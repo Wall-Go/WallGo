@@ -2,9 +2,25 @@ import numpy as np
 from .stuff import vw
 
 
-def main_function():
+class Oli:
     """
-    Super important stuff
+    The Oli class
     """
-    print("Oli is the best")
-    return vw()
+
+    def main_function():
+        r"""
+        Super important stuff like :math:`\Gamma(x)=(x-1)!`,
+
+        .. math::
+            y''(x) + \omega^2 y(x) = 0.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        vw : float
+            The bubble wall speed.
+        """
+        print("Oli is the best")
+        return vw()

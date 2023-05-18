@@ -29,5 +29,5 @@ dependencies = [
 readme = "README.rst"
 
 [project.urls]
-"Homepage" = "https://github.com/jorindevandevis/WallSpeed"
+"Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/jorindevandevis/WallSpeed"

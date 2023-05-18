@@ -1,8 +1,8 @@
 """
 A first example.
 """
-from WallSpeed.oli import main_function
+from WallSpeed.oli import Oli
 
-result = main_function()
+result = Oli.main_function()
 
 print("result =", result)
