@@ -17,9 +17,9 @@ Based on Python 3. For necessary libraries, see `requirements.txt`.
 Installation
 ===========================================
 
-Can be installed as a package with pip, or pip3, using::
+Can be installed as a package (in developer mode) with pip, or pip3, using::
 
-    pip install .
+    pip install -e .
 
 from the base directory of the repository.
 
