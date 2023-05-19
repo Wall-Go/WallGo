@@ -1,6 +1,6 @@
 import numpy as np
 
-def findWallVelocityLoop(TNucl, wallVelocityLTE, hMass, sMass, errTol):
+def findWallVelocityLoop(Model,TNucl, wallVelocityLTE, hMass, sMass, errTol):
 
     # Initial conditions
 
@@ -13,7 +13,7 @@ def findWallVelocityLoop(TNucl, wallVelocityLTE, hMass, sMass, errTol):
     else:
         wallVelocity = np.sqrt(1/3)
 
-    offEquilDeltas = 0
+    outOffEquilDeltas = 0
 
     c1, c2 = findHydroBoundaries(TNucl, wallVelocity)
     Tprofile = findTemperatureProfile(c1, c2, higgsWidth, singletWidth, wallOffSet, offEquilDeltas)
@@ -26,7 +26,7 @@ def findWallVelocityLoop(TNucl, wallVelocityLTE, hMass, sMass, errTol):
         oldWallOffSet = wallOffSet
         oldWallVelocity = wallVelocity
 
-        offEquilDeltas = solveBoltzmannEquation(Tprofile, higgsWidth, singletWidth, wallOffSet)
+        outOffEquilDeltas = solveBoltzmannEquation(Tprofile, higgsWidth, singletWidth, wallOffSet)
 
         c1, c2 = findHydroBoundaries(TNucl, wallVelocity)
         Tprofile = findTemperatureProfile(c1, c2, higgsWidth, singletWidth, wallOffSet, offEquilDeltas)
