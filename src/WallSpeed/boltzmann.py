@@ -26,7 +26,7 @@ class BoltzmannSolver:
 
     def solveBoltzmannEquations():
         """
-        Solves Boltzmann equation for :math:`\delta f`.
+        Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
 
         Parameters
         ----------
@@ -60,7 +60,7 @@ class BoltzmannSolver:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
-        These are defined in equation (20) or [LC22]_.
+        These are defined in equation (20) of [LC22]_.
 
         Parameters
         ----------
@@ -68,7 +68,7 @@ class BoltzmannSolver:
         Returns
         -------
         Deltas : array_like
-            Defined in equation (20) or [LC22]_. A list of 4 arrays, each of
+            Defined in equation (20) of [LC22]_. A list of 4 arrays, each of
             which is of size :py:data:`len(z)`.
 
         References
@@ -79,17 +79,43 @@ class BoltzmannSolver:
         """
         pass
 
-    def __source(z, pz, pp):
+    def __collocationGrid(Nz, Npz, Npp):
+        """
+        Constructs a collocation grid of Gauss-Lobatto points.
+
+        See equation (34) of [LC22].
+        """
+        z_compact = np.cos(np.pi * np.arange(1, Nz) / Nz)
+        pz_compact = np.cos(np.pi * np.arange(1, Npz) / Npz)
+        pp_compact = np.cos(np.pi * np.arange(1, Npp) / (Npp - 1))
+        return z_compact, pz_compact, pp_compact
+
+    def __source(z, pz, pp, vw, msq, T, statistics=-1):
         """
         Local equilibrium source term for non-equilibrium deviations, a
         rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
         """
+        # evaluating dot products with the plasma 4-velocity
+        gamma = 1 / np.sqrt(1 - vw**2)
+        E_wall = msq + pz**2 + pp**2
+        E_plasma = gamma * (E_wall - vw * pz)
+        P_plasma = gamma * (- vw * E_wall + pz)
+
+        # equilibrium distribution, and its derivative
+        f_eq = 1 / (np.exp(E_plasma / T) - statistics * 1)
+        df_eq = -np.exp(E_plasma / T) * f_eq**2
+
+        # pz d/dz term
+
+        # mass derivative term
+
+        # putting it together
         pass
 
     def __liouville(z, pz, pp):
         """
         Lioville operator, a rank 6 array, with shape
-        :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`
+        :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
         """
         pass
 
@@ -97,7 +123,9 @@ class BoltzmannSolver:
     def __collision(z, pz, pp):
         """
         Collision integrals, a rank 4 array, with shape
-        :py:data:`(len(pz), len(pp), len(pz), len(pp))`
+        :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
+
+        See equation (30) of [LC22].
         """
         pass
 
