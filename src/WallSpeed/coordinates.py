@@ -1,9 +1,17 @@
 import numpy as np
 
 def compactifyCoordinates(z, pz, pp, L, T0):
-    """ Transforms coordinates to [-1, 1] interval
+    r""" Transforms coordinates to [-1, 1] interval
 
     All coordinates are in the wall frame.
+
+    The barred coordinates are compactified:
+
+    .. math::
+        \bar{z} \equiv \frac{z}{\sqrt{z^2 + L^2}}, \qquad
+        \bar{p}_{z} \equiv \tanh\left(\frac{p_z}{2 T_0}\right), \qquad
+        \bar{p}_{\Vert} \equiv 1 - 2 e^{-p_\Vert/T_0}.
+
 
     Parameters
     ----------
@@ -34,10 +42,17 @@ def compactifyCoordinates(z, pz, pp, L, T0):
 
 
 def decompactifyCoordinates(z_compact, pz_compact, pp_compact, L, T0):
-    """ Transforms coordinates from [-1, 1] interval
+    r""" Transforms coordinates from [-1, 1] interval
     (inverse of compactifyCoordinates)
 
     All coordinates are in the wall frame.
+
+    The barred coordinates are compactified:
+
+    .. math::
+        z = \frac{\bar{z} L }{\sqrt{1 - \bar{z}^2}}, \qquad
+        p_z = 2 T_0\ \text{atanh}(\bar{p}_z), \qquad
+        p_\Vert = - T_0 \log\left(\frac{1-\bar{p}_\Vert}{2}\right).
 
     Parameters
     ----------
