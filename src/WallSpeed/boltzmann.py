@@ -1,13 +1,16 @@
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
+from .coordinates import ...
 
 class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
+
     """
 
     def __init__():
-        """ Initialsation of BoltzmannSolver
+        """
+        Initialsation of BoltzmannSolver
 
         Parameters
         ----------
@@ -22,7 +25,8 @@ class BoltzmannSolver:
         return cls
 
     def solveBoltzmannEquations():
-        """ Solves Boltzmann equation for :math:`\delta f`.
+        """
+        Solves Boltzmann equation for :math:`\delta f`.
 
         Parameters
         ----------
@@ -44,7 +48,7 @@ class BoltzmannSolver:
         # reshaping indices
         N_new = len(z) * len(pz) * len(pp)
         source = np.reshape(source, N_new)
-        operator = np.transpose(np.reshape(operator, (N_new, N_new), order="F"))
+        operator = np.reshape(operator, (N_new, N_new), order="F")
 
         # solving the linear system: operator.delta_f = source
         delta_f = np.linalg.solve(operator, source)
@@ -53,7 +57,8 @@ class BoltzmannSolver:
         return delta_f
 
     def getDeltas():
-        """ Computes Deltas necessary for solving the Higgs equation of motion.
+        """
+        Computes Deltas necessary for solving the Higgs equation of motion.
 
         These are defined in equation (20) or [LC22]_.
 
@@ -75,89 +80,30 @@ class BoltzmannSolver:
         pass
 
     def __source(z, pz, pp):
-        """ Local equilibrium source for non-equilibrium deviations
-
-        All coordinates are in the wall frame.
-
-        Parameters
-        ----------
-        z : array_like
-            Array of z coordinate positions.
-        pz : array_like
-            Array of momenta in the z direction.
-        pp : array_like
-            Array of momenta parallel to the wall.
-
-        Returns
-        -------
-        source : array_like
-            The source term, a rank 3 array, with shape
-            :py:data:`(len(z), len(pz), len(pp))`.
+        """
+        Local equilibrium source term for non-equilibrium deviations, a
+        rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
         """
         pass
 
     def __liouville(z, pz, pp):
-        """ Lioville operator
-
-        All coordinates are in the wall frame.
-
-        Parameters
-        ----------
-        z : array_like
-            Array of z coordinate positions.
-        pz : array_like
-            Array of momenta in the z direction.
-        pp : array_like
-            Array of momenta parallel to the wall.
-
-        Returns
-        -------
-        liouville : array_like
-            The liouville operator, a rank 6 array, with shape
-            :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
+        """
+        Lioville operator, a rank 6 array, with shape
+        :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`
         """
         pass
 
 
     def __collision(z, pz, pp):
-        """ Collision integrals
-
-        All coordinates are in the wall frame.
-
-        Parameters
-        ----------
-        z : array_like
-            Array of z coordinate positions.
-        pz : array_like
-            Array of momenta in the z direction.
-        pp : array_like
-            Array of momenta parallel to the wall.
-
-        Returns
-        -------
-        collision : array_like
-            The collision integrals, a rank 4 array, with shape
-            :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
+        """
+        Collision integrals, a rank 4 array, with shape
+        :py:data:`(len(pz), len(pp), len(pz), len(pp))`
         """
         pass
 
     def __collisionFilename(z, pz, pp, particle):
-        """ A filename convention for collision integrals.
-
-        All coordinates are in the wall frame.
-
-        Parameters
-        ----------
-        z : array_like
-            Array of z coordinate positions.
-        pz : array_like
-            Array of momenta in the z direction.
-        pp : array_like
-            Array of momenta parallel to the wall.
-
-        Returns
-        -------
-        filename : string
+        """
+        A filename convention for collision integrals.
         """
         dir = "."
         suffix = "hdf5"
