@@ -32,16 +32,14 @@ class Polynomial:
         self.derivChi = self.derivatives(grid.chiValues)
         self.derivRz = self.derivatives(grid.rzValues)
         
-    def cardinal(self,x,n,grid):
+    def cardinal(self,x,grid):
         r"""
-        Computes the cardinal basis function :math:`C_n(x)`.
+        Computes the whole basis of cardinal functions :math:`C_n(x)` defined by grid.
 
         Parameters
         ----------
         x : float
             Coordinate at which to evaluate the cardinal function.
-        n : array_like
-            Order of the cardinal function.
         grid : array_like
             Array of the grid points defining the cardinal basis.
 
@@ -51,17 +49,51 @@ class Polynomial:
             Values of the cardinal functions.
         """
         
-        #Computing all the factor in the product defining the cardinal function
+        #Computing all the factor in the product defining the cardinal functions
         cn_partial = np.where(grid[None,:]-grid[:,None] != 0,(x-grid[:,None])/(grid[None,:]-grid[:,None]))
         
-        #Multiplying all the factors to get the cardinal function
+        #Multiplying all the factors to get the cardinal functions
         cn = np.prod(cn_partial,axis=0)
         
         return cn
     
-    def evaluate(self,x,f):
+    def chebyshev(self,x,n,restriction=None):
+        r"""
+        Computes the Chebyshev polynomial :math:`T_n(x)`
+
+        Parameters
+        ----------
+        x : float
+            Coordinate at which to evaluate the polynomial.
+        n : int or array_like 
+            Order of the Chebyshev polynomial.
+        restriction : None or string
+            Select the restriction on the Chebyshev basis. 
+            If None, evaluates the unrestricted basis.
+            If 'full', the polynomials are 0 at :math:`x=\pm 1`.
+            If 'partial', the polynomials are 0 at :math:`x=+1`.
+
+        Returns
+        -------
+        tn : float or array_like 
+            Values of the polynomial
+
         """
-        Evaluates the polynomial series with coefficients f at the points x.
+        
+        #Computing the unrestricted basis
+        tn = np.cos(n*np.arccos(x))
+        
+        #Applying the restriction
+        if restriction == 'partial':
+            tn -= 1
+        elif restriction == 'full':
+            tn -= np.where(n%2==0,1,x)
+        
+        return tn
+    
+    def evaluateCardinal(self,x,f):
+        """
+        Evaluates the cardinal series with coefficients f at the point x.
 
         Parameters
         ----------
@@ -73,16 +105,42 @@ class Polynomial:
         Returns
         -------
         series : float
-            Values of the series at the points x.
+            Value of the series at the point x.
         """
         
         #Computing the cardinal functions for the chi, rz and rp directions
-        cardinal_chi = self.cardinal(x[0], np.arange(self.grid.M), self.grid.chiValues)
-        cardinal_rz = self.cardinal(x[1], np.arange(self.grid.N), self.grid.rzValues)
-        cardinal_rp = self.cardinal(x[2], np.arange(self.grid.N), self.grid.rpValues)
+        cardinal_chi = self.cardinal(x[0], self.grid.chiValues)
+        cardinal_rz = self.cardinal(x[1], self.grid.rzValues)
+        cardinal_rp = self.cardinal(x[2], self.grid.rpValues)
         
         #Summing over all the terms
         series = np.sum(f*cardinal_chi[:,None,None]*cardinal_rz[None,:,None]*cardinal_rp[None,None,:],axis=(0,1,2))
+        return series
+    
+    def evaluateChebyshev(self,x,f):
+        """
+        Evaluates the Chebyshev series with coefficients f at the point x.
+
+        Parameters
+        ----------
+        x : array_like, shape (3,)
+            Coordinate at which to evaluate the Chebyshev series.
+        f : array_like, shape (M,N,N)
+            Spectral coefficients of the series.
+
+        Returns
+        -------
+        series : float
+            Value of the series at the point x.
+        """
+        
+        #Computing the Chebyshev polynomials for the chi, rz and rp directions
+        cheb_chi = self.chebyshev(x[0], np.arange(2,self.grid.M+1), 'full')
+        cheb_rz = self.chebyshev(x[1], np.arange(2,self.grid.N+1), 'full')
+        cheb_rp = self.chebyshev(x[2], np.arange(1,self.grid.N), 'partial')
+        
+        #Summing over all the terms
+        series = np.sum(f*cheb_chi[:,None,None]*cheb_rz[None,:,None]*cheb_rp[None,None,:],axis=(0,1,2))
         return series
     
     def derivatives(self,grid):
