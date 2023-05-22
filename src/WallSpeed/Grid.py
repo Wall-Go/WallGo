@@ -7,9 +7,14 @@ class Grid:
     r"""
     Computes the grid on which the Boltzmann equation is solved.
 
-    Grid is 3d, and consists of the physical coordinates :math:`\xi`,
-    :math:`p_z` and :math:`p_\Vert`, as well as the corresponding
-    compactified coordinates on the interval [-1, 1],
+    Grid is 3d, and consists of the physical coordinates:
+    
+        - :math:`\xi`, position perpendicular to the wall,
+        - :math:`p_z`, momentum perpendicular to the wall,
+        - :math:`p_\Vert`, momentum magnitude parallel to the wall.
+
+    In addition there are the corresponding compactified coordinates on the
+    interval [-1, 1],
 
     .. math::
         \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L^2}}, \qquad
@@ -27,12 +32,11 @@ class Grid:
     rpValues : array_like
         Grid of the :math:`\rho_\Vert` direction.
     xiValues : array_like
-        Grid of the :math:`\xi` direction, position perpendicular to the wall.
+        Grid of the :math:`\xi` direction.
     pzValues : array_like
-        Grid of the :math:`p_z` direction, momentum perpendicular to the wall.
+        Grid of the :math:`p_z` direction.
     ppValues : array_like
-        Grid of the :math:`p_\Vert` direction, momentum magnitude parallel to
-        the wall.
+        Grid of the :math:`p_\Vert` direction.
     """
 
     def __init__(self, M, N, L_xi, T):
@@ -73,7 +77,7 @@ class Grid:
         )
 
     def getCompactCoordinates(self, endpoints=False):
-        """
+        r"""
         Return compact coordinates of grid.
 
         Parameters
@@ -84,11 +88,11 @@ class Grid:
         Returns
         ----------
         chiValues : array_like
-            Grid of the chi direction.
+            Grid of the :math:`\chi` direction.
         rzValues : array_like
-            Grid of the rz direction.
+            Grid of the :math:`\rho_z` direction.
         rpValues : array_like
-            Grid of the rp direction.
+            Grid of the :math:`\rho_\Vert` direction.
         """
         if endpoints:
             chi = np.array([-1] + list(self.chiValues) + [1])
@@ -99,7 +103,7 @@ class Grid:
             return self.chiValues, self.rzValues, self.rpValues
 
     def getCoordinates(self, endpoints=False):
-        """
+        r"""
         Return coordinates of grid, not compactified.
 
         Parameters
@@ -110,11 +114,11 @@ class Grid:
         Returns
         ----------
         xiValues : array_like
-            Grid of the chi direction.
+            Grid of the :math:`\xi` direction.
         pzValues : array_like
-            Grid of the rz direction.
+            Grid of the :math:`p_z` direction.
         ppValues : array_like
-            Grid of the rp direction.
+            Grid of the :math:`p_\Vert` direction.
         """
         if endpoints:
             xi = np.array([-np.inf] + list(self.chiValues) + [np.inf])
