@@ -29,6 +29,10 @@ class BoltzmannSolver:
         """
         self.grid = grid
         self.background = background
+        if background.vw < 0:
+            # changing convention so that bubble moves outwards
+            self.background.vw *= -1
+            self.background.vProfile *= -1
         self.mode = mode
         try:
             with h5py.File(collisionFile, "r") as file:
@@ -99,27 +103,35 @@ class BoltzmannSolver:
         rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
         """
         # coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates()
+        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        chi, rz, rp = self.grid.getCompactCoordinates() # compact
 
         # background profiles
         T = self.background.temperatureProfile
         field = self.background.fieldProfile
+        v = self.background.vProfile
 
         # fluctuation mode
         statistics = self.mode.statistics
         msq = self.mode.msq(field)
+        E = np.sqrt(msq + pz**2 + pp**2)
 
-        # evaluating dot products with the plasma 4-velocity
-        gamma = 1 / np.sqrt(1 - vw**2)
-        E_wall = np.sqrt(msq + rz**2 + rp**2)
-        E_plasma = gamma * (E_wall - vw * rz)
-        P_plasma = gamma * (- vw * E_wall + rz)
+        # dot products with wall velocity
+        gammaWall = 1 / np.sqrt(1 - vw**2)
+        EWall = gammaWall * (pz - vw * E)
+        PWall = gammaWall * (E - vw * pz)
+
+        # dot products with plasma profile velocity
+        gammaProfile = 1 / np.sqrt(1 - v**2)
+        EPlasma = gammaProfile * (pz - v * E)
+        PPlasma = gammaProfile * (E - v * pz)
 
         # equilibrium distribution, and its derivative
         f_eq = 1 / (np.exp(E_plasma / T) - statistics * 1)
         df_eq = -np.exp(E_plasma / T) * f_eq**2
 
         # pz d/dz term
+
 
         # mass derivative term
 
