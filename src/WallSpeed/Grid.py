@@ -8,7 +8,7 @@ class Grid:
     Computes the grid on which the Boltzmann equation is solved.
 
     Grid is 3d, and consists of the physical coordinates:
-    
+
         - :math:`\xi`, position perpendicular to the wall,
         - :math:`p_z`, momentum perpendicular to the wall,
         - :math:`p_\Vert`, momentum magnitude parallel to the wall.
@@ -72,7 +72,7 @@ class Grid:
         )
 
         # Computing the grids in physical coordinates
-        (self.xiValues, self.pzValues, self.ppValues,) = Grid.__decompactify(
+        (self.xiValues, self.pzValues, self.ppValues,) = Grid.decompactify(
             self.chiValues, self.rzValues, self.rpValues, L_xi, T
         )
 
@@ -128,8 +128,7 @@ class Grid:
         else:
             return self.xiValues, self.pzValues, self.ppValues
 
-    @staticmethod
-    def __compactify(z, pz, pp, L, T0):
+    def compactify(z, pz, pp, L, T0):
         r"""
         Transforms coordinates to [-1, 1] interval
         """
@@ -138,8 +137,7 @@ class Grid:
         pp_compact = 1 - 2 * np.exp(-pp / T0)
         return z_compact, pz_compact, pp_compact
 
-    @staticmethod
-    def __decompactify(z_compact, pz_compact, pp_compact, L, T0):
+    def decompactify(z_compact, pz_compact, pp_compact, L, T0):
         r"""
         Transforms coordinates from [-1, 1] interval (inverse of compactify).
         """
