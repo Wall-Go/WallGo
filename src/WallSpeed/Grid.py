@@ -7,7 +7,7 @@ Created on Fri May 19 14:02:29 2023
 """
 
 import numpy as np
-from .coordinates import ...
+from .coordinates import decompactifyCoordinates
 
 class Grid:
     """
@@ -50,3 +50,55 @@ class Grid:
 
         #Computing the grids in physical coordinates
         self.xiValues,self.pzValues,self.ppValues = decompactifyCoordinates(self.chiValues, self.rzValues, self.rpValues, L_xi, T)
+
+    def getCompactCoordinates(self, endpoints=False):
+        """
+        Return compact coordinates of grid.
+
+        Parameters
+        ----------
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        ----------
+        chiValues : array_like
+            Grid of the chi direction.
+        rzValues : array_like
+            Grid of the rz direction.
+        rpValues : array_like
+            Grid of the rp direction.
+        """
+        if endpoints:
+            chi = np.array([-1] + list(self.chiValues) + [1])
+            rz = np.array([-1] + list(self.rzValues) + [1])
+            rp = np.array(list(self.rpValues) + [1])
+            return chi, rz, rp
+        else:
+            return self.chiValues, self.rzValues, self.rpValues
+
+    def getCoordinates(self, endpoints=False):
+        """
+        Return coordinates of grid, not compactified.
+
+        Parameters
+        ----------
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        ----------
+        xiValues : array_like
+            Grid of the chi direction.
+        pzValues : array_like
+            Grid of the rz direction.
+        ppValues : array_like
+            Grid of the rp direction.
+        """
+        if endpoints:
+            xi = np.array([-np.inf] + list(self.chiValues) + [np.inf])
+            pz = np.array([-np.inf] + list(self.rzValues) + [np.inf])
+            pp = np.array(list(self.rpValues) + [np.inf])
+            return xi, pz, pp
+        else:
+            return self.xiValues, self.pzValues, self.ppValues
