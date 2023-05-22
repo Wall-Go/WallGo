@@ -1,1 +1,11 @@
 In this branch we use LTE approximation to inspect effect of higher order thermal corrections to wall speed.
+
+Data used in xSM BM point in https://inspirehep.net/literature/2090856 by Jorinde and Tuomas is stored in
+
+data/pressure-for-LTE-approximation/
+
+and therein text file
+
+readme-for-jorinde
+
+describes the data.
