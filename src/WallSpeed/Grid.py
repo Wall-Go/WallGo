@@ -12,14 +12,14 @@ from .coordinates import ...
 class Grid:
     """
     Computes the grid on which the Boltzmann equation is solved.
-    
+
     Parameters
     ----------
     M : int
         Number of basis functions in the chi direction.
     N : int
         Number of basis functions in the rhoz and rhoPar directions.
-        
+
     Attributes
     ----------
     chiValues : array_like
@@ -40,13 +40,13 @@ class Grid:
         self.N = N
         self.L_xi = L_xi
         self.T = T
-        
+
         #Computing the grids in the chi, rz and rp directions
+        #See equation (34) in arXiv:2204.13120.
+        #Additional signs are so that each coordinate starts from -1.
         self.chiValues = -np.cos(np.arange(1,self.M)*np.pi/self.M)
         self.rzValues = -np.cos(np.arange(1,self.N)*np.pi/self.N)
         self.rpValues = np.flip(np.cos(np.arange(1,self.N)*np.pi/(self.N-1)))
-        
+
         #Computing the grids in physical coordinates
         self.xiValues,self.pzValues,self.ppValues = decompactifyCoordinates(self.chiValues, self.rzValues, self.rpValues, L_xi, T)
-        
-    
