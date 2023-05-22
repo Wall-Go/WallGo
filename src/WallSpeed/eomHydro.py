@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.optimize import minimize, brentq
+
+from scipy.optimize import minimize, brentq, fsolve
 from scipy.integrate import quad
 
 
@@ -80,6 +81,7 @@ def findWallVelocityLoop(
 
     return wallVelocity, higgsWidth, singletWidth, wallOffSet
 
+        
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
