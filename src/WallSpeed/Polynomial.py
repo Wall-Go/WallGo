@@ -29,8 +29,9 @@ class Polynomial:
         self.grid = grid
         
         #Computing the chi and rz derivative matrices
-        self.derivChi = self.derivatives(grid.chiValues)
-        self.derivRz = self.derivatives(grid.rzValues)
+        chiValues,rzValues,rpValues = self.grid.getCompactCoordinates(True)
+        self.derivChi = self.derivatives(chiValues)
+        self.derivRz = self.derivatives(rzValues)
         
     def cardinal(self,x,grid):
         r"""
