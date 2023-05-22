@@ -1,16 +1,18 @@
 import numpy as np
 from scipy.optimize import minimize, brentq
+from scipy.integrate import quad
 
 
 def findWallVelocityLoop(
     Model, TNucl, wallVelocityLTE, hMass, sMass, errTol, thermalPotential, grid
 ):
+    """
+    Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
+    the field equation of motion iteratively.
+    """
 
-    # Initial conditions
-
-    higgsWidth = 1 / hMass
-    singletWidth = 1 / sMass
-    wallOffSet = 0
+    # Initial conditions for velocity, hydro boundaries, wall parameters and
+    # temperature profile
 
     if wallVelocityLTE is not None:
         wallVelocity = 0.9 * wallVelocityLTE
@@ -20,6 +22,14 @@ def findWallVelocityLoop(
     outOffEquilDeltas = 0
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
+
+    higgsWidth = 1 / hMass
+    singletWidth = 1 / sMass
+    wallOffSet = 0
+    higgsWidth, singletWidth, wallOffSet = initialWallParameters(
+        higgsWidth, singletWidth, wallOffSet, 0.5 * (Tplus + Tminus), Veff
+    )
+
     Tprofile = findTemperatureProfile(
         c1,
         c2,
@@ -69,6 +79,47 @@ def findWallVelocityLoop(
         )
 
     return wallVelocity, higgsWidth, singletWidth, wallOffSet
+
+
+def initialWallParameters(
+    higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
+):
+    higgsVEV = Veff.higgsVEV(TGuess)
+    singletVEV = Veff.singletVEV(TGuess)
+
+    initRes = minimize(
+        lambda higgsWidth, singletWidth, wallOffSet: oneDimAction(
+            higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, TGuess, Veff
+        ),
+        x0=[higgsWidthGuess, singletWidthGuess, wallOffSetGuess],
+        bounds=[(0, None), (0, None), (None, None)],
+    )
+
+    return initRes.x[0], initRes.x[1], initRes.x[2]
+
+
+def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, Veff):
+    kinetic = (1 / higgsWidth + 1 / singletWidth) * 3 / 2
+
+    integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
+
+    potential = quad(
+        lambda z: Veff.V(
+            wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
+            T,
+        ),
+        -integrationLength,
+        integrationLength,
+    ) - integrationLength * (Veff.V(higgsVEV, 0, T) + Veff.V(0, singletVEV, T))
+
+    return kinetic + potential
+
+
+def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
+    h = 0.5 * higgsVEV * (1 - np.tanh(z / higgsWidth))
+    s = 0.5 * singletVEV * (1 + np.tanh(z / singletWidth + wallOffSet))
+
+    return [h, s]
 
 
 def findTemperatureProfile(
