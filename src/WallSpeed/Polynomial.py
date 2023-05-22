@@ -50,10 +50,10 @@ class Polynomial:
         """
         
         #Computing all the factor in the product defining the cardinal functions
-        cn_partial = np.where(grid[None,:]-grid[:,None] != 0,(x-grid[:,None])/(grid[None,:]-grid[:,None]))
+        cn_partial = np.divide(x-grid[:,None], grid[None,:]-grid[:,None], where=grid[None,:]-grid[:,None]!=0)
         
         #Multiplying all the factors to get the cardinal functions
-        cn = np.prod(cn_partial,axis=0)
+        cn = np.prod(np.where(grid[None,:]-grid[:,None] == 0, 1, cn_partial),axis=0)
         
         return cn
     
@@ -67,7 +67,7 @@ class Polynomial:
             Coordinate at which to evaluate the polynomial.
         n : int or array_like 
             Order of the Chebyshev polynomial.
-        restriction : None or string
+        restriction : None or string, optional
             Select the restriction on the Chebyshev basis. 
             If None, evaluates the unrestricted basis.
             If 'full', the polynomials are 0 at :math:`x=\pm 1`.
@@ -108,10 +108,13 @@ class Polynomial:
             Value of the series at the point x.
         """
         
+        #Getting the grid coordinates
+        chiValues,rzValues,rpValues = self.grid.getCompactCoordinates(True)
+        
         #Computing the cardinal functions for the chi, rz and rp directions
-        cardinal_chi = self.cardinal(x[0], self.grid.chiValues)
-        cardinal_rz = self.cardinal(x[1], self.grid.rzValues)
-        cardinal_rp = self.cardinal(x[2], self.grid.rpValues)
+        cardinal_chi = self.cardinal(x[0], chiValues)
+        cardinal_rz = self.cardinal(x[1], rzValues)
+        cardinal_rp = self.cardinal(x[2], rpValues)
         
         #Summing over all the terms
         series = np.sum(f*cardinal_chi[:,None,None]*cardinal_rz[None,:,None]*cardinal_rp[None,None,:],axis=(0,1,2))
@@ -159,13 +162,13 @@ class Polynomial:
 
         """
         #Computing the diagonal part
-        diagonal = np.sum(np.where(grid[:,None]-grid[None,:] != 0, 1/(grid[:,None]-grid[None,:])),axis=1)
+        diagonal = np.sum(np.where(grid[:,None]-grid[None,:] == 0, 0, np.divide(1, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0)),axis=1)
         
         #Computing the off-diagonal part
-        offDiagonal = np.prod(np.where((grid[:,None,None]-grid[None,None,:])*(grid[None,:,None]-grid[None,None,:]) != 0, (grid[None,:,None]-grid[None,None,:])/(grid[:,None,None]-grid[None,None,:])),axis=-1)
+        offDiagonal = np.prod(np.where((grid[:,None,None]-grid[None,None,:])*(grid[None,:,None]-grid[None,None,:]) == 0, 1, np.divide(grid[None,:,None]-grid[None,None,:], grid[:,None,None]-grid[None,None,:], where=grid[:,None,None]-grid[None,None,:]!=0)),axis=-1)
         
         #Putting all together
-        deriv = np.where(grid[:,None]-grid[None,:] == 0,diagonal[:,None],offDiagonal/(grid[:,None]-grid[None,:]))
+        deriv = np.where(grid[:,None]-grid[None,:] == 0,diagonal[:,None], np.divide(offDiagonal, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0))
         
         return deriv
         
