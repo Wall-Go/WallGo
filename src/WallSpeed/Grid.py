@@ -121,9 +121,9 @@ class Grid:
             Grid of the :math:`p_\Vert` direction.
         """
         if endpoints:
-            xi = np.array([-np.inf] + list(self.chiValues) + [np.inf])
-            pz = np.array([-np.inf] + list(self.rzValues) + [np.inf])
-            pp = np.array(list(self.rpValues) + [np.inf])
+            xi = np.array([-np.inf] + list(self.xiValues) + [np.inf])
+            pz = np.array([-np.inf] + list(self.pzValues) + [np.inf])
+            pp = np.array(list(self.ppValues) + [np.inf])
             return xi, pz, pp
         else:
             return self.xiValues, self.pzValues, self.ppValues
