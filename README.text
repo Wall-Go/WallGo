@@ -9,3 +9,18 @@ and therein text file
 readme-for-jorinde
 
 describes the data.
+
+Note that pressure of the symmetric phase is in separate list of its own, but it is still also added in Higgs and singlet phase pressure ALREADY (is this for sure correct, make sure?!).
+
+
+We should add following scripts:
+
+1) from P(T) lists, compute alpha(T), e(T), omega(T) and sound speed lists etc
+
+2) from lists obtained in 1), compute vwLTE, using either assumption that sound speed is constant in T (but different in higgs and singlet phases) or by relaxing this assumption, since sound speed is a function of T.
+
+This results vwLTE at all T, but note that above (and near enough?) Tc there should not be any meaningful results!
+
+3) write a plotting script that plot vwLTE as function of T. Now we can compare "1-loop" vs N3LO. Could also add here result of Benoit, for comparison!
+
+4) We can find also actual TnLO (by using code by Oli and Tuomas), so lets compare how things looks for final prediction for vwLTE!
