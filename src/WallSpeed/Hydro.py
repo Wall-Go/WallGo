@@ -38,9 +38,9 @@ def findMatching(Model,vwTry,Tnucl):
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-        vp = 1
-        Tp = 1
-        Tm = 1
-        vm = 1
+        dv = vwTry/50 #initial velocity step
+        vptry = dv #initial value of vp
+        while dv < 
 
+        
     return (vp,vm,Tp,Tm)
