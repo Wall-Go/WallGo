@@ -50,14 +50,17 @@ class Polynomial:
 
         # Computing all the factor in the product defining the cardinal functions
         cn_partial = np.divide(
-            x - xi[:, None],
-            xi[None, :] - xi[:, None],
-            where=xi[None, :] - xi[:, None] != 0,
+            x - xi[:, np.newaxis],
+            xi[np.newaxis, :] - xi[:, np.newaxis],
+            where=xi[np.newaxis, :] - xi[:, np.newaxis] != 0,
         )
 
         # Multiplying all the factors to get the cardinal functions
         cn = np.prod(
-            np.where(xi[None, :] - xi[:, None] == 0, 1, cn_partial), axis=0
+            np.where(
+                xi[Nonp.newaxisne, :] - xi[:, np.newaxis] == 0, 1, cn_partial
+            ),
+            axis=0,
         )
 
         return cn
@@ -177,7 +180,7 @@ class Polynomial:
 
         Parameters
         ----------
-        grid : array_like
+        grid1d : array_like
             Array of the grid points defining the cardinal basis.
         direction : {0, 1, 2}
             Choice of direction
@@ -231,5 +234,40 @@ class Polynomial:
                 where=grid[:, None] - grid[None, :] != 0,
             ),
         )
+
+        return deriv
+
+    def derivativesChebyshev(self, grid1d):
+        """
+        Computes the derivative matrix, for a specific direction.
+
+        Parameters
+        ----------
+        grid1d : array_like
+            Array of the grid points defining the Chebyshev basis.
+        direction : {0, 1, 2}
+            Choice of direction
+            {:math:`\chi`, :math:`\rho_z`, :math:`\rho_\Vert`}.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+        grid = grid1d
+        nGrid = len(grid)
+        deriv = np.zeros((nGrid, nGrid))
+
+        for j in range(nGrid):
+            if j % 2 == 0:
+                for k in range(j // 2):
+                    if k == 0:
+                        deriv[j, 2 * k] = n
+                    elif k % 2 == 0:
+                        deriv[j, 2 * k] = 2 * n
+            else:
+                for k in range((j + 1) // 2):
+                    deriv[j, 2 * k + 1] = 2 * n
 
         return deriv

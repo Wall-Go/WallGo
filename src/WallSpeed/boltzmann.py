@@ -7,7 +7,7 @@ class BoltzmannSolver:
     Class for solving Boltzmann equations for small deviations from equilibrium.
     """
 
-    def __init__(self, grid, background, mode, collisionFile):
+    def __init__(self, grid, background, mode):
         """
         Initialsation of BoltzmannSolver
 
@@ -19,8 +19,6 @@ class BoltzmannSolver:
             An object of the Background class.
         mode : Mode
             An object of the Mode class.
-        collisionFile : string
-            File name where collision integrals are stored.
 
         Returns
         -------
@@ -34,12 +32,8 @@ class BoltzmannSolver:
             self.background.vw *= -1
             self.background.vProfile *= -1
         self.mode = mode
-        try:
-            with h5py.File(collisionFile, "r") as file:
-                self.collision = np.array(file["random"])
-        except FileNotFoundError:
-            print("BoltzmannSolver error: %s not found" % collisionFile)
-            raise
+        self.dotPs = self.__getDotProducts()
+        self.derivs = self.__getDerivatives()
 
 
     def solveBoltzmannEquations():
@@ -62,15 +56,15 @@ class BoltzmannSolver:
             doi:10.1103/PhysRevD.106.023501
         """
         # contructing the various terms in the Boltzmann equation
-        source = self.source(z, pz, pp)
-        liouville = self.liouville(z, pz, pp)
-        collision = self.collision(pz, pp)
+        source = self.source()
+        liouville = self.liouville()
+        collision = self.collision()
 
         # constructing the full rank 6 tensor operator
         operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
 
         # reshaping indices
-        N_new = len(z) * len(pz) * len(pp)
+        N_new = self.grid.M * self.grid.N**2
         source = np.reshape(source, N_new)
         operator = np.reshape(operator, (N_new, N_new), order="F")
 
@@ -97,7 +91,77 @@ class BoltzmannSolver:
         """
         pass
 
-    def source(vw):
+    def __getDotProducts(self):
+        """
+        Returns dict containing various useful dot products
+        """
+        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        v = self.background.vProfile
+        vw = self.background.vw
+
+        # dict to store results
+        dotPs = {}
+
+        # fluctuation mode
+        statistics = self.mode.statistics
+        msq = self.mode.msq(field)
+        E = np.sqrt(msq + pz**2 + pp**2)
+
+        # dot products with wall velocity
+        dotPs["gammaWall"] = 1 / np.sqrt(1 - vw**2)
+        dotPs["EWall"] = gammaWall * (pz - vw * E)
+        dotPs["PWall"] = gammaWall * (E - vw * pz)
+
+        # dot products with plasma profile velocity
+        dotPs["gammaPlasma"] = 1 / np.sqrt(1 - v**2)
+        dotPs["EPlasma"] = gammaPlasma * (pz - v * E)
+        dotPs["PPlasma"] = gammaPlasma * (E - v * pz)
+
+        # dot product of velocities
+        dotPs["uwBaruPl"] = gammaWall * gammaPlasma * (vw - v)
+
+        return dotPs
+
+    def __getDerivatives(self):
+        """
+        Returns dict containing various useful derivatives
+        """
+        # dict to store results
+        derivs = {}
+
+        # polynomial tool
+        poly = Polynomial(self.grid)
+
+        # coordinates
+        xi, pz, pp = self.grid.getCoordinates() # non-compact
+
+        # background profiles
+        T = self.background.temperatureProfile
+        field = self.background.fieldProfile
+        v = self.background.vProfile
+
+        # fluctuation mode
+        msq = self.mode.msq(field)
+
+        # spatial derivatives of profiles
+        deriv = poly.derivativesChebyshev()
+        derivs["dTdxi"] = np.dot(deriv, T)
+        derivs["dvdxi"] = np.dot(deriv, v)
+        derivs["dmsqdxi"] = np.dot(deriv, msq)
+
+        # derivatives of compactified coordinates
+        dchi, drz, drp = grid.getCompactificationDerivatives()
+        derivs["dchidxi"] = dchi
+        derivs["drzdpz"] = drz
+        derivs["drpdpp"] = drp
+
+        # equilibrium distribution, and its derivative
+        fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
+        derivs["dfEq"] = -np.exp(EPlasma / T) * fEq**2
+
+        return derivs
+
+    def source():
         """
         Local equilibrium source term for non-equilibrium deviations, a
         rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
@@ -113,57 +177,49 @@ class BoltzmannSolver:
         poly = Polynomial(self.grid)
 
         # background profiles
-        T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
-        v = self.background.vProfile[:, np.newaxis, np.newaxis]
-
-        # spatial derivatives of profiles
-        dT = poly
-
-        # fluctuation mode
-        statistics = self.mode.statistics
-        msq = self.mode.msq(field)
-        E = np.sqrt(msq + pz**2 + pp**2)
-
-        # dot products with wall velocity
-        gammaWall = 1 / np.sqrt(1 - vw**2)
-        EWall = gammaWall * (pz - vw * E)
-        PWall = gammaWall * (E - vw * pz)
-
-        # dot products with plasma profile velocity
-        gammaProfile = 1 / np.sqrt(1 - v**2)
-        EPlasma = gammaProfile * (pz - v * E)
-        PPlasma = gammaProfile * (E - v * pz)
-
-        # equilibrium distribution, and its derivative
-        fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
-        dfEq = -np.exp(EPlasma / T) * fEq**2
-
-        # pz d/dz term
+        T = self.background.temperatureProfile
+        field = self.background.fieldProfile
+        v = self.background.vProfile
+        vw = self.background.vw
 
 
-        # mass derivative term
-        source += 1 / 2 *
 
-        # putting it together
+        # putting it all together
+        return (dfEq / T) * (
+            PWall * PPlasma * gammaPlasma**2 * dvdxi
+            + PWall * EPlasma * dTdxi / T
+            + 1 / 2 * dmsqdxi * uwBaruPl
+        )
 
 
-    def liouville(z, pz, pp):
+    def liouville():
         """
         Lioville operator, a rank 6 array, with shape
         :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
         """
-        pass
+        # putting it together
+        return (
+            dchidxi * PWall * deriv * unit * unit
+            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi * unit * deriv * unit
+        ) * Tai * Tbj * Tck
 
 
-    def collision(z, pz, pp):
+    def collision():
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
         See equation (30) of [LC22]_.
         """
-        pass
+        collisionFile = BoltzmannSolver.__collisionFilename(z, pp, pp, "top")
+        datasetName = "chebyshev"
+        try:
+            with h5py.File(collisionFile, "r") as file:
+                collision = np.array(file[datasetName])
+        except FileNotFoundError:
+            print("BoltzmannSolver error: %s not found" % collisionFile)
+            raise
+        return collision
 
     def __collisionFilename(z, pz, pp, particle):
         """
