@@ -3,9 +3,9 @@ import numpy as np
 from scipy.optimize import fsolve
 
 def findJouguetVelocity(model,Tnucl):
-    """
+    r"""
     Finds the Jouguet velocity for a thermal effective potential, defined by Model,
-    using that the derivative of v+ wrt T- is zero at the Jouguet velocity
+    using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity
     """
     def vpDerivNum(tm): #the numerator of the derivative of v+^2
         num1 = model.pSym(Tnucl) - model.pBrok(tm) #first factor in the numerator of v+^2
@@ -24,24 +24,35 @@ def findJouguetVelocity(model,Tnucl):
 
 
 def vpovm(model, Tp, Tm):
-     return (model.eBrok(Tm) + model.pSym(Tp))/(model.eSym(Tp)+model.pBrok(Tm))
+    r"""
+    Returns the ratio :math:`v_+/v_-` as a function of :math:`T_+, T_-`
+    """
+    return (model.eBrok(Tm) + model.pSym(Tp))/(model.eSym(Tp)+model.pBrok(Tm))
 
 def vpvm(model, Tp, Tm):
+    r"""
+    Returns the product :math:`v_+v_-` as a function of :math:`T_+, T_-`
+    """
     return (model.pSym(Tp)-model.pBrok(Tm))/(model.eSym(Tp)-model.eBrok(Tm))
+
+
+def matchDeton(model,vw,Tnucl):
+    vp = vw
+    Tp = Tnucl
+    def tmFromvpsq(tm): #determine Tm from the expression for vp^2
+        lhs = vp**2*(model.eSym(Tp)+model.pBrok(tm))*(model.eSym(Tp)-model.eBrok(tm))      
+        rhs = (model.eBrok(tm) + model.pSym(Tp))*(model.pSym(Tp)-model.pBrok(tm))
+        return lhs - rhs
+    Tm = fsolve(tmFromvpsq,Tp*1.1)[0]
+    vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
+    return (vp, vm, Tp, Tm)
 
 def findMatching(model,vwTry,Tnucl):
     """
     """
     vJouguet = findJouguetVelocity(model,Tnucl)
     if vwTry > vJouguet: #Detonation
-        vp = vwTry
-        Tp = Tnucl
-        def tmFromvpsq(tm): #determine Tm from the expression for vp^2
-            lhs = vp**2*(model.eSym(Tp)+model.pBrok(tm))*(model.eSym(Tp)-model.eBrok(tm))      
-            rhs = (model.eBrok(tm) + model.pSym(Tp))*(model.pSym(Tp)-model.pBrok(tm))
-            return lhs - rhs
-        Tm = fsolve(tmFromvpsq,Tp*1.1)[0]
-        vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
+        vp,vm,Tp,Tm = matchDeton(model,vwTry,Tnucl)
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
@@ -74,4 +85,6 @@ def findMatching(model,vwTry,Tnucl):
             else:
                 vm = model.cb(Tm)
             
-    return (vptry,vm,Tp,Tm)
+    return (vp,vm,Tp,Tm)
+
+
