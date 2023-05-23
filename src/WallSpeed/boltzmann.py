@@ -109,10 +109,16 @@ class BoltzmannSolver:
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
+        # polynomial tool
+        poly = Polynomial(self.grid)
+
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
         field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
         v = self.background.vProfile[:, np.newaxis, np.newaxis]
+
+        # spatial derivatives of profiles
+        dT = poly
 
         # fluctuation mode
         statistics = self.mode.statistics
@@ -130,13 +136,14 @@ class BoltzmannSolver:
         PPlasma = gammaProfile * (E - v * pz)
 
         # equilibrium distribution, and its derivative
-        f_eq = 1 / (np.exp(E_plasma / T) - statistics * 1)
-        df_eq = -np.exp(E_plasma / T) * f_eq**2
+        fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
+        dfEq = -np.exp(EPlasma / T) * fEq**2
 
         # pz d/dz term
 
 
         # mass derivative term
+        source += 1 / 2 *
 
         # putting it together
 
