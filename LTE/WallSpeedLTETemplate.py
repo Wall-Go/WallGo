@@ -286,9 +286,11 @@ for i in range(len(alphaB)):
   wallSpeedLTEB[i,0] = alphaB[i,0]/alphaB[-1,0]
   wallSpeedLTEB[i,1] = findvwsubj(cbsqB[i,1],cssqB[i,1],alphaB[i,1],PsiB[i,1])
 
+"""
+Plot the wall velocity as a function of Tn/Tc
+"""
 
-
-plt.plot(wallSpeedLTE1[:,0],wallSpeedLTE1[:,1], label = 'NLO', color = color4d, linestyle='-',linewidth=2)
+plt.plot(wallSpeedLTE1[:,0],wallSpeedLTE1[:,1], label = 'One loop', color = color4d, linestyle='-',linewidth=2)
 #plt.plot(wallSpeedLTE2[:,0],wallSpeedLTE2[:,1], color = color4d, linestyle='-',linewidth=2)
 plt.plot(wallSpeedLTE3d1[:,0],wallSpeedLTE3d1[:,1], label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
 #plt.plot(wallSpeedLTE3d2[:,0],wallSpeedLTE3d2[:,1], color = color3d, linestyle='-',linewidth=2)
@@ -299,6 +301,78 @@ plt.plot(wallSpeedLTEB[:,0],wallSpeedLTEB[:,1], label = 'Benoit', color = colorB
 
 plt.xlabel(r'$T_n/Tc$')
 plt.ylabel(r'$v_w$ ')
+#plt.xlim([0.7,1.1])
 plt.legend(loc='lower right');
+plt.savefig('wallspeedLTE-Benoit-NLO-N3LO.pdf')
+plt.gcf().clear()
 
-plt.savefig('wallspeedLTE-NLO-N3LO.pdf')
+"""
+Plot alpha as a function of Tn/Tc
+"""
+
+plt.plot(alpha1[:,0]/alpha1[-1,0],alpha1[:,1], label = 'One loop', color = color4d, linestyle='-',linewidth=2)
+plt.plot(alpha3d1[:,0]/alpha3d1[-1,0],alpha3d1[:,1],label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
+plt.plot(alphaB[:,0]/alphaB[-1,0],alphaB[:,1], label = 'Benoit', color = colorB, linestyle='-',linewidth=2)
+
+
+plt.xlabel(r'$T_n/Tc$')
+plt.ylabel(r'$\alpha_n$ ')
+plt.legend(loc='lower left');
+#plt.xlim([0.7,1.1])
+
+
+plt.savefig('alpha-Benoit-NLO-N3LO.pdf')
+
+plt.gcf().clear()
+
+"""
+Plot psi as a function of Tn/Tc
+"""
+
+plt.plot(Psi1[:,0]/Psi1[-1,0],Psi1[:,1], label = 'One loop', color = color4d, linestyle='-',linewidth=2)
+plt.plot(Psi3d1[:,0]/Psi3d1[-1,0],Psi1[:,1],label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
+plt.plot(PsiB[:,0]/PsiB[-1,0],Psi1[:,1], label = 'Benoit', color = colorB, linestyle='-',linewidth=2)
+
+
+plt.xlabel(r'$T_n/Tc$')
+plt.ylabel(r'$\Psi_n$ ')
+plt.legend(loc='lower left');
+
+
+plt.savefig('Psi-Benoit-NLO-N3LO.pdf')
+plt.gcf().clear()
+
+"""
+Plot cssq as a function of Tn/Tc
+"""
+
+plt.plot(cssq1[:,0]/cssq1[-1,0],cssq1[:,1], label = 'One loop', color = color4d, linestyle='-',linewidth=2)
+plt.plot(cssq3d1[:,0]/cssq3d1[-1,0],cssq3d1[:,1],label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
+plt.plot(cssqB[:,0]/cssqB[-1,0],cssqB[:,1], label = 'Benoit', color = colorB, linestyle='-',linewidth=2)
+
+
+plt.xlabel(r'$T_n/Tc$')
+plt.ylabel(r'$c_s^2$ ')
+plt.legend(loc='lower left');
+
+
+plt.savefig('cssq-Benoit-NLO-N3LO.pdf')
+plt.gcf().clear()
+
+"""
+Plot cbsq as a function of Tn/Tc
+"""
+
+plt.plot(cbsq1[:,0]/cbsq1[-1,0],cbsq1[:,1], label = 'One loop', color = color4d, linestyle='-',linewidth=2)
+plt.plot(cbsq3d1[:,0]/cbsq3d1[-1,0],cbsq3d1[:,1],label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
+plt.plot(cbsqB[:,0]/cbsqB[-1,0],cbsqB[:,1], label = 'Benoit', color = colorB, linestyle='-',linewidth=2)
+
+
+plt.xlabel(r'$T_n/Tc$')
+plt.ylabel(r'$c_b^2$ ')
+plt.legend(loc='lower left');
+#plt.xlim([0.7,1.1])
+
+
+plt.savefig('cbsq-Benoit-NLO-N3LO.pdf')
+plt.gcf().clear()
