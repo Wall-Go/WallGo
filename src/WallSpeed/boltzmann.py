@@ -64,7 +64,7 @@ class BoltzmannSolver:
         # contructing the various terms in the Boltzmann equation
         source = self.source(z, pz, pp)
         liouville = self.liouville(z, pz, pp)
-        collision = self.collision(z, pz, pp)
+        collision = self.collision(pz, pp)
 
         # constructing the full rank 6 tensor operator
         operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
@@ -105,11 +105,14 @@ class BoltzmannSolver:
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
         chi, rz, rp = self.grid.getCompactCoordinates() # compact
+        xi = xi[:, np.newaxis, np.newaxis]
+        pz = pz[np.newaxis, :, np.newaxis]
+        pp = pp[np.newaxis, np.newaxis, :]
 
         # background profiles
-        T = self.background.temperatureProfile
-        field = self.background.fieldProfile
-        v = self.background.vProfile
+        T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
+        field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
+        v = self.background.vProfile[:, np.newaxis, np.newaxis]
 
         # fluctuation mode
         statistics = self.mode.statistics
@@ -136,7 +139,7 @@ class BoltzmannSolver:
         # mass derivative term
 
         # putting it together
-        pass
+
 
     def liouville(z, pz, pp):
         """
@@ -151,7 +154,7 @@ class BoltzmannSolver:
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
-        See equation (30) of [LC22].
+        See equation (30) of [LC22]_.
         """
         pass
 
