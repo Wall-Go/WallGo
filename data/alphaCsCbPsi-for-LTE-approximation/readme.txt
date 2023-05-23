@@ -18,3 +18,5 @@ alpha2.dat, cbsq2.dat, cssq2.dat, Psi2.dat		# high-scale
 alpha3d1.dat, cbsq3d1.dat, cssq3d1.dat, Psi3d1.dat	# low-scale 
 alpha3d2.dat, cbsq3d2.dat, cssq3d2.dat, Psi3d2.dat	# high-scale 
 
+Benoits data
+alphaBenoit.dat, cbsqBenoit.dat, cssqBenoit.dat, PsiBenoit.dat 	# Benoits data, with RG scale at the Higgs mass

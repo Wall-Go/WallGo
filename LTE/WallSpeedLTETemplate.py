@@ -229,6 +229,7 @@ load, alpha, cs, cb and psiN and compute the wall speed in local thermal equilib
 
 color3d = '#eb9072' # light red
 color4d = '#7ab6d6' # light blue
+colorB = 'limegreen'
 
 alpha1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha1.dat");
 cbsq1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq1.dat");
@@ -241,16 +242,16 @@ for i in range(len(alpha1)):
   wallSpeedLTE1[i,0] = alpha1[i,0]/alpha1[-1,0]
   wallSpeedLTE1[i,1] = findvwsubj(cbsq1[i,1],cssq1[i,1],alpha1[i,1],Psi1[i,1])
 
-alpha2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha2.dat");
-cbsq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq2.dat");
-cssq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq2.dat");
-Psi2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi2.dat");
-
-wallSpeedLTE2 = np.empty([len(alpha2),2])
-
-for i in range(len(alpha2)):
-  wallSpeedLTE2[i,0] = alpha2[i,0]/alpha2[-1,0]
-  wallSpeedLTE2[i,1] = findvwsubj(cbsq2[i,1],cssq2[i,1],alpha2[i,1],Psi2[i,1])
+##alpha2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha2.dat");
+##cbsq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq2.dat");
+##cssq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq2.dat");
+##Psi2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi2.dat");
+##
+##wallSpeedLTE2 = np.empty([len(alpha2),2])
+##
+##for i in range(len(alpha2)):
+##  wallSpeedLTE2[i,0] = alpha2[i,0]/alpha2[-1,0]
+##  wallSpeedLTE2[i,1] = findvwsubj(cbsq2[i,1],cssq2[i,1],alpha2[i,1],Psi2[i,1])
 
 alpha3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha3d1.dat");
 cbsq3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq3d1.dat");
@@ -263,22 +264,35 @@ for i in range(len(alpha3d1)):
   wallSpeedLTE3d1[i,0] = alpha3d1[i,0]/alpha3d1[-1,0]
   wallSpeedLTE3d1[i,1] = findvwsubj(cbsq3d1[i,1],cssq3d1[i,1],alpha3d1[i,1],Psi3d1[i,1])
 
-alpha3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha3d2.dat");
-cbsq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq3d2.dat");
-cssq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq3d2.dat");
-Psi3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi3d2.dat");
+##alpha3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha3d2.dat");
+##cbsq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq3d2.dat");
+##cssq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq3d2.dat");
+##Psi3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi3d2.dat");
+##
+##wallSpeedLTE3d2 = np.empty([len(alpha3d2),2])
+##
+##for i in range(len(alpha3d2)):
+##  wallSpeedLTE3d2[i,0] = alpha3d2[i,0]/alpha3d2[-1,0]
+##  wallSpeedLTE3d2[i,1] = findvwsubj(cbsq3d2[i,1],cssq3d2[i,1],alpha3d2[i,1],Psi3d2[i,1])
 
-wallSpeedLTE3d2 = np.empty([len(alpha3d2),2])
+alphaB = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alphaBenoit.dat");
+cbsqB = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsqBenoit.dat");
+cssqB = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssqBenoit.dat");
+PsiB = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/PsiBenoit.dat");
 
-for i in range(len(alpha3d2)):
-  wallSpeedLTE3d2[i,0] = alpha3d2[i,0]/alpha3d2[-1,0]
-  wallSpeedLTE3d2[i,1] = findvwsubj(cbsq3d2[i,1],cssq3d2[i,1],alpha3d2[i,1],Psi3d2[i,1])
+wallSpeedLTEB = np.empty([len(alphaB),2])
+
+for i in range(len(alphaB)):
+  wallSpeedLTEB[i,0] = alphaB[i,0]/alphaB[-1,0]
+  wallSpeedLTEB[i,1] = findvwsubj(cbsqB[i,1],cssqB[i,1],alphaB[i,1],PsiB[i,1])
+
 
 
 plt.plot(wallSpeedLTE1[:,0],wallSpeedLTE1[:,1], label = 'NLO', color = color4d, linestyle='-',linewidth=2)
 #plt.plot(wallSpeedLTE2[:,0],wallSpeedLTE2[:,1], color = color4d, linestyle='-',linewidth=2)
 plt.plot(wallSpeedLTE3d1[:,0],wallSpeedLTE3d1[:,1], label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
 #plt.plot(wallSpeedLTE3d2[:,0],wallSpeedLTE3d2[:,1], color = color3d, linestyle='-',linewidth=2)
+plt.plot(wallSpeedLTEB[:,0],wallSpeedLTEB[:,1], label = 'Benoit', color = colorB, linestyle='-',linewidth=2)
 
 #plt.fill_between(wallSpeedLTE1[:,0], wallSpeedLTE1[:,1], wallSpeedLTE2[:,1], interpolate=True, color=color4d);
 #plt.fill_between(wallSpeedLTE3d1[:,0], wallSpeedLTE3d1[:,1], wallSpeedLTE3d2[:,1], interpolate=True, color=color3d);
