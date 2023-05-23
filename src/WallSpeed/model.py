@@ -9,13 +9,25 @@ class Model:
     '''
     Class that generates the model given external model file
     '''
-    def __init__(self,mu3D,mu4D):
+    def __init__(self,mu3D,mu4D,ms,lambdaS,lambdaHS):
+#    def __init__(self,scalarMasses,scalarCoupling,mu3D,mu4D):
         '''
         Initialise class
         '''
+        self.ms,self.lambdaS,self.lambdaHS = ms,lambdaS,lambdaHS
+        self.v0 = 246
+        self.mh = 125
+        self.lambdaH = self.mh**2/(2*self.v0**2)
+        '''
+        Number of bosonic and fermionic dofs
+        '''
         self.num_boson_dof = 29
         self.num_fermion_dof = 90
-
+        '''
+        Number of fermion generations and colors
+        '''
+        self.nf = 3
+        self.Nc = 3
         '''
         3D and 4D RG scale of EFT as fraction of temperature
         '''
@@ -28,6 +40,17 @@ class Model:
         self.MZ = 91.1876
         self.Mt = 172.76
         #self.couplings = {}
+
+        self.g1 = 2*self.MW/self.v0
+        self.g2 = math.sqrt((2*self.MZ/self.v0)**2-self.g1**2)
+        self.yt = math.sqrt(2)*self.Mt/self.v0
+        self.cs = (2*lambdaHS+3*lambdaS)/12
+        self.ch = (
+                +9*self.g1**2
+                +3*self.g2**2
+                +12*self.yt**2
+                +24*self.lambdaH
+                +2*self.lambdaHS)/48
 
     def Run4Dparams(self,T):
         '''
@@ -74,6 +97,14 @@ class Model:
             print(vtree)
         return vtree
 
+    def findMinimum(self,T=0.0):
+        '''
+        Minimization
+        '''
+        X = self.approxZeroTMin(T)
+        fh = lambda h: self.Vtot([abs(h),0],T)
+        fs = lambda s: self.Vtot([0,abs(s)],T)
+
 
     def Veff4d(self):
         '''
@@ -107,7 +138,7 @@ class Model:
 
 
 #def main():
-pot = Model(1,1)
+pot = Model(1,1,1,1,1)
 #pot.Run4Dparams(1)
 pot.Vtree(1)
 
