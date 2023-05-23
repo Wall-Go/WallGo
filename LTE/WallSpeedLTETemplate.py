@@ -1,7 +1,15 @@
 import numpy as np
 from scipy.integrate import odeint
 from scipy.integrate import simps
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+import sys
+import string, math
+
+
+"""
+The following functions are defined to compute the wall velocity in LTE as a
+function of the sound speeds, phase transition strength and ratio of enthalpies
+"""
 
 def mu(a,b):
   return (a-b)/(1.-a*b)
@@ -125,62 +133,6 @@ def kappaNuMuModel(cs2b,cs2s,al,vw):
 
   return (Ksh + Krf)/al
 
-def matchingrelofvw(cs2b,cs2s,al,rn):
-  nvw = 99
-  vwmin = 0.01
-  vwmax = 0.99
-  matchlist = np.empty((nvw,2))
-  alphalist = np.empty((nvw,2))
-  dalphalist = np.empty((nvw,2))
-  for i in range(nvw):
-    vw = vwmin + i*0.01
-    vm, mode = getvm(al,vw,cs2b)
-      
-    if mode<2:
-      almax,wow = getalNwow(0,vm,vw,cs2b,cs2s)
-      if almax<al:
-        print ("alpha too large for shock")
-        return 0;
-
-      vp = min(cs2s/vw,vw) #check here
-      almin,wow = getalNwow(vp,vm,vw,cs2b,cs2s)
-      if almin>al: #minimum??
-        print ("alpha too small for shock")
-        return 0;
-
-      iv = [[vp,almin],[0,almax]]
-      while (abs(iv[1][0]-iv[0][0])>1e-7):
-        vpm = (iv[1][0]+iv[0][0])/2.
-        alm = getalNwow(vpm,vm,vw,cs2b,cs2s)[0]
-        if alm>al:
-          iv = [iv[0],[vpm,alm]]
-        else:
-          iv = [[vpm,alm],iv[1]]
-      #print iv
-      vp = (iv[1][0]+iv[0][0])/2.
-
-    else:
-      vp = vw
-
-    matchlist[i,0]=vw
-    alphalist[i,0]=vw
-    alplus = getal(vp,vm,cs2b)
-    alphalist[i,1]=alplus
-    rp=rn*((3*al*(1+1/cs2s)+1/cs2b-1/cs2s)/((3*alplus*(1+1/cs2s)+1/cs2b-1/cs2s)))**((-1/cs2s+1/cs2b)/(1/cs2s+1))
-#    print(vw,rp)
-    matchlist[i,1] = (rp*(np.sqrt(1-vm*vm)/np.sqrt(1-vp*vp))**(1+1/cs2b)-1)*(-1 + vm*vp*(1/cs2b))/3/(1+vm*vp)
-    dalphalist[i,1] = (rp*(np.sqrt(1-vm*vm)/np.sqrt(1-vp*vp))**(1+1/cs2b)-1)*(-1 + vm*vp*(1/cs2b))/3/(1+vm*vp) - alplus
-    
-
-  plt.plot(matchlist[:,0],matchlist[:,1],color = 'blue')
-#  plt.plot(matchlist[:,0],-matchlist[:,1],color = 'red')
-  plt.plot(matchlist[:,0],alphalist[:,1],color = 'red')
-#  plt.plot(matchlist[:,0],dalphalist[:,1],color = 'blue')
-  plt.xlabel(r'$v_w$')
-  plt.ylabel(r'$a_{\bar \theta}$ according to matching relation')
-#  plt.yscale('log')
-  plt.show()
-
 def findvwsubj(cs2b,cs2s,al,rn):
   vmin = 0.01
   vmax = jouguet(al,cs2b)
@@ -241,9 +193,6 @@ def findvwsubj(cs2b,cs2s,al,rn):
 
   else:
     return(vmidprev)
-
-def checkLTEshock(cs2b,cs2s,al,rn):
-  vw = findvwsubj(cs2b,cs2s,al,rn)
   
 
 def findvwdet(cs2b,cs2s,al,rn):
@@ -274,33 +223,68 @@ def findvwdet(cs2b,cs2s,al,rn):
   else:
     return(vmid) 
 
-def plotvw(cs2b,cs2s,rn):
-  try1 = np.logspace(-3,0,10) #alphas
-  vwtry1 = np.empty(10)
-  vwdettry1 = np.empty(10)
-  for i in range(10):
-    vwtry1[i] = findvwsubj(cs2b,cs2s,try1[i],rn)
-    vwdettry1[i] = findvwdet(cs2b,cs2s,try1[i],rn)
-  solsfound = np.nonzero(vwtry1)
-  solsfounddet = np.nonzero(vwdettry1)
+"""
+load, alpha, cs, cb and psiN and compute the wall speed in local thermal equilibrium
+"""
 
-  try2 = np.logspace(np.log10(try1[solsfound[0][0]-1]),np.log10(try1[solsfound[0][-1]+1]),50)
-  try2det = np.logspace(np.log10(try1[solsfounddet[0][0]-1]),np.log10(try1[solsfounddet[0][-1]+1]),50)
-  vwtry2 = np.empty(50)
-  vwdettry2 = np.empty(50)
-  if len(solsfound[0]) != 0:
-    for i in range(50):
-      vwtry2[i] = findvwsubj(cs2b,cs2s,try2[i],rn)
+color3d = '#eb9072' # light red
+color4d = '#7ab6d6' # light blue
 
-  if len(solsfounddet[0]) != 0:
-    for i in range(50):
-      vwdettry2[i] = findvwdet(cs2b,cs2s,try2[i],rn)
+alpha1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha1.dat");
+cbsq1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq1.dat");
+cssq1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq1.dat");
+Psi1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi1.dat");
 
-  
-  plt.plot(try2[:],vwtry2[:],color = 'blue')
-  plt.plot(try2det[:],vwdettry2[:],color = 'red')
-  plt.xlabel(r'$\alpha$')
-  plt.ylabel(r'$v_w$')
-  plt.xscale('log')
-  plt.show()
-  return
+wallSpeedLTE1 = np.empty([len(alpha1),2])
+
+for i in range(len(alpha1)):
+  wallSpeedLTE1[i,0] = alpha1[i,0]/alpha1[-1,0]
+  wallSpeedLTE1[i,1] = findvwsubj(cbsq1[i,1],cssq1[i,1],alpha1[i,1],Psi1[i,1])
+
+alpha2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha2.dat");
+cbsq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq2.dat");
+cssq2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq2.dat");
+Psi2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi2.dat");
+
+wallSpeedLTE2 = np.empty([len(alpha2),2])
+
+for i in range(len(alpha2)):
+  wallSpeedLTE2[i,0] = alpha2[i,0]/alpha2[-1,0]
+  wallSpeedLTE2[i,1] = findvwsubj(cbsq2[i,1],cssq2[i,1],alpha2[i,1],Psi2[i,1])
+
+alpha3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha3d1.dat");
+cbsq3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq3d1.dat");
+cssq3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq3d1.dat");
+Psi3d1 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi3d1.dat");
+
+wallSpeedLTE3d1 = np.empty([len(alpha3d1),2])
+
+for i in range(len(alpha3d1)):
+  wallSpeedLTE3d1[i,0] = alpha3d1[i,0]/alpha3d1[-1,0]
+  wallSpeedLTE3d1[i,1] = findvwsubj(cbsq3d1[i,1],cssq3d1[i,1],alpha3d1[i,1],Psi3d1[i,1])
+
+alpha3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/alpha3d2.dat");
+cbsq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cbsq3d2.dat");
+cssq3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/cssq3d2.dat");
+Psi3d2 = np.genfromtxt("../data/alphaCsCbPsi-for-LTE-approximation/Psi3d2.dat");
+
+wallSpeedLTE3d2 = np.empty([len(alpha3d2),2])
+
+for i in range(len(alpha3d2)):
+  wallSpeedLTE3d2[i,0] = alpha3d2[i,0]/alpha3d2[-1,0]
+  wallSpeedLTE3d2[i,1] = findvwsubj(cbsq3d2[i,1],cssq3d2[i,1],alpha3d2[i,1],Psi3d2[i,1])
+
+
+plt.plot(wallSpeedLTE1[:,0],wallSpeedLTE1[:,1], label = 'NLO', color = color4d, linestyle='-',linewidth=2)
+#plt.plot(wallSpeedLTE2[:,0],wallSpeedLTE2[:,1], color = color4d, linestyle='-',linewidth=2)
+plt.plot(wallSpeedLTE3d1[:,0],wallSpeedLTE3d1[:,1], label = 'N3LO', color = color3d, linestyle='-',linewidth=2)
+#plt.plot(wallSpeedLTE3d2[:,0],wallSpeedLTE3d2[:,1], color = color3d, linestyle='-',linewidth=2)
+
+#plt.fill_between(wallSpeedLTE1[:,0], wallSpeedLTE1[:,1], wallSpeedLTE2[:,1], interpolate=True, color=color4d);
+#plt.fill_between(wallSpeedLTE3d1[:,0], wallSpeedLTE3d1[:,1], wallSpeedLTE3d2[:,1], interpolate=True, color=color3d);
+
+plt.xlabel(r'$T_n/Tc$')
+plt.ylabel(r'$v_w$ ')
+plt.legend(loc='lower right');
+
+plt.savefig('wallspeedLTE-NLO-N3LO.pdf')
