@@ -37,6 +37,9 @@ def vpvm(model, Tp, Tm):
 
 
 def matchDeton(model,vw,Tnucl):
+    r"""
+    Returns :math:`v_+, v_-, T_+, T_-` for a detonation as a function of the wall velocity and `T_n`.
+    """
     vp = vw
     Tp = Tnucl
     def tmFromvpsq(tm): #determine Tm from the expression for vp^2
@@ -47,6 +50,35 @@ def matchDeton(model,vw,Tnucl):
     vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
     return (vp, vm, Tp, Tm)
 
+def matchDeflagOrHyb(model,vw,vp):
+    def matchDeflag(Tpm):
+        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vw**2)
+
+    def matchHybrid(Tpm):
+        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.cb(Tpm[1])**2)
+
+    try:
+        Tp,Tm = fsolve(matchDeflag,[0.5,0.5])
+    except:
+        deflagFail = True
+    else:
+        deflagFail = False
+        if vw < model.cb(Tm):
+            vm = vw
+
+    if deflagFail == True or vw > model.cb(Tm):
+        try:
+            Tp,Tm = fsolve(matchHybrid,[0.5,0.5])
+        except:
+            print('Cant find a hybrid or deflagration solution')
+        else:
+            vm = model.cb(Tm)
+    return (vp, vm, Tp, Tm)
+
+
+def solveHydroShock(vp,Tp):
+    
+
 def findMatching(model,vwTry,Tnucl):
     """
     """
@@ -56,35 +88,23 @@ def findMatching(model,vwTry,Tnucl):
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-        dv = vwTry/50 #initial velocity step
-        vptry = dv #initial value of vp
-        vm = 1
- #       while dv < 10**-5: #adjust precision
+        vpmax = model.cs(model.Tc())
+        vpmin = 0.01 #minimum value of vpmin!
+        vptry = (vpmax + vpmin)/2
+        TnTry = 0
+        error = 10**-2 #adjust error here
+        while(np.abs(TnTry - Tnucl)/Tnucl > error):
+            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vw,vptry)
 
-        def matchDeflag(Tpm):
-            return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vptry**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vwTry**2)
+            Tntry = solveHydroShock(vp,Tp)            
 
-        def matchHybrid(Tpm):
-            return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vptry**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.cb(Tpm[1])**2)
-        
-        try:
-            Tp,Tm = fsolve(matchDeflag,[0.5,0.5])
-        except:
-            deflagFail = True
-            print(deflagFail)
-        else:
-            deflagFail = False
-            if vwTry < model.cb(Tm):
-                vm = vwTry
-
-        if deflagFail == True or vwTry > model.cb(Tm):
-            try:
-                Tp,Tm = fsolve(matchHybrid,[0.5,0.5])
-            except:
-                print('Cant find a hybrid or deflagration solution')
+            if Tntry < Tnucl:
+                vpmax = vptry
+                vptry = (vpmax + vpmin)/2
             else:
-                vm = model.cb(Tm)
-            
+                vpmin = vptry
+                vptry = (vpmax + vpmin)/2
+                    
     return (vp,vm,Tp,Tm)
 
 
