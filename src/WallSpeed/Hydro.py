@@ -1,4 +1,4 @@
-import Model
+import ModelTest
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -98,7 +98,7 @@ def solveHydroShock(vw,vp,Tp):
     while mu(xisol[index],vs[index])**2*xisol[index] < model.cSym(Tsol[index])**2:
         index +=1
     def TiiShock(tn): #continuity of Tii
-        return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) = model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
+        return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
     Tn = fsolve(TiiShock,Tp*0.9)[0]
     return Tn
     
