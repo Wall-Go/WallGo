@@ -1,13 +1,14 @@
 ======================================
-Oli
+Stuff
 ======================================
 
-.. automodule:: WallSpeed.oli
+.. automodule:: WallSpeed.Polynomial
     :members:
     :inherited-members:
     :special-members: __init__
 
-.. automodule:: WallSpeed.Grid
+
+.. automodule:: WallSpeed.boltzmann
     :members:
     :inherited-members:
     :special-members: __init__

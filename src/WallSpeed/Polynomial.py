@@ -238,7 +238,7 @@ class Polynomial:
         return deriv
 
     def derivativesChebyshev(self, grid1d):
-        """
+        r"""
         Computes the derivative matrix, for a specific direction.
 
         Parameters

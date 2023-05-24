@@ -36,8 +36,18 @@ class BoltzmannSolver:
         self.derivs = self.__getDerivatives()
 
     def solveBoltzmannEquations():
-        """
+        r"""
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
+
+        Equations are of the form
+
+        .. math::
+            \mathcal{O}_{ijk,abc} \delta f_{abc} = \mathcal{S}_{ijk},
+
+        where letters from the middle of the alphabet denote points on the
+        coordinate lattice :math:`\{\xi_i,p_{z,j},p_{\Vert,k}\}`, and letters from the
+        beginning of the alphabet denote elements of the basis of spectral
+        functions :math:`\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}`.
 
         Parameters
         ----------
@@ -80,12 +90,15 @@ class BoltzmannSolver:
         """
         pass
 
-    def buildLinearEquations():
+    def buildLinearEquations(basis="Cardinal"):
         """
-        Constructs matrix and source for equation of form :math:`M x = s`.
+        Constructs matrix and source for Boltzmann equation.
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
+        assert basis == "Cardinal", \
+            "BoltzmannSolver.buildLinearEquations error: %s unkown" % basis
+
         # polynomial tool
         poly = Polynomial(self.grid)
 
@@ -95,10 +108,10 @@ class BoltzmannSolver:
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
-        # identity matrices
-        unitXi = np.identity(self.grid.M)
-        unitRz = np.identity(self.grid.N)
-        unitRp = np.identity(self.grid.N)
+        # intertwiner matrices
+        TXiMat = np.identity(self.grid.M)
+        TRzMat = np.identity(self.grid.N)
+        TRpMat = np.identity(self.grid.N)
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -125,8 +138,8 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        derivXi = poly.derivativesChebyshev(...)
-        derivPz = poly.derivativesChebyshev(...)
+        derivXi = poly.derivativesCardinal("xi")
+        derivPz = poly.derivativesCardinal("pz")
         dTdxi = np.dot(derivM, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
         dvdxi = np.dot(derivM, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
         dmsqdxi = np.dot(derivM, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
@@ -151,41 +164,39 @@ class BoltzmannSolver:
         liouville = (
             dchidxi * PWall
                 * derivXi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * unitPz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * unitPp[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+                * TPzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
             - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
-                * unitXi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * TXiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * derivPz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * unitPp[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-        ) * Tai * Tbj * Tck
-        should be a better way of doing the above, without introducing so many unit operators, I guess these are the Tai in the cardinal basis
+                * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+        )
 
         ##### collision operator #####
         collisionFile = self.__collisionFilename("top")
-        collision = BoltzmannSolver.readCollision(collisionFile)
+        collision = BoltzmannSolver.readCollision(collisionFile, basis)
 
         ##### total operator #####
         operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
 
         # reshaping indices
-        N_new = self.grid.M * self.grid.N**2
+        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
         source = np.reshape(source, N_new)
         operator = np.reshape(operator, (N_new, N_new), order="F")
 
         # returning results
-        return operator, srouce
+        return operator, source
 
-    def readCollision(collisionFile):
+    def readCollision(collisionFile, basis="Cardinal"):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
         See equation (30) of [LC22]_.
         """
-        datasetName = "chebyshev"
         try:
             with h5py.File(collisionFile, "r") as file:
-                collision = np.array(file[datasetName])
+                collision = np.array(file[basis])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
