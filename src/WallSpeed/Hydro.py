@@ -1,4 +1,4 @@
-import ModelTest
+import TestModel
 import numpy as np
 from scipy.optimize import fsolve
 
