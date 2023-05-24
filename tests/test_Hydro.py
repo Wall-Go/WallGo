@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import TestModel
+from scipy.integrate import odeint
 from WallSpeed.Hydro import *
 
 #model1 = TestModel.TestModel(0.2,0.1,0.4)
@@ -29,12 +30,19 @@ def test_DetonationMatch():
     np.testing.assert_allclose(res,(0.751924,0.710458,0.8,0.846123),rtol = 10**-3,atol = 0)
     res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.9),0.9)
     np.testing.assert_allclose(res,(0.71697,0.690044,0.9,0.931932),rtol = 10**-3,atol = 0)
-    
+
+def test_DeflagrationHydroMatch():
+    res = matchDeflagOrHyb(model1,0.5,0.4)
+    np.testing.assert_allclose(res,(0.4,0.5,0.825993,0.771703),rtol = 10**-3,atol = 0)
+    res = matchDeflagOrHyb(model1,0.6, 0.3)
+    np.testing.assert_allclose(res,(0.3,0.530156,0.698846,0.593875),rtol = 10**-3,atol = 0)
+    res = matchDeflagOrHyb(model1,0.3, 0.2)
+    np.testing.assert_allclose(res,(0.2,0.3,0.667112,0.614376),rtol = 10**-3,atol = 0)
+    res = matchDeflagOrHyb(model1,0.7, 0.4)
+    np.testing.assert_allclose(res,(0.4,0.547745,0.814862,0.734061),rtol = 10**-3,atol = 0)
 
 
 
-
-
-                                    #,[(0.853731,0.777282,0.6,0.685916)],
-                                    #[(0.796415,0.737286,0.7,0.763685)],[(0.751924,0.710458,0.8,0.846123)],[(0.71697,0.690044,0.9,0.931932)]],rtol = 10**-3,atol = 0)
-
+#def test_DeflagHybridMatch():
+#    res = findMatching(model1,0.4,0.8)
+#    np.testing.assert_allclose(res,(0.346057,0.4,0.823038,0.795492),rtol = 10**-3,atol = 0)

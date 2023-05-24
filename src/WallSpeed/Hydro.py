@@ -1,6 +1,7 @@
 import TestModel
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.integrate import odeint
 
 def findJouguetVelocity(model,Tnucl):
     r"""
@@ -57,7 +58,7 @@ def matchDeflagOrHyb(model,vw,vp):
         return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vw**2)
 
     def matchHybrid(Tpm):
-        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.cBrok(Tpm[1])**2)
+        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.csqBrok(Tpm[1]))
 
     try:
         Tp,Tm = fsolve(matchDeflag,[0.5,0.5])
@@ -65,30 +66,30 @@ def matchDeflagOrHyb(model,vw,vp):
         deflagFail = True
     else:
         deflagFail = False
-        if vw < model.cBrok(Tm):
+        if vw < np.sqrt(model.csqBrok(Tm)):
             vm = vw
 
-    if deflagFail == True or vw > model.cBrok(Tm):
+    if deflagFail == True or vw > np.sqrt(model.csqBrok(Tm)):
         try:
             Tp,Tm = fsolve(matchHybrid,[0.5,0.5])
         except:
             print('Cant find a hybrid or deflagration solution')
         else:
-            vm = model.cBrok(Tm)
+            vm = np.sqrt(model.csqBrok(Tm))
     return vp, vm, Tp, Tm
 
 def gammasq(v):
     return 1./(1. - v*v)
 
 def mu(xi,v):
-    (xi - v)/(1. - xi*v)
+    return (xi - v)/(1. - xi*v)
 
 def shockDE(xiAndT,v,model):
     xi, T = xiAndT
-    dxiAndTdv = [gammasq(v) * (1 - v*xi)*(mu(xi,v)**2/model.cSym(T)**2-1.)*xi/2./v,model.wSym(T)/model.dpSym(T)*gammasq(v)*mu(xi,v)]
+    dxiAndTdv = [gammasq(v) * (1. - v*xi)*(mu(xi,v)*mu(xi,v)/model.csqSym(T)-1.)*xi/2./v,model.wSym(T)/model.dpSym(T)*gammasq(v)*mu(xi,v)]
     return dxiAndTdv
     
-def solveHydroShock(vw,vp,Tp):
+def solveHydroShock(model,vw,vp,Tp):
     xi0T0 = [vw,Tp]
     vs = np.linspace(vp,0,1024)
     solshock = odeint(shockDE,xi0T0,vs,args=(model,)) #solve differential equation all the way from v = v+ to v = 0
@@ -97,7 +98,7 @@ def solveHydroShock(vw,vp,Tp):
 
     #now need to determine the position of the shock, which is set by mu(xi,v)^2 xi = cs^2
     index = 0
-    while mu(xisol[index],vs[index])**2*xisol[index] < model.cSym(Tsol[index])**2:
+    while mu(xisol[index],vs[index])**2*xisol[index] < model.csqSym(Tsol[index]):
         index +=1
     def TiiShock(tn): #continuity of Tii
         return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
@@ -114,14 +115,14 @@ def findMatching(model,vwTry,Tnucl):
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-        vpmax = model.cs(model.Tc())
+        vpmax = np.sqrt(model.csqSym(model.Tc()))
         vpmin = 0.01 #minimum value of vpmin!
         vptry = (vpmax + vpmin)/2.
         TnTry = 0
         error = 10**-2 #adjust error here
         while(np.abs(TnTry - Tnucl)/Tnucl > error):
-            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vw,vptry)
-            Tntry = solveHydroShock(vwTry,vp,Tp)            
+            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry)
+            Tntry = solveHydroShock(model,vwTry,vp,Tp)            
 
             if Tntry < Tnucl:
                 vpmax = vptry

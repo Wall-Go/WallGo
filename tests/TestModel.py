@@ -31,9 +31,14 @@ class TestModel():
     def deSym(self, T):
         return T*self.ddpSym(T)
 
+    #Enthalpy in the symmetric phase
+    def wSym(self,T):
+        return self.pSym(T)+self.eSym(T)
+
     #Sound speed squared in the symmetric phase
     def csqSym(self,T):
         return self.dpSym(T)/self.deSym(T)
+
     
     #Pressure in the broken phase
     def pBrok(self, T):
@@ -55,7 +60,16 @@ class TestModel():
     def deBrok(self, T):
         return T*self.ddpBrok(T)
 
+    #Enthalpy in the symmetric phase
+    def wBrok(self,T):
+        return self.pBrok(T)+self.eBrok(T)
+
     #Sound speed squared in the broken phase
     def csqBrok(self,T):
         return self.dpBrok(T)/self.deBrok(T)
+
+
+
+    def Tc(self):
+        return 1
 
