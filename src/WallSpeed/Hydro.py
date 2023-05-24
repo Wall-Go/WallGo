@@ -75,7 +75,7 @@ def matchDeflagOrHyb(model,vw,vp):
             print('Cant find a hybrid or deflagration solution')
         else:
             vm = model.cBrok(Tm)
-    return (vp, vm, Tp, Tm)
+    return vp, vm, Tp, Tm
 
 def gammasq(v):
     return 1./(1. - v*v)
