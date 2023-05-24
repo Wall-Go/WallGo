@@ -28,13 +28,12 @@ class BoltzmannSolver:
         self.grid = grid
         self.background = background
         if background.vw < 0:
-            # changing convention so that bubble moves outwards
+            # fixing convention so that bubble moves outwards
             self.background.vw *= -1
             self.background.vProfile *= -1
         self.mode = mode
         self.dotPs = self.__getDotProducts()
         self.derivs = self.__getDerivatives()
-
 
     def solveBoltzmannEquations():
         """
@@ -56,17 +55,7 @@ class BoltzmannSolver:
             doi:10.1103/PhysRevD.106.023501
         """
         # contructing the various terms in the Boltzmann equation
-        source = self.source()
-        liouville = self.liouville()
-        collision = self.collision()
-
-        # constructing the full rank 6 tensor operator
-        operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
-
-        # reshaping indices
-        N_new = self.grid.M * self.grid.N**2
-        source = np.reshape(source, N_new)
-        operator = np.reshape(operator, (N_new, N_new), order="F")
+        source, operator = self.buildLinearEquations()
 
         # solving the linear system: operator.delta_f = source
         delta_f = np.linalg.solve(operator, source)
@@ -91,16 +80,30 @@ class BoltzmannSolver:
         """
         pass
 
-    def __getDotProducts(self):
+    def buildLinearEquations():
         """
-        Returns dict containing various useful dot products
-        """
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
-        v = self.background.vProfile
-        vw = self.background.vw
+        Constructs matrix and source for equation of form :math:`M x = s`.
 
-        # dict to store results
-        dotPs = {}
+        Note, we make extensive use of numpy's broadcasting rules.
+        """
+        # polynomial tool
+        poly = Polynomial(self.grid)
+
+        # coordinates
+        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        xi = xi[:, np.newaxis, np.newaxis]
+        pz = pz[np.newaxis, :, np.newaxis]
+        pp = pp[np.newaxis, np.newaxis, :]
+
+        # identity matrices
+        unitM = np.identity(self.grid.M)
+        unitN = np.identity(self.grid.N)
+
+        # background profiles
+        T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
+        field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
+        v = self.background.vProfile[:, np.newaxis, np.newaxis]
+        vw = self.background.vw
 
         # fluctuation mode
         statistics = self.mode.statistics
@@ -108,110 +111,68 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with wall velocity
-        dotPs["gammaWall"] = 1 / np.sqrt(1 - vw**2)
-        dotPs["EWall"] = gammaWall * (pz - vw * E)
-        dotPs["PWall"] = gammaWall * (E - vw * pz)
+        gammaWall = 1 / np.sqrt(1 - vw**2)
+        EWall = gammaWall * (pz - vw * E)
+        PWall = gammaWall * (E - vw * pz)
 
         # dot products with plasma profile velocity
-        dotPs["gammaPlasma"] = 1 / np.sqrt(1 - v**2)
-        dotPs["EPlasma"] = gammaPlasma * (pz - v * E)
-        dotPs["PPlasma"] = gammaPlasma * (E - v * pz)
+        gammaPlasma = 1 / np.sqrt(1 - v**2)
+        EPlasma = gammaPlasma * (pz - v * E)
+        PPlasma = gammaPlasma * (E - v * pz)
 
         # dot product of velocities
-        dotPs["uwBaruPl"] = gammaWall * gammaPlasma * (vw - v)
-
-        return dotPs
-
-    def __getDerivatives(self):
-        """
-        Returns dict containing various useful derivatives
-        """
-        # dict to store results
-        derivs = {}
-
-        # polynomial tool
-        poly = Polynomial(self.grid)
-
-        # coordinates
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
-
-        # background profiles
-        T = self.background.temperatureProfile
-        field = self.background.fieldProfile
-        v = self.background.vProfile
-
-        # fluctuation mode
-        msq = self.mode.msq(field)
+        uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
         deriv = poly.derivativesChebyshev()
-        derivs["dTdxi"] = np.dot(deriv, T)
-        derivs["dvdxi"] = np.dot(deriv, v)
-        derivs["dmsqdxi"] = np.dot(deriv, msq)
+        dTdxi = np.dot(deriv, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
+        dvdxi = np.dot(deriv, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
+        dmsqdxi = np.dot(deriv, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
 
         # derivatives of compactified coordinates
-        dchi, drz, drp = grid.getCompactificationDerivatives()
-        derivs["dchidxi"] = dchi
-        derivs["drzdpz"] = drz
-        derivs["drpdpp"] = drp
+        dchidxi, drzdpz, drpdpp = grid.getCompactificationDerivatives()
+        dchidxi = dchidxi[:, np.newaxis, np.newaxis]
+        drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
         # equilibrium distribution, and its derivative
         fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
-        derivs["dfEq"] = -np.exp(EPlasma / T) * fEq**2
+        dfEq = -np.exp(EPlasma / T) * fEq**2
 
-        return derivs
-
-    def source():
-        """
-        Local equilibrium source term for non-equilibrium deviations, a
-        rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
-        """
-        # coordinates
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
-        chi, rz, rp = self.grid.getCompactCoordinates() # compact
-        xi = xi[:, np.newaxis, np.newaxis]
-        pz = pz[np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, :]
-
-        # polynomial tool
-        poly = Polynomial(self.grid)
-
-        # background profiles
-        T = self.background.temperatureProfile
-        field = self.background.fieldProfile
-        v = self.background.vProfile
-        vw = self.background.vw
-
-
-
-        # putting it all together
-        return (dfEq / T) * (
+        ##### source term ####
+        source = (dfEq / T) * (
             PWall * PPlasma * gammaPlasma**2 * dvdxi
             + PWall * EPlasma * dTdxi / T
             + 1 / 2 * dmsqdxi * uwBaruPl
         )
 
-
-    def liouville():
-        """
-        Lioville operator, a rank 6 array, with shape
-        :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
-        """
-        # putting it together
-        return (
-            dchidxi * PWall * deriv * unit * unit
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi * unit * deriv * unit
+        ##### liouville operator ####
+        liouville = (
+            dchidxi * PWall * deriv[np.newaxis, ] * unitN * unitN
+            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi * unitM * deriv * unitN
         ) * Tai * Tbj * Tck
 
+        ##### collision operator ####
+        collisionFile = self.__collisionFilename("top")
+        collision = BoltzmannSolver.readCollision(collisionFile)
 
-    def collision():
+        ##### total operator ####
+        operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
+
+        # reshaping indices
+        N_new = self.grid.M * self.grid.N**2
+        source = np.reshape(source, N_new)
+        operator = np.reshape(operator, (N_new, N_new), order="F")
+
+        # returning results
+        return operator, srouce
+
+    def readCollision(collisionFile):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
         See equation (30) of [LC22]_.
         """
-        collisionFile = BoltzmannSolver.__collisionFilename(z, pp, pp, "top")
         datasetName = "chebyshev"
         try:
             with h5py.File(collisionFile, "r") as file:
@@ -221,13 +182,13 @@ class BoltzmannSolver:
             raise
         return collision
 
-    def __collisionFilename(z, pz, pp, particle):
+    def __collisionFilename(self, particle):
         """
         A filename convention for collision integrals.
         """
         dir = "."
         suffix = "hdf5"
-        filename = "%s/collision_%s_Nz_%i_Npz_%i_Npp_%i.%s" % (
-            dir, particle, len(z), len(pz), len(pp), suffix
+        filename = "%s/collision_%s_M_%i_N_%i.%s" % (
+            dir, particle, self.grid.M, self.grid.N, suffix
         )
         return filename
