@@ -1,6 +1,7 @@
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
 from .Grid import Grid
+from .Polynomial import Polynomial
 
 class BoltzmannSolver:
     """
@@ -30,10 +31,8 @@ class BoltzmannSolver:
         if background.vw < 0:
             # fixing convention so that bubble moves outwards
             self.background.vw *= -1
-            self.background.vProfile *= -1
+            self.background.velocityProfile *= -1
         self.mode = mode
-        self.dotPs = self.__getDotProducts()
-        self.derivs = self.__getDerivatives()
 
     def solveBoltzmannEquations():
         r"""
@@ -90,7 +89,7 @@ class BoltzmannSolver:
         """
         pass
 
-    def buildLinearEquations(basis="Cardinal"):
+    def buildLinearEquations(self, basis="Cardinal"):
         """
         Constructs matrix and source for Boltzmann equation.
 
@@ -101,6 +100,8 @@ class BoltzmannSolver:
 
         # polynomial tool
         poly = Polynomial(self.grid)
+        derivXi = poly.derivativesCardinal("xi")
+        derivPz = poly.derivativesCardinal("pz")
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -112,11 +113,13 @@ class BoltzmannSolver:
         TXiMat = np.identity(self.grid.M)
         TRzMat = np.identity(self.grid.N)
         TRpMat = np.identity(self.grid.N)
+        DTXiMat = np.dot(derivXi, TXiMat)
+        DTRzMat = np.dot(derivRz, TRzMat)
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
         field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
-        v = self.background.vProfile[:, np.newaxis, np.newaxis]
+        v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
         vw = self.background.vw
 
         # fluctuation mode
@@ -138,8 +141,6 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        derivXi = poly.derivativesCardinal("xi")
-        derivPz = poly.derivativesCardinal("pz")
         dTdxi = np.dot(derivM, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
         dvdxi = np.dot(derivM, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
         dmsqdxi = np.dot(derivM, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
@@ -163,12 +164,12 @@ class BoltzmannSolver:
         ##### liouville operator #####
         liouville = (
             dchidxi * PWall
-                * derivXi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * DTXiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TPzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
             - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
                 * TXiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * derivPz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * DTRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
