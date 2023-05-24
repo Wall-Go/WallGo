@@ -89,6 +89,31 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
     return wallVelocity, higgsWidth, singletWidth, wallOffSet
 
+def higgsPressureMoment(higgsVEV, higgsWidth, singletVEV, singletWidth, Veff, offEquilDeltas, Tfunc):
+    return quad(lambda z: higgsPressureLocal(higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, Tfunc(z)), -20*higgsWidth, -20*singletWidth)
+
+def higgsPressureLocal(
+    higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+):
+    dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
+    return -dhdz * higgsEquationOfMotion(
+        higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+    )
+
+
+def higgsStretchMoment(higgsVEV, higgsWidth, singletVEV, singletWidth, Veff, offEquilDeltas, Tfunc):
+    return quad(lambda z: higgsStretchLocal(higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, Tfunc(z)), -20*higgsWidth, -20*singletWidth)
+
+
+def higgsStretchLocal(
+    higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+):
+    dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
+    offCenterWeight = -np.tanh(z / higgsWidth)
+    return dhdz * offCenterWeight * higgsEquationOfMotion(
+        higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+    )
+
 
 def higgsEquationOfMotion(
     higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
@@ -108,6 +133,29 @@ def higgsEquationOfMotion(
         * offEquilDeltas[0, 0]
     )
     return kinetic + potential + offEquil
+
+def singletPressureMoment(higgsVEV, higgsWidth, singletVEV, singletWidth, Veff, offEquilDeltas, Tfunc):
+    return quad(lambda z: singletPressureLocal(higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, Tfunc(z)), -20*singletWidth, -20*singletWidth)
+
+def singletPressureLocal(
+    higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+):
+    dsdz = 0.5 * singletVEV / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
+    return -dsdz * singletEquationOfMotion(
+        higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+    )
+
+def singletStretchMoment(higgsVEV, higgsWidth, singletVEV, singletWidth, Veff, offEquilDeltas, Tfunc):
+    return quad(lambda z: singletStretchLocal(higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, Tfunc(z)), -20*singletWidth, -20*singletWidth)
+
+def singletStretchLocal(
+    higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+):
+    dsdz = 0.5 * singletVEV / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
+    offCenterWeight = np.tanh(z / singletWidth + wallOffSet)
+    return dsdz * offCenterWeight * singletEquationOfMotion(
+        higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+    )
 
 
 def singletEquationOfMotion(
