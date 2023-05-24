@@ -1,12 +1,10 @@
 import numpy as np
 
-from scipy.optimize import minimize, brentq, fsolve
+from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 
 
-def findWallVelocityLoop(
-    Model, TNucl, wallVelocityLTE, hMass, sMass, errTol, thermalPotential, grid
-):
+def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
     """
     Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
     the field equation of motion iteratively.
@@ -17,10 +15,12 @@ def findWallVelocityLoop(
 
     if wallVelocityLTE is not None:
         wallVelocity = 0.9 * wallVelocityLTE
+        maxWallVelocity = wallVelocityLTE
     else:
         wallVelocity = np.sqrt(1 / 3)
+        maxWallVelocity = findJouguetVelocity(model, TNucl)
 
-    outOffEquilDeltas = 0
+    offEquilDeltas = 0
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
@@ -31,46 +31,56 @@ def findWallVelocityLoop(
         higgsWidth, singletWidth, wallOffSet, 0.5 * (Tplus + Tminus), Veff
     )
 
-    Tprofile = findTemperatureProfile(
-        c1,
-        c2,
-        higgsWidth,
-        singletWidth,
-        wallOffSet,
-        outOffEquilDeltas,
-        Tplus,
-        Tminus,
-        thermalPotential,
-        grid,
-    )
+    initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
+    wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
     error = errTol + 1
     while error > errTol:
 
-        oldHiggsWidth = higgsWidth
-        oldSingletWidth = singletWidth
-        oldWallOffSet = wallOffSet
-        oldWallVelocity = wallVelocity
-
-        outOffEquilDeltas = solveBoltzmannEquation(
-            Tprofile, higgsWidth, singletWidth, wallOffSet
-        )
+        oldWallVelocity = wallParameters[0]
+        oldHiggsWidth = wallParameters[1]
+        oldSingletWidth = wallParameters[2]
+        oldWallOffSet = wallParameters[3]
+        oldError = error
 
         c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
+
         Tprofile = findTemperatureProfile(
             c1,
             c2,
             higgsWidth,
             singletWidth,
             wallOffSet,
-            outOffEquilDeltas,
+            offEquilDeltas,
             Tplus,
             Tminus,
-            thermalPotential,
+            model,
             grid,
         )
 
-        wallVelocity, higgsWidth, singletWidth, wallOffSet = solveWallEoM()
+        offEquilDeltas = solveBoltzmannEquation(
+            Tprofile, wallParameters[1], wallParameters[2], wallParameters[3]
+        )
+
+        intermediateRes = root(
+            momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
+        )
+
+        wallParameters = intermediateRes.x
+
+        c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
+        Tprofile = findTemperatureProfile(
+            c1,
+            c2,
+            higgsWidth,
+            singletWidth,
+            wallOffSet,
+            offEquilDeltas,
+            Tplus,
+            Tminus,
+            model,
+            grid,
+        )
 
         error = np.sqrt(
             ((wallVelocity - oldWallVelocity) / wallVelocity) ** 2
@@ -81,7 +91,339 @@ def findWallVelocityLoop(
 
     return wallVelocity, higgsWidth, singletWidth, wallOffSet
 
-        
+
+def momentsOfWallEoM(wallParameters, offEquilDeltas, Veff):
+    c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
+    Tprofile = findTemperatureProfile(
+        c1,
+        c2,
+        higgsWidth,
+        singletWidth,
+        wallOffSet,
+        offEquilDeltas,
+        Tplus,
+        Tminus,
+        model,
+        grid,
+    )
+
+    higgsVEV = Veff.higgsVEV(Tminus)
+    singletVEV = Veff.singletVEV(Tplus)
+
+    mom1 = higgsPressureMoment(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        Veff,
+        offEquilDeltas,
+        Tfunc,
+    )
+    mom2 = higgsStretchMoment(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        Veff,
+        offEquilDeltas,
+        Tfunc,
+    )
+    mom3 = singletPressureMoment(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        Veff,
+        offEquilDeltas,
+        Tfunc,
+    )
+    mom4 = singletPressureMoment(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        Veff,
+        offEquilDeltas,
+        Tfunc,
+    )
+
+    return [mom1, mom2, mom3, mom4]
+
+
+def higgsPressureMoment(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    Veff,
+    offEquilDeltas,
+    Tfunc,
+):
+    return quad(
+        lambda z: higgsPressureLocal(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            Tfunc(z),
+        ),
+        -20 * higgsWidth,
+        -20 * singletWidth,
+    )
+
+
+def higgsPressureLocal(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
+    return -dhdz * higgsEquationOfMotion(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        z,
+        Veff,
+        offEquilDeltas,
+        T,
+    )
+
+
+def higgsStretchMoment(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    Veff,
+    offEquilDeltas,
+    Tfunc,
+):
+    return quad(
+        lambda z: higgsStretchLocal(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            Tfunc(z),
+        ),
+        -20 * higgsWidth,
+        -20 * singletWidth,
+    )
+
+
+def higgsStretchLocal(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
+    offCenterWeight = -np.tanh(z / higgsWidth)
+    return (
+        dhdz
+        * offCenterWeight
+        * higgsEquationOfMotion(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            T,
+        )
+    )
+
+
+def higgsEquationOfMotion(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    zLHiggs = z / higgsWidth
+    kinetic = -higgsVEV * np.tanh(zLHiggs) / (higgsWidth * np.cosh(zLHiggs)) ** 2
+    potential = Veff.higgsDerivative(
+        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
+    )
+    offEquil = (
+        0.5
+        * 12
+        * Veff.dTopMassdh(
+            wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
+            T,
+        )
+        * offEquilDeltas[0, 0]
+    )
+    return kinetic + potential + offEquil
+
+
+def singletPressureMoment(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    Veff,
+    offEquilDeltas,
+    Tfunc,
+):
+    return quad(
+        lambda z: singletPressureLocal(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            Tfunc(z),
+        ),
+        -20 * singletWidth,
+        -20 * singletWidth,
+    )
+
+
+def singletPressureLocal(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    dsdz = (
+        0.5 * singletVEV / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
+    )
+    return -dsdz * singletEquationOfMotion(
+        higgsVEV,
+        higgsWidth,
+        singletVEV,
+        singletWidth,
+        wallOffSet,
+        z,
+        Veff,
+        offEquilDeltas,
+        T,
+    )
+
+
+def singletStretchMoment(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    Veff,
+    offEquilDeltas,
+    Tfunc,
+):
+    return quad(
+        lambda z: singletStretchLocal(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            Tfunc(z),
+        ),
+        -20 * singletWidth,
+        -20 * singletWidth,
+    )
+
+
+def singletStretchLocal(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    dsdz = (
+        0.5 * singletVEV / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
+    )
+    offCenterWeight = np.tanh(z / singletWidth + wallOffSet)
+    return (
+        dsdz
+        * offCenterWeight
+        * singletEquationOfMotion(
+            higgsVEV,
+            higgsWidth,
+            singletVEV,
+            singletWidth,
+            wallOffSet,
+            z,
+            Veff,
+            offEquilDeltas,
+            T,
+        )
+    )
+
+
+def singletEquationOfMotion(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    zLSingletOff = z / singletWidth + wallOffSet
+    kinetic = (
+        singletVEV * np.tanh(zLSingletOff) / (singletWidth * np.cosh(zLSingletOff)) ** 2
+    )
+    potential = Veff.singletDerivative(
+        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
+    )
+    return kinetic + potential
+
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
@@ -130,7 +472,7 @@ def findTemperatureProfile(
     higgsWidth,
     singletWidth,
     wallOffSet,
-    outOffEquilDeltas,
+    offEquilDeltas,
     Tplus,
     Tminus,
     Veff,
@@ -154,21 +496,19 @@ def findTemperatureProfile(
         )
 
         T = findTemperaturePoint(
-            c1, c2, Veff, h, dhdz, s, dsdz, outOffEquilDeltas, Tplus, Tminus
+            c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
         )
 
     return np.array(findTemperatureProfile)
 
 
-def findTemperaturePoint(
-    c1, c2, Veff, h, dhdz, s, dsdz, outOffEquilDeltas, Tplus, Tminus
-):
+def findTemperaturePoint(c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus):
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
 
-    s1 = c1 - outOffEquilDeltas[0, 3]
-    s2 = c2 - outOffEquilDeltas[3, 3]
+    s1 = c1 - offEquilDeltas[0, 3]
+    s2 = c2 - offEquilDeltas[3, 3]
 
     Tavg = 0.5 * (Tplus + Tminus)
 
