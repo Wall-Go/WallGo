@@ -4,9 +4,7 @@ from scipy.optimize import minimize, brentq, fsolve
 from scipy.integrate import quad
 
 
-def findWallVelocityLoop(
-    model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid
-):
+def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
     """
     Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
     the field equation of motion iteratively.
@@ -92,6 +90,46 @@ def findWallVelocityLoop(
     return wallVelocity, higgsWidth, singletWidth, wallOffSet
 
 
+def higgsEquationOfMotion(
+    higgsVEV, higgsWidth, singletVEV, singletWidth, z, Veff, offEquilDeltas, T
+):
+    zLHiggs = z / higgsWidth
+    kinetic = -higgsVEV * np.tanh(zLHiggs) / (higgsWidth * np.cosh(zLHiggs)) ** 2
+    potential = Veff.higgsDerivative(
+        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
+    )
+    offEquil = (
+        0.5
+        * 12
+        * Veff.dTopMassdh(
+            wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
+            T,
+        )
+        * offEquilDeltas[0, 0]
+    )
+    return kinetic + potential + offEquil
+
+
+def singletEquationOfMotion(
+    higgsVEV,
+    higgsWidth,
+    singletVEV,
+    singletWidth,
+    wallOffSet,
+    z,
+    Veff,
+    offEquilDeltas,
+    T,
+):
+    zLSingletOff = z / singletWidth + wallOffSet
+    kinetic = (
+        singletVEV * np.tanh(zLSingletOff) / (singletWidth * np.cosh(zLSingletOff)) ** 2
+    )
+    potential = Veff.singletDerivative(
+        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
+    )
+    return kinetic + potential
+
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
@@ -170,9 +208,7 @@ def findTemperatureProfile(
     return np.array(findTemperatureProfile)
 
 
-def findTemperaturePoint(
-    c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
-):
+def findTemperaturePoint(c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus):
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
