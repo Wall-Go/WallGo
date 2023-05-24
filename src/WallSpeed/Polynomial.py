@@ -8,6 +8,7 @@ Created on Fri May 19 13:41:50 2023
 
 import numpy as np
 from Grid import Grid################
+from scipy.special import eval_chebyt
 
 class Polynomial:
     r"""
@@ -26,6 +27,8 @@ class Polynomial:
         Derivative matrix in the rz direction
     """
     def __init__(self,grid):
+        self.directions = {'z':0,'pz':1,'pp':2}
+        
         self.grid = grid
         
         #Computing the chi and rz derivative matrices
@@ -43,8 +46,8 @@ class Polynomial:
             Coordinate at which to evaluate the cardinal function.
         n : array_like
             Order of the cardinal functions to evaluate
-        direction : int
-            Direction of the grid to choose. Can either be 0 for 'xi', 1 for 'rz' or 2 for 'rp'
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
 
         Returns
         -------
@@ -63,8 +66,13 @@ class Polynomial:
         n = np.expand_dims(n, tuple(np.arange(xShapeSize+1))).astype(int)
         
         #Selecting the appropriate grid and resizing it
-        completeGrid = np.expand_dims(self.gridValues[direction], tuple(np.arange(1,nShapeSize+xShapeSize+1)))
-        nGrid = self.gridValues[direction][n]
+        grid = None
+        match direction:
+            case 'z': grid = self.gridValues[0]
+            case 'pz': grid = self.gridValues[1]
+            case 'pp': grid = self.gridValues[2]
+        completeGrid = np.expand_dims(grid, tuple(np.arange(1,nShapeSize+xShapeSize+1)))
+        nGrid = grid[n]
         
         #Computing all the factor in the product defining the cardinal functions
         cn_partial = np.divide(x-completeGrid, nGrid-completeGrid, where=nGrid-completeGrid!=0)
@@ -80,10 +88,10 @@ class Polynomial:
 
         Parameters
         ----------
-        x : float
-            Coordinate at which to evaluate the polynomial.
-        n : int or array_like 
-            Order of the Chebyshev polynomial.
+        x : array_like
+            Coordinate at which to evaluate the Chebyshev polynomial.
+        n : array_like
+            Order of the Chebyshev polynomial to evaluate
         restriction : None or string, optional
             Select the restriction on the Chebyshev basis. 
             If None, evaluates the unrestricted basis.
@@ -92,13 +100,24 @@ class Polynomial:
 
         Returns
         -------
-        tn : float or array_like 
+        tn : array_like 
             Values of the polynomial
 
         """
         
+        x = np.asarray(x)
+        n = np.asarray(n)
+        
+        xShapeSize = len(x.shape)
+        nShapeSize = len(n.shape)
+        
+        #Resizing the inputs in preparation for the calculation
+        x = np.expand_dims(x, tuple(-np.arange(nShapeSize)-1))
+        n = np.expand_dims(n, tuple(np.arange(xShapeSize))).astype(int)
+        
         #Computing the unrestricted basis
-        tn = np.cos(n*np.arccos(x))
+        #tn = np.cos(n*np.arccos(x))
+        tn = eval_chebyt(n, x)
         
         #Applying the restriction
         if restriction == 'partial':
@@ -162,6 +181,59 @@ class Polynomial:
         #Summing over all the terms
         series = np.sum(f*cheb_chi[:,None,None]*cheb_rz[None,:,None]*cheb_rp[None,None,:],axis=(0,1,2))
         return series
+    
+    def cardinalMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+        
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+        
+        if direction == 'z':
+            return np.identity(self.grid.M-1+2*endpoints)
+        if direction == 'pz':
+            return np.identity(self.grid.N-1+2*endpoints)
+        if direction == 'pp':
+            return np.identity(self.grid.N-1+endpoints)
+        
+    def chebyshevMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` computed in a specific direction.
+        
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+        
+        grid,n,restriction = None,None,None
+        match direction:
+            case 'z':
+                grid = self.grid.getCompactCoordinates(endpoints)[0]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pz':
+                grid = self.grid.getCompactCoordinates(endpoints)[1]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pp':
+                grid = self.grid.getCompactCoordinates(endpoints)[2]
+                n = np.arange(grid.size)+1-endpoints
+                restriction = 'partial'
+        if endpoints:
+            restriction = None
+        
+        return self.chebyshev(grid, n, restriction)
+        
     
     def derivatives(self,grid):
         """
