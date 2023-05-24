@@ -8,7 +8,8 @@ from WallSpeed.Hydro import *
 
 #print(findJouguetVelocity(model1,0.7))
 
+model1 = TestModel.TestModel(0.2,0.1,0.4)
+
 def test_JouguetVelocity():
-    model1 = TestModel.TestModel(0.2,0.1,0.4)
     res = findJouguetVelocity(model1,0.7)
     assert res == pytest.approx(0.7240,rel=0.01)
