@@ -7,12 +7,12 @@ setting up the Boltzmann equations.
 """
 
 # hard-coded dimensions of collision array
-N_pz = 5
-N_pp = 5
+N_pz = 10 - 1
+N_pp = 10 - 1
 
 # hard coded names
 file_name = "collision_mock.hdf5"
-dataset_name = "random"
+dataset_name = "top"
 
 # total size and shape of collision array
 N_total = (N_pz * N_pp)**2

@@ -25,8 +25,8 @@ class Polynomial:
 
         # Computing the chi and rz derivative matrices
         chiValues, rzValues, rpValues = self.grid.getCompactCoordinates(True)
-        self.derivChi = self.derivatives(chiValues)
-        self.derivRz = self.derivatives(rzValues)
+        self.derivChi = self.derivativesCardinal(chiValues)
+        self.derivRz = self.derivativesCardinal(rzValues)
 
     def cardinal(self, x, grid1d):
         r"""
@@ -129,9 +129,9 @@ class Polynomial:
         # Summing over all the terms
         series = np.sum(
             f
-            * cardinal_chi[:, None, None]
-            * cardinal_rz[None, :, None]
-            * cardinal_rp[None, None, :],
+            * cardinal_chi[:, np.newaxis, np.newaxis]
+            * cardinal_rz[np.newaxis, :, np.newaxis]
+            * cardinal_rp[np.newaxis, np.newaxis, :],
             axis=(0, 1, 2),
         )
         return series
@@ -197,7 +197,7 @@ class Polynomial:
         # Computing the diagonal part
         diagonal = np.sum(
             np.where(
-                grid[:, None] - grid[None, :] == 0,
+                grid[:, np.newaxis] - grid[np.newaxis, :] == 0,
                 0,
                 np.divide(
                     1,

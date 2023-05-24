@@ -148,7 +148,7 @@ class Grid:
             Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
         """
         xi, pz, pp = self.getCoordinates(endpoints)
-        return compactificationDerivatives(z, pz, pp, self.L_xi, self.T)
+        return Grid.compactificationDerivatives(xi, pz, pp, self.L_xi, self.T)
 
     def compactify(z, pz, pp, L_xi, T):
         r"""

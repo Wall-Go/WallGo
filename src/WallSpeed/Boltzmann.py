@@ -34,7 +34,7 @@ class BoltzmannSolver:
             self.background.velocityProfile *= -1
         self.mode = mode
 
-    def solveBoltzmannEquations():
+    def solveBoltzmannEquations(self):
         r"""
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
 
@@ -64,7 +64,7 @@ class BoltzmannSolver:
             doi:10.1103/PhysRevD.106.023501
         """
         # contructing the various terms in the Boltzmann equation
-        source, operator = self.buildLinearEquations()
+        operator, source = self.buildLinearEquations()
 
         # solving the linear system: operator.delta_f = source
         delta_f = np.linalg.solve(operator, source)
@@ -72,7 +72,7 @@ class BoltzmannSolver:
         # returning result
         return delta_f
 
-    def getDeltas():
+    def getDeltas(self):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -100,8 +100,10 @@ class BoltzmannSolver:
 
         # polynomial tool
         poly = Polynomial(self.grid)
-        derivXi = poly.derivativesCardinal("xi")
-        derivPz = poly.derivativesCardinal("pz")
+        derivChi = poly.derivativesCardinal(self.grid.chiValues)
+        derivPz = poly.derivativesCardinal(self.grid.pzValues)
+        derivXi = poly.derivativesCardinal(self.grid.xiValues)
+        derivRz = poly.derivativesCardinal(self.grid.rzValues)
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -110,10 +112,10 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        TXiMat = np.identity(self.grid.M)
-        TRzMat = np.identity(self.grid.N)
-        TRpMat = np.identity(self.grid.N)
-        DTXiMat = np.dot(derivXi, TXiMat)
+        TChiMat = np.identity(self.grid.M - 1)
+        TRzMat = np.identity(self.grid.N - 1)
+        TRpMat = np.identity(self.grid.N - 1)
+        DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
 
         # background profiles
@@ -141,12 +143,12 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdxi = np.dot(derivM, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
-        dvdxi = np.dot(derivM, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
-        dmsqdxi = np.dot(derivM, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
+        dTdxi = np.dot(derivXi, T[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, T, optimize=True)
+        dvdxi = np.dot(derivXi, v[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, v, optimize=True)
+        dmsqdxi = np.dot(derivXi, msq[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, msq, optimize=True)
 
         # derivatives of compactified coordinates
-        dchidxi, drzdpz, drpdpp = grid.getCompactificationDerivatives()
+        dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
         dchidxi = dchidxi[:, np.newaxis, np.newaxis]
         drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
@@ -164,18 +166,18 @@ class BoltzmannSolver:
         ##### liouville operator #####
         liouville = (
             dchidxi * PWall
-                * DTXiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * TPzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+                * DTChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
             - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
-                * TXiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * DTRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TPpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
         ##### collision operator #####
-        collisionFile = self.__collisionFilename("top")
-        collision = BoltzmannSolver.readCollision(collisionFile, basis)
+        collisionFile = self.__collisionFilename()
+        collision = BoltzmannSolver.readCollision(collisionFile, "top")
 
         ##### total operator #####
         operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
@@ -203,13 +205,14 @@ class BoltzmannSolver:
             raise
         return collision
 
-    def __collisionFilename(self, particle):
+    def __collisionFilename(self):
         """
         A filename convention for collision integrals.
         """
+        return "collision_mock.hdf5"
         dir = "."
         suffix = "hdf5"
-        filename = "%s/collision_%s_M_%i_N_%i.%s" % (
-            dir, particle, self.grid.M, self.grid.N, suffix
+        filename = "%s/collision_M_%i_N_%i.%s" % (
+            dir, self.grid.M, self.grid.N, suffix
         )
         return filename
