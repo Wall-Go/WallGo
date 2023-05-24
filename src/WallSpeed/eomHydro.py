@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.optimize import minimize, brentq, fsolve
+from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 
 
@@ -62,7 +62,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             Tprofile, wallParameters[1], wallParameters[2], wallParameters[3]
         )
 
-        intermediateRes = fsolve(
+        intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
         )
 
