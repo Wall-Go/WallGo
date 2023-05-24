@@ -19,6 +19,8 @@ def findJouguetVelocity(model,Tnucl):
         return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
 
     tmSol = fsolve(vpDerivNum,Tnucl*1.1)[0]
+    if tmSol < Tnucl:
+        tmSol = fsolve(vpDerivNum,Tnucl*2.)[0] #replace by solution with constraint?
     vp = np.sqrt((model.pSym(Tnucl) - model.pBrok(tmSol))*(model.pSym(Tnucl) + model.eBrok(tmSol))/(model.eSym(Tnucl) - model.eBrok(tmSol))/(model.eSym(Tnucl) + model.pBrok(tmSol)))
     return(vp)
 
