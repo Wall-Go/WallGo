@@ -117,20 +117,22 @@ def findMatching(model,vwTry,Tnucl):
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
         vpmax = np.sqrt(model.csqSym(model.Tc()))
-        vpmin = 0.01 #minimum value of vpmin!
+        vpmin = 0.01 #minimum value of vpmin
         vptry = (vpmax + vpmin)/2.
         TnTry = 0
         error = 10**-2 #adjust error here
-        while(np.abs(TnTry - Tnucl)/Tnucl > error):
+        count = 0
+        while np.abs(TnTry - Tnucl)/Tnucl > error and count <100:
             vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry)
-            Tntry = solveHydroShock(model,vwTry,vp,Tp)            
+            Tntry = solveHydroShock(model,vwTry,vptry,Tp)
 
-            if Tntry < Tnucl:
+            if Tntry > Tnucl:
                 vpmax = vptry
                 vptry = (vpmax + vpmin)/2.
             else:
                 vpmin = vptry
                 vptry = (vpmax + vpmin)/2.
+            count += 1
                     
     return (vp,vm,Tp,Tm)
 
