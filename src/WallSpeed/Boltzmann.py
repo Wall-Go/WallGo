@@ -66,11 +66,12 @@ class BoltzmannSolver:
         # contructing the various terms in the Boltzmann equation
         operator, source = self.buildLinearEquations()
 
-        # solving the linear system: operator.delta_f = source
-        delta_f = np.linalg.solve(operator, source)
+        # solving the linear system: operator.deltaF = source
+        deltaF = np.linalg.solve(operator, source)
 
         # returning result
-        return delta_f
+        deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
+        return np.reshape(deltaF, deltaFShape, order="F")
 
     def getDeltas(self):
         """
