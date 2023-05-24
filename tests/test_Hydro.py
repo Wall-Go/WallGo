@@ -19,7 +19,7 @@ def test_JouguetVelocity():
 #    assert res == pytest.approx([0.840948,0.776119,0.7240,0.6836,0.651791],rel=0.01*np.ones(5))
     np.testing.assert_allclose(res,[0.840948,0.776119,0.7240,0.6836,0.651791],rtol = 10**-3,atol = 0)
 
-def test_DetonationMatch():
+def test_matchDeton():
     res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.5),0.5)
     np.testing.assert_allclose(res,(0.925043,0.848164,0.5,0.614381),rtol = 10**-3,atol = 0)
     res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.6),0.6)
@@ -31,7 +31,7 @@ def test_DetonationMatch():
     res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.9),0.9)
     np.testing.assert_allclose(res,(0.71697,0.690044,0.9,0.931932),rtol = 10**-3,atol = 0)
 
-def test_DeflagrationHydroMatch():
+def test_matchDeflagOrHyb():
     res = matchDeflagOrHyb(model1,0.5,0.4)
     np.testing.assert_allclose(res,(0.4,0.5,0.825993,0.771703),rtol = 10**-3,atol = 0)
     res = matchDeflagOrHyb(model1,0.6, 0.3)
@@ -41,7 +41,15 @@ def test_DeflagrationHydroMatch():
     res = matchDeflagOrHyb(model1,0.7, 0.4)
     np.testing.assert_allclose(res,(0.4,0.547745,0.814862,0.734061),rtol = 10**-3,atol = 0)
 
-
+def test_solveHydroShock():
+    res = solveHydroShock(model1, 0.5, 0.4,0.825993)
+    assert res == pytest.approx(0.77525, rel=0.01)
+    res = solveHydroShock(model1, 0.6, 0.3,0.698846)
+    assert res == pytest.approx(0.576319, rel=0.01)
+    res = solveHydroShock(model1, 0.3, 0.2,0.6671123)
+    assert res == pytest.approx(0.642264, rel=0.01)
+    res = solveHydroShock(model1, 0.7, 0.4,0.73406141)
+    assert res == pytest.approx(0.576516, rel=0.01)
 
 #def test_DeflagHybridMatch():
 #    res = findMatching(model1,0.4,0.8)

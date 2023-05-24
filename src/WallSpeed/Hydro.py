@@ -91,14 +91,15 @@ def shockDE(xiAndT,v,model):
     
 def solveHydroShock(model,vw,vp,Tp):
     xi0T0 = [vw,Tp]
-    vs = np.linspace(vp,0,1024)
+    vpcent = mu(vw,vp)
+    maxindex = 1024
+    vs = np.linspace(vpcent,0,maxindex)
     solshock = odeint(shockDE,xi0T0,vs,args=(model,)) #solve differential equation all the way from v = v+ to v = 0
     xisol = solshock[:,0]
     Tsol = solshock[:,1]
-
     #now need to determine the position of the shock, which is set by mu(xi,v)^2 xi = cs^2
     index = 0
-    while mu(xisol[index],vs[index])**2*xisol[index] < model.csqSym(Tsol[index]):
+    while mu(xisol[index],vs[index])*xisol[index] < model.csqSym(Tsol[index]) and index<maxindex-1:
         index +=1
     def TiiShock(tn): #continuity of Tii
         return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
