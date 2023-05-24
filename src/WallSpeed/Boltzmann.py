@@ -144,9 +144,12 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdxi = np.dot(derivXi, T[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, T, optimize=True)
-        dvdxi = np.dot(derivXi, v[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, v, optimize=True)
-        dmsqdxi = np.dot(derivXi, msq[:, 0, 0])[:, np.newaxis, np.newaxis] #np.einsum("ij,jbc", deriv, msq, optimize=True)
+        #dTdxi = np.einsum("ij,jbc", derivXi, T, optimize=True)
+        #dvdxi = np.einsum("ij,jbc", derivXi, v, optimize=True)
+        #dmsqdxi = np.einsum("ij,jbc", derivXi, msq, optimize=True)
+        dTdxi = np.dot(derivXi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dvdxi = np.dot(derivXi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dmsqdxi = np.dot(derivXi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
