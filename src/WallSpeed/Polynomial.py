@@ -7,7 +7,7 @@ Created on Fri May 19 13:41:50 2023
 """
 
 import numpy as np
-from .Grid import Grid
+from Grid import Grid################
 
 class Polynomial:
     r"""
@@ -29,20 +29,22 @@ class Polynomial:
         self.grid = grid
         
         #Computing the chi and rz derivative matrices
-        chiValues,rzValues,rpValues = self.grid.getCompactCoordinates(True)
-        self.derivChi = self.derivatives(chiValues)
-        self.derivRz = self.derivatives(rzValues)
+        self.gridValues = self.grid.getCompactCoordinates(True)
+        self.derivChi = self.derivatives(self.gridValues[0])
+        self.derivRz = self.derivatives(self.gridValues[1])
         
-    def cardinal(self,x,grid):
+    def cardinal(self,x,n,direction):
         r"""
         Computes the whole basis of cardinal functions :math:`C_n(x)` defined by grid.
 
         Parameters
         ----------
-        x : float
+        x : array_like
             Coordinate at which to evaluate the cardinal function.
-        grid : array_like
-            Array of the grid points defining the cardinal basis.
+        n : array_like
+            Order of the cardinal functions to evaluate
+        direction : int
+            Direction of the grid to choose. Can either be 0 for 'xi', 1 for 'rz' or 2 for 'rp'
 
         Returns
         -------
@@ -50,11 +52,25 @@ class Polynomial:
             Values of the cardinal functions.
         """
         
+        x = np.asarray(x)
+        n = np.asarray(n)
+        
+        xShapeSize = len(x.shape)
+        nShapeSize = len(n.shape)
+        
+        #Resizing the inputs in preparation for the calculation
+        x = np.expand_dims(x, tuple(-np.arange(nShapeSize+1)))
+        n = np.expand_dims(n, tuple(np.arange(xShapeSize+1))).astype(int)
+        
+        #Selecting the appropriate grid and resizing it
+        completeGrid = np.expand_dims(self.gridValues[direction], tuple(np.arange(1,nShapeSize+xShapeSize+1)))
+        nGrid = self.gridValues[direction][n]
+        
         #Computing all the factor in the product defining the cardinal functions
-        cn_partial = np.divide(x-grid[:,None], grid[None,:]-grid[:,None], where=grid[None,:]-grid[:,None]!=0)
+        cn_partial = np.divide(x-completeGrid, nGrid-completeGrid, where=nGrid-completeGrid!=0)
         
         #Multiplying all the factors to get the cardinal functions
-        cn = np.prod(np.where(grid[None,:]-grid[:,None] == 0, 1, cn_partial),axis=0)
+        cn = np.prod(np.where(nGrid-completeGrid==0, 1, cn_partial),axis=0)
         
         return cn
     
