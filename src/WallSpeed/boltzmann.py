@@ -96,8 +96,9 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # identity matrices
-        unitM = np.identity(self.grid.M)
-        unitN = np.identity(self.grid.N)
+        unitXi = np.identity(self.grid.M)
+        unitRz = np.identity(self.grid.N)
+        unitRp = np.identity(self.grid.N)
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -124,10 +125,11 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        deriv = poly.derivativesChebyshev()
-        dTdxi = np.dot(deriv, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
-        dvdxi = np.dot(deriv, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
-        dmsqdxi = np.dot(deriv, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
+        derivXi = poly.derivativesChebyshev(...)
+        derivPz = poly.derivativesChebyshev(...)
+        dTdxi = np.dot(derivM, T) #np.einsum("ij,jbc", deriv, T, optimize=True)
+        dvdxi = np.dot(derivM, v) #np.einsum("ij,jbc", deriv, v, optimize=True)
+        dmsqdxi = np.dot(derivM, msq) #np.einsum("ij,jbc", deriv, msq, optimize=True)
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = grid.getCompactificationDerivatives()
@@ -138,24 +140,31 @@ class BoltzmannSolver:
         fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
         dfEq = -np.exp(EPlasma / T) * fEq**2
 
-        ##### source term ####
+        ##### source term #####
         source = (dfEq / T) * (
             PWall * PPlasma * gammaPlasma**2 * dvdxi
             + PWall * EPlasma * dTdxi / T
             + 1 / 2 * dmsqdxi * uwBaruPl
         )
 
-        ##### liouville operator ####
+        ##### liouville operator #####
         liouville = (
-            dchidxi * PWall * deriv[np.newaxis, ] * unitN * unitN
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi * unitM * deriv * unitN
+            dchidxi * PWall
+                * derivXi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * unitPz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * unitPp[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
+                * unitXi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * derivPz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * unitPp[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         ) * Tai * Tbj * Tck
+        should be a better way of doing the above, without introducing so many unit operators, I guess these are the Tai in the cardinal basis
 
-        ##### collision operator ####
+        ##### collision operator #####
         collisionFile = self.__collisionFilename("top")
         collision = BoltzmannSolver.readCollision(collisionFile)
 
-        ##### total operator ####
+        ##### total operator #####
         operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
 
         # reshaping indices
