@@ -27,8 +27,6 @@ class Polynomial:
         Derivative matrix in the rz direction
     """
     def __init__(self,grid):
-        self.directions = {'z':0,'pz':1,'pp':2}
-        
         self.grid = grid
         
         #Computing the chi and rz derivative matrices
