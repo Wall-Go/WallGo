@@ -2,6 +2,7 @@ import numpy as np
 
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
+from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 
 
 def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
@@ -61,6 +62,8 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             model,
             grid,
         )
+
+        boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, TODOfProfile, Tprofile)
 
         offEquilDeltas = solveBoltzmannEquation(
             Tprofile,
