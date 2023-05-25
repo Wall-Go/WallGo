@@ -127,7 +127,7 @@ void calculateAllCollisions() {
      int Ncheb = gridSizeN - 1; //(N-1)^4 terms in total
 
      //The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
-     Array4D collGrid(gridSizeN, gridSizeN, gridSizeN, gridSizeN, 0.0);
+     Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
 
      double rhoZ[Ncheb], rhoPerp[Ncheb]; //Contains the Chebyshev interpolation points for pZ and pPerp
 
