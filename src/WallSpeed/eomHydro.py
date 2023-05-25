@@ -28,7 +28,11 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
     singletWidth = 1 / sMass
     wallOffSet = 0
     higgsWidth, singletWidth, wallOffSet = initialWallParameters(
-        higgsWidth, singletWidth, wallOffSet, 0.5 * (Tplus + Tminus), Veff
+        higgsWidthGuess,
+        singletWidthGuess,
+        wallOffSetGuess,
+        0.5 * (Tplus + Tminus),
+        model,
     )
 
     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
@@ -45,7 +49,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
-        Tprofile = findTemperatureProfile(
+        Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
             higgsWidth,
@@ -59,7 +63,11 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
         )
 
         offEquilDeltas = solveBoltzmannEquation(
-            Tprofile, wallParameters[1], wallParameters[2], wallParameters[3]
+            Tprofile,
+            velocityProfile,
+            wallParameters[1],
+            wallParameters[2],
+            wallParameters[3],
         )
 
         intermediateRes = root(
@@ -313,8 +321,8 @@ def singletPressureMoment(
             offEquilDeltas,
             Tfunc(z),
         ),
-        -20 * singletWidth,
-        -20 * singletWidth,
+        -(20 + np.abs(wallOffSet)) * singletWidth,
+        (20 + np.abs(wallOffSet)) * singletWidth,
     )
 
 
@@ -367,8 +375,8 @@ def singletStretchMoment(
             offEquilDeltas,
             Tfunc(z),
         ),
-        -20 * singletWidth,
-        -20 * singletWidth,
+        -(20 + np.abs(wallOffSet)) * singletWidth,
+        (20 + np.abs(wallOffSet)) * singletWidth,
     )
 
 
@@ -454,7 +462,15 @@ def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, 
         ),
         -integrationLength,
         integrationLength,
-    ) - integrationLength * (Veff.V(higgsVEV, 0, T) + Veff.V(0, singletVEV, T))
+    )
+
+    potential = integral[0] - integrationLength * (
+        Veff.V([higgsVEV, 0], T) + Veff.V([0, singletVEV], T)
+    )
+
+    print(higgsWidth, singletWidth, wallOffSet)
+
+    print(kinetic + potential)
 
     return kinetic + potential
 
@@ -466,7 +482,7 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
     return [h, s]
 
 
-def findTemperatureProfile(
+def findPlasmaProfile(
     c1,
     c2,
     higgsWidth,
@@ -481,7 +497,8 @@ def findTemperatureProfile(
     """
     Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
     """
-    findTemperatureProfile = []
+    temperatureProfile = []
+    velocityProfile = []
     for z in grid.xiValues:
         h = 0.5 * Veff.higgsVEV(Tminus) * (1 - np.tanh(z / higgsWidth))
         dhdz = (
@@ -495,14 +512,19 @@ def findTemperatureProfile(
             / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
         )
 
-        T = findTemperaturePoint(
+        T, vPlasma = findPlasmaProfilePoint(
             c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
         )
 
-    return np.array(findTemperatureProfile)
+        temperatureProfile.append(T)
+        velocityProfile.append(vPlasma)
+
+    return temperatureProfile, velocityProfile
 
 
-def findTemperaturePoint(c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus):
+def findPlasmaProfilePoint(
+    c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
+):
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
@@ -521,7 +543,9 @@ def findTemperaturePoint(c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, 
     # TODO: A fail safe
 
     if temperatureProfileEqLHS(h, s, dhdz, dsdz, minRes.x, s1, s2, Veff) >= 0:
-        return minRes.x
+        T = minRes.x
+        vPlasma = plasmaVelocity(h, s, T, s1, Veff)
+        return T, vPlasma
 
     TLowerBound = minRes.x
     TStep = np.abs(Tplus - TLowerBound)
@@ -542,7 +566,9 @@ def findTemperaturePoint(c1, c2, Veff, h, dhdz, s, dsdz, offEquilDeltas, Tplus, 
     )
     # TODO: Can the function have multiple zeros?
 
-    return res.x
+    T = res.x
+    vPlasma = plasmaVelocity(h, s, T, s1, Veff)
+    return T, vPlasma
 
 
 def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, Veff):
@@ -557,6 +583,7 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, Veff):
         - s2
     )
 
+
 def deltaToTmunu(
     velocityProfile
     offEquilDeltas,
@@ -565,3 +592,8 @@ def deltaToTmunu(
 
     delta00 = offEquilDeltas["00"]
     return T03 T33
+
+def plasmaVelocity(h, s, T, s1, Veff):
+    return ((
+        -Veff.enthalpy(h, s, T) + np.sqrt(4 * s1**2 + Veff.enthalpy(h, s, T) ** 2)
+    ) / (2 * s1))
