@@ -20,6 +20,7 @@
 //Q+Q-> V+ V matrix element
 static double matrixElementQQVVX(double s,double t, double u){
 
+	double temp = u;
 	return s*t/(t-MQ2+1e-6)/(t-MQ2+1e-6);
 
 }
