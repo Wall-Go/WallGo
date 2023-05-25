@@ -1,6 +1,7 @@
 import TestModel
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.integrate import odeint
 
 def findJouguetVelocity(model,Tnucl):
     r"""
@@ -19,6 +20,8 @@ def findJouguetVelocity(model,Tnucl):
         return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
 
     tmSol = fsolve(vpDerivNum,Tnucl*1.1)[0]
+    if tmSol < Tnucl:
+        tmSol = fsolve(vpDerivNum,Tnucl*2.)[0] #replace by solution with constraint?
     vp = np.sqrt((model.pSym(Tnucl) - model.pBrok(tmSol))*(model.pSym(Tnucl) + model.eBrok(tmSol))/(model.eSym(Tnucl) - model.eBrok(tmSol))/(model.eSym(Tnucl) + model.pBrok(tmSol)))
     return(vp)
 
@@ -51,11 +54,14 @@ def matchDeton(model,vw,Tnucl):
     return (vp, vm, Tp, Tm)
 
 def matchDeflagOrHyb(model,vw,vp):
+    r"""
+    Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
+    """
     def matchDeflag(Tpm):
         return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vw**2)
 
     def matchHybrid(Tpm):
-        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.cBrok(Tpm[1])**2)
+        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.csqBrok(Tpm[1]))
 
     try:
         Tp,Tm = fsolve(matchDeflag,[0.5,0.5])
@@ -63,39 +69,52 @@ def matchDeflagOrHyb(model,vw,vp):
         deflagFail = True
     else:
         deflagFail = False
-        if vw < model.cBrok(Tm):
+        if vw < np.sqrt(model.csqBrok(Tm)):
             vm = vw
 
-    if deflagFail == True or vw > model.cBrok(Tm):
+    if deflagFail == True or vw > np.sqrt(model.csqBrok(Tm)):
         try:
             Tp,Tm = fsolve(matchHybrid,[0.5,0.5])
         except:
             print('Cant find a hybrid or deflagration solution')
         else:
-            vm = model.cBrok(Tm)
-    return (vp, vm, Tp, Tm)
+            vm = np.sqrt(model.csqBrok(Tm))
+    return vp, vm, Tp, Tm
 
 def gammasq(v):
+    """
+    Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
+    """
     return 1./(1. - v*v)
 
 def mu(xi,v):
-    (xi - v)/(1. - xi*v)
+    """
+    Lorentz-transformed velocity
+    """
+    return (xi - v)/(1. - xi*v)
 
 def shockDE(xiAndT,v,model):
+    """
+    Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
+    """
     xi, T = xiAndT
-    dxiAndTdv = [gammasq(v) * (1 - v*xi)*(mu(xi,v)**2/model.cSym(T)**2-1.)*xi/2./v,model.wSym(T)/model.dpSym(T)*gammasq(v)*mu(xi,v)]
+    dxiAndTdv = [gammasq(v) * (1. - v*xi)*(mu(xi,v)*mu(xi,v)/model.csqSym(T)-1.)*xi/2./v,model.wSym(T)/model.dpSym(T)*gammasq(v)*mu(xi,v)]
     return dxiAndTdv
     
-def solveHydroShock(vw,vp,Tp):
+def solveHydroShock(model,vw,vp,Tp):
+    """
+    Solves the hydrodynamic equations in the shock for a given wall velocity and `v_+, T_+` and determines the position of the shock. Returns the nucleation temperature.
+    """
     xi0T0 = [vw,Tp]
-    vs = np.linspace(vp,0,1024)
+    vpcent = mu(vw,vp)
+    maxindex = 1024
+    vs = np.linspace(vpcent,0,maxindex)
     solshock = odeint(shockDE,xi0T0,vs,args=(model,)) #solve differential equation all the way from v = v+ to v = 0
     xisol = solshock[:,0]
     Tsol = solshock[:,1]
-
     #now need to determine the position of the shock, which is set by mu(xi,v)^2 xi = cs^2
     index = 0
-    while mu(xisol[index],vs[index])**2*xisol[index] < model.cSym(Tsol[index])**2:
+    while mu(xisol[index],vs[index])*xisol[index] < model.csqSym(Tsol[index]) and index<maxindex-1:
         index +=1
     def TiiShock(tn): #continuity of Tii
         return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
@@ -105,6 +124,8 @@ def solveHydroShock(vw,vp,Tp):
 
 def findMatching(model,vwTry,Tnucl):
     """
+    Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
+    matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
     """
     vJouguet = findJouguetVelocity(model,Tnucl)
     if vwTry > vJouguet: #Detonation
@@ -112,22 +133,33 @@ def findMatching(model,vwTry,Tnucl):
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-        vpmax = model.cs(model.Tc())
-        vpmin = 0.01 #minimum value of vpmin!
+        vpmax = np.sqrt(model.csqSym(model.Tc()))
+        vpmin = 0.01 #minimum value of vpmin
         vptry = (vpmax + vpmin)/2.
         TnTry = 0
         error = 10**-2 #adjust error here
-        while(np.abs(TnTry - Tnucl)/Tnucl > error):
-            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vw,vptry)
-            Tntry = solveHydroShock(vwTry,vp,Tp)            
+        count = 0
+        while np.abs(TnTry - Tnucl)/Tnucl > error and count <100:
+            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry)
+            Tntry = solveHydroShock(model,vwTry,vptry,Tp)
 
-            if Tntry < Tnucl:
+            if Tntry > Tnucl:
                 vpmax = vptry
                 vptry = (vpmax + vpmin)/2.
             else:
                 vpmin = vptry
                 vptry = (vpmax + vpmin)/2.
+            count += 1
                     
     return (vp,vm,Tp,Tm)
+
+def c1c2(model, vwTry, Tnucl):
+    """
+    Returns :math:`c_1, c_2` for a given wall velocity and nucleation temperature
+    """
+    vp,vm,Tp,Tm = findMatching(model, vwTry, Tnucl)
+    c1 = model.wSym(Tp)*gammasq(vp)*vp
+    c2 = model.pSym(Tp)+model.wSym(Tp)*gammasq(vp)*vp**2
+    return (c1, c2)
 
 
