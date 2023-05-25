@@ -82,7 +82,7 @@ def matchDeflagOrHyb(model,vw,vp):
     return vp, vm, Tp, Tm
 
 def gammasq(v):
-    """
+    r"""
     Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
     """
     return 1./(1. - v*v)
@@ -94,7 +94,7 @@ def mu(xi,v):
     return (xi - v)/(1. - xi*v)
 
 def shockDE(xiAndT,v,model):
-    """
+    r"""
     Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
     """
     xi, T = xiAndT
@@ -102,7 +102,7 @@ def shockDE(xiAndT,v,model):
     return dxiAndTdv
     
 def solveHydroShock(model,vw,vp,Tp):
-    """
+    r"""
     Solves the hydrodynamic equations in the shock for a given wall velocity and `v_+, T_+` and determines the position of the shock. Returns the nucleation temperature.
     """
     xi0T0 = [vw,Tp]
@@ -123,7 +123,7 @@ def solveHydroShock(model,vw,vp,Tp):
     
 
 def findMatching(model,vwTry,Tnucl):
-    """
+    r"""
     Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
     matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
     """
@@ -154,7 +154,7 @@ def findMatching(model,vwTry,Tnucl):
     return (vp,vm,Tp,Tm)
 
 def c1c2(model, vwTry, Tnucl):
-    """
+    r"""
     Returns :math:`c_1, c_2` for a given wall velocity and nucleation temperature
     """
     vp,vm,Tp,Tm = findMatching(model, vwTry, Tnucl)
