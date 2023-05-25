@@ -7,7 +7,7 @@ CXX := g++ -std=c++11
 
 ## TODO fix the include and library paths
 
-CXXFLAGS := -I/opt/homebrew/opt/libaec/include -I/opt/homebrew/include -fopenmp -fno-stack-protector -fcommon -std=c++11 -O3 -fomit-frame-pointer -I./src/common -I. -I /usr/include/hdf5/serial
+CXXFLAGS := -I/opt/homebrew/opt/libaec/include -I/opt/homebrew/include -fno-stack-protector -fcommon -std=c++11 -O3 -fomit-frame-pointer -I./src/common -I. -I /usr/include/hdf5/serial
 
 
 
@@ -18,7 +18,7 @@ OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
 
 # -march=native
-LDFLAGS := -I/opt/homebrew/opt/libomp/include -lgsl -lgslcblas -lhdf5
+LDFLAGS := -lgsl -lgslcblas -lhdf5
 LIBFLAGS := -L/opt/homebrew/lib -L /usr/lib/x86_64-linux-gnu/hdf5/serial 
 FFLAGS := -Wall -O -fbounds-check
 
