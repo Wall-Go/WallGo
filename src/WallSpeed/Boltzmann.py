@@ -184,7 +184,11 @@ class BoltzmannSolver:
         collision = BoltzmannSolver.readCollision(collisionFile, "top")
 
         ##### total operator #####
-        operator = liouville + collision[np.newaxis, :, :, np.newaxis, :, :]
+        operator = (
+            liouville
+            + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * collision[np.newaxis, :, :, np.newaxis, :, :]
+        )
 
         # reshaping indices
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
