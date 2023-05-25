@@ -153,13 +153,12 @@ def findMatching(model,vwTry,Tnucl):
                     
     return (vp,vm,Tp,Tm)
 
-def c1c2(model, vwTry, Tnucl):
+def findHydroBoundaries(model, vwTry, Tnucl):
     r"""
-    Returns :math:`c_1, c_2` for a given wall velocity and nucleation temperature
+    Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature
     """
     vp,vm,Tp,Tm = findMatching(model, vwTry, Tnucl)
     c1 = model.wSym(Tp)*gammasq(vp)*vp
     c2 = model.pSym(Tp)+model.wSym(Tp)*gammasq(vp)*vp**2
-    return (c1, c2)
-
+    return (c1, c2, Tp, Tm)
 
