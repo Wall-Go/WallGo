@@ -105,10 +105,16 @@ class BoltzmannSolver:
         """
         # polynomial tool
         poly = Polynomial(self.grid)
-        derivChi = poly.derivatives(self.grid.chiValues, basis=self.basisM)
-        derivPz = poly.derivatives(self.grid.pzValues, basis=self.basisN)
-        derivXi = poly.derivatives(self.grid.xiValues, basis=self.basisM)
-        derivRz = poly.derivatives(self.grid.rzValues, basis=self.basisN)
+        if self.basisM == "Cardinal": ##### temporary hack
+            derivChi = poly.cardinalDeriv("z")
+        else:
+            derivChi = poly.chebyshevDeriv("z")
+        if self.basisN == "Cardinal": ##### temporary hack
+            derivPz = poly.cardinalDeriv("pz")
+        else:
+            derivPz = poly.chebyshevDeriv("pz")
+        derivXi = derivChi
+        derivRz = derivPz
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -117,11 +123,16 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        #TChiMat = np.identity(self.grid.M - 1)
-        #TRzMat = np.identity(self.grid.N - 1)
-        #TRpMat = np.identity(self.grid.N - 1)
-        TChiMat = poly.intertwiner("Coordinate", self.basisM)
-        TRzMat = poly.intertwiner("Coordinate", self.basisN)
+        if self.basisM == "Cardinal": ##### temporary hack
+            TChiMat = poly.cardinalMatrix("z")
+        else:
+            TChiMat = poly.chebyshevMatrix("z")
+        if self.basisN == "Cardinal": ##### temporary hack
+            TRzMat = poly.cardinalMatrix("pz")
+        else:
+            TRzMat = poly.chebyshevMatrix("pz")
+        #TChiMat = poly.intertwiner("Coordinate", self.basisM)
+        #TRzMat = poly.intertwiner("Coordinate", self.basisN)
         TRpMat = TRzMat
         DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
@@ -224,8 +235,8 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                collisionArray = np.array(file["Array"])
-                collisionBasis = string(file["Basis"])
+                collisionArray = np.array(file["Chebyshev array"])
+                collisionBasis = "Chebyshev" ##### a temporary hack
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
