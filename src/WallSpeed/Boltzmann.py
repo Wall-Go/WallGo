@@ -199,7 +199,10 @@ class BoltzmannSolver:
 
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
-        collisionArray, collision = BoltzmannSolver.readCollision(collisionFile, "top")
+        collisionArray, collisionBasis = BoltzmannSolver.readCollision(
+            collisionFile,
+            "top",
+        )
         if self.basisN != collisionBasis:
             TInvRzMat = poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
@@ -215,7 +218,7 @@ class BoltzmannSolver:
         operator = (
             liouville
             + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * collision[np.newaxis, :, :, np.newaxis, :, :]
+                * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
         # reshaping indices
@@ -226,7 +229,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source
 
-    def readCollision(collisionFile):
+    def readCollision(collisionFile, particle="top"):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
