@@ -122,7 +122,7 @@ class BoltzmannSolver:
         #TRpMat = np.identity(self.grid.N - 1)
         TChiMat = poly.intertwiner("Coordinate", self.basisM)
         TRzMat = poly.intertwiner("Coordinate", self.basisN)
-        TRpMat = poly.intertwiner("Coordinate", self.basisN)
+        TRpMat = TRzMat
         DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
 
@@ -188,7 +188,17 @@ class BoltzmannSolver:
 
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
-        collision = BoltzmannSolver.readCollision(collisionFile, "top")
+        collisionArray, collision = BoltzmannSolver.readCollision(collisionFile, "top")
+        if self.basisN != collisionBasis:
+            TInvRzMat = poly.intertwiner(collisionBasis, self.basisN)
+            TInvRpMat = TInvRzMat
+            collisionArray = np.einsum(
+                "ac,bd,ijcd",
+                TInvRzMat,
+                TInvRpMat,
+                collisionArray,
+                optimize=True,
+            )
 
         ##### total operator #####
         operator = (
@@ -214,8 +224,8 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                collisionArray = np.array(file["Chebyshev array"])
-                collisionBasis = np.array(file["Chebyshev array"])
+                collisionArray = np.array(file["Array"])
+                collisionBasis = np.array(file["Basis"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
