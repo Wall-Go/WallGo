@@ -123,55 +123,44 @@ void calculateAllCollisions() {
 
      /*******************If you want to generate the entire grid you can do something like this***************************/
 
-     int nZ, mPerp, iZ, jPerp; //nZ,iZ specifies the chebyshev polynomial and interpolation point for the z component
-                              //Similar for mPerp and jPerp
-     nZ=20;
-     mPerp=20;
-     iZ=20;
-     jPerp=20;
+     int gridSizeN = 20;
+     int Ncheb = gridSizeN - 1; //(N-1)^4 terms in total
 
+     //The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
+     Array4D collGrid(gridSizeN, gridSizeN, gridSizeN, gridSizeN, 0.0);
 
-     double rhoZ[iZ-1], rhoPerp[jPerp-1]; //Contains the Chebyshev interpolation points for pZ and pPerp
+     double rhoZ[Ncheb], rhoPerp[Ncheb]; //Contains the Chebyshev interpolation points for pZ and pPerp
 
 
      //All the interpolation points for pZ
-     for (int i = 1; i < iZ; ++i)
+     for (int i = 1; i < Ncheb; ++i)
      {
-          rhoZ[i-1]=2.0*atanh(cos(PI*i/(iZ+0.0)));
+          rhoZ[i-1]=2.0*atanh(-cos(PI*i/(Ncheb+0.0)));
      }
 
 
      //All the interpolation points for pPerp
-     for (int j = 1; j < jPerp; ++j)
+     for (int j = 0; j < Ncheb-1; ++j)
      {
-          rhoPerp[j-1]=-log((1.0-cos(PI*j/(jPerp-1.0)))/2.0);
+          rhoPerp[j]=-log((1.0+cos(PI*j/(Ncheb-1.0)))/2.0);
      }
 
-
-     int gridSizeN = 20;
-     Array4D collGrid(gridSizeN, gridSizeN, gridSizeN, gridSizeN, 0.0);
-
-
-     //We now do the for loop over all the grid points
+     // We now do the for loop over all the grid points
 
      std::cout << "Now computing all collision integrals. See you in a bit...\n"; 
      std::cout << "TEST VERSION: Generating dummy collision integrals\n";
 
-     for (int n = 0; n < nZ; ++n)
-     {
+     for (int n = 0; n < Ncheb; ++n) {
 
-          for (int m = 0; m < mPerp; ++m)
-          {
-               specifyChebyshev(n+1,m+1);    //specifies the relevant chebyshev point
-                                             //note that n is between 2 and nZ (I still took 1 and nZ here)
+          for (int m = 0; m < Ncheb; ++m) {
+               specifyChebyshev(n+2,m+1);    //specifies the relevant chebyshev point
+                                             //note that n is between 2 and nZ
                                              //, and m is between 1 and mPerp-1
-               for (int i = 0; i < iZ; ++i)
-               {
+               for (int i = 0; i < Ncheb; ++i) {
                     pVec[0]=rhoZ[i];
 
-                    for (int j = 0; j < jPerp; ++j)
-                    {
-                         pVec[1]=rhoPerp[j]; 
+                    for (int j = 0; j < Ncheb; ++j) {
+                    pVec[1]=rhoPerp[j]; 
                          // collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
                          // Dummy 
                          collGrid[n][m][i][j]= 0.0;
@@ -181,7 +170,6 @@ void calculateAllCollisions() {
      }
 
      // Write these to file
-
      std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
      WriteToHDF5(collGrid, filename, "top");
 }
