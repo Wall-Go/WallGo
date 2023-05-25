@@ -7,7 +7,7 @@ Created on Fri May 19 13:41:50 2023
 """
 
 import numpy as np
-from Grid import Grid################
+from .Grid import Grid################
 from scipy.special import eval_chebyt
 
 class Polynomial:
@@ -125,16 +125,18 @@ class Polynomial:
         
         return tn
     
-    def evaluateCardinal(self,x,f):
+    def evaluateCardinal(self,x,f,directions=('z','pz','pp')):
         """
         Evaluates the cardinal series with coefficients f at the point x.
 
         Parameters
         ----------
-        x : array_like, shape (3,)
+        x : array_like, shape (...,N)
             Coordinate at which to evaluate the polynomial series.
-        f : array_like, shape (M,N,N)
-            Coefficients of the series, which are the values of the function evaluated on the grid.
+        f : array_like
+            Coefficients of the series, which are the values of the function evaluated on the grid. Must contain the endpoints.
+        directions : tuple of length N, optional
+            Tuple containing all the directions along which to evaluate the series. Default is ('z','pz','pp').
 
         Returns
         -------
@@ -142,16 +144,26 @@ class Polynomial:
             Value of the series at the point x.
         """
         
-        #Getting the grid coordinates
-        chiValues,rzValues,rpValues = self.grid.getCompactCoordinates(True)
+        x = np.asarray(x)
+        f = np.asarray(f)
+        xShapeSize = len(x.shape)-1
+        N = len(directions)
         
-        #Computing the cardinal functions for the chi, rz and rp directions
-        cardinal_chi = self.cardinal(x[0], chiValues)
-        cardinal_rz = self.cardinal(x[1], rzValues)
-        cardinal_rp = self.cardinal(x[2], rpValues)
+        #Computing and multiplying the cardinal functions in all the directions
+        cardinals = 1
+        for i in range(N):
+            n = None
+            match directions[i]:
+                case 'z': n = np.arange(self.grid.M+1)
+                case 'pz': n = np.arange(self.grid.N+1)
+                case 'pp': n = np.arange(self.grid.N)
+            createAxes = tuple(np.delete(-np.arange(N)-1,N-i-1))
+            cardinals = cardinals*np.expand_dims(self.cardinal(x[...,i], n, directions[i]), createAxes)
         
-        #Summing over all the terms
-        series = np.sum(f*cardinal_chi[:,None,None]*cardinal_rz[None,:,None]*cardinal_rp[None,None,:],axis=(0,1,2))
+        #Resizing f and summing over all the terms
+        f = np.expand_dims(f, tuple(np.arange(xShapeSize)))
+        series = np.sum(f*cardinals, axis=tuple(-np.arange(N)-1))
+        
         return series
     
     def evaluateChebyshev(self,x,f):
