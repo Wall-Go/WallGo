@@ -122,100 +122,97 @@ for (int i = 0; i < 100; ++i)
 
 /*******************If you want to generate the entire grid you can do something like this***************************/
 
-// int nZ, mPerp, iZ, jPerp; //nZ,iZ specifies the chebyshev polynomial and interpolation point for the z component
-//                           //Similar for mPerp and jPerp
-// nZ=20;
-// mPerp=20;
-// iZ=20;
-// jPerp=20;
 
-// //The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
-//  double**** collGrid= (double ****)malloc(nZ*sizeof(double***));      //The rank 4 tensor that stores all the data
+int Ncheb=20-1; //(N-1)^4 terms in total
 
-// for (int n = 0; n < nZ; ++n)
-// {
-//      collGrid[n]=(double ***)malloc(mPerp*sizeof(double**));
 
-//      for (int m = 0; m < mPerp; ++m)
-//      {
-//           collGrid[n][m]=(double **)malloc(iZ*sizeof(double*));
+//The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
+ double**** collGrid= (double ****)malloc(Ncheb*sizeof(double***));      //The rank 4 tensor that stores all the data
 
-//           for (int i = 0; i < iZ; ++i)
-//           {
-//                collGrid[n][m][i]=(double *)malloc(jPerp*sizeof(double));
-//           }
-//      }
+for (int n = 0; n < Ncheb; ++n)
+{
+     collGrid[n]=(double ***)malloc(Ncheb*sizeof(double**));
 
-// }
+     for (int m = 0; m < Ncheb; ++m)
+     {
+          collGrid[n][m]=(double **)malloc(Ncheb*sizeof(double*));
+
+          for (int i = 0; i < Ncheb; ++i)
+          {
+               collGrid[n][m][i]=(double *)malloc(Ncheb*sizeof(double));
+          }
+     }
+
+}
 
 
 
-// double rhoZ[iZ-1], rhoPerp[jPerp-1]; //Contains the Chebyshev interpolation points for pZ and pPerp
+double rhoZ[Ncheb], rhoPerp[Ncheb]; //Contains the Chebyshev interpolation points for pZ and pPerp
 
 
-// //All the interpolation points for pZ
-// for (int i = 1; i < iZ; ++i)
-// {
-//      rhoZ[i-1]=2.0*atanh(cos(PI*i/(iZ+0.0)));
-// }
+//All the interpolation points for pZ
+for (int i = 1; i < Ncheb; ++i)
+{
+     rhoZ[i-1]=2.0*atanh(-cos(PI*i/(Ncheb+0.0)));
+}
 
 
-// //All the interpolation points for pPerp
-// for (int j = 1; j < jPerp; ++j)
-// {
-//      rhoPerp[j-1]=-log((1.0-cos(PI*j/(jPerp-1.0)))/2.0);
-// }
+//All the interpolation points for pPerp
+for (int j = 0; j < Ncheb-1; ++j)
+{
+     rhoPerp[j]=-log((1.0+cos(PI*j/(Ncheb-1.0)))/2.0);
+}
 
 
 
-// //We now do the for loop over all the grid points
+//We now do the for loop over all the grid points
 
-// for (int n = 0; n < nZ; ++n)
-// {
+for (int n = 0; n < Ncheb; ++n)
+{
 
-//      for (int m = 0; m < mPerp; ++m)
-//      {
-//           specifyChebyshev(n+1,m+1);    //specifies the relevant chebyshev point
-//                                         //note that n is between 2 and nZ (I still took 1 and nZ here)
-//                                         //, and m is between 1 and mPerp-1
-//           for (int i = 0; i < iZ; ++i)
-//           {
-//                pVec[0]=rhoZ[i];
+     for (int m = 0; m < Ncheb; ++m)
+     {
+          specifyChebyshev(n+2,m+1);    //specifies the relevant chebyshev point
+                                        //note that n is between 2 and nZ (I still took 1 and nZ here)
+                                        //, and m is between 1 and mPerp-1
+          for (int i = 0; i < Ncheb; ++i)
+          {
+               pVec[0]=rhoZ[i];
 
-//                for (int j = 0; j < jPerp; ++j)
-//                {
-//                  pVec[1]=rhoPerp[j]; 
-//                  collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
-//                }
-//           }
-//      }
+               for (int j = 0; j < Ncheb; ++j)
+               {
+                 pVec[1]=rhoPerp[j]; 
+                 collGrid[i][j][n][m]=integrateCollision(pVec,prefac);
+               }
+          }
+     }
 
-// }
+}
 
 
 
 
 
-// //Deallocate the data
+//Deallocate the data
 
-// for (int n = 0; n < nZ; ++n)
-// {
+for (int n = 0; n < Ncheb; ++n)
+{
 
-//      for (int m = 0; m < mPerp; ++m)
-//      {
+     for (int m = 0; m < Ncheb; ++m)
+     {
 
-//           for (int i = 0; i < iZ; ++i)
-//           {
-//                free(collGrid[n][m][i]);
-//           }
+          for (int i = 0; i < Ncheb; ++i)
+          {
+               free(collGrid[n][m][i]);
+          }
 
-//            free(collGrid[n][m]);
-//      }
+           free(collGrid[n][m]);
+     }
 
-//      free(collGrid[n]);
+     free(collGrid[n]);
 
-// }
-// free(collGrid);
+}
+free(collGrid);
 
 
 

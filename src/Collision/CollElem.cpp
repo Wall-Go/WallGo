@@ -24,7 +24,6 @@ static double matrixElementQQVVX(double s,double t, double u){
 
 }
 
-
 //Q+V-> Q+ V matrix element
 static double matrixElementQVQVX(double s,double t, double u){
 //I here use equation (A4) and pull out a factor -64/9 from both terms
@@ -33,13 +32,26 @@ static double matrixElementQVQVX(double s,double t, double u){
 }
 
 
-
 //T+Q-> T+ Q matrix element
 static double matrixElementTQTQX(double s,double t, double u){
 //I here use equation (A4) and pull out a factor -64/9 from the function
 	return -5.0/4.0*(s*s+u*u)/(t-MG2+1e-6)/(t-MG2+1e-6);
-
 }
+
+
+//Q+Q-> Q+ Q matrix element. So all fermions are equal
+static double matrixElementQQQQX(double s,double t, double u){
+//Table II in https://arxiv.org/pdf/hep-ph/0209353.pdf. Pulled out a factor of -64/9
+	return -((s*s+u*u)/(t-MG2+1e-6)/(t-MG2+1e-6)+(s*s+t*t)/(u-MG2+1e-6)/(u-MG2+1e-6));
+}
+
+
+//V+V-> V+ V matrix element. So all fermions are equal
+static double matrixElementVVVVX(double s,double t, double u){
+//Table II in https://arxiv.org/pdf/hep-ph/0209353.pdf. Pulled out a factor of -64/9
+	return 81.0/16.0*(s*u/(t-MG2+1e-6)/(t-MG2+1e-6)+s*t/(u-MG2+1e-6)/(u-MG2+1e-6));
+}
+
 
 
 //The Bose-Einstein distribution function
