@@ -16,23 +16,24 @@ class BoltzmannBackground():
         self.polynomialBasis = "Cardinal"
 
 class BoltzmannParticle():
-    def __init__(self, N, M)    :
+    def __init__(self)    :
         self.msqVacuum = lambda x: 0.5 * x**2
         self.msqThermal = lambda T: 0.1 * T**2
         self.statistics = -1
-        self.polynomialBasis = "Chebyshev"
         self.isOutOfEquilibrium = True
         gsq = 0.4
         self.collisionPrefactors = [gsq**2, gsq**2, gsq**2]
-        self.M = M
-        self.N = N
+        
+#self.polynomialBasis = "Chebyshev"
+#self.M = M
+#self.N = N
 
 M = 20
 N = 20
 grid = Grid(M, N, 1, 1)
 poly = Polynomial(grid)
-background = Background(M)
-mode = Mode()
+background = BoltzmannBackground(M)
+mode = BoltzmannParticle()
 boltzmann = BoltzmannSolver(grid, background, mode)
 print("BoltzmannSolver object =", boltzmann)
 operator, source = boltzmann.buildLinearEquations()

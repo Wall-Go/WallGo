@@ -127,7 +127,7 @@ class BoltzmannSolver:
 
         # fluctuation mode
         statistics = self.mode.statistics
-        msq = self.mode.msq(field)
+        msq = self.mode.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with wall velocity
@@ -207,7 +207,7 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                collision = np.array(file[basis])
+                collision = np.array(file["Chebyshev array"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
@@ -217,7 +217,7 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        return "collision_mock.hdf5"
+        return "data/collision_N_20.hdf5"
         dir = "."
         suffix = "hdf5"
         filename = "%s/collision_M_%i_N_%i.%s" % (
