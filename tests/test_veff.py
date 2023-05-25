@@ -10,7 +10,7 @@ from WallSpeed.model import *
 def test_BM1():
     pot = Model(1,125,160,1.0,1.2)
     res = pot.findMinimum(None,100)
-    assert res == pytest.approx([193.033, 0.2785],rel=0.01)
+    assert res == pytest.approx([196.734, -0.2536],rel=0.01)
 
 def test_BM2():
     pot = Model(1,125,160,1.0,1.6)

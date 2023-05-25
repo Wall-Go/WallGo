@@ -7,6 +7,27 @@ from cosmoTransitions.finiteT import Jb_spline as Jb
 from cosmoTransitions.finiteT import Jf_spline as Jf
 
 
+class Particle:
+    def __init__(
+        self,
+        msqVaccum,
+        msqThermal,
+        statistics,
+        isOutOfEquilibrium,
+        collisionPrefactors,
+    ):
+        self.msqVacuum = msqVaccum
+        self.msqThermal = msqThermal
+        assert statistics in [
+            -1,
+            1,
+        ], "Particle error: statistics not understood %s" % (
+            statistics
+        )
+        self.statistics = statistics
+        self.isOutOfEquilibrium = isOutOfEquilibrium
+        self.collisionPrefactors = collisionPrefactors
+
 class Model:
     '''
     Class that generates the model given external model file
@@ -52,7 +73,6 @@ class Model:
         self.g0 = 2*self.MW/self.v0
         self.g1 = self.g0*math.sqrt((self.MZ/self.MW)**2-1)
         self.g2 = self.g0
-        self.yt = math.sqrt(2)*self.Mt/self.v0
         self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
         self.musT = (
                 +1./6*lambdaHS
@@ -65,6 +85,16 @@ class Model:
                 +8*self.lambdaH)/16
                 +self.lambdaHS/24
                 )
+        '''
+        Define dictionary of used parameters
+        '''
+        self.pars = {
+                'muh2': self.muh2,
+                'mus2': self.mus2,
+                'lambdaH': self.lambdaH,
+                'lambdaS': self.lambdaS,
+                'lambdaHS': self.lambdaHS
+        }
 
    # def Run4Dparams(self,T):
    #     '''
@@ -89,6 +119,17 @@ class Model:
         '''
         return -m**3/(12*np.pi)
 
+    def readModel(self,filePath,args,fields):
+        file = open(filePath,'r')
+        fileContent = file.read()
+        file.close()
+
+        argsInternal = args.copy()
+        for k, v in argsInternal.items():
+            k = v
+
+        return eval(fileContent,fields,argsInternal)
+
     def V0(self,X,show_V=False):
         '''
         Tree level effective potential
@@ -97,17 +138,21 @@ class Model:
         X = np.asanyarray(X)
         h1 = X[...,0]
         s1 = X[...,1]
-        #with open('Veff3dLO.dat','r') as file:
-        #    V = file.read()
-        #vtree = vtree.replace("lambdaH","lambdaH.self")
-        #vtree = eval(vtree)
 
-        V = (
-            +self.muh2*h1**2/2
-            +self.mus2*s1**2/2
-            +self.lambdaH*h1**4/4
-            +self.lambdaS*s1**4/4
-            +self.lambdaHS*(h1*s1)**2/4)
+        fields = {
+                'h1':h1,
+                's1':s1
+            }
+
+        V = self.readModel('Veff3dLO.dat',self.pars,fields)
+        print(V)
+
+        #V = (
+        #    +self.muh2*h1**2/2
+        #    +self.mus2*s1**2/2
+        #    +self.lambdaH*h1**4/4
+        #    +self.lambdaS*s1**4/4
+        #    +self.lambdaHS*(h1*s1)**2/4)
         if show_V:
             print(V)
         return V
@@ -150,6 +195,7 @@ class Model:
         Nfermions = 1
         dof = np.array([12])
         mt = self.yt**2*h1**2/2
+        # todo include spins for each particle
 
         massSq = np.column_stack((mt,))
         return massSq,dof
@@ -331,16 +377,11 @@ class Model:
         3rd T-derivative of the effective potential
         '''
 
-    def Vefftot(self):
-        '''
-        Function that generates the effective potential given a pre-defined model
-        '''
-
-## 100,h 110, s 130
-##def main():
-#pot = Model(1,125,160,1.0,1.2)
-##pot.Run4Dparams(1)
-#print(pot.V0([[110,130]]))
+# 100,h 110, s 130
+#def main():
+pot = Model(1,125,160,1.0,1.2)
+#pot.Run4Dparams(1)
+print(pot.V0([[110,130]]))
 #print(pot.Vtot([[110,140],[110,130]],[110]))
 #print(pot.findMinimum(None,110))
 
