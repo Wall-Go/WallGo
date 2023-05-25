@@ -1,3 +1,6 @@
+#ifndef COLLELEM_H_
+#define COLLELEM_H_
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +21,7 @@
 //Note to self: Move these matrix elements to their own file
 
 //Q+Q-> V+ V matrix element
-static double matrixElementQQVVX(double s,double t, double u){
+static inline double matrixElementQQVVX(double s,double t, double u) {
 
 	double temp = u;
 	return s*t/(t-MQ2+1e-6)/(t-MQ2+1e-6);
@@ -26,7 +29,7 @@ static double matrixElementQQVVX(double s,double t, double u){
 }
 
 //Q+V-> Q+ V matrix element
-static double matrixElementQVQVX(double s,double t, double u){
+static inline double matrixElementQVQVX(double s,double t, double u) {
 //I here use equation (A4) and pull out a factor -64/9 from both terms
 	return s*u/(u-MQ2+1e-6)/(u-MQ2+1e-6)-9.0/4.0*(s*s+u*u)/(t-MG2+1e-6)/(t-MG2+1e-6);
 
@@ -34,21 +37,21 @@ static double matrixElementQVQVX(double s,double t, double u){
 
 
 //T+Q-> T+ Q matrix element
-static double matrixElementTQTQX(double s,double t, double u){
+static inline double matrixElementTQTQX(double s,double t, double u) {
 //I here use equation (A4) and pull out a factor -64/9 from the function
 	return -5.0/4.0*(s*s+u*u)/(t-MG2+1e-6)/(t-MG2+1e-6);
 }
 
 
 //Q+Q-> Q+ Q matrix element. So all fermions are equal
-static double matrixElementQQQQX(double s,double t, double u){
+static inline double matrixElementQQQQX(double s,double t, double u) {
 //Table II in https://arxiv.org/pdf/hep-ph/0209353.pdf. Pulled out a factor of -64/9
 	return -((s*s+u*u)/(t-MG2+1e-6)/(t-MG2+1e-6)+(s*s+t*t)/(u-MG2+1e-6)/(u-MG2+1e-6));
 }
 
 
 //V+V-> V+ V matrix element. So all fermions are equal
-static double matrixElementVVVVX(double s,double t, double u){
+static inline double matrixElementVVVVX(double s,double t, double u){
 //Table II in https://arxiv.org/pdf/hep-ph/0209353.pdf. Pulled out a factor of -64/9
 	return 81.0/16.0*(s*u/(t-MG2+1e-6)/(t-MG2+1e-6)+s*t/(u-MG2+1e-6)/(u-MG2+1e-6));
 }
@@ -204,3 +207,4 @@ class CollElem {
 
 };
 
+#endif // header guard
