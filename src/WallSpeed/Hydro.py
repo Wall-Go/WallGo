@@ -54,6 +54,9 @@ def matchDeton(model,vw,Tnucl):
     return (vp, vm, Tp, Tm)
 
 def matchDeflagOrHyb(model,vw,vp):
+    r"""
+    Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
+    """
     def matchDeflag(Tpm):
         return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vw**2)
 
@@ -79,17 +82,29 @@ def matchDeflagOrHyb(model,vw,vp):
     return vp, vm, Tp, Tm
 
 def gammasq(v):
+    """
+    Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
+    """
     return 1./(1. - v*v)
 
 def mu(xi,v):
+    """
+    Lorentz-transformed velocity
+    """
     return (xi - v)/(1. - xi*v)
 
 def shockDE(xiAndT,v,model):
+    """
+    Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
+    """
     xi, T = xiAndT
     dxiAndTdv = [gammasq(v) * (1. - v*xi)*(mu(xi,v)*mu(xi,v)/model.csqSym(T)-1.)*xi/2./v,model.wSym(T)/model.dpSym(T)*gammasq(v)*mu(xi,v)]
     return dxiAndTdv
     
 def solveHydroShock(model,vw,vp,Tp):
+    """
+    Solves the hydrodynamic equations in the shock for a given wall velocity and `v_+, T_+` and determines the position of the shock. Returns the nucleation temperature.
+    """
     xi0T0 = [vw,Tp]
     vpcent = mu(vw,vp)
     maxindex = 1024
@@ -109,6 +124,8 @@ def solveHydroShock(model,vw,vp,Tp):
 
 def findMatching(model,vwTry,Tnucl):
     """
+    Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
+    matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
     """
     vJouguet = findJouguetVelocity(model,Tnucl)
     if vwTry > vJouguet: #Detonation
@@ -135,5 +152,14 @@ def findMatching(model,vwTry,Tnucl):
             count += 1
                     
     return (vp,vm,Tp,Tm)
+
+def c1c2(model, vwTry, Tnucl):
+    """
+    Returns :math:`c_1, c_2` for a given wall velocity and nucleation temperature
+    """
+    vp,vm,Tp,Tm = findMatching(model, vwTry, Tnucl)
+    c1 = model.wSym(Tp)*gammasq(vp)*vp
+    c2 = model.pSym(Tp)+model.wSym(Tp)*gammasq(vp)*vp**2
+    return (c1, c2)
 
 
