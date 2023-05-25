@@ -8,7 +8,14 @@ class BoltzmannSolver:
     Class for solving Boltzmann equations for small deviations from equilibrium.
     """
 
-    def __init__(self, grid, background, mode):
+    def __init__(
+        self,
+        grid,
+        background,
+        particle,
+        basisM="Cardinal",
+        basisN="Chebyshev",
+    ):
         """
         Initialsation of BoltzmannSolver
 
@@ -28,11 +35,11 @@ class BoltzmannSolver:
         """
         self.grid = grid
         self.background = background
-        if background.vw < 0:
-            # fixing convention so that bubble moves outwards
-            self.background.vw *= -1
-            self.background.velocityProfile *= -1
-        self.mode = mode
+        self.particle = particle
+        BoltzmannSolver.__checkBasis(basisM)
+        BoltzmannSolver.__checkBasis(basisN)
+        self.basisM = basisM
+        self.basisN = basisN
 
     def solveBoltzmannEquations(self):
         r"""
@@ -90,21 +97,18 @@ class BoltzmannSolver:
         """
         pass
 
-    def buildLinearEquations(self, basis="Cardinal"):
+    def buildLinearEquations(self):
         """
         Constructs matrix and source for Boltzmann equation.
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        assert basis == "Cardinal", \
-            "BoltzmannSolver.buildLinearEquations error: %s unkown" % basis
-
         # polynomial tool
         poly = Polynomial(self.grid)
-        derivChi = poly.derivativesCardinal(self.grid.chiValues)
-        derivPz = poly.derivativesCardinal(self.grid.pzValues)
-        derivXi = poly.derivativesCardinal(self.grid.xiValues)
-        derivRz = poly.derivativesCardinal(self.grid.rzValues)
+        derivChi = poly.derivatives(self.grid.chiValues, basis=self.basisM)
+        derivPz = poly.derivatives(self.grid.pzValues, basis=self.basisN)
+        derivXi = poly.derivatives(self.grid.xiValues, basis=self.basisM)
+        derivRz = poly.derivatives(self.grid.rzValues, basis=self.basisN)
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -113,9 +117,12 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        TChiMat = np.identity(self.grid.M - 1)
-        TRzMat = np.identity(self.grid.N - 1)
-        TRpMat = np.identity(self.grid.N - 1)
+        #TChiMat = np.identity(self.grid.M - 1)
+        #TRzMat = np.identity(self.grid.N - 1)
+        #TRpMat = np.identity(self.grid.N - 1)
+        TChiMat = poly.intertwiner("Coordinate", self.basisM)
+        TRzMat = poly.intertwiner("Coordinate", self.basisN)
+        TRpMat = poly.intertwiner("Coordinate", self.basisN)
         DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
 
@@ -126,8 +133,8 @@ class BoltzmannSolver:
         vw = self.background.vw
 
         # fluctuation mode
-        statistics = self.mode.statistics
-        msq = self.mode.msqVacuum(field)
+        statistics = self.particle.statistics
+        msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with wall velocity
@@ -198,7 +205,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source
 
-    def readCollision(collisionFile, basis="Cardinal"):
+    def readCollision(collisionFile):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
@@ -207,20 +214,28 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                collision = np.array(file["Chebyshev array"])
+                collisionArray = np.array(file["Chebyshev array"])
+                collisionBasis = np.array(file["Chebyshev array"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
-        return collision
+        return collisionArray, collisionBasis
 
     def __collisionFilename(self):
         """
         A filename convention for collision integrals.
         """
-        return "data/collision_N_20.hdf5"
+        return "data/collision_N_20.hdf5" ##### a temporary hack
         dir = "."
         suffix = "hdf5"
-        filename = "%s/collision_M_%i_N_%i.%s" % (
-            dir, self.grid.M, self.grid.N, suffix
+        filename = "%s/collision_%s_N_%i.%s" % (
+            dir, self.basisN, self.grid.N, suffix
         )
         return filename
+
+    def __checkBasis(basis):
+        """
+        Check that basis is reckognised
+        """
+        bases = ["Cardinal", "Chebyshev"]
+        assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
