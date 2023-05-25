@@ -584,14 +584,36 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, Veff):
     )
 
 
+
 def deltaToTmunu(
-    velocityProfile
+    velocityProfile,
+    temperatureProfile,
     offEquilDeltas,
+    higgsWidth
     grid,
+    particleList,
+    Veff
 ):
 
     delta00 = offEquilDeltas["00"]
-    return T03 T33
+    delta11 = offEquilDeltas["11"]
+    delta02 = offEquilDeltas["02"]
+    delta20 = offEquilDeltas["20"]
+
+    u0 = np.sqrt(gammasq(velocityProfile))
+    u3 = np.sqrt(gammasq(velocityProfile))*velocityProfile
+    ubar0 = u3
+    ubar3 = u0
+    
+    h = 0.5 * Veff.higgsVEV(temperatureProfile)*(1 - np.tanh(grid.xiValues / higgsWidth))
+    mTopSquared = 1/2.*particleList.ytop*h*h
+
+    T30 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u0+
+           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u03*ubar0 + ubar3*u0))/2.
+    T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
+           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar3+4*delta11*u03*ubar3)/2.
+    
+    return T30, T33
 
 def plasmaVelocity(h, s, T, s1, Veff):
     return ((
