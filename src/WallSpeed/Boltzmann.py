@@ -203,7 +203,8 @@ class BoltzmannSolver:
             collisionFile,
             "top",
         )
-        if self.basisN != collisionBasis:
+        if self.basisN != collisionBasis and False:
+            print("I am confused:", [self.basisN, collisionBasis])
             TInvRzMat = poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
             collisionArray = np.einsum(
@@ -238,8 +239,9 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                collisionArray = np.array(file["Chebyshev array"])
-                collisionBasis = "Chebyshev" ##### a temporary hack
+                dataset = file[particle]
+                collisionArray = np.array(dataset)
+                collisionBasis = str(dataset.attrs["Basis"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
@@ -249,7 +251,7 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        return "data/collision_N_20.hdf5" ##### a temporary hack
+        return "src/Collision/build/collisions_Chebyshev_20.hdf5" ##### hack
         dir = "."
         suffix = "hdf5"
         filename = "%s/collision_%s_N_%i.%s" % (
