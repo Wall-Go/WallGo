@@ -225,7 +225,7 @@ class BoltzmannSolver:
         try:
             with h5py.File(collisionFile, "r") as file:
                 collisionArray = np.array(file["Array"])
-                collisionBasis = np.array(file["Basis"])
+                collisionBasis = string(file["Basis"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
