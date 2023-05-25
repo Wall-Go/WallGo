@@ -65,9 +65,7 @@ class Grid:
         # Additional signs are so that each coordinate starts from -1.
         self.chiValues = -np.cos(np.arange(1, self.M) * np.pi / self.M)
         self.rzValues = -np.cos(np.arange(1, self.N) * np.pi / self.N)
-        self.rpValues = np.flip(
-            np.cos(np.arange(1, self.N) * np.pi / (self.N - 1))
-        )
+        self.rpValues = -np.cos(np.arange(0, self.N - 1) * np.pi / (self.N - 1))
 
         # Computing the grids in physical coordinates
         (self.xiValues, self.pzValues, self.ppValues,) = Grid.decompactify(

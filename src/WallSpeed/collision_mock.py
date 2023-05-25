@@ -7,16 +7,16 @@ setting up the Boltzmann equations.
 """
 
 # hard-coded dimensions of collision array
-N_pz = 20 - 1
-N_pp = 20 - 1
+N_pz = 20
+N_pp = 20
 
 # hard coded names
 file_name = "collision_mock.hdf5"
 dataset_name = "top"
 
 # total size and shape of collision array
-N_total = (N_pz * N_pp)**2
-shape_collision = (N_pz, N_pp, N_pz, N_pp)
+N_total = ((N_pz - 1) * (N_pp - 1))**2
+shape_collision = (N_pz - 1, N_pp - 1, N_pz - 1, N_pp - 1)
 
 # costructing mock data, just random numbers for now
 collision = np.random.rand(*shape_collision)

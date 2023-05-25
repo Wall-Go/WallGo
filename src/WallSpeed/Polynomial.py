@@ -1,7 +1,6 @@
 import numpy as np
-from scipy.special import eval_chebyt
-from .Grid import Grid
-
+from .Grid import Grid################
+from scipy.special import eval_chebyt,eval_chebyu
 
 class Polynomial:
     r"""
@@ -11,70 +10,68 @@ class Polynomial:
     ----------
     grid : Grid
         An object of the class Grid
-
-    Attributes
-    ----------
-    derivChi : array_like
-        Derivative matrix in the chi direction
-    derivRz : array_like
-        Derivative matrix in the rz direction
     """
-
-    def __init__(self, grid):
+    def __init__(self,grid):
         self.grid = grid
 
-        # Computing the chi and rz derivative matrices
-        chiValues, rzValues, rpValues = self.grid.getCompactCoordinates(True)
-        self.derivChi = self.derivativesCardinal(chiValues)
-        self.derivRz = self.derivativesCardinal(rzValues)
+        self.gridValues = self.grid.getCompactCoordinates(True)
 
-    def cardinal(self, x, grid1d):
+    def cardinal(self,x,n,direction):
         r"""
-        Computes the whole basis of cardinal functions :math:`C_n(x)` defined
-        by subgrid.
+        Computes the whole basis of cardinal functions :math:`C_n(x)` defined by grid.
 
         Parameters
         ----------
-        x : float
+        x : array_like
             Coordinate at which to evaluate the cardinal function.
-        grid1d : array_like
-            Array of the 1d grid points defining the cardinal basis.
+        n : array_like
+            Order of the cardinal functions to evaluate
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
 
         Returns
         -------
         cn : array_like
             Values of the cardinal functions.
         """
-        # grid
-        xi = grid1d
 
-        # Computing all the factor in the product defining the cardinal functions
-        cn_partial = np.divide(
-            x - xi[:, np.newaxis],
-            xi[np.newaxis, :] - xi[:, np.newaxis],
-            where=xi[np.newaxis, :] - xi[:, np.newaxis] != 0,
-        )
+        x = np.asarray(x)
+        n = np.asarray(n)
 
-        # Multiplying all the factors to get the cardinal functions
-        cn = np.prod(
-            np.where(
-                xi[Nonp.newaxisne, :] - xi[:, np.newaxis] == 0, 1, cn_partial
-            ),
-            axis=0,
-        )
+        xShapeSize = len(x.shape)
+        nShapeSize = len(n.shape)
+
+        #Resizing the inputs in preparation for the calculation
+        x = np.expand_dims(x, tuple(-np.arange(nShapeSize+1)))
+        n = np.expand_dims(n, tuple(np.arange(xShapeSize+1))).astype(int)
+
+        #Selecting the appropriate grid and resizing it
+        grid = None
+        match direction:
+            case 'z': grid = self.gridValues[0]
+            case 'pz': grid = self.gridValues[1]
+            case 'pp': grid = self.gridValues[2]
+        completeGrid = np.expand_dims(grid, tuple(np.arange(1,nShapeSize+xShapeSize+1)))
+        nGrid = grid[n]
+
+        #Computing all the factor in the product defining the cardinal functions
+        cn_partial = np.divide(x-completeGrid, nGrid-completeGrid, where=nGrid-completeGrid!=0)
+
+        #Multiplying all the factors to get the cardinal functions
+        cn = np.prod(np.where(nGrid-completeGrid==0, 1, cn_partial),axis=0)
 
         return cn
 
-    def chebyshev(self, x, n, restriction=None):
+    def chebyshev(self,x,n,restriction=None):
         r"""
         Computes the Chebyshev polynomial :math:`T_n(x)`
 
         Parameters
         ----------
-        x : float
-            Coordinate at which to evaluate the polynomial.
-        n : int or array_like
-            Order of the Chebyshev polynomial.
+        x : array_like
+            Coordinate at which to evaluate the Chebyshev polynomial.
+        n : array_like
+            Order of the Chebyshev polynomial to evaluate
         restriction : None or string, optional
             Select the restriction on the Chebyshev basis.
             If None, evaluates the unrestricted basis.
@@ -83,34 +80,45 @@ class Polynomial:
 
         Returns
         -------
-        tn : float or array_like
+        tn : array_like
             Values of the polynomial
 
         """
 
-        # Computing the unrestricted basis
-        # tn = np.cos(n*np.arccos(x))
+        x = np.asarray(x)
+        n = np.asarray(n)
+
+        xShapeSize = len(x.shape)
+        nShapeSize = len(n.shape)
+
+        #Resizing the inputs in preparation for the calculation
+        x = np.expand_dims(x, tuple(-np.arange(nShapeSize)-1))
+        n = np.expand_dims(n, tuple(np.arange(xShapeSize))).astype(int)
+
+        #Computing the unrestricted basis
+        #tn = np.cos(n*np.arccos(x))
         tn = eval_chebyt(n, x)
 
-        # Applying the restriction
-        if restriction == "partial":
+        #Applying the restriction
+        if restriction == 'partial':
             tn -= 1
-        elif restriction == "full":
-            tn -= np.where(n % 2 == 0, 1, x)
+        elif restriction == 'full':
+            tn -= np.where(n%2==0,1,x)
 
         return tn
 
-    def evaluateCardinal(self, x, f):
+    def evaluateCardinal(self,x,f,directions=('z','pz','pp')):
         """
         Evaluates the cardinal series with coefficients f at the point x.
 
         Parameters
         ----------
-        x : array_like, shape (3,)
+        x : array_like, shape (...,N)
             Coordinate at which to evaluate the polynomial series.
-        f : array_like, shape (M,N,N)
-            Coefficients of the series, which are the values of the function
-            evaluated on the grid.
+        f : array_like
+            Coefficients of the series, which are the values of the function evaluated on the grid. Must contain the endpoints.
+        directions : tuple of length N, optional
+            Tuple containing all the directions along which to evaluate the series. Default is ('z','pz','pp').
 
         Returns
         -------
@@ -118,136 +126,138 @@ class Polynomial:
             Value of the series at the point x.
         """
 
-        # Getting the grid coordinates
-        chiValues, rzValues, rpValues = self.grid.getCompactCoordinates(True)
+        x = np.asarray(x)
+        f = np.asarray(f)
+        xShapeSize = len(x.shape)-1
+        N = len(directions)
 
-        # Computing the cardinal functions for the chi, rz and rp directions
-        cardinal_chi = self.cardinal(x[0], chiValues)
-        cardinal_rz = self.cardinal(x[1], rzValues)
-        cardinal_rp = self.cardinal(x[2], rpValues)
+        #Computing and multiplying the cardinal functions in all the directions
+        cardinals = 1
+        for i in range(N):
+            n = None
+            match directions[i]:
+                case 'z': n = np.arange(self.grid.M+1)
+                case 'pz': n = np.arange(self.grid.N+1)
+                case 'pp': n = np.arange(self.grid.N)
+            createAxes = tuple(np.delete(-np.arange(N)-1,N-i-1))
+            cardinals = cardinals*np.expand_dims(self.cardinal(x[...,i], n, directions[i]), createAxes)
 
-        # Summing over all the terms
-        series = np.sum(
-            f
-            * cardinal_chi[:, np.newaxis, np.newaxis]
-            * cardinal_rz[np.newaxis, :, np.newaxis]
-            * cardinal_rp[np.newaxis, np.newaxis, :],
-            axis=(0, 1, 2),
-        )
+        #Resizing f and summing over all the terms
+        f = np.expand_dims(f, tuple(np.arange(xShapeSize)))
+        series = np.sum(f*cardinals, axis=tuple(-np.arange(N)-1))
+
         return series
 
-    def evaluateChebyshev(self, x, f):
+    def evaluateChebyshev(self,x,f,directions=('z','pz','pp')):
         """
         Evaluates the Chebyshev series with coefficients f at the point x.
 
         Parameters
         ----------
-        x : array_like, shape (3,)
+        x : array_like, shape (...,N)
             Coordinate at which to evaluate the Chebyshev series.
-        f : array_like, shape (M,N,N)
-            Spectral coefficients of the series.
+        f : array_like
+            Spectral coefficients of the series. Should not include the endpoints.
+        directions : tuple of length N, optional
+            Tuple containing all the directions along which to evaluate the series. Default is ('z','pz','pp').
 
         Returns
         -------
         series : float
             Value of the series at the point x.
         """
-        # checking shapes are as expected
-        xShape = (3,)
-        fShape = (self.M, self.N, self.N)
-        errorMsg = "Polynomial.evaluateChebyshev error: "
-        assert x.shape == xShape, errorMsg + "x shape " + str(x.shape)
-        assert f.shape == fShape, errorMsg + "f shape " + str(f.shape)
 
-        # Computing the Chebyshev polynomials for the chi, rz and rp directions
-        cheb_chi = self.chebyshev(x[0], np.arange(2, self.grid.M + 1), "full")
-        cheb_rz = self.chebyshev(x[1], np.arange(2, self.grid.N + 1), "full")
-        cheb_rp = self.chebyshev(x[2], np.arange(1, self.grid.N), "partial")
+        x = np.asarray(x)
+        f = np.asarray(f)
+        xShapeSize = len(x.shape)-1
+        N = len(directions)
 
-        # Summing over all the terms
-        series = np.sum(
-            f
-            * cheb_chi[:, None, None]
-            * cheb_rz[None, :, None]
-            * cheb_rp[None, None, :],
-            axis=(0, 1, 2),
-        )
+        #Computing and multiplying the cardinal functions in all the directions
+        chebyshevs = 1
+        for i in range(N):
+            n,restriction = None,None
+            match directions[i]:
+                case 'z':
+                    n = np.arange(2,self.grid.M+1)
+                    restriction = 'full'
+                case 'pz':
+                    n = np.arange(2,self.grid.N+1)
+                    restriction = 'full'
+                case 'pp':
+                    n = np.arange(1,self.grid.N)
+                    restriction = 'partial'
+            createAxes = tuple(np.delete(-np.arange(N)-1,N-i-1))
+            chebyshevs = chebyshevs*np.expand_dims(self.chebyshev(x[...,i], n, restriction), createAxes)
+
+        #Resizing f and summing over all the terms
+        f = np.expand_dims(f, tuple(np.arange(xShapeSize)))
+        series = np.sum(f*chebyshevs, axis=tuple(-np.arange(N)-1))
+
         return series
 
-    def derivativesCardinal(self, grid1d):
-        """
-        Computes the derivative matrix, for a specific direction.
-
-        Parameters
-        ----------
-        grid1d : array_like
-            Array of the grid points defining the cardinal basis.
-        direction : {0, 1, 2}
-            Choice of direction
-            {:math:`\chi`, :math:`\rho_z`, :math:`\rho_\Vert`}.
-
-        Returns
-        -------
-        deriv : array_like
-            Derivative matrix.
-
-        """
-        grid = grid1d
-
-        # Computing the diagonal part
-        diagonal = np.sum(
-            np.where(
-                grid[:, np.newaxis] - grid[np.newaxis, :] == 0,
-                0,
-                np.divide(
-                    1,
-                    grid[:, None] - grid[None, :],
-                    where=grid[:, None] - grid[None, :] != 0,
-                ),
-            ),
-            axis=1,
-        )
-
-        # Computing the off-diagonal part
-        offDiagonal = np.prod(
-            np.where(
-                (grid[:, None, None] - grid[None, None, :])
-                * (grid[None, :, None] - grid[None, None, :])
-                == 0,
-                1,
-                np.divide(
-                    grid[None, :, None] - grid[None, None, :],
-                    grid[:, None, None] - grid[None, None, :],
-                    where=grid[:, None, None] - grid[None, None, :] != 0,
-                ),
-            ),
-            axis=-1,
-        )
-
-        # Putting all together
-        deriv = np.where(
-            grid[:, None] - grid[None, :] == 0,
-            diagonal[:, None],
-            np.divide(
-                offDiagonal,
-                grid[:, None] - grid[None, :],
-                where=grid[:, None] - grid[None, :] != 0,
-            ),
-        )
-
-        return deriv
-
-    def derivativesChebyshev(self, grid1d):
+    def cardinalMatrix(self, direction, endpoints=False):
         r"""
-        Computes the derivative matrix, for a specific direction.
+        Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
 
         Parameters
         ----------
-        grid1d : array_like
-            Array of the grid points defining the Chebyshev basis.
-        direction : {0, 1, 2}
-            Choice of direction
-            {:math:`\chi`, :math:`\rho_z`, :math:`\rho_\Vert`}.
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if direction == 'z':
+            return np.identity(self.grid.M-1+2*endpoints)
+        if direction == 'pz':
+            return np.identity(self.grid.N-1+2*endpoints)
+        if direction == 'pp':
+            return np.identity(self.grid.N-1+endpoints)
+
+    def chebyshevMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        grid,n,restriction = None,None,None
+        match direction:
+            case 'z':
+                grid = self.grid.getCompactCoordinates(endpoints)[0]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pz':
+                grid = self.grid.getCompactCoordinates(endpoints)[1]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pp':
+                grid = self.grid.getCompactCoordinates(endpoints)[2]
+                n = np.arange(grid.size)+1-endpoints
+                restriction = 'partial'
+        if endpoints:
+            restriction = None
+
+        return self.chebyshev(grid, n, restriction)
+
+
+    def cardinalDeriv(self,direction,endpoints=False):
+        """
+        Computes the derivative matrix of the cardinal functions in some direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
 
         Returns
         -------
@@ -255,19 +265,69 @@ class Polynomial:
             Derivative matrix.
 
         """
-        grid = grid1d
-        nGrid = len(grid)
-        deriv = np.zeros((nGrid, nGrid))
 
-        for j in range(nGrid):
-            if j % 2 == 0:
-                for k in range(j // 2):
-                    if k == 0:
-                        deriv[j, 2 * k] = n
-                    elif k % 2 == 0:
-                        deriv[j, 2 * k] = 2 * n
-            else:
-                for k in range((j + 1) // 2):
-                    deriv[j, 2 * k + 1] = 2 * n
+        grid = None
+        match direction:
+            case 'z': grid = self.gridValues[0]
+            case 'pz': grid = self.gridValues[1]
+            case 'pp': grid = self.gridValues[2]
+
+        #Computing the diagonal part
+        diagonal = np.sum(np.where(grid[:,None]-grid[None,:] == 0, 0, np.divide(1, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0)),axis=1)
+
+        #Computing the off-diagonal part
+        offDiagonal = np.prod(np.where((grid[:,None,None]-grid[None,None,:])*(grid[None,:,None]-grid[None,None,:]) == 0, 1, np.divide(grid[None,:,None]-grid[None,None,:], grid[:,None,None]-grid[None,None,:], where=grid[:,None,None]-grid[None,None,:]!=0)),axis=-1)
+
+        #Putting all together
+        derivWithEndpoints = np.where(grid[:,None]-grid[None,:] == 0,diagonal[:,None], np.divide(offDiagonal, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0))
+
+        deriv = None
+        if not endpoints:
+            if direction == 'z' or direction == 'pz':
+                deriv = derivWithEndpoints[1:-1,1:-1]
+            elif direction == 'pp':
+                deriv = derivWithEndpoints[:-1,:-1]
+        else:
+            deriv = derivWithEndpoints
+
+        return np.transpose(deriv)
+
+    def chebyshevDeriv(self,direction,endpoints=False):
+        """
+        Computes the derivative matrix of the Chebyshev polynomials in some direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+
+        grid,n,restriction = None,None,None
+        match direction:
+            case 'z':
+                grid = self.grid.getCompactCoordinates(endpoints)[0]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pz':
+                grid = self.grid.getCompactCoordinates(endpoints)[1]
+                n = np.arange(grid.size)+2-2*endpoints
+                restriction = 'full'
+            case 'pp':
+                grid = self.grid.getCompactCoordinates(endpoints)[2]
+                n = np.arange(grid.size)+1-endpoints
+                restriction = 'partial'
+
+        deriv = n[None,:]*eval_chebyu(n[None,:]-1,grid[:,None])
+
+        if restriction == 'full':
+            deriv -= np.where(n[None,:]%2==0,0,1)
 
         return deriv
