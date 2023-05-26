@@ -50,6 +50,8 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
+        wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid)
+
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
@@ -63,7 +65,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             grid,
         )
 
-        boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, TODOfProfile, Tprofile)
+        boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
         offEquilDeltas = solveBoltzmannEquation(
             Tprofile,
@@ -476,6 +478,19 @@ def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, 
     print(kinetic + potential)
 
     return kinetic + potential
+
+
+def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid):
+    [higgsWidth, singletWidth, wallOffSet] = staticWallParams
+
+    higgsVEV = Veff.higgsVEV(Tminus)
+    singletVEV = Veff.singletVEV(Tplus)
+
+    wallProfileGrid = []
+    for z in grid.xiValues:
+        wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
+
+    return wallProfileGrid
 
 
 def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
