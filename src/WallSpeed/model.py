@@ -12,21 +12,48 @@ class Particle:
         self,
         msqVaccum,
         msqThermal,
+        dof,
+        cfactor,
         statistics,
         isOutOfEquilibrium,
         collisionPrefactors,
     ):
         self.msqVacuum = msqVaccum
         self.msqThermal = msqThermal
+        self.dof = dof
+        self.cfactor = cfactor
         assert statistics in [
             -1,
-            1,
+            +1,
         ], "Particle error: statistics not understood %s" % (
             statistics
         )
         self.statistics = statistics
         self.isOutOfEquilibrium = isOutOfEquilibrium
         self.collisionPrefactors = collisionPrefactors
+
+## Top
+#msqVacuum_Top = lambda x: 0.5 * x**2
+#msqThermal_Top = lambda T: 0.1 * T**2
+#statistics_Top = -1
+#isOutOfEquilibrium_Top = True
+#gsq = 0.5
+#collisionPrefactors_Top = [gsq**2, gsq**2, gsq**2]
+#top = BoltzmannParticle(
+#    msqVacuum_Top,
+#    msqThermal_Top,
+#    statistics_Top,
+#    isOutOfEquilibrium_Top,
+#    collisionPrefactors_Top,
+#)
+
+class ModelBuild:
+    '''
+    Class that generates the model given external model file
+    '''
+    def __init__(self,model):
+        return
+
 
 class Model:
     '''
@@ -95,6 +122,23 @@ class Model:
                 'lambdaS': self.lambdaS,
                 'lambdaHS': self.lambdaHS
         }
+        '''
+        Define list of particles
+        '''
+        self.H = Particle(
+                self.muh2,
+                lambda T: self.muhT * T**2,
+                1,3/2,
+                +1,
+                False,
+                [0, 0, 0])
+        self.S = Particle(
+                self.mus2,
+                lambda T: self.musT * T**2,
+                1,3/2,
+                +1,
+                False,
+                [0, 0, 0])
 
    # def Run4Dparams(self,T):
    #     '''
@@ -169,7 +213,7 @@ class Model:
 
         Nbosons = 5
         dof = np.array([1,1,3,6,3])#h,s,chi,W,Z
-        c = np.array([1.5,1.5,1.5,5/6,5/6])
+        c = np.array([3/2,3/2,3/2,5/6,5/6])
 
         '''
         mass matrix
