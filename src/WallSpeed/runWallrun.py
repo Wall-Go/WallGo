@@ -37,13 +37,15 @@ print(kissa)
 
 '''
 
+'''
 class Wallspeed: 
     #pass
     def __init__(self,model,grid,coll):
-    	self.model = model
-		self.grid = grid
+        self.model = model
+        self.grid = grid
         #self.coll = coll
-    	pass
+        pass
+'''
 
 
 '''
