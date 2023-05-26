@@ -150,13 +150,13 @@ class BoltzmannSolver:
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
-        EWall = gammaWall * (pz - vw * E)
-        PWall = gammaWall * (E - vw * pz)
+        EWall = gammaWall * (E - vw * pz)
+        PWall = gammaWall * (pz - vw * E)
 
         # dot products with plasma profile velocity
         gammaPlasma = 1 / np.sqrt(1 - v**2)
-        EPlasma = gammaPlasma * (pz - v * E)
-        PPlasma = gammaPlasma * (E - v * pz)
+        EPlasma = gammaPlasma * (E - v * pz)
+        PPlasma = gammaPlasma * (pz - v * E)
 
         # dot product of velocities
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
