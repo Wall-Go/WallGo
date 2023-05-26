@@ -1,10 +1,12 @@
 import numpy as np
 import math
-import warnings
 #import DRwizard
 from scipy import integrate,interpolate,optimize,special,linalg,stats
 from cosmoTransitions.finiteT import Jb_spline as Jb
 from cosmoTransitions.finiteT import Jf_spline as Jf
+#3import concurrent.futures
+#3import warnings
+#3warnings.filterwarnings("ignore")
 
 
 class Particle:
@@ -183,12 +185,12 @@ class Model:
         h1 = X[...,0]
         s1 = X[...,1]
 
-        fields = {
+        bgFields = {
                 'h1':h1,
                 's1':s1
             }
 
-        V = self.readModel('Veff3dLO.dat',self.pars,fields)
+        V = self.readModel('Veff3dLO.dat',self.pars,bgFields)
         print(V)
 
         #V = (
@@ -304,6 +306,20 @@ class Model:
                 V -= nf * 7*np.pi**4 / 360.
         return V*T4/(2*np.pi*np.pi)
 
+    def V1T_from_X(self, X, T, include_radiation=True):
+        """
+        Calculates the mass matrix and resulting one-loop finite-T potential.
+
+        Useful when calculate temperature derivatives, when the zero-temperature
+        contributions don't matter.
+        """
+        T = np.asanyarray(T, dtype=float)
+        X = np.asanyarray(X, dtype=float)
+        bosons = self.boson_massSq(X,T)
+        fermions = self.fermion_massSq(X)
+        V = self.V1T(bosons, fermions, T, include_radiation)
+        return V
+
     def Vtot(self, X, T, include_radiation=True):
         '''
         The total finite temperature effective potential.
@@ -323,7 +339,11 @@ class Model:
             differences or derivatives.
         '''
         T = np.asanyarray(T, dtype=float)
+        print("debug")
+        print(X)
+        return
         X = np.asanyarray(X, dtype=float)
+        print(X)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
@@ -376,7 +396,7 @@ class Model:
 
         # This should be overridden.
         #return np.array([[m1, 0], [0, m2]])
-        return np.array([[m1, 0], [0, m2]])
+        return [[m1, 0], [0, m2]]
 
 
     def findMinimum(self, X=None, T=0.0):
@@ -385,14 +405,35 @@ class Model:
         temperature `T`.
         '''
         if X is None:
-            X = self.approxZeroTMin()[0]
+            X = self.approxZeroTMin(T)
+            X = np.asanyarray(X)
         fh = lambda h: self.Vtot([abs(h),0],T)
         fs = lambda s: self.Vtot([0,abs(s)],T)
 
-        #result = optimize.fmin(self.Vtot, X, args=(T,), disp=0)
+        ##result = optimize.fmin(self.Vtot, X, args=(T,), disp=0)
+        print("xxx")
+        print(X)
         result = optimize.minimize(self.Vtot, X, args=(T,),
                                    method='Nelder-Mead',
                                    tol=1e-12,options={'disp': False})
+
+        vT,sT = X[0,0],X[1,1]
+        #print("hello")
+        #print(vT)
+        #print(fh(vT))
+
+        #if fh(vT) < fh(0) and fh(3*vT) > fh(vT):
+        #    vT = optimize.minimize_scalar(fh,(0,vT,3*vT)).x
+            #vT = optimize.fmin(fh,(0,vT,3*vT)).x
+        #else:
+        #    vT = optimize.minimize_scalar(fh,(vT,2*vT),(0,10*vT)).x
+
+        #if fs(sT) < fs(0) and fs(3*sT) > fs(sT):
+        #    sT = optimize.minimize_scalar(fs,(0,sT,3*sT)).x
+        #else:
+        #    sT = optimize.minimize_scalar(fs,(sT,2*sT),(0,10*sT)).x
+
+        #return np.array([[vT,0],[0,sT]])
 
         return result.x
 
@@ -426,8 +467,9 @@ class Model:
 pot = Model(1,125,160,1.0,1.2)
 #pot.Run4Dparams(1)
 print(pot.V0([[110,130]]))
-#print(pot.Vtot([[110,140],[110,130]],[110]))
-#print(pot.findMinimum(None,110))
+print(pot.Vtot([[110,140],[110,130]],[110]))
+#print(pot.V1T_from_X([[110,140],[110,130]],[110]))
+print(pot.findMinimum(None,110))
 
 
 # if __name__ == '__main__':
