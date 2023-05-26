@@ -40,6 +40,7 @@ class BoltzmannSolver:
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
+        self.poly = Polynomial(self.grid)
 
     def solveBoltzmannEquations(self):
         r"""
@@ -80,7 +81,7 @@ class BoltzmannSolver:
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
         return np.reshape(deltaF, deltaFShape, order="F")
 
-    def getDeltas(self):
+    def getDeltas(self, deltaF):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -95,7 +96,14 @@ class BoltzmannSolver:
             Defined in equation (20) of [LC22]_. A list of 4 arrays, each of
             which is of size :py:data:`len(z)`.
         """
-        pass
+        # dict to store results
+        Delta = {"00": 0, "02": 0, "20": 0, "11": 0}
+        # points and weights for Gauss-Legendre quadrature
+        points, weights = polynomial.legendre.leggauss(self.grid.N - 1)
+        # evaluating deltaF at the points
+        deltaFValues = self.poly.
+
+
 
     def buildLinearEquations(self):
         """
@@ -103,16 +111,14 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        # polynomial tool
-        poly = Polynomial(self.grid)
         if self.basisM == "Cardinal": ##### temporary hack
-            derivChi = poly.cardinalDeriv("z")
+            derivChi = self.poly.cardinalDeriv("z")
         else:
-            derivChi = poly.chebyshevDeriv("z")
+            derivChi = self.poly.chebyshevDeriv("z")
         if self.basisN == "Cardinal": ##### temporary hack
-            derivPz = poly.cardinalDeriv("pz")
+            derivPz = self.poly.cardinalDeriv("pz")
         else:
-            derivPz = poly.chebyshevDeriv("pz")
+            derivPz = self.poly.chebyshevDeriv("pz")
         derivXi = derivChi
         derivRz = derivPz
 
@@ -124,15 +130,15 @@ class BoltzmannSolver:
 
         # intertwiner matrices
         if self.basisM == "Cardinal": ##### temporary hack
-            TChiMat = poly.cardinalMatrix("z")
+            TChiMat = self.poly.cardinalMatrix("z")
         else:
-            TChiMat = poly.chebyshevMatrix("z")
+            TChiMat = self.poly.chebyshevMatrix("z")
         if self.basisN == "Cardinal": ##### temporary hack
-            TRzMat = poly.cardinalMatrix("pz")
+            TRzMat = self.poly.cardinalMatrix("pz")
         else:
-            TRzMat = poly.chebyshevMatrix("pz")
-        #TChiMat = poly.intertwiner("Coordinate", self.basisM)
-        #TRzMat = poly.intertwiner("Coordinate", self.basisN)
+            TRzMat = self.poly.chebyshevMatrix("pz")
+        #TChiMat = self.poly.intertwiner("Coordinate", self.basisM)
+        #TRzMat = self.poly.intertwiner("Coordinate", self.basisN)
         TRpMat = TRzMat
         DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
@@ -205,7 +211,7 @@ class BoltzmannSolver:
         )
         if self.basisN != collisionBasis and False:
             print("I am confused:", [self.basisN, collisionBasis])
-            TInvRzMat = poly.intertwiner(collisionBasis, self.basisN)
+            TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
             collisionArray = np.einsum(
                 "ac,bd,ijcd",
