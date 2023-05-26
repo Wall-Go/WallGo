@@ -9,7 +9,6 @@ using namespace std;
 #include <time.h>
 #include "kinematics.h"
 #include "operators.h"
-#include <omp.h>
 
 #include "hdf5Interface.h"
 
