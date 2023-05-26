@@ -67,13 +67,9 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
-        offEquilDeltas = solveBoltzmannEquation(
-            Tprofile,
-            velocityProfile,
-            wallParameters[1],
-            wallParameters[2],
-            wallParameters[3],
-        )
+        boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, TODOparticle)
+
+        offEquilDeltas = boltzmannSolver.getDeltas()
 
         intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
