@@ -4,13 +4,21 @@
 
 - pybind11 (TODO)
 
-- Official HDF5 C API headers + library
+- Official HDF5 C API library
 
-	To get these on linux:
-	sudo apt-get install libhdf5-serial-dev
-	sudo apt-get install libhdf5-dev	
-	
-	
+
+
+----- Installing dependencies -----
+
+Linux:
+	sudo apt-get install libgsl-dev
+	sudo apt-get install libhdf5-dev
+
+MacOS: 
+	brew install gsl
+	brew install hdf5
+
+		
 ========= Compiling ==========
 
 Stardard CMake build. Go to WallSpeed/Collision (where the CMakeLists.txt file is) and run:
