@@ -1,5 +1,5 @@
 #include <math.h>
-#include "CollElem.cpp"
+#include "CollElem.h"
 
 //Functions for setting global variables
 void specifyChebyshev(int n, int m); //Specifies which chebyshev polynomials should be used

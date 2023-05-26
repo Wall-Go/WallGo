@@ -1,5 +1,7 @@
-#include <math.h>
+#ifndef FOURVECTOR_H_
+#define FOURVECTOR_H_
 
+#include <math.h>
 
 
 // The four-vector class. Contains (p0,p1,p2,p3). The first element is the energy.
@@ -94,3 +96,4 @@ class FourVector {
 
 };
 
+#endif // header guard
