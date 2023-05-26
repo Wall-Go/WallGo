@@ -2,6 +2,7 @@ import numpy as np
 
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
+from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 
 
 def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
@@ -49,6 +50,8 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
+        wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid)
+
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
@@ -62,13 +65,11 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             grid,
         )
 
-        offEquilDeltas = solveBoltzmannEquation(
-            Tprofile,
-            velocityProfile,
-            wallParameters[1],
-            wallParameters[2],
-            wallParameters[3],
-        )
+        boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+
+        boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, model.particles)
+
+        offEquilDeltas = boltzmannSolver.getDeltas()
 
         intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
@@ -473,6 +474,19 @@ def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, 
     print(kinetic + potential)
 
     return kinetic + potential
+
+
+def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid):
+    [higgsWidth, singletWidth, wallOffSet] = staticWallParams
+
+    higgsVEV = Veff.higgsVEV(Tminus)
+    singletVEV = Veff.singletVEV(Tplus)
+
+    wallProfileGrid = []
+    for z in grid.xiValues:
+        wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
+
+    return wallProfileGrid
 
 
 def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
