@@ -41,6 +41,7 @@ class BoltzmannSolver:
         self.basisM = basisM
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
+        print("NOTE: should boost frames for input velocities from Joonas's to mine")
 
     def solveBoltzmannEquations(self):
         r"""
@@ -124,7 +125,7 @@ class BoltzmannSolver:
         measurePzPp = 1 / (2 * np.pi)**2 / E * measurePz * measurePp
         # evaluating with Gauss-Chebyshev quadrature
         Delta["00"] = np.einsum("jk, ijk", measurePzPp * weights, deltaF, optimize=True)
-
+        print("NOTE: should boost frames for output velocities from mine to Joonas's")
 
 
 
@@ -134,16 +135,8 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        if self.basisM == "Cardinal": ##### temporary hack
-            derivChi = self.poly.cardinalDeriv("z")
-        else:
-            derivChi = self.poly.chebyshevDeriv("z")
-        if self.basisN == "Cardinal": ##### temporary hack
-            derivPz = self.poly.cardinalDeriv("pz")
-        else:
-            derivPz = self.poly.chebyshevDeriv("pz")
-        derivXi = derivChi
-        derivRz = derivPz
+        derivChi = self.poly.deriv("z", self.basisM)
+        derivRz = self.poly.deriv("pz", self.basisN)
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -152,19 +145,9 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        if self.basisM == "Cardinal": ##### temporary hack
-            TChiMat = self.poly.cardinalMatrix("z")
-        else:
-            TChiMat = self.poly.chebyshevMatrix("z")
-        if self.basisN == "Cardinal": ##### temporary hack
-            TRzMat = self.poly.cardinalMatrix("pz")
-        else:
-            TRzMat = self.poly.chebyshevMatrix("pz")
-        #TChiMat = self.poly.intertwiner("Coordinate", self.basisM)
-        #TRzMat = self.poly.intertwiner("Coordinate", self.basisN)
-        TRpMat = TRzMat
-        DTChiMat = np.dot(derivChi, TChiMat)
-        DTRzMat = np.dot(derivRz, TRzMat)
+        TChiMat = self.poly.matrix("z", self.basisM)
+        TRzMat = self.poly.matrix("pz", self.basisN)
+        TRpMat = self.poly.matrix("pp", self.basisN)
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -194,9 +177,9 @@ class BoltzmannSolver:
         #dTdxi = np.einsum("ij,jbc", derivXi, T, optimize=True)
         #dvdxi = np.einsum("ij,jbc", derivXi, v, optimize=True)
         #dmsqdxi = np.einsum("ij,jbc", derivXi, msq, optimize=True)
-        dTdxi = np.dot(derivXi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
-        dvdxi = np.dot(derivXi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
-        dmsqdxi = np.dot(derivXi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dTdChi = np.dot(derivChi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dvdChi = np.dot(derivChi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dmsqdChi = np.dot(derivChi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
@@ -208,21 +191,21 @@ class BoltzmannSolver:
         dfEq = -np.exp(EPlasma / T) * fEq**2
 
         ##### source term #####
-        source = (dfEq / T) * (
-            PWall * PPlasma * gammaPlasma**2 * dvdxi
-            + PWall * EPlasma * dTdxi / T
-            + 1 / 2 * dmsqdxi * uwBaruPl
+        source = (dfEq / T) * dchidxi * (
+            PWall * PPlasma * gammaPlasma**2 * dvdChi
+            + PWall * EPlasma * dTdChi / T
+            + 1 / 2 * dmsqdChi * uwBaruPl
         )
 
         ##### liouville operator #####
         liouville = (
             dchidxi * PWall
-                * DTChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
             - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * DTRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
