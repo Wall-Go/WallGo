@@ -600,8 +600,8 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, Veff):
 
 
 def deltaToTmunu(
-    velocityProfile,
-    temperatureProfile,
+    velocityAtCenter,
+    Tm,
     offEquilDeltas,
     higgsWidth
     grid,
@@ -614,18 +614,18 @@ def deltaToTmunu(
     delta02 = offEquilDeltas["02"]
     delta20 = offEquilDeltas["20"]
 
-    u0 = np.sqrt(gammasq(velocityProfile))
-    u3 = np.sqrt(gammasq(velocityProfile))*velocityProfile
+    u0 = np.sqrt(gammasq(velocityAtCenter))
+    u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
     ubar0 = u3
     ubar3 = u0
     
-    h = 0.5 * Veff.higgsVEV(temperatureProfile)*(1 - np.tanh(grid.xiValues / higgsWidth))
-    mTopSquared = 1/2.*particleList.ytop*h*h
+    h = 0.5 * Veff.higgsVEV(Tm)*(1 - np.tanh(grid.xiValues / higgsWidth))
+    mTopSquared = 1/2.*model.ytop*h*h #need to update this once model file is ready
 
     T30 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u0+
-           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u03*ubar0 + ubar3*u0))/2.
+           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
     T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
-           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar3+4*delta11*u03*ubar3)/2.
+           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
     
     return T30, T33
 
