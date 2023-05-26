@@ -25,9 +25,9 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
-    higgsWidth = 1 / hMass
-    singletWidth = 1 / sMass
-    wallOffSet = 0
+    higgsWidthGuess = 1 / hMass
+    singletWidthGuess = 1 / sMass
+    wallOffSetGuess = 0
     higgsWidth, singletWidth, wallOffSet = initialWallParameters(
         higgsWidthGuess,
         singletWidthGuess,
@@ -77,20 +77,6 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         wallParameters = intermediateRes.x
 
-        c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
-        Tprofile = findTemperatureProfile(
-            c1,
-            c2,
-            higgsWidth,
-            singletWidth,
-            wallOffSet,
-            offEquilDeltas,
-            Tplus,
-            Tminus,
-            model,
-            grid,
-        )
-
         error = np.sqrt(
             ((wallVelocity - oldWallVelocity) / wallVelocity) ** 2
             + ((higgsWidth - oldHiggsWidth) / higgsWidth) ** 2
@@ -98,7 +84,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             + (wallOffSet - oldWallOffSet) ** 2
         )
 
-    return wallVelocity, higgsWidth, singletWidth, wallOffSet
+    return wallParameters
 
 
 def momentsOfWallEoM(wallParameters, offEquilDeltas, Veff):
@@ -149,7 +135,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, Veff):
         offEquilDeltas,
         Tfunc,
     )
-    mom4 = singletPressureMoment(
+    mom4 = singletStretchMoment(
         higgsVEV,
         higgsWidth,
         singletVEV,
@@ -186,7 +172,7 @@ def higgsPressureMoment(
             Tfunc(z),
         ),
         -20 * higgsWidth,
-        -20 * singletWidth,
+        20 * higgsWidth,
     )
 
 
@@ -238,7 +224,7 @@ def higgsStretchMoment(
             Tfunc(z),
         ),
         -20 * higgsWidth,
-        -20 * singletWidth,
+        20 * higgsWidth,
     )
 
 
@@ -441,22 +427,22 @@ def initialWallParameters(
     singletVEV = Veff.singletVEV(TGuess)
 
     initRes = minimize(
-        lambda higgsWidth, singletWidth, wallOffSet: oneDimAction(
-            higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, TGuess, Veff
-        ),
+        lambda wallParams: oneDimAction(higgsVEV, singletVEV, wallParams, TGuess, Veff),
         x0=[higgsWidthGuess, singletWidthGuess, wallOffSetGuess],
-        bounds=[(0, None), (0, None), (None, None)],
+        bounds=[(0, None), (0, None), (-10, 10)],
     )
 
     return initRes.x[0], initRes.x[1], initRes.x[2]
 
 
-def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, Veff):
+def oneDimAction(higgsVEV, singletVEV, wallParams, T, Veff):
+    [higgsWidth, singletWidth, wallOffSet] = wallParams
+
     kinetic = (1 / higgsWidth + 1 / singletWidth) * 3 / 2
 
     integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
 
-    potential = quad(
+    integral = quad(
         lambda z: Veff.V(
             wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
             T,
