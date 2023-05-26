@@ -386,8 +386,8 @@ class Model:
         '''
         if X is None:
             X = self.approxZeroTMin()[0]
-        #fh = lambda h: self.Vtot([abs(h),0],T)
-        #fs = lambda s: self.Vtot([0,abs(s)],T)
+        fh = lambda h: self.Vtot([abs(h),0],T)
+        fs = lambda s: self.Vtot([0,abs(s)],T)
 
         #result = optimize.fmin(self.Vtot, X, args=(T,), disp=0)
         result = optimize.minimize(self.Vtot, X, args=(T,),
