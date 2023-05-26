@@ -135,8 +135,8 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        derivChi = self.poly.deriv("z", self.basisM)
-        derivRz = self.poly.deriv("pz", self.basisN)
+        derivChi = self.poly.deriv(self.basisM, "z")
+        derivRz = self.poly.deriv(self.basisN, "pz")
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates() # non-compact
@@ -145,9 +145,9 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        TChiMat = self.poly.matrix("z", self.basisM)
-        TRzMat = self.poly.matrix("pz", self.basisN)
-        TRpMat = self.poly.matrix("pp", self.basisN)
+        TChiMat = self.poly.matrix(self.basisM, "z")
+        TRzMat = self.poly.matrix(self.basisN, "pz")
+        TRpMat = self.poly.matrix(self.basisN, "pp")
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -203,7 +203,7 @@ class BoltzmannSolver:
                 * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
+            - dchidxi * drzdpz * gammaWall / 2 * dmsqdChi
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
