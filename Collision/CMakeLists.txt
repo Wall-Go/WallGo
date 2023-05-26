@@ -52,7 +52,7 @@ find_package(GSL REQUIRED CXX)
 ## includes for the packages
 target_include_directories(collision 
 	PRIVATE ${HDF5_INCLUDE_DIRS}
-	PRIVAGE ${GSL_INCLUDE_DIRS}
+	PRIVATE ${GSL_INCLUDE_DIRS}
 )
 
 # Libraries for the packages
