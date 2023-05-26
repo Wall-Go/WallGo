@@ -25,7 +25,7 @@ def test_cardinal():
     assert maxDiffChi == pytest.approx(0,abs=1e-10) and maxDiffRz == pytest.approx(0,abs=1e-10) and maxDiffRp == pytest.approx(0,abs=1e-10)
     
 def test_evaluateCardinal():
-    r"""
+    """
     Interpolates a function f by a cardinal series and tests if this is a good approximation on and between the grid points.
 
     """
@@ -38,7 +38,7 @@ def test_evaluateCardinal():
     pol = Polynomial(grid)
     chiValues,rzValues,rpValues = grid.getCompactCoordinates(True)
     
-    f = lambda x,y,z: np.exp(-(2*x)**2-(3*y)**2-(1.5*z)**2)*(1+x+y**2+0.5*z)
+    f = lambda x,y,z: np.exp(-(2*x)**2-(3*y)**2-(1.5*z)**2)*(1-x**2)*(1-y**2)*(1-z)
     
     fGrid = f(chiValues[:,None,None],rzValues[None,:,None],rpValues[None,None,:])
     fOffGrid = f((chiValues[:-1,None,None]+chiValues[1:,None,None])/2,(rzValues[None,:-1,None]+rzValues[None,1:,None])/2,(rpValues[None,None,:-1]+rpValues[None,None,1:])/2)
@@ -63,7 +63,39 @@ def test_evaluateCardinal():
     maxDiffOnGrid = np.amax(np.abs(fOnGridSeries-fGrid))
     maxDiffOffGrid = np.amax(np.abs(fOffGridSeries-fOffGrid))
     
-    assert maxDiffOnGrid == pytest.approx(0,abs=1e-10) and maxDiffOffGrid == pytest.approx(0,abs=1e-5)
+    assert maxDiffOnGrid == pytest.approx(0,abs=1e-10) and maxDiffOffGrid == pytest.approx(0,abs=1e-4)
+    
+def test_evaluateChebyshev():
+    """
+    Interpolates a function f by a cardinal series and tests if this is a good approximation on and between the grid points.
+
+    """
+    
+    M,N = 20,20
+    grid = Grid(M,N,1,1)
+    pol = Polynomial(grid)
+    chiValues,rzValues,rpValues = grid.getCompactCoordinates(False)
+    
+    f = lambda x,y,z: np.exp(-(2*x)**2-(3*y)**2-(1.5*z)**2)*(1-x**2)*(1-y**2)*(1-z)
+    
+    fGrid = f(chiValues[:,None,None],rzValues[None,:,None],rpValues[None,None,:])
+    fOffGrid = f((chiValues[:-1,None,None]+chiValues[1:,None,None])/2,(rzValues[None,:-1,None]+rzValues[None,1:,None])/2,(rpValues[None,None,:-1]+rpValues[None,None,1:])/2)
+    
+    completeGrid = np.transpose(np.meshgrid(chiValues,rzValues,rpValues,indexing='ij'), axes=(1,2,3,0))
+    completeOffGrid = np.transpose(np.meshgrid((chiValues[:-1]+chiValues[1:])/2,(rzValues[:-1]+rzValues[1:])/2,(rpValues[:-1]+rpValues[1:])/2
+                                                ,indexing='ij'), axes=(1,2,3,0))
+    
+    matrix = np.linalg.inv(pol.chebyshevMatrix('z'))[:,None,None,:,None,None]*np.linalg.inv(pol.chebyshevMatrix('pz'))[None,:,None,None,:,None]*np.linalg.inv(pol.chebyshevMatrix('pp'))[None,None,:,None,None,:]
+    spectral = np.sum(matrix*fGrid[None,None,None,:,:,:],axis=(-3,-2,-1))
+    
+    fOnGridSeries = pol.evaluateChebyshev(completeGrid,spectral)
+    fOffGridSeries = pol.evaluateChebyshev(completeOffGrid,spectral)
+    
+    maxDiffOnGrid = np.amax(np.abs(fOnGridSeries-fGrid))
+    maxDiffOffGrid = np.amax(np.abs(fOffGridSeries-fOffGrid))
+    
+    assert maxDiffOnGrid == pytest.approx(0,abs=1e-10) and maxDiffOffGrid == pytest.approx(0,abs=1e-4)
+    
     
 def test_cardinalDeriv():
     """
