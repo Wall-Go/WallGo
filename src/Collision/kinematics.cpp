@@ -80,19 +80,14 @@ return SP4(p,k)/(SP4(p2,p)+SP4(p2,k));
 // Creates s,t,y Mandelstam invariants
 void CreateInvariants(double mandelstam[3],FourVector p,FourVector k, FourVector p2, FourVector k2){
 //help four-vector
-FourVector helpFV;
-
 //The s invariant
-helpFV=addFV(p,k);
-mandelstam[0]=helpFV.norm();
+mandelstam[0]=2.0*SP4(p,k);
 
 //The t invariant
-helpFV=subtractFV(p,p2);
-mandelstam[1]=helpFV.norm();
+mandelstam[1]=-2.0*SP4(p,p2);
 
 //The u invariant
-helpFV=subtractFV(p,k2);
-mandelstam[2]=helpFV.norm();
+mandelstam[2]=-mandelstam[0]-mandelstam[1];
 }
 
 
