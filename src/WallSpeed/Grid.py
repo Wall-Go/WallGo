@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 
 
@@ -17,7 +15,7 @@ class Grid:
     interval [-1, 1],
 
     .. math::
-        \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L^2}}, \qquad
+        \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L_xi^2}}, \qquad
         \rho_{z} \equiv \tanh\left(\frac{p_z}{2 T_0}\right), \qquad
         \rho_{\Vert} \equiv 1 - 2 e^{-p_\Vert/T_0}.
 
@@ -67,9 +65,7 @@ class Grid:
         # Additional signs are so that each coordinate starts from -1.
         self.chiValues = -np.cos(np.arange(1, self.M) * np.pi / self.M)
         self.rzValues = -np.cos(np.arange(1, self.N) * np.pi / self.N)
-        self.rpValues = np.flip(
-            np.cos(np.arange(1, self.N) * np.pi / (self.N - 1))
-        )
+        self.rpValues = -np.cos(np.arange(0, self.N - 1) * np.pi / (self.N - 1))
 
         # Computing the grids in physical coordinates
         (self.xiValues, self.pzValues, self.ppValues,) = Grid.decompactify(
@@ -128,20 +124,51 @@ class Grid:
         else:
             return self.xiValues, self.pzValues, self.ppValues
 
-    def compactify(z, pz, pp, L, T0):
+    def getCompactificationDerivatives(self, endpoints=False):
+        r"""
+        Return derivatives of compactified coordinates of grid, with respect to
+        uncompactified derivatives.
+
+        Parameters
+        ----------
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        ----------
+        dchiValues : array_like
+            Grid of the :math:`\partial_\xi\chi` direction.
+        drzValues : array_like
+            Grid of the :math:`\partial_{p_z}\rho_z` direction.
+        drpValues : array_like
+            Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
+        """
+        xi, pz, pp = self.getCoordinates(endpoints)
+        return Grid.compactificationDerivatives(xi, pz, pp, self.L_xi, self.T)
+
+    def compactify(z, pz, pp, L_xi, T):
         r"""
         Transforms coordinates to [-1, 1] interval
         """
-        z_compact = z / np.sqrt(L**2 + z**2)
-        pz_compact = np.tanh(pz / 2 / T0)
-        pp_compact = 1 - 2 * np.exp(-pp / T0)
+        z_compact = z / np.sqrt(L_xi**2 + z**2)
+        pz_compact = np.tanh(pz / 2 / T)
+        pp_compact = 1 - 2 * np.exp(-pp / T)
         return z_compact, pz_compact, pp_compact
 
-    def decompactify(z_compact, pz_compact, pp_compact, L, T0):
+    def decompactify(z_compact, pz_compact, pp_compact, L_xi, T):
         r"""
         Transforms coordinates from [-1, 1] interval (inverse of compactify).
         """
-        z = L * z_compact / np.sqrt(1 - z_compact**2)
-        pz = 2 * T0 * np.arctanh(pz_compact)
-        pp = -T0 * np.log((1 - pp_compact) / 2)
+        z = L_xi * z_compact / np.sqrt(1 - z_compact**2)
+        pz = 2 * T * np.arctanh(pz_compact)
+        pp = -T * np.log((1 - pp_compact) / 2)
         return z, pz, pp
+
+    def compactificationDerivatives(z, pz, pp, L_xi, T):
+        r"""
+        Derivative of transforms coordinates to [-1, 1] interval
+        """
+        dz_compact = L_xi**2 / (L_xi**2 + z**2)**1.5
+        dpz_compact = 1 / 2 / T / np.cosh(pz / 2 / T)**2
+        dpp_compact = 2 / T * np.exp(-pp / T)
+        return dz_compact, dpz_compact, dpp_compact
