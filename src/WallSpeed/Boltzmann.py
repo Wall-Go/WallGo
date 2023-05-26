@@ -98,10 +98,33 @@ class BoltzmannSolver:
         """
         # dict to store results
         Delta = {"00": 0, "02": 0, "20": 0, "11": 0}
-        # points and weights for Gauss-Legendre quadrature
-        points, weights = polynomial.legendre.leggauss(self.grid.N - 1)
-        # evaluating deltaF at the points
-        deltaFValues = self.poly.
+
+        # coordinates
+        chi, rz, rp = self.grid.getCompactCoordinates() # compact
+
+        # fluctuation mode
+        msq = self.particle.msqVacuum(field)
+        E = np.sqrt(msq + pz**2 + pp**2)
+
+        # dot products with fixed plasma profile velocity
+        vFixed = v[0]
+        gammaPlasma = 1 / np.sqrt(1 - vFixed**2)
+        EPlasma = gammaPlasma * (E - vFixed * pz)
+        PPlasma = gammaPlasma * (pz - vFixed * E)
+
+        # weights for Gauss-Legendre quadrature
+        weightsPz = np.pi / self.grid.N * np.sin(np.pi / self.grid.N * np.arange(1, self.grid.N))
+        weightsPz /= np.sqrt(1 - rz**2)
+        weightsPp = ... ###### this isn't true
+        weightsPp *= ...
+        weights = weightsPz[:, np.newaxis] *  weightsPp[np.newaxis, :]
+        # measure, including Jacobian from coordinate compactification
+        measurePz = (2 * T0) / (1 - rz**2)
+        measurePp = T0**2 / (1 - rp) * np.log(2 / (1 - rp)) ####### looks like this is going to hit a singularity on the grid
+        measurePzPp = 1 / (2 * np.pi)**2 / E * measurePz * measurePp
+        # evaluating with Gauss-Chebyshev quadrature
+        Delta["00"] = np.einsum("jk, ijk", measurePzPp * weights, deltaF, optimize=True)
+
 
 
 
