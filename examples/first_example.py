@@ -23,7 +23,7 @@ class BoltzmannParticle():
         self.isOutOfEquilibrium = True
         gsq = 0.4
         self.collisionPrefactors = [gsq**2, gsq**2, gsq**2]
-        
+
 #self.polynomialBasis = "Chebyshev"
 #self.M = M
 #self.N = N
@@ -44,3 +44,6 @@ deltaF = boltzmann.solveBoltzmannEquations()
 print("deltaF.shape =", deltaF.shape)
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
+
+Deltas = boltzmann.getDeltas(deltaF)
+print("Deltas =", Deltas)

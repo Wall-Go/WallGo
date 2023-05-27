@@ -43,6 +43,72 @@ class BoltzmannSolver:
         self.poly = Polynomial(self.grid)
         print("NOTE: should boost frames for input velocities from Joonas's to mine")
 
+    def getDeltas(self, deltaF=None):
+        """
+        Computes Deltas necessary for solving the Higgs equation of motion.
+
+        These are defined in equation (20) of [LC22]_.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        Deltas : array_like
+            Defined in equation (20) of [LC22]_. A list of 4 arrays, each of
+            which is of size :py:data:`len(z)`.
+        """
+        # checking if result pre-computed
+        if deltaF is None:
+            deltaF = self.solveBoltzmannEquations()
+
+        # dict to store results
+        Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
+
+        # coordinates
+        chi, rz, rp = self.grid.getCompactCoordinates() # compact
+        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        xi = xi[:, np.newaxis, np.newaxis]
+        pz = pz[np.newaxis, :, np.newaxis]
+        pp = pp[np.newaxis, np.newaxis, :]
+
+        # background
+        vFixed = self.background.velocityProfile[0]
+        T0 = self.background.temperatureProfile[0]
+
+        # fluctuation mode
+        msq = self.particle.msqVacuum(self.background.fieldProfile)
+        msq = msq[:, np.newaxis, np.newaxis]
+        E = np.sqrt(msq + pz**2 + pp**2)
+
+        # dot products with fixed plasma profile velocity
+        gammaPlasma = 1 / np.sqrt(1 - vFixed**2)
+        EPlasma = gammaPlasma * (E - vFixed * pz)
+        PPlasma = gammaPlasma * (pz - vFixed * E)
+
+        # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
+        weightsPz = np.pi / self.grid.N * np.sin(np.pi / self.grid.N * np.arange(1, self.grid.N))
+        weightsPz /= np.sqrt(1 - rz**2)
+        # note, we drop the point at rp=-1, to avoid an apparent divergence.
+        # should think further about this another day.
+        weightsPp = np.pi / (self.grid.N - 1) * np.sin(np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1))
+        weightsPp /= np.sqrt(1 - rp[1:]**2)
+        weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
+        # measure, including Jacobian from coordinate compactification
+        measurePz = (2 * T0) / (1 - rz**2)
+        measurePp = T0**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
+        measurePzPp = 1 / (2 * np.pi)**2 * measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
+
+        # evaluating integrals with Gaussian quadrature
+        Deltas["00"] = np.einsum("jk, ijk -> i", measurePzPp * weights, deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
+        Deltas["11"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:] * PPlasma[:, :, 1:] * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
+        Deltas["20"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
+        Deltas["02"] = np.einsum("jk, ijk -> i", measurePzPp * weights, PPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
+        print("NOTE: should boost frames for output velocities from mine to Joonas's")
+
+        # returning results
+        return Deltas
+
     def solveBoltzmannEquations(self):
         r"""
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
@@ -81,52 +147,6 @@ class BoltzmannSolver:
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
         return np.reshape(deltaF, deltaFShape, order="F")
-
-    def getDeltas(self, deltaF):
-        """
-        Computes Deltas necessary for solving the Higgs equation of motion.
-
-        These are defined in equation (20) of [LC22]_.
-
-        Parameters
-        ----------
-
-        Returns
-        -------
-        Deltas : array_like
-            Defined in equation (20) of [LC22]_. A list of 4 arrays, each of
-            which is of size :py:data:`len(z)`.
-        """
-        # dict to store results
-        Delta = {"00": 0, "02": 0, "20": 0, "11": 0}
-
-        # coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates() # compact
-
-        # fluctuation mode
-        msq = self.particle.msqVacuum(field)
-        E = np.sqrt(msq + pz**2 + pp**2)
-
-        # dot products with fixed plasma profile velocity
-        vFixed = v[0]
-        gammaPlasma = 1 / np.sqrt(1 - vFixed**2)
-        EPlasma = gammaPlasma * (E - vFixed * pz)
-        PPlasma = gammaPlasma * (pz - vFixed * E)
-
-        # weights for Gauss-Legendre quadrature
-        weightsPz = np.pi / self.grid.N * np.sin(np.pi / self.grid.N * np.arange(1, self.grid.N))
-        weightsPz /= np.sqrt(1 - rz**2)
-        weightsPp = ... ###### this isn't true
-        weightsPp *= ...
-        weights = weightsPz[:, np.newaxis] *  weightsPp[np.newaxis, :]
-        # measure, including Jacobian from coordinate compactification
-        measurePz = (2 * T0) / (1 - rz**2)
-        measurePp = T0**2 / (1 - rp) * np.log(2 / (1 - rp)) ####### looks like this is going to hit a singularity on the grid
-        measurePzPp = 1 / (2 * np.pi)**2 / E * measurePz * measurePp
-        # evaluating with Gauss-Chebyshev quadrature
-        Delta["00"] = np.einsum("jk, ijk", measurePzPp * weights, deltaF, optimize=True)
-        print("NOTE: should boost frames for output velocities from mine to Joonas's")
-
 
 
     def buildLinearEquations(self):
@@ -174,9 +194,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        #dTdxi = np.einsum("ij,jbc", derivXi, T, optimize=True)
-        #dvdxi = np.einsum("ij,jbc", derivXi, v, optimize=True)
-        #dmsqdxi = np.einsum("ij,jbc", derivXi, msq, optimize=True)
+        #dTdxi = np.einsum("ij,jbc->ibc", derivXi, T, optimize=True)
+        #dvdxi = np.einsum("ij,jbc->ibc", derivXi, v, optimize=True)
+        #dmsqdxi = np.einsum("ij,jbc->ibc", derivXi, msq, optimize=True)
         dTdChi = np.dot(derivChi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
         dvdChi = np.dot(derivChi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
         dmsqdChi = np.dot(derivChi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
@@ -220,7 +240,7 @@ class BoltzmannSolver:
             TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
             collisionArray = np.einsum(
-                "ac,bd,ijcd",
+                "ac,bd,ijcd->ijab",
                 TInvRzMat,
                 TInvRpMat,
                 collisionArray,
