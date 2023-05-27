@@ -41,7 +41,7 @@ class BoltzmannSolver:
         self.basisM = basisM
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
-        print("NOTE: should boost frames for input velocities from Joonas's to mine")
+        print("NOTE: missing boost between frames")
 
     def getDeltas(self, deltaF=None):
         """
@@ -104,7 +104,6 @@ class BoltzmannSolver:
         Deltas["11"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:] * PPlasma[:, :, 1:] * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
         Deltas["20"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
         Deltas["02"] = np.einsum("jk, ijk -> i", measurePzPp * weights, PPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
-        print("NOTE: should boost frames for output velocities from mine to Joonas's")
 
         # returning results
         return Deltas
