@@ -35,5 +35,8 @@ Stardard CMake build. Go to WallSpeed/Collision (where the CMakeLists.txt file i
 	cd build
 	cmake ..
 	make
+	make install
 	
-This will produce the executable in build/bin. If cmake errors out due to missing external libraries, install those and try again.
+This will produce the executable in build/bin and python module in build/lib. The 'make install' step will copy these to their defaultl locations at ./bin and ./pybind/lib
+
+If cmake errors out due to missing external libraries, install those and try again.
