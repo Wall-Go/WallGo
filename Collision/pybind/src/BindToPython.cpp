@@ -2,6 +2,8 @@
 /** This file defines a simple interface for calling collision 
  * integral routines from Python using the pybind11 library. **/
 
+#include <iostream>
+
 #include "kinematics.h"
 #include "operators.h"
 
@@ -15,8 +17,24 @@ struct InputData {
     std::map<std::string, pybind11::object> values;
 };
 
+
+// Test function
+void pybindTestFunction(const InputData& inputData) {
+
+    std::cout << "hello test1 from laurin\n";
+}
+
+
 PYBIND11_MODULE(CollisionModule, m) {
-    // Module definition here
+
+    // Bind the InputData struct
+    pybind11::class_<InputData>(m, "InputData")
+        .def(pybind11::init<>())
+        .def_readwrite("values", &InputData::values);
+
+    // Bind functions
+    m.def("pybindTestFunction", &pybindTestFunction, 
+        "Test function to call from python");
 }
 
 
