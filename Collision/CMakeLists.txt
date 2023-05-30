@@ -11,6 +11,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+
+# Set the path to the installation directories
+set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
+
+
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
@@ -33,9 +38,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 
+
 # Add all source files in the src directory
 file(GLOB SOURCES "src/*.cpp")
-
 
 # Create an executable target
 add_executable(collision ${SOURCES})
@@ -60,6 +65,13 @@ target_link_libraries(collision
 	PRIVATE ${HDF5_LIBRARIES}
 	PRIVATE ${GSL_LIBRARIES}
 )
+
+# Install the standalone program
+install(TARGETS collision DESTINATION ${INSTALL_DIR})
+
+## Python module?
+add_subdirectory(pybind)
+
 
 # Add any additional dependencies (if needed)
 # find_package(YourDependency REQUIRED)
