@@ -130,7 +130,8 @@ def strongestShock(model, vw):
     def vpnum(Tpm):
         return (model.eBrok(Tpm[1])+model.pSym(Tpm[0]),model.pSym(Tpm[0])-model.pBrok(Tpm[1]))
 
-    Tp,Tm = fsolve(vpnum,[0.2,0.2])
+    Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
+    print(Tp,Tm)
     return solveHydroShock(model,vw,0,Tp)
 
 def findMatching(model,vwTry,Tnucl):

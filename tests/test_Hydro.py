@@ -51,6 +51,24 @@ def test_solveHydroShock():
     res = solveHydroShock(model1, 0.7, 0.4,0.73406141)
     assert res == pytest.approx(0.576516, rel=0.01)
 
+def test_strongestShock():
+    res = strongestShock(model1,0.2)
+    assert res == pytest.approx(0.509786, rel=0.01)
+    res = strongestShock(model1,0.3)
+    assert res == pytest.approx(0.488307, rel=0.01)
+    res = strongestShock(model1,0.4)
+    assert res == pytest.approx(0.462405, rel=0.01)
+    res = strongestShock(model1,0.5)
+    assert res == pytest.approx(0.433052, rel=0.01)
+    res = strongestShock(model1,0.6)
+    assert res == pytest.approx(0.401013, rel=0.01)
+    res = strongestShock(model1,0.7)
+    assert res == pytest.approx(0.366219, rel=0.01)
+    res = strongestShock(model1,0.8)
+    assert res == pytest.approx(0.327039, rel=0.01)
+    res = strongestShock(model1,0.9)
+    assert res == pytest.approx(0.278722, rel=0.01)
+
 def test_findMatching():
     res = findMatching(model1,0.3,0.5)
     np.testing.assert_allclose(res,(0.0308804,0.3,0.5419,0.361743),rtol = 10**-2,atol = 0)
