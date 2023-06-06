@@ -35,18 +35,21 @@ PYBIND11_MODULE(CollisionModule, m) {
     // Bind functions
     m.def("pybindTestFunction", &pybindTestFunction, 
         "Test function to call from python");
+
+    m.def("calculateAllCollisions", &calculateAllCollisions,
+        "C++ function that calculates all collision integrals.");
 }
 
 
-/* Calculate a component of the "collision tensor" C(m,j; n,k).
-m,n refer to indices of basis polynomials and j,k refer to their momenta on the grid */
-/* void CalcCollisionTensorComponent(int m, int j, int n, int k, const InputData& inputData) {
+/* Calculate a component of the "collision tensor" C(m,n; j,k).
+m,n refer to indices of basis polynomials and j,k refer to their pZ, pPar momenta on the grid */
+/* void CalcCollisionTensorComponent(int m, int n, int j, int k, const InputData& inputData) {
 
     int N = 20;
     CollisionIntegral coll(N);
     std::cout << "Running CalcCollisionTensorComponent()\n";
 
-    std::vector<double> c = coll.CalcCollision(2, 1, 1, 1);
+    std::vector<double> c = coll.CalcCollision(m, n, j, k);
     printf("Result %g, error %g\n", c[0], c[1]);
     printf("With 2pi error: %g, error %g\n", 2*M_PI*c[0], 2*M_PI*c[1]);
 } */

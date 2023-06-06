@@ -31,6 +31,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/W4 /WX)
 endif()
 
+
 # Configure build type (change to Release for production build)
 if(NOT CMAKE_BUILD_TYPE)
     #set(CMAKE_BUILD_TYPE Release)
@@ -38,46 +39,55 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 
-
-# Add all source files in the src directory
-file(GLOB SOURCES "src/*.cpp")
-
-# Create an executable target
-add_executable(collision ${SOURCES})
-
-# Add include directories
-target_include_directories(collision
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/include/collision
-)
-
 ## External packages
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
 
-## includes for the packages
-target_include_directories(collision 
-	PRIVATE ${HDF5_INCLUDE_DIRS}
-	PRIVATE ${GSL_INCLUDE_DIRS}
+#---- Link to external libraries
+link_libraries(
+    ${HDF5_LIBRARIES}
+    ${GSL_LIBRARIES}
 )
 
-# Libraries for the packages
-target_link_libraries(collision
-	PRIVATE ${HDF5_LIBRARIES}
-	PRIVATE ${GSL_LIBRARIES}
+#---- And their includes
+include_directories(
+    ${HDF5_INCLUDE_DIRS}
+    ${GSL_INCLUDE_DIRS}
 )
 
-# Install the standalone program
-install(TARGETS collision DESTINATION ${INSTALL_DIR})
-
-## Python module?
-add_subdirectory(pybind)
+## NB: this is linking/including them globally for all targets.
+## Not very elegant but makes sense since the same are needed for the python module
 
 
-# Add any additional dependencies (if needed)
-# find_package(YourDependency REQUIRED)
-# target_link_libraries(YourExecutable
-#     PRIVATE YourDependency::YourDependency
-# )
+#----------------- Target 'collision'. This is the standalone C++ program
+
+set(STANDALONE_EXEC collision)
+
+# Add all source files in the src directory. These will be common also to the python module
+file(GLOB COMMON_SOURCES "src/*.cpp")
+
+# Create an executable target
+add_executable(${STANDALONE_EXEC} ${COMMON_SOURCES})
+
+# Project specific includes (global scope again) 
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/collision
+)
+
+# Install the standalone program (with 'make install')
+install(TARGETS ${STANDALONE_EXEC} DESTINATION ${INSTALL_DIR})
+
+#----------------- End standalone target
+ 
+
+
+# Build python module with pybind11 linkage?
+option(BUILD_PYTHON_MODULE "Build Python module" ON)
+if (BUILD_PYTHON_MODULE)
+	add_subdirectory(pybind)
+	
+endif()
+
 
 # Enable testing (optional)
 #enable_testing()

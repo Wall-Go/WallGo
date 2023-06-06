@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// definition in main.cpp
+void calculateAllCollisions();
+
 
 //For now I just hard code the thermal masses
 #define  MQ2 0.251327 				//Top quark mass squared

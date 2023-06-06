@@ -12,19 +12,24 @@ set(MODULE_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib")
 # Find pybind11 package
 find_package(pybind11 CONFIG REQUIRED)
 
+# Create the pybind11 module (this takes place of add_executable
+pybind11_add_module(${MODULE_NAME})
+
 # If this file gets called from CMakeLists.txt elsewhere then 
 # CMAKE_SOURCE_DIR = location of the original calling file
 # CMAKE_CURRENT_SOURCE_DIR = location of this file as it gets processed
 
-# Include directories for the main C++ code
-include_directories("${CMAKE_SOURCE_DIR}/src/include/collision")
-include_directories("${CMAKE_SOURCE_DIR}/pybind/src/include")
+
+target_include_directories(${MODULE_NAME}
+	PRIVATE ${CMAKE_SOURCE_DIR}/pybind/src/include
+)
 
 
-# Create the pybind11 module
-pybind11_add_module(${MODULE_NAME})
+target_sources(${MODULE_NAME} 
+	PRIVATE ${COMMON_SOURCES}	# from the standalone executable
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/BindToPython.cpp
+)
 
-target_sources(${MODULE_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/BindToPython.cpp")
 
 # Install the python module ('make install')
 install(TARGETS ${MODULE_NAME} DESTINATION ${MODULE_INSTALL_DIR})
