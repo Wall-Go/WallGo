@@ -120,7 +120,18 @@ def solveHydroShock(model,vw,vp,Tp):
         return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
     Tn = fsolve(TiiShock,Tp*0.9)[0]
     return Tn
-    
+
+def strongestShock(model, vw):
+    r"""
+    Returns the minimum temperature for which a shock can exist.
+    For the strongest shock, :math:`v_+=0`, which yields `T_+,T_-`.
+    The fluid equations in the shock are then solved to determine the strongest shock.
+    """
+    def vpnum(Tpm):
+        return (model.eBrok(Tpm[1])+model.pSym(Tpm[0]),model.pSym(Tpm[0])-model.pBrok(Tpm[1]))
+
+    Tp,Tm = fsolve(vpnum,[0.2,0.2])
+    return solveHydroShock(model,vw,0,Tp)
 
 def findMatching(model,vwTry,Tnucl):
     r"""
@@ -161,4 +172,9 @@ def findHydroBoundaries(model, vwTry, Tnucl):
     c1 = model.wSym(Tp)*gammasq(vp)*vp
     c2 = model.pSym(Tp)+model.wSym(Tp)*gammasq(vp)*vp**2
     return (c1, c2, Tp, Tm)
+
+def findvwLTE(model, Tnucl):
+    vmin = 0.01
+    vmax = findJouguetVelocity(model,Tnucl)
+    return 0
 
