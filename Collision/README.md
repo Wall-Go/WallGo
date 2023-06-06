@@ -13,19 +13,19 @@
 
 Linux:
 ```
-	sudo apt-get install libgsl-dev
-	sudo apt-get install libhdf5-dev
+sudo apt-get install libgsl-dev
+sudo apt-get install libhdf5-dev
 ```
 
 MacOS: 
 ```
-	brew install gsl
-	brew install hdf5
+brew install gsl
+brew install hdf5
 ```
 
 For both systems the python bindings can be installed with pip:
 ```
-	pip install pybind11[global]
+pip install pybind11[global]
 ```
 
 The pybind11 installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda (have not tested).
@@ -56,3 +56,5 @@ If cmake errors out due to missing external libraries, install those and try aga
 ## TODO 
 
 - Check that the program builds fine without pybind11 installed if -DBUILD_PYTHON_MODULE=Off is used
+
+- Figure out how to cancel execution of a long C++ function from Python side. CTRL-C doesn't seem to work; need to kill the process or close the terminal
