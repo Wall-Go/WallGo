@@ -120,13 +120,10 @@ double f(double *xx, size_t dim, void *fdata)
 {
 	  (void)(dim); /* avoid unused parameter warnings */
 
-		 
-		double *pVec = (double *)fdata;
-		double p = *(pVec);							//pVec[0]=p
-		double thetaP = *(pVec+1);			//pVec[1]=theta_p
+		FourVector FVp=*(FourVector*)fdata; //Four vector for the incoming momenta, p
 
 
-	//Note to self: Change everything so that we integrate over Cos(angles)
+		//Note to self: Change everything so that we integrate over Cos(angles)
 		double k=xx[0];				//xx[0] - k
 		double thetaK=xx[1];	//xx[1] - theta_k
 		double thetaP2=xx[2];	//xx[2] - theta_p2
@@ -134,18 +131,16 @@ double f(double *xx, size_t dim, void *fdata)
 		double phiP2=xx[4];		//xx[4] - phi_p2
 
 
-		FourVector FVp,FVk, FVp2, FVk2; //Four vectors that are used for the computation
+		FourVector FVk, FVp2, FVk2; //Four vectors that are used for the computation
 		double mandelstam[3]={0,0,0}; //Mandelstam variables in the ordet s,t,u
 
 
 		//First we create the four-vectors
 		double kV[3]={k,thetaK,phiK};
-		double p2V[3]={1.0,thetaP2,phiP2}; //e will fix the magnitude of the vector by a delta function
-		double pV[3]={p,thetaP,0.0};
+		double p2V[3]={1.0,thetaP2,phiP2}; //we will fix the magnitude of the vector by a delta function
 
 
 		FVk=FourVector(kV);
-		FVp=FourVector(pV);
 		FVp2=FourVector(p2V);
 
 
@@ -159,7 +154,8 @@ double f(double *xx, size_t dim, void *fdata)
 
 
 		//Jacobian factor from the k2^2=0 delta function
-		double beta=abs(FVp2.energy()/SP4(FVp,FVk));
+		double beta=FVp2.energy()/SP4(FVp,FVk);
+
 		CreateInvariants(mandelstam,FVp,FVk,FVp2, FVk2); //Calculates the mandelstam variables in the order s,t,u
 
 
@@ -189,7 +185,7 @@ double f(double *xx, size_t dim, void *fdata)
 		double *chebFac; //Contain the contributions from the chebyshev polynomials
 
 		
-		kinFac=k*FVp2.energy()*sin(thetaK)*sin(thetaP2)*beta; //Kinematical factors from the integration measure
+		kinFac=k*FVp2.energy()*beta; //Kinematical factors from the integration measure
 
 
 		for (int j = 0; j < numberElements; ++j) // numberElements specifies how many matrixElements the user wanted
@@ -237,12 +233,17 @@ double integrateCollision(double pVec[2], double preFac){
 
 	double res, err;
 
-  double xl[5] = { 0, 0, 0 ,0,0};
-  double xu[5] = { MaxMomentum,PI,PI, 2*PI,2*PI };	//For now we integrate the polar angles from 0 to Pi
+  double xl[5] = { 0, -1.0, -1.0 ,0,0};
+  double xu[5] = { MaxMomentum,1.0,1.0, 2*PI,2*PI };	//We integrate the Cos(polar angle) from -1 to 1
+
+
+  double pV[3]={pVec[0],cos(pVec[1]),0.0};
+	FourVector FVp=FourVector(pV);
+
 
   const gsl_rng_type *T;
   gsl_rng *r;
-  gsl_monte_function G = { &f, 5, pData };			//f is the integrand that takes pData=pVec as an input
+  gsl_monte_function G = { &f, 5, &FVp };			//f is the integrand that takes pData=pVec as an input
 
 
  	size_t calls = 10000;	//The number of monte-carlo points

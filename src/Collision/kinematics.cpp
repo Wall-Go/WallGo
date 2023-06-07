@@ -12,14 +12,6 @@ return aC[0]*bC[0]-aC[1]*bC[1]-aC[2]*bC[2]-aC[3]*bC[3];
 }
 
 
-// Vector product of the spatial components
-double SP3(FourVector a, FourVector b){
-    double* aC=a.components();
-    double* bC=b.components();
-return aC[1]*bC[1]+aC[2]*bC[2]+aC[3]*bC[3];
-}
-
-
 
 // Adds two four-vectors
 FourVector addFV(FourVector a, FourVector b){
