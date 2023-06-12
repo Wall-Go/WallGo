@@ -121,7 +121,7 @@ void WriteToHDF5(const double* data, unsigned int arrayDimension, const hsize_t*
 
 void testHDF5() {
 
-   unsigned int gridSizeN = 20;
+   const int gridSizeN = 20;
    std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
 
    // 20x20x20x20 std::vector, all initialized to 0.0

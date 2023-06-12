@@ -10,6 +10,9 @@
 #include <gsl/gsl_monte_miser.h>
 #include <gsl/gsl_monte_vegas.h>
 #include <iostream>
+
+#include <FourVector.h>
+
 using namespace std;
 
 //For now I just hard code the thermal masses
@@ -132,29 +135,23 @@ double f(double *xx, size_t dim, void *fdata)
 
 
 		FourVector FVk, FVp2, FVk2; //Four vectors that are used for the computation
-		double mandelstam[3]={0,0,0}; //Mandelstam variables in the ordet s,t,u
+		double mandelstam[3]={0,0,0}; //Mandelstam variables in the order s,t,u
 
 
-		//First we create the four-vectors
-		double kV[3]={k,thetaK,phiK};
-		double p2V[3]={1.0,thetaP2,phiP2}; //we will fix the magnitude of the vector by a delta function
+		// TODO check that these are correct
+		FVk = FourVector(k, k*sin(thetaK)*sin(phiK), k*sin(thetaK)*cos(phiK), k*cos(thetaK));
+		FVp2 = FourVector(1.0, sin(thetaP2)*sin(phiP2), sin(thetaP2)*cos(phiP2), cos(thetaP2)); // we will fix the magnitude of the vector by a delta function
 
 
-		FVk=FourVector(kV);
-		FVp2=FourVector(p2V);
-
-
-		//Now we fix the norm of p2
-		double norm=P2Norm(FVp,FVk,FVp2);
-		FVp2.setLength(norm);
+		// Now we fix the norm of p2
+		double norm = FVp*FVk / (FVp*FVp2 + FVp2*FVk);
+		FVp2 *= norm;
 
 		// Now we use momentum conservation,k2=p+k-p2, and create the k2 four-vector
-		FVk2=addFV(FVp,FVk);
-		FVk2=subtractFV(FVk2,FVp2);
-
+		FVk2 = FVp + FVk - FVp2;
 
 		//Jacobian factor from the k2^2=0 delta function
-		double beta=FVp2.energy()/SP4(FVp,FVk);
+		double beta=FVp2.energy() / (FVp*FVk);
 
 		CreateInvariants(mandelstam,FVp,FVk,FVp2, FVk2); //Calculates the mandelstam variables in the order s,t,u
 
@@ -229,41 +226,43 @@ double f(double *xx, size_t dim, void *fdata)
 
 double integrateCollision(double pVec[2], double preFac){
 
-	double pData[2]={pVec[0],pVec[1]};//pVec[0]-Magnitude of p, pVec[1]- polar angle Theta_p
+	// pVec[0] = p1_Z, pVec[1] = p1_parallel
 
 	double res, err;
 
-  double xl[5] = { 0, -1.0, -1.0 ,0,0};
-  double xu[5] = { MaxMomentum,1.0,1.0, 2*PI,2*PI };	//We integrate the Cos(polar angle) from -1 to 1
+	double xl[5] = { 0, -1.0, -1.0 ,0,0};
+	double xu[5] = { MaxMomentum,1.0,1.0, 2*PI,2*PI };	//We integrate the Cos(polar angle) from -1 to 1
 
 
-  double pV[3]={pVec[0],cos(pVec[1]),0.0};
-	FourVector FVp=FourVector(pV);
+	//double pV[3]={pVec[0],cos(pVec[1]),0.0};
+
+	double energy1 = std::sqrt(pVec[0]*pVec[0] + pVec[1]*pVec[1]);
+	FourVector FVp= FourVector(energy1, 0.0, pVec[1], pVec[0]);
 
 
-  const gsl_rng_type *T;
-  gsl_rng *r;
-  gsl_monte_function G = { &f, 5, &FVp };			//f is the integrand that takes pData=pVec as an input
+	const gsl_rng_type *T;
+	gsl_rng *r;
+	gsl_monte_function G = { &f, 5, &FVp };			//f is the integrand that takes pData=pVec as an input
 
 
- 	size_t calls = 10000;	//The number of monte-carlo points
+	size_t calls = 10000;	//The number of monte-carlo points
 
-  gsl_rng_env_setup ();
+	gsl_rng_env_setup ();
 
-  T = gsl_rng_default;
-  r = gsl_rng_alloc (T);
-  
-
-  gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (5);
-
-  gsl_monte_vegas_integrate (&G, xl, xu, 5, calls, r, s,
-                               &res, &err);
-
-  gsl_monte_vegas_free (s);
-  gsl_rng_free (r);
+	T = gsl_rng_default;
+	r = gsl_rng_alloc (T);
 
 
-//  printf("%f %f\n",res, 100*err/res ); //prints the result and relative error(in%)
+	gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (5);
+
+	gsl_monte_vegas_integrate (&G, xl, xu, 5, calls, r, s,
+							&res, &err);
+
+	gsl_monte_vegas_free (s);
+	gsl_rng_free (r);
+
+
+	//  printf("%f %f\n",res, 100*err/res ); //prints the result and relative error(in%)
 
 	return res*preFac;
 }

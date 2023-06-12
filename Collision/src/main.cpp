@@ -150,20 +150,24 @@ void calculateAllCollisions() {
      std::cout << "Now computing all collision integrals. See you in a bit...\n"; 
      //std::cout << "TEST VERSION: Generating dummy collision integrals\n";
 
-     for (int n = 0; n < Ncheb; ++n) {
+     for (int m = 0; m < Ncheb; ++m) {
 
-          for (int m = 0; m < Ncheb; ++m) {
-               specifyChebyshev(n+2,m+1);    //specifies the relevant chebyshev point
+          for (int n = 0; n < Ncheb; ++n) {
+               specifyChebyshev(m+2,n+1);    //specifies the relevant chebyshev point
                                              //note that n is between 2 and nZ
                                              //, and m is between 1 and mPerp-1
-               for (int i = 0; i < Ncheb; ++i) {
-                    pVec[0]=rhoZ[i];
+               for (int j = 0; j < Ncheb; ++j) {
+                    pVec[0]=rhoZ[j];
 
-                    for (int j = 0; j < Ncheb; ++j) {
-                    pVec[1]=rhoPerp[j]; 
-                         collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
+                    for (int k = 0; k < Ncheb; ++k) {
+                         pVec[1]=rhoPerp[k]; 
+                         
+                         collGrid[m][n][j][k]=integrateCollision(pVec,prefac);
+
+                         printf("%d %d %d %d %g\n", n, m, j, k, collGrid[m][n][j][k]);
+                         
                          // Dummy 
-                         collGrid[n][m][i][j]= 0.0;
+                         collGrid[m][n][j][k]= 0.0;
                     }
                }
           }

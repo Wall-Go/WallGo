@@ -26,7 +26,6 @@ void calculateAllCollisions();
 //Q+Q-> V+ V matrix element
 static inline double matrixElementQQVVX(double s,double t, double u) {
 
-	double temp = u;
 	return s*t/(t-MQ2+1e-6)/(t-MQ2+1e-6);
 
 }
@@ -63,13 +62,14 @@ static inline double matrixElementVVVVX(double s,double t, double u){
 
 //The Bose-Einstein distribution function
 static inline double nB(double x){
-	return 1/(exp(x)-1+1e-6);
+	// TODO better cutoff?
+	return 1.0 / (exp(x) - 1.0 + 1e-6);
 }
 
 
 //The Fermi-Dirac distribution function
 static inline double nF(double x){
-	return 1/(exp(x)+1);
+	return 1.0 / (exp(x) + 1.0);
 }
 
 
