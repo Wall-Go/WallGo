@@ -2,4 +2,4 @@
 Hydro
 ======================================
 
-Failed
+.. automodule:: WallSpeed.Hydro
