@@ -7,6 +7,7 @@ using namespace std;
 #include <math.h>
 #include <sys/time.h>
 #include <time.h>
+
 #include "kinematics.h"
 #include "operators.h"
 #include "CollElem.h"
@@ -181,6 +182,8 @@ void calculateAllCollisions() {
 
 
 int main(int argc, char const *argv[]) {
+
+     CollElem<4> c;
 
      calculateAllCollisions();
 
