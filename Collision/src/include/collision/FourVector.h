@@ -185,8 +185,6 @@ public:
 		return sqrt(comp[1]*comp[1]+comp[2]*comp[2]);
 	}
 
-
-
 };
 
 #endif // header guard

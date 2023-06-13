@@ -10,4 +10,3 @@ double SP3(FourVector a, FourVector b);	// Vector product of the spatial compone
 
 // Calculates s,t,y Mandelstam invariants
 void CreateInvariants(double mandelstam[3],FourVector p,FourVector k, FourVector p2, FourVector k2);
-
