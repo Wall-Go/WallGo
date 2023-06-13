@@ -282,10 +282,9 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        return "src/Collision/build/collisions_Chebyshev_20.hdf5" ##### hack
-        dir = "."
+        dir = "./data"
         suffix = "hdf5"
-        filename = "%s/collision_%s_N_%i.%s" % (
+        filename = "%s/collisions_%s_%i.%s" % (
             dir, self.basisN, self.grid.N, suffix
         )
         return filename
