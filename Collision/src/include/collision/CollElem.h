@@ -1,21 +1,15 @@
 #ifndef COLLELEM_H_
 #define COLLELEM_H_
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "FourVector.h"
+#include <cmath>
 #include <array>
 #include <vector>
 #include <string>
 
+#include "FourVector.h"
+
 // definition in main.cpp
-void calculateAllCollisions();
-
-
-//For now I just hard code the thermal masses
-#define PI 3.14159265358979323846
+//void calculateAllCollisions();
 
 
 // Boson or fermion?
@@ -30,6 +24,8 @@ struct Mandelstam {
 class ParticleSpecies {
 
 public: 
+
+	// We prolly don't want a default constructor - the user should at the very least specify particle type
 
 	ParticleSpecies(std::string speciesName, EParticleType particleType) : type(particleType) {
 		name = speciesName;
@@ -67,7 +63,7 @@ public:
 
 public:
 	// TODO setters for these 
-	// Neglect mass in dispersion relations or not?
+	// Neglect mass in dispersion relations or not? (this flag is not used ATM)
 	bool bUltrarelativistic = true;
 	// Is the particle assumed to be in thermal equilibrium?
 	bool bInEquilibrium = false;
@@ -85,62 +81,6 @@ private:
 	
 };
 
-/*
-class Particle {
-
-public:
-
-	Particle(EParticleType particleType) : type(particleType), momentum(0.0, 0.0, 0.0, 0.0) {
-		
-		vacuumMassSquared = 0.0;
-		thermalMassSquared = 0.0;
-	}
-
-	Particle(EParticleType particleType, double msqVacuum, double msqThermal, const FourVector& mom)
-		: type(particleType) {
-
-		momentum = mom;
-		vacuumMassSquared = msqVacuum;
-		thermalMassSquared = msqThermal;
-	}
-
-	inline void setMomentum(const FourVector& p) { momentum = p; }
-
-	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
-	inline bool isInEquilibrium() const { return bInEquilibrium; }
-
-	// Equilibrium distribution function for the particle
-	double fEq() const {
-		double res = 0.0;
-		double energy = momentum[0];
-		if (type == EParticleType::BOSON) {
-			// TODO better cutoff
-			res = 1.0 / (exp(energy) - 1.0 + 1e-6);
-		} else {
-			res = 1.0 / (exp(energy) + 1.0);
-		}
-		return res;
-	}
-
-	inline double getDeltaF() const { return deltaF; }
-
-private:
-	FourVector momentum;
-	double vacuumMassSquared;
-	double thermalMassSquared;
-	// Set this in constructor using initialization list
-	const EParticleType type;
-	// Neglect mass in dispersion relations or not?
-	bool bUltrarelativistic = true;
-	// Is the particle assumed to be in thermal equilibrium?
-	bool bInEquilibrium = false;
-	// Current deviation from equilibrium for the particle // TODO does this make sense here? It's a feature of whole particle species
-	double deltaF = 0.0;
-};
-
-*/
-
-
 
 /* CollElem class: takes in 4 particle species i,j,m,n and constructs matrix element 
 * and population factor ij -> mn scattering process. The full collision integral is constructed 
@@ -151,13 +91,12 @@ class CollElem {
 	// For now, no info about momenta in this class
 
 public:
-	CollElem() {}
 
-	CollElem(const std::array<ParticleSpecies, NPARTICLES> &inputParticleSpecies) {
-		particles = inputParticles;
-	}
+	// Use initialization list here for setting the particle species, 
+	// otherwise may run into compiler errors due to (lack of) copy constructors
+	CollElem(const std::array<ParticleSpecies, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies) {}
 
-	inline Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) {
+	inline Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const {
 		Mandelstam m;
 		m.s = (p1 + p2) * (p1 + p2);
 		m.t = (p1 - p3) * (p1 - p3);
@@ -165,34 +104,8 @@ public:
 		return m;
 	}
 
-	// TODO properly. Right now I've just hand-coded matrix elements for the top
-	void makeMatrixElements(const Mandelstam &mandelstam) {
-		double s = mandelstam.s;
-		double t = mandelstam.t;
-		double u = mandelstam.u;
-		matrixElements.clear();
-		
-		// Thermal masses squared to use in matrix elements
-		double mg2 = 3.01593;
-		double mq2 = 0.251327;
-		// Coupling 
-		double gs = 1.2279920495357861;
-		double gs4 = gs*gs*gs*gs;
-
-		double tt_gg = -64./9. * gs4 * s*t / ((t-mq2) * (t-mq2));
-        double tg_tg = -64./9. * gs4 * s*u / ((u-mq2) * (u-mq2)) + 16.*gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2) );
-        double tq_tq = 80./3. * gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2));
-
-		matrixElements.push_back(tt_gg);
-		matrixElements.push_back(tg_tg);
-		matrixElements.push_back(tq_tq);
-	}
-
-
-
 	// Evaluate eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
 	double populationFactor(const std::array<FourVector, NPARTICLES> &momenta) const {
-
 
 		double f1 = particles[0].fEq( momenta[0].energy() );
 		double f2 = particles[1].fEq( momenta[1].energy() );
@@ -208,37 +121,54 @@ public:
 		return res;
 	}
 
+	// Calculate matrix element times population factor for this 2->2 process 
+	double evaluate(const std::array<FourVector, NPARTICLES> &momenta) const {
 
-	double evaluate(const std::array<FourVector, NPARTICLES> &momenta) {
-		double res = 0.0;
-
-		// FOR NOW: hardcode in: 
-		// if (p[0] = top, p[1] = top, p[2] = gluon, p[3] = gluon) ETC. here p = particles array
-
-		// TODO
-
-		double E1 = p[0].energy();
-		double E2 = p[1].energy();
-		double E3 = p[2].energy();
-		double E4 = p[3].energy();
+		double matrixElementSquared = 0.0;
 
 		// Coupling 
 		double gs = 1.2279920495357861;
 		double gs4 = gs*gs*gs*gs;
 
-		Mandelstam m = calculateMandelstam(p[0], p[1], p[2], p[3]);
+		// FOR NOW: hardcode in: 
+		// if (p[0] = top, p[1] = top, p[2] = gluon, p[3] = gluon) ETC. here p = particles array
 
-		// tt_gg, so p[0] p[1] -> p[2] p[3]
-		double mq2 = p[0].thermalMassSquared;
-		double tt_gg = -64./9. * gs4 * m.s*m.t / ((m.t-mq2) * (m.t-mq2));
+		// Thermal masses squared
+		double mg2 = 3.01593;
+		double mq2 = 0.251327;
 
+		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
+		double s = mandelstam.s;
+		double t = mandelstam.t;
+		double u = mandelstam.u;
 
+		if (particles[0].getName() == "top" && particles[1].getName() == "top" 
+			&& particles[2].getName() == "gluon" && particles[3].getName() == "gluon") 
+		{
+			// tt -> gg
+			matrixElementSquared = -64./9. * gs4 * s*t / ((t-mq2) * (t-mq2));
+
+		} 
+		else if (particles[0].getName() == "top" && particles[1].getName() == "gluon" 
+			&& particles[2].getName() == "top" && particles[3].getName() == "gluon") 
+		{
+			// tg -> tg
+			matrixElementSquared = -64./9. * gs4 * s*u / ((u-mq2) * (u-mq2)) + 16.*gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2) );
+		} 
+		else if (particles[0].getName() == "top" && particles[1].getName() == "quark" 
+			&& particles[2].getName() == "top" && particles[3].getName() == "quark")
+		{
+			// tq -> tq, q = light quark (not top)
+			// NOTE HERE: none of the external particles is gluon, yet we still need the gluon mass. So keep this in mind when generalizing
+			matrixElementSquared = 80./3. * gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2));
+		}
+
+		return matrixElementSquared * populationFactor(momenta);
 	}
 
 private:
 
 	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1
-
 	std::array<ParticleSpecies, NPARTICLES> particles;
 };
 
@@ -286,7 +216,7 @@ static inline double matrixElementVVVVX(double s,double t, double u){
 
 
 
-
+/*
 
 // ???
 typedef double (*funcptr)(double);
@@ -336,8 +266,8 @@ public:
 	}
 
 
-	/*For the definition of these terms "see https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.023501"
-		equation A.3 */
+	//For the definition of these terms "see https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.023501"
+	//	equation A.3
 
 	//We multiply all terms with deltaF to ensure that only the requested terms are evaluated
 
@@ -430,5 +360,66 @@ public:
 	}
 
 };
+
+*/
+
+
+
+/*
+class Particle {
+
+public:
+
+	Particle(EParticleType particleType) : type(particleType), momentum(0.0, 0.0, 0.0, 0.0) {
+		
+		vacuumMassSquared = 0.0;
+		thermalMassSquared = 0.0;
+	}
+
+	Particle(EParticleType particleType, double msqVacuum, double msqThermal, const FourVector& mom)
+		: type(particleType) {
+
+		momentum = mom;
+		vacuumMassSquared = msqVacuum;
+		thermalMassSquared = msqThermal;
+	}
+
+	inline void setMomentum(const FourVector& p) { momentum = p; }
+
+	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
+	inline bool isInEquilibrium() const { return bInEquilibrium; }
+
+	// Equilibrium distribution function for the particle
+	double fEq() const {
+		double res = 0.0;
+		double energy = momentum[0];
+		if (type == EParticleType::BOSON) {
+			// TODO better cutoff
+			res = 1.0 / (exp(energy) - 1.0 + 1e-6);
+		} else {
+			res = 1.0 / (exp(energy) + 1.0);
+		}
+		return res;
+	}
+
+	inline double getDeltaF() const { return deltaF; }
+
+private:
+	FourVector momentum;
+	double vacuumMassSquared;
+	double thermalMassSquared;
+	// Set this in constructor using initialization list
+	const EParticleType type;
+	// Neglect mass in dispersion relations or not?
+	bool bUltrarelativistic = true;
+	// Is the particle assumed to be in thermal equilibrium?
+	bool bInEquilibrium = false;
+	// Current deviation from equilibrium for the particle // TODO does this make sense here? It's a feature of whole particle species
+	double deltaF = 0.0;
+};
+
+*/
+
+
 
 #endif // header guard

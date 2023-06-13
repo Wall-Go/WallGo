@@ -5,7 +5,7 @@
 void specifyChebyshev(int n, int m); //Specifies which chebyshev polynomials should be used
 void setNumberElements(int numberInput); //Specifies how many different matrix elements the user want to use
 
-void specifyCollTerm(CollElem* collElemInput);//Specification for the matrix element, spin, and delta_f terms that should be used
+//void specifyCollTerm(CollElem* collElemInput);//Specification for the matrix element, spin, and delta_f terms that should be used
 
 
 

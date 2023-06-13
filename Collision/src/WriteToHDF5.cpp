@@ -7,8 +7,6 @@
 
 
 
-
-
 // Write 4D array (vector) of doubles(!!) to .hdf5 file.
 // Note that currently this will overwrite the whole file!
 
@@ -43,6 +41,7 @@ void WriteToHDF5(const double* data, unsigned int arrayDimension, const hsize_t*
    hid_t fileId, dataspaceId, datasetId;  
 
    int polynomialBasisSize = dims[0];
+   (void)polynomialBasisSize; // suppress -Wunused-parameter
 
    // Create a new HDF5 file
    fileId = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);

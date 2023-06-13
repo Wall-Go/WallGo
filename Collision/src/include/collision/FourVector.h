@@ -161,13 +161,19 @@ public:
 
 	//-------------------- TODO cleanup of these
 
-	// Minkowskian norm of the four-vector (can be negative!)
-	inline double norm() const {
+	// Minkowskian square of the four-vector (can be negative!)
+	inline double squared() const {
 		double result = comp[0]*comp[0];
 		for (int i=1; i<NCOMPONENTS; ++i) result -= comp[i]*comp[i];
 		return result;
 	}
 
+    // Norm of the 3-vector part. Always non-negative
+	inline double norm3() const {
+		double result = 0.0;
+		for (int i=1; i<NCOMPONENTS; ++i) result += comp[i]*comp[i];
+		return std::sqrt(result);
+	}
 
 	// Returns the energy which resides at the first component
 	inline double energy() const {
@@ -182,7 +188,7 @@ public:
 
 	// Returns component perpendicular to z-axis
 	inline double perpComp() const {
-		return sqrt(comp[1]*comp[1]+comp[2]*comp[2]);
+		return std::sqrt(comp[1]*comp[1]+comp[2]*comp[2]);
 	}
 
 };

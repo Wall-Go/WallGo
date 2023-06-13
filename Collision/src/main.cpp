@@ -11,10 +11,7 @@ using namespace std;
 #include "kinematics.h"
 #include "operators.h"
 #include "CollElem.h"
-
-#include "hdf5Interface.h"
-
-
+#include "CollisionIntegral.h"
 
 
 #define PI 3.14159265358979323846
@@ -43,149 +40,56 @@ void printTime(long duration){
 
 //***************
 
-void calculateAllCollisions() {
 
-     /****************************************************/
+//int main(int argc, char const *argv[]) {
+int main() {
 
-     //The numerical prefactor that depends on coupling constants and factors of pi
-     double prefac=-64*GS*GS*GS*GS/9/8/(2*PI)/(2*PI)/(2*PI)/(2*PI)/(2*PI);   //All factors of Pi and couplings that multiply the integral. Should be changed
-     double intVal=0.0;                                                      //The value of the integral
+     // 2->2 scatterings so 4 external particles
+     using CollisionElement = CollElem<4>;
+     
+     // define particles that we include in matrix elements
+     ParticleSpecies topQuark("top", EParticleType::FERMION);
+     ParticleSpecies lightQuark("quark", EParticleType::FERMION);
+     ParticleSpecies gluon("gluon", EParticleType::BOSON);
 
-     double pVec[2]={1.0,PI*0.5}; //pVec[0] is the magnitude of p, and pVec[1] is the polar angle relative to the z-axis
+     // Set masses. These need to be in units of temperature, ie. (m/T)^2
+     double mq2 = 0.251327; // quark
+     double mg2 = 3.01593; // SU(3) gluon
 
+     topQuark.thermalMassSquared = mq2;
+     lightQuark.thermalMassSquared = mq2;
+     gluon.thermalMassSquared = mg2;
 
-     int nElements=1;                  //This specifies that we want one matrix elements
-     CollElem collTermTot[nElements];  //For each matrix element the spin and needed delta_F terms are stored in the class collElem
-     setNumberElements(nElements);     //Sets the global variable that keeps tracks of how many elements we have
+     topQuark.vacuumMassSquared = 0.0;
+     lightQuark.vacuumMassSquared = 0.0;
+     gluon.vacuumMassSquared = 0.0;
 
-     //For all particles we use the convention that the process is p+k->p2+k2, where p is the external momenta
-     //that should be evaluated on the grid
-     //All specification of spin and matrix elements assumes the order p k p2 k2, so {1,1,2,2} etc 
+     // Which particles are treated as always being in equilibrium?
+     topQuark.bInEquilibrium = false;
+     lightQuark.bInEquilibrium = true;
+     gluon.bInEquilibrium = true;
 
+     // TODO should prob have a constructor that takes all these in as eg. a struct
 
-     //To specify the spin we use the conventions (should probably be changed) that even numbers correspond to fermions
-     //and odd number to bosons
+     // Then create collision elements for 2->2 processes involving these. 
+     // By 'collision element' I mean |M|^2 * P[ij -> nm], where P is the population factor involving distribution functions.
+     // Right now the correct matrix elements are hardcoded in for the top quark. 
+     // In a real model-independent calculation this needs to either calculate the matrix elements itself (hard, probably needs its own class)
+     // or read them in from somewhere.
+     CollisionElement tt_gg({ topQuark, topQuark, gluon, gluon });
+     CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
+     CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
+     
+     CollisionIntegral4 collInt;
+     collInt.addCollisionElement(tt_gg);
+     collInt.addCollisionElement(tg_tg);
+     collInt.addCollisionElement(tq_tq);
 
+     double test = collInt.calculateIntegrand(std::array<double, 3>( {0.0, 1.42, 3.1} ), 5, 4.2, 1.3, 0.4, -0.13, std::array<double, 4>( {0.0, 0.0, 0.0, 0.0} ));
 
-     CollElem collTerm;            //Creates a matrix element
-     int spin[4]={1,1,2,2};        //Specifies that p and k are fermions, and that p2 and k2 are bosons
-     int deltaF[4]={1,1,0,0};      //Specifies that we only want the delta_p and delta_k terms
-
-     collTerm.setSpin(spin);       //Sets the spin
-     collTerm.setMatrixElem(0);    //Specifies that we want the tt->gg matrix element. Hard coded for now. See CollElem for all available matrix elements
-     collTerm.setDeltaF(deltaF);   
-     collTerm.setDistributions();  //Initializes Bose-Einstein and Fermi-Dirac distributions
-
-
-     collTermTot[0]=collTerm;      //Loads all requested matrix elements. In this case only one
-     specifyCollTerm(collTermTot);
-
-
-     //For the Chebyshev polynomials we use the convention: T_nZ(rho_z)T_mPerp(rho_perp) (with rho_z=tanh(pz/2) and rho_perp=1-exp(-p_perp))
-     specifyChebyshev(2,2);        //Specifies that we are interested in nZ=2 and mPerp=2.
-
-
-     intVal=integrateCollision(pVec,prefac);
-     cout<< intVal<<endl; //You should get 0.433736 with the inputs as above
-
-
-     // /****************Performance tests******************/
-
-     /*Note in practice we can do way faster than the estimate below.
-     Both from increasing the number of cores, and by using symmetry,
-     and by using that deltaF_p terms only need to be evaluated once*/
-
-     srand (static_cast <unsigned> (time(0)));
-
-     //     // Get starting timepoint
-     auto start = high_resolution_clock::now();
-     auto stop = high_resolution_clock::now();
-     auto duration = duration_cast<microseconds>(stop - start);
-
-     double r;
-
-     start = high_resolution_clock::now();
-     for (int i = 0; i < 100; ++i)
-     {
-          r = (double)rand() / RAND_MAX;
-     pVec[0]= 0.0 + r * 20.0; //Just some random values for the p vector
-     pVec[1]= 0.0 + r * PI;   //Just some random values for the p vector
-     intVal=integrateCollision(pVec,prefac);
-     }
-
-     stop = high_resolution_clock::now();
-
-     duration = duration_cast<microseconds>(stop - start);
-
-     cout<<"Estimated time to generate the entire grid for 1 thread:"<<endl;
-     printTime(pow(20,4)*duration.count()/100);
-
-
-
-     /*******************If you want to generate the entire grid you can do something like this***************************/
-
-     int gridSizeN = 20;
-     int Ncheb = gridSizeN - 1; //(N-1)^4 terms in total
-
-     //The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
-     Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
-
-     double rhoZ[Ncheb], rhoPerp[Ncheb]; //Contains the Chebyshev interpolation points for pZ and pPerp
-
-
-     //All the interpolation points for pZ
-     for (int i = 1; i < Ncheb; ++i)
-     {
-          rhoZ[i-1]=2.0*atanh(-cos(PI*i/(Ncheb+0.0)));
-     }
-
-
-     //All the interpolation points for pPerp
-     for (int j = 0; j < Ncheb-1; ++j)
-     {
-          rhoPerp[j]=-log((1.0+cos(PI*j/(Ncheb-1.0)))/2.0);
-     }
-
-     // We now do the for loop over all the grid points
-
-     std::cout << "Now computing all collision integrals. See you in a bit...\n"; 
-     //std::cout << "TEST VERSION: Generating dummy collision integrals\n";
-
-     for (int m = 0; m < Ncheb; ++m) {
-
-          for (int n = 0; n < Ncheb; ++n) {
-               specifyChebyshev(m+2,n+1);    //specifies the relevant chebyshev point
-                                             //note that n is between 2 and nZ
-                                             //, and m is between 1 and mPerp-1
-               for (int j = 0; j < Ncheb; ++j) {
-                    pVec[0]=rhoZ[j];
-
-                    for (int k = 0; k < Ncheb; ++k) {
-                         pVec[1]=rhoPerp[k]; 
-                         
-                         collGrid[m][n][j][k]=integrateCollision(pVec,prefac);
-
-                         printf("%d %d %d %d %g\n", n, m, j, k, collGrid[m][n][j][k]);
-                         
-                         // Dummy 
-                         collGrid[m][n][j][k]= 0.0;
-                    }
-               }
-          }
-     }
-
-     // Write these to file
-     std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
-     WriteToHDF5(collGrid, filename, "top");
-}
-
-
-
-int main(int argc, char const *argv[]) {
-
-     CollElem<4> c;
-
-     calculateAllCollisions();
+     printf("test %g\n", test);
+     
+     //calculateAllCollisions();
 
      return 0;
 }
