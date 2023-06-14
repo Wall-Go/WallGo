@@ -80,14 +80,30 @@ int main() {
      CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
      CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
      
-     CollisionIntegral4 collInt;
+     const int basisSizeN = 20;
+
+     CollisionIntegral4 collInt(basisSizeN);
      collInt.addCollisionElement(tt_gg);
      collInt.addCollisionElement(tg_tg);
      collInt.addCollisionElement(tq_tq);
 
-     double test = collInt.calculateIntegrand(std::array<double, 3>( {0.0, 1.42, 3.1} ), 5, 4.2, 1.3, 0.4, -0.13, std::array<double, 4>( {0.0, 0.0, 0.0, 0.0} ));
+     std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
 
-     printf("test %g\n", test);
+     int m = 2;
+     int n = 1;
+     int j = 1;
+     int k = 1;
+
+     double p2 = 5;
+     double phi2 = 4.1;
+     double phi3 = 5.3;
+     double cosTheta2 = -0.31;
+     double cosTheta3 = 0.65;
+
+     double test = collInt.calculateIntegrand(m, n, j, k, p2, phi2, phi3, cosTheta2, cosTheta3, massSquared);
+
+     std::array<double, 2> integral = collInt.evaluate(m, n, j, k, massSquared);
+     printf("test %g; %g +/- %g\n", test, integral[0], integral[1]);
      
      //calculateAllCollisions();
 

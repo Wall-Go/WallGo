@@ -186,8 +186,8 @@ public:
 		return comp[3];
 	}
 
-	// Returns component perpendicular to z-axis
-	inline double perpComp() const {
+	// Returns component perpendicular to z-axis, ie. component parallel to the wall
+	inline double parComp() const {
 		return std::sqrt(comp[1]*comp[1]+comp[2]*comp[2]);
 	}
 

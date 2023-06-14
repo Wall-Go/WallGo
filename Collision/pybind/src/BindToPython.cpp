@@ -4,8 +4,7 @@
 
 #include <iostream>
 
-#include "kinematics.h"
-#include "operators.h"
+#include "CollisionIntegral.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -22,6 +21,7 @@ struct InputData {
 void pybindTestFunction(const InputData& inputData) {
 
     std::cout << "hello test1 from laurin\n";
+    (void)inputData; // suppress -Wunused-variable
 }
 
 

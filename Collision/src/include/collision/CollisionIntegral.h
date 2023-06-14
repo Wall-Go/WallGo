@@ -6,6 +6,8 @@
 
 #include "FourVector.h"
 #include "CollElem.h"
+#include "constants.h"
+#include "PolynomialBasis.h"
 
 void calculateAllCollisions();
 
@@ -20,12 +22,15 @@ class CollisionIntegral4 {
 
 public:
 
+    CollisionIntegral4(int polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
+
     void addCollisionElement(const CollElem<4> &collElem) { 
         collisionElements.push_back(collElem); 
         // TODO should check here that the collision element makes sense: has correct p1 particle etc
     }
 
 
+    // ??
     void setIntegrationVariables(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3) {
         integrationVariables.p2 = p2;
         integrationVariables.phi2 = phi2;
@@ -34,14 +39,20 @@ public:
         integrationVariables.cosTheta3 = cosTheta3;
     }
 
-    std::array<FourVector, 4> fixFourMomenta();
+    // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
+    // Returns { result, error }
+    std::array<double, 2> evaluate(int m, int n, int j, int k, const std::array<double, 4> &massSquare);
 
-    // Everything in the integral except for matrix element and population factor (TODO constant prefactors here or nay?)
-    double kinematicPrefactor(const FourVector &p1, const FourVector &p2, const FourVector &p3, const FourVector &p4);
+    // TODO Would like a function fixFourMomenta(input_integration_variables) that applies delta functions and other kinematic constraints, 
+    // then returns the external four-momenta. Right now its all done in calculateIntegrand()
 
     // Evaluate all 'collision elements' at input momenta, sum them and calculate the kinematic prefactor (including integration measure)
     // For now this takes particle masses as input. Those are also contained in CollElems but I don't have a simple way of extracting them from there
-    double calculateIntegrand(const std::array<double, 3> &p1Vec, double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, const std::array<double, 4> &massSquared);
+    // Very messy...
+    // Specifically, this calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P), including the 1/(2N) prefactor.
+    // NB: when comparing to output of Benoit's python code, note that he calculates 2pi * (A1)
+    double calculateIntegrand(int m, int n, int j, int k, double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
+          const std::array<double, 4> &massSquared);
 
 private:
 
@@ -59,8 +70,9 @@ private:
 
     // Masses smaller than this are set to 0 when computing the kinematic prefactor. This is to avoid spurious singularities at small momenta
     double massSquaredLowerBound = 1e-14;
-    // TODO this should be elsewhere since others may need it too
-    const double PI = 3.141592653589793238463;
+
+    Chebyshev polynomialBasis;
+
 };
 
 

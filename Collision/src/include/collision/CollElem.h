@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include "FourVector.h"
 
@@ -60,6 +61,14 @@ public:
 	}
 
 	inline double getDeltaF() const { return deltaF; }
+	// Set out-of-equilibrium part of distribution function
+	void setDeltaF(double df) {
+		if (bInEquilibrium) {
+			std::cerr << "Warning: setDeltaF() called with bInEquilibrium = true\n";
+			return;
+		}
+		deltaF = df;
+	}
 
 public:
 	// TODO setters for these 
@@ -124,6 +133,8 @@ public:
 	// Calculate matrix element times population factor for this 2->2 process 
 	double evaluate(const std::array<FourVector, NPARTICLES> &momenta) const {
 
+		// !!! the matrix elements that I've hardcoded here are actually 1/N_t |M| => change this??
+
 		double matrixElementSquared = 0.0;
 
 		// Coupling 
@@ -166,7 +177,8 @@ public:
 		return matrixElementSquared * populationFactor(momenta);
 	}
 
-private:
+// TODO
+public:
 
 	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1
 	std::array<ParticleSpecies, NPARTICLES> particles;
