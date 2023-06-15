@@ -45,19 +45,6 @@ public:
 		comp = arr;
 	}
 
-/*
-	//Initialize the four-vector components in terms of angles // TODO 
-	FourVector(double vectorSph[4]) {
-		//vectorSph[0] contains the radius, vectorSph[1] is cos(polar angle),
-		//and vectorSph[2] the azimuthal angle
-		comp[0]=vectorSph[0];
-		comp[1]=vectorSph[0]*std::cos(vectorSph[2])*std::sqrt(1-vectorSph[1]*vectorSph[1]);
-		comp[2]=vectorSph[0]*std::sin(vectorSph[2])*std::sqrt(1-vectorSph[1]*vectorSph[1]);
-		comp[3]=vectorSph[0]*vectorSph[1];
-	}
-*/
-
-
 	//------------- Operator overloads
 
     FourVector& operator=(const FourVector& other) {

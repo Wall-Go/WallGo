@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "PolynomialBasis.h"
 
+
 void calculateAllCollisions();
 
 
@@ -53,6 +54,9 @@ public:
     // NB: when comparing to output of Benoit's python code, note that he calculates 2pi * (A1)
     double calculateIntegrand(int m, int n, int j, int k, double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
           const std::array<double, 4> &massSquared);
+
+
+    inline size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
 private:
 

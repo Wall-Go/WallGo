@@ -7,8 +7,6 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_monte_vegas.h>
 
-void calculateAllCollisions() {}
-
 namespace gslWrapper {
      // Helpers for GSL integration routines. note that we cannot pass a member function by reference,
      // so we dodge this in the wrapper by passing a reference to the object whose function we want to integrate
@@ -113,10 +111,12 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
      double pZ1 = polynomialBasis.rhoZ_to_pZ(rhoZ1);
      double pPar1 = polynomialBasis.rhoPar_to_pPar(rhoPar1);
      double p1 = std::sqrt(pZ1*pZ1 + pPar1*pPar1);
+
+     //printf("pZ1 %g pPar1 %g\n", pZ1, pPar1);
      
      
      // SLOPPY: Create 3-vectors, but I just use FourVectors with vanishing 0-component
-     FourVector FV1dummy(0.0, 0.0, pPar1, pZ1);
+     FourVector FV1dummy(0.0, pPar1, 0.0, pZ1);
      FourVector FV2dummy(0.0, p2*sinTheta2*cosPhi2, p2*sinTheta2*sinPhi2, p2*cosTheta2);
      // 'p3Hat': like p3, but normalized to 1. We will fix its magnitude using a delta(FV4^2 - msq4)
      FourVector FV3Hat(0.0, sinTheta3*cosPhi3, sinTheta3*sinPhi3, cosTheta3);
@@ -147,7 +147,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
      // Quadratic eq. A p3^2 + B p3 + C = 0, take positive root(s)
      double A = delta*delta - eps*eps;
      double B = 2.0 * kappa * delta;
-     double C = kappa*kappa;
+     double C = kappa*kappa - eps*eps*massSquared[2];
      // Roots of g(p3):
      double discriminant = B*B - 4.0*A*C;
      double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
@@ -164,6 +164,8 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
           rootp3.push_back(root1);
      if (root2 >= 0.0) 
           rootp3.push_back(root2);
+
+     //printf("%ld %g %g %g %g\n", rootp3.size(), root1, root2, funcG(root1), funcG(root2));
 
      // TODO need way of calculating and assigning deltaFs, or Chebyshevs. (maybe even give this a pointer to funct that calculates deltaF for given FourVector?)
      double fullIntegrand = 0.0;
@@ -195,6 +197,8 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
           }
           // Check that P4 is on-shell // TODO
 
+          //printf("p1 %g p2 %g p3 %g p4 %g\n", p1, p2, p3, FV4.norm3());
+
           // Now add all collision elements at these momenta
           double integrand = 0.0;
           for (CollElem<4> collElem : collisionElements) {
@@ -211,6 +215,9 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
                          collElem.particles[i].setDeltaF( polynomialBasis.TmTn(m, n, fourMomenta[i]) );
                     }
                }
+               //printf("TmTn(p1) %g\n", polynomialBasis.TmTn(m, n, fourMomenta[0]));
+
+               //printf("collision element %g\n", collElem.evaluate( fourMomenta ));
 
                integrand += collElem.evaluate( fourMomenta );
           } 
@@ -229,7 +236,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
           if (std::abs(massSquared[2]) < massSquaredLowerBound) gDer = delta - eps;
           else gDer = delta - eps * p3 / E3;
 
-          integrand /= std::abs(gDer);
+          integrand *= kinPrefac / std::abs(gDer);
 
 
           fullIntegrand += integrand;

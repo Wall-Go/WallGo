@@ -16,10 +16,10 @@
 class Chebyshev {
 
 private:
-    int N = 1;
+    size_t N = 1;
 
 public:
-    Chebyshev(int basisSize) {
+    Chebyshev(size_t basisSize) {
         N = basisSize;
     }
 
@@ -50,6 +50,8 @@ public:
         double rhoPar = pPar_to_rhoPar(pPar);
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
+
+    inline size_t getBasisSize() const { return N; }
 
 };
 
