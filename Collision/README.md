@@ -62,7 +62,7 @@ If cmake errors out due to missing external libraries, install those and try aga
 
 ## Debugging & Profiling
 
-The CMakeLists.txt file defines basic debugging options to use with GCC or Clang compiler. To configure CMake for a debug build, use ```-DCMAKE_BUILD_TYPE=Debug``` when invoking cmake. This will apply compiler flags -g -gp and disable optimization flags. Note that the debug version runs much slower than a "Release" build with compiler optimizations enabled.
+The CMakeLists.txt file defines basic debugging options to use with GCC or Clang compiler. To configure CMake for a debug build, use ```-DCMAKE_BUILD_TYPE=Debug``` when invoking cmake. This will apply compiler flags ```-gp``` and disable optimization flags. Note that the debug version runs much slower than a "Release" build with compiler optimizations enabled.
 
 Running the debug build once should generate file called ```gmon.out``` in the working directory. This can be fed to the popular ```gprof``` profiler by running 
 

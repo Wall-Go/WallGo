@@ -141,12 +141,10 @@ int main() {
 
      int m, n, j, k;
 
-     
      m = 2; n = 1; j = 1; k = 1;
      resultMC = collInt.evaluate(m, n, j, k, massSquared);
      printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-          
      m = 6; n = 4; j = 11; k = 9;
      resultMC = collInt.evaluate(m, n, j, k, massSquared);
      printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);

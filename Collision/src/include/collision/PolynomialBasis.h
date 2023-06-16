@@ -5,6 +5,10 @@
 #include "constants.h"
 #include "FourVector.h"
 
+/* Note to self: GSL library has functions for computing Chebyshev series expansions so could investigate 
+* if their implementation of Chebyshev polynomials are faster than what we have here. However I didn't find 
+* any documentation about computing individual polynomials in GSL, just series expansions. */
+
 /* Note to self: Probably the 'best' implementation in terms of clarity would be 
 * an interface 'PolynomialBasis' that declares functions for computing basis polynomials and 
 * grid momenta for a given fixed grid size N (template parameter?).
@@ -43,6 +47,11 @@ public:
     inline double rhoPar_to_pPar(double rho_par) const { return -log(0.5 * (1 - rho_par)); } 
 
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
+    inline double TmTn(int m, int n, double rhoZ, double rhoPar) {
+        return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
+    }
+    
+    // Same as above but with FourVector input
     inline double TmTn(int m, int n, const FourVector &FV) {
         double pZ = FV.zComp();
         double pPar = FV.parComp();
@@ -50,6 +59,7 @@ public:
         double rhoPar = pPar_to_rhoPar(pPar);
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
+
 
     inline size_t getBasisSize() const { return N; }
 

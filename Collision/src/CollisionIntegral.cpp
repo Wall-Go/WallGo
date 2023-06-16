@@ -12,8 +12,6 @@ namespace gslWrapper {
      // so we dodge this in the wrapper by passing a reference to the object whose function we want to integrate
 
      struct functionParams {
-          int m, n;
-          int j, k;
           std::array<double, 4> msq;
           // Pointer to the object whose member function we are integrating
           CollisionIntegral4* pointerToObject;
@@ -33,13 +31,15 @@ namespace gslWrapper {
           double phi3 = intVars[2];
           double cosTheta2 = intVars[3];
           double cosTheta3 = intVars[4];
-          return params->pointerToObject->calculateIntegrand(params->m, params->n, params->j, params->k, 
-                                                                 p2, phi2, phi3, cosTheta2, cosTheta3, params->msq);
+          return params->pointerToObject->calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, params->msq);
      } 
 }
 
 
 std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, const std::array<double, 4> &massSquare) {
+
+     // Fix p1 momentum
+     precalculateMomentum1(m, n, j, k);
 
      // Integral dimensions
      const int dim = this->integralDimension;
@@ -49,10 +49,6 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
 
      // Construct parameter wrapper struct
      gslWrapper::functionParams paramWrap;
-     paramWrap.m = m;
-     paramWrap.n = n;
-     paramWrap.j = j;
-     paramWrap.k = k;
      paramWrap.msq = massSquare;
      paramWrap.pointerToObject = this;
 
@@ -86,10 +82,19 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
 
 // collision integral C[m,n; j,k]. mn = Chebyshev indices, jk = grid momentum indices. 
 // Could optimize by pre-calculating p1 momenta etc
-double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
+double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
           const std::array<double, 4> &massSquared)
      {
      
+     // NB: Grid indices need to be set internally before calling this
+     const int m = gridIndices.m;
+     const int n = gridIndices.n;
+
+     // p1 and its pZ, pPar also pre-calculated internally. Here I'm defining them locally for clarity (NB: j, k not needed anymore)
+     const double p1 = this->p1;
+     const double pZ1 = this->pZ1;
+     const double pPar1 = this->pPar1;
+
      // Sines
      double sinTheta2 = std::sin(std::acos(cosTheta2));
      double sinTheta3 = std::sin(std::acos(cosTheta3));
@@ -100,16 +105,6 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
      double cosPhi2 = std::cos(phi2);
      double cosPhi3 = std::cos(phi3);
 
-     // p1 3-vector and its magnitude
-     double rhoZ1 = polynomialBasis.rhoZGrid(j);
-     double rhoPar1 = polynomialBasis.rhoParGrid(k);
-
-     double pZ1 = polynomialBasis.rhoZ_to_pZ(rhoZ1);
-     double pPar1 = polynomialBasis.rhoPar_to_pPar(rhoPar1);
-     double p1 = std::sqrt(pZ1*pZ1 + pPar1*pPar1);
-
-     //printf("pZ1 %g pPar1 %g\n", pZ1, pPar1);
-     
      
      // SLOPPY: Create 3-vectors, but I just use FourVectors with vanishing 0-component
      FourVector FV1dummy(0.0, pPar1, 0.0, pZ1);
@@ -128,7 +123,8 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
 
      //------------------------------- TODO move this bit elsewhere
      
-     // Now def. function g(p3) = FV4(p3) - msq4 and express the delta function in terms of roots of g(p3) and delta(p3 - p3root); p3 integral becomes trivial.
+     // Now def. function g(p3) = FV4(p3) - msq4 and express the delta function in 
+     // terms of roots of g(p3) and delta(p3 - p3root); p3 integral becomes trivial.
      // Will need to solve a quadratic equation; some helper variables for it:
      double Q = massSquared[0] + massSquared[1] + massSquared[2] - massSquared[3];
      double kappa = Q + 2.0 * (E1*E2 - p1p2Dot);
@@ -159,9 +155,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
 
      //printf("%ld %g %g %g %g\n", rootp3.size(), root1, root2, funcG(root1), funcG(root2));
 
-     // TODO need way of calculating and assigning deltaFs, or Chebyshevs. (maybe even give this a pointer to funct that calculates deltaF for given FourVector?)
      double fullIntegrand = 0.0;
-
      // Now proceed to fix remaining 4-momenta
      for (double p3 : rootp3) if (p3 >= 0.0) {
 
@@ -180,7 +174,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
           FourVector FV3 = p3*FV3Hat;
           FV3[0] = E3;
 
-          // momentum conservation fixed P4 
+          // momentum conservation fixes P4 
           FourVector FV4 = FV1 + FV2 - FV3;
 
           if (FV4.energy() < 0.0) {
@@ -193,18 +187,24 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
 
           // Now add all collision elements at these momenta
           double integrand = 0.0;
+
+          // Calculate deltaF's for all momenta (p1 already done and set internally in precalculate phase)
+          // In our spectral approach this means that we replace deltaF with 
+          // Tm(rhoZ) Tn(rhoPar), where Tm, Tn are appropriate basis polynomials
+          std::array<FourVector, 4> fourMomenta({FV1, FV2, FV3, FV4});
+          double TmTn_p2 = polynomialBasis.TmTn(m, n, FV2);
+          double TmTn_p3 = polynomialBasis.TmTn(m, n, FV3);
+          double TmTn_p4 = polynomialBasis.TmTn(m, n, FV4);
+          std::array<double, 4> TmTn_p({TmTn_p1, TmTn_p2, TmTn_p3, TmTn_p4});  
+
           for (CollElem<4> collElem : collisionElements) {
 
-               // Fix deltaF's. In our spectral approach this means that we replace deltaF with 
-               // Tm(rhoZ) Tn(rhoPar), where Tm, Tn are appropriate basis polynomials
-
-               // TODO optimize. this is slow because the same momenta are re-calculated for each collision element
-
-               std::array<FourVector, 4> fourMomenta({FV1, FV2, FV3, FV4});
-
+               // Note that this is still very redundant: each collElem shares the same particles, only their order changes
+               // !! It should be OK to set deltaF for particle 0 in pre-calculate phase, but for some reason it led to different result
+               // ==> need to figure this out (ideally better implementation for particle content anyway) 
                for (int i=0; i<4; ++i) {
                     if ( ! collElem.particles[i].isInEquilibrium()) {
-                         collElem.particles[i].setDeltaF( polynomialBasis.TmTn(m, n, fourMomenta[i]) );
+                         collElem.particles[i].setDeltaF( TmTn_p[i] );
                     }
                }
                //printf("TmTn(p1) %g\n", polynomialBasis.TmTn(m, n, fourMomenta[0]));

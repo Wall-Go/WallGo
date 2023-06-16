@@ -53,6 +53,25 @@ public:
         integrationVariables.cosTheta3 = cosTheta3;
     }
 
+    //----------------- Precalculate stuff for optimization
+
+    // This also sets m, n, j, k internally, which is very important for the integrand function, so rename this
+    void precalculateMomentum1(int m, int n, int j, int k) {
+        gridIndices.m = m;
+        gridIndices.n = n;
+        gridIndices.j = j;
+        gridIndices.k = k;
+
+        rhoZ1 = polynomialBasis.rhoZGrid(j);
+        rhoPar1 = polynomialBasis.rhoParGrid(k);
+        pZ1 = polynomialBasis.rhoZ_to_pZ(rhoZ1);
+        pPar1 = polynomialBasis.rhoPar_to_pPar(rhoPar1);
+        TmTn_p1 = polynomialBasis.TmTn(m, n, rhoZ1, rhoPar1);
+        p1 = std::sqrt(pZ1*pZ1 + pPar1*pPar1);
+    }
+
+    //----------------- End precalculations
+
     // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
     // Returns { result, error }
     std::array<double, 2> evaluate(int m, int n, int j, int k, const std::array<double, 4> &massSquare);
@@ -64,9 +83,8 @@ public:
     // For now this takes particle masses as input. Those are also contained in CollElems but I don't have a simple way of extracting them from there
     // Very messy...
     // Specifically, this calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P), including the 1/(2N) prefactor.
-    // NB: when comparing to output of Benoit's python code, note that he calculates 2pi * (A1)
-    double calculateIntegrand(int m, int n, int j, int k, double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
-          const std::array<double, 4> &massSquared);
+    // NB: when comparing to output of Benoit's python code, note that he calculates 4pi * (A1), and that his tg_tg term had an error in the population factor.
+    double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, const std::array<double, 4> &massSquared);
 
 
     inline size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
@@ -89,6 +107,25 @@ private:
     double massSquaredLowerBound = 1e-14;
 
     Chebyshev polynomialBasis;
+
+    //--------------------------
+
+    // Basis polynomial indices m, n
+    struct GridIndices {
+        // Basis polynomial indices (Tbar_m, Ttilde_n)
+        int m, n;
+        // Grid momentum indices (j -> rho_z, k -> rho_par)
+        int j, k;
+    } gridIndices;
+
+
+    // These will be pre-calculated before starting integration
+    double rhoZ1, rhoPar1;
+    double pZ1, pPar1;
+    // Magnitude of p1 3-vector
+    double p1;
+    // Tm(rhoZ1)*Tn(rhoPar1)
+    double TmTn_p1; 
 
     static constexpr size_t integralDimension = 5;
     gsl_rng* gslRNG;
