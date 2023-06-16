@@ -42,18 +42,10 @@ namespace gslWrapper {
 std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, const std::array<double, 4> &massSquare) {
 
      // Integral dimensions
-     const int dim = 5;
+     const int dim = this->integralDimension;
      // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
      double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.}; // Lower limits
      double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0*constants::pi, 2.0*constants::pi, 1., 1.}; // Upper limits
-
-     //------ GSL initialization. TODO move this eg. to constructor
-     // is this needed?!
-     gsl_rng_env_setup();
-     // Create a random number generator for the integration
-     gsl_rng* rng = gsl_rng_alloc(gsl_rng_default);
-
-     gsl_monte_vegas_state* state = gsl_monte_vegas_alloc(dim);
 
      // Construct parameter wrapper struct
      gslWrapper::functionParams paramWrap;
@@ -70,18 +62,22 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
      G.params = &paramWrap;
 
      // How many Monte Carlo iterations
-     size_t calls = 100000;
+     size_t calls = 50000;
+     size_t warmupCalls = 0.1*calls;
      double mean = 0.0;
      double error = 0.0;
 
-     // Warmup?!?
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, 0.2*calls, rng, state, &mean, &error);
-     // converge run??
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, rng, state, &mean, &error);
+     // Unique Monte Carlo state for this integration. Other option would be to alloc this in the constructor 
+     // and re-use the same state for all integrations (needs call to gsl_monte_vegas_init() for each new integral and would NOT be thread safe) 
+     // but I did not notice any significant performance improvement over just allocating it here 
+     gsl_monte_vegas_state* gslState = gsl_monte_vegas_alloc(dim);
 
-     // Clean up and free memory
-     gsl_monte_vegas_free(state);
-     gsl_rng_free(rng);
+     // Warmup?!?
+     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, this->gslRNG, gslState, &mean, &error);
+     // converge run??
+     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, this->gslRNG, gslState, &mean, &error);
+     
+     gsl_monte_vegas_free(gslState);
 
      return std::array<double, 2>( {mean, error} );
 }
@@ -159,11 +155,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
      // 3) Is it possible to have 2 positive roots??
 
      //-------------------------------
-     std::vector<double> rootp3;
-     if (root1 >= 0.0) 
-          rootp3.push_back(root1);
-     if (root2 >= 0.0) 
-          rootp3.push_back(root2);
+     std::array<double, 2> rootp3({root1, root2});
 
      //printf("%ld %g %g %g %g\n", rootp3.size(), root1, root2, funcG(root1), funcG(root2));
 
@@ -171,7 +163,7 @@ double CollisionIntegral4::calculateIntegrand(int m, int n, int j, int k, double
      double fullIntegrand = 0.0;
 
      // Now proceed to fix remaining 4-momenta
-     for (double p3 : rootp3) {
+     for (double p3 : rootp3) if (p3 >= 0.0) {
 
 
           if (std::abs(funcG(p3)) > 1e-8) {

@@ -58,3 +58,28 @@ If cmake errors out due to missing external libraries, install those and try aga
 - Check that the program builds fine without pybind11 installed if -DBUILD_PYTHON_MODULE=Off is used
 
 - Figure out how to cancel execution of a long C++ function from Python side. CTRL-C doesn't seem to work; need to kill the process or close the terminal
+
+
+## Debugging & Profiling
+
+The CMakeLists.txt file defines basic debugging options to use with GCC or Clang compiler. To configure CMake for a debug build, use ```-DCMAKE_BUILD_TYPE=Debug``` when invoking cmake. This will apply compiler flags -g -gp and disable optimization flags. Note that the debug version runs much slower than a "Release" build with compiler optimizations enabled.
+
+Running the debug build once should generate file called ```gmon.out``` in the working directory. This can be fed to the popular ```gprof``` profiler by running 
+
+```
+gprof <program> gmon.out > analysis.txt
+```
+where <program> is the executable built with debug flags. The output analysis.txt contains profiling report, eg. information on time spend in each function call.
+
+For visualizing the profiler output you can use the Python package ```gprof2dot```. Note that it requires graphviz to work. Installation on linux:
+
+```
+sudo apt install graphviz
+pip install gprof2dot
+```
+
+Usage example:
+```
+gprof ./bin/collision | gprof2dot | dot -Tpng -o analysis.png
+```
+This produces a huge PNG graph that is easier to interpret than the plain text output of gprof.

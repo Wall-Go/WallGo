@@ -1,30 +1,12 @@
 /*******/
 
 #include <iostream>
-#include <chrono>
 #include <cmath>
-#include <sys/time.h>
-#include <time.h>
+#include <chrono>
 
 #include "CollElem.h"
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
-
-
-void printTime(long duration){
-     //3600000000 microseconds in an hour
-     long hr = duration / 3600000000;
-     duration = duration - 3600000000 * hr;
-     //60000000 microseconds in a minute
-     long min = duration / 60000000;
-     duration = duration - 60000000 * min;
-
-     //1000000 microseconds in a second
-     long sec = duration / 1000000;
-
-     std::cout << hr << " hours and " << min << " minutes and " << sec << " seconds" << std::endl;
-
-}
 
 
 // TEMP
@@ -42,10 +24,15 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
      Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
      Array4D collGridErrors(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
 
+     std::cout << "Now evaluating all collision integrals\n" << std::endl;
+
      // m,n = Polynomial indices
      for (int m = 2; m < gridSizeN; ++m) for (int n = 1; n < gridSizeN; ++n) {
           // j,k = grid momentum indices 
           for (int j = 1; j < gridSizeN; ++j) for (int k = 1; k < gridSizeN; ++k) {
+
+               // Note symmetries: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+               // TODO
 
                // Monte Carlo result for the integral + its error
                std::array<double, 2> resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
@@ -116,41 +103,54 @@ int main() {
      collInt.addCollisionElement(tg_tg);
      collInt.addCollisionElement(tq_tq);
 
-     calculateAllCollisions(collInt);
+     // How many collision terms do we need in total
+     int nCollisionTerms = std::pow(basisSizeN-1, 4);
 
-/*
+     //-------------------- Measure wall clock time
+
+     std::cout << "Running speed test: integral C[2,1,1,1]\n";
+     auto startTime = std::chrono::steady_clock::now();
+
+     collInt.evaluate(2, 1, 1, 1, {0.0, 0.0, 0.0, 0.0});
+
+     auto endTime = std::chrono::steady_clock::now();
+
+     auto elapsedTime = endTime - startTime;
+     // Convert the elapsed time to milliseconds
+     auto elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+
+     // How long for all collision integrals
+     auto totalTime = elapsedTime * nCollisionTerms;
+
+     auto hours = std::chrono::duration_cast<std::chrono::hours>(totalTime).count();
+     auto minutes = std::chrono::duration_cast<std::chrono::minutes>(totalTime).count() % 60;
+
+     std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
+     std::cout << "Estimated time for all " << nCollisionTerms << " collision integrals: " 
+               << hours << " hours " << minutes << " minutes\n";
+
+     //--------------------
+
+     // This would calculate all required collision terms but is currently slow:
+     //calculateAllCollisions(collInt);
+
+     // FOR PROFILING: just calculate a few terms and exit
+
      std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
-
-     std::array<double, 2> integral;
+     std::array<double, 2> resultMC;
 
      int m, n, j, k;
 
-     m = 2; n = 1; j = 1; k = 1;
-     double p2 = 5.4;
-     double phi2 = 4.1;
-     double phi3 = 1.2;
-     double cosTheta2 = std::cos(1.7);
-     double cosTheta3 = std::cos(0.3);
-
-     printf("integrand only: %g\n", collInt.calculateIntegrand(m, n, j, k, p2, phi2, phi3, cosTheta2, cosTheta3, massSquared));
-
-     std::cin.get();
-
-     m = 2; n = 1; j = 1; k = 1;
-     integral = collInt.evaluate(m, n, j, k, massSquared);
-     printf("%d %d %d %d: %g +/- %g\n", m, n, j, k, integral[0], integral[1]);
-
-     k = 2;
-     integral = collInt.evaluate(m, n, j, k, massSquared);
-     printf("%d %d %d %d: %g +/- %g\n", m, n, j, k, integral[0], integral[1]);
      
-     k = 3;
-     integral = collInt.evaluate(m, n, j, k, massSquared);
-     printf("%d %d %d %d: %g +/- %g\n", m, n, j, k, integral[0], integral[1]);
+     m = 2; n = 1; j = 1; k = 1;
+     resultMC = collInt.evaluate(m, n, j, k, massSquared);
+     printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-*/
+          
+     m = 6; n = 4; j = 11; k = 9;
+     resultMC = collInt.evaluate(m, n, j, k, massSquared);
+     printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-     //calculateAllCollisions();
 
      return 0;
 }

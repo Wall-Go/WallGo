@@ -4,6 +4,10 @@
 #include <cmath>
 #include <vector>
 
+// Monte Carlo integration
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_monte_vegas.h>
+
 #include "FourVector.h"
 #include "CollElem.h"
 #include "constants.h"
@@ -23,7 +27,16 @@ class CollisionIntegral4 {
 
 public:
 
-    CollisionIntegral4(int polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
+    CollisionIntegral4(int polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {
+        //------ GSL initialization
+        gsl_rng_env_setup();
+        // Create a random number generator for the integration
+        gslRNG = gsl_rng_alloc(gsl_rng_default);
+    }
+
+    ~CollisionIntegral4() {
+        gsl_rng_free(gslRNG);
+    }  
 
     void addCollisionElement(const CollElem<4> &collElem) { 
         collisionElements.push_back(collElem); 
@@ -77,6 +90,8 @@ private:
 
     Chebyshev polynomialBasis;
 
+    static constexpr size_t integralDimension = 5;
+    gsl_rng* gslRNG;
 };
 
 

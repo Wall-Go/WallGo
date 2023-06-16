@@ -8,9 +8,6 @@
 class FourVector {
 	
 private:
-	//To perform scalar products it is fastest to use Cos(theta) and phi
-	//But to perform vector addition we keep the cartesian coordinates
-
 	// Don't change this...
 	const int NCOMPONENTS = 4;
 	// Cartesian components of the four-vector
