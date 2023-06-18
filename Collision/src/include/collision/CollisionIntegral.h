@@ -45,6 +45,7 @@ public:
 
 
     // ??
+    /*
     void setIntegrationVariables(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3) {
         integrationVariables.p2 = p2;
         integrationVariables.phi2 = phi2;
@@ -52,6 +53,7 @@ public:
         integrationVariables.cosTheta2 = cosTheta2;
         integrationVariables.cosTheta3 = cosTheta3;
     }
+    */
 
     //----------------- Precalculate stuff for optimization
 
@@ -91,12 +93,14 @@ public:
 
 private:
 
+    /*
     // dunno if need this
     struct IntegrationVariables {
         double p2; // magnitude of p2 3-momentum
         double phi2, phi3;
         double cosTheta2, cosTheta3;       
     } integrationVariables;
+    */
 
     // upper limit on p2 integration
     double maxIntegrationMomentum = 20.0; 

@@ -9,10 +9,24 @@
 #include "hdf5Interface.h"
 
 
-// TEMP
+// TEMPORARY. This is bound to the pybind module but does nothing ATM.  
 void calculateAllCollisions() {}
 
 
+// Count how many independent collision integrals there are for basis with N polynomials
+long countIndependentIntegrals(int N) {
+     long count = (N-1)*(N-1)*(N-1)*(N-1);
+     // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
+     count = std::ceil(count / 2.0);
+     // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+     if (N % 2 == 0) {
+          // how many odd m?
+          long mOdd = N / 2;
+          count -= mOdd;
+     } 
+
+     return count;
+}
 
 // Temporary routine for illustrating how we can generate all collision terms + write them to hdf5 file
 void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
@@ -26,16 +40,30 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 
      std::cout << "Now evaluating all collision integrals\n" << std::endl;
 
-     // m,n = Polynomial indices
-     for (int m = 2; m < gridSizeN; ++m) for (int n = 1; n < gridSizeN; ++n) {
+     // m,n = Polynomial indices. 
+     for (int m = 2; m <= gridSizeN; ++m) for (int n = 1; n <= gridSizeN-1; ++n) {
           // j,k = grid momentum indices 
-          for (int j = 1; j < gridSizeN; ++j) for (int k = 1; k < gridSizeN; ++k) {
-
-               // Note symmetries: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-               // TODO
+          for (int j = 1; j <= gridSizeN-1; ++j) for (int k = 1; k <= gridSizeN-1; ++k) {
 
                // Monte Carlo result for the integral + its error
-               std::array<double, 2> resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
+               std::array<double, 2> resultMC;
+
+               // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+               // which means we only need j <= N/2
+               if (2*j > gridSizeN){
+                    int jOther = gridSizeN - j;
+                    int sign = (m % 2 == 0 ? 1 : -1);
+                    resultMC[0] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+                    resultMC[1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+               }
+               // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+               else if (2*j == gridSizeN && m % 2 != 0) {
+                    resultMC[0] = 0.0;
+                    resultMC[1] = 0.0;
+               } else {
+
+                    resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
+               }
                
                collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
                collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
@@ -104,7 +132,7 @@ int main() {
      collInt.addCollisionElement(tq_tq);
 
      // How many collision terms do we need in total
-     int nCollisionTerms = std::pow(basisSizeN-1, 4);
+     int nCollisionTerms = countIndependentIntegrals(basisSizeN);
 
      //-------------------- Measure wall clock time
 
@@ -131,13 +159,15 @@ int main() {
 
      //--------------------
 
-     // This would calculate all required collision terms but is currently slow:
-     //calculateAllCollisions(collInt);
+     // This will  calculate all required collision terms:
+     calculateAllCollisions(collInt);
 
+/*
      // FOR PROFILING: just calculate a few terms and exit
 
      std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
      std::array<double, 2> resultMC;
+
 
      int m, n, j, k;
 
@@ -148,7 +178,7 @@ int main() {
      m = 6; n = 4; j = 11; k = 9;
      resultMC = collInt.evaluate(m, n, j, k, massSquared);
      printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
-
+*/
 
      return 0;
 }

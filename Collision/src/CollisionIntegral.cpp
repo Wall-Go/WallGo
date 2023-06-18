@@ -58,8 +58,8 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
      G.params = &paramWrap;
 
      // How many Monte Carlo iterations
-     size_t calls = 50000;
-     size_t warmupCalls = 0.1*calls;
+     size_t calls = 10000;
+     //size_t warmupCalls = 0.1*calls;
      double mean = 0.0;
      double error = 0.0;
 
@@ -69,8 +69,11 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
      gsl_monte_vegas_state* gslState = gsl_monte_vegas_alloc(dim);
 
      // Warmup?!?
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, this->gslRNG, gslState, &mean, &error);
+     //gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, this->gslRNG, gslState, &mean, &error);
      // converge run??
+
+     /* TODO: GSL instructions on the Vegas routine did a bunch of "warmup" iterations before the actual "convergence" runs. 
+     Need to understand what the optimal usage of Vegas routines is. */
      gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, this->gslRNG, gslState, &mean, &error);
      
      gsl_monte_vegas_free(gslState);
