@@ -1,7 +1,8 @@
 
+#include <iostream>
+
 #include "CollisionIntegral.h"
 #include "CollElem.h"
-#include <iostream>
 
 // Monte Carlo integration
 #include <gsl/gsl_math.h>
