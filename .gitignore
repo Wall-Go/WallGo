@@ -10,3 +10,4 @@ docs/_build
 *.egg-info
 dist/
 *.hdf5
+.vscode/
