@@ -1,7 +1,8 @@
-import TestModel
+#import TestModel
 import numpy as np
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
+import TestModel
 
 def findJouguetVelocity(model,Tnucl):
     r"""
@@ -179,3 +180,5 @@ def findvwLTE(model, Tnucl):
     vmax = findJouguetVelocity(model,Tnucl)
     return 0
 
+#model1 = TestModel.TestModelBag(0.9)
+#print(findMatching(model1, 0.8,0.8))

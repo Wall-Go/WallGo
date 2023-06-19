@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import TestModel
+import WallSpeed.TestModel
 from scipy.integrate import odeint
 from WallSpeed.Hydro import *
 
@@ -10,7 +10,7 @@ from WallSpeed.Hydro import *
 
 #print(findJouguetVelocity(model1,0.7))
 
-model1 = TestModel.TestModel(0.2,0.1,0.4)
+model1 = TestModel.TestModel2Step(0.2,0.1,0.4)
 
 def test_JouguetVelocity():
     res = np.zeros(5)
