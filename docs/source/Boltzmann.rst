@@ -1,13 +1,8 @@
 ======================================
-Oli
+Boltzmann
 ======================================
 
-.. automodule:: WallSpeed.oli
-    :members:
-    :inherited-members:
-    :special-members: __init__
-
-.. automodule:: WallSpeed.Grid
+.. automodule:: WallSpeed.Boltzmann
     :members:
     :inherited-members:
     :special-members: __init__
