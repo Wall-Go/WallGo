@@ -1,7 +1,9 @@
-#from .tests.TestModel import TestModel
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.optimize import root_scalar
+from scipy.optimize import root
 from scipy.integrate import odeint
+from TestModel import *
 
 def findJouguetVelocity(model,Tnucl):
     r"""
@@ -19,9 +21,7 @@ def findJouguetVelocity(model,Tnucl):
         dden2 = model.dpBrok(tm)
         return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
 
-    tmSol = fsolve(vpDerivNum,Tnucl*1.1)[0]
-    if tmSol < Tnucl:
-        tmSol = fsolve(vpDerivNum,Tnucl*2.)[0] #replace by solution with constraint?
+    tmSol = root_scalar(vpDerivNum,bracket =[Tnucl, 5*Tnucl], method='brentq').root #Have to be more careful about this upper bound. Can we determine that analytically?
     vp = np.sqrt((model.pSym(Tnucl) - model.pBrok(tmSol))*(model.pSym(Tnucl) + model.eBrok(tmSol))/(model.eSym(Tnucl) - model.eBrok(tmSol))/(model.eSym(Tnucl) + model.pBrok(tmSol)))
     return(vp)
 
@@ -49,7 +49,7 @@ def matchDeton(model,vw,Tnucl):
         lhs = vp**2*(model.eSym(Tp)+model.pBrok(tm))*(model.eSym(Tp)-model.eBrok(tm))      
         rhs = (model.eBrok(tm) + model.pSym(Tp))*(model.pSym(Tp)-model.pBrok(tm))
         return lhs - rhs
-    Tm = fsolve(tmFromvpsq,Tp*1.1)[0]
+    Tm = fsolve(tmFromvpsq, 1.1*Tp)[0]     
     vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
     return (vp, vm, Tp, Tm)
 
@@ -57,28 +57,16 @@ def matchDeflagOrHyb(model,vw,vp):
     r"""
     Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
     """
-    def matchDeflag(Tpm):
-        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-vw**2)
+    def match(Tpm):
+        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-min(vw**2,model.csqBrok(Tpm[1])))
 
-    def matchHybrid(Tpm):
-        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-model.csqBrok(Tpm[1]))
-
-    try:
-        Tp,Tm = fsolve(matchDeflag,[0.5,0.5])
-    except:
-        deflagFail = True
+    
+#    Tp,Tm = fsolve(match,[0.5,0.5])
+    [Tp,Tm] = root(match,[0.5,0.5]).x
+    if vw < np.sqrt(model.csqBrok(Tm)):
+        vm = vw
     else:
-        deflagFail = False
-        if vw < np.sqrt(model.csqBrok(Tm)):
-            vm = vw
-
-    if deflagFail == True or vw > np.sqrt(model.csqBrok(Tm)):
-        try:
-            Tp,Tm = fsolve(matchHybrid,[0.5,0.5])
-        except:
-            print('Cant find a hybrid or deflagration solution')
-        else:
-            vm = np.sqrt(model.csqBrok(Tm))
+        vm = np.sqrt(model.csqBrok(Tm))
     return vp, vm, Tp, Tm
 
 def gammasq(v):
@@ -120,7 +108,18 @@ def solveHydroShock(model,vw,vp,Tp):
         return model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - model.wSym(Tsol[index])*mu(xisol[index],vs[index])*gammasq(mu(xisol[index],vs[index]))
     Tn = fsolve(TiiShock,Tp*0.9)[0]
     return Tn
-    
+
+def strongestShock(model, vw):
+    r"""
+    Returns the minimum temperature for which a shock can exist.
+    For the strongest shock, :math:`v_+=0`, which yields `T_+,T_-`.
+    The fluid equations in the shock are then solved to determine the strongest shock.
+    """
+    def vpnum(Tpm):
+        return (model.eBrok(Tpm[1])+model.pSym(Tpm[0]),model.pSym(Tpm[0])-model.pBrok(Tpm[1]))
+
+    Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
+    return solveHydroShock(model,vw,0,Tp)
 
 def findMatching(model,vwTry,Tnucl):
     r"""
@@ -139,7 +138,7 @@ def findMatching(model,vwTry,Tnucl):
         TnTry = 0
         error = 10**-2 #adjust error here
         count = 0
-        while np.abs(TnTry - Tnucl)/Tnucl > error and count <100:
+        while np.abs(TnTry - Tnucl)/Tnucl > error and count <100: #get rid of this hard-coded thing
             vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry)
             Tntry = solveHydroShock(model,vwTry,vptry,Tp)
 
@@ -162,3 +161,33 @@ def findHydroBoundaries(model, vwTry, Tnucl):
     c2 = model.pSym(Tp)+model.wSym(Tp)*gammasq(vp)*vp**2
     return (c1, c2, Tp, Tm)
 
+def findvwLTE(model, Tnucl):
+    r"""
+    Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
+    The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-` via a binary search. 
+    For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
+    If no solution can be found (because the phase transition is too strong or too weak), the search algorithm asymptotes towards the
+    Jouguet velocity and the function returns zero.
+    The solution is always a deflagration or hybrid.
+    """
+    vmin = 0.01
+    vj = findJouguetVelocity(model,Tnucl)
+    vmax = vj
+    counter = 0
+    errmatch = 1.
+    errjouguet = 1. 
+    while counter<30 and min(errmatch,errjouguet)>10**-5: #probably also get rid of this hard-coded thing
+        vmid = (vmin+vmax)/2.
+        vp,vm,Tp,Tm = findMatching(model,vmid, Tnucl)
+        if Tp*np.sqrt(gammasq(vp)) > Tm*np.sqrt(gammasq(vm)):
+            vmin = vmid
+        else:
+            vmax = vmid
+        errmatch = np.abs((Tp*np.sqrt(gammasq(vp)) - Tm*np.sqrt(gammasq(vm))))/(Tp*np.sqrt(gammasq(vp))) #Checks error in matching condition
+        errjouguet = np.abs(vmid-vj)/vmid #Checks distance to Jouguet velocity
+        counter+=1
+
+    if errmatch < 10**-4:
+        return vmid
+    else:
+        return 0
