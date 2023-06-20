@@ -1,6 +1,7 @@
 # defines the toy xSM model, used in 2004.06995 and 2010.09744 
 # critical temperature is at T=1
 class TestModel2Step():
+    __test__ = False
     abrok = 0.2
     asym = 0.1
     musqq = 0.4
@@ -76,7 +77,7 @@ class TestModel2Step():
 #The phase transition strength at temperature t is given by: \alpha(t) = 1/3.*(1-psi)(1/t)**4 
 
 class TestModelBag():
-
+    __test__ = False
     
     def __init__(self, psi):
         self.psi = psi #number of degrees of freedom of the broken phase divided by the number of degrees of freedom in the symmetric phase
