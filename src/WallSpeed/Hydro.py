@@ -190,7 +190,7 @@ def findvwLTE(model, Tnucl):
     counter = 0
     errmatch = 1.
     errjouguet = 1. 
-    while counter<200 and min(errmatch,errjouguet)>10**-6: 
+    while counter<30 and min(errmatch,errjouguet)>10**-5: 
         vmid = (vmin+vmax)/2.
         vp,vm,Tp,Tm = findMatching(model,vmid, Tnucl)
         if Tp*np.sqrt(gammasq(vp)) > Tm*np.sqrt(gammasq(vm)):
@@ -201,7 +201,7 @@ def findvwLTE(model, Tnucl):
         errjouguet = np.abs(vmid-vj)/vmid #Checks distance to Jouguet velocity
         counter+=1
 
-    if errmatch < 10**-5:
+    if errmatch < 10**-4:
         return vmid
     else:
         return 0

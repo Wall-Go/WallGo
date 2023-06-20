@@ -140,7 +140,6 @@ class TestModelBag():
         return 1/3.
 
 
-
     def Tc(self):
         return 1.
 
