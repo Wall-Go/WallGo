@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
-import TestModel
+from TestModel import *
 
 def findJouguetVelocity(model,Tnucl):
     r"""
@@ -177,8 +177,23 @@ def findHydroBoundaries(model, vwTry, Tnucl):
 
 def findvwLTE(model, Tnucl):
     vmin = 0.01
-    vmax = findJouguetVelocity(model,Tnucl)
-    return 0
+    vj = findJouguetVelocity(model,Tnucl)
+    vmax = vj
+    counter = 0
+    errmatch = 1.
+    errjouguet = 1.
+    while counter<200 and min(errmatch,errjouguet)>10**-6:
+        vmid = (vmin+vmax)/2.
+        vp,vm,Tp,Tm = findMatching(model,vmid, Tnucl)
+        if Tp*np.sqrt(gammasq(vp)) > Tm*np.sqrt(gammasq(vm)):
+            vmin = vmid
+        else:
+            vmax = vmid
+        errmatch = np.abs((Tp*np.sqrt(gammasq(vp)) - Tm*np.sqrt(gammasq(vm))))/(Tp*np.sqrt(gammasq(vp)))
+        errjouguet = np.abs(vmid-vj)/vmid
+        counter+=1
 
-#model1 = TestModel.TestModelBag(0.9)
-#print(findMatching(model1, 0.8,0.8))
+    if errmatch < 10**-4:
+        return vmid
+    else:
+        return 0

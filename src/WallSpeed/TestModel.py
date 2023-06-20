@@ -77,7 +77,7 @@ class TestModelBag():
     
     def __init__(self, psi):
         self.psi = psi #number of degrees of freedom of the broken phase
-        self.eps = 1 - psi #this is not the bag constant times 3 and divided by the number of degrees of freedom of the symmetric phase
+        self.eps = 1. - psi #this is not the bag constant times 3 and divided by the number of degrees of freedom of the symmetric phase
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pSym(self, T):
@@ -139,5 +139,5 @@ class TestModelBag():
 
 
     def Tc(self):
-        return 1
+        return 1.
 
