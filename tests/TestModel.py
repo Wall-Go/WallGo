@@ -1,6 +1,5 @@
 # defines the toy xSM model, used in 2004.06995 and 2010.09744 
 # critical temperature is at T=1
-
 class TestModel2Step():
     abrok = 0.2
     asym = 0.1
@@ -17,11 +16,11 @@ class TestModel2Step():
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        return 4*T**3. + 4 * self.aSym * T *(self.aBrok - self.aSym + self.aSym * T**2-self.musq)
+        return 4*T**3. + 4. * self.aSym * T *(self.aBrok - self.aSym + self.aSym * T**2-self.musq)
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        return 12*T**2. +8 * self.aSym**2 * T**2 + 4*self.aSym*(self.aBrok-self.aSym +self.aSym*T**2-self.musq)
+        return 12.*T**2. +8 * self.aSym**2. * T**2. + 4.*self.aSym*(self.aBrok-self.aSym +self.aSym*T**2-self.musq)
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -42,15 +41,15 @@ class TestModel2Step():
     
     #Pressure in the broken phase
     def pBrok(self, T):
-        return T**4. + (self.aBrok*T**2 - self.musq)**2 - self.musq**2 
+        return T**4. + (self.aBrok*T**2. - self.musq)**2. - self.musq**2. 
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        return 4*T**3. + 4 * self.aBrok * T *(self.aBrok*T**2 - self.musq)
+        return 4.*T**3. + 4. * self.aBrok * T *(self.aBrok*T**2 - self.musq)
 
     #Second T-derivative of the pressure in the broken phase 
     def ddpBrok(self, T):
-        return 12*T**2. +8 * self.aBrok**2 * T**2 + 4*self.aBrok*(self.aBrok*T**2-self.musq)
+        return 12.*T**2. +8. * self.aBrok**2. * T**2. + 4.*self.aBrok*(self.aBrok*T**2.-self.musq)
 
     #Energy density in the broken phase
     def eBrok(self, T):
@@ -69,15 +68,19 @@ class TestModel2Step():
         return self.dpBrok(T)/self.deBrok(T)
 
     def Tc(self):
-        return 1
+        return 1.
 
+#Defines the bag equation of state
+#Note that a factor 1/3 a_+ Tc**4 has been scaled out
+#The critical temperature is at Tc=1, which relates psi and the (rescaled) bag constant epsilon: eps = 1-psi
+#The phase transition strength at temperature t is given by: \alpha(t) = 1/3.*(1-psi)(1/t)**4 
 
 class TestModelBag():
 
     
     def __init__(self, psi):
-        self.psi = psi #number of degrees of freedom of the broken phase
-        self.eps = 1 - psi #this is not the bag constant times 3 and divided by the number of degrees of freedom of the symmetric phase
+        self.psi = psi #number of degrees of freedom of the broken phase divided by the number of degrees of freedom in the symmetric phase
+        self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the symmetric phase times Tc^4)
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pSym(self, T):
@@ -85,11 +88,11 @@ class TestModelBag():
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        return 4*T**3. 
+        return 4.*T**3. 
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        return 12*T**2. 
+        return 12.*T**2. 
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -108,17 +111,17 @@ class TestModelBag():
         return 1/3.
 
     
-    #Pressure in the broken phase
+    #Pressure in the broken phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pBrok(self, T):
         return self.psi*T**4. 
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        return 4*self.psi*T**3.
+        return 4.*self.psi*T**3.
 
     #Second T-derivative of the pressure in the broken phase 
     def ddpBrok(self, T):
-        return 12*self.psi*T**2.
+        return 12.*self.psi*T**2.
     
     #Energy density in the broken phase
     def eBrok(self, T):
@@ -139,5 +142,5 @@ class TestModelBag():
 
 
     def Tc(self):
-        return 1
+        return 1.
 

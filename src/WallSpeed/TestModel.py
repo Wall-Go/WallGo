@@ -17,11 +17,11 @@ class TestModel2Step():
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        return 4*T**3. + 4 * self.aSym * T *(self.aBrok - self.aSym + self.aSym * T**2-self.musq)
+        return 4*T**3. + 4. * self.aSym * T *(self.aBrok - self.aSym + self.aSym * T**2-self.musq)
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        return 12*T**2. +8 * self.aSym**2 * T**2 + 4*self.aSym*(self.aBrok-self.aSym +self.aSym*T**2-self.musq)
+        return 12.*T**2. +8 * self.aSym**2. * T**2. + 4.*self.aSym*(self.aBrok-self.aSym +self.aSym*T**2-self.musq)
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -42,15 +42,15 @@ class TestModel2Step():
     
     #Pressure in the broken phase
     def pBrok(self, T):
-        return T**4. + (self.aBrok*T**2 - self.musq)**2 - self.musq**2 
+        return T**4. + (self.aBrok*T**2. - self.musq)**2. - self.musq**2. 
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        return 4*T**3. + 4 * self.aBrok * T *(self.aBrok*T**2 - self.musq)
+        return 4.*T**3. + 4. * self.aBrok * T *(self.aBrok*T**2 - self.musq)
 
     #Second T-derivative of the pressure in the broken phase 
     def ddpBrok(self, T):
-        return 12*T**2. +8 * self.aBrok**2 * T**2 + 4*self.aBrok*(self.aBrok*T**2-self.musq)
+        return 12.*T**2. +8. * self.aBrok**2. * T**2. + 4.*self.aBrok*(self.aBrok*T**2.-self.musq)
 
     #Energy density in the broken phase
     def eBrok(self, T):
@@ -69,7 +69,7 @@ class TestModel2Step():
         return self.dpBrok(T)/self.deBrok(T)
 
     def Tc(self):
-        return 1
+        return 1.
 
 
 class TestModelBag():
@@ -85,11 +85,11 @@ class TestModelBag():
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        return 4*T**3. 
+        return 4.*T**3. 
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        return 12*T**2. 
+        return 12.*T**2. 
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -114,11 +114,11 @@ class TestModelBag():
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        return 4*self.psi*T**3.
+        return 4.*self.psi*T**3.
 
     #Second T-derivative of the pressure in the broken phase 
     def ddpBrok(self, T):
-        return 12*self.psi*T**2.
+        return 12.*self.psi*T**2.
     
     #Energy density in the broken phase
     def eBrok(self, T):

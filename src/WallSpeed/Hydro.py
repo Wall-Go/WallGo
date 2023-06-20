@@ -176,24 +176,32 @@ def findHydroBoundaries(model, vwTry, Tnucl):
     return (c1, c2, Tp, Tm)
 
 def findvwLTE(model, Tnucl):
+    r"""
+    Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
+    The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-` via a binary search. 
+    For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
+    If no solution can be found (because the phase transition is too strong or too weak), the search algorithm asymptotes towards the
+    Jouguet velocity and the function returns zero.
+    The solution is always a deflagration or hybrid.
+    """
     vmin = 0.01
     vj = findJouguetVelocity(model,Tnucl)
     vmax = vj
     counter = 0
     errmatch = 1.
-    errjouguet = 1.
-    while counter<200 and min(errmatch,errjouguet)>10**-6:
+    errjouguet = 1. 
+    while counter<200 and min(errmatch,errjouguet)>10**-6: 
         vmid = (vmin+vmax)/2.
         vp,vm,Tp,Tm = findMatching(model,vmid, Tnucl)
         if Tp*np.sqrt(gammasq(vp)) > Tm*np.sqrt(gammasq(vm)):
             vmin = vmid
         else:
             vmax = vmid
-        errmatch = np.abs((Tp*np.sqrt(gammasq(vp)) - Tm*np.sqrt(gammasq(vm))))/(Tp*np.sqrt(gammasq(vp)))
-        errjouguet = np.abs(vmid-vj)/vmid
+        errmatch = np.abs((Tp*np.sqrt(gammasq(vp)) - Tm*np.sqrt(gammasq(vm))))/(Tp*np.sqrt(gammasq(vp))) #Checks error in matching condition
+        errjouguet = np.abs(vmid-vj)/vmid #Checks distance to Jouguet velocity
         counter+=1
 
-    if errmatch < 10**-4:
+    if errmatch < 10**-5:
         return vmid
     else:
         return 0
