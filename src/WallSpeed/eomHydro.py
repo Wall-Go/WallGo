@@ -2,6 +2,7 @@ import numpy as np
 
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
+from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 
 
 def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
@@ -24,9 +25,9 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
-    higgsWidth = 1 / hMass
-    singletWidth = 1 / sMass
-    wallOffSet = 0
+    higgsWidthGuess = 1 / hMass
+    singletWidthGuess = 1 / sMass
+    wallOffSetGuess = 0
     higgsWidth, singletWidth, wallOffSet = initialWallParameters(
         higgsWidthGuess,
         singletWidthGuess,
@@ -49,6 +50,8 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
         c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
+        wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid)
+
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
@@ -62,33 +65,17 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             grid,
         )
 
-        offEquilDeltas = solveBoltzmannEquation(
-            Tprofile,
-            velocityProfile,
-            wallParameters[1],
-            wallParameters[2],
-            wallParameters[3],
-        )
+        boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+
+        boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, model.particles)
+
+        offEquilDeltas = boltzmannSolver.getDeltas()
 
         intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
         )
 
         wallParameters = intermediateRes.x
-
-        c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
-        Tprofile = findTemperatureProfile(
-            c1,
-            c2,
-            higgsWidth,
-            singletWidth,
-            wallOffSet,
-            offEquilDeltas,
-            Tplus,
-            Tminus,
-            model,
-            grid,
-        )
 
         error = np.sqrt(
             ((wallVelocity - oldWallVelocity) / wallVelocity) ** 2
@@ -97,7 +84,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
             + (wallOffSet - oldWallOffSet) ** 2
         )
 
-    return wallVelocity, higgsWidth, singletWidth, wallOffSet
+    return wallParameters
 
 
 def momentsOfWallEoM(wallParameters, offEquilDeltas, Veff):
@@ -148,7 +135,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, Veff):
         offEquilDeltas,
         Tfunc,
     )
-    mom4 = singletPressureMoment(
+    mom4 = singletStretchMoment(
         higgsVEV,
         higgsWidth,
         singletVEV,
@@ -185,7 +172,7 @@ def higgsPressureMoment(
             Tfunc(z),
         ),
         -20 * higgsWidth,
-        -20 * singletWidth,
+        20 * higgsWidth,
     )
 
 
@@ -237,7 +224,7 @@ def higgsStretchMoment(
             Tfunc(z),
         ),
         -20 * higgsWidth,
-        -20 * singletWidth,
+        20 * higgsWidth,
     )
 
 
@@ -440,22 +427,22 @@ def initialWallParameters(
     singletVEV = Veff.singletVEV(TGuess)
 
     initRes = minimize(
-        lambda higgsWidth, singletWidth, wallOffSet: oneDimAction(
-            higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, TGuess, Veff
-        ),
+        lambda wallParams: oneDimAction(higgsVEV, singletVEV, wallParams, TGuess, Veff),
         x0=[higgsWidthGuess, singletWidthGuess, wallOffSetGuess],
-        bounds=[(0, None), (0, None), (None, None)],
+        bounds=[(0, None), (0, None), (-10, 10)],
     )
 
     return initRes.x[0], initRes.x[1], initRes.x[2]
 
 
-def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, Veff):
+def oneDimAction(higgsVEV, singletVEV, wallParams, T, Veff):
+    [higgsWidth, singletWidth, wallOffSet] = wallParams
+
     kinetic = (1 / higgsWidth + 1 / singletWidth) * 3 / 2
 
     integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
 
-    potential = quad(
+    integral = quad(
         lambda z: Veff.V(
             wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
             T,
@@ -473,6 +460,19 @@ def oneDimAction(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, T, 
     print(kinetic + potential)
 
     return kinetic + potential
+
+
+def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid):
+    [higgsWidth, singletWidth, wallOffSet] = staticWallParams
+
+    higgsVEV = Veff.higgsVEV(Tminus)
+    singletVEV = Veff.singletVEV(Tplus)
+
+    wallProfileGrid = []
+    for z in grid.xiValues:
+        wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
+
+    return wallProfileGrid
 
 
 def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
@@ -586,8 +586,8 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, Veff):
 
 
 def deltaToTmunu(
-    velocityProfile,
-    temperatureProfile,
+    velocityAtCenter,
+    Tm,
     offEquilDeltas,
     higgsWidth
     grid,
@@ -600,18 +600,18 @@ def deltaToTmunu(
     delta02 = offEquilDeltas["02"]
     delta20 = offEquilDeltas["20"]
 
-    u0 = np.sqrt(gammasq(velocityProfile))
-    u3 = np.sqrt(gammasq(velocityProfile))*velocityProfile
+    u0 = np.sqrt(gammasq(velocityAtCenter))
+    u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
     ubar0 = u3
     ubar3 = u0
     
-    h = 0.5 * Veff.higgsVEV(temperatureProfile)*(1 - np.tanh(grid.xiValues / higgsWidth))
-    mTopSquared = 1/2.*particleList.ytop*h*h
+    h = 0.5 * Veff.higgsVEV(Tm)*(1 - np.tanh(grid.xiValues / higgsWidth))
+    mTopSquared = 1/2.*model.ytop*h*h #need to update this once model file is ready
 
     T30 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u0+
-           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u03*ubar0 + ubar3*u0))/2.
+           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
     T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
-           (3*delta02 - delta20 - mTopSquared*delta00)*ubar3*ubar3+4*delta11*u03*ubar3)/2.
+           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
     
     return T30, T33
 

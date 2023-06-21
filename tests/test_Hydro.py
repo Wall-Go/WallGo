@@ -1,22 +1,17 @@
 import pytest
 import numpy as np
-import WallSpeed.TestModel
+import TestModel
 from scipy.integrate import odeint
 from WallSpeed.Hydro import *
 
-#model1 = TestModel.TestModel(0.2,0.1,0.4)
 
-#print(model1.eBrok(0.3))
-
-#print(findJouguetVelocity(model1,0.7))
-
+#These tests are all based on a comparison to external code which computes the same quantities
 model1 = TestModel.TestModel2Step(0.2,0.1,0.4)
 
 def test_JouguetVelocity():
     res = np.zeros(5)
     for i in range(5):
         res[i] = findJouguetVelocity(model1,0.5+i*0.1)
-#    assert res == pytest.approx([0.840948,0.776119,0.7240,0.6836,0.651791],rel=0.01*np.ones(5))
     np.testing.assert_allclose(res,[0.840948,0.776119,0.7240,0.6836,0.651791],rtol = 10**-3,atol = 0)
 
 def test_matchDeton():
@@ -88,3 +83,19 @@ def test_findMatching():
     np.testing.assert_allclose(res,(0.9, 0.889579,0.8,0.829928),rtol = 10**-2,atol = 0)
     res = findMatching(model1,0.9,0.9)
     np.testing.assert_allclose(res,(0.9, 0.894957,0.9,0.918446),rtol = 10**-2,atol = 0)
+
+# Test local thermal equilibrium solution in bag model
+
+def test_LTE():
+    model2 = TestModel.TestModelBag(0.9)
+    res = np.zeros(5)
+    for i in range(5):
+        res[i] = findvwLTE(model2,0.5+i*0.1)
+    np.testing.assert_allclose(res,[0.,0.,0.,0.714738,0.6018],rtol = 10**-3,atol = 0)
+
+    model2 = TestModel.TestModelBag(0.8)
+    res2 = np.zeros(4)
+    for i in range(4):
+        print (0.6+i*0.1)
+        res2[i] = findvwLTE(model2,0.6+i*0.1)
+    np.testing.assert_allclose(res2,[0.87429,0.7902,0.6856,0.5619],rtol = 10**-3,atol = 0)

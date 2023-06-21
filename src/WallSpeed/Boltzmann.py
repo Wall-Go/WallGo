@@ -1,7 +1,24 @@
 import numpy as np
-import h5py # read/write hdf5 structured binary data file format
+import h5py  # read/write hdf5 structured binary data file format
 from .Grid import Grid
 from .Polynomial import Polynomial
+
+
+class BoltzmannBackground:
+    def __init__(
+        self,
+        vw,
+        velocityProfile,
+        fieldProfile,
+        temperatureProfile,
+        polynomialBasis="Cardinal",
+    ):
+        self.vw = vw
+        self.velocityProfile = velocityProfile
+        self.fieldProfile = fieldProfile
+        self.temperatureProfile = temperatureProfile
+        self.polynomialBasis = polynomialBasis
+
 
 class BoltzmannSolver:
     """
@@ -105,11 +122,11 @@ class BoltzmannSolver:
         """
         # polynomial tool
         poly = Polynomial(self.grid)
-        if self.basisM == "Cardinal": ##### temporary hack
+        if self.basisM == "Cardinal":  ##### temporary hack
             derivChi = poly.cardinalDeriv("z")
         else:
             derivChi = poly.chebyshevDeriv("z")
-        if self.basisN == "Cardinal": ##### temporary hack
+        if self.basisN == "Cardinal":  ##### temporary hack
             derivPz = poly.cardinalDeriv("pz")
         else:
             derivPz = poly.chebyshevDeriv("pz")
@@ -117,22 +134,22 @@ class BoltzmannSolver:
         derivRz = derivPz
 
         # coordinates
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
         # intertwiner matrices
-        if self.basisM == "Cardinal": ##### temporary hack
+        if self.basisM == "Cardinal":  ##### temporary hack
             TChiMat = poly.cardinalMatrix("z")
         else:
             TChiMat = poly.chebyshevMatrix("z")
-        if self.basisN == "Cardinal": ##### temporary hack
+        if self.basisN == "Cardinal":  ##### temporary hack
             TRzMat = poly.cardinalMatrix("pz")
         else:
             TRzMat = poly.chebyshevMatrix("pz")
-        #TChiMat = poly.intertwiner("Coordinate", self.basisM)
-        #TRzMat = poly.intertwiner("Coordinate", self.basisN)
+        # TChiMat = poly.intertwiner("Coordinate", self.basisM)
+        # TRzMat = poly.intertwiner("Coordinate", self.basisN)
         TRpMat = TRzMat
         DTChiMat = np.dot(derivChi, TChiMat)
         DTRzMat = np.dot(derivRz, TRzMat)
@@ -162,9 +179,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        #dTdxi = np.einsum("ij,jbc", derivXi, T, optimize=True)
-        #dvdxi = np.einsum("ij,jbc", derivXi, v, optimize=True)
-        #dmsqdxi = np.einsum("ij,jbc", derivXi, msq, optimize=True)
+        # dTdxi = np.einsum("ij,jbc", derivXi, T, optimize=True)
+        # dvdxi = np.einsum("ij,jbc", derivXi, v, optimize=True)
+        # dmsqdxi = np.einsum("ij,jbc", derivXi, msq, optimize=True)
         dTdxi = np.dot(derivXi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
         dvdxi = np.dot(derivXi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
         dmsqdxi = np.dot(derivXi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
@@ -187,14 +204,19 @@ class BoltzmannSolver:
 
         ##### liouville operator #####
         liouville = (
-            dchidxi * PWall
-                * DTChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdxi
-                * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * DTRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+            dchidxi
+            * PWall
+            * DTChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+            * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+            * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+            - dchidxi
+            * drzdpz
+            * gammaWall
+            / 2
+            * dmsqdxi
+            * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+            * DTRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+            * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
         ##### collision operator #####
@@ -219,7 +241,7 @@ class BoltzmannSolver:
         operator = (
             liouville
             + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
+            * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
         # reshaping indices
@@ -251,12 +273,10 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        return "src/Collision/build/collisions_Chebyshev_20.hdf5" ##### hack
+        return "src/Collision/build/collisions_Chebyshev_20.hdf5"  ##### hack
         dir = "."
         suffix = "hdf5"
-        filename = "%s/collision_%s_N_%i.%s" % (
-            dir, self.basisN, self.grid.N, suffix
-        )
+        filename = "%s/collision_%s_N_%i.%s" % (dir, self.basisN, self.grid.N, suffix)
         return filename
 
     def __checkBasis(basis):
