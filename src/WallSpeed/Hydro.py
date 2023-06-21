@@ -11,15 +11,15 @@ def findJouguetVelocity(model,Tnucl):
     Finds the Jouguet velocity for a thermal effective potential, defined by Model,
     using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity
     """
-    pSymTn = model.pSym(Tnucl)
-    eSymTn = model.eSym(Tnucl)
+    pSym = model.pSym(Tnucl)
+    eSym = model.eSym(Tnucl)
     def vpDerivNum(tm): #the numerator of the derivative of v+^2
-        pBrokTm = model.pBrok(tm)
-        eBrokTm = model.eBrok(tm)
-        num1 = pSymTn - pBrokTm #first factor in the numerator of v+^2
-        num2 = pSymTn + eBrokTm 
-        den1 = eSymTn - eBrokTm #first factor in the denominator of v+^2
-        den2 = eSymTn + pBrokTm 
+        pBrok = model.pBrok(tm)
+        eBrok = model.eBrok(tm)
+        num1 = pSym - pBrok #first factor in the numerator of v+^2
+        num2 = pSym + eBrok
+        den1 = eSym - eBrok #first factor in the denominator of v+^2
+        den2 = eSym + pBrok 
         dnum1 = - model.dpBrok(tm) #T-derivative of first factor wrt tm
         dnum2 = model.deBrok(tm)
         dden1 = - dnum2 #T-derivative of second factor wrt tm
@@ -40,7 +40,7 @@ def findJouguetVelocity(model,Tnucl):
     if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
         tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq').root 
     else: #If we cannot bracket the root, use the 'secant' method instead.
-        tmSol = root_scalar(vpDerivNum, method='secant', x0=Tmax, x1=1.5*Tmax).root 
+        tmSol = root_scalar(vpDerivNum, method='secant', x0=Tnucl, x1=1.5*Tmax).root 
     vp = np.sqrt((model.pSym(Tnucl) - model.pBrok(tmSol))*(model.pSym(Tnucl) + model.eBrok(tmSol))/(model.eSym(Tnucl) - model.eBrok(tmSol))/(model.eSym(Tnucl) + model.pBrok(tmSol)))
     return(vp)
 
@@ -85,14 +85,13 @@ def matchDeton(model,vw,Tnucl):
         bracket1 = bracket2
         Tmax *= 1.5
         bracket2 = tmFromvpsq(Tmax)
-    print(Tmin,Tmax,vp)
+    
     Tm = None
     if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
         Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq').root 
         
     else: #If we cannot bracket the root, use the 'secant' method instead.
-        print('secant')
-        Tm = root_scalar(tmFromvpsq, method='secant', x0=Tmax, x1=1.5*Tmax).root     
+        Tm = root_scalar(tmFromvpsq, method='secant', x0=Tnucl, x1=1.5*Tmax).root     
     vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
     return (vp, vm, Tp, Tm)
 
