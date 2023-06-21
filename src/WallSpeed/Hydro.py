@@ -174,7 +174,7 @@ def findMatching(model,vwTry,Tnucl):
             
     else: #Hybrid or deflagration
         #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-        vpmax = np.sqrt(model.csqSym(model.Tc()))
+        vpmax = min(vwTry,np.sqrt(model.csqSym(model.Tc())))
         vpmin = 0.01 #minimum value of vpmin
         vptry = (vpmax + vpmin)/2.
         TnTry = 0
