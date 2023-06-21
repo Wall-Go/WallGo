@@ -10,18 +10,36 @@ def findJouguetVelocity(model,Tnucl):
     Finds the Jouguet velocity for a thermal effective potential, defined by Model,
     using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity
     """
+    pSymTn = model.pSym(Tnucl)
+    eSymTn = model.eSym(Tnucl)
     def vpDerivNum(tm): #the numerator of the derivative of v+^2
-        num1 = model.pSym(Tnucl) - model.pBrok(tm) #first factor in the numerator of v+^2
-        num2 = model.pSym(Tnucl) + model.eBrok(tm) 
-        den1 = model.eSym(Tnucl) - model.eBrok(tm) #first factor in the denominator of v+^2
-        den2 = model.eSym(Tnucl) + model.pBrok(tm) 
+        pBrokTm = model.pBrok(tm)
+        eBrokTm = model.eBrok(tm)
+        num1 = pSymTn - pBrokTm #first factor in the numerator of v+^2
+        num2 = pSymTn + eBrokTm 
+        den1 = eSymTn - eBrokTm #first factor in the denominator of v+^2
+        den2 = eSymTn + pBrokTm 
         dnum1 = - model.dpBrok(tm) #T-derivative of first factor wrt tm
         dnum2 = model.deBrok(tm)
-        dden1 = - model.deBrok(tm) #T-derivative of second factor wrt tm
-        dden2 = model.dpBrok(tm)
+        dden1 = - dnum2 #T-derivative of second factor wrt tm
+        dden2 = - dnum1
         return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
-
-    tmSol = root_scalar(vpDerivNum,bracket =[Tnucl, 5*Tnucl], method='brentq').root #Have to be more careful about this upper bound. Can we determine that analytically?
+    
+    # For detonations, Tm has a lower bound of Tn, but no upper bound.
+    # We increase Tmax until we find a value that brackets our root.
+    Tmin,Tmax = Tnucl,1.5*Tnucl
+    bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
+    while bracket1*bracket2 > 0 and Tmax < 10*Tnucl:
+        Tmin = Tmax
+        bracket1 = bracket2
+        Tmax *= 1.5
+        bracket2 = vpDerivNum(Tmax)
+    
+    tmSol = None
+    if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+        tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq').root 
+    else: #If we cannot bracket the root, use the 'secant' method instead.
+        tmSol = root_scalar(vpDerivNum, method='secant', x0=Tmax, x1=1.5*Tmax).root 
     vp = np.sqrt((model.pSym(Tnucl) - model.pBrok(tmSol))*(model.pSym(Tnucl) + model.eBrok(tmSol))/(model.eSym(Tnucl) - model.eBrok(tmSol))/(model.eSym(Tnucl) + model.pBrok(tmSol)))
     return(vp)
 
