@@ -5,6 +5,7 @@ from scipy.optimize import root
 from scipy.integrate import odeint
 from TestModel import *
 
+
 def findJouguetVelocity(model,Tnucl):
     r"""
     Finds the Jouguet velocity for a thermal effective potential, defined by Model,
@@ -63,11 +64,35 @@ def matchDeton(model,vw,Tnucl):
     """
     vp = vw
     Tp = Tnucl
-    def tmFromvpsq(tm): #determine Tm from the expression for vp^2
-        lhs = vp**2*(model.eSym(Tp)+model.pBrok(tm))*(model.eSym(Tp)-model.eBrok(tm))      
-        rhs = (model.eBrok(tm) + model.pSym(Tp))*(model.pSym(Tp)-model.pBrok(tm))
+    pSym,wSym = model.pSym(Tp),model.wSym(Tp)
+    eSym = wSym - pSym
+    def tmFromvpsq(tm): #determine Tm in the detonation branch from the expression for r = w_+/w_-
+        pBrok,wBrok = model.pBrok(tm),model.wBrok(tm)
+        eBrok = wBrok - pBrok
+        
+        alpha = (eSym-eBrok-3*(pSym-pBrok))/(3*wSym)
+        X = 1-3*alpha+3*vp**2*(1+alpha)
+        lhs = wSym/wBrok
+        rhs = (1-vp**2)*(X+2*np.sqrt(X**2-12*vp**2))/(16*vp**2-X**2)
         return lhs - rhs
-    Tm = fsolve(tmFromvpsq, 1.1*Tp)[0]     
+    
+    # For detonations, Tm has a lower bound of Tn, but no upper bound.
+    # We increase Tmax until we find a value that brackets our root.
+    Tmin,Tmax = Tnucl,1.5*Tnucl
+    bracket1,bracket2 = tmFromvpsq(Tmin),tmFromvpsq(Tmax)
+    while bracket1*bracket2 > 0 and Tmax < 10*Tnucl:
+        Tmin = Tmax
+        bracket1 = bracket2
+        Tmax *= 1.5
+        bracket2 = tmFromvpsq(Tmax)
+    print(Tmin,Tmax,vp)
+    Tm = None
+    if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+        Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq').root 
+        
+    else: #If we cannot bracket the root, use the 'secant' method instead.
+        print('secant')
+        Tm = root_scalar(tmFromvpsq, method='secant', x0=Tmax, x1=1.5*Tmax).root     
     vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
     return (vp, vm, Tp, Tm)
 
