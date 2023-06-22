@@ -27,13 +27,13 @@ def test_matchDeton():
     np.testing.assert_allclose(res,(0.71697,0.690044,0.9,0.931932),rtol = 10**-3,atol = 0)
 
 def test_matchDeflagOrHyb():
-    res = matchDeflagOrHyb(model1,0.5,0.4)
+    res = matchDeflagOrHyb(model1,0.5,0.4,1)
     np.testing.assert_allclose(res,(0.4,0.5,0.825993,0.771703),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.6, 0.3)
+    res = matchDeflagOrHyb(model1,0.6, 0.3,1)
     np.testing.assert_allclose(res,(0.3,0.530156,0.698846,0.593875),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.3, 0.2)
+    res = matchDeflagOrHyb(model1,0.3, 0.2,1)
     np.testing.assert_allclose(res,(0.2,0.3,0.667112,0.614376),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.7, 0.4)
+    res = matchDeflagOrHyb(model1,0.7, 0.4,1)
     np.testing.assert_allclose(res,(0.4,0.547745,0.814862,0.734061),rtol = 10**-3,atol = 0)
 
 def test_solveHydroShock():
@@ -99,3 +99,4 @@ def test_LTE():
         print (0.6+i*0.1)
         res2[i] = findvwLTE(model2,0.6+i*0.1)
     np.testing.assert_allclose(res2,[0.87429,0.7902,0.6856,0.5619],rtol = 10**-3,atol = 0)
+

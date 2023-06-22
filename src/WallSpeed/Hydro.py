@@ -95,16 +95,25 @@ def matchDeton(model,vw,Tnucl):
     vm = np.sqrt(vpvm(model,Tp,Tm)/vpovm(model,Tp,Tm))
     return (vp, vm, Tp, Tm)
 
-def matchDeflagOrHyb(model,vw,vp):
+def matchDeflagOrHyb(model,vw,vp,Tnucl):
     r"""
     Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
     """
-    def match(Tpm):
-        return (vpvm(model,Tpm[0],Tpm[1])*vpovm(model,Tpm[0],Tpm[1])-vp**2,vpvm(model,Tpm[0],Tpm[1])/vpovm(model,Tpm[0],Tpm[1])-min(vw**2,model.csqBrok(Tpm[1])))
+    def match(XpXm):
+        Tpm = __inverseMappingT(XpXm, Tnucl)
+        _vpvm = vpvm(model,Tpm[0],Tpm[1])
+        _vpovm = vpovm(model,Tpm[0],Tpm[1])
+        eq1 = _vpvm*_vpovm-vp**2
+        eq2 = _vpvm/_vpovm-min(vw**2,model.csqBrok(Tpm[1]))
+        
+        # We multiply the equations by c to make sure the solver
+        # do not explore arbitrarly small or large values of Tm and Tp.
+        c = ((2*Tnucl)**2+Tpm[0]**2+Tpm[1]**2)*((2/Tnucl)**2+1/Tpm[0]**2+1/Tpm[1]**2)
+        return (eq1*c,eq2*c)
 
-    
-#    Tp,Tm = fsolve(match,[0.5,0.5])
-    [Tp,Tm] = root(match,[0.5,0.5]).x
+    # We map Tm and Tp, which satisfy 0<Tm<Tp, to the interval (-inf,inf) which is used by the solver.
+    sol = root(match,__mappingT([1.1*Tnucl,0.9*Tnucl], Tnucl),method='hybr')
+    [Tp,Tm] = __inverseMappingT(sol.x,Tnucl)
     if vw < np.sqrt(model.csqBrok(Tm)):
         vm = vw
     else:
@@ -178,10 +187,13 @@ def findMatching(model,vwTry,Tnucl):
         vpmin = 0.01 #minimum value of vpmin
         vptry = (vpmax + vpmin)/2.
         TnTry = 0
-        error = 10**-2 #adjust error here
+        error = 10**-3 #adjust error here
         count = 0
+        _,_,Tp1,_ = matchDeflagOrHyb(model,vwTry,vpmin,Tnucl)
+        _,_,Tp2,_ = matchDeflagOrHyb(model,vwTry,vpmax,Tnucl)
+        print(Tnucl,Tp1,Tp2,solveHydroShock(model,vwTry,vpmin,Tp1)-Tnucl,solveHydroShock(model,vwTry,vpmax,Tp2)-Tnucl)
         while np.abs(TnTry - Tnucl)/Tnucl > error and count <100: #get rid of this hard-coded thing
-            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry)
+            vp,vm,Tp,Tm = matchDeflagOrHyb(model,vwTry,vptry,Tnucl)
             Tntry = solveHydroShock(model,vwTry,vptry,Tp)
 
             if Tntry > Tnucl:
@@ -233,3 +245,47 @@ def findvwLTE(model, Tnucl):
         return vmid
     else:
         return 0
+    
+def __mappingT(TpTm,Tscale):
+    """
+    Maps the variables Tp and Tm, which are constrained by 0<Tm<Tp for deflagration/hybrid walls. 
+    They are mapped to the interval (-inf,inf) to allow root finding algorithms to explore different values of (Tp,Tm),
+    without going outside of the bound above.
+
+    Parameters
+    ----------
+    TpTm : array_like, shape (2,)
+        List containing Tp and Tm.
+    Tscale : double
+        Typical temperature scale. Should be of order Tnucl.
+    """
+    
+    Tp,Tm = TpTm
+    Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
+    Xp = Tp/Tscale-1 if Tp > Tscale else 1-Tscale/Tp
+    return [Xp,Xm]
+
+def __inverseMappingT(XpXm,Tscale):
+    """
+    Inverse of __mappingT.
+    """
+    
+    Xp,Xm = XpXm
+    Tp = Tscale*(1+Xp) if Xp > 0 else Tscale/(1-Xp)
+    Tm = 0.5*Tp*(1+Xm/np.sqrt(1+Xm**2))
+    return [Tp,Tm]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
