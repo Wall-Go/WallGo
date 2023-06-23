@@ -7,96 +7,115 @@ from WallSpeed.Hydro import *
 
 #These tests are all based on a comparison to external code which computes the same quantities
 model1 = TestModel.TestModel2Step(0.2,0.1,0.4)
+hydro = Hydro(model1,1)
 
 def test_JouguetVelocity():
     res = np.zeros(5)
     for i in range(5):
-        res[i] = findJouguetVelocity(model1,0.5+i*0.1)
+        hydro.Tnucl = 0.5+i*0.1
+        res[i] = hydro.findJouguetVelocity()
     np.testing.assert_allclose(res,[0.840948,0.776119,0.7240,0.6836,0.651791],rtol = 10**-3,atol = 0)
 
 def test_matchDeton():
-    res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.5),0.5)
+    hydro.Tnucl = 0.5
+    res = hydro.matchDeton(1.1*hydro.findJouguetVelocity())
     np.testing.assert_allclose(res,(0.925043,0.848164,0.5,0.614381),rtol = 10**-3,atol = 0)
-    res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.6),0.6)
+    hydro.Tnucl = 0.6
+    res = hydro.matchDeton(1.1*hydro.findJouguetVelocity())
     np.testing.assert_allclose(res,(0.853731,0.777282,0.6,0.685916),rtol = 10**-3,atol = 0)
-    res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.7),0.7)
+    hydro.Tnucl = 0.7
+    res = hydro.matchDeton(1.1*hydro.findJouguetVelocity())
     np.testing.assert_allclose(res,(0.796415,0.737286,0.7,0.763685),rtol = 10**-3,atol = 0)
-    res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.8),0.8)
+    hydro.Tnucl = 0.8
+    res = hydro.matchDeton(1.1*hydro.findJouguetVelocity())
     np.testing.assert_allclose(res,(0.751924,0.710458,0.8,0.846123),rtol = 10**-3,atol = 0)
-    res = matchDeton(model1,1.1*findJouguetVelocity(model1,0.9),0.9)
+    hydro.Tnucl = 0.9
+    res = hydro.matchDeton(1.1*hydro.findJouguetVelocity())
     np.testing.assert_allclose(res,(0.71697,0.690044,0.9,0.931932),rtol = 10**-3,atol = 0)
 
 def test_matchDeflagOrHyb():
-    res = matchDeflagOrHyb(model1,0.5,0.4,1)
+    hydro.Tnucl = 1
+    res = hydro.matchDeflagOrHyb(0.5,0.4)
     np.testing.assert_allclose(res,(0.4,0.5,0.825993,0.771703),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.6, 0.3,1)
+    res = hydro.matchDeflagOrHyb(0.6, 0.3)
     np.testing.assert_allclose(res,(0.3,0.530156,0.698846,0.593875),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.3, 0.2,1)
+    res = hydro.matchDeflagOrHyb(0.3, 0.2)
     np.testing.assert_allclose(res,(0.2,0.3,0.667112,0.614376),rtol = 10**-3,atol = 0)
-    res = matchDeflagOrHyb(model1,0.7, 0.4,1)
+    res = hydro.matchDeflagOrHyb(0.7, 0.4)
     np.testing.assert_allclose(res,(0.4,0.547745,0.814862,0.734061),rtol = 10**-3,atol = 0)
 
 def test_solveHydroShock():
-    res = solveHydroShock(model1, 0.5, 0.4,0.825993)
+    res = hydro.solveHydroShock(0.5, 0.4,0.825993)
     assert res == pytest.approx(0.77525, rel=0.01)
-    res = solveHydroShock(model1, 0.6, 0.3,0.698846)
+    res = hydro.solveHydroShock(0.6, 0.3,0.698846)
     assert res == pytest.approx(0.576319, rel=0.01)
-    res = solveHydroShock(model1, 0.3, 0.2,0.6671123)
+    res = hydro.solveHydroShock(0.3, 0.2,0.6671123)
     assert res == pytest.approx(0.642264, rel=0.01)
-    res = solveHydroShock(model1, 0.7, 0.4,0.73406141)
+    res = hydro.solveHydroShock(0.7, 0.4,0.73406141)
     assert res == pytest.approx(0.576516, rel=0.01)
 
 def test_strongestShock():
-    res = strongestShock(model1,0.2)
+    res = hydro.strongestShock(0.2)
     assert res == pytest.approx(0.509786, rel=0.01)
-    res = strongestShock(model1,0.3)
+    res = hydro.strongestShock(0.3)
     assert res == pytest.approx(0.488307, rel=0.01)
-    res = strongestShock(model1,0.4)
+    res = hydro.strongestShock(0.4)
     assert res == pytest.approx(0.462405, rel=0.01)
-    res = strongestShock(model1,0.5)
+    res = hydro.strongestShock(0.5)
     assert res == pytest.approx(0.433052, rel=0.01)
-    res = strongestShock(model1,0.6)
+    res = hydro.strongestShock(0.6)
     assert res == pytest.approx(0.401013, rel=0.01)
-    res = strongestShock(model1,0.7)
+    res = hydro.strongestShock(0.7)
     assert res == pytest.approx(0.366219, rel=0.01)
-    res = strongestShock(model1,0.8)
+    res = hydro.strongestShock(0.8)
     assert res == pytest.approx(0.327039, rel=0.01)
-    res = strongestShock(model1,0.9)
+    res = hydro.strongestShock(0.9)
     assert res == pytest.approx(0.278722, rel=0.01)
 
 def test_findMatching():
-    res = findMatching(model1,0.3,0.5)
+    hydro.Tnucl = 0.5
+    hydro.vJ = hydro.findJouguetVelocity()
+    res = hydro.findMatching(0.3)
     np.testing.assert_allclose(res,(0.0308804,0.3,0.5419,0.361743),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.3,0.8)
-    np.testing.assert_allclose(res,(0.265521,0.3,0.811487,0.793731),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.3,0.9)
-    np.testing.assert_allclose(res,(0.28306,0.3,0.90647,0.898604),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.6,0.5)
+    res = hydro.findMatching(0.6)
     np.testing.assert_allclose(res,(0.208003, 0.508124,0.628915,0.503117),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.6,0.8)
-    np.testing.assert_allclose(res,(0.447702, 0.554666,0.897803,0.831459),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.6,0.9)
-    np.testing.assert_allclose(res,(0.485733, 0.559572,0.98525,0.933473),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.9,0.5)
+    res = hydro.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.789344,0.5,0.62322),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.9,0.8)
+    hydro.Tnucl = 0.8
+    hydro.vJ = hydro.findJouguetVelocity()
+    res = hydro.findMatching(0.3)
+    np.testing.assert_allclose(res,(0.265521,0.3,0.811487,0.793731),rtol = 10**-2,atol = 0)
+    res = hydro.findMatching(0.6)
+    np.testing.assert_allclose(res,(0.447702, 0.554666,0.897803,0.831459),rtol = 10**-2,atol = 0)
+    res = hydro.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.889579,0.8,0.829928),rtol = 10**-2,atol = 0)
-    res = findMatching(model1,0.9,0.9)
+    hydro.Tnucl = 0.9
+    hydro.vJ = hydro.findJouguetVelocity()
+    res = hydro.findMatching(0.3)
+    np.testing.assert_allclose(res,(0.28306,0.3,0.90647,0.898604),rtol = 10**-2,atol = 0)
+    res = hydro.findMatching(0.6)
+    np.testing.assert_allclose(res,(0.485733, 0.559572,0.98525,0.933473),rtol = 10**-2,atol = 0)
+    res = hydro.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.894957,0.9,0.918446),rtol = 10**-2,atol = 0)
 
 # Test local thermal equilibrium solution in bag model
 
 def test_LTE():
     model2 = TestModel.TestModelBag(0.9)
+    hydro2 = Hydro(model2,1)
     res = np.zeros(5)
     for i in range(5):
-        res[i] = findvwLTE(model2,0.5+i*0.1)
+        hydro2.Tnucl = 0.5+i*0.1
+        hydro2.vJ = hydro2.findJouguetVelocity()
+        res[i] = hydro2.findvwLTE()
     np.testing.assert_allclose(res,[0.,0.,0.,0.714738,0.6018],rtol = 10**-3,atol = 0)
 
     model2 = TestModel.TestModelBag(0.8)
+    hydro2 = Hydro(model2,1)
     res2 = np.zeros(4)
     for i in range(4):
-        print (0.6+i*0.1)
-        res2[i] = findvwLTE(model2,0.6+i*0.1)
+        hydro2.Tnucl = 0.6+i*0.1
+        hydro2.vJ = hydro2.findJouguetVelocity()
+        res2[i] = hydro2.findvwLTE()
     np.testing.assert_allclose(res2,[0.87429,0.7902,0.6856,0.5619],rtol = 10**-3,atol = 0)
 
