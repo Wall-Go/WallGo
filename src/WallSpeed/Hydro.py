@@ -4,6 +4,7 @@ from scipy.optimize import root_scalar
 from scipy.optimize import root
 from scipy.integrate import odeint
 from TestModel import *
+from .HydroTemplateModel import HydroTemplateModel
 
 
 class Hydro:
@@ -11,6 +12,7 @@ class Hydro:
         self.model = model
         self.Tnucl = Tnucl
         self.vJ = self.findJouguetVelocity()
+        self.template = HydroTemplateModel(model, Tnucl)
         
     def findJouguetVelocity(self):
         r"""
@@ -105,6 +107,10 @@ class Hydro:
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
         """
+        # First, finds an initial guess for Tp and Tm using the template model.
+        Tpm0 = self.template.matchDeflagOrHybInitial(vw, vp)
+        if Tpm0[0] <= Tpm0[1]:
+            Tpm0[0] = 1.01*Tpm0[1]
         def match(XpXm):
             Tpm = self.__inverseMappingT(XpXm)
             _vpvm = self.vpvm(Tpm[0],Tpm[1])
@@ -114,16 +120,17 @@ class Hydro:
             
             # We multiply the equations by c to make sure the solver
             # do not explore arbitrarly small or large values of Tm and Tp.
-            c = ((2*self.Tnucl)**2+Tpm[0]**2+Tpm[1]**2)*((2/self.Tnucl)**2+1/Tpm[0]**2+1/Tpm[1]**2)
+            c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
     
         # We map Tm and Tp, which satisfy 0<Tm<Tp, to the interval (-inf,inf) which is used by the solver.
-        sol = root(match,self.__mappingT([1.1*self.Tnucl,0.9*self.Tnucl]),method='hybr')
+        sol = root(match,self.__mappingT(Tpm0),method='hybr')
         [Tp,Tm] = self.__inverseMappingT(sol.x)
         if vw < np.sqrt(self.model.csqBrok(Tm)):
             vm = vw
         else:
             vm = np.sqrt(self.model.csqBrok(Tm))
+        print(Tp,Tpm0[0],Tm,Tpm0[1])
         return vp, vm, Tp, Tm
     
     def gammasq(self, v):
