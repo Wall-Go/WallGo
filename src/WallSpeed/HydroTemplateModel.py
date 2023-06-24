@@ -16,20 +16,39 @@ class HydroTemplateModel:
     arXiv:2303.10171 (2023).
     """
     
-    def __init__(self,alN,psiN,cb2,cs2,Tn):
-        self.alN = alN
-        self.psiN = psiN
-        self.cb2 = cb2
-        self.cs2 = cs2
-        self.cb = np.sqrt(cb2)
-        self.cs = np.sqrt(cs2)
-        self.Tn = Tn
+    def __init__(self,model,Tnucl):
+        r"""
+        Initialize the HydroTemplateModel class. Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b`.
+
+        Parameters
+        ----------
+        model : Model
+            An object of the class Model.
+        Tnucl : double
+            Nucleation temperature.
+
+        Returns
+        -------
+        None.
+
+        """
+        self.model = model
+        pSym,pBrok = model.pSym(Tnucl),model.pBrok(Tnucl)
+        wSym,wBrok = model.wSym(Tnucl),model.wBrok(Tnucl)
+        eSym,eBrok = wSym-pSym,wBrok-pBrok
+        self.cb2 = model.csqBrok(Tnucl)
+        self.cs2 = model.csqSym(Tnucl)
+        self.alN = (eSym-eBrok-(pSym-pBrok)/self.cb2)/(3*wSym)
+        self.psiN = wBrok/wSym
+        self.cb = np.sqrt(self.cb2)
+        self.cs = np.sqrt(self.cs2)
+        self.Tnucl = Tnucl
         
-        self.nu = 1+1/cb2
-        self.mu = 1+1/cs2
-        self.vJ = self.find_vJ()
+        self.nu = 1+1/self.cb2
+        self.mu = 1+1/self.cs2
+        self.vJ = self.findJouguetVelocity()
         
-    def find_vJ(self): 
+    def findJouguetVelocity(self): 
         """
         Computes the Jouguet velocity.
 
@@ -56,7 +75,7 @@ class HydroTemplateModel:
             :math: `v_+`.
 
         """
-        disc = vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al))
+        disc = max(0, vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al)))
         return 0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al)
     
     def w_from_alpha(self,al):
@@ -81,8 +100,8 @@ class HydroTemplateModel:
         Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+`.
         """
         epsilon = (self.nu-self.mu+3*self.alN*self.mu)/(self.mu*self.nu)
-        ap = 3/(self.mu*self.Tn**self.mu)
-        am = 3/(self.mu*self.psiN*self.Tn**self.nu)
+        ap = 3/(self.mu*self.Tnucl**self.mu)
+        am = 3/(self.mu*self.psiN*self.Tnucl**self.nu)
         return ((3*(vm+vp)*epsilon-ap*Tp**self.mu*(vm+vp-vp*self.mu))/(am*(vm*self.nu-vm-vp)))**(1/self.nu)
     
     def __eqWall(self,al,vm,branch=-1):
@@ -94,7 +113,7 @@ class HydroTemplateModel:
         psi = self.psiN*self.w_from_alpha(al)**(self.nu/self.mu-1)
         return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu)
     
-    def solve_alpha(self,vw):
+    def solve_alpha(self,vw, constraint=True):
         r"""
         Finds the value of :math:`\alpha_+` that solves the matching equation at the wall.
 
@@ -102,6 +121,9 @@ class HydroTemplateModel:
         ----------
         vw : double
             Wall velocity at which to solve the matching equation.
+        constraint : bool, optional
+            If True, imposes :math:`v_+<\min(c_s^2/v_w,v_w)` on the solution. Otherwise, the 
+            constraint :math:`v_+<v_-` is used instead. Default is True.
 
         Returns
         -------
@@ -110,7 +132,7 @@ class HydroTemplateModel:
 
         """
         vm = min(self.cb,vw)
-        vp_max = min(self.cs2/vw,vw)
+        vp_max = min(self.cs2/vw,vw) if constraint else vm
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
         al_max = 1/3
         branch = -1
@@ -168,7 +190,7 @@ class HydroTemplateModel:
         wm_sw = sol.y[1,-1]
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
     
-    def find_vw(self):
+    def findvwLTE(self):
         """
         Computes the wall velocity for a deflagration or hybrid solution.
         """
@@ -182,7 +204,7 @@ class HydroTemplateModel:
         sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=1e-6,xtol=1e-6)
         return sol.root
     
-    def find_vAndT(self,vw):
+    def findMatching(self,vw):
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution when the wall velocity is vw.
         """
@@ -198,20 +220,25 @@ class HydroTemplateModel:
         sol = root_scalar(func,bracket=(al_min,al_max),rtol=1e-6,xtol=1e-6)
         wp = self.w_from_alpha(sol.root)
         vp = self.get_vp(vm, sol.root)
-        Tp = self.Tn*wp**(1/self.mu)
+        Tp = self.Tnucl*wp**(1/self.mu)
         Tm = self.__find_Tm(vm, vp, Tp)
-        return vm,vp,Tm,Tp
+        return vp,vm,Tp,Tm
     
     def matchDeflagOrHybInitial(self,vw,vp):
         r"""
         Returns initial guess for the solver in the matchDeflagOrHyb function.
         """
         vm = min(vw,self.cb)
-        al = ((vm-vp)*(self.cb2-vm*vp))/(3*self.cb2*vm*(1-vp**2))
+        al = None
+        if vp is not None:
+            al = ((vm-vp)*(self.cb2-vm*vp))/(3*self.cb2*vm*(1-vp**2))
+        else:
+            al = self.solve_alpha(vw, False)
+            vp = self.get_vp(vm, al)
         wp = self.w_from_alpha(al)
-        Tp = self.Tn*wp**(1/self.mu)
+        Tp = self.Tnucl*wp**(1/self.mu)
         Tm = self.__find_Tm(vm, vp, Tp)
-        return [Tm, Tp]
+        return [Tp, Tm]
     
     def max_al(self,upper_limit=100):
         r"""
@@ -260,8 +287,8 @@ class HydroTemplateModel:
         vp = vw
         X = vp**2+self.cb2*(1-3*(1-vp**2)*self.alN)
         vm = (X+np.sqrt(X**2-4*self.cb2*vp**2))/(2*vp)
-        Tm = self.__find_Tm(vm, vp, self.Tn)
-        return vm,vp,Tm,self.Tn
+        Tm = self.__find_Tm(vm, vp, self.Tnucl)
+        return vm,vp,Tm,self.Tnucl
     
     
     

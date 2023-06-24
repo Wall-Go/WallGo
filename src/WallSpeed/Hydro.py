@@ -103,34 +103,55 @@ class Hydro:
         vm = np.sqrt(self.vpvm(Tp,Tm)/self.vpovm(Tp,Tm))
         return (vp, vm, Tp, Tm)
     
-    def matchDeflagOrHyb(self, vw, vp):
+    def matchDeflagOrHyb(self, vw, vp=None):
         r"""
-        Returns :math:`v_+, v_-, T_+, T_-` for a deflagrtion or hybrid when the wall velocity and :math:`v_+` are given
+        Returns :math:`v_+, v_-, T_+, T_-` for a deflagration or hybrid when the wall velocity is given.
+        
+        Parameters
+        ----------
+        vw : double
+            Wall velocity.
+        vp : double or None, optional
+            Plasma velocity in front of the wall :math:`v_-`. If None, vp is determined from conservation of 
+            entropy. Default is None.
         """
-        # First, finds an initial guess for Tp and Tm using the template model.
-        Tpm0 = self.template.matchDeflagOrHybInitial(vw, vp)
-        if Tpm0[0] <= Tpm0[1]:
+        
+        vwMapping = None
+        if vp is None:
+            vwMapping = vw
+        
+        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all 
+        # the relevant bounds.
+        Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
+        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.model.csqBrok(Tpm0[1])))):
+            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.model.csqBrok(Tpm0[1]))))/2
+        
         def match(XpXm):
-            Tpm = self.__inverseMappingT(XpXm)
+            Tpm = self.__inverseMappingT(XpXm,vwMapping)
+            vmsq = min(vw**2,self.model.csqBrok(Tpm[1]))
+            if vp is None:
+                vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
+            else:
+                vpsq = vp**2
             _vpvm = self.vpvm(Tpm[0],Tpm[1])
             _vpovm = self.vpovm(Tpm[0],Tpm[1])
-            eq1 = _vpvm*_vpovm-vp**2
-            eq2 = _vpvm/_vpovm-min(vw**2,self.model.csqBrok(Tpm[1]))
+            eq1 = _vpvm*_vpovm-vpsq
+            eq2 = _vpvm/_vpovm-vmsq
             
             # We multiply the equations by c to make sure the solver
             # do not explore arbitrarly small or large values of Tm and Tp.
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
     
-        # We map Tm and Tp, which satisfy 0<Tm<Tp, to the interval (-inf,inf) which is used by the solver.
-        sol = root(match,self.__mappingT(Tpm0),method='hybr')
-        [Tp,Tm] = self.__inverseMappingT(sol.x)
-        if vw < np.sqrt(self.model.csqBrok(Tm)):
-            vm = vw
-        else:
-            vm = np.sqrt(self.model.csqBrok(Tm))
-        print(Tp,Tpm0[0],Tm,Tpm0[1])
+        # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved), 
+        # to the interval (-inf,inf) which is used by the solver.
+        sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr')
+        [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
+        vm = min(vw, np.sqrt(self.model.csqBrok(Tm)))
+        if vp is None:
+            vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
         return vp, vm, Tp, Tm
     
     def gammasq(self, v):
@@ -226,6 +247,34 @@ class Hydro:
         c2 = self.model.pSym(Tp)+wSym*self.gammasq(vp)*vp**2
         return (c1, c2, Tp, Tm)
     
+    def findvwLTE2(self):
+        r"""
+        Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
+        The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-` via a binary search. 
+        For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
+        If no solution can be found (because the phase transition is too strong or too weak), the search algorithm asymptotes towards the
+        Jouguet velocity and the function returns zero.
+        The solution is always a deflagration or hybrid.
+        """
+        
+        def func(vw): # Function given to the root finder
+            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
+            Tntry = self.solveHydroShock(vw,vp,Tp)
+            return Tntry - self.Tnucl
+        
+        vmin = 0.01
+        vmax = self.vJ
+        fmin = func(vmin)
+        fmax = func(vmax)
+        
+        if fmin < 0: # vw is smaller than vmin, we return 0.
+            return 0
+        elif fmax > 0: # There is no deflagration or hybrid solution, we return 1.
+            return 1
+        else:
+            sol = root_scalar(func, bracket=(vmin,vmax))
+            return sol.root
+    
     def findvwLTE(self):
         r"""
         Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
@@ -270,27 +319,39 @@ class Hydro:
         Tscale : double
             Typical temperature scale. Should be of order Tnucl.
         vw : double, optional
-            Wall velocity. Must be provided only if entropy is conserved, in which case Tp < Tm/sqrt(1-vm**2).
+            Wall velocity. Must be provided only if entropy is conserved, in which case 
+            0 < Tm < Tp < Tm/sqrt(1-vm**2). If None, only 0 < Tm < Tp is enforced.
             Default is None (entropy not conserved).
         """
         
         Tp,Tm = TpTm
-        #if vw is None:
-        Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
-        Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/Tp
-        return [Xp,Xm]
-       # else:
-            #vm = min(vw,)
+        if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
+            Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
+            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/Tp
+            return [Xp,Xm]
+        else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
+            vmsq = min(vw**2,self.model.csqBrok(Tm))
+            Xm = Tm/self.Tnucl-1 if Tm > self.Tnucl else 1-self.Tnucl/Tm
+            r = Tm*(1/np.sqrt(1-vmsq)-1)
+            Xp = (0.5*r+Tm-Tp)/np.sqrt((Tp-Tm)*(r+Tm-Tp))
+            return [Xp,Xm]
     
-    def __inverseMappingT(self, XpXm):
+    def __inverseMappingT(self, XpXm, vw=None):
         """
         Inverse of __mappingT.
         """
         
         Xp,Xm = XpXm
-        Tp = self.Tnucl*(1+Xp) if Xp > 0 else self.Tnucl/(1-Xp)
-        Tm = 0.5*Tp*(1+Xm/np.sqrt(1+Xm**2))
-        return [Tp,Tm]
+        if vw is None:
+            Tp = self.Tnucl*(1+Xp) if Xp > 0 else self.Tnucl/(1-Xp)
+            Tm = 0.5*Tp*(1+Xm/np.sqrt(1+Xm**2))
+            return [Tp,Tm]
+        else:
+            Tm = self.Tnucl*(Xm+1) if Xm > 0 else self.Tnucl/(1-Xm)
+            vmsq = min(vw**2,self.model.csqBrok(Tm))
+            r = Tm*(1/np.sqrt(1-vmsq)-1)
+            Tp = Tm + 0.5*r*(1+Xp/np.sqrt(1+Xp**2))
+            return [Tp,Tm]
 
 
 

@@ -106,14 +106,14 @@ def test_LTE():
     res = np.zeros(5)
     for i in range(5):
         hydro2 = Hydro(model2,0.5+i*0.1)
-        res[i] = hydro2.findvwLTE()
-    np.testing.assert_allclose(res,[0.,0.,0.,0.714738,0.6018],rtol = 10**-3,atol = 0)
+        res[i] = hydro2.findvwLTE2()
+    np.testing.assert_allclose(res,[1.,1.,1.,0.714738,0.6018],rtol = 10**-3,atol = 0)
 
     model2 = TestModel.TestModelBag(0.8)
     hydro2 = Hydro(model2,1)
     res2 = np.zeros(4)
     for i in range(4):
         hydro2 = Hydro(model2,0.6+i*0.1)
-        res2[i] = hydro2.findvwLTE()
+        res2[i] = hydro2.findvwLTE2()
     np.testing.assert_allclose(res2,[0.87429,0.7902,0.6856,0.5619],rtol = 10**-3,atol = 0)
 
