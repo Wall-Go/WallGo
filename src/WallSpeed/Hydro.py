@@ -208,34 +208,26 @@ class Hydro:
         Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
         matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
         """
-        if vwTry > self.vJ: #Detonation
+        if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
                 
-        else: #Hybrid or deflagration
-            #loop over v+ until the temperature in front of the shock matches the nucleation temperature
+        else: # Hybrid or deflagration
+            # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
             vpmax = min(vwTry,np.sqrt(self.model.csqSym(self.model.Tc())))
-            vpmin = 0.01 #minimum value of vpmin
-            vptry = (vpmax + vpmin)/2.
-            TnTry = 0
-            error = 10**-3 #adjust error here
-            count = 0
-            while np.abs(TnTry - self.Tnucl)/self.Tnucl > error and count <100: #get rid of this hard-coded thing
-                vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,vptry)
-                Tntry = self.solveHydroShock(vwTry,vptry,Tp)
-    
-                if Tntry > self.Tnucl:
-                    vpmax = vptry
-                    vptry = (vpmax + vpmin)/2.
-                else:
-                    vpmin = vptry
-                    vptry = (vpmax + vpmin)/2.
-                count += 1
+            vpmin = 0.01 # Minimum value of vpmin
+            
+            def func(vpTry):
+                _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
+                return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
+            
+            sol = root_scalar(func, bracket=[vpmin,vpmax])
+            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
                         
         return (vp,vm,Tp,Tm)
     
     def findHydroBoundaries(self, vwTry):
         r"""
-        Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature
+        Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         wSym = self.model.wSym(Tp)
@@ -246,10 +238,9 @@ class Hydro:
     def findvwLTE2(self):
         r"""
         Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
-        The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-` via a binary search. 
+        The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-`. 
         For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
-        If no solution can be found (because the phase transition is too strong or too weak), the search algorithm asymptotes towards the
-        Jouguet velocity and the function returns zero.
+        If the phase transition is too weak for a solution to exist, returns 0. If it is too strong, returns 1.
         The solution is always a deflagration or hybrid.
         """
         
@@ -312,8 +303,6 @@ class Hydro:
         ----------
         TpTm : array_like, shape (2,)
             List containing Tp and Tm.
-        Tscale : double
-            Typical temperature scale. Should be of order Tnucl.
         vw : double, optional
             Wall velocity. Must be provided only if entropy is conserved, in which case 
             0 < Tm < Tp < Tm/sqrt(1-vm**2). If None, only 0 < Tm < Tp is enforced.
