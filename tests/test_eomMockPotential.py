@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class MockPotential:
     def V(self, phi, T):
         [h, s] = phi
-        return -(h**2) + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 4
+        return -(h**2) + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 6
 
     def higgsVEV(self, T):
         return 2*np.sqrt(3)
