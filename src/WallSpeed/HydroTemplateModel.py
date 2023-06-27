@@ -42,6 +42,8 @@ class HydroTemplateModel:
         self.psiN = wBrok/wSym
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
+        self.wN = wSym
+        self.pN = pSym
         self.Tnucl = Tnucl
         
         self.nu = 1+1/self.cb2
@@ -239,6 +241,17 @@ class HydroTemplateModel:
         Tp = self.Tnucl*wp**(1/self.mu)
         Tm = self.__find_Tm(vm, vp, Tp)
         return [Tp, Tm]
+    
+    def findHydroBoundaries(self, vwTry):
+        r"""
+        Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
+        """
+        vp,vm,Tp,Tm = self.findMatching(vwTry)
+        wSym = self.wN*(Tp/self.Tnucl)**self.mu
+        pSym = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
+        c1 = wSym*vp/(1-vp**2)
+        c2 = pSym+wSym*vp**2/(1-vp**2)
+        return (c1, c2, Tp, Tm)
     
     def max_al(self,upper_limit=100):
         r"""
