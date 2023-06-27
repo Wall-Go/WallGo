@@ -17,20 +17,20 @@ class Hydro:
     def findJouguetVelocity(self):
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by Model,
-        using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity
+        using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity.
         """
         pSym = self.model.pSym(self.Tnucl)
         eSym = self.model.eSym(self.Tnucl)
-        def vpDerivNum(tm): #the numerator of the derivative of v+^2
+        def vpDerivNum(tm): # The numerator of the derivative of v+^2
             pBrok = self.model.pBrok(tm)
             eBrok = self.model.eBrok(tm)
-            num1 = pSym - pBrok #first factor in the numerator of v+^2
+            num1 = pSym - pBrok # First factor in the numerator of v+^2
             num2 = pSym + eBrok
-            den1 = eSym - eBrok #first factor in the denominator of v+^2
+            den1 = eSym - eBrok # First factor in the denominator of v+^2
             den2 = eSym + pBrok 
-            dnum1 = - self.model.dpBrok(tm) #T-derivative of first factor wrt tm
+            dnum1 = - self.model.dpBrok(tm) # T-derivative of first factor wrt tm
             dnum2 = self.model.deBrok(tm)
-            dden1 = - dnum2 #T-derivative of second factor wrt tm
+            dden1 = - dnum2 # T-derivative of second factor wrt tm
             dden2 = - dnum1
             return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
         
@@ -45,25 +45,21 @@ class Hydro:
             bracket2 = vpDerivNum(Tmax)
         
         tmSol = None
-        if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+        if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
             tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq').root 
-        else: #If we cannot bracket the root, use the 'secant' method instead.
+        else: # If we cannot bracket the root, use the 'secant' method instead.
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax).root 
         vp = np.sqrt((pSym - self.model.pBrok(tmSol))*(pSym + self.model.eBrok(tmSol))/(eSym - self.model.eBrok(tmSol))/(eSym + self.model.pBrok(tmSol)))
         return(vp)
     
-    
-    def vpovm(self, Tp, Tm):
+    def vpvmAndvpovm(self, Tp, Tm):
         r"""
-        Returns the ratio :math:`v_+/v_-` as a function of :math:`T_+, T_-`
+        Returns :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`.
         """
-        return (self.model.eBrok(Tm) + self.model.pSym(Tp))/(self.model.eSym(Tp)+self.model.pBrok(Tm))
-    
-    def vpvm(self, Tp, Tm):
-        r"""
-        Returns the product :math:`v_+v_-` as a function of :math:`T_+, T_-`
-        """
-        return (self.model.pSym(Tp)-self.model.pBrok(Tm))/(self.model.eSym(Tp)-self.model.eBrok(Tm))
+        
+        pSym,pBrok = self.model.pSym(Tp),self.model.pBrok(Tm)
+        eSym,eBrok = self.model.eSym(Tp),self.model.eBrok(Tm)
+        return (pSym-pBrok)/(eSym-eBrok), (eBrok+pSym)/(eSym+pBrok)
     
     
     def matchDeton(self, vw):
@@ -99,8 +95,9 @@ class Hydro:
             Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq').root 
             
         else: #If we cannot bracket the root, use the 'secant' method instead.
-            Tm = root_scalar(tmFromvpsq, method='secant', x0=self.Tnucl, x1=1.5*Tmax).root     
-        vm = np.sqrt(self.vpvm(Tp,Tm)/self.vpovm(Tp,Tm))
+            Tm = root_scalar(tmFromvpsq, method='secant', x0=self.Tnucl, x1=1.5*Tmax).root   
+        vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
+        vm = np.sqrt(vpvm/vpovm)
         return (vp, vm, Tp, Tm)
     
     def matchDeflagOrHyb(self, vw, vp=None):
@@ -135,10 +132,9 @@ class Hydro:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
             else:
                 vpsq = vp**2
-            _vpvm = self.vpvm(Tpm[0],Tpm[1])
-            _vpovm = self.vpovm(Tpm[0],Tpm[1])
-            eq1 = _vpvm*_vpovm-vpsq
-            eq2 = _vpvm/_vpovm-vmsq
+            vpvm,vpovm = self.vpvmAndvpovm(Tpm[0],Tpm[1])
+            eq1 = vpvm*vpovm-vpsq
+            eq2 = vpvm/vpovm-vmsq
             
             # We multiply the equations by c to make sure the solver
             # do not explore arbitrarly small or large values of Tm and Tp.
