@@ -37,9 +37,9 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, Veff):
         Veff.V([higgsVEV, 0], T) + Veff.V([0, singletVEV], T)
     )
 
-    print(higgsWidth, singletWidth, wallOffSet)
+    #print(higgsWidth, singletWidth, wallOffSet)
 
-    print(kinetic + potential)
+    #print(kinetic + potential)
 
     return kinetic + potential
 
@@ -53,7 +53,7 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
 class MockPotential:
     def V(self, phi, T):
         [h, s] = phi
-        return -(h**2) + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 6
+        return -(h**2) + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 4
 
     def higgsVEV(self, T):
         return 2*np.sqrt(3)
@@ -89,7 +89,10 @@ singlets = np.transpose(fields)[1]
 plt.plot(higgss, singlets)
 plt.show()
 
+plt.plot(zs, higgss)
+plt.plot(zs, singlets)
 
+plt.show()
 
 
 #
