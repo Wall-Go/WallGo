@@ -1,7 +1,24 @@
 import numpy as np
-import h5py # read/write hdf5 structured binary data file format
+import h5py  # read/write hdf5 structured binary data file format
 from .Grid import Grid
 from .Polynomial import Polynomial
+
+
+class BoltzmannBackground:
+    def __init__(
+        self,
+        vw,
+        velocityProfile,
+        fieldProfile,
+        temperatureProfile,
+        polynomialBasis="Cardinal",
+    ):
+        self.vw = vw
+        self.velocityProfile = velocityProfile
+        self.fieldProfile = fieldProfile
+        self.temperatureProfile = temperatureProfile
+        self.polynomialBasis = polynomialBasis
+
 
 class BoltzmannSolver:
     """
@@ -154,11 +171,12 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
+        # derivative matrices
         derivChi = self.poly.deriv(self.basisM, "z")
         derivRz = self.poly.deriv(self.basisN, "pz")
 
         # coordinates
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
+        xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
@@ -250,7 +268,7 @@ class BoltzmannSolver:
         operator = (
             liouville
             + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
+            * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
         # reshaping indices

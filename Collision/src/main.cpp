@@ -9,6 +9,7 @@ using namespace std;
 #include <time.h>
 #include "kinematics.h"
 #include "operators.h"
+#include "CollElem.h"
 
 #include "hdf5Interface.h"
 
@@ -147,7 +148,7 @@ void calculateAllCollisions() {
      // We now do the for loop over all the grid points
 
      std::cout << "Now computing all collision integrals. See you in a bit...\n"; 
-     std::cout << "TEST VERSION: Generating dummy collision integrals\n";
+     //std::cout << "TEST VERSION: Generating dummy collision integrals\n";
 
      for (int n = 0; n < Ncheb; ++n) {
 
@@ -160,7 +161,7 @@ void calculateAllCollisions() {
 
                     for (int j = 0; j < Ncheb; ++j) {
                     pVec[1]=rhoPerp[j]; 
-                         // collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
+                         collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
                          // Dummy 
                          collGrid[n][m][i][j]= 0.0;
                     }

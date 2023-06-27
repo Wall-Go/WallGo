@@ -1,5 +1,5 @@
 ===========================================
-WallSpeed
+WallGo
 ===========================================
 
 Computes the bubble wall speed for cosmological phase transitions.
