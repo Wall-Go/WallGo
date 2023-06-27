@@ -438,7 +438,7 @@ def initialWallParameters(
 def oneDimAction(higgsVEV, singletVEV, wallParams, T, Veff):
     [higgsWidth, singletWidth, wallOffSet] = wallParams
 
-    kinetic = (1 / higgsWidth + 1 / singletWidth) * 3 / 2
+    kinetic = (higgsVEV**2 / higgsWidth + singletVEV**2 / singletWidth) * 3 / 2
 
     integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
 
@@ -604,7 +604,7 @@ def deltaToTmunu(
     u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
     ubar0 = u3
     ubar3 = u0
-    
+
     h = 0.5 * Veff.higgsVEV(Tm)*(1 - np.tanh(grid.xiValues / higgsWidth))
     mTopSquared = 1/2.*model.ytop*h*h #need to update this once model file is ready
 
@@ -612,7 +612,7 @@ def deltaToTmunu(
            (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
     T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
            (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
-    
+
     return T30, T33
 
 def plasmaVelocity(h, s, T, s1, Veff):

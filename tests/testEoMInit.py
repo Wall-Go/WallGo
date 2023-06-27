@@ -2,6 +2,7 @@ from scipy.integrate import quad
 from scipy.optimize import minimize, brentq, root
 import numpy as np
 import matplotlib.pyplot as plt
+from Grid import Grid
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
@@ -20,7 +21,7 @@ def initialWallParameters(
 def oneDimAction(higgsVEV, singletVEV, wallParams, T, Veff):
     [higgsWidth, singletWidth, wallOffSet] = wallParams
 
-    kinetic = (1 / higgsWidth + 1 / singletWidth) * 3 / 2
+    kinetic = (higgsVEV**2 / higgsWidth + singletVEV**2 / singletWidth) * 3 / 2
 
     integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
 
@@ -49,14 +50,28 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
 
     return [h, s]
 
+def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid):
+    [higgsWidth, singletWidth, wallOffSet] = staticWallParams
+
+    higgsVEV = Veff.higgsVEV(Tminus)
+    singletVEV = Veff.singletVEV(Tplus)
+
+    wallProfileGrid = []
+    for z in grid.xiValues:
+        wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
+
+    return wallProfileGrid
+
 
 class MockPotential:
     def V(self, phi, T):
         [h, s] = phi
         return -(h**2) + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 4
+        return -(h**2)/2 + h**4 / 24 - s**2 / 2 + s**4 / 24 + h**2 * s**2 / 6
 
     def higgsVEV(self, T):
         return 2*np.sqrt(3)
+        return np.sqrt(6)
 
     def singletVEV(self, T):
         return np.sqrt(6)
@@ -77,16 +92,34 @@ higgsVEV = Veff.higgsVEV(0)
 singletVEV  = Veff.singletVEV(0)
 
 plotRangeZ = (20+np.abs(wallOffSet))*max(higgsWidth, singletWidth)
-zs = np.linspace(-plotRangeZ, plotRangeZ, 100)
+zs = np.linspace(-plotRangeZ, plotRangeZ, 1000)
 
 fields = []
+fields0 = []
+fieldsM = []
 for z in zs:
     fields.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
+    fields0.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, 0, z))
+    fieldsM.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, -wallOffSet, z))
 
 higgss = np.transpose(fields)[0]
 singlets = np.transpose(fields)[1]
 
-plt.plot(higgss, singlets)
+plt.plot(zs, Veff.V(np.transpose(fields), 0), label='Minimum')
+plt.plot(zs, Veff.V(np.transpose(fields0), 0), label='No offset')
+plt.plot(zs, Veff.V(np.transpose(fieldsM), 0), label='Opposite offset')
+plt.xlim(-8,8)
+plt.ylabel("V")
+plt.xlabel("z")
+plt.legend()
+plt.show()
+
+plt.plot(np.transpose(fields)[0], np.transpose(fields)[1], label='Minimum')
+plt.plot(np.transpose(fields0)[0], np.transpose(fields0)[1], label='No offset')
+plt.plot(np.transpose(fieldsM)[0], np.transpose(fieldsM)[1], label='Opposite offset')
+plt.xlabel("h")
+plt.ylabel("s")
+plt.legend()
 plt.show()
 
 plt.plot(zs, higgss)
