@@ -16,7 +16,7 @@ class BoltzmannBackground():
         self.polynomialBasis = "Cardinal"
 
 class BoltzmannParticle():
-    def __init__(self)    :
+    def __init__(self):
         self.msqVacuum = lambda x: 0.5 * x**2
         self.msqThermal = lambda T: 0.1 * T**2
         self.statistics = -1

@@ -1,5 +1,6 @@
 import numpy as np
-import h5py  # read/write hdf5 structured binary data file format
+import h5py # read/write hdf5 structured binary data file format
+import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
 from .Polynomial import Polynomial
 
@@ -211,12 +212,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        #dTdxi = np.einsum("ij,jbc->ibc", derivXi, T, optimize=True)
-        #dvdxi = np.einsum("ij,jbc->ibc", derivXi, v, optimize=True)
-        #dmsqdxi = np.einsum("ij,jbc->ibc", derivXi, msq, optimize=True)
-        dTdChi = np.dot(derivChi, T[:, 0, 0])[:, np.newaxis, np.newaxis]
-        dvdChi = np.dot(derivChi, v[:, 0, 0])[:, np.newaxis, np.newaxis]
-        dmsqdChi = np.dot(derivChi, msq[:, 0, 0])[:, np.newaxis, np.newaxis]
+        dTdChi = np.einsum("ij,jbc->ibc", derivChi, T, optimize=True)
+        dvdChi = np.einsum("ij,jbc->ibc", derivChi, v, optimize=True)
+        dmsqdChi = np.einsum("ij,jbc->ibc", derivChi, msq, optimize=True)
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
@@ -252,8 +250,7 @@ class BoltzmannSolver:
             collisionFile,
             "top",
         )
-        if self.basisN != collisionBasis and False:
-            print("I am confused:", [self.basisN, collisionBasis])
+        if self.basisN != collisionBasis:
             TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
             collisionArray = np.einsum(
@@ -289,8 +286,14 @@ class BoltzmannSolver:
         try:
             with h5py.File(collisionFile, "r") as file:
                 dataset = file[particle]
+                assert type(dataset.attrs["Basis"]) == np.ndarray, \
+                    "readCollision error: Basis unexpected type"
+                collisionBasis = codecs.decode(
+                    dataset.attrs["Basis"][0],
+                    'unicode_escape',
+                )
+                BoltzmannSolver.__checkBasis(collisionBasis)
                 collisionArray = np.array(dataset)
-                collisionBasis = str(dataset.attrs["Basis"])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
