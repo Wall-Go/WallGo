@@ -301,7 +301,7 @@ class HydroTemplateModel:
         X = vp**2+self.cb2*(1-3*(1-vp**2)*self.alN)
         vm = (X+np.sqrt(X**2-4*self.cb2*vp**2))/(2*vp)
         Tm = self.__find_Tm(vm, vp, self.Tnucl)
-        return vm,vp,Tm,self.Tnucl
+        return vp,vm,self.Tnucl,Tm
     
     
     
