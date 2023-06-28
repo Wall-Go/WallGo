@@ -50,12 +50,14 @@ class HydroTemplateModel:
         self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
         
-    def findJouguetVelocity(self): 
+    def findJouguetVelocity(self, alN=None): 
         """
         Computes the Jouguet velocity.
 
         """
-        return self.cb*(1+np.sqrt(3*self.alN*(1-self.cb2+3*self.cb2*self.alN)))/(1+3*self.cb2*self.alN)
+        if alN is None:
+            alN = self.alN
+        return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
     
     def get_vp(self,vm,al,branch=-1):
         r"""
@@ -273,7 +275,7 @@ class HydroTemplateModel:
         """
         vm = self.cb
         def func(alN):
-            vw = self.vJ
+            vw = self.findJouguetVelocity(alN)
             vp = self.cs2/vw
             ga2p,ga2m = 1/(1-vp**2),1/(1-vm**2)
             wp = (vp+vw-vw*self.mu)/(vp+vw-vp*self.mu)
