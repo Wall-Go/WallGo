@@ -186,10 +186,17 @@ class HydroTemplateModel:
         vm = min(self.cb,vw)
         vp = self.get_vp(vm, al)
         wp = self.w_from_alpha(al)
-        sol = self.integrate_plasma((vw-vp)/(1-vw*vp), vw, wp)
-        vp_sw = sol.y[0,-1]
-        vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
-        wm_sw = sol.y[1,-1]
+        if abs(vp*vw-self.cs2) < 1e-12: 
+            # If the wall is already very close to the shock front, we do not integrate through the shock wave 
+            # to avoid any error due to rounding error.
+            vp_sw = vw
+            vm_sw = vp
+            wm_sw = wp
+        else:
+            sol = self.integrate_plasma((vw-vp)/(1-vw*vp), vw, wp)
+            vp_sw = sol.y[0,-1]
+            vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
+            wm_sw = sol.y[1,-1]
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
     
     def findvwLTE(self):
