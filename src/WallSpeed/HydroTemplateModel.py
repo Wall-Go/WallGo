@@ -103,10 +103,9 @@ class HydroTemplateModel:
         r"""
         Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+`.
         """
-        epsilon = (self.nu-self.mu+3*self.alN*self.mu)/(self.mu*self.nu)
         ap = 3/(self.mu*self.Tnucl**self.mu)
-        am = 3/(self.mu*self.psiN*self.Tnucl**self.nu)
-        return ((3*(vm+vp)*epsilon-ap*Tp**self.mu*(vm+vp-vp*self.mu))/(am*(vm*self.nu-vm-vp)))**(1/self.nu)
+        am = 3*self.psiN/(self.nu*self.Tnucl**self.nu)
+        return ((ap*vp*self.mu*(1-vm**2)*Tp**self.mu)/(am*vm*self.nu*(1-vp**2)))**(1/self.nu)
     
     def __eqWall(self,al,vm,branch=-1):
         """
