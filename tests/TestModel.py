@@ -143,4 +143,84 @@ class TestModelBag():
 
     def Tc(self):
         return 1.
+    
+
+class TestModelTemplate():
+    __test__ = False
+    
+    def __init__(self, alN, psiN, cb2, cs2, Tn, wn):
+        self.alN = alN # Strength parameter alpha_n of the phase transition at the nucleation temperature
+        self.psiN = psiN # Enthalpy in the broken phase divided by the enthalpy in the symmetric phase (both evaluated at the nucleation temperature)
+        self.cb2 = cb2
+        self.cs2 = cs2
+        self.nu = 1+1/self.cb2
+        self.mu = 1+1/self.cs2
+        
+        self.Tn = Tn # Nucleation temperature
+        self.wn = wn # Enthalpy in the symmetric phase at the nucleation temperature
+        self.ap = 3*wn/(self.mu*Tn**self.mu)
+        self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
+        self.eps = 0
+        self.eps = (self.pSym(Tn)-self.pBrok(Tn)-cb2*(self.eSym(Tn)-self.eBrok(Tn)-3*wn*alN))/(1+cb2)
+
+    #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pSym(self, T):
+        return self.ap*T**self.mu/3 - self.eps
+
+    #T-derivative of the pressure in the symmetric phase
+    def dpSym(self, T):
+        return self.mu*self.ap*T**(self.mu-1)/3
+
+    #Second T-derivative of the pressure in the symmetric phase
+    def ddpSym(self, T):
+        return self.mu*(self.mu-1)*self.ap*T**(self.mu-2)/3 
+
+    #Energy density in the symmetric phase
+    def eSym(self, T):
+        return T*self.dpSym(T) - self.pSym(T) 
+
+    #T-derivative of the energy density in the symmetric phase
+    def deSym(self, T):
+        return T*self.ddpSym(T)
+
+    #Enthalpy in the symmetric phase
+    def wSym(self,T):
+        return T*self.dpSym(T)
+
+    #Sound speed squared in the symmetric phase
+    def csqSym(self,T):
+        return self.cs2
+
+    
+    #Pressure in the broken phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pBrok(self, T):
+        return self.am*T**self.nu/3
+
+    #T-derivative of the pressure in the broken phase
+    def dpBrok(self, T):
+        return self.nu*self.am*T**(self.nu-1)/3
+
+    #Second T-derivative of the pressure in the broken phase 
+    def ddpBrok(self, T):
+        return self.nu*(self.nu-1)*self.am*T**(self.nu-2)/3
+    
+    #Energy density in the broken phase
+    def eBrok(self, T):
+        return T*self.dpBrok(T) - self.pBrok(T)
+    
+    #T-derivative of the energy density in the broken phase
+    def deBrok(self, T):
+        return T*self.ddpBrok(T)
+
+    #Enthalpy in the symmetric phase
+    def wBrok(self,T):
+        return T*self.dpBrok(T)
+
+    #Sound speed squared in the broken phase
+    def csqBrok(self,T):
+        return self.cb2
+
+
+    def Tc(self):
+        return self.Tn
 
