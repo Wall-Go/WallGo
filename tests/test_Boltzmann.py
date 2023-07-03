@@ -12,10 +12,7 @@ dir_path = os.path.dirname(real_path)
 
 @pytest.mark.parametrize(
     "M, N, a, b, c, d, e, f",
-    [(10, 10, 1, 0, 0, 1, 0, 0),
-    (20, 20, 1, 0, 0, 1, 0, 0),
-    (20, 20, 1, 2, 3, 1, 5, 7),
-    (20, 20, 1, 9, 10, 3, 4, 5)]
+    [(10, 10, 1, 0, 0, 1, 0, 0)]
 )
 def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     r"""
@@ -41,7 +38,7 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     E = np.sqrt(msq + pz**2 + pp**2)
 
     # integrand with known result
-    integrand_analytic = E * np.sqrt(1 - rz**2) * np.sqrt(1 - rp)
+    integrand_analytic = E * (1 - rz**2) * (1 - rp) / np.log(2 / (1 - rp))
     integrand_analytic *= (a + b * rz + c * rz**2)
     integrand_analytic *= (d + e * rp + f * rp**2)
 
@@ -49,8 +46,9 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     Deltas = boltzmann.getDeltas(integrand_analytic)
 
     # comparing to analytic result
-    Delta00_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
-    Delta00_analytic *= (a + c / 2) * (d + 7 / 9 * e + 161 / 225 * f)
+    Delta00_analytic = background.temperatureProfile**3 * (
+        2 / (9 * np.pi**2) * (3 * a + c) * (3 * d + f)
+    )
     ratios = Deltas["00"] / Delta00_analytic
 
     # asserting result

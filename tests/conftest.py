@@ -13,7 +13,7 @@ class BoltzmannBackground():
 
 class BoltzmannParticle():
     def __init__(self):
-        self.msqVacuum = lambda x: 0.5 * x**2
+        self.msqVacuum = lambda x: 1e4 * np.ones_like(x)
         self.msqThermal = lambda T: 0.1 * T**2
         self.statistics = -1
         self.isOutOfEquilibrium = True
