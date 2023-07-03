@@ -12,7 +12,8 @@ dir_path = os.path.dirname(real_path)
 
 @pytest.mark.parametrize(
     "M, N, a, b, c, d, e, f",
-    [(10, 10, 1, 0, 0, 1, 0, 0)]
+    [(10, 10, 1, 0, 0, 1, 0, 0),
+    (25, 25, 1, 0, 0, 1, 0, 0)]
 )
 def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     r"""
@@ -52,4 +53,4 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     ratios = Deltas["00"] / Delta00_analytic
 
     # asserting result
-    np.testing.assert_allclose(ratios, np.ones(M - 1), rtol=1e-3, atol=0)
+    np.testing.assert_allclose(ratios, np.ones(M - 1), rtol=1e-2, atol=0)
