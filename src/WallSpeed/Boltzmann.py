@@ -106,12 +106,12 @@ class BoltzmannSolver:
 
         # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
         sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
-        weightsPz = np.pi / self.grid.N * np.sin(sin_arg_Pz)
+        weightsPz = np.pi / self.grid.N * np.sin(np.flip(sin_arg_Pz))**2
         weightsPz /= np.sqrt(1 - rz**2)
         # note, we drop the point at rp=-1, to avoid an apparent divergence.
         # should think further about this another day.
         sin_arg_Pp = np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1)
-        weightsPp = np.pi / (self.grid.N - 1) * np.sin(sin_arg_Pp)
+        weightsPp = np.pi / (self.grid.N - 1) * np.sin(np.flip(sin_arg_Pp))**2
         weightsPp /= np.sqrt(1 - rp[1:]**2)
         weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
         # measure, including Jacobian from coordinate compactification
