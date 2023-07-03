@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import root_scalar
+from scipy.optimize import root_scalar,minimize_scalar
+import matplotlib.pyplot as plt
 
 
 class HydroTemplateModel:
@@ -282,7 +283,11 @@ class HydroTemplateModel:
             al = (self.mu-self.nu)/(3*self.mu)+(alN-(self.mu-self.nu)/(3*self.mu))/wp
             return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu)
         if func(upper_limit) < 0:
-            return upper_limit
+            maximum = minimize_scalar(lambda x: -func(x),bounds=[(1-self.psiN)/3,upper_limit],method='Bounded')
+            if maximum.fun > 0:
+                return upper_limit
+            else:
+                upper_limit = maximum.x
         sol = root_scalar(func,bracket=((1-self.psiN)/3,upper_limit),rtol=1e-6,xtol=1e-6)
         return sol.root
     

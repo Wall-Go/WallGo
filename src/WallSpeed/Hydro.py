@@ -5,6 +5,7 @@ from scipy.optimize import root
 from scipy.integrate import odeint
 from TestModel import *
 from .HydroTemplateModel import HydroTemplateModel
+import matplotlib.pyplot as plt
 
 
 class Hydro:
@@ -119,7 +120,10 @@ class Hydro:
         
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all 
         # the relevant bounds.
-        Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+        try:
+            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+        except:
+            Tpm0 = [1.1*self.Tnucl,self.Tnucl]
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.model.csqBrok(Tpm0[1])))):
@@ -144,6 +148,7 @@ class Hydro:
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved), 
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr')
+        self.success = sol.success
         [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
         vm = min(vw, np.sqrt(self.model.csqBrok(Tm)))
         if vp is None:
@@ -249,15 +254,16 @@ class Hydro:
             Tntry = self.solveHydroShock(vw,vp,Tp)
             return Tntry - self.Tnucl
         
+        self.success = True
         vmin = 0.01
         vmax = self.vJ
-        fmin = func(vmin)
         fmax = func(vmax)
+        if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
+            return 1
         
+        fmin = func(vmin)
         if fmin < 0: # vw is smaller than vmin, we return 0.
             return 0
-        elif fmax > 0: # There is no deflagration or hybrid solution, we return 1.
-            return 1
         else:
             sol = root_scalar(func, bracket=(vmin,vmax))
             return sol.root
