@@ -65,7 +65,7 @@ class BoltzmannSolver:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
-        These are defined in equation (20) of [LC22]_.
+        These are defined in equation (15) of [LC22]_.
 
         Parameters
         ----------
@@ -73,7 +73,7 @@ class BoltzmannSolver:
         Returns
         -------
         Deltas : array_like
-            Defined in equation (20) of [LC22]_. A list of 4 arrays, each of
+            Defined in equation (15) of [LC22]_. A list of 4 arrays, each of
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed

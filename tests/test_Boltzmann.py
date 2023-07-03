@@ -10,8 +10,13 @@ real_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(real_path)
 
 
-@pytest.mark.parametrize("M, N", [(20, 20)])
-def test_Delta00(background, particle, M, N):
+@pytest.mark.parametrize(
+    "M, N, a, b, c, d, e, f",
+    [(20, 20, 1, 0, 0, 1, 0, 0),
+    (20, 20, 1, 2, 3, 1, 5, 7),
+    (20, 20, 1, 9, 10, 3, 4, 5)]
+)
+def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     r"""
     Tests that the Delta integral gives a known analytic result for
     :math:`\delta f = E \sqrt{(1 - \rho_z^2)(1 - \rho_\Vert)}`.
@@ -36,12 +41,15 @@ def test_Delta00(background, particle, M, N):
 
     # integrand with known result
     integrand_analytic = E * np.sqrt(1 - rz**2) * np.sqrt(1 - rp)
+    integrand_analytic *= (a + b * rz + c * rz**2)
+    integrand_analytic *= (d + e * rp + f * rp**2)
 
     # doing computation
     Deltas = boltzmann.getDeltas(integrand_analytic)
 
     # comparing to analytic result
     Delta00_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
+    Delta00_analytic *= (a + c / 2) * (d + 7 / 9 * e + 161 / 225 * f)
     ratios = Deltas["00"] / Delta00_analytic
 
     # asserting result
