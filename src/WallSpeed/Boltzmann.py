@@ -105,23 +105,48 @@ class BoltzmannSolver:
         PPlasma = gammaPlasma * (pz - vFixed * E)
 
         # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
-        weightsPz = np.pi / self.grid.N * np.sin(np.pi / self.grid.N * np.arange(1, self.grid.N))
+        sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
+        weightsPz = np.pi / self.grid.N * np.sin(sin_arg_Pz)
         weightsPz /= np.sqrt(1 - rz**2)
         # note, we drop the point at rp=-1, to avoid an apparent divergence.
         # should think further about this another day.
-        weightsPp = np.pi / (self.grid.N - 1) * np.sin(np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1))
+        sin_arg_Pp = np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1)
+        weightsPp = np.pi / (self.grid.N - 1) * np.sin(sin_arg_Pp)
         weightsPp /= np.sqrt(1 - rp[1:]**2)
         weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
         # measure, including Jacobian from coordinate compactification
         measurePz = (2 * T0) / (1 - rz**2)
         measurePp = T0**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
-        measurePzPp = 1 / (2 * np.pi)**2 * measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
+        measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
+        measurePzPp /= (2 * np.pi)**2
 
         # evaluating integrals with Gaussian quadrature
-        Deltas["00"] = np.einsum("jk, ijk -> i", measurePzPp * weights, deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
-        Deltas["11"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:] * PPlasma[:, :, 1:] * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
-        Deltas["20"] = np.einsum("jk, ijk -> i", measurePzPp * weights, EPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
-        Deltas["02"] = np.einsum("jk, ijk -> i", measurePzPp * weights, PPlasma[:, :, 1:]**2 * deltaF[:, :, 1:] / E[:, :, 1:], optimize=True)
+        measureWeight = measurePzPp * weights
+        arg00 = deltaF[:, :, 1:] / E[:, :, 1:]
+        Deltas["00"] = np.einsum(
+            "jk, ijk -> i",
+            measureWeight,
+            deltaF[:, :, 1:] / E[:, :, 1:],
+            optimize=True,
+        )
+        Deltas["11"] = np.einsum(
+            "jk, ijk -> i",
+            measureWeight,
+            arg00 * EPlasma[:, :, 1:] * PPlasma[:, :, 1:],
+            optimize=True,
+        )
+        Deltas["20"] = np.einsum(
+            "jk, ijk -> i",
+            measureWeight,
+            arg00 * EPlasma[:, :, 1:]**2,
+            optimize=True,
+        )
+        Deltas["02"] = np.einsum(
+            "jk, ijk -> i",
+            measureWeight,
+            arg00 * PPlasma[:, :, 1:]**2,
+            optimize=True,
+        )
 
         # returning results
         return Deltas
@@ -136,9 +161,9 @@ class BoltzmannSolver:
             \mathcal{O}_{ijk,abc} \delta f_{abc} = \mathcal{S}_{ijk},
 
         where letters from the middle of the alphabet denote points on the
-        coordinate lattice :math:`\{\xi_i,p_{z,j},p_{\Vert,k}\}`, and letters from the
-        beginning of the alphabet denote elements of the basis of spectral
-        functions :math:`\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}`.
+        coordinate lattice :math:`\{\xi_i,p_{z,j},p_{\Vert,k}\}`, and letters
+        from the beginning of the alphabet denote elements of the basis of
+        spectral functions :math:`\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}`.
 
         Parameters
         ----------
