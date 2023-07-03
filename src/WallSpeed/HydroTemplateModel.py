@@ -228,7 +228,10 @@ class HydroTemplateModel:
         al_max = 1/3
         vp_max = min(self.cs2/vw,vw)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
-        sol = root_scalar(func,bracket=(al_min,al_max),rtol=1e-6,xtol=1e-6)
+        try:
+            sol = root_scalar(func,bracket=(al_min,al_max),rtol=1e-6,xtol=1e-6)
+        except:
+            return (None,None,None,None) # If no deflagration solution exists, returns None.
         wp = self.w_from_alpha(sol.root)
         vp = self.get_vp(vm, sol.root)
         Tp = self.Tnucl*wp**(1/self.mu)

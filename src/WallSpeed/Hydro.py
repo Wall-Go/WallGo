@@ -218,14 +218,17 @@ class Hydro:
                 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            vpmax = min(vwTry,np.sqrt(self.model.csqSym(self.model.Tc())))
-            vpmin = 0.01 # Minimum value of vpmin
+            vpmax = min(vwTry,self.model.csqSym(self.model.Tc())/vwTry)
+            vpmin = 1e-5 # Minimum value of vpmin
             
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
                 return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
             
-            sol = root_scalar(func, bracket=[vpmin,vpmax])
+            try:
+                sol = root_scalar(func, bracket=[vpmin,vpmax])
+            except:
+                return (None,None,None,None) # If no deflagration solution exists, returns None.
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
                         
         return (vp,vm,Tp,Tm)
