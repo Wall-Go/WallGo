@@ -1,8 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
-from scipy.optimize import root_scalar
-from scipy.optimize import root
-from scipy.integrate import odeint
+from scipy.optimize import root_scalar,root
+from scipy.integrate import solve_ivp
 from TestModel import *
 from .HydroTemplateModel import HydroTemplateModel
 import matplotlib.pyplot as plt
@@ -167,7 +166,7 @@ class Hydro:
         """
         return (xi - v)/(1. - xi*v)
     
-    def shockDE(self, xiAndT, v):
+    def shockDE(self, v, xiAndT):
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
         """
@@ -180,20 +179,36 @@ class Hydro:
         r"""
         Solves the hydrodynamic equations in the shock for a given wall velocity and `v_+, T_+` and determines the position of the shock. Returns the nucleation temperature.
         """
+        
+        def shock(v, xiAndT):
+            xi, T = xiAndT
+            return self.mu(xi,v)*xi - self.model.csqSym(T)
+        shock.terminal = True
         xi0T0 = [vw,Tp]
         vpcent = self.mu(vw,vp)
-        maxindex = 1024
-        vs = np.linspace(vpcent,0,maxindex)
-        solshock = odeint(self.shockDE,xi0T0,vs) #solve differential equation all the way from v = v+ to v = 0
-        xisol = solshock[:,0]
-        Tsol = solshock[:,1]
-        #now need to determine the position of the shock, which is set by mu(xi,v)^2 xi = cs^2
-        index = 0
-        while self.mu(xisol[index],vs[index])*xisol[index] < self.model.csqSym(Tsol[index]) and index<maxindex-1:
-            index +=1
+        if shock(vpcent,xi0T0) > 0:
+            vm_sh = vp
+            xi_sh = vw
+            Tm_sh = Tp
+        else:
+            solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock) #solve differential equation all the way from v = v+ to v = 0
+            vm_sh = solshock.t[-1]
+            xi_sh,Tm_sh = solshock.y[:,-1]
+        
         def TiiShock(tn): #continuity of Tii
-            return self.model.wSym(tn)*xisol[index]/(1-xisol[index]**2) - self.model.wSym(Tsol[index])*self.mu(xisol[index],vs[index])*self.gammasq(self.mu(xisol[index],vs[index]))
-        Tn = fsolve(TiiShock,Tp*0.9)[0]
+            return self.model.wSym(tn)*xi_sh/(1-xi_sh**2) - self.model.wSym(Tm_sh)*self.mu(xi_sh,vm_sh)*self.gammasq(self.mu(xi_sh,vm_sh))
+        Tmin,Tmax = 0.9*self.Tnucl,Tm_sh
+        bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
+        while bracket1*bracket2 > 0 and Tmin > self.Tnucl/10:
+            Tmax = Tmin
+            bracket2 = bracket1
+            Tmin /= 1.5
+            bracket1 = TiiShock(Tmin)
+        
+        if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq').root    
+        else: #If we cannot bracket the root, use the 'secant' method instead.
+            Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh).root   
         return Tn
     
     def strongestShock(self, vw):
