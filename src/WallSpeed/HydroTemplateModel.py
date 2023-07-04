@@ -259,6 +259,8 @@ class HydroTemplateModel:
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
+        if vp is None:
+            return (vp,vm,Tp,Tm)
         wSym = self.wN*(Tp/self.Tnucl)**self.mu
         pSym = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = wSym*vp/(1-vp**2)

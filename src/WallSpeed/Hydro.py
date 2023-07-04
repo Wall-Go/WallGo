@@ -77,7 +77,7 @@ class Hydro:
             alpha = (eSym-eBrok-3*(pSym-pBrok))/(3*wSym)
             X = 1-3*alpha+3*vp**2*(1+alpha)
             lhs = wSym/wBrok
-            rhs = (1-vp**2)*(X+2*np.sqrt(X**2-12*vp**2))/(16*vp**2-X**2)
+            rhs = (1-vp**2)*(X+2*np.sqrt(max(0,X**2-12*vp**2)))/(16*vp**2-X**2)
             return lhs - rhs
         
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
@@ -253,12 +253,14 @@ class Hydro:
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
+        if vp is None:
+            return (vp,vm,Tp,Tm)
         wSym = self.model.wSym(Tp)
         c1 = wSym*self.gammasq(vp)*vp
         c2 = self.model.pSym(Tp)+wSym*self.gammasq(vp)*vp**2
         return (c1, c2, Tp, Tm)
     
-    def findvwLTE2(self):
+    def findvwLTE(self):
         r"""
         Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
         The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-`. 
@@ -285,36 +287,6 @@ class Hydro:
         else:
             sol = root_scalar(func, bracket=(vmin,vmax))
             return sol.root
-    
-    def findvwLTE(self):
-        r"""
-        Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
-        The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-` via a binary search. 
-        For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
-        If no solution can be found (because the phase transition is too strong or too weak), the search algorithm asymptotes towards the
-        Jouguet velocity and the function returns zero.
-        The solution is always a deflagration or hybrid.
-        """
-        vmin = 0.01
-        vmax = self.vJ
-        counter = 0
-        errmatch = 1.
-        errjouguet = 1. 
-        while counter<30 and min(errmatch,errjouguet)>10**-5: #probably also get rid of this hard-coded thing
-            vmid = (vmin+vmax)/2.
-            vp,vm,Tp,Tm = self.findMatching(vmid)
-            if Tp*np.sqrt(self.gammasq(vp)) > Tm*np.sqrt(self.gammasq(vm)):
-                vmin = vmid
-            else:
-                vmax = vmid
-            errmatch = np.abs((Tp*np.sqrt(self.gammasq(vp)) - Tm*np.sqrt(self.gammasq(vm))))/(Tp*np.sqrt(self.gammasq(vp))) #Checks error in matching condition
-            errjouguet = np.abs(vmid-self.vJ)/vmid #Checks distance to Jouguet velocity
-            counter+=1
-    
-        if errmatch < 10**-4:
-            return vmid
-        else:
-            return 0
         
     def __mappingT(self, TpTm, vw=None):
         """
