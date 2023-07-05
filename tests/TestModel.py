@@ -148,7 +148,7 @@ class TestModelBag():
 class TestModelTemplate():
     __test__ = False
     
-    def __init__(self, alN, psiN, cb2, cs2, Tn, wn):
+    def __init__(self, alN, psiN, cb2, cs2, Tn=1, wn=1):
         self.alN = alN # Strength parameter alpha_n of the phase transition at the nucleation temperature
         self.psiN = psiN # Enthalpy in the broken phase divided by the enthalpy in the symmetric phase (both evaluated at the nucleation temperature)
         self.cb2 = cb2
