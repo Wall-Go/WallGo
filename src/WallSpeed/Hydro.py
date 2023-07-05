@@ -2,9 +2,7 @@ import numpy as np
 from scipy.optimize import fsolve
 from scipy.optimize import root_scalar,root
 from scipy.integrate import solve_ivp
-from TestModel import *
 from .HydroTemplateModel import HydroTemplateModel
-import matplotlib.pyplot as plt
 
 
 class Hydro:
