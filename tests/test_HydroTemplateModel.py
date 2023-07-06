@@ -50,7 +50,6 @@ def test_findvwLTE():
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
-        print(alN[i],psiN[i],cb2[i],cs2[i])
         model = TestModel.TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i])
         hydro = Hydro(model,1)
         hydroTemplate = HydroTemplateModel(model,1)
