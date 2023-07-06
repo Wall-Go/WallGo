@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 
 
 class Hydro:
-    def __init__(self, model, Tnucl):
+    def __init__(self, model, Tnucl, rtol=1e-6, atol=1e-6):
         self.model = model
         self.Tnucl = Tnucl
+        self.rtol,self.atol = rtol,atol
         self.vJ = self.findJouguetVelocity()
-        self.template = HydroTemplateModel(model, Tnucl)
+        self.template = HydroTemplateModel(model, Tnucl, rtol=1e-6, atol=1e-6)
         
     def findJouguetVelocity(self):
         r"""
@@ -45,9 +46,9 @@ class Hydro:
         
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
-            tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq').root 
+            tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root 
         else: # If we cannot bracket the root, use the 'secant' method instead.
-            tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax).root 
+            tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root 
         vp = np.sqrt((pSym - self.model.pBrok(tmSol))*(pSym + self.model.eBrok(tmSol))/(eSym - self.model.eBrok(tmSol))/(eSym + self.model.pBrok(tmSol)))
         return(vp)
     
@@ -91,10 +92,10 @@ class Hydro:
         
         Tm = None
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq').root 
+            Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root 
             
         else: #If we cannot bracket the root, use the 'secant' method instead.
-            Tm = root_scalar(tmFromvpsq, method='secant', x0=self.Tnucl, x1=1.5*Tmax).root   
+            Tm = root_scalar(tmFromvpsq, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root   
         vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
         return (vp, vm, Tp, Tm)
@@ -145,7 +146,7 @@ class Hydro:
     
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved), 
         # to the interval (-inf,inf) which is used by the solver.
-        sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr')
+        sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr',options={'xtol':self.atol})
         self.success = sol.success
         [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
         vm = min(vw, np.sqrt(self.model.csqBrok(Tm)))
@@ -190,7 +191,7 @@ class Hydro:
             xi_sh = vw
             Tm_sh = Tp
         else:
-            solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock) #solve differential equation all the way from v = v+ to v = 0
+            solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
             vm_sh = solshock.t[-1]
             xi_sh,Tm_sh = solshock.y[:,-1]
         
@@ -205,9 +206,9 @@ class Hydro:
             bracket1 = TiiShock(Tmin)
         
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq')  
+            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol)  
         else: #If we cannot bracket the root, use the 'secant' method instead.
-            Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh)
+            Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh, xtol=self.atol, rtol=self.rtol)
         
         return Tn.root
     
@@ -242,12 +243,12 @@ class Hydro:
             
             fmin,fmax = func(vpmin),func(vpmax)
             if fmin*fmax <= 0:
-                sol = root_scalar(func, bracket=[vpmin,vpmax])
+                sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
             else:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded',tol=1e-3)
                 if extremum.fun > 0:
                     return (None,None,None,None) # If no deflagration solution exists, returns None.
-                sol = root_scalar(func, bracket=[vpmin,extremum.x])
+                sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
                         
         return (vp,vm,Tp,Tm)
@@ -284,7 +285,7 @@ class Hydro:
         vmin = 0.01
         vmax = self.vJ
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
-            vmax = root_scalar(shock,bracket=[self.model.csqSym(self.Tnucl)**0.5,self.vJ]).root-1e-6
+            vmax = root_scalar(shock,bracket=[self.model.csqSym(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
         fmax = func(vmax)
         if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
             return 1
@@ -293,7 +294,7 @@ class Hydro:
         if fmin < 0: # vw is smaller than vmin, we return 0.
             return 0
         else:
-            sol = root_scalar(func, bracket=(vmin,vmax))
+            sol = root_scalar(func, bracket=(vmin,vmax), xtol=self.atol, rtol=self.rtol)
             return sol.root
         
     def __mappingT(self, TpTm, vw=None):

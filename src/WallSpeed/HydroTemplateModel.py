@@ -17,7 +17,7 @@ class HydroTemplateModel:
     arXiv:2303.10171 (2023).
     """
     
-    def __init__(self,model,Tnucl):
+    def __init__(self,model,Tnucl,rtol=1e-6,atol=1e-6):
         r"""
         Initialize the HydroTemplateModel class. Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b`.
 
@@ -34,6 +34,7 @@ class HydroTemplateModel:
 
         """
         self.model = model
+        self.rtol,self.atol = rtol,atol
         pSym,pBrok = model.pSym(Tnucl),model.pBrok(Tnucl)
         wSym,wBrok = model.wSym(Tnucl),model.wBrok(Tnucl)
         eSym,eBrok = wSym-pSym,wBrok-pBrok
@@ -142,7 +143,7 @@ class HydroTemplateModel:
         branch = -1
         if self.__eqWall(al_min,vm)*self.__eqWall(al_max,vm)>0:
             branch = 1
-        sol = root_scalar(self.__eqWall,(vm,branch),bracket=(al_min,al_max),rtol=1e-6,xtol=1e-6)
+        sol = root_scalar(self.__eqWall,(vm,branch),bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
         return sol.root
     
     def __dfdv(self,v,X):
@@ -178,7 +179,7 @@ class HydroTemplateModel:
             xi,w = X
             return xi*(xi-v)/(1-xi*v) - self.cs2
         event.terminal = True
-        sol = solve_ivp(self.__dfdv,(v0,1e-20),[vw,wp],events=event,rtol=1e-6,atol=1e-6)
+        sol = solve_ivp(self.__dfdv,(v0,1e-20),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
     
     def __shooting(self,vw,al):
@@ -212,7 +213,7 @@ class HydroTemplateModel:
         if self.alN > self.max_al(100) or func(self.vJ) < 0:
             # print('alN too large')
             return 1
-        sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=1e-6,xtol=1e-6)
+        sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
         return sol.root
     
     def findMatching(self,vw):
@@ -229,7 +230,7 @@ class HydroTemplateModel:
         vp_max = min(self.cs2/vw,vw)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
         try:
-            sol = root_scalar(func,bracket=(al_min,al_max),rtol=1e-6,xtol=1e-6)
+            sol = root_scalar(func,bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
         except:
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         wp = self.w_from_alpha(sol.root)
@@ -302,7 +303,7 @@ class HydroTemplateModel:
             else:
                 upper_limit = minimum.x
                 
-        sol = root_scalar(func,bracket=(lower_limit,upper_limit),rtol=1e-6,xtol=1e-6)
+        sol = root_scalar(func,bracket=(lower_limit,upper_limit),rtol=self.rtol,xtol=self.atol)
         return sol.root
     
     def detonation_vw(self):
@@ -317,7 +318,7 @@ class HydroTemplateModel:
         if matching_eq(self.vJ+1e-10)*matching_eq(1-1e-10) > 0:
             # print('No detonation solution')
             return 0
-        sol = root_scalar(matching_eq,bracket=(self.vJ+1e-10,1-1e-10),rtol=1e-6,xtol=1e-6)
+        sol = root_scalar(matching_eq,bracket=(self.vJ+1e-10,1-1e-10),rtol=self.rtol,xtol=self.atol)
         return sol.root
     
     def detonation_vAndT(self,vw):
