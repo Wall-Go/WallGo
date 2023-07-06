@@ -1,8 +1,9 @@
 import numpy as np
 from scipy.optimize import fsolve
-from scipy.optimize import root_scalar,root
+from scipy.optimize import root_scalar,root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
+import matplotlib.pyplot as plt
 
 
 class Hydro:
@@ -68,14 +69,14 @@ class Hydro:
         Tp = self.Tnucl
         pSym,wSym = self.model.pSym(Tp),self.model.wSym(Tp)
         eSym = wSym - pSym
+        
         def tmFromvpsq(tm): #determine Tm in the detonation branch from the expression for r = w_+/w_-
             pBrok,wBrok = self.model.pBrok(tm),self.model.wBrok(tm)
             eBrok = wBrok - pBrok
-            
             alpha = (eSym-eBrok-3*(pSym-pBrok))/(3*wSym)
             X = 1-3*alpha+3*vp**2*(1+alpha)
-            lhs = wSym/wBrok
-            rhs = (1-vp**2)*(X+2*np.sqrt(max(0,X**2-12*vp**2)))/(16*vp**2-X**2)
+            lhs = (16*vp**2-X**2)*wSym/wBrok
+            rhs = (1-vp**2)*(X+2*np.sqrt(max(0,X**2-12*vp**2)))
             return lhs - rhs
         
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
@@ -169,7 +170,7 @@ class Hydro:
         Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
         """
         xi, T = xiAndT
-        eq1 = self.gammasq(v) * (1. - v*xi)*(self.mu(xi,v)*self.mu(xi,v)/self.model.csqSym(T)-1.)*xi/2./v
+        eq1 = self.gammasq(v) * (1. - v*xi)*(self.mu(xi,v)**2/self.model.csqSym(T)-1.)*xi/2./v
         eq2 = self.model.wSym(T)/self.model.dpSym(T)*self.gammasq(v)*self.mu(xi,v)
         return [eq1,eq2]
         
@@ -204,10 +205,11 @@ class Hydro:
             bracket1 = TiiShock(Tmin)
         
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq').root    
+            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq')  
         else: #If we cannot bracket the root, use the 'secant' method instead.
-            Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh).root   
-        return Tn
+            Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh)
+        
+        return Tn.root
     
     def strongestShock(self, vw):
         r"""
@@ -238,10 +240,14 @@ class Hydro:
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
                 return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
             
-            try:
+            fmin,fmax = func(vpmin),func(vpmax)
+            if fmin*fmax <= 0:
                 sol = root_scalar(func, bracket=[vpmin,vpmax])
-            except:
-                return (None,None,None,None) # If no deflagration solution exists, returns None.
+            else:
+                extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded',tol=1e-3)
+                if extremum.fun > 0:
+                    return (None,None,None,None) # If no deflagration solution exists, returns None.
+                sol = root_scalar(func, bracket=[vpmin,extremum.x])
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
                         
         return (vp,vm,Tp,Tm)
@@ -266,15 +272,19 @@ class Hydro:
         If the phase transition is too weak for a solution to exist, returns 0. If it is too strong, returns 1.
         The solution is always a deflagration or hybrid.
         """
-        
         def func(vw): # Function given to the root finder
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
             Tntry = self.solveHydroShock(vw,vp,Tp)
             return Tntry - self.Tnucl
+        def shock(vw): # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
+            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
+            return vp*vw-self.model.csqSym(Tp)
         
         self.success = True
         vmin = 0.01
         vmax = self.vJ
+        if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
+            vmax = root_scalar(shock,bracket=[self.model.csqSym(self.Tnucl)**0.5,self.vJ]).root-1e-6
         fmax = func(vmax)
         if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
             return 1

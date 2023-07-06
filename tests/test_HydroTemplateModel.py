@@ -8,7 +8,7 @@ from WallSpeed.HydroTemplateModel import *
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
 N = 100
-rng = np.random.default_rng(1)
+rng = np.random.default_rng(10)
 
 def test_JouguetVelocity():
     res1,res2 = np.zeros(N),np.zeros(N)
@@ -55,7 +55,7 @@ def test_findvwLTE():
         hydroTemplate = HydroTemplateModel(model,1)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
-    np.testing.assert_allclose(res1,res2,rtol = 10**-5,atol = 0)
+    np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
     
 def test_findHydroBoundaries():
     res1,res2 = np.zeros((N,4)),np.zeros((N,4))

@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
+import matplotlib.pyplot as plt
 
 
 class HydroTemplateModel:
@@ -206,10 +207,10 @@ class HydroTemplateModel:
         """
         func = lambda vw: self.__shooting(vw,self.solve_alpha(vw))
         if self.alN < (1-self.psiN)/3 or self.alN <= (self.mu-self.nu)/(3*self.mu):
-            print('alN too small')
+            # print('alN too small')
             return 0
         if self.alN > self.max_al(100) or func(self.vJ) < 0:
-            print('alN too large')
+            # print('alN too large')
             return 1
         sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=1e-6,xtol=1e-6)
         return sol.root
@@ -278,6 +279,7 @@ class HydroTemplateModel:
 
         """
         vm = self.cb
+        lower_limit = (1-self.psiN)/3
         def func(alN):
             vw = self.findJouguetVelocity(alN)
             vp = self.cs2/vw
@@ -286,13 +288,21 @@ class HydroTemplateModel:
             psi = self.psiN*wp**(self.nu/self.mu-1)
             al = (self.mu-self.nu)/(3*self.mu)+(alN-(self.mu-self.nu)/(3*self.mu))/wp
             return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu)
+        
         if func(upper_limit) < 0:
             maximum = minimize_scalar(lambda x: -func(x),bounds=[(1-self.psiN)/3,upper_limit],method='Bounded')
             if maximum.fun > 0:
                 return upper_limit
             else:
                 upper_limit = maximum.x
-        sol = root_scalar(func,bracket=((1-self.psiN)/3,upper_limit),rtol=1e-6,xtol=1e-6)
+        if func(lower_limit) > 0:
+            minimum = minimize_scalar(func,bounds=[lower_limit,upper_limit],method='Bounded')
+            if minimum.fun > 0:
+                return lower_limit
+            else:
+                upper_limit = minimum.x
+                
+        sol = root_scalar(func,bracket=(lower_limit,upper_limit),rtol=1e-6,xtol=1e-6)
         return sol.root
     
     def detonation_vw(self):
@@ -305,7 +315,7 @@ class HydroTemplateModel:
             ga2w,ga2m = 1/(1-vw**2),1/(1-vm**2)
             return vw*vm*self.alN/(1-(self.nu-1)*vw*vm)-(1-3*self.alN-(ga2w/ga2m)**(self.nu/2)*self.psiN)/(3*self.nu)
         if matching_eq(self.vJ+1e-10)*matching_eq(1-1e-10) > 0:
-            print('No detonation solution')
+            # print('No detonation solution')
             return 0
         sol = root_scalar(matching_eq,bracket=(self.vJ+1e-10,1-1e-10),rtol=1e-6,xtol=1e-6)
         return sol.root
