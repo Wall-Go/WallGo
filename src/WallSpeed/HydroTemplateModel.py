@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
-import matplotlib.pyplot as plt
 
 
 class HydroTemplateModel:
