@@ -3,7 +3,6 @@ from scipy.optimize import fsolve
 from scipy.optimize import root_scalar,root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
-import matplotlib.pyplot as plt
 
 
 class Hydro:

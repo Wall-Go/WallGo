@@ -226,7 +226,7 @@ class HydroTemplateModel:
         
         vm = min(self.cb,vw)
         al_max = 1/3
-        vp_max = min(self.cs2/vw,vw)
+        vp_max = min(self.cs2/vw,vw,vm)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
         try:
             sol = root_scalar(func,bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
@@ -301,7 +301,7 @@ class HydroTemplateModel:
                 return lower_limit
             else:
                 upper_limit = minimum.x
-                
+        
         sol = root_scalar(func,bracket=(lower_limit,upper_limit),rtol=self.rtol,xtol=self.atol)
         return sol.root
     

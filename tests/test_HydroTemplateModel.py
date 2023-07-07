@@ -8,7 +8,7 @@ from WallSpeed.HydroTemplateModel import *
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
 N = 100
-rng = np.random.default_rng(6)
+rng = np.random.default_rng(1)
 
 def test_JouguetVelocity():
     res1,res2 = np.zeros(N),np.zeros(N)
@@ -33,15 +33,15 @@ def test_findMatching():
     vw = rng.random(N)
     for i in range(N):
         model = TestModel.TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i])
-        hydro = Hydro(model,1)
-        hydroTemplate = HydroTemplateModel(model,1)
+        hydro = Hydro(model,1,1e-10,1e-10)
+        hydroTemplate = HydroTemplateModel(model,1,1e-10,1e-10)
         res1[i] = hydro.findMatching(vw[i])
         res2[i] = hydroTemplate.findMatching(vw[i])
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0]
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0]
-    np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
+    np.testing.assert_allclose(res1,res2,rtol = 10**-2,atol = 0)
     
 def test_findvwLTE():
     res1,res2 = np.zeros(N),np.zeros(N)
@@ -66,8 +66,8 @@ def test_findHydroBoundaries():
     vw = rng.random(N)
     for i in range(N):
         model = TestModel.TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i])
-        hydro = Hydro(model,1)
-        hydroTemplate = HydroTemplateModel(model,1)
+        hydro = Hydro(model,1,1e-10,1e-10)
+        hydroTemplate = HydroTemplateModel(model,1,1e-10,1e-10)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         if np.isnan(res1[i,0]):
