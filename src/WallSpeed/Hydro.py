@@ -3,6 +3,7 @@ from scipy.optimize import fsolve
 from scipy.optimize import root_scalar,root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
+import matplotlib.pyplot as plt
 
 
 class Hydro:
@@ -61,7 +62,7 @@ class Hydro:
         return (pSym-pBrok)/(eSym-eBrok), (eBrok+pSym)/(eSym+pBrok)
     
     
-    def matchDeton(self, vw):
+    def matchDeton(self, vw, branch=1):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` for a detonation as a function of the wall velocity and `T_n`.
         """
@@ -70,31 +71,13 @@ class Hydro:
         pSym,wSym = self.model.pSym(Tp),self.model.wSym(Tp)
         eSym = wSym - pSym
         
-        def tmFromvpsq(tm): #determine Tm in the detonation branch from the expression for r = w_+/w_-
+        def tmFromvpsq(tm):
             pBrok,wBrok = self.model.pBrok(tm),self.model.wBrok(tm)
             eBrok = wBrok - pBrok
-            alpha = (eSym-eBrok-3*(pSym-pBrok))/(3*wSym)
-            X = 1-3*alpha+3*vp**2*(1+alpha)
-            lhs = (16*vp**2-X**2)*wSym/wBrok
-            rhs = (1-vp**2)*(X+2*np.sqrt(max(0,X**2-12*vp**2)))
-            return lhs - rhs
+            return vp**2*(eSym-eBrok) - (pSym-pBrok)*(eBrok+pSym)/(eSym+pBrok)
         
-        # For detonations, Tm has a lower bound of Tn, but no upper bound.
-        # We increase Tmax until we find a value that brackets our root.
-        Tmin,Tmax = self.Tnucl,1.5*self.Tnucl
-        bracket1,bracket2 = tmFromvpsq(Tmin),tmFromvpsq(Tmax)
-        while bracket1*bracket2 > 0 and Tmax < 10*self.Tnucl:
-            Tmin = Tmax
-            bracket1 = bracket2
-            Tmax *= 1.5
-            bracket2 = tmFromvpsq(Tmax)
-        
-        Tm = None
-        if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tm = root_scalar(tmFromvpsq,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root 
-            
-        else: #If we cannot bracket the root, use the 'secant' method instead.
-            Tm = root_scalar(tmFromvpsq, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root   
+        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,10*self.Tnucl],method='Bounded').x
+        Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
         vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
         return (vp, vm, Tp, Tm)
