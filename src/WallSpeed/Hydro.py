@@ -124,7 +124,7 @@ class Hydro:
             # do not explore arbitrarly small or large values of Tm and Tp.
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
-    
+        
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved), 
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr',options={'xtol':self.atol})
@@ -304,7 +304,7 @@ class Hydro:
             vmsq = min(vw**2,self.model.csqBrok(Tm))
             Xm = Tm/self.Tnucl-1 if Tm > self.Tnucl else 1-self.Tnucl/Tm
             r = Tm*(1/np.sqrt(1-vmsq)-1)
-            Xp = (0.5*r+Tm-Tp)/np.sqrt((Tp-Tm)*(r+Tm-Tp))
+            Xp = -(0.5*r+Tm-Tp)/np.sqrt((Tp-Tm)*(r+Tm-Tp))
             return [Xp,Xm]
     
     def __inverseMappingT(self, XpXm, vw=None):

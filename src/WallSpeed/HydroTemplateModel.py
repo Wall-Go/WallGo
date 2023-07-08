@@ -137,7 +137,7 @@ class HydroTemplateModel:
         """
         vm = min(self.cb,vw)
         vp_max = min(self.cs2/vw,vw) if constraint else vm
-        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu),1e-10)
         al_max = 1/3
         branch = -1
         if self.__eqWall(al_min,vm)*self.__eqWall(al_max,vm)>0:
