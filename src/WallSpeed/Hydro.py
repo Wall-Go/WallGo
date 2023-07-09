@@ -168,10 +168,15 @@ class Hydro:
         xi0T0 = [vw,Tp]
         vpcent = self.mu(vw,vp)
         if shock(vpcent,xi0T0) > 0:
-            vm_sh = vp
+            vm_sh = vpcent
             xi_sh = vw
             Tm_sh = Tp
+        elif vw == vp:
+            vm_sh = 0
+            xi_sh = self.model.csqSym(Tp)**0.5
+            Tm_sh = Tp
         else:
+            self.temp = vw,vp,Tp
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
             vm_sh = solshock.t[-1]
             xi_sh,Tm_sh = solshock.y[:,-1]
@@ -226,7 +231,7 @@ class Hydro:
             if fmin*fmax <= 0:
                 sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
             else:
-                extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded',tol=1e-3)
+                extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
                     return (None,None,None,None) # If no deflagration solution exists, returns None.
                 sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
