@@ -6,142 +6,126 @@
 #include "hdf5Interface.h"
 
 
+void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata) {
 
-// Write 4D array (vector) of doubles(!!) to .hdf5 file.
-// Note that currently this will overwrite the whole file!
+	try {
+
+		// Create a group to hold metadata (keeping it separate from the actual data)
+		H5::Group metadataGroup = h5File.createGroup("metadata");
+
+		// Create attributes in the group. One attribute for each variable in metadata struct
+		H5::Attribute basisSizeAttr = metadataGroup.createAttribute("Basis Size", H5::PredType::NATIVE_INT, H5::DataSpace());
+		H5::Attribute basisNameAttr = metadataGroup.createAttribute("Basis Type", H5::StrType(H5::PredType::C_S1, metadata.basisName.size()), H5::DataSpace());
+		H5::Attribute integratorAttr = metadataGroup.createAttribute("Integrator", H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), H5::DataSpace());
+
+		// Write the attributes
+		basisSizeAttr.write(H5::PredType::NATIVE_INT, &metadata.basisSize);
+		basisNameAttr.write(H5::StrType(H5::PredType::C_S1, metadata.basisName.size()), metadata.basisName);
+		integratorAttr.write(H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), metadata.integrator);
+
+		// Cleanup
+		basisSizeAttr.close();
+		basisNameAttr.close();
+		integratorAttr.close();
+		metadataGroup.close();
+
+	} catch (const H5::Exception& error) {
+		// Handle HDF5 errors
+		std::cerr << "Caught HDF5 exception when writing metadata: " << error.getDetailMsg() << std::endl;
+		std::exit(EXIT_FAILURE);
+	} catch (const std::exception& error) {
+		// Handle other exceptions
+		std::cerr << "Caught exception when writing metadata: " << error.what() << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+
+}
+
 
 // Turn Array4D into C-style array, then pass that to overloaded WriteToHDF5()
-void WriteToHDF5(const Array4D &data, std::string filename, std::string datasetName) {
+void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetName) {
 
-   // 4D array dimensions
-   hsize_t dims[4] = {data.size(), data[0].size(), data[0][0].size(), data[0][0][0].size()};
+	constexpr size_t arrayDimension = 4;
+	// 4D array dimensions
+	hsize_t dims[arrayDimension] = {data.size(), data[0].size(), data[0][0].size(), data[0][0][0].size()};
 
-   // For writing we need to pass the data as a contiguous block of memory. A nested std::vector is not
-   // guaranteed to be contiguous so need to flatten the data here
-   std::vector<double> flattened_data;
-   for (const auto& vec3 : data) {
-      for (const auto& vec2 : vec3) {
-         for (const auto& vec1 : vec2) {
-               flattened_data.insert(flattened_data.end(), vec1.begin(), vec1.end());
-         }
-      }
-   }
+	// For writing we need to pass the data as a contiguous block of memory. A nested std::vector is not
+	// guaranteed to be contiguous so need to flatten the data here
+	std::vector<double> flattened_data;
+	for (const auto& vec3 : data) {
+		for (const auto& vec2 : vec3) {
+			for (const auto& vec1 : vec2) {
+				flattened_data.insert(flattened_data.end(), vec1.begin(), vec1.end());
+			}
+		}
+	}
 
-   unsigned int arrayDimension = 4;
-   // need to pass C-style array
-   WriteToHDF5(&flattened_data[0], arrayDimension, dims, filename, datasetName);
+	// need to pass C-style array
+	writeDataSet(h5File, &flattened_data[0], arrayDimension, dims, datasetName);
 }
 
+void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension, const hsize_t* dims, std::string datasetName) {
 
-// arrayDimension = ie. is the array 3D or 4D or... 
-// dims = data array dimensions
-void WriteToHDF5(const double* data, unsigned int arrayDimension, const hsize_t* dims, 
-                     std::string filename, std::string datasetName) {
+	try {
 
-   hid_t fileId, dataspaceId, datasetId;  
+		// Create dataspace
+		H5::DataSpace dataspace(arrayDimension, dims);
 
-   int polynomialBasisSize = dims[0];
-   (void)polynomialBasisSize; // suppress -Wunused-parameter
+		// Create dataset of doubles inside the file/dataspace. Should guarantee correct byte size on any platform
+		H5::DataSet dataset = h5File.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE, dataspace);
 
-   // Create a new HDF5 file
-   fileId = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-   if (fileId < 0) {
-      std::cout << "Failed to create file '" << filename << "'. Exiting...\n";
-      return;
-   }
+		// Write the data
+		dataset.write(data, H5::PredType::NATIVE_DOUBLE);
 
-   // Create 4D dataspace for the dataset. Last argument NULL means the dataspace size is fixed
-   dataspaceId = H5Screate_simple(4, dims, NULL);
-   if (dataspaceId < 0) {
-      printf("Failed to create dataspace. Exiting...\n");
-      H5Fclose(fileId);
-      return;
-   }
+		// Cleanup
+		dataset.close();
+		dataspace.close();
 
-   // Create a dataset of doubles (should work on all platforms)
-   datasetId = H5Dcreate2(fileId, datasetName.c_str(), H5T_NATIVE_DOUBLE, dataspaceId,
-                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-   if (datasetId < 0) {
-      printf("Failed to create dataset. Exiting...\n");
-      H5Sclose(dataspaceId);
-      H5Fclose(fileId);
-      return;
-   }
+		std::cout << "Wrote dataset '" << datasetName << "' to " << h5File.getFileName() << std::endl;
 
-   // Write the data to the dataset. Note that we need to pass a C-array and not a std::vector
-   herr_t status = H5Dwrite(datasetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-   // herr_t status = H5Dwrite(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, wtf);
-   if (status < 0) {
-      printf("Failed to write data to dataset. Exiting...\n");
-      H5Dclose(datasetId);
-      H5Sclose(dataspaceId);
-      H5Fclose(fileId);
-      return;
-   }
+	} catch (const H5::Exception& error) {
+		// Handle HDF5 errors
+		std::cerr << "Caught HDF5 exception: " << error.getDetailMsg() << std::endl;
+		std::exit(EXIT_FAILURE);
+	} catch (const std::exception& error) {
+		// Handle other exceptions
+		std::cerr << "Caught exception: " << error.what() << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 
-   // Attribute for storing a string ("Chebyshev" or "Cardinal")
-   // TODO write the attribute at root level
-
-   // Create an attribute dataspace for storing metadata, eg. which polynomial basis was used.
-   // For now a dataspace of dimension 1, length 1 will do
-   hsize_t attributeDims[1] = {1};
-   hid_t attributeDataspaceId = H5Screate_simple(1, attributeDims, NULL);
-
-   // TODO write accuracy, list of heavy/light particles etc
-
-   std::string label = "Basis";
-   std::string basisType = "Chebyshev";
-   
-   // Copy the built-in H5 string type and resize it accordingly
-   hid_t stringAttributeTypeId = H5Tcopy(H5T_C_S1);
-   H5Tset_size(stringAttributeTypeId, basisType.length());
-   
-   // Now create the string attribute
-   hid_t stringAttributeId = H5Acreate2(datasetId, label.c_str(), stringAttributeTypeId, attributeDataspaceId, H5P_DEFAULT, H5P_DEFAULT);
-
-   // Write the string attribute value
-   H5Awrite(stringAttributeId, stringAttributeTypeId, basisType.c_str());
-
-   // Close the string attribute and string attribute dataspace
-   H5Aclose(stringAttributeId);
-   H5Tclose(stringAttributeTypeId);
-   H5Sclose(attributeDataspaceId);
-
-   // End attribute
-
-   // Close all opened HDF5 objects
-   H5Dclose(datasetId);
-   H5Sclose(dataspaceId);
-   H5Fclose(fileId);
-
-   printf("Wrote data to file '%s'.\n", filename.c_str());
 }
-
 
 void testHDF5() {
 
-   const int gridSizeN = 20;
-   std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
+	// Produce dummy test data that resembles realistic collision tensor: same size etc  
+	const int gridSizeN = 4;
+	std::string filename = "testDummy.hdf5";
 
-   // 20x20x20x20 std::vector, all initialized to 0.0
-   Array4D collisionIntegrals(gridSizeN, gridSizeN, gridSizeN, gridSizeN, 0.0);
+	Array4D dummyData(gridSizeN - 1, gridSizeN - 1, gridSizeN - 1 , gridSizeN - 1, 0.0);
 
-   // Fill with dummy data
-   long seed = 13424213;
-   srand48(seed);
+	// Test RNG
+	long seed = 13424213;
+	srand48(seed);
 
-   for (int i = 0; i < gridSizeN; ++i) {
-      for (int j = 0; j < gridSizeN; ++j) {
-         for (int k = 0; k < gridSizeN; ++k) {
-            for (int l = 0; l < gridSizeN; ++l) {
-               collisionIntegrals[i][j][k][l] = drand48();
-            }
-         }
-      }
-   }
+	// m,n = Polynomial indices. 
+	for (int m = 2; m <= gridSizeN; ++m) for (int n = 1; n <= gridSizeN-1; ++n) {
+		// j,k = grid momentum indices 
+		for (int j = 1; j <= gridSizeN-1; ++j) for (int k = 1; k <= gridSizeN-1; ++k) {
+			dummyData[m-2][n-1][j-1][k-1] = drand48();
+		}
+	}
 
-   // TODO Oli's preferred notation was C(j,k ; m,n) with j = p_z, k = p_par, m = Tbar, n = Ttilde
-   
-   WriteToHDF5(collisionIntegrals, filename, "top");
+	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
+	H5::H5File h5File(filename, H5F_ACC_TRUNC);
+	H5Metadata metadata;
+	metadata.basisSize = gridSizeN;
+	metadata.basisName = "Chebyshev";
+	metadata.integrator = "Vegas Monte Carlo (GSL)";
+	writeMetadata(h5File, metadata);
+
+	writeDataSet(h5File, dummyData, "top");
+	writeDataSet(h5File, dummyData, "W");
+
+	h5File.close();
 }
 
