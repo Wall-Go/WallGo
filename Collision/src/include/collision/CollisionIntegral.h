@@ -131,7 +131,7 @@ private:
     // Tm(rhoZ1)*Tn(rhoPar1)
     double TmTn_p1; 
 
-    static constexpr size_t integralDimension = 5;
+    //static constexpr size_t integralDimension = 5;
     gsl_rng* gslRNG;
 };
 

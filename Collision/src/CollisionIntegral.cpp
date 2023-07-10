@@ -43,7 +43,7 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k, c
      precalculateMomentum1(m, n, j, k);
 
      // Integral dimensions
-     const int dim = this->integralDimension;
+     constexpr size_t dim = 5;
      // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
      double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.}; // Lower limits
      double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0*constants::pi, 2.0*constants::pi, 1., 1.}; // Upper limits
