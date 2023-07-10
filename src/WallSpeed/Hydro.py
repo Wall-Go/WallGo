@@ -58,7 +58,9 @@ class Hydro:
         
         pSym,pBrok = self.model.pSym(Tp),self.model.pBrok(Tm)
         eSym,eBrok = self.model.eSym(Tp),self.model.eBrok(Tm)
-        return (pSym-pBrok)/(eSym-eBrok), (eBrok+pSym)/(eSym+pBrok)
+        vpvm = (pSym-pBrok)/(eSym-eBrok) if eSym != eBrok else (pSym-pBrok)*1e50
+        vpovm = (eBrok+pSym)/(eSym+pBrok)
+        return vpvm,vpovm
     
     
     def matchDeton(self, vw, branch=1):
@@ -176,7 +178,6 @@ class Hydro:
             xi_sh = self.model.csqSym(Tp)**0.5
             Tm_sh = Tp
         else:
-            self.temp = vw,vp,Tp
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
             vm_sh = solshock.t[-1]
             xi_sh,Tm_sh = solshock.y[:,-1]

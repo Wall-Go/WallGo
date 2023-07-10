@@ -151,9 +151,8 @@ class HydroTemplateModel:
         """
         xi,w = X
         mu_xiv = (xi-v)/(1-xi*v)
-        dxidv = xi*(1-v*xi)*(mu_xiv**2/self.cs2-1)
-        dxidv /= 2*v*(1-v**2)
         dwdv = w*(1+1/self.cs2)*mu_xiv/(1-v**2)
+        dxidv = xi*(1-v*xi)*(mu_xiv**2/self.cs2-1)/(2*v*(1-v**2)) if v != 0  else 1e50 #If v = 0, dxidv is set to a very high value
         return [dxidv,dwdv]
     
     def integrate_plasma(self,v0,vw,wp):
@@ -176,9 +175,9 @@ class HydroTemplateModel:
         """
         def event(v,X):
             xi,w = X
-            return xi*(xi-v)/(1-xi*v) - self.cs2
+            return (xi*(xi-v)/(1-xi*v) - self.cs2)*v
         event.terminal = True
-        sol = solve_ivp(self.__dfdv,(v0,1e-20),[vw,wp],events=event,rtol=self.rtol,atol=0)
+        sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
     
     def __shooting(self,vw,al):
@@ -194,7 +193,13 @@ class HydroTemplateModel:
             vp_sw = vw
             vm_sw = vp
             wm_sw = wp
+        elif vw == vp:
+            # If the plasma is at rest in front of the wall, there is no variation of plasma velocity and temperature in the shock wave
+            vp_sw = self.cs
+            vm_sw = self.cs
+            wm_sw = wp
         else:
+            self.temp = [vw,vp,(vw-vp)/(1-vw*vp),wp]
             sol = self.integrate_plasma((vw-vp)/(1-vw*vp), vw, wp)
             vp_sw = sol.y[0,-1]
             vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
