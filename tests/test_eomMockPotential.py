@@ -1,7 +1,7 @@
 #from WallSpeed.eomHydro import initialWallParameters
-from eomHydro import initialWallParameters, wallProfile
+from WallSpeed.eomHydro import initialWallParameters, wallProfile
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 class MockPotential:
@@ -40,8 +40,9 @@ for z in zs:
 higgss = np.transpose(fields)[0]
 singlets = np.transpose(fields)[1]
 
-plt.plot(higgss, singlets)
-plt.show()
+## Let's not have test plotting in the main branch
+#plt.plot(higgss, singlets)
+#plt.show()
 
 
 
