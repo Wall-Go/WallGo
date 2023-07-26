@@ -63,7 +63,6 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
      // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
      // which means we only need j <= N/2
 
-
      // m,n = Polynomial indices
      #pragma omp parallel for collapse(4)
      for (int m = 2; m <= gridSizeN; ++m) 
@@ -80,7 +79,7 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
                     resultMC[0] = 0.0;
                     resultMC[1] = 0.0;
                } else {
-                    resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
+                    resultMC = collisionIntegral.evaluate(m, n, j, k);
                }
 
                collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
@@ -96,10 +95,10 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
      for (int n = 1; n <= gridSizeN-1; ++n) {
           for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
           for (int k = 1; k <= gridSizeN-1; ++k) {
-                    int jOther = gridSizeN - j;
-                    int sign = (m % 2 == 0 ? 1 : -1);
-                    collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
-                    collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+               int jOther = gridSizeN - j;
+               int sign = (m % 2 == 0 ? 1 : -1);
+               collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+               collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
           }
      }
 
@@ -175,30 +174,21 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 
 	// 2->2 scatterings so 4 external particles
 	using CollisionElement = CollElem<4>;
-	
-	// define particles that we include in matrix elements
-	ParticleSpecies topQuark("top", EParticleType::FERMION);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION);
-	ParticleSpecies gluon("gluon", EParticleType::BOSON);
 
-	// Set masses squared. These need to be in units of temperature, ie. (m/T)^2
+     //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
+     // Thermal
 	double mq2 = 0.251327; // quark
 	double mg2 = 3.01593; // SU(3) gluon
+     // Vacuum
+     // TODO if needed
+     double msqVacuum = 0.0;
 
-	topQuark.thermalMassSquared = mq2;
-	lightQuark.thermalMassSquared = mq2;
-	gluon.thermalMassSquared = mg2;
+	
+	// define particles that we include in matrix elements
+	ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
+	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
+	ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2);
 
-	topQuark.vacuumMassSquared = 0.0;
-	lightQuark.vacuumMassSquared = 0.0;
-	gluon.vacuumMassSquared = 0.0;
-
-	// Which particles are treated as always being in equilibrium?
-	topQuark.bInEquilibrium = false;
-	lightQuark.bInEquilibrium = true;
-	gluon.bInEquilibrium = true;
-
-	// TODO should prob have a constructor that takes all these in as eg. a struct
 
 	// Then create collision elements for 2->2 processes involving these. 
 	// By 'collision element' I mean |M|^2 * P[ij -> nm], where P is the population factor involving distribution functions.
@@ -225,7 +215,7 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 	std::cout << "Running speed test: integral C[2,1,1,1]\n";
 	auto startTime = std::chrono::steady_clock::now();
 
-	collInt.evaluate(2, 1, 1, 1, {0.0, 0.0, 0.0, 0.0});
+	collInt.evaluate(2, 1, 1, 1);
 
 	auto endTime = std::chrono::steady_clock::now();
 
@@ -240,7 +230,7 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 	auto minutes = std::chrono::duration_cast<std::chrono::minutes>(totalTime).count() % 60;
 
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
-	std::cout << "Estimated time for all " << nCollisionTerms << " collision integrals: " 
+	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
@@ -250,19 +240,17 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 
 /*
 	// FOR PROFILING: just calculate a few terms and exit
-
-	std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
 	std::array<double, 2> resultMC;
 
 
 	int m, n, j, k;
 
 	m = 2; n = 1; j = 1; k = 1;
-	resultMC = collInt.evaluate(m, n, j, k, massSquared);
+	resultMC = collInt.evaluate(m, n, j, k);
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
 	m = 6; n = 4; j = 11; k = 9;
-	resultMC = collInt.evaluate(m, n, j, k, massSquared);
+	resultMC = collInt.evaluate(m, n, j, k);
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 */
 

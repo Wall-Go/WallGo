@@ -58,6 +58,12 @@ endif()
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
 
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    link_libraries(OpenMP::OpenMP_CXX)
+endif()
+
+
 #---- Link to external libraries
 link_libraries(
     ${HDF5_LIBRARIES}
