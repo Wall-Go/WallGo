@@ -2,7 +2,7 @@
 
 - GSL monte vegas
 
-- Official HDF5 C API library
+- Official HDF5 C++ API library, version >= 1.10.1 
 
 - pybind11
 
