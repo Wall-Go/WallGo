@@ -40,45 +40,59 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 
      std::cout << "Now evaluating all collision integrals\n" << std::endl;
 
-     // m,n = Polynomial indices. 
-     for (int m = 2; m <= gridSizeN; ++m) for (int n = 1; n <= gridSizeN-1; ++n) {
+     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+     // which means we only need j <= N/2
+
+
+     // m,n = Polynomial indices
+     #pragma omp parallel for collapse(4)
+     for (int m = 2; m <= gridSizeN; ++m) 
+     for (int n = 1; n <= gridSizeN-1; ++n) {
           // j,k = grid momentum indices 
-          for (int j = 1; j <= gridSizeN-1; ++j) for (int k = 1; k <= gridSizeN-1; ++k) {
+          for (int j = 1; j <= gridSizeN/2; ++j)
+          for (int k = 1; k <= gridSizeN-1; ++k) {
 
                // Monte Carlo result for the integral + its error
                std::array<double, 2> resultMC;
 
-               // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-               // which means we only need j <= N/2
-               if (2*j > gridSizeN){
-                    int jOther = gridSizeN - j;
-                    int sign = (m % 2 == 0 ? 1 : -1);
-                    resultMC[0] = sign * collGrid[m-2][n-1][jOther-1][k-1];
-                    resultMC[1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
-               }
                // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-               else if (2*j == gridSizeN && m % 2 != 0) {
+               if (2*j == gridSizeN && m % 2 != 0) {
                     resultMC[0] = 0.0;
                     resultMC[1] = 0.0;
                } else {
-
                     resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
                }
+
+               if (2*j > gridSizeN){
+                    
+               }
+
                
                collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
                collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
 
                printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-          } // end j, k
+          } // end j,k
      } // end m,n
+
+     // Fill in the j > N/2 elements
+     for (int m = 2; m <= gridSizeN; ++m) 
+     for (int n = 1; n <= gridSizeN-1; ++n) {
+          for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
+          for (int k = 1; k <= gridSizeN-1; ++k) {
+                    int jOther = gridSizeN - j;
+                    int sign = (m % 2 == 0 ? 1 : -1);
+                    collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+                    collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+          }
+     }
 
      // Write these to file
      std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
      WriteToHDF5(collGrid, filename, "top");
      filename = "errors_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
      WriteToHDF5(collGridErrors, filename, "top");
-
 }
 
 
