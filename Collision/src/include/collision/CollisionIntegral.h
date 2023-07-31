@@ -14,7 +14,8 @@
 #include "PolynomialBasis.h"
 
 
-void calculateAllCollisions();
+// TEMPORARY. This is bound to the pybind module but does nothing ATM.  
+inline void calculateAllCollisions() {}
 
 
 // 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
@@ -42,7 +43,7 @@ public:
     };
 
 
-    CollisionIntegral4(int polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {
+    CollisionIntegral4(std::size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {
         //------ GSL initialization
         gsl_rng_env_setup();
         // Create a random number generator for the integration
@@ -84,6 +85,12 @@ public:
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters) const;
 
+    // Overload of the above (for testing)
+    inline double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
+        int m, int n, int j, int k) const {
+            
+        return calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, initializeIntegrandParameters(m, n, j, k));
+    }
 
     // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
     // Returns { result, error }

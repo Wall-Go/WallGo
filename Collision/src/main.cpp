@@ -29,10 +29,6 @@ void printUsage(FILE *fp, const char *path) {
 				"Test the hdf5 output routines by writing dummy data and exit.\n");
 }
 
-// TEMPORARY. This is bound to the pybind module but does nothing ATM.  
-void calculateAllCollisions() {}
-
-
 // Count how many independent collision integrals there are for basis with N polynomials
 long countIndependentIntegrals(int N) {
      long count = (N-1)*(N-1)*(N-1)*(N-1);

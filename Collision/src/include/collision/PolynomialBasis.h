@@ -20,10 +20,10 @@
 class Chebyshev {
 
 private:
-    size_t N = 1;
+    std::size_t N = 1;
 
 public:
-    Chebyshev(size_t basisSize) {
+    Chebyshev(std::size_t basisSize) {
         N = basisSize;
     }
 
@@ -61,7 +61,7 @@ public:
     }
 
 
-    inline size_t getBasisSize() const { return N; }
+    inline std::size_t getBasisSize() const { return N; }
 
 };
 
