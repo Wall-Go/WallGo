@@ -56,47 +56,48 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 
 	std::cout << "Now evaluating all collision integrals\n" << std::endl;
 
-     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-     // which means we only need j <= N/2
+	// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+	// which means we only need j <= N/2
 
-     // m,n = Polynomial indices
-     #pragma omp parallel for collapse(4)
-     for (int m = 2; m <= gridSizeN; ++m) 
-     for (int n = 1; n <= gridSizeN-1; ++n) {
-          // j,k = grid momentum indices 
-          for (int j = 1; j <= gridSizeN/2; ++j)
-          for (int k = 1; k <= gridSizeN-1; ++k) {
+	// m,n = Polynomial indices
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
+		// j,k = grid momentum indices 
+		for (int j = 1; j <= gridSizeN/2; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
 
-			// Monte Carlo result for the integral + its error
-			std::array<double, 2> resultMC;
+		// Monte Carlo result for the integral + its error
+		std::array<double, 2> resultMC;
 
-               // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-               if (2*j == gridSizeN && m % 2 != 0) {
-                    resultMC[0] = 0.0;
-                    resultMC[1] = 0.0;
-               } else {
-                    resultMC = collisionIntegral.evaluate(m, n, j, k);
-               }
+			// Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+			if (2*j == gridSizeN && m % 2 != 0) {
+				resultMC[0] = 0.0;
+				resultMC[1] = 0.0;
+			} else {
+				resultMC = collisionIntegral.evaluate(m, n, j, k);
+			}
 
-               collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
-               collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
+			collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
+			collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-			printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+		printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-          } // end j,k
-     } // end m,n
+		} // end j,k
+	} // end m,n
 
-     // Fill in the j > N/2 elements
-     for (int m = 2; m <= gridSizeN; ++m) 
-     for (int n = 1; n <= gridSizeN-1; ++n) {
-          for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
-          for (int k = 1; k <= gridSizeN-1; ++k) {
-               int jOther = gridSizeN - j;
-               int sign = (m % 2 == 0 ? 1 : -1);
-               collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
-               collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
-          }
-     }
+	// Fill in the j > N/2 elements
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
+		for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
+			int jOther = gridSizeN - j;
+			int sign = (m % 2 == 0 ? 1 : -1);
+			collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+			collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+		}
+	}
 
 	
 	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists

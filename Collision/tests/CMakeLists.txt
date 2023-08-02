@@ -1,7 +1,7 @@
 
 set(BINARY ${CMAKE_PROJECT_NAME}_tests)
 
-set(TEST_SOURCES test_main.cpp test_integrand.cpp)
+set(TEST_SOURCES test_main.cpp test_integrand.cpp test_integration.cpp)
 
 # Get latest release of Google Test from github 
 include(FetchContent)
