@@ -9,6 +9,19 @@ add_library(${BINARY}_lib STATIC ${SOURCES})
 # main executable. Don't rebuild sources here
 add_executable(${BINARY} main.cpp)
 
+
+## For MacOS need to manually setup OpenMP
+if (APPLE)
+    set(CMAKE_CXX_COMPILER clang++)
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "omp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+
+endif()
+
 ## External packages
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
@@ -22,10 +35,10 @@ target_link_libraries(${BINARY}_lib PUBLIC
     ${GSL_LIBRARIES}
 )
 
-if(OpenMP_CXX_FOUND)
+if (OpenMP_CXX_FOUND)
     target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
 else()
-    message(STATUS "==== NOTE: OpenMP installation not found, disabling multithreading")
+    message(WARNING "==== NOTE: OpenMP installation not found, disabling multithreading")
 endif()
 
 #---- Header includes
