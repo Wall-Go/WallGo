@@ -47,8 +47,6 @@ long countIndependentIntegrals(int N) {
 // Temporary routine for illustrating how we can generate all collision terms + write them to hdf5 file
 void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 
-	std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
-
 	int gridSizeN = collisionIntegral.getPolynomialBasisSize();
 
 	Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
@@ -128,9 +126,9 @@ int main(int argc, char *argv[]) {
 	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
 	* Currently the matrix elements are just hard coded, in a more realistic setting they would probably be read from elsewhere. */
 
-/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
-* These are given as inputs to CollElem when constructing CollElem objects. 
-* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
+	/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
+	* These are given as inputs to CollElem when constructing CollElem objects. 
+	* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
 
 	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case). 
 	* IE: this object calculates eq. (A1) in 2204.13120, with delta f replace with Chebyshev polynomials.
@@ -144,8 +142,8 @@ int main(int argc, char *argv[]) {
 	//---------------
 
 	// Parse command line arguments
-int opt;
-while ((opt = getopt(argc, argv, "w")) != -1) {
+	int opt;
+	while ((opt = getopt(argc, argv, "w")) != -1) {
 		switch (opt) {
 			case 'h':
 				// Print usage and exit
@@ -164,19 +162,19 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 			default:
 				abort();
 		}
-}
+	}
 
 
 	// 2->2 scatterings so 4 external particles
 	using CollisionElement = CollElem<4>;
 
-     //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
-     // Thermal
+	//**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
+	// Thermal
 	double mq2 = 0.251327; // quark
 	double mg2 = 3.01593; // SU(3) gluon
-     // Vacuum
-     // TODO if needed
-     double msqVacuum = 0.0;
+	// Vacuum
+	// TODO if needed
+	double msqVacuum = 0.0;
 
 	
 	// define particles that we include in matrix elements
@@ -226,7 +224,6 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
 
 	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
-
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
