@@ -8,96 +8,17 @@
 #include <iostream>
 
 #include "FourVector.h"
+#include "ParticleSpecies.h"
 
-// definition in main.cpp
-//void calculateAllCollisions();
-
-
-// Boson or fermion?
-enum class EParticleType {
-	BOSON, FERMION
-};
 
 struct Mandelstam {
 	double s, t, u;
 };
 
-class ParticleSpecies {
 
-public: 
-
-	// We prolly don't want a default constructor - the user should at the very least specify particle type
-
-	ParticleSpecies(std::string speciesName, EParticleType particleType) : type(particleType) {
-		name = speciesName;
-		vacuumMassSquared = 0.0;
-		thermalMassSquared = 0.0;
-	}
-
-	ParticleSpecies(std::string speciesName, EParticleType particleType, double msqVacuum, double msqThermal) 
-		: type(particleType)  
-	{
-		name = speciesName;
-		vacuumMassSquared = msqVacuum;
-		thermalMassSquared = msqThermal;
-	}
-
-	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
-	inline bool isInEquilibrium() const { return bInEquilibrium; }
-
-	inline std::string getName() const { return name; }
-
-
-	// Equilibrium distribution function for the particle species
-	double fEq(double energy) const {
-		double res = 0.0;
-		if (type == EParticleType::BOSON) {
-			// TODO better cutoff
-			res = 1.0 / (exp(energy) - 1.0 + 1e-6);
-		} else {
-			res = 1.0 / (exp(energy) + 1.0);
-		}
-		return res;
-	}
-
-	inline double getDeltaF() const { return deltaF; }
-	// Set out-of-equilibrium part of distribution function
-	void setDeltaF(double df) {
-		if (bInEquilibrium) {
-			std::cerr << "Warning: setDeltaF() called with bInEquilibrium = true\n";
-			return;
-		}
-		deltaF = df;
-	}
-
-public:
-	// TODO setters for these 
-	// Neglect mass in dispersion relations or not? (this flag is not used ATM)
-	bool bUltrarelativistic = true;
-	// Is the particle assumed to be in thermal equilibrium?
-	bool bInEquilibrium = false;
-
-	double vacuumMassSquared;
-	double thermalMassSquared;
-
-private:
-	std::string name;
-
-	// Set this in constructor using initialization list
-	const EParticleType type;
-	// Current deviation from equilibrium for the particle // TODO does this make sense here? It's a feature of whole particle species
-	double deltaF = 0.0;
-	
-};
-
-
-/* CollElem class: takes in 4 particle species i,j,m,n and constructs matrix element 
-* and population factor ij -> mn scattering process. The full collision integral is constructed 
-* from a bunch of these + the kinematic prefactor  */
+/* CollElem class: This describes collision process with external particles types being fixed */
 template <std::size_t NPARTICLES>
 class CollElem {
-
-	// For now, no info about momenta in this class
 
 public:
 
@@ -113,25 +34,8 @@ public:
 		return m;
 	}
 
-	// Evaluate eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
-	double populationFactor(const std::array<FourVector, NPARTICLES> &momenta) const {
-
-		double f1 = particles[0].fEq( momenta[0].energy() );
-		double f2 = particles[1].fEq( momenta[1].energy() );
-		double f3 = particles[2].fEq( momenta[2].energy() );
-		double f4 = particles[3].fEq( momenta[3].energy() );
-		
-		double res =  std::exp(momenta[1].energy()) * particles[0].getDeltaF() / (f1*f1)
-					+ std::exp(momenta[0].energy()) * particles[1].getDeltaF() / (f2*f2)
-					- std::exp(momenta[3].energy()) * particles[2].getDeltaF() / (f3*f3)
-					- std::exp(momenta[2].energy()) * particles[3].getDeltaF() / (f4*f4);
-
-		res = res * f1*f2*f3*f4;
-		return res;
-	}
-
-	// Calculate matrix element times population factor for this 2->2 process 
-	double evaluate(const std::array<FourVector, NPARTICLES> &momenta) const {
+	// Calculate |M|^2 
+	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) const {
 
 		// !!! the matrix elements that I've hardcoded here are actually 1/N_t |M| => change this??
 
@@ -174,10 +78,38 @@ public:
 			matrixElementSquared = 80./3. * gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2));
 		}
 
-		return matrixElementSquared * populationFactor(momenta);
+		return matrixElementSquared;
 	}
 
-// TODO
+	// Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
+	double evaluatePopulationFactor(const std::array<FourVector, NPARTICLES> &momenta, 
+										const std::array<double, NPARTICLES> &deltaF) const {
+
+		// delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i
+
+		double f1 = particles[0].fEq( momenta[0].energy() );
+		double f2 = particles[1].fEq( momenta[1].energy() );
+		double f3 = particles[2].fEq( momenta[2].energy() );
+		double f4 = particles[3].fEq( momenta[3].energy() );
+		
+		double res =  std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
+					+ std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
+					- std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
+					- std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
+
+		res = res * f1*f2*f3*f4;
+		return res;
+	}
+
+
+
+	// Calculate matrix element times population factor for this 2->2 process 
+	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
+						const std::array<double, NPARTICLES> &deltaF) const {
+
+		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
+	}
+
 public:
 
 	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1

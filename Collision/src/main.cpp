@@ -29,10 +29,6 @@ void printUsage(FILE *fp, const char *path) {
 				"Test the hdf5 output routines by writing dummy data and exit.\n");
 }
 
-// TEMPORARY. This is bound to the pybind module but does nothing ATM.  
-void calculateAllCollisions() {}
-
-
 // Count how many independent collision integrals there are for basis with N polynomials
 long countIndependentIntegrals(int N) {
      long count = (N-1)*(N-1)*(N-1)*(N-1);
@@ -51,48 +47,54 @@ long countIndependentIntegrals(int N) {
 // Temporary routine for illustrating how we can generate all collision terms + write them to hdf5 file
 void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 
-	std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
-
 	int gridSizeN = collisionIntegral.getPolynomialBasisSize();
 
 	Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
 	Array4D collGridErrors(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
 
 	std::cout << "Now evaluating all collision integrals\n" << std::endl;
+	// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+	// which means we only need j <= N/2
 
-	// m,n = Polynomial indices. 
-	for (int m = 2; m <= gridSizeN; ++m) for (int n = 1; n <= gridSizeN-1; ++n) {
+	// m,n = Polynomial indices
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
 		// j,k = grid momentum indices 
-		for (int j = 1; j <= gridSizeN-1; ++j) for (int k = 1; k <= gridSizeN-1; ++k) {
+		for (int j = 1; j <= gridSizeN/2; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
 
-			// Monte Carlo result for the integral + its error
-			std::array<double, 2> resultMC;
+		// Monte Carlo result for the integral + its error
+		std::array<double, 2> resultMC;
 
-			// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-			// which means we only need j <= N/2
-			if (2*j > gridSizeN){
-				int jOther = gridSizeN - j;
-				int sign = (m % 2 == 0 ? 1 : -1);
-				resultMC[0] = sign * collGrid[m-2][n-1][jOther-1][k-1];
-				resultMC[1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
-			}
 			// Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-			else if (2*j == gridSizeN && m % 2 != 0) {
+			if (2*j == gridSizeN && m % 2 != 0) {
 				resultMC[0] = 0.0;
 				resultMC[1] = 0.0;
 			} else {
-
-				resultMC = collisionIntegral.evaluate(m, n, j, k, massSquared);
+				resultMC = collisionIntegral.evaluate(m, n, j, k);
 			}
-			
+
 			collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
 			collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-			printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+		printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
-		} // end j, k
+		} // end j,k
 	} // end m,n
 
+	// Fill in the j > N/2 elements
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
+		for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
+			int jOther = gridSizeN - j;
+			int sign = (m % 2 == 0 ? 1 : -1);
+			collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+			collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+		}
+	}
 	
 	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
 	std::string filename = "collisions_N" + std::to_string(gridSizeN) + ".hdf5";
@@ -102,6 +104,7 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 	metadata.basisSize = gridSizeN;
 	metadata.basisName = "Chebyshev";
 	metadata.integrator = "Vegas Monte Carlo (GSL)";
+
 
 	writeMetadata(h5File, metadata);
 
@@ -123,9 +126,9 @@ int main(int argc, char *argv[]) {
 	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
 	* Currently the matrix elements are just hard coded, in a more realistic setting they would probably be read from elsewhere. */
 
-/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
-* These are given as inputs to CollElem when constructing CollElem objects. 
-* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
+	/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
+	* These are given as inputs to CollElem when constructing CollElem objects. 
+	* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
 
 	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case). 
 	* IE: this object calculates eq. (A1) in 2204.13120, with delta f replace with Chebyshev polynomials.
@@ -139,8 +142,8 @@ int main(int argc, char *argv[]) {
 	//---------------
 
 	// Parse command line arguments
-int opt;
-while ((opt = getopt(argc, argv, "w")) != -1) {
+	int opt;
+	while ((opt = getopt(argc, argv, "w")) != -1) {
 		switch (opt) {
 			case 'h':
 				// Print usage and exit
@@ -159,36 +162,26 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 			default:
 				abort();
 		}
-}
-
+	}
 
 
 	// 2->2 scatterings so 4 external particles
 	using CollisionElement = CollElem<4>;
-	
-	// define particles that we include in matrix elements
-	ParticleSpecies topQuark("top", EParticleType::FERMION);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION);
-	ParticleSpecies gluon("gluon", EParticleType::BOSON);
 
-	// Set masses squared. These need to be in units of temperature, ie. (m/T)^2
+	//**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
+	// Thermal
 	double mq2 = 0.251327; // quark
 	double mg2 = 3.01593; // SU(3) gluon
+	// Vacuum
+	// TODO if needed
+	double msqVacuum = 0.0;
 
-	topQuark.thermalMassSquared = mq2;
-	lightQuark.thermalMassSquared = mq2;
-	gluon.thermalMassSquared = mg2;
+	
+	// define particles that we include in matrix elements
+	ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
+	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
+	ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2);
 
-	topQuark.vacuumMassSquared = 0.0;
-	lightQuark.vacuumMassSquared = 0.0;
-	gluon.vacuumMassSquared = 0.0;
-
-	// Which particles are treated as always being in equilibrium?
-	topQuark.bInEquilibrium = false;
-	lightQuark.bInEquilibrium = true;
-	gluon.bInEquilibrium = true;
-
-	// TODO should prob have a constructor that takes all these in as eg. a struct
 
 	// Then create collision elements for 2->2 processes involving these. 
 	// By 'collision element' I mean |M|^2 * P[ij -> nm], where P is the population factor involving distribution functions.
@@ -214,8 +207,7 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 
 	std::cout << "Running speed test: integral C[2,1,1,1]\n";
 	auto startTime = std::chrono::steady_clock::now();
-
-	collInt.evaluate(2, 1, 1, 1, {0.0, 0.0, 0.0, 0.0});
+	collInt.evaluate(2, 1, 1, 1);
 
 	auto endTime = std::chrono::steady_clock::now();
 
@@ -230,7 +222,8 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 	auto minutes = std::chrono::duration_cast<std::chrono::minutes>(totalTime).count() % 60;
 
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
-	std::cout << "Estimated time for all " << nCollisionTerms << " collision integrals: " 
+
+	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
@@ -241,18 +234,19 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 /*
 	// FOR PROFILING: just calculate a few terms and exit
 
-	std::array<double, 4> massSquared({0.0, 0.0, 0.0, 0.0});
 	std::array<double, 2> resultMC;
 
 
 	int m, n, j, k;
 
 	m = 2; n = 1; j = 1; k = 1;
-	resultMC = collInt.evaluate(m, n, j, k, massSquared);
+
+	resultMC = collInt.evaluate(m, n, j, k);
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
 	m = 6; n = 4; j = 11; k = 9;
-	resultMC = collInt.evaluate(m, n, j, k, massSquared);
+	resultMC = collInt.evaluate(m, n, j, k);
+
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 */
 

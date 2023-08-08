@@ -20,10 +20,10 @@
 class Chebyshev {
 
 private:
-    size_t N = 1;
+    std::size_t N = 1;
 
 public:
-    Chebyshev(size_t basisSize) {
+    Chebyshev(std::size_t basisSize) {
         N = basisSize;
     }
 
@@ -47,12 +47,12 @@ public:
     inline double rhoPar_to_pPar(double rho_par) const { return -log(0.5 * (1 - rho_par)); } 
 
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
-    inline double TmTn(int m, int n, double rhoZ, double rhoPar) {
+    inline double TmTn(int m, int n, double rhoZ, double rhoPar) const {
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
     
     // Same as above but with FourVector input
-    inline double TmTn(int m, int n, const FourVector &FV) {
+    inline double TmTn(int m, int n, const FourVector &FV) const {
         double pZ = FV.zComp();
         double pPar = FV.parComp();
         double rhoZ = pZ_to_rhoZ(pZ);
@@ -61,7 +61,7 @@ public:
     }
 
 
-    inline size_t getBasisSize() const { return N; }
+    inline std::size_t getBasisSize() const { return N; }
 
 };
 

@@ -6,6 +6,8 @@
 
 - pybind11
 
+- OpenMP (optional)
+
 
 
 ## Installing dependencies
