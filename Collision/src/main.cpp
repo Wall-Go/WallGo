@@ -55,7 +55,6 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 	Array4D collGridErrors(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
 
 	std::cout << "Now evaluating all collision integrals\n" << std::endl;
-
 	// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
 
@@ -98,7 +97,6 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 			collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
 		}
 	}
-
 	
 	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
 	std::string filename = "collisions_N" + std::to_string(gridSizeN) + ".hdf5";
@@ -108,6 +106,7 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 	metadata.basisSize = gridSizeN;
 	metadata.basisName = "Chebyshev";
 	metadata.integrator = "Vegas Monte Carlo (GSL)";
+
 
 	writeMetadata(h5File, metadata);
 
@@ -168,7 +167,6 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 }
 
 
-
 	// 2->2 scatterings so 4 external particles
 	using CollisionElement = CollElem<4>;
 
@@ -211,7 +209,6 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 
 	std::cout << "Running speed test: integral C[2,1,1,1]\n";
 	auto startTime = std::chrono::steady_clock::now();
-
 	collInt.evaluate(2, 1, 1, 1);
 
 	auto endTime = std::chrono::steady_clock::now();
@@ -227,7 +224,9 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 	auto minutes = std::chrono::duration_cast<std::chrono::minutes>(totalTime).count() % 60;
 
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
+
 	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
+
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
@@ -237,17 +236,20 @@ while ((opt = getopt(argc, argv, "w")) != -1) {
 
 /*
 	// FOR PROFILING: just calculate a few terms and exit
+
 	std::array<double, 2> resultMC;
 
 
 	int m, n, j, k;
 
 	m = 2; n = 1; j = 1; k = 1;
+
 	resultMC = collInt.evaluate(m, n, j, k);
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
 	m = 6; n = 4; j = 11; k = 9;
 	resultMC = collInt.evaluate(m, n, j, k);
+
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 */
 
