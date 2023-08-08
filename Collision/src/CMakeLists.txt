@@ -10,17 +10,24 @@ add_library(${BINARY}_lib STATIC ${SOURCES})
 add_executable(${BINARY} main.cpp)
 
 
-## For MacOS need to manually setup OpenMP
-if (APPLE)
+## For MacOS, may need to manually setup OpenMP
+if(APPLE)
+    set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_CXX_LIB_NAMES "omp")
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_LIB_NAMES "libomp")
         set(OpenMP_omp_LIBRARY omp)
     endif()
 
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "libomp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
 endif()
+
 
 ## External packages
 find_package(HDF5 REQUIRED CXX)

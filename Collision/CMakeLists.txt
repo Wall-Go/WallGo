@@ -58,6 +58,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 
+
 # Will build a 'core' library from code in ./src, apart from main.cpp.
 # Using the core lib we then build the 'main' program, a separate unit test module (if in Debug mode) and a separate pybind11 module 
 
@@ -74,8 +75,12 @@ if(BUILD_UNIT_TESTS)
 endif()
 
 
-# Pybind11
-option(BUILD_PYTHON_MODULE "Build Python module" ON)
+# Pybind11: build the module unless flag was disabled by user 
+if(NOT BUILD_PYTHON_MODULE) 
+	option(BUILD_PYTHON_MODULE "Build Python module" ON)
+endif()
+
+
 if (BUILD_PYTHON_MODULE)
 	add_subdirectory(pybind)
 endif()
