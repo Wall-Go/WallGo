@@ -4,38 +4,7 @@
 #include "CollisionIntegral.h"
 #include "CollElem.h"
 
-// Monte Carlo integration
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_monte_vegas.h>
-
-namespace gslWrapper {
-     // Helpers for GSL integration routines. note that we cannot pass a member function by reference,
-     // so we dodge this in the wrapper by passing a reference to the object whose function we want to integrate
-
-     struct gslFunctionParams {
-          // Pointer to the object whose member function we are integrating
-          CollisionIntegral4* pointerToObject;
-          // Additional (non-integration variable) parameters needed to evaluate the integrand
-          CollisionIntegral4::IntegrandParameters integrandParameters;
-     };
-
-     // pp should be of gslFunctionParams type
-     inline double integrandWrapper(double* intVars, size_t dim, void* pp) {
-          
-          // GSL requires size_t as input: the logic is that dim should be used to check that intVars is correct size.
-          // But I'm a badass and just do this:
-          (void)dim;
-
-          gslFunctionParams* params = static_cast<gslFunctionParams*>(pp);
-
-          double p2 = intVars[0];
-          double phi2 = intVars[1];
-          double phi3 = intVars[2];
-          double cosTheta2 = intVars[3];
-          double cosTheta3 = intVars[4];
-          return params->pointerToObject->calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, params->integrandParameters);
-     } 
-}
+#include "gslWrapper.h"
 
 
 // This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
@@ -69,12 +38,12 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      gsl_monte_vegas_state* gslState = gsl_monte_vegas_alloc(dim);
 
      // Warmup?!?
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, this->gslRNG, gslState, &mean, &error);
+     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, gslWrapper::rng, gslState, &mean, &error);
 
      /* TODO: GSL instructions on the Vegas routine did a bunch of "warmup" iterations before the actual "convergence" runs. 
      Need to understand what the optimal usage of Vegas routines is. */
 
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, this->gslRNG, gslState, &mean, &error);
+     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, gslWrapper::rng, gslState, &mean, &error);
      
      gsl_monte_vegas_free(gslState);
 
