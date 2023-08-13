@@ -69,6 +69,7 @@ class FreeEnergy:
     def __init__(
         self,
         f,
+        Tnucl,
         phi_eps=1e-3,
         T_eps=1e-3,
     ):
@@ -95,6 +96,36 @@ class FreeEnergy:
         self.f = f
         self.phi_eps = phi_eps
         self.T_eps = phi_eps
+        self.Tnucl = 100
+
+    def FiniteTPotential(self, X, T):
+        """
+        The effective potential as a function of the field and temperature.
+
+        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
+        which is user-defined.
+        """
+        X = np.asanyarray(X)
+        h,s = X[...,0], X[...,1]
+
+        v0 = 246.22
+        muhsq = 7825.
+        lamh = 0.129074
+        mussq = 10774.6
+        lams = 1.
+        lamm = 1.2
+
+        Vtree = -1/2.*muhsq*h**2 + 1/4.*lamh*h**4 -1/2.*mussq*s**2 + 1/4.*lams*s**4 + 1/4.*lamm*s**2*h**2 + 1/4.*lamh*v0**4
+
+        g = 0.652905
+        gp = 0.349791
+        yt = 0.992283
+        th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
+        ts = 1/12.*(2*lamm + 3*lams)
+
+        VT = 1/2.*(th*h**2 + ts*s**2)*T**2
+        
+        return Vtree + VT
 
 
     def findPhases(self, T):
