@@ -155,4 +155,6 @@ class FreeEnergy:
             A list of phases
 
         """
-        return np.array([[0, 0], [1.0, 1.7]])
+        ssq = (-self.ts*T**2+self.mussq)/self.lams
+        hsq = (-self.th*T**2+self.muhsq)/self.lamh
+        return np.array([[0,np.sqrt(ssq)],[np.sqrt(hsq),0]])
