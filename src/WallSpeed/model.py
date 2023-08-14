@@ -81,6 +81,8 @@ class FreeEnergy:
         ----------
         f : function
             Free energy density function :math:`f(\phi, T)`.
+        Tnucl : float
+            Value of the nucleation temperature, to be defined by the user
         phi_eps : float, optional
             Small value with which to take numerical derivatives with respect
             to the field.
@@ -126,6 +128,26 @@ class FreeEnergy:
         VT = 1/2.*(self.th*h**2 + self.ts*s**2)*T**2
         
         return Vtree + VT
+
+    def FiniteTPotentialSingletDerivative(self,X,T):
+        X = np.asanyarray(X)
+        h,s = X[...,0], X[...,1]
+
+        dVtree = -self.mussq*s + self.lams*s**3 + 1/2.*self.lamm*s*h**2 
+
+        dVT = self.ts*s*T**2
+        
+        return dVtree + dVT
+
+    def FiniteTPotentialHiggsDerivative(self,X,T):
+        X = np.asanyarray(X)
+        h,s = X[...,0], X[...,1]
+
+        dVtree = -self.muhsq*h + self.lamh*h**3 + 1/2.*self.lamm*s**2*h
+
+        dVT = self.th*h*T**2
+        
+        return dVtree + dVT
     
     def pressureHighT(self,T):
         """
