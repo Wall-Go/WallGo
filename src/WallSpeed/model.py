@@ -1,7 +1,8 @@
 """
 Classes for user input of models
 """
-#from .helpers import derivative # derivatives for callable functions
+import numpy as np # arrays, maths and stuff
+from .helpers import derivative # derivatives for callable functions
 
 
 class Particle:
@@ -17,6 +18,8 @@ class Particle:
         msqVacuum,
         msqThermal,
         statistics,
+        inEquilibrium,
+        ultrarelativistic,
         collisionPrefactors,
     ):
         r"""Initialisation
@@ -29,6 +32,10 @@ class Particle:
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
+        inEquilibrium : bool
+            True if particle is treated as in local equilibrium.
+        ultrarelativistic : bool
+            True if particle is treated as ultrarelativistic.
         collisionPrefactors : list
             Coefficients of collision integrals, :math:`\sim g^4`, currently
             must be of length 3.
@@ -39,15 +46,29 @@ class Particle:
             An object of the Particle class.
         """
         Particle.__validateInput(
-            msqVacuum, msqThermal, statistics, collisionPrefactors,
+            msqVacuum,
+            msqThermal,
+            statistics,
+            inEquilibrium,
+            ultrarelativistic,
+            collisionPrefactors,
         )
         self.msqVacuum = msqVacuum
         self.msqThermal = msqThermal
         self.statistics = statistics
+        self.inEquilibrium = inEquilibrium
+        self.ultrarelativistic = ultrarelativistic
         self.collisionPrefactors = collisionPrefactors
 
     @staticmethod
-    def __validateInput(msqVacuum, msqThermal, statistics, collisionPrefactors):
+    def __validateInput(
+        msqVacuum,
+        msqThermal,
+        statistics,
+        inEquilibrium,
+        ultrarelativistic,
+        collisionPrefactors,
+    ):
         """
         Checks input fits expectations
         """
@@ -61,6 +82,10 @@ class Particle:
             raise ValueError(
                 f"{statistics=} not in {Particle.STATISTICS_OPTIONS}"
             )
+        assert isinstance(inEquilibrium, bool), \
+            "inEquilibrium must be a bool"
+        assert isinstance(ultrarelativistic, bool), \
+            "ultrarelativistic must be a bool"
         assert len(collisionPrefactors) == 3, \
             "len(collisionPrefactors) must be 3"
 
@@ -165,9 +190,15 @@ class FreeEnergy:
         if self.dfdT is not None:
             return self.dfdT(X, T)
         else:
-            return (self(X, T + self.dT) - self(X, T)) / self.dT
+            return derivative(
+                lambda T: self(X, T),
+                T,
+                dx=self.dT,
+                n=1,
+                order=4,
+            )
 
-    def derivField(self,X,T):
+    def derivField(self, X, T):
 
         """
         The temperature-derivative of the effective potential.

@@ -1,4 +1,6 @@
 from .model import FreeEnergy
+from .helpers import derivative
+
 
 class Thermodynamics:
     """
@@ -36,20 +38,27 @@ class Thermodynamics:
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        p = self.freeEnergy.params # hard coded!
-        return (T**3*(p["ts"]**2 + 4*p["b"]*p["lams"])-p["ts"]*T*p["mussq"])/p["lams"]
-        return (
-            self.freeEnergy.pressureHighT(T + self.freeEnergy.dT)
-            - self.freeEnergy.pressureHighT(T)
-        ) / self.freeEnergy.dT
+        #p = self.freeEnergy.params # hard coded!
+        #return (T**3*(p["ts"]**2 + 4*p["b"]*p["lams"])-p["ts"]*T*p["mussq"])/p["lams"]
+        return derivative(
+            self.freeEnergy.pressureHighT,
+            T,
+            dx=self.freeEnergy.dT,
+            n=1,
+            order=4,
+        )
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        p = self.freeEnergy.params # hard coded!
-        return (3*T**2*(p["ts"]**2+4*p["b"]*p["lams"])-p["ts"]*p["mussq"])/p["lams"]
-        return return (
-            dpSym(T + self.freeEnergy.dT) - dpSym(T)
-        ) / self.freeEnergy.dT
+        #p = self.freeEnergy.params # hard coded!
+        #return (3*T**2*(p["ts"]**2+4*p["b"]*p["lams"])-p["ts"]*p["mussq"])/p["lams"]
+        return derivative(
+            self.freeEnergy.pressureHighT,
+            T,
+            dx=self.freeEnergy.dT,
+            n=2,
+            order=4,
+        )
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -73,20 +82,27 @@ class Thermodynamics:
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        p = self.freeEnergy.params # hard coded!
-        return (T**3*(p["th"]**2 + 4*p["b"]*p["lamh"])-p["th"]*T*p["muhsq"])/p["lamh"]
-        return (
-            self.freeEnergy.pressureLowT(T + self.freeEnergy.dT)
-            - self.freeEnergy.pressureLowT(T)
-        ) / self.freeEnergy.dT
+        #p = self.freeEnergy.params # hard coded!
+        #return (T**3*(p["th"]**2 + 4*p["b"]*p["lamh"])-p["th"]*T*p["muhsq"])/p["lamh"]
+        return derivative(
+            self.freeEnergy.pressureLowT,
+            T,
+            dx=self.freeEnergy.dT,
+            n=1,
+            order=4,
+        )
 
     #Second T-derivative of the pressure in the broken phase
     def ddpBrok(self, T):
-        p = self.freeEnergy.params # hard coded!
-        return (3*T**2*(p["th"]**2+4*p["b"]*p["lamh"])-p["th"]*p["muhsq"])/p["lamh"]
-        return (
-            dpBrok(T + self.freeEnergy.dT) - dpBrok(T)
-        ) / self.freeEnergy.dT
+        #p = self.freeEnergy.params # hard coded!
+        #return (3*T**2*(p["th"]**2+4*p["b"]*p["lamh"])-p["th"]*p["muhsq"])/p["lamh"]
+        return derivative(
+            self.freeEnergy.pressureLowT,
+            T,
+            dx=self.freeEnergy.dT,
+            n=2,
+            order=4,
+        )
 
     #Energy density in the broken phase
     def eBrok(self, T):

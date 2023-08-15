@@ -6,13 +6,14 @@ from pprint import pprint # pretty printing of dicts
 from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
+from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy
 
 """
 Model definition
 """
-print("Model: xSM")
+print("Model: xSM\n")
 v0 = 246.22
 muhsq = 7825.
 lamh = 0.129074
@@ -92,21 +93,31 @@ params = { # putting params together into dict for WallGo
     "b" : b,
 }
 pprint(params)
-fxSM = FreeEnergy(f, Tn, params=params, dfdT=dfdT, dfdPhi=dfdPhi)
-print("Free energy:", fxSM)
+fxSM = FreeEnergy(f, Tn, params=params, dfdPhi=dfdPhi)
+print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
 print(f"{fxSM.derivT([0, 1], 100)=}")
 print(f"{fxSM.derivField([0, 1], 100)=}")
+
+# looking at thermodynamics
+thermo = Thermodynamics(fxSM)
+print("\nThermodynamics:", thermo)
+print(f"{thermo.pSym(100)=}")
+print(f"{thermo.pBrok(100)=}")
+print(f"{thermo.ddpBrok(100)=}")
+
 
 # defining particles which are out of equilibrium for WallGo
 top = Particle(
     msqVacuum=lambda X: yt**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: yt**2 * T**2,
     statistics="Fermion",
+    inEquilibrium=False,
+    ultrarelativistic=False,
     collisionPrefactors=[g**4, g**4, g**4],
 )
 particles = [top]
-print("top quark:", top)
+print("\ntop quark:", top)
 
 # grid size
 M = 20
