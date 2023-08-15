@@ -1,7 +1,8 @@
 """
 A first example.
 """
-import numpy as np
+import numpy as np # arrays, maths and stuff
+from pprint import pprint # pretty printing of dicts
 from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
@@ -13,6 +14,7 @@ M = 20
 N = 20
 
 # model definition
+print("Model: xSM")
 p = {
     "v0" : 246.22,
     "muhsq" : 7825.,
@@ -24,6 +26,8 @@ p = {
     "gp" : 0.652905,
     "yt" : 0.992283,
 }
+pprint(p)
+
 
 th = 1/48.*(9*p["g"]**2+3*p["gp"]**2+2*(6*p["yt"]**2 + 12*p["lamh"]+ p["lamm"]))
 ts = 1/12.*(2*p["lamm"] + 3*p["lams"])
@@ -51,6 +55,7 @@ Tc = np.sqrt(
     / (p["ts"]**2*p["lamh"] - p["th"]**2*p["lams"])
 )
 Tn = 100
+print(f"{Tc=}, {Tn=}")
 
 # defining the free energy
 fxSM = FreeEnergy(f, Tn, params=p)
