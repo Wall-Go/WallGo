@@ -19,8 +19,8 @@ lamh = 0.129074
 mussq = 10774.6
 lams = 1
 lamm = 1.2
-g = 0.349791
-gp = 0.652905
+gp = 0.349791
+g = 0.652905
 yt = 0.992283
 
 # adding as model parameters for convenience
