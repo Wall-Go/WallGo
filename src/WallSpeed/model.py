@@ -14,7 +14,7 @@ class Particle:
 
     def __init__(
         self,
-        msqVaccum,
+        msqVacuum,
         msqThermal,
         statistics,
         collisionPrefactors,
@@ -23,7 +23,7 @@ class Particle:
 
         Parameters
         ----------
-        msqVaccum : function
+        msqVacuum : function
             Function :math:`m^2_0(\phi)`, should take a float and return one.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
@@ -39,15 +39,15 @@ class Particle:
             An object of the Particle class.
         """
         Particle.__validateInput(
-            msqVaccum, msqThermal, statistics, collisionPrefactors,
+            msqVacuum, msqThermal, statistics, collisionPrefactors,
         )
-        self.msqVacuum = msqVaccum
+        self.msqVacuum = msqVacuum
         self.msqThermal = msqThermal
         self.statistics = statistics
         self.collisionPrefactors = collisionPrefactors
 
     @staticmethod
-    def __validateInput(msqVaccum, msqThermal, statistics, collisionPrefactors):
+    def __validateInput(msqVacuum, msqThermal, statistics, collisionPrefactors):
         """
         Checks input fits expectations
         """
@@ -57,9 +57,9 @@ class Particle:
         T = 100
         assert isinstance(msqThermal(T), float), \
             f"msqThermal({T}) must return float"
-        if statistics not in ParticleConfig.STATISTICS_OPTIONS:
+        if statistics not in Particle.STATISTICS_OPTIONS:
             raise ValueError(
-                f"{statistics=} not in {ParticleConfig.STATISTICS_OPTIONS}"
+                f"{statistics=} not in {Particle.STATISTICS_OPTIONS}"
             )
         assert len(collisionPrefactors) == 3, \
             "len(collisionPrefactors) must be 3"
@@ -72,6 +72,7 @@ class FreeEnergy:
         Tnucl,
         phi_eps=1e-3,
         T_eps=1e-3,
+        params=None,
     ):
         r"""Initialisation
 
@@ -89,34 +90,24 @@ class FreeEnergy:
         T_eps : float, optional
             Small value with which to take numerical derivatives with respect
             to the temperature.
+        params : dict, optional
+            Additional fixed arguments to be passed to f as kwargs. Default is
+            None.
 
         Returns
         -------
         cls : FreeEnergy
             An object of the FreeEnergy class.
         """
-        self.f = f
+        if params is None:
+            self.f = f
+        else:
+            self.f = lambda v, T: f(v, T, **params)
+        self.Tnucl = Tnucl
         self.phi_eps = phi_eps
         self.T_eps = phi_eps
-        self.Tnucl = 100
 
-        #Parameters for the hard-coded potential
-        self.v0 = 246.22
-        self.muhsq = 7825.
-        self.lamh = 0.129074
-        self.mussq = 10774.6
-        self.lams = 1.
-        self.lamm = 1.2
-
-        self.g = 0.652905
-        self.gp = 0.349791
-        self.yt = 0.992283
-        self.th = 1/48.*(9*self.g**2+3*self.gp**2+2*(6*self.yt**2 + 12*self.lamh+ self.lamm))
-        self.ts = 1/12.*(2*self.lamm + 3*self.lams)
-
-        self.Tc = np.sqrt((-self.th*self.lams*self.muhsq + self.ts*self.lamh*self.mussq - np.sqrt(self.lamh*self.lams)*(self.ts*self.muhsq-self.th*self.mussq))/(self.ts**2*self.lamh - self.th**2*self.lams))
-
-    def FiniteTPotential(self, X, T):
+    def __call__(self, X, T):
         """
         The effective potential.
 
@@ -127,19 +118,15 @@ class FreeEnergy:
         T : float
             the temperature
 
-        For testing purposes this is a hard-coded potential, but this has to be replaced by f,
-        which is user-defined.
+        Returns
+        ----------
+        f : float
+            The free energy density at this field value and temperature.
+
         """
-        X = np.asanyarray(X)
-        h,s = X[...,0], X[...,1]
+        return f(X, T)
 
-        Vtree = -1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4 -1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4 + 1/4.*self.lamm*s**2*h**2 + 1/4.*self.lamh*self.v0**4
-
-        VT = 1/2.*(self.th*h**2 + self.ts*s**2)*T**2 -107.75*np.pi**2/90*T**4
-        
-        return Vtree + VT
-
-    def FiniteTPotentialTDerivative(self, X, T):            
+    def derivT(self, X, T):
         """
         The temperature-derivative of the effective potential.
 
@@ -150,18 +137,16 @@ class FreeEnergy:
         T : float
             the temperature
 
-        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
-        which is user-defined.
+        Returns
+        ----------
+        dfdT : float
+            The temperature derivative of the free energy density at this field
+            value and temperature.
         """
-        X = np.asanyarray(X)
-        h,s = X[...,0], X[...,1]
+        return (self(X, T + self.T_eps) - self(X, T)) / self.T_eps
 
-        dVT = (self.th*h**2 + self.ts*s**2)*T -4*107.75*np.pi**2/90*T**3
-        
-        return dVT
+    def derivField(self,X,T):
 
-    def FiniteTPotentialSingletDerivative(self,X,T):
-        
         """
         The temperature-derivative of the effective potential.
 
@@ -172,41 +157,25 @@ class FreeEnergy:
         T : float
             the temperature
 
-        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
-        which is user-defined.
-        """        
-        X = np.asanyarray(X)
-        h,s = X[...,0], X[...,1]
-
-        dVtree = -self.mussq*s + self.lams*s**3 + 1/2.*self.lamm*s*h**2 
-
-        dVT = self.ts*s*T**2
-        
-        return dVtree + dVT
-
-    def FiniteTPotentialHiggsDerivative(self,X,T):
-        """
-        The temperature-derivative of the effective potential.
-
-        Parameters
+        Returns
         ----------
-        X : array of floats
-            the field values (here: Higgs, singlet)
-        T : float
-            the temperature
-
-        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
-        which is user-defined.
+        dfdX : array_like
+            The field derivative of the free energy density at this field
+            value and temperature.
         """
         X = np.asanyarray(X)
-        h,s = X[...,0], X[...,1]
+        # this needs generalising to arbitrary fields
+        h, s = X[..., 0], X[..., 1]
+        Xdh = X.copy()
+        Xdh[..., 0] += self.phi_eps * np.ones_like(h)
+        Xds = X.copy()
+        Xds[..., 1] += self.phi_eps * np.ones_like(h)
 
-        dVtree = -self.muhsq*h + self.lamh*h**3 + 1/2.*self.lamm*s**2*h
+        dfdh = (self(Xdh, T) - self(X, T)) / self.phi_eps
+        dfds = (self(Xds, T) - self(X, T)) / self.phi_eps
 
-        dVT = self.th*h*T**2
-        
-        return dVtree + dVT
-    
+        return np.array([dfdh, dfds])
+
     def pressureHighT(self,T):
         """
         The pressure in the high-temperature (singlet) phase
@@ -216,15 +185,15 @@ class FreeEnergy:
         T : float
             The temperature for which to find the pressure.
 
-        For testing purposes the pressure was hard-coded, but it can be obtained from      
+        For testing purposes the pressure was hard-coded, but it can be obtained from
         """
-        return -self.FiniteTPotential(self.findPhases(T)[0],T)
+        return -self(self.findPhases(T)[0],T)
 
     def pressureLowT(self,T):
         """
-        Returns the value of the pressure as a function of temperature in the low-T phase        
+        Returns the value of the pressure as a function of temperature in the low-T phase
         """
-        return -self.FiniteTPotential(self.findPhases(T)[1],T)
+        return -self(self.findPhases(T)[1],T)
 
     def findPhases(self, T):
         """Finds all phases at a given temperature T

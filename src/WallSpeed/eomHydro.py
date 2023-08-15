@@ -271,19 +271,15 @@ def higgsEquationOfMotion(
 ):
     zLHiggs = z / higgsWidth
     kinetic = -higgsVEV * np.tanh(zLHiggs) / (higgsWidth * np.cosh(zLHiggs)) ** 2
-    potential = freeEnergy.FiniteTPotentialHiggsDerivative(
-        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
-    )
+    [h, s] = wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z)
+    [dVdh, dVds] = freeEnergy.derivField([h, s], T)
     offEquil = (
         0.5
         * 12
-        * Veff.dTopMassdh(
-            wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
-            T,
-        ) #need to rewrite
+        * Veff.dTopMassdh([h, s], T) #need to rewrite
         * offEquilDeltas[0, 0]
     )
-    return kinetic + potential + offEquil
+    return kinetic + dVdh + offEquil
 
 
 def singletPressureMoment(
@@ -414,9 +410,8 @@ def singletEquationOfMotion(
     kinetic = (
         singletVEV * np.tanh(zLSingletOff) / (singletWidth * np.cosh(zLSingletOff)) ** 2
     )
-    potential = freeEnergy.FiniteTPotentialSingletDerivative(
-        wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z), T
-    )
+    [h, s] = wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z)
+    [dVdh, dVds] = freeEnergy.derivField([h, s], T)
     return kinetic + potential
 
 
@@ -443,7 +438,7 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, freeEnergy):
     integrationLength = (20 + np.abs(wallOffSet)) * max(higgsWidth, singletWidth)
 
     integral = quad(
-        lambda z: freeEnergy.FiniteTPotential(
+        lambda z: freeEnergy(
             wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z),
             T,
         ),
@@ -452,7 +447,7 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, freeEnergy):
     )
 
     potential = integral[0] - integrationLength * (
-        freeEnergy.FiniteTPotential([higgsVEV, 0], T) + freeEnergy.FiniteTPotential([0, singletVEV], T)
+        freeEnergy([higgsVEV, 0], T) + freeEnergy([0, singletVEV], T)
     )
 
     print(higgsWidth, singletWidth, wallOffSet)
@@ -580,9 +575,9 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy):
     """
     return (
         0.5 * (dhdz**2 + dsdz**2)
-        - freeEnergy.FintiteTPotential([h, s], T)
-        - 0.5 * T*freeEnergy.FiniteTPotentialTDerivative([h, s], T) 
-        + 0.5 * np.sqrt(4 * s1**2 + T*freeEnergy.FiniteTPotentialTDerivative([h, s], T) ** 2) 
+        - freeEnergy([h, s], T)
+        - 0.5 * T*freeEnergy.derivT([h, s], T)
+        + 0.5 * np.sqrt(4 * s1**2 + T*freeEnergy.derivT([h, s], T) ** 2)
         - s2
     )
 
@@ -619,6 +614,5 @@ def deltaToTmunu(
     return T30, T33
 
 def plasmaVelocity(h, s, T, s1, freeEnergy):
-    return ((
-        -T*freeEnergy.FiniteTPotentialTDerivative([h, s], T)  + np.sqrt(4 * s1**2 + T*freeEnergy.FiniteTPotentialTDerivative([h, s], T)  ** 2)
-    ) / (2 * s1))
+    dVdT = freeEnergy.derivT([h, s], T)
+    return (-T * dVdT  + np.sqrt(4 * s1**2 + T * dVdT**2)) / (2 * s1)
