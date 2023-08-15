@@ -28,10 +28,10 @@ th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
 ts = 1/12.*(2*lamm + 3*lams)
 b = 107.75 * np.pi**2 / 90
 
-def f(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
+def f(field, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user defines their effective free energy
-    X = np.asanyarray(X)
-    h, s = X[...,0], X[...,1]
+    field = np.asanyarray(field)
+    h, s = field[...,0], field[...,1]
     V0 = (
         -1/2.*muhsq*h**2 + 1/4.*lamh*h**4
         -1/2.*mussq*s**2 + 1/4.*lams*s**4
@@ -43,24 +43,27 @@ def f(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     return V0 + VT + fsymT
 
 
-def dfdT(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
+def dfdT(field, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user may or may not define this
-    X = np.asanyarray(X)
-    h, s = X[...,0], X[...,1]
+    field = np.asanyarray(field)
+    h, s = field[...,0], field[...,1]
     th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
     ts = 1/12.*(2*lamm + 3*lams)
     return (th*h**2 + ts*s**2)*T - 4*b*T**3
 
 
-def dfdPhi(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
+def dfdPhi(field, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user may or may not define this
-    X = np.asanyarray(X)
-    h, s = X[...,0], X[...,1]
+    field = np.asanyarray(field)
+    h, s = field[...,0], field[...,1]
     dV0dh = -muhsq*h + lamh*h**3 + 1/2.*lamm*s**2*h
     dVTdh = th*h*T**2
     dV0ds = -mussq*s + lams*s**3 + 1/2.*lamm*s*h**2
     dVTds = ts*s*T**2
-    return np.array([dV0dh + dVTdh, dV0ds + dVTds])
+    return_val = np.empty_like(field)
+    return_val[..., 0] = dV0dh + dVTdh
+    return_val[..., 1] = dV0ds + dVTds
+    return return_val
 
 
 Tc = np.sqrt(

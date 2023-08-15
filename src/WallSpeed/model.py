@@ -199,7 +199,11 @@ class FreeEnergy:
             dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
             dfds = (self(Xds, T) - self(X, T)) / self.dPhi
 
-            return np.array([dfdh, dfds])
+            return_val = np.empty_like(X)
+            return_val[..., 0] = dfdh
+            return_val[..., 1] = dfds
+
+            return return_val
 
     def pressureHighT(self,T):
         """
