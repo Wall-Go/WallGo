@@ -23,16 +23,15 @@ g = 0.349791
 gp = 0.652905
 yt = 0.992283
 
+# adding as model parameters for convenience
 th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
 ts = 1/12.*(2*lamm + 3*lams)
+b = 107.75 * np.pi**2 / 90
 
-
-def f(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt):
+def f(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user defines their effective free energy
     X = np.asanyarray(X)
     h, s = X[...,0], X[...,1]
-    th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
-    ts = 1/12.*(2*lamm + 3*lams)
     V0 = (
         -1/2.*muhsq*h**2 + 1/4.*lamh*h**4
         -1/2.*mussq*s**2 + 1/4.*lams*s**4
@@ -40,25 +39,23 @@ def f(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt):
         + 1/4.*lamh*v0**4
     )
     VT = 1/2.*(th*h**2 + ts*s**2)*T**2
-    fsymT = - 107.75*np.pi**2/90*T**4
+    fsymT = - b*T**4
     return V0 + VT + fsymT
 
 
-def dfdT(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt):
+def dfdT(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user may or may not define this
     X = np.asanyarray(X)
     h, s = X[...,0], X[...,1]
     th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
     ts = 1/12.*(2*lamm + 3*lams)
-    return (th*h**2 + ts*s**2)*T -4*107.75*np.pi**2/90*T**3
+    return (th*h**2 + ts*s**2)*T - 4*b*T**3
 
 
-def dfdPhi(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt):
+def dfdPhi(X, T, v0, muhsq, lamh, mussq, lams, lamm, g, gp, yt, th, ts, b):
     # The user may or may not define this
     X = np.asanyarray(X)
     h, s = X[...,0], X[...,1]
-    th = 1/48.*(9*g**2+3*gp**2+2*(6*yt**2 + 12*lamh+ lamm))
-    ts = 1/12.*(2*lamm + 3*lams)
     dV0dh = -muhsq*h + lamh*h**3 + 1/2.*lamm*s**2*h
     dVTdh = th*h*T**2
     dV0ds = -mussq*s + lams*s**3 + 1/2.*lamm*s*h**2
@@ -77,16 +74,19 @@ Tn = 100 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 # defining the free energy for WallGo
-params = { # putting params together into dict
-    "v0" : 246.22,
-    "muhsq" : 7825.,
-    "lamh" : 0.129074,
-    "mussq" : 10774.6,
-    "lams" : 1.,
-    "lamm" : 1.2,
-    "g" : 0.349791,
-    "gp" : 0.652905,
-    "yt" : 0.992283,
+params = { # putting params together into dict for WallGo
+    "v0" : v0,
+    "muhsq" : muhsq,
+    "lamh" : lamh,
+    "mussq" : mussq,
+    "lams" : lams,
+    "lamm" : lamm,
+    "g" : g,
+    "gp" : gp,
+    "yt" : yt,
+    "th" : th,
+    "ts" : ts,
+    "b" : b,
 }
 pprint(params)
 fxSM = FreeEnergy(f, Tn, params=params, dfdT=dfdT, dfdPhi=dfdPhi)
