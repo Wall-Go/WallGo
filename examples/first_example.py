@@ -9,11 +9,9 @@ from WallSpeed.Boltzmann import BoltzmannSolver
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy
 
-# grid size
-M = 20
-N = 20
-
-# model definition
+"""
+Model definition
+"""
 print("Model: xSM")
 p = {
     "v0" : 246.22,
@@ -28,13 +26,14 @@ p = {
 }
 pprint(p)
 
-
 th = 1/48.*(9*p["g"]**2+3*p["gp"]**2+2*(6*p["yt"]**2 + 12*p["lamh"]+ p["lamm"]))
 ts = 1/12.*(2*p["lamm"] + 3*p["lams"])
 p["th"] = th # not necessary for model definition, but simplifies things
 p["ts"] = ts
 
+
 def f(X, T, p):
+    # The user defines their effective free energy
     X = np.asanyarray(X)
     h, s = X[...,0], X[...,1]
     V0 = (
@@ -47,6 +46,7 @@ def f(X, T, p):
     fsymT = - 107.75*np.pi**2/90*T**4
     return V0 + VT + fsymT
 
+
 Tc = np.sqrt(
     (
         -th*p["lams"]*p["muhsq"] + ts*p["lamh"]*p["mussq"]
@@ -54,21 +54,26 @@ Tc = np.sqrt(
     )
     / (p["ts"]**2*p["lamh"] - p["th"]**2*p["lams"])
 )
-Tn = 100
+Tn = 100 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
-# defining the free energy
+# defining the free energy for WallGo
 fxSM = FreeEnergy(f, Tn, params=p)
 print("Free energy:", fxSM)
 
-# particles which are out of equilibrium
+# defining particles which are out of equilibrium for WallGo
 top = Particle(
     msqVacuum=lambda X: p["yt"]**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: p["yt"]**2 * T**2,
     statistics="Fermion",
     collisionPrefactors=[p["g"]**4, p["g"]**4, p["g"]**4],
 )
+particles = [top]
 print("top quark:", top)
+
+# grid size
+M = 20
+N = 20
 
 # now compute the bubble wall speed
 # findWallVelocityLoop
