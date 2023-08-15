@@ -15,6 +15,7 @@ class Particle:
 
     def __init__(
         self,
+        name,
         msqVacuum,
         msqThermal,
         statistics,
@@ -26,15 +27,17 @@ class Particle:
 
         Parameters
         ----------
+        name : string
+            A string naming the particle.
         msqVacuum : function
             Function :math:`m^2_0(\phi)`, should take a float and return one.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
-        inEquilibrium : bool
+        inEquilibrium : boole
             True if particle is treated as in local equilibrium.
-        ultrarelativistic : bool
+        ultrarelativistic : boole
             True if particle is treated as ultrarelativistic.
         collisionPrefactors : list
             Coefficients of collision integrals, :math:`\sim g^4`, currently
@@ -46,6 +49,7 @@ class Particle:
             An object of the Particle class.
         """
         Particle.__validateInput(
+            name,
             msqVacuum,
             msqThermal,
             statistics,
@@ -53,6 +57,7 @@ class Particle:
             ultrarelativistic,
             collisionPrefactors,
         )
+        self.name = name
         self.msqVacuum = msqVacuum
         self.msqThermal = msqThermal
         self.statistics = statistics
@@ -62,6 +67,7 @@ class Particle:
 
     @staticmethod
     def __validateInput(
+        name,
         msqVacuum,
         msqThermal,
         statistics,

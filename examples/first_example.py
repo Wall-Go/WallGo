@@ -109,6 +109,7 @@ print(f"{thermo.ddpBrok(100)=}")
 
 # defining particles which are out of equilibrium for WallGo
 top = Particle(
+    "top",
     msqVacuum=lambda X: yt**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: yt**2 * T**2,
     statistics="Fermion",
