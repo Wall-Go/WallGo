@@ -106,6 +106,7 @@ class FreeEnergy:
         self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
+        self.p = params # Would not normally be stored. Here temporarily.
 
     def __call__(self, X, T):
         """
@@ -209,6 +210,6 @@ class FreeEnergy:
             A list of phases
 
         """
-        ssq = (-self.ts*T**2+self.mussq)/self.lams
-        hsq = (-self.th*T**2+self.muhsq)/self.lamh
+        ssq = (-self.p["ts"]*T**2+self.p["mussq"])/self.p["lams"]
+        hsq = (-self.p["th"]*T**2+self.p["muhsq"])/self.p["lamh"]
         return np.array([[0,np.sqrt(ssq)],[np.sqrt(hsq),0]])
