@@ -129,6 +129,16 @@ class FreeEnergy:
         
         return Vtree + VT
 
+        def FiniteTPotentialTDerivative(self, X, T):
+        """
+        """
+        X = np.asanyarray(X)
+        h,s = X[...,0], X[...,1]
+
+        dVT = (self.th*h**2 + self.ts*s**2)*T
+        
+        return dVT
+
     def FiniteTPotentialSingletDerivative(self,X,T):
         X = np.asanyarray(X)
         h,s = X[...,0], X[...,1]

@@ -581,8 +581,8 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy):
     return (
         0.5 * (dhdz**2 + dsdz**2)
         - freeEnergy.FintiteTPotential([h, s], T)
-        - 0.5 * Veff.enthalpy(h, s, T) #need to replace after implementing enthalpy function
-        + 0.5 * np.sqrt(4 * s1**2 + Veff.enthalpy(h, s, T) ** 2) #need to replace
+        - 0.5 * T*freeEnergy.FiniteTPotentialTDerivative([h, s], T) 
+        + 0.5 * np.sqrt(4 * s1**2 + T*freeEnergy.FiniteTPotentialTDerivative([h, s], T) ** 2) 
         - s2
     )
 
@@ -620,5 +620,5 @@ def deltaToTmunu(
 
 def plasmaVelocity(h, s, T, s1, freeEnergy):
     return ((
-        -Veff.enthalpy(h, s, T) + np.sqrt(4 * s1**2 + Veff.enthalpy(h, s, T) ** 2)
+        -T*freeEnergy.FiniteTPotentialTDerivative([h, s], T)  + np.sqrt(4 * s1**2 + T*freeEnergy.FiniteTPotentialTDerivative([h, s], T)  ** 2)
     ) / (2 * s1))
