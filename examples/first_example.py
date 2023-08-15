@@ -5,7 +5,8 @@ import numpy as np
 from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
-from WallSpeed import Particle, FreeEnergy, findWallVelocityLoop
+#from WallSpeed.eomHydro import findWallVelocityLoop
+from WallSpeed import Particle, FreeEnergy
 
 # grid size
 M = 20
@@ -53,6 +54,7 @@ Tn = 100
 
 # defining the free energy
 fxSM = FreeEnergy(f, Tn, params=p)
+print("Free energy:", fxSM)
 
 # particles which are out of equilibrium
 top = Particle(
@@ -61,6 +63,7 @@ top = Particle(
     statistics="Fermion",
     collisionPrefactors=[p["g"]**4, p["g"]**4, p["g"]**4],
 )
+print("top quark:", top)
 
 # now compute the bubble wall speed
 # findWallVelocityLoop
