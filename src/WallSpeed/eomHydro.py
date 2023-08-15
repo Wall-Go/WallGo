@@ -587,7 +587,7 @@ def deltaToTmunu(
     velocityAtCenter,
     Tm,
     offEquilDeltas,
-    higgsWidth
+    higgsWidth,
     grid,
     particleList,
     freeEnergy
