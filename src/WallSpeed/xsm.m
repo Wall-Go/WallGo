@@ -1,0 +1,395 @@
+(* ::Package:: *)
+
+Quit[];
+
+
+SetDirectory[NotebookDirectory[]];
+$LoadGroupMath=True;
+<<DRalgo`
+
+
+(* ::Chapter:: *)
+(*SM+sr1*)
+
+
+(*see 2102.11145 [hep-ph]*)
+
+
+(* ::Section:: *)
+(*Model*)
+
+
+Group={"SU3","SU2","U1"};
+RepAdjoint={{1,1},{2},0};
+scalar1={{{0,0},{1},Y\[Phi]/2},"C"};
+scalar2={{{0,0},{0},0},"R"};
+RepScalar={scalar1,scalar2};
+CouplingName={g3,g2,g1};
+
+
+Rep1={{{1,0},{1},Yq/2},"L"};
+Rep2={{{1,0},{0},Yu/2},"R"};
+Rep3={{{1,0},{0},Yd/2},"R"};
+Rep4={{{0,0},{1},Yl/2},"L"};
+Rep5={{{0,0},{0},Ye/2},"R"};
+RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
+
+
+(* ::Text:: *)
+(*The input for the gauge interactions to DRalgo are then given by*)
+
+
+RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
+RepFermion3Gen={RepFermion1Gen}//Flatten[#,1]&;
+
+
+(* ::Text:: *)
+(*The first element is the vector self-interaction matrix:*)
+
+
+{gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC}=AllocateTensors[Group,RepAdjoint,CouplingName,RepFermion3Gen,RepScalar];
+
+
+InputInv={{1,1},{True,False}};
+MassTerm1=CreateInvariant[Group,RepScalar,InputInv]//Simplify//FullSimplify;
+InputInv={{2,2},{True,True}};
+MassTerm2=CreateInvariant[Group,RepScalar,InputInv]//Simplify//FullSimplify;
+
+
+VMass=(
+	+muh2*MassTerm1
+	+mus2/2*MassTerm2
+	);
+
+
+\[Mu]ij=GradMass[VMass[[1]]]//Simplify//SparseArray;
+
+
+QuarticTerm1=MassTerm1[[1]]^2;
+QuarticTerm2=MassTerm2[[1]]^2;
+QuarticTerm3=MassTerm1[[1]]*MassTerm2[[1]];
+
+
+VQuartic=(
+	+lambdaH*QuarticTerm1
+	+lambdaS/4*QuarticTerm2
+	+lambdaHS/2*QuarticTerm3
+	);
+
+
+\[Lambda]4=GradQuartic[VQuartic];
+
+
+InputInv={{1,1,2},{True,False,True}};
+CubicTerm1=CreateInvariant[Group,RepScalar,InputInv][[1]]//Simplify;
+InputInv={{2,2,2},{True,True,True}};
+CubicTerm2=CreateInvariant[Group,RepScalar,InputInv][[1]]//Simplify;
+
+
+(*VCubic=(
+	+mum/2*CubicTerm1
+	+mu3/3*CubicTerm2
+	);*)
+
+
+(*\[Lambda]3=GradCubic[VCubic];*)
+
+
+(*InputInv={{2},{True}};
+TadpoleTerm1=CreateInvariant[Group,RepScalar,InputInv][[1]]//Simplify;*)
+
+
+(*VTadpole=mu1*TadpoleTerm1;*)
+
+
+(*\[Lambda]1=GradTadpole[VTadpole];*)
+
+
+InputInv={{1,1,2},{False,False,True}}; 
+YukawaDoublet1=CreateInvariantYukawa[Group,RepScalar,RepFermion3Gen,InputInv]//Simplify;
+
+
+Ysff=-yt1*GradYukawa[YukawaDoublet1[[1]]];
+
+
+YsffC=SparseArray[Simplify[Conjugate[Ysff]//Normal,Assumptions->{yt1>0}]];
+
+
+repY={
+Yu->4/3,
+Yd->-2/3,
+Yl->-1,
+Ye->-2,
+Yq->1/3,
+Y\[Phi]->1
+};
+
+
+(* ::Section:: *)
+(*Dimensional Reduction*)
+
+
+ImportModelDRalgo[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC,Verbose->False];
+PosFermion=PrintFermionRepPositions[];
+FermionMat=Table[{Nf,i},{i,PosFermion}];
+DefineNF[FermionMat]
+PerformDRhard[]
+
+
+BetaFunctions4D[]
+PrintCouplings[]//Simplify
+
+
+repPy={
+	g13d^2->g13Sq,g23d^2->g23Sq,g33d^2->g33Sq,\[Mu]sqSU3->musqSU3,\[Mu]sqSU2->musqSU2,\[Mu]sqU1->musqU1,
+	\[Lambda]VLL[x_]:>ToExpression[ToString[lambdaVLL]<>ToString[x]],
+	\[Lambda]VL[x_]:>ToExpression[ToString[lambdaVL]<>ToString[x]],
+	Nf->Nf,
+	\[Mu]3->mu3D,\[Mu]->mu4D};	
+
+
+BetaFunctions4D[][[1,2]]/.repY/.repPy//Expand//FortranForm
+
+
+BetaFunctions4D[][[All,1]]
+
+
+file="BetaFunctions4D.dat";
+DeleteFile[file];
+(*CreateFile[file];*)
+Table[WriteString[file,
+	BetaFunctions4D[][[i,1]]/.repY/.repPy//Expand//FortranForm,
+	",",
+(*	"d",
+	ToString[
+		BetaFunctions4D[][[i,1]]/.repY/.repPy//Expand//FortranForm
+	],"=",*)
+	ToString[
+		BetaFunctions4D[][[i,2]]/.repY/.repPy//Expand//FortranForm
+],"\n"],
+{i,Length[BetaFunctions4D[]]}]
+
+
+Import["BetaFunctions4D.dat"][[1]]
+
+
+?Import
+
+
+PrintTadpoles["LO"]
+PrintTadpoles["NLO"]
+
+
+PrintTemporalScalarCouplings[]
+
+
+PrintDebyeMass["LO"]
+PrintDebyeMass["NLO"]
+
+
+PrintScalarMass["LO"]//Simplify
+PrintScalarMass["NLO"]//Simplify
+
+
+PerformDRsoft[{}]
+
+
+PrintCouplingsUS[]
+
+
+PrintScalarMassUS["LO"]
+PrintScalarMassUS["NLO"]
+
+
+BetaFunctions3DUS[]
+
+
+PrintTadpolesUS["LO"]
+
+
+PerformDRsoft[{5}];
+
+
+PrintCouplingsUS[]
+
+
+PrintScalarMassUS["LO"]
+PrintScalarMassUS["NLO"]
+
+
+BetaFunctions3DUS[]
+
+
+PrintTensorUSDRalgo[]
+
+
+PerformDRsoft[{1,2,3,4}]
+
+
+PrintCouplingsUS[]
+
+
+PrintScalarMassUS["LO"]
+
+
+PrintTadpolesUS["LO"]
+
+
+BetaFunctions3DUS[]
+
+
+PrintPressureUS["LO"]
+PrintPressureUS["NLO"]
+
+
+CounterTerms4D[]
+
+
+(* ::Section:: *)
+(*Effective potential*)
+
+
+(*There are two options to define your model*)
+
+
+(*First, if you have used "PerformDRsoft[{1,2,3,4}]" the couplings can be defined with the command:*)
+
+
+(*DefineTensorsUS[]*)
+
+
+(*Second, you can define your custom model as below (here just taking the original model as an example)*)
+
+
+DefineNewTensorsUS[\[Mu]ij,\[Lambda]4,\[Lambda]3,gvss,gvvv];
+
+
+(*Do calculate the effective potential we first need to define a VeV*)
+
+
+\[CurlyPhi]vev={phi1,0,0,0,s1}//SparseArray; 
+DefineVEVS[\[CurlyPhi]vev];
+
+
+(*The field dependent masses are*)
+
+
+PrintTensorsVEV[];
+
+
+(* ::Subsection:: *)
+(*If we only want the 1 - loop/tree - level effective potential*)
+
+
+MassMatrix=PrintTensorsVEV[];
+ScalarMass=PrintTensorsVEV[][[1]]//Normal;
+VectorMass=MassMatrix[[2]]//Normal;
+
+
+ScalarMassDiag=Eigenvalues[ScalarMass]//DiagonalMatrix[#]&//Simplify;
+VectorMassDiag=Eigenvalues[VectorMass]//DiagonalMatrix[#]&//Simplify;
+
+
+CalculatePotentialUS[ScalarMassDiag,VectorMassDiag,CustomMasses->True]
+
+
+PrintEffectivePotential["LO"]//Expand
+
+
+file="Veff3dLO.dat";
+DeleteFile[file];
+(*CreateFile[file];*)
+WriteString[file,
+	ToString[
+		PrintEffectivePotential["LO"]/.repY/.repPy//Expand//FortranForm
+],"\n"]
+
+
+PrintEffectivePotential["NLO"]
+
+
+(* ::Subsection:: *)
+(*If we want the 2 - loop effective potential without explicit diagonalization*)
+
+
+DefineNewTensorsUS[\[Mu]ij,\[Lambda]4,\[Lambda]3,gvss,gvvv];
+
+
+\[CurlyPhi]vev={\[CurlyPhi],0,0,0,s}//SparseArray; 
+DefineVEVS[\[CurlyPhi]vev];
+
+
+MassMatrix=PrintTensorsVEV[];
+ScalarMass=PrintTensorsVEV[][[1]]//Normal;
+VectorMass=MassMatrix[[2]]//Normal;
+
+
+(*If we want the 2-loop effective potential we also need the scalar-mass diagonalization matrix:*)
+
+
+(*Since the masses are quite complicated it is useful to use the replacement*)
+
+
+HelpReplace={ScalarMass[[4;;5,4;;5]][[1,1]]->M11,ScalarMass[[4;;5,4;;5]][[1,2]]->M12,ScalarMass[[4;;5,4;;5]][[2,1]]->M12,ScalarMass[[4;;5,4;;5]][[2,2]]->M22};
+
+
+ScalarMassHelp=ScalarMass[[4;;5,4;;5]]//ReplaceAll[#,HelpReplace]&;
+
+
+HelpRevert=HelpReplace/.(a_->b_)->(b->a);
+
+
+ScalarEigenvectors=FullSimplify[
+    Transpose[Normalize/@Eigenvectors[ScalarMassHelp]]];
+
+
+(*Since we know that the matrix should be SO(2), let's write it as*)
+
+
+ScalDiaMatrix={{c\[Theta],-s\[Theta]},{s\[Theta],c\[Theta]}};
+
+
+(*We can then write the total rotation matrix as (first 3 components are already diagonal)*)
+
+
+ DSRot={{IdentityMatrix[3],0},{0,ScalDiaMatrix}}//ArrayFlatten;
+
+
+(*We might as well simplify the scalar masses as well*)
+
+
+ScalarMassDiag={{ScalarMass[[1;;3,1;;3]],0},{0,DiagonalMatrix[{\[Mu]S11,\[Mu]S22}]}}//ArrayFlatten//Simplify//FullSimplify;
+
+
+(*In this case it's easy to rotate the vectors explicitly to the mass basis*)
+
+
+VectorEigenvectors=FullSimplify[
+    Transpose[Normalize/@Eigenvectors[VectorMass[[11;;12,11;;12]]]],
+Assumptions->{#>0&/@Variables[VectorMass]}];
+ DVRot={{IdentityMatrix[10],0},{0,VectorEigenvectors}}//ArrayFlatten;
+
+
+(*And the diagonal vector mass matrix is*)
+
+
+VectorMassDiag=FullSimplify[Transpose[DVRot] . VectorMass . DVRot,
+Assumptions->{#>0&/@Variables[VectorMass]}];
+
+
+(*We could of course also just parameterize the vector-rotation and mass matrix as we did for the scalar one*)
+
+
+RotateTensorsCustomMass[DSRot,DVRot,ScalarMassDiag,VectorMassDiag];
+
+
+CalculatePotentialUS[];
+
+
+PrintEffectivePotential["LO"]
+
+
+PrintEffectivePotential["NLO"]
+
+
+PrintEffectivePotential["NNLO"]
