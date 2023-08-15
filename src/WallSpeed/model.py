@@ -70,8 +70,8 @@ class FreeEnergy:
         self,
         f,
         Tnucl,
-        phi_eps=1e-3,
-        T_eps=1e-3,
+        dPhi=1e-3,
+        dT=1e-3,
         params=None,
     ):
         r"""Initialisation
@@ -84,10 +84,10 @@ class FreeEnergy:
             Free energy density function :math:`f(\phi, T)`.
         Tnucl : float
             Value of the nucleation temperature, to be defined by the user
-        phi_eps : float, optional
+        dPhi : float, optional
             Small value with which to take numerical derivatives with respect
             to the field.
-        T_eps : float, optional
+        dT : float, optional
             Small value with which to take numerical derivatives with respect
             to the temperature.
         params : dict, optional
@@ -104,8 +104,8 @@ class FreeEnergy:
         else:
             self.f = lambda v, T: f(v, T, **params)
         self.Tnucl = Tnucl
-        self.phi_eps = phi_eps
-        self.T_eps = phi_eps
+        self.dPhi = dPhi
+        self.dT = dPhi
 
     def __call__(self, X, T):
         """
@@ -143,7 +143,7 @@ class FreeEnergy:
             The temperature derivative of the free energy density at this field
             value and temperature.
         """
-        return (self(X, T + self.T_eps) - self(X, T)) / self.T_eps
+        return (self(X, T + self.dT) - self(X, T)) / self.dT
 
     def derivField(self,X,T):
 
@@ -167,12 +167,12 @@ class FreeEnergy:
         # this needs generalising to arbitrary fields
         h, s = X[..., 0], X[..., 1]
         Xdh = X.copy()
-        Xdh[..., 0] += self.phi_eps * np.ones_like(h)
+        Xdh[..., 0] += self.dPhi * np.ones_like(h)
         Xds = X.copy()
-        Xds[..., 1] += self.phi_eps * np.ones_like(h)
+        Xds[..., 1] += self.dPhi * np.ones_like(h)
 
-        dfdh = (self(Xdh, T) - self(X, T)) / self.phi_eps
-        dfds = (self(Xds, T) - self(X, T)) / self.phi_eps
+        dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
+        dfds = (self(Xds, T) - self(X, T)) / self.dPhi
 
         return np.array([dfdh, dfds])
 

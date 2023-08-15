@@ -26,16 +26,6 @@ class Thermodynamics:
         """
         self.freeEnergy = freeEnergy
 
-        self.muhsq = freeEnergy.muhsq # this function shouldn't need to know these parameters
-        self.lamh = freeEnergy.lamh
-        self.mussq = freeEnergy.mussq
-        self.lams = freeEnergy.lams
-
-        self.th = freeEnergy.th
-        self.ts = freeEnergy.ts
-
-        self.b = np.pi**2 *107.75/90
-
 
     #JvdV: We should replace broken/symm labels with lowT/highT. Haven't done it yet, because hydro uses the same
     #therminology
@@ -46,11 +36,16 @@ class Thermodynamics:
 
     #T-derivative of the pressure in the symmetric phase
     def dpSym(self, T):
-        return (T**3*(self.ts**2 + 4*self.b*self.lams)-self.ts*T*self.mussq)/self.lams
+        return return (
+            self.freeEnergy.pressureHighT(T + self.freeEnergy.dT)
+            - self.freeEnergy.pressureHighT(T)
+        ) / self.freeEnergy.dT
 
     #Second T-derivative of the pressure in the symmetric phase
     def ddpSym(self, T):
-        return (3*T**2*(self.ts**2+4*self.b*self.lams)-self.ts*self.mussq)/self.lams
+        return return (
+            dpSym(T + self.freeEnergy.dT) - dpSym(T)
+        ) / self.freeEnergy.dT
 
     #Energy density in the symmetric phase
     def eSym(self, T):
@@ -74,11 +69,16 @@ class Thermodynamics:
 
     #T-derivative of the pressure in the broken phase
     def dpBrok(self, T):
-        return (T**3*(self.th**2 + 4*self.b*self.lamh)-self.th*T*self.muhsq)/self.lamh
+        return (
+            self.freeEnergy.pressureLowT(T + self.freeEnergy.dT)
+            - self.freeEnergy.pressureLowT(T)
+        ) / self.freeEnergy.dT
 
     #Second T-derivative of the pressure in the broken phase
     def ddpBrok(self, T):
-        return (3*T**2*(self.th**2+4*self.b*self.lamh)-self.th*self.muhsq)/self.lamh
+        return (
+            dpBrok(T + self.freeEnergy.dT) - dpBrok(T)
+        ) / self.freeEnergy.dT
 
     #Energy density in the broken phase
     def eBrok(self, T):

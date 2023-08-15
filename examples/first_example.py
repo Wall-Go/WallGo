@@ -38,8 +38,9 @@ def f(X, T, p):
         + 1/4.*p["lamm"]*s**2*h**2
         + 1/4.*p["lamh"]*p["v0"]**4
     )
-    VT = 1/2.*(p["th"]*h**2 + p["ts"]*s**2)*T**2 - 107.75*np.pi**2/90*T**4
-    return V0 + VT
+    VT = 1/2.*(p["th"]*h**2 + p["ts"]*s**2)*T**2
+    fsymT = - 107.75*np.pi**2/90*T**4
+    return V0 + VT + fsymT
 
 Tc = np.sqrt(
     (
