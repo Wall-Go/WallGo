@@ -1,8 +1,8 @@
 """
 Classes for user input of models
 """
-from .helpers import derivative # derivatives for callable functions
-
+#from .helpers import derivative # derivatives for callable functions
+import numpy as np
 
 class Particle:
     """Particle configuration
@@ -100,6 +100,7 @@ class FreeEnergy:
         self.T_eps = phi_eps
         self.Tnucl = 100
 
+        #Parameters for the hard-coded potential
         self.v0 = 246.22
         self.muhsq = 7825.
         self.lamh = 0.129074
@@ -115,9 +116,16 @@ class FreeEnergy:
 
     def FiniteTPotential(self, X, T):
         """
-        The effective potential as a function of the field and temperature.
+        The effective potential.
 
-        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
+        Parameters
+        ----------
+        X : array of floats
+            the field values (here: Higgs, singlet)
+        T : float
+            the temperature
+
+        For testing purposes this is a hard-coded potential, but this has to be replaced by f,
         which is user-defined.
         """
         X = np.asanyarray(X)
@@ -125,21 +133,46 @@ class FreeEnergy:
 
         Vtree = -1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4 -1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4 + 1/4.*self.lamm*s**2*h**2 + 1/4.*self.lamh*self.v0**4
 
-        VT = 1/2.*(self.th*h**2 + self.ts*s**2)*T**2
+        VT = 1/2.*(self.th*h**2 + self.ts*s**2)*T**2 -107.75*np.pi**2/90*T**4
         
         return Vtree + VT
 
-        def FiniteTPotentialTDerivative(self, X, T):
+    def FiniteTPotentialTDerivative(self, X, T):            
         """
+        The temperature-derivative of the effective potential.
+
+        Parameters
+        ----------
+        X : array of floats
+            the field values (here: Higgs, singlet)
+        T : float
+            the temperature
+
+        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
+        which is user-defined.
         """
         X = np.asanyarray(X)
         h,s = X[...,0], X[...,1]
 
-        dVT = (self.th*h**2 + self.ts*s**2)*T
+        dVT = (self.th*h**2 + self.ts*s**2)*T -4*107.75*np.pi**2/90*T**3
         
         return dVT
 
     def FiniteTPotentialSingletDerivative(self,X,T):
+        
+        """
+        The temperature-derivative of the effective potential.
+
+        Parameters
+        ----------
+        X : array of floats
+            the field values (here: Higgs, singlet)
+        T : float
+            the temperature
+
+        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
+        which is user-defined.
+        """        
         X = np.asanyarray(X)
         h,s = X[...,0], X[...,1]
 
@@ -150,6 +183,19 @@ class FreeEnergy:
         return dVtree + dVT
 
     def FiniteTPotentialHiggsDerivative(self,X,T):
+        """
+        The temperature-derivative of the effective potential.
+
+        Parameters
+        ----------
+        X : array of floats
+            the field values (here: Higgs, singlet)
+        T : float
+            the temperature
+
+        For testing purposes it has a hard-coded potential, but this has to be replaced by f,
+        which is user-defined.
+        """
         X = np.asanyarray(X)
         h,s = X[...,0], X[...,1]
 
@@ -161,17 +207,22 @@ class FreeEnergy:
     
     def pressureHighT(self,T):
         """
-        Returns the value of the pressure as a function of temperature in the high-T phase
+        The pressure in the high-temperature (singlet) phase
+
+        Parameters
+        ----------
+        T : float
+            The temperature for which to find the pressure.
+
+        For testing purposes the pressure was hard-coded, but it can be obtained from      
         """
-        ssq = (-self.ts*T**2+self.mussq)/self.lams
-        return -self.FiniteTPotential(np.array([0,np.sqrt(ssq)]),T)
+        return -self.FiniteTPotential(self.findPhases(T)[0],T)
 
     def pressureLowT(self,T):
         """
         Returns the value of the pressure as a function of temperature in the low-T phase        
         """
-        hsq = (-self.th*T**2+self.muhsq)/self.lamh
-        return -self.FiniteTPotential(np.array([np.sqrt(hsq),0]),T)
+        return -self.FiniteTPotential(self.findPhases(T)[1],T)
 
     def findPhases(self, T):
         """Finds all phases at a given temperature T
