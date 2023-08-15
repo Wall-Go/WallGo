@@ -96,5 +96,3 @@ class Thermodynamics:
     def csqBrok(self,T):
         return self.dpBrok(T)/self.deBrok(T)
 
-    def Tc(self):
-        return 1.

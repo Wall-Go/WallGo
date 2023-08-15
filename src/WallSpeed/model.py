@@ -1,8 +1,8 @@
 """
 Classes for user input of models
 """
-#from .helpers import derivative # derivatives for callable functions
-import numpy as np
+from .helpers import derivative # derivatives for callable functions
+
 
 class Particle:
     """Particle configuration
@@ -113,6 +113,8 @@ class FreeEnergy:
         self.yt = 0.992283
         self.th = 1/48.*(9*self.g**2+3*self.gp**2+2*(6*self.yt**2 + 12*self.lamh+ self.lamm))
         self.ts = 1/12.*(2*self.lamm + 3*self.lams)
+
+        self.Tc = np.sqrt((-self.th*self.lams*self.muhsq + self.ts*self.lamh*self.mussq - np.sqrt(self.lamh*self.lams)*(self.ts*self.muhsq-self.th*self.mussq))/(self.ts**2*self.lamh - self.th**2*self.lams))
 
     def FiniteTPotential(self, X, T):
         """
