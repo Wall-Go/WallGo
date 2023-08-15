@@ -132,6 +132,8 @@ class Hydro:
         sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr',options={'xtol':self.atol})
         self.success = sol.success
         [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
+
+        ## NOTE! RuntimeWarning: invalid value encountered in sqrt
         vm = min(vw, np.sqrt(self.model.csqBrok(Tm)))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
