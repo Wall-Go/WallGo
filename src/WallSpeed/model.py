@@ -1,7 +1,7 @@
 """
 Classes for user input of models
 """
-from .helpers import derivative # derivatives for callable functions
+#from .helpers import derivative # derivatives for callable functions
 
 
 class Particle:
@@ -106,7 +106,7 @@ class FreeEnergy:
         self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
-        self.p = params # Would not normally be stored. Here temporarily.
+        self.params = params # Would not normally be stored. Here temporarily.
 
     def __call__(self, X, T):
         """
@@ -144,7 +144,13 @@ class FreeEnergy:
             The temperature derivative of the free energy density at this field
             value and temperature.
         """
-        return (self(X, T + self.dT) - self(X, T)) / self.dT
+        if True: # hardcoded!
+            X = np.asanyarray(X)
+            h,s = X[...,0], X[...,1]
+            p = self.params
+            return (p["th"]*h**2 + p["ts"]*s**2)*T -4*107.75*np.pi**2/90*T**3
+        else:
+            return (self(X, T + self.dT) - self(X, T)) / self.dT
 
     def derivField(self,X,T):
 
@@ -164,18 +170,28 @@ class FreeEnergy:
             The field derivative of the free energy density at this field
             value and temperature.
         """
-        X = np.asanyarray(X)
-        # this needs generalising to arbitrary fields
-        h, s = X[..., 0], X[..., 1]
-        Xdh = X.copy()
-        Xdh[..., 0] += self.dPhi * np.ones_like(h)
-        Xds = X.copy()
-        Xds[..., 1] += self.dPhi * np.ones_like(h)
+        if True: # hardcoded!
+            X = np.asanyarray(X)
+            h,s = X[...,0], X[...,1]
+            p = self.params
+            dV0dh = -p["muhsq"]*h + p["lamh"]*h**3 + 1/2.*p["lamm"]*s**2*h
+            dVTdh = p["th"]*h*T**2
+            dV0ds = -p["mussq"]*s + p["lams"]*s**3 + 1/2.*p["lamm"]*s*h**2
+            dVTds = p["ts"]*s*T**2
+            return np.array([dV0dh + dVTdh, dV0ds + dVTds])
+        else:
+            X = np.asanyarray(X)
+            # this needs generalising to arbitrary fields
+            h, s = X[..., 0], X[..., 1]
+            Xdh = X.copy()
+            Xdh[..., 0] += self.dPhi * np.ones_like(h)
+            Xds = X.copy()
+            Xds[..., 1] += self.dPhi * np.ones_like(h)
 
-        dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
-        dfds = (self(Xds, T) - self(X, T)) / self.dPhi
+            dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
+            dfds = (self(Xds, T) - self(X, T)) / self.dPhi
 
-        return np.array([dfdh, dfds])
+            return np.array([dfdh, dfds])
 
     def pressureHighT(self,T):
         """
@@ -210,6 +226,8 @@ class FreeEnergy:
             A list of phases
 
         """
-        ssq = (-self.p["ts"]*T**2+self.p["mussq"])/self.p["lams"]
-        hsq = (-self.p["th"]*T**2+self.p["muhsq"])/self.p["lamh"]
+        # hardcoded!
+        p = self.params
+        ssq = (-p["ts"]*T**2+p["mussq"])/p["lams"]
+        hsq = (-p["th"]*T**2+p["muhsq"])/p["lamh"]
         return np.array([[0,np.sqrt(ssq)],[np.sqrt(hsq),0]])
