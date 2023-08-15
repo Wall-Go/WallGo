@@ -70,6 +70,8 @@ class FreeEnergy:
         self,
         f,
         Tnucl,
+        dfdT=None,
+        dfdPhi=None,
         dPhi=1e-3,
         dT=1e-3,
         params=None,
@@ -84,6 +86,12 @@ class FreeEnergy:
             Free energy density function :math:`f(\phi, T)`.
         Tnucl : float
             Value of the nucleation temperature, to be defined by the user
+        dfdT : function
+            Derivative of free energy density function with respect to
+            temperature.
+        dfdPhi : function
+            Derivative of free energy density function with respect to
+            field values. Should return a vector in the space of scalar fields.
         dPhi : float, optional
             Small value with which to take numerical derivatives with respect
             to the field.
@@ -101,8 +109,18 @@ class FreeEnergy:
         """
         if params is None:
             self.f = f
+            self.dfdT = dfdT
+            self.dfdPhi = dfdPhi
         else:
             self.f = lambda v, T: f(v, T, **params)
+            if dfdT is None:
+                self.dfdT = None
+            else:
+                self.dfdT = lambda v, T: dfdT(v, T, **params)
+            if dfdPhi is None:
+                self.dfdPhi = None
+            else:
+                self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
         self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
@@ -125,7 +143,7 @@ class FreeEnergy:
             The free energy density at this field value and temperature.
 
         """
-        return f(X, T)
+        return self.f(X, T)
 
     def derivT(self, X, T):
         """
@@ -144,11 +162,8 @@ class FreeEnergy:
             The temperature derivative of the free energy density at this field
             value and temperature.
         """
-        if True: # hardcoded!
-            X = np.asanyarray(X)
-            h,s = X[...,0], X[...,1]
-            p = self.params
-            return (p["th"]*h**2 + p["ts"]*s**2)*T -4*107.75*np.pi**2/90*T**3
+        if self.dfdT is not None:
+            return self.dfdT(X, T)
         else:
             return (self(X, T + self.dT) - self(X, T)) / self.dT
 
@@ -170,15 +185,8 @@ class FreeEnergy:
             The field derivative of the free energy density at this field
             value and temperature.
         """
-        if True: # hardcoded!
-            X = np.asanyarray(X)
-            h,s = X[...,0], X[...,1]
-            p = self.params
-            dV0dh = -p["muhsq"]*h + p["lamh"]*h**3 + 1/2.*p["lamm"]*s**2*h
-            dVTdh = p["th"]*h*T**2
-            dV0ds = -p["mussq"]*s + p["lams"]*s**3 + 1/2.*p["lamm"]*s*h**2
-            dVTds = p["ts"]*s*T**2
-            return np.array([dV0dh + dVTdh, dV0ds + dVTds])
+        if self.dfdPhi is not None:
+            return self.dfdPhi(X, T)
         else:
             X = np.asanyarray(X)
             # this needs generalising to arbitrary fields
