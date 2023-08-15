@@ -2,6 +2,7 @@ import numpy as np
 import h5py  # read/write hdf5 structured binary data file format
 from .Grid import Grid
 from .Polynomial import Polynomial
+from .model import Particle
 
 
 class BoltzmannBackground:
