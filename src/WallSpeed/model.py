@@ -207,7 +207,7 @@ class FreeEnergy:
     def derivField(self, X, T):
 
         """
-        The temperature-derivative of the effective potential.
+        The field-derivative of the effective potential.
 
         Parameters
         ----------

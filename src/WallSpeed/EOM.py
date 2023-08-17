@@ -266,6 +266,7 @@ def higgsEquationOfMotion(
     wallOffSet,
     z,
     freeEnergy,
+    particle,
     offEquilDeltas,
     T,
 ):
@@ -273,10 +274,23 @@ def higgsEquationOfMotion(
     kinetic = -higgsVEV * np.tanh(zLHiggs) / (higgsWidth * np.cosh(zLHiggs)) ** 2
     [h, s] = wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z)
     [dVdh, dVds] = freeEnergy.derivField([h, s], T)
+
+    def dmtdh(ptcle,X):
+    X = np.asanyarray(X)
+    h, s = X[..., 0], X[..., 1]
+    return derivative(
+        lambda h: ptcle.msqVacuum([h,s]),
+        h,
+        dx = 1e-3,
+        n=1,
+        order=4,
+        )
+
+    #need to generalize to more than 1 particle.
     offEquil = (
         0.5
         * 12
-        * Veff.dTopMassdh([h, s], T) #need to rewrite
+        * dmtdh(particle,[h,s])
         * offEquilDeltas[0, 0]
     )
     return kinetic + dVdh + offEquil
@@ -589,7 +603,7 @@ def deltaToTmunu(
     offEquilDeltas,
     higgsWidth,
     grid,
-    particleList,
+    particle,
     freeEnergy
 ):
 
