@@ -10,6 +10,7 @@ class Hydro:
     def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
+        self.Tc = thermodynamics.Tc
         self.rtol,self.atol = rtol,atol
         self.vJ = self.findJouguetVelocity()
         self.template = HydroTemplateModel(thermodynamics, Tnucl, rtol=1e-6, atol=1e-6)
@@ -224,7 +225,7 @@ class Hydro:
                 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            vpmax = min(vwTry,self.thermodynamics.csqSym(self.thermodynamics.Tc())/vwTry)
+            vpmax = min(vwTry,self.thermodynamics.csqSym(self.Tc)/vwTry)
             vpmin = 1e-5 # Minimum value of vpmin
             
             def func(vpTry):
