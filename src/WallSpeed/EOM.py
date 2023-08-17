@@ -3,9 +3,10 @@ import numpy as np
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .helpers import derivative # derivatives for callable functions
 
 
-def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
+def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     """
     Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
     the field equation of motion iteratively.
@@ -25,6 +26,29 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
+    def ddVddf(freeEnergy,X,whichfield):
+        X = np.asanyarray(X)
+        h, s = X[..., 0], X[..., 1]
+        if whichfield == 0:
+            return derivative(
+                lambda h: freeEnergy([h,s],freeEnergy.Tnucl),
+                h,
+                dx = 1e-3,
+                n=2,
+                order=4,
+            )
+        else:
+            return derivative(
+                lambda s: freeEnergy([h,s],freeEnergy.Tnucl),
+                s,
+                dx = 1e-3,
+                n=2,
+                order=4,
+            )
+
+    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),0)
+    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),1)
+    
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
     wallOffSetGuess = 0
@@ -89,7 +113,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
 def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy):
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
-    Tprofile = findTemperatureProfile(
+    Tprofile, vprofile = findPlasmaProfile(
         c1,
         c2,
         higgsWidth,
@@ -98,7 +122,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy):
         offEquilDeltas,
         Tplus,
         Tminus,
-        model,
+        freeEnergy,
         grid,
     )
 
@@ -276,14 +300,14 @@ def higgsEquationOfMotion(
     [dVdh, dVds] = freeEnergy.derivField([h, s], T)
 
     def dmtdh(ptcle,X):
-    X = np.asanyarray(X)
-    h, s = X[..., 0], X[..., 1]
-    return derivative(
-        lambda h: ptcle.msqVacuum([h,s]),
-        h,
-        dx = 1e-3,
-        n=1,
-        order=4,
+        X = np.asanyarray(X)
+        h, s = X[..., 0], X[..., 1]
+        return derivative(
+            lambda h: ptcle.msqVacuum([h,s]),
+            h,
+            dx = 1e-3,
+            n=1,
+            order=4,
         )
 
     #need to generalize to more than 1 particle.

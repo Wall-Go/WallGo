@@ -9,6 +9,7 @@ from WallSpeed.Boltzmann import BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy
+from WallSpeed.helpers import derivative
 
 """
 Model definition
@@ -105,7 +106,8 @@ print("\nThermodynamics:", thermo)
 print(f"{thermo.pSym(100)=}")
 print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
-
+print(f"{thermo.csqSym(100)=}")
+print(f"{thermo.csqBrok(100)=}")
 
 # defining particles which are out of equilibrium for WallGo
 top = Particle(
@@ -119,6 +121,23 @@ top = Particle(
 )
 particles = [top]
 print("\ntop quark:", top)
+
+def ddVddf(freeEnergy,X,whichfield):
+    X = np.asanyarray(X)
+    h, s = X[..., 0], X[..., 1]
+    return derivative(
+        if whichfield == 0:
+            lambda h: freeEnergy([h,s],freeEnergy.Tnucl),
+            h,
+        else:
+            lambda s: freeEnergy([h,s],freeEnergy.Tnucl),
+            s,            
+        dx = 1e-3,
+        n=2,
+        order=4,
+    )
+
+print(ddVddf(fxSM,[0,100],0))
 
 # grid size
 M = 20
