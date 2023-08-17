@@ -246,6 +246,7 @@ class FreeEnergy:
 
             return return_val
 
+
     def pressureHighT(self,T):
         """
         The pressure in the high-temperature (singlet) phase
@@ -255,7 +256,6 @@ class FreeEnergy:
         T : float
             The temperature for which to find the pressure.
 
-        For testing purposes the pressure was hard-coded, but it can be obtained from
         """
         return -self(self.findPhases(T)[0],T)
 

@@ -34,11 +34,11 @@ class HydroTemplateModel:
         """
         self.thermodynamics = thermodynamics
         self.rtol,self.atol = rtol,atol
-        pSym,pBrok = thermodynamics.pSym(Tnucl),thermodynamics.pBrok(Tnucl)
-        wSym,wBrok = thermodynamics.wSym(Tnucl),thermodynamics.wBrok(Tnucl)
+        pSym,pBrok = thermodynamics.pSym(thermodynamics.Tnucl),thermodynamics.pBrok(thermodynamics.Tnucl)
+        wSym,wBrok = thermodynamics.wSym(thermodynamics.Tnucl),thermodynamics.wBrok(thermodynamics.Tnucl)
         eSym,eBrok = wSym-pSym,wBrok-pBrok
-        self.cb2 = thermodynamics.csqBrok(Tnucl)
-        self.cs2 = thermodynamics.csqSym(Tnucl)
+        self.cb2 = thermodynamics.csqBrok(thermodynamics.Tnucl)
+        self.cs2 = thermodynamics.csqSym(thermodynamics.Tnucl)
         self.alN = (eSym-eBrok-(pSym-pBrok)/self.cb2)/(3*wSym)
         self.psiN = wBrok/wSym
         self.cb = np.sqrt(self.cb2)

@@ -6,10 +6,12 @@ class TestModel2Step():
     asym = 0.1
     musqq = 0.4
 
-    def __init__(self, abrok, asym, musqq):
+    def __init__(self, abrok, asym, musqq, Tn):
         self.aBrok = abrok
         self.aSym = asym
         self.musq = musqq
+        self.Tnucl = Tn
+        self.Tc = 1
 
     #Pressure in symmetric phase
     def pSym(self, T):
@@ -68,9 +70,6 @@ class TestModel2Step():
     def csqBrok(self,T):
         return self.dpBrok(T)/self.deBrok(T)
 
-    def Tc(self):
-        return 1.
-
 #Defines the bag equation of state
 #Note that a factor 1/3 a_+ Tc**4 has been scaled out
 #The critical temperature is at Tc=1, which relates psi and the (rescaled) bag constant epsilon: eps = 1-psi
@@ -79,9 +78,11 @@ class TestModel2Step():
 class TestModelBag():
     __test__ = False
     
-    def __init__(self, psi):
+    def __init__(self, psi, Tn):
         self.psi = psi #number of degrees of freedom of the broken phase divided by the number of degrees of freedom in the symmetric phase
         self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the symmetric phase times Tc^4)
+        self.Tnucl = Tn
+        self.Tc = 1
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pSym(self, T):
@@ -140,9 +141,6 @@ class TestModelBag():
     def csqBrok(self,T):
         return 1/3.
 
-
-    def Tc(self):
-        return 1.
     
 
 class TestModelTemplate():
