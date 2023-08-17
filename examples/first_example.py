@@ -74,7 +74,7 @@ Tc = np.sqrt(
     )
     / (ts**2*lamh - th**2*lams)
 )
-Tn = 100 # only Tn is strictly necessary
+Tn = 100 
 print(f"{Tc=}, {Tn=}")
 
 # defining the free energy for WallGo
@@ -93,7 +93,7 @@ params = { # putting params together into dict for WallGo
     "b" : b,
 }
 pprint(params)
-fxSM = FreeEnergy(f, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = FreeEnergy(f, Tc, Tn, params=params, dfdPhi=dfdPhi)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
 print(f"{fxSM.derivT([0, 1], 100)=}")

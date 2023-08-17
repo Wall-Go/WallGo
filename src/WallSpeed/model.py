@@ -100,6 +100,7 @@ class FreeEnergy:
     def __init__(
         self,
         f,
+        Tc,
         Tnucl,
         dfdT=None,
         dfdPhi=None,
@@ -115,6 +116,8 @@ class FreeEnergy:
         ----------
         f : function
             Free energy density function :math:`f(\phi, T)`.
+        Tc : float
+            Value of the critical temperature, to be defined by the user
         Tnucl : float
             Value of the nucleation temperature, to be defined by the user
         dfdT : function
@@ -152,6 +155,7 @@ class FreeEnergy:
                 self.dfdPhi = None
             else:
                 self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
+        self.Tc = Tc
         self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
