@@ -618,12 +618,11 @@ def deltaToTmunu(
     ubar3 = u0
 
     h = 0.5 * freeEnergy.findPhases(Tm)[1,0]*(1 - np.tanh(grid.xiValues / higgsWidth))
-    mTopSquared = 1/2.*model.ytop*h*h #need to update this once model file is ready
 
-    T30 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u0+
-           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
-    T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
-           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+    T30 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u0+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
+    T33 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u3+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
 
     return T30, T33
 
