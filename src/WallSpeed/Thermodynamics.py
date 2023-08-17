@@ -27,6 +27,8 @@ class Thermodynamics:
         These all need to be modified.
         """
         self.freeEnergy = freeEnergy
+        self.Tnucl = freeEnergy.Tnucl
+        self.Tc = freeEnergy.Tc
 
 
     #JvdV: We should replace broken/symm labels with lowT/highT. Haven't done it yet, because hydro uses the same
