@@ -3,6 +3,7 @@ import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
 from .Polynomial import Polynomial
+from .model import Particle
 
 
 class BoltzmannBackground:

@@ -1,184 +1,254 @@
 /*******/
 
 #include <iostream>
+#include <cmath>
 #include <chrono>
-using namespace std::chrono;
-using namespace std;
-#include <math.h>
-#include <sys/time.h>
-#include <time.h>
-#include "kinematics.h"
-#include "operators.h"
-#include "CollElem.h"
 
+#include <cstring>
+#include <getopt.h> // command line arguments
+
+#include "CollElem.h"
+#include "CollisionIntegral.h"
 #include "hdf5Interface.h"
 
 
 
+// Print a description of all supported options
+void printUsage(FILE *fp, const char *path) {
 
-#define PI 3.14159265358979323846
-#define GS 1.2279920495357861
+	// Take only the last portion of the path
+	const char *basename = std::strrchr(path, '/');
+	basename = basename ? basename + 1 : path;
 
+	fprintf (fp, "usage: %s [OPTIONS]\n", basename);
+	fprintf (fp, "Available options:\n");
+	fprintf (fp, "  -h\t\t"
+				"Print this help and exit.\n");
 
-
-
-void printTime(long duration){
-     //3600000000 microseconds in an hour
-     long hr = duration / 3600000000;
-     duration = duration - 3600000000 * hr;
-     //60000000 microseconds in a minute
-     long min = duration / 60000000;
-     duration = duration - 60000000 * min;
-
-     //1000000 microseconds in a second
-     long sec = duration / 1000000;
-
-     cout << hr << " hours and " << min << " minutes and " << sec << " seconds" << endl;
-
+	fprintf (fp, "  -w\t\t"
+				"Test the hdf5 output routines by writing dummy data and exit.\n");
 }
 
+// Count how many independent collision integrals there are for basis with N polynomials
+long countIndependentIntegrals(int N) {
+     long count = (N-1)*(N-1)*(N-1)*(N-1);
+     // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
+     count = std::ceil(count / 2.0);
+     // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+     if (N % 2 == 0) {
+          // how many odd m?
+          long mOdd = N / 2;
+          count -= mOdd;
+     } 
+
+     return count;
+}
+
+// Temporary routine for illustrating how we can generate all collision terms + write them to hdf5 file
+void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
+
+	int gridSizeN = collisionIntegral.getPolynomialBasisSize();
+
+	Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
+	Array4D collGridErrors(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
+
+	std::cout << "Now evaluating all collision integrals\n" << std::endl;
+	// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+	// which means we only need j <= N/2
+
+	// m,n = Polynomial indices
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
+		// j,k = grid momentum indices 
+		for (int j = 1; j <= gridSizeN/2; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
+
+		// Monte Carlo result for the integral + its error
+		std::array<double, 2> resultMC;
+
+			// Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+			if (2*j == gridSizeN && m % 2 != 0) {
+				resultMC[0] = 0.0;
+				resultMC[1] = 0.0;
+			} else {
+				resultMC = collisionIntegral.evaluate(m, n, j, k);
+			}
+
+			collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
+			collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
+
+		printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+
+		} // end j,k
+	} // end m,n
+
+	// Fill in the j > N/2 elements
+	#pragma omp parallel for collapse(4)
+	for (int m = 2; m <= gridSizeN; ++m) 
+	for (int n = 1; n <= gridSizeN-1; ++n) {
+		for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
+		for (int k = 1; k <= gridSizeN-1; ++k) {
+			int jOther = gridSizeN - j;
+			int sign = (m % 2 == 0 ? 1 : -1);
+			collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
+			collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
+		}
+	}
+	
+	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
+	std::string filename = "collisions_N" + std::to_string(gridSizeN) + ".hdf5";
+	H5::H5File h5File(filename, H5F_ACC_TRUNC);
+
+	H5Metadata metadata;
+	metadata.basisSize = gridSizeN;
+	metadata.basisName = "Chebyshev";
+	metadata.integrator = "Vegas Monte Carlo (GSL)";
 
 
+	writeMetadata(h5File, metadata);
+
+	writeDataSet(h5File, collGrid, "top");
+	writeDataSet(h5File, collGridErrors, "top errors");
+	
+	h5File.close();
+}
 
 //***************
 
-void calculateAllCollisions() {
 
-     /****************************************************/
+int main(int argc, char *argv[]) {
 
-     //The numerical prefactor that depends on coupling constants and factors of pi
-     double prefac=-64*GS*GS*GS*GS/9/8/(2*PI)/(2*PI)/(2*PI)/(2*PI)/(2*PI);   //All factors of Pi and couplings that multiply the integral. Should be changed
-     double intVal=0.0;                                                      //The value of the integral
+	//--------------- How this works 
 
-     double pVec[2]={1.0,PI*0.5}; //pVec[0] is the magnitude of p, and pVec[1] is the polar angle relative to the z-axis
+	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!). 
+	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed. 
+	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
+	* Currently the matrix elements are just hard coded, in a more realistic setting they would probably be read from elsewhere. */
 
+	/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
+	* These are given as inputs to CollElem when constructing CollElem objects. 
+	* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
 
-     int nElements=1;                  //This specifies that we want one matrix elements
-     CollElem collTermTot[nElements];  //For each matrix element the spin and needed delta_F terms are stored in the class collElem
-     setNumberElements(nElements);     //Sets the global variable that keeps tracks of how many elements we have
+	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case). 
+	* IE: this object calculates eq. (A1) in 2204.13120, with delta f replace with Chebyshev polynomials.
+	* Therefore the class it needs to know the size of our polynomial basis (N) and CollElem objects that make up the integral. 
+	* The class calculates 5D integrals with same integration variables as Benoit had. See notes in the private repo. */
 
-     //For all particles we use the convention that the process is p+k->p2+k2, where p is the external momenta
-     //that should be evaluated on the grid
-     //All specification of spin and matrix elements assumes the order p k p2 k2, so {1,1,2,2} etc 
+	/* Currently the interface between CollisionIntegral4 and CollElem is not optimal and there is some redundancy 
+	* in how the CollisionIntegral4 obtains particle masses etc. This needs to be improved in next version before we 
+	* get started with generic matrix elements */
 
+	//---------------
 
-     //To specify the spin we use the conventions (should probably be changed) that even numbers correspond to fermions
-     //and odd number to bosons
-
-
-     CollElem collTerm;            //Creates a matrix element
-     int spin[4]={1,1,2,2};        //Specifies that p and k are fermions, and that p2 and k2 are bosons
-     int deltaF[4]={1,1,0,0};      //Specifies that we only want the delta_p and delta_k terms
-
-     collTerm.setSpin(spin);       //Sets the spin
-     collTerm.setMatrixElem(0);    //Specifies that we want the tt->gg matrix element. Hard coded for now. See CollElem for all available matrix elements
-     collTerm.setDeltaF(deltaF);   
-     collTerm.setDistributions();  //Initializes Bose-Einstein and Fermi-Dirac distributions
-
-
-     collTermTot[0]=collTerm;      //Loads all requested matrix elements. In this case only one
-     specifyCollTerm(collTermTot);
-
-
-     //For the Chebyshev polynomials we use the convention: T_nZ(rho_z)T_mPerp(rho_perp) (with rho_z=tanh(pz/2) and rho_perp=1-exp(-p_perp))
-     specifyChebyshev(2,2);        //Specifies that we are interested in nZ=2 and mPerp=2.
-
-
-     intVal=integrateCollision(pVec,prefac);
-     cout<< intVal<<endl; //You should get 0.433736 with the inputs as above
-
-
-     // /****************Performance tests******************/
-
-     /*Note in practice we can do way faster than the estimate below.
-     Both from increasing the number of cores, and by using symmetry,
-     and by using that deltaF_p terms only need to be evaluated once*/
-
-     srand (static_cast <unsigned> (time(0)));
-
-     //     // Get starting timepoint
-     auto start = high_resolution_clock::now();
-     auto stop = high_resolution_clock::now();
-     auto duration = duration_cast<microseconds>(stop - start);
-
-     double r;
-
-     start = high_resolution_clock::now();
-     for (int i = 0; i < 100; ++i)
-     {
-          r = (double)rand() / RAND_MAX;
-     pVec[0]= 0.0 + r * 20.0; //Just some random values for the p vector
-     pVec[1]= 0.0 + r * PI;   //Just some random values for the p vector
-     intVal=integrateCollision(pVec,prefac);
-     }
-
-     stop = high_resolution_clock::now();
-
-     duration = duration_cast<microseconds>(stop - start);
-
-     cout<<"Estimated time to generate the entire grid for 1 thread:"<<endl;
-     printTime(pow(20,4)*duration.count()/100);
+	// Parse command line arguments
+	int opt;
+	while ((opt = getopt(argc, argv, "w")) != -1) {
+		switch (opt) {
+			case 'h':
+				// Print usage and exit
+				printUsage(stderr, argv[0]);
+				return 0;
+			case 'w':
+				std::cout << "== Running HDF5 output test ==\n";
+				testHDF5();
+				return 0;
+			case '?':
+				if (isprint(opt))
+						fprintf(stderr, "Unknown option `-%c'.\n", opt);
+				else
+						fprintf(stderr, "Unknown option character `\\x%x'.\n", opt);
+				return 1;
+			default:
+				abort();
+		}
+	}
 
 
+	// 2->2 scatterings so 4 external particles
+	using CollisionElement = CollElem<4>;
 
-     /*******************If you want to generate the entire grid you can do something like this***************************/
+	//**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
+	// Thermal
+	double mq2 = 0.251327; // quark
+	double mg2 = 3.01593; // SU(3) gluon
+	// Vacuum
+	// TODO if needed
+	double msqVacuum = 0.0;
 
-     int gridSizeN = 20;
-     int Ncheb = gridSizeN - 1; //(N-1)^4 terms in total
-
-     //The tensor is allocated as collGrid[nZ,mPerp,iZ,jPerp]
-     Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
-
-     double rhoZ[Ncheb], rhoPerp[Ncheb]; //Contains the Chebyshev interpolation points for pZ and pPerp
-
-
-     //All the interpolation points for pZ
-     for (int i = 1; i < Ncheb; ++i)
-     {
-          rhoZ[i-1]=2.0*atanh(-cos(PI*i/(Ncheb+0.0)));
-     }
-
-
-     //All the interpolation points for pPerp
-     for (int j = 0; j < Ncheb-1; ++j)
-     {
-          rhoPerp[j]=-log((1.0+cos(PI*j/(Ncheb-1.0)))/2.0);
-     }
-
-     // We now do the for loop over all the grid points
-
-     std::cout << "Now computing all collision integrals. See you in a bit...\n"; 
-     //std::cout << "TEST VERSION: Generating dummy collision integrals\n";
-
-     for (int n = 0; n < Ncheb; ++n) {
-
-          for (int m = 0; m < Ncheb; ++m) {
-               specifyChebyshev(n+2,m+1);    //specifies the relevant chebyshev point
-                                             //note that n is between 2 and nZ
-                                             //, and m is between 1 and mPerp-1
-               for (int i = 0; i < Ncheb; ++i) {
-                    pVec[0]=rhoZ[i];
-
-                    for (int j = 0; j < Ncheb; ++j) {
-                    pVec[1]=rhoPerp[j]; 
-                         collGrid[n][m][i][j]=integrateCollision(pVec,prefac);
-                         // Dummy 
-                         collGrid[n][m][i][j]= 0.0;
-                    }
-               }
-          }
-     }
-
-     // Write these to file
-     std::string filename = "collisions_Chebyshev_" + std::to_string(gridSizeN) + ".hdf5";
-     WriteToHDF5(collGrid, filename, "top");
-}
+	
+	// define particles that we include in matrix elements
+	ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
+	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
+	ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2);
 
 
+	// Then create collision elements for 2->2 processes involving these. 
+	// By 'collision element' I mean |M|^2 * P[ij -> nm], where P is the population factor involving distribution functions.
+	// Right now the correct matrix elements are hardcoded in for the top quark. 
+	// In a real model-independent calculation this needs to either calculate the matrix elements itself (hard, probably needs its own class)
+	// or read them in from somewhere.
+	CollisionElement tt_gg({ topQuark, topQuark, gluon, gluon });
+	CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
+	CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
+	
+	const int basisSizeN = 20;
 
-int main(int argc, char const *argv[]) {
+	CollisionIntegral4 collInt(basisSizeN);
+	collInt.addCollisionElement(tt_gg);
+	collInt.addCollisionElement(tg_tg);
+	collInt.addCollisionElement(tq_tq);
 
-     calculateAllCollisions();
+	// How many collision terms do we need in total
+	int nCollisionTerms = countIndependentIntegrals(basisSizeN);
 
-     return 0;
+
+	//-------------------- Measure wall clock time
+
+	std::cout << "Running speed test: integral C[2,1,1,1]\n";
+	auto startTime = std::chrono::steady_clock::now();
+	collInt.evaluate(2, 1, 1, 1);
+
+	auto endTime = std::chrono::steady_clock::now();
+
+	auto elapsedTime = endTime - startTime;
+	// Convert the elapsed time to milliseconds
+	auto elapsedTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(elapsedTime).count();
+
+	// How long for all collision integrals
+	auto totalTime = elapsedTime * nCollisionTerms;
+
+	auto hours = std::chrono::duration_cast<std::chrono::hours>(totalTime).count();
+	auto minutes = std::chrono::duration_cast<std::chrono::minutes>(totalTime).count() % 60;
+
+	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
+
+	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
+			<< hours << " hours " << minutes << " minutes\n";
+
+	//--------------------
+
+	// This will  calculate all required collision terms:
+	calculateAllCollisions(collInt);
+
+/*
+	// FOR PROFILING: just calculate a few terms and exit
+
+	std::array<double, 2> resultMC;
+
+
+	int m, n, j, k;
+
+	m = 2; n = 1; j = 1; k = 1;
+
+	resultMC = collInt.evaluate(m, n, j, k);
+	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+
+	m = 6; n = 4; j = 11; k = 9;
+	resultMC = collInt.evaluate(m, n, j, k);
+
+	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+*/
+
+	return 0;
 }

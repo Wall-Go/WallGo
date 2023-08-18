@@ -1,32 +1,128 @@
 #ifndef COLLELEM_H_
 #define COLLELEM_H_
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <array>
+#include <vector>
+#include <string>
+#include <iostream>
 
-// definition in main.cpp
-void calculateAllCollisions();
-
-
-//For now I just hard code the thermal masses
-#define  MQ2 0.251327 				//Top quark mass squared
-#define  MG2 3.01593 				//Gluon mass squared
-#define PI 3.14159265358979323846
-
-// The collElem class specifies which matrix element, the spin of the particles, and what
-//delta_f terms the user wants to calculate
-//The idea is that the user can create #collElem classes at the start which are all included in a given
-// integration call
+#include "FourVector.h"
+#include "ParticleSpecies.h"
 
 
+struct Mandelstam {
+	double s, t, u;
+};
 
+
+/* CollElem class: This describes collision process with external particles types being fixed */
+template <std::size_t NPARTICLES>
+class CollElem {
+
+public:
+
+	// Use initialization list here for setting the particle species, 
+	// otherwise may run into compiler errors due to (lack of) copy constructors
+	CollElem(const std::array<ParticleSpecies, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies) {}
+
+	inline Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const {
+		Mandelstam m;
+		m.s = (p1 + p2) * (p1 + p2);
+		m.t = (p1 - p3) * (p1 - p3);
+		m.u = (p1 - p4) * (p1 - p4);
+		return m;
+	}
+
+	// Calculate |M|^2 
+	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) const {
+
+		// !!! the matrix elements that I've hardcoded here are actually 1/N_t |M| => change this??
+
+		double matrixElementSquared = 0.0;
+
+		// Coupling 
+		double gs = 1.2279920495357861;
+		double gs4 = gs*gs*gs*gs;
+
+		// FOR NOW: hardcode in: 
+		// if (p[0] = top, p[1] = top, p[2] = gluon, p[3] = gluon) ETC. here p = particles array
+
+		// Thermal masses squared
+		double mg2 = 3.01593;
+		double mq2 = 0.251327;
+
+		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
+		double s = mandelstam.s;
+		double t = mandelstam.t;
+		double u = mandelstam.u;
+
+		if (particles[0].getName() == "top" && particles[1].getName() == "top" 
+			&& particles[2].getName() == "gluon" && particles[3].getName() == "gluon") 
+		{
+			// tt -> gg
+			matrixElementSquared = -64./9. * gs4 * s*t / ((t-mq2) * (t-mq2));
+
+		} 
+		else if (particles[0].getName() == "top" && particles[1].getName() == "gluon" 
+			&& particles[2].getName() == "top" && particles[3].getName() == "gluon") 
+		{
+			// tg -> tg
+			matrixElementSquared = -64./9. * gs4 * s*u / ((u-mq2) * (u-mq2)) + 16.*gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2) );
+		} 
+		else if (particles[0].getName() == "top" && particles[1].getName() == "quark" 
+			&& particles[2].getName() == "top" && particles[3].getName() == "quark")
+		{
+			// tq -> tq, q = light quark (not top)
+			// NOTE HERE: none of the external particles is gluon, yet we still need the gluon mass. So keep this in mind when generalizing
+			matrixElementSquared = 80./3. * gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2));
+		}
+
+		return matrixElementSquared;
+	}
+
+	// Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
+	double evaluatePopulationFactor(const std::array<FourVector, NPARTICLES> &momenta, 
+										const std::array<double, NPARTICLES> &deltaF) const {
+
+		// delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i
+
+		double f1 = particles[0].fEq( momenta[0].energy() );
+		double f2 = particles[1].fEq( momenta[1].energy() );
+		double f3 = particles[2].fEq( momenta[2].energy() );
+		double f4 = particles[3].fEq( momenta[3].energy() );
+		
+		double res =  std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
+					+ std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
+					- std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
+					- std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
+
+		res = res * f1*f2*f3*f4;
+		return res;
+	}
+
+
+
+	// Calculate matrix element times population factor for this 2->2 process 
+	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
+						const std::array<double, NPARTICLES> &deltaF) const {
+
+		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
+	}
+
+public:
+
+	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1
+	std::array<ParticleSpecies, NPARTICLES> particles;
+};
+
+
+/*
 //Note to self: Move these matrix elements to their own file
 
 //Q+Q-> V+ V matrix element
 static inline double matrixElementQQVVX(double s,double t, double u) {
 
-	double temp = u;
 	return s*t/(t-MQ2+1e-6)/(t-MQ2+1e-6);
 
 }
@@ -59,155 +155,215 @@ static inline double matrixElementVVVVX(double s,double t, double u){
 	return 81.0/16.0*(s*u/(t-MG2+1e-6)/(t-MG2+1e-6)+s*t/(u-MG2+1e-6)/(u-MG2+1e-6));
 }
 
+*/
 
 
-//The Bose-Einstein distribution function
-static inline double nB(double x){
-	return 1/(exp(x)-1+1e-6);
-}
 
 
-//The Fermi-Dirac distribution function
-static inline double nF(double x){
-	return 1/(exp(x)+1);
-}
+/*
 
-
+// ???
 typedef double (*funcptr)(double);
 
-class CollElem {
+// The collElem class specifies which matrix element, the spin of the particles, and what
+//delta_f terms the user wants to calculate
+//The idea is that the user can create #collElem classes at the start which are all included in a given
+// integration call
+
+class CollElemOld {
 	
-	protected:
-		double (*matrixFunc)(double, double, double); //Returns the value of the matrix element for given s,t,u
+// why protected?
+protected:
+	double (*matrixFunc)(double, double, double); //Returns the value of the matrix element for given s,t,u
 
-		funcptr distributions[4];//Returns the value of all distribution function for p
+	funcptr distributions[4];//Returns the value of all distribution function for p
 
-		int matrixElem; //specifies the matrix element that should be used
-		int spin[4]; //specifies the spin of the particles in the matrix element. Even boson, odd fermion
+	int matrixElem; //specifies the matrix element that should be used
+	int spin[4]; //specifies the spin of the particles in the matrix element. Even boson, odd fermion
 
-		// p:deltaF=0, k:deltaF=1, p2:deltaF=2, k2=deltaF=3
-		int deltaF[4]; //specifies which deltaF terms should be calculated
+	// p:deltaF=0, k:deltaF=1, p2:deltaF=2, k2=deltaF=3
+	int deltaF[4]; //specifies which deltaF terms should be calculated
 
-	public:
-		CollElem() {
-			//By default all particles are bosons
-			spin[0]=2;
-			spin[1]=2;
-			spin[2]=2;
-			spin[3]=2;
+public:
+	CollElemOld() {
+		//By default all particles are bosons
+		spin[0]=2;
+		spin[1]=2;
+		spin[2]=2;
+		spin[3]=2;
 
-			//By default the matrix element is 0: QQ ->VV
-			matrixElem=0;
+		//By default the matrix element is 0: QQ ->VV
+		matrixElem=0;
 
-			//By default only the delta_p term is calculated
-			deltaF[0]=1;
-			deltaF[1]=0; //Negative values specifies that the term is not included
-			deltaF[2]=0;
-			deltaF[3]=0;
+		//By default only the delta_p term is calculated
+		deltaF[0]=1;
+		deltaF[1]=0; //Negative values specifies that the term is not included
+		deltaF[2]=0;
+		deltaF[3]=0;
 
-
-	    }
-
-
-	   	double calculateMatrixElement(double s, double t, double u){
-			//Returns the matrix element as a function of the mandelstam variables
-			return matrixFunc(s,t,u);
-		}
+	}
 
 
-		/*For the definition of these terms "see https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.023501"
-		 	equation A.3 */
-
-		//We multiply all terms with deltaF to ensure that only the requested terms are evaluated
-
-		//The product of distribution functions that multiply delta f_p
-		double calculateDeltaP(double p,double k, double p2, double k2){
-			return *(deltaF)*exp(k)*distributions[1](k)*distributions[2](p2)*distributions[3](k2)/distributions[0](p);
-		}
+	double calculateMatrixElement(double s, double t, double u){
+		//Returns the matrix element as a function of the mandelstam variables
+		return matrixFunc(s,t,u);
+	}
 
 
-		//The product of distribution functions that multiply delta f_k
-		double calculateDeltaK(double p,double k, double p2, double k2){
-			return *(deltaF+1)*exp(p)*distributions[2](p2)*distributions[3](k2)*distributions[0](p)/distributions[1](k);
-		}
+	//For the definition of these terms "see https://journals.aps.org/prd/abstract/10.1103/PhysRevD.106.023501"
+	//	equation A.3
 
-		//The product of distribution functions that multiply delta f_p2
-		double calculateDeltaP2(double p,double k, double p2, double k2){
-			return -*(deltaF+2)*exp(k2)*distributions[3](k2)*distributions[0](p)*distributions[1](k)/distributions[2](p2);
-		}
+	//We multiply all terms with deltaF to ensure that only the requested terms are evaluated
 
-		//The product of distribution functions that multiply delta f_k2
-		double calculateDeltaK2(double p,double k, double p2, double k2){
-			return -*(deltaF+3)*exp(p2)*distributions[0](p)*distributions[1](k)*distributions[2](p2)/distributions[3](k2);
-		}
+	//The product of distribution functions that multiply delta f_p
+	double calculateDeltaP(double p,double k, double p2, double k2){
+		return *(deltaF)*exp(k)*distributions[1](k)*distributions[2](p2)*distributions[3](k2)/distributions[0](p);
+	}
 
 
-		void specifyMatrixElement(){
-			//Function to choose which matrix element should be used
-			// QQVV:0, QVQV:1, TQTQ: 2
-				switch(matrixElem) {
-				  case 0:
-				    matrixFunc=matrixElementQQVVX;
-				    break;
-				  case 1:
-				    matrixFunc=matrixElementTQTQX;
-				    break;
-				 case 2:
-				    matrixFunc=matrixElementTQTQX;
-				    break;
-				   
-				}
+	//The product of distribution functions that multiply delta f_k
+	double calculateDeltaK(double p,double k, double p2, double k2){
+		return *(deltaF+1)*exp(p)*distributions[2](p2)*distributions[3](k2)*distributions[0](p)/distributions[1](k);
+	}
+
+	//The product of distribution functions that multiply delta f_p2
+	double calculateDeltaP2(double p,double k, double p2, double k2){
+		return -*(deltaF+2)*exp(k2)*distributions[3](k2)*distributions[0](p)*distributions[1](k)/distributions[2](p2);
+	}
+
+	//The product of distribution functions that multiply delta f_k2
+	double calculateDeltaK2(double p,double k, double p2, double k2){
+		return -*(deltaF+3)*exp(p2)*distributions[0](p)*distributions[1](k)*distributions[2](p2)/distributions[3](k2);
+	}
+
+
+	void specifyMatrixElement(){
+		//Function to choose which matrix element should be used
+		// QQVV:0, QVQV:1, TQTQ: 2
+			switch(matrixElem) {
+				case 0:
+				matrixFunc=matrixElementQQVVX;
+				break;
+				case 1:
+				matrixFunc=matrixElementTQTQX;
+				break;
+				case 2:
+				matrixFunc=matrixElementTQTQX;
+				break;
+				
 			}
+		}
 
-	   	//Specifies the matrix element that should be used
-	    void setMatrixElem(int matrixElemInput) {
-	    	matrixElem=matrixElemInput;
-	    }
+	//Specifies the matrix element that should be used
+	void setMatrixElem(int matrixElemInput) {
+		matrixElem=matrixElemInput;
+	}
 
-	    //Prints the Matrix element
-	    int printMatrixElem() {
-	    	return matrixElem;
-	    }
+	//Prints the Matrix element
+	int printMatrixElem() {
+		return matrixElem;
+	}
 
-	   	//Specifies the distribution functions for all particles
-	    void setDistributions() {
-	    	for (int i = 0; i < 4; ++i)
-	    	{
-				if (*(spin+i)%2==0)
-				{
-					 *(distributions+i)=nB;
-				}else{
-					 *(distributions+i)=nF;
-				}
-	    	}
-	    }
+	//Specifies the distribution functions for all particles
+	void setDistributions() {
+		for (int i = 0; i < 4; ++i)
+		{
+			if (*(spin+i)%2==0)
+			{
+					*(distributions+i)=nB;
+			}else{
+					*(distributions+i)=nF;
+			}
+		}
+	}
 
-	   	//Specifies which delta_F terms should be used
-	    void setDeltaF(int *deltaFInput) {
-			deltaF[0]=*(deltaFInput);
-			deltaF[1]=*(deltaFInput+1); 
-			deltaF[2]=*(deltaFInput+2);
-			deltaF[3]=*(deltaFInput+3);
-	    }
+	//Specifies which delta_F terms should be used
+	void setDeltaF(int *deltaFInput) {
+		deltaF[0]=*(deltaFInput);
+		deltaF[1]=*(deltaFInput+1); 
+		deltaF[2]=*(deltaFInput+2);
+		deltaF[3]=*(deltaFInput+3);
+	}
 
-	    //Prints the delta_F terms
-	    int* printDeltaF() {
-	    	return deltaF;
-	    }
+	//Prints the delta_F terms
+	int* printDeltaF() {
+		return deltaF;
+	}
 
-	   	//Specifies the spin of the particles
-	    void setSpin(int *spinInput) {
-	    	spin[0]=*(spinInput);
-	    	spin[1]=*(spinInput+1);
-	    	spin[2]=*(spinInput+2);
-	    	spin[3]=*(spinInput+3);
-	    }
+	//Specifies the spin of the particles
+	void setSpin(int *spinInput) {
+		spin[0]=*(spinInput);
+		spin[1]=*(spinInput+1);
+		spin[2]=*(spinInput+2);
+		spin[3]=*(spinInput+3);
+	}
 
-	  	//Prints the spin of the particle
-	    int* printSpin() {
-	    	return spin;
-	    }
+	//Prints the spin of the particle
+	int* printSpin() {
+		return spin;
+	}
 
 };
+
+*/
+
+
+
+/*
+class Particle {
+
+public:
+
+	Particle(EParticleType particleType) : type(particleType), momentum(0.0, 0.0, 0.0, 0.0) {
+		
+		vacuumMassSquared = 0.0;
+		thermalMassSquared = 0.0;
+	}
+
+	Particle(EParticleType particleType, double msqVacuum, double msqThermal, const FourVector& mom)
+		: type(particleType) {
+
+		momentum = mom;
+		vacuumMassSquared = msqVacuum;
+		thermalMassSquared = msqThermal;
+	}
+
+	inline void setMomentum(const FourVector& p) { momentum = p; }
+
+	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
+	inline bool isInEquilibrium() const { return bInEquilibrium; }
+
+	// Equilibrium distribution function for the particle
+	double fEq() const {
+		double res = 0.0;
+		double energy = momentum[0];
+		if (type == EParticleType::BOSON) {
+			// TODO better cutoff
+			res = 1.0 / (exp(energy) - 1.0 + 1e-6);
+		} else {
+			res = 1.0 / (exp(energy) + 1.0);
+		}
+		return res;
+	}
+
+	inline double getDeltaF() const { return deltaF; }
+
+private:
+	FourVector momentum;
+	double vacuumMassSquared;
+	double thermalMassSquared;
+	// Set this in constructor using initialization list
+	const EParticleType type;
+	// Neglect mass in dispersion relations or not?
+	bool bUltrarelativistic = true;
+	// Is the particle assumed to be in thermal equilibrium?
+	bool bInEquilibrium = false;
+	// Current deviation from equilibrium for the particle // TODO does this make sense here? It's a feature of whole particle species
+	double deltaF = 0.0;
+};
+
+*/
+
+
 
 #endif // header guard

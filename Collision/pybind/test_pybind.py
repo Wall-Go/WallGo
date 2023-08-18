@@ -1,6 +1,5 @@
 from lib import CollisionModule
 
-
 ## Example: create mock data in format that the C++ program can understand.
 # This can be any additional input that the integral may need, eg. particle masses.
 data = CollisionModule.InputData()
