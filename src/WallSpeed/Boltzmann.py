@@ -220,7 +220,7 @@ class BoltzmannSolver:
         vw = self.background.vw
 
         # fluctuation mode
-        statistics = self.particle.statistics
+        statistics = -1 if self.particle.statistics == "Fermion" else 1
         msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
 
@@ -272,10 +272,12 @@ class BoltzmannSolver:
 
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
-        collisionArray, collisionBasis = BoltzmannSolver.readCollision(
+        collisionArray, collisionBasis, collisionN = BoltzmannSolver.readCollision(
             collisionFile,
             "top",
         )
+        assert collisionN == self.grid.N, \
+            f"Collision basis size error {collisionN=}"
         if self.basisN != collisionBasis:
             TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
@@ -311,19 +313,17 @@ class BoltzmannSolver:
         """
         try:
             with h5py.File(collisionFile, "r") as file:
-                dataset = file[particle]
-                assert type(dataset.attrs["Basis"]) == np.ndarray, \
-                    "readCollision error: Basis unexpected type"
-                collisionBasis = codecs.decode(
-                    dataset.attrs["Basis"][0],
-                    'unicode_escape',
+                metadata = file["metadata"]
+                basisSize = metadata.attrs["Basis Size"]
+                basisType = codecs.decode(
+                    metadata.attrs["Basis Type"], 'unicode_escape',
                 )
-                BoltzmannSolver.__checkBasis(collisionBasis)
-                collisionArray = np.array(dataset)
+                BoltzmannSolver.__checkBasis(basisType)
+                collisionArray = np.array(file[particle][:])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
-        return collisionArray, collisionBasis
+        return collisionArray, basisType, basisSize
 
     def __collisionFilename(self):
         """
@@ -331,10 +331,7 @@ class BoltzmannSolver:
         """
         dir = "./data"
         suffix = "hdf5"
-        filename = "%s/collisions_%s_%i.%s" % (
-            dir, self.basisN, self.grid.N, suffix
-        )
-        return filename
+        return f"{dir}/collisions_N{self.grid.N}.{suffix}"
 
     def __checkBasis(basis):
         """

@@ -19,6 +19,7 @@ try:
         basisSize = metadata.attrs["Basis Size"]
         basisType = metadata.attrs["Basis Type"]
         integrator = metadata.attrs["Integrator"]
+        print([type(basisSize), type(basisType), type(integrator)])
         print("Basis Size: ", basisSize) # this is N
         print("Basis Type: ", basisType) # this just tells what polynomial basis we are using. Just Chebyshev for now
         print("Integrator: ", integrator) # what numerical integrator was used
@@ -37,19 +38,19 @@ try:
             dataset = file[name]
             data = dataset[:]
             print("\n-- %s --" % name)
-            print(data)
+            #print(data)
 
         ## To pick eg. the collision tensor for top quark:
         dataset = file["top"]
         collisionsTop = dataset[:]
         print("\n=== EXAMPLE: top quark collisions ===")
 
-        ## Note that the array indices run from 0 to N-1 while the "grid indices" used in the paper are m = 2, ... N and n,j,k = 1, ... N-1 
+        ## Note that the array indices run from 0 to N-1 while the "grid indices" used in the paper are m = 2, ... N and n,j,k = 1, ... N-1
         ## so need to offset accordingly
         m, n, j, k = 2, 1, 1, 1
         print("C[%d, %d, %d, %d] = %g" % (m, n, j, k, collisionsTop[m-2, n-1, j-1, k-1]) )
 
-        
+
 
 except Exception as error:
     # Handle any errors that occur
