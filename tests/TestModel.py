@@ -146,7 +146,7 @@ class TestModelBag():
 class TestModelTemplate():
     __test__ = False
     
-    def __init__(self, alN, psiN, cb2, cs2, Tn=1, wn=1):
+    def __init__(self, alN, psiN, cb2, cs2, Tn,Tc, wn=1):
         self.alN = alN # Strength parameter alpha_n of the phase transition at the nucleation temperature
         self.psiN = psiN # Enthalpy in the broken phase divided by the enthalpy in the symmetric phase (both evaluated at the nucleation temperature)
         self.cb2 = cb2
@@ -154,7 +154,8 @@ class TestModelTemplate():
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2
         
-        self.Tn = Tn # Nucleation temperature
+        self.Tnucl = Tn # Nucleation temperature
+        self.Tc = Tc
         self.wn = wn # Enthalpy in the symmetric phase at the nucleation temperature
         self.ap = 3*wn/(self.mu*Tn**self.mu)
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
@@ -218,7 +219,4 @@ class TestModelTemplate():
     def csqBrok(self,T):
         return self.cb2
 
-
-    def Tc(self):
-        return self.Tn
 
