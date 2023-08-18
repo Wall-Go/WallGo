@@ -6,10 +6,12 @@ class TestModel2Step():
     asym = 0.1
     musqq = 0.4
 
-    def __init__(self, abrok, asym, musqq):
+    def __init__(self, abrok, asym, musqq, Tn):
         self.aBrok = abrok
         self.aSym = asym
         self.musq = musqq
+        self.Tnucl = Tn
+        self.Tc = 1
 
     #Pressure in symmetric phase
     def pSym(self, T):
@@ -68,9 +70,6 @@ class TestModel2Step():
     def csqBrok(self,T):
         return self.dpBrok(T)/self.deBrok(T)
 
-    def Tc(self):
-        return 1.
-
 #Defines the bag equation of state
 #Note that a factor 1/3 a_+ Tc**4 has been scaled out
 #The critical temperature is at Tc=1, which relates psi and the (rescaled) bag constant epsilon: eps = 1-psi
@@ -79,9 +78,11 @@ class TestModel2Step():
 class TestModelBag():
     __test__ = False
     
-    def __init__(self, psi):
+    def __init__(self, psi, Tn):
         self.psi = psi #number of degrees of freedom of the broken phase divided by the number of degrees of freedom in the symmetric phase
         self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the symmetric phase times Tc^4)
+        self.Tnucl = Tn
+        self.Tc = 1
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pSym(self, T):
@@ -140,15 +141,12 @@ class TestModelBag():
     def csqBrok(self,T):
         return 1/3.
 
-
-    def Tc(self):
-        return 1.
     
 
 class TestModelTemplate():
     __test__ = False
     
-    def __init__(self, alN, psiN, cb2, cs2, Tn=1, wn=1):
+    def __init__(self, alN, psiN, cb2, cs2, Tn,Tc, wn=1):
         self.alN = alN # Strength parameter alpha_n of the phase transition at the nucleation temperature
         self.psiN = psiN # Enthalpy in the broken phase divided by the enthalpy in the symmetric phase (both evaluated at the nucleation temperature)
         self.cb2 = cb2
@@ -156,7 +154,8 @@ class TestModelTemplate():
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2
         
-        self.Tn = Tn # Nucleation temperature
+        self.Tnucl = Tn # Nucleation temperature
+        self.Tc = Tc
         self.wn = wn # Enthalpy in the symmetric phase at the nucleation temperature
         self.ap = 3*wn/(self.mu*Tn**self.mu)
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
@@ -220,7 +219,4 @@ class TestModelTemplate():
     def csqBrok(self,T):
         return self.cb2
 
-
-    def Tc(self):
-        return self.Tn
 
