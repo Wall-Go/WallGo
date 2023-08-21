@@ -3,6 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 from .Thermodynamics import Thermodynamics
+from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative # derivatives for callable functions
@@ -18,7 +19,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     # temperature profile
 
     thermo = Thermodynamics(freeEnergy)
-    hydro = Hydrodynamics(thermo)
+    hydro = Hydro(thermo)
 
     if wallVelocityLTE is not None:
         wallVelocity = 0.9 * wallVelocityLTE
@@ -51,8 +52,8 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
                 order=4,
             )
 
-    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),0)
-    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),1)
+    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],0))
+    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],1))
     
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
@@ -62,7 +63,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         singletWidthGuess,
         wallOffSetGuess,
         0.5 * (Tplus + Tminus),
-        model,
+        freeEnergy,
     )
 
     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
@@ -96,7 +97,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
         boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
-        boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, model.particles)
+        boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
 
         offEquilDeltas = boltzmannSolver.getDeltas()
 
@@ -142,7 +143,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
         wallOffSet,
         freeEnergy,
         offEquilDeltas,
-        Tfunc,
+        Tprofile,  #correct?
     )
     mom2 = higgsStretchMoment(
         higgsVEV,
@@ -152,7 +153,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
         wallOffSet,
         freeEnergy,
         offEquilDeltas,
-        Tfunc,
+        Tprofile,
     )
     mom3 = singletPressureMoment(
         higgsVEV,
@@ -162,7 +163,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
         wallOffSet,
         freeEnergy,
         offEquilDeltas,
-        Tfunc,
+        Tprofile,
     )
     mom4 = singletStretchMoment(
         higgsVEV,
@@ -172,7 +173,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
         wallOffSet,
         freeEnergy,
         offEquilDeltas,
-        Tfunc,
+        Tprofile,
     )
 
     return [mom1, mom2, mom3, mom4]
@@ -459,7 +460,11 @@ def singletEquationOfMotion(
 
 
 def initialWallParameters(
-    higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, freeEnergy
+    higgsWidthGuess,
+    singletWidthGuess,
+    wallOffSetGuess,
+    TGuess,
+    freeEnergy
 ):
     higgsVEV = freeEnergy.findPhases(TGuess)[1,0]
     singletVEV = freeEnergy.findPhases(TGuess)[0,1]
