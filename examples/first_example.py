@@ -9,7 +9,6 @@ from WallSpeed.Boltzmann import BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy
-from WallSpeed.helpers import derivative
 
 """
 Model definition
@@ -75,7 +74,7 @@ Tc = np.sqrt(
     )
     / (ts**2*lamh - th**2*lams)
 )
-Tn = 100 
+Tn = 100 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 # defining the free energy for WallGo
@@ -94,7 +93,7 @@ params = { # putting params together into dict for WallGo
     "b" : b,
 }
 pprint(params)
-fxSM = FreeEnergy(f, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = FreeEnergy(f, Tn, params=params, dfdPhi=dfdPhi)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
 print(f"{fxSM.derivT([0, 1], 100)=}")
@@ -106,13 +105,12 @@ print("\nThermodynamics:", thermo)
 print(f"{thermo.pSym(100)=}")
 print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
-print(f"{thermo.csqSym(100)=}")
-print(f"{thermo.csqBrok(100)=}")
+
 
 # defining particles which are out of equilibrium for WallGo
 top = Particle(
     "top",
-    msqVacuum=lambda X: yt**2 * np.asanyarray(X)[..., 0]**2/2.,
+    msqVacuum=lambda X: yt**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: yt**2 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
@@ -121,23 +119,6 @@ top = Particle(
 )
 particles = [top]
 print("\ntop quark:", top)
-
-def ddVddf(freeEnergy,X,whichfield):
-    X = np.asanyarray(X)
-    h, s = X[..., 0], X[..., 1]
-    return derivative(
-        if whichfield == 0:
-            lambda h: freeEnergy([h,s],freeEnergy.Tnucl),
-            h,
-        else:
-            lambda s: freeEnergy([h,s],freeEnergy.Tnucl),
-            s,            
-        dx = 1e-3,
-        n=2,
-        order=4,
-    )
-
-print(ddVddf(fxSM,[0,100],0))
 
 # grid size
 M = 20
