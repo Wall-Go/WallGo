@@ -100,6 +100,7 @@ class FreeEnergy:
     def __init__(
         self,
         f,
+        Tc,
         Tnucl,
         dfdT=None,
         dfdPhi=None,
@@ -115,6 +116,8 @@ class FreeEnergy:
         ----------
         f : function
             Free energy density function :math:`f(\phi, T)`.
+        Tc : float
+            Value of the critical temperature, to be defined by the user
         Tnucl : float
             Value of the nucleation temperature, to be defined by the user
         dfdT : function
@@ -152,6 +155,7 @@ class FreeEnergy:
                 self.dfdPhi = None
             else:
                 self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
+        self.Tc = Tc
         self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
@@ -207,7 +211,7 @@ class FreeEnergy:
     def derivField(self, X, T):
 
         """
-        The temperature-derivative of the effective potential.
+        The field-derivative of the effective potential.
 
         Parameters
         ----------
@@ -242,6 +246,7 @@ class FreeEnergy:
 
             return return_val
 
+
     def pressureHighT(self,T):
         """
         The pressure in the high-temperature (singlet) phase
@@ -251,7 +256,6 @@ class FreeEnergy:
         T : float
             The temperature for which to find the pressure.
 
-        For testing purposes the pressure was hard-coded, but it can be obtained from
         """
         return -self(self.findPhases(T)[0],T)
 

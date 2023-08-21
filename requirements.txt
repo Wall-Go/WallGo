@@ -2,3 +2,4 @@ h5py
 numpy
 pytest
 setuptools
+findiff

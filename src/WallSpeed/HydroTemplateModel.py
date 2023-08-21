@@ -16,7 +16,7 @@ class HydroTemplateModel:
     arXiv:2303.10171 (2023).
     """
     
-    def __init__(self,model,Tnucl,rtol=1e-6,atol=1e-6):
+    def __init__(self,thermodynamics,rtol=1e-6,atol=1e-6):
         r"""
         Initialize the HydroTemplateModel class. Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b`.
 
@@ -32,20 +32,20 @@ class HydroTemplateModel:
         None.
 
         """
-        self.model = model
+        self.thermodynamics = thermodynamics
         self.rtol,self.atol = rtol,atol
-        pSym,pBrok = model.pSym(Tnucl),model.pBrok(Tnucl)
-        wSym,wBrok = model.wSym(Tnucl),model.wBrok(Tnucl)
+        pSym,pBrok = thermodynamics.pSym(thermodynamics.Tnucl),thermodynamics.pBrok(thermodynamics.Tnucl)
+        wSym,wBrok = thermodynamics.wSym(thermodynamics.Tnucl),thermodynamics.wBrok(thermodynamics.Tnucl)
         eSym,eBrok = wSym-pSym,wBrok-pBrok
-        self.cb2 = model.csqBrok(Tnucl)
-        self.cs2 = model.csqSym(Tnucl)
+        self.cb2 = thermodynamics.csqBrok(thermodynamics.Tnucl)
+        self.cs2 = thermodynamics.csqSym(thermodynamics.Tnucl)
         self.alN = (eSym-eBrok-(pSym-pBrok)/self.cb2)/(3*wSym)
         self.psiN = wBrok/wSym
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
         self.wN = wSym
         self.pN = pSym
-        self.Tnucl = Tnucl
+        self.Tnucl = thermodynamics.Tnucl
         
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2

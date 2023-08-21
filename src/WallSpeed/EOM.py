@@ -3,9 +3,10 @@ import numpy as np
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .helpers import derivative # derivatives for callable functions
 
 
-def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, grid):
+def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     """
     Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
     the field equation of motion iteratively.
@@ -25,6 +26,29 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
 
+    def ddVddf(freeEnergy,X,whichfield):
+        X = np.asanyarray(X)
+        h, s = X[..., 0], X[..., 1]
+        if whichfield == 0:
+            return derivative(
+                lambda h: freeEnergy([h,s],freeEnergy.Tnucl),
+                h,
+                dx = 1e-3,
+                n=2,
+                order=4,
+            )
+        else:
+            return derivative(
+                lambda s: freeEnergy([h,s],freeEnergy.Tnucl),
+                s,
+                dx = 1e-3,
+                n=2,
+                order=4,
+            )
+
+    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),0)
+    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(Tnucl)[0]),1)
+    
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
     wallOffSetGuess = 0
@@ -89,7 +113,7 @@ def findWallVelocityLoop(model, TNucl, wallVelocityLTE, hMass, sMass, errTol, gr
 
 def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy):
     c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
-    Tprofile = findTemperatureProfile(
+    Tprofile, vprofile = findPlasmaProfile(
         c1,
         c2,
         higgsWidth,
@@ -98,7 +122,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy):
         offEquilDeltas,
         Tplus,
         Tminus,
-        model,
+        freeEnergy,
         grid,
     )
 
@@ -266,6 +290,7 @@ def higgsEquationOfMotion(
     wallOffSet,
     z,
     freeEnergy,
+    particle,
     offEquilDeltas,
     T,
 ):
@@ -273,10 +298,23 @@ def higgsEquationOfMotion(
     kinetic = -higgsVEV * np.tanh(zLHiggs) / (higgsWidth * np.cosh(zLHiggs)) ** 2
     [h, s] = wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z)
     [dVdh, dVds] = freeEnergy.derivField([h, s], T)
+
+    def dmtdh(ptcle,X):
+        X = np.asanyarray(X)
+        h, s = X[..., 0], X[..., 1]
+        return derivative(
+            lambda h: ptcle.msqVacuum([h,s]),
+            h,
+            dx = 1e-3,
+            n=1,
+            order=4,
+        )
+
+    #need to generalize to more than 1 particle.
     offEquil = (
         0.5
         * 12
-        * Veff.dTopMassdh([h, s], T) #need to rewrite
+        * dmtdh(particle,[h,s])
         * offEquilDeltas[0, 0]
     )
     return kinetic + dVdh + offEquil
@@ -589,7 +627,7 @@ def deltaToTmunu(
     offEquilDeltas,
     higgsWidth,
     grid,
-    particleList,
+    particle,
     freeEnergy
 ):
 
@@ -604,12 +642,11 @@ def deltaToTmunu(
     ubar3 = u0
 
     h = 0.5 * freeEnergy.findPhases(Tm)[1,0]*(1 - np.tanh(grid.xiValues / higgsWidth))
-    mTopSquared = 1/2.*model.ytop*h*h #need to update this once model file is ready
 
-    T30 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u0+
-           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
-    T33 = ((3*delta20 - delta02 - mTopSquared*delta00)*u3*u3+
-           (3*delta02 - delta20 + mTopSquared*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+    T30 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u0+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
+    T33 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u3+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
 
     return T30, T33
 
