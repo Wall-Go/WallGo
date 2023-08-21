@@ -141,7 +141,7 @@ class Hydro:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
         return vp, vm, Tp, Tm
     
-    def gammasq(self, v):
+    def gammasq(self, v):#move to helper functions?
         r"""
         Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
         """

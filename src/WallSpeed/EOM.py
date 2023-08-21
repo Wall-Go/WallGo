@@ -28,8 +28,6 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         wallVelocity = np.sqrt(1 / 3)
         maxWallVelocity = hydro.vJ
 
-    offEquilDeltas = 0
-
     c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
 
     def ddVddf(freeEnergy,X,whichfield):
@@ -69,6 +67,9 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
+
+    offEquilDeltas = {"00": np.zeros(grid.M), "02": np.zeros(grid.M), "20": np.zeros(grid.M), "11": np.zeros(grid.M)}
+    
     error = errTol + 1
     while error > errTol:
 
@@ -80,7 +81,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
         c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
 
-        wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid)
+        wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
 
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
@@ -89,6 +90,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
             singletWidth,
             wallOffSet,
             offEquilDeltas,
+            particle,
             Tplus,
             Tminus,
             freeEnergy,
@@ -100,6 +102,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
 
         offEquilDeltas = boltzmannSolver.getDeltas()
+
 
         intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, freeEnergy, hydro)
@@ -126,6 +129,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
         singletWidth,
         wallOffSet,
         offEquilDeltas,
+        particle,
         Tplus,
         Tminus,
         freeEnergy,
@@ -533,6 +537,7 @@ def findPlasmaProfile(
     singletWidth,
     wallOffSet,
     offEquilDeltas,
+    particle,
     Tplus,
     Tminus,
     freeEnergy,
@@ -552,14 +557,14 @@ def findPlasmaProfile(
 
         singletVEV = freeEnergy.findPhases(Tplus)[0,1]
         s = 0.5 * singletVEV * (1 + np.tanh(z / singletWidth + wallOffSet))
-        dsdh = (
+        dsdz = (
             0.5
             * singletVEV
             / (singletWidth * np.cosh(z / singletWidth + wallOffSet) ** 2)
         )
 
         T, vPlasma = findPlasmaProfilePoint(
-            c1, c2, freeEnergy, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
+            c1, c2, freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
         )
 
         temperatureProfile.append(T)
@@ -569,11 +574,14 @@ def findPlasmaProfile(
 
 
 def findPlasmaProfilePoint(
-    c1, c2, freeEnergy, h, dhdz, s, dsdz, offEquilDeltas, Tplus, Tminus
+    c1,c2,freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
 ):
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
+
+    velocityAtCenter = 0.5 #this is not correct
+    Tout30, Tout33 = deltaToTmunu(velocityAtCenter,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)
 
     s1 = c1 - offEquilDeltas[0, 3]
     s2 = c2 - offEquilDeltas[3, 3]
@@ -645,6 +653,9 @@ def deltaToTmunu(
     delta11 = offEquilDeltas["11"]
     delta02 = offEquilDeltas["02"]
     delta20 = offEquilDeltas["20"]
+
+    def gammasq(v): #move to helper functions?
+        return 1./(1.-v**2)
 
     u0 = np.sqrt(gammasq(velocityAtCenter))
     u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
