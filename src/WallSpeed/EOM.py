@@ -68,7 +68,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
-    offEquilDeltas = {"00": np.zeros(grid.M), "02": np.zeros(grid.M), "20": np.zeros(grid.M), "11": np.zeros(grid.M)}
+    offEquilDeltas = {"00": np.zeros(grid.M-1), "02": np.zeros(grid.M-1), "20": np.zeros(grid.M-1), "11": np.zeros(grid.M-1)}
     
     error = errTol + 1
     while error > errTol:
@@ -664,10 +664,17 @@ def deltaToTmunu(
 
     h = 0.5 * freeEnergy.findPhases(Tm)[1,0]*(1 - np.tanh(grid.xiValues / higgsWidth))
 
-    T30 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u0+
-           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
-    T33 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u3+
-           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+    print("------")
+
+    print(np.asanyarray(h).shape)
+    print(np.zeros(len(h)).shape)
+
+    print(len(h))
+
+    T30 = ((3*delta20 - delta02 - particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*u3*u0+
+           (3*delta02 - delta20 + particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
+    T33 = ((3*delta20 - delta02 - particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*u3*u3+
+           (3*delta02 - delta20 + particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
 
     return T30, T33
 
