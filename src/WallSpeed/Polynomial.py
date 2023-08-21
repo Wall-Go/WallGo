@@ -1,5 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri May 19 13:41:50 2023
+
+@author: benoitlaurent
+"""
+
 import numpy as np
-from .Grid import Grid################
 from scipy.special import eval_chebyt,eval_chebyu
 
 class Polynomial:
@@ -247,6 +254,28 @@ class Polynomial:
 
         return self.chebyshev(grid, n, restriction)
 
+    def matrix(self, basis,direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        basis : string
+            Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if basis == 'Cardinal':
+            return self.cardinalMatrix(direction,endpoints)
+        elif basis == 'Chebyshev':
+            return self.chebyshevMatrix(direction,endpoints)
+        else:
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+
 
     def cardinalDeriv(self,direction,endpoints=False):
         """
@@ -331,3 +360,30 @@ class Polynomial:
             deriv -= np.where(n[None,:]%2==0,0,1)
 
         return deriv
+
+    def deriv(self,basis,direction,endpoints=False):
+        """
+        Computes the derivative matrix of either the Chebyshev or cardinal polynomials in some direction.
+
+        Parameters
+        ----------
+        basis : string
+            Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
+        direction : string
+            Select the direction in which to compute the matrix. Can be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+
+        if basis == 'Cardinal':
+            return self.cardinalDeriv(direction,endpoints)
+        elif basis == 'Chebyshev':
+            return self.chebyshevDeriv(direction,endpoints)
+        else:
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")

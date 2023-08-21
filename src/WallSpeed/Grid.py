@@ -41,6 +41,35 @@ class Grid:
         r"""
         Initialises Grid object.
 
+        Compactified coordinates are chosen according to
+
+        .. math::
+            \chi = -\cos\left(\frac{\pi i}{M}\right), \qquad
+            \rho_{z} = -\cos\left(\frac{\pi j}{N}\right), \qquad
+            \rho_{\Vert} = -\cos\left(\frac{\pi k}{N-1}\right),
+
+        with integers :math:`i, j, k` taken over
+
+        .. math::
+            i = 0, 1, \dots, M, \qquad
+            j = 0, 1, \dots, N, \qquad
+            k = 0, 1, \dots, N-1.
+
+        These are the Gauss-Lobatto collocation points, here with all
+        boundary points included.
+
+        The boundary points :math:`\chi=\pm 1`, :math:`\rho_z=\pm 1` and
+        :math:`\rho_{\Vert}=1` correspond to points at infinity. The
+        deviation from equilibrium is assumed to equal zero at infinity, so
+        these points are dropped when solving the Boltzmann equations. The
+        resulting grid is
+
+        .. math::
+            i = 1, 2, \dots, M-1, \qquad
+            j = 1, 2, \dots, N-1, \qquad
+            k = 0, 1, \dots, N-2.
+
+
         Parameters
         ----------
         M : int

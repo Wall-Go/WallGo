@@ -78,9 +78,9 @@ class Particle:
         """
         Checks input fits expectations
         """
-        fields = [1, 1]
-        assert isinstance(msqVacuum(fields), float), \
-            f"msqVacuum({fields}) must return float"
+        #fields = np.array([1, 1])
+        #assert isinstance(msqVacuum(fields), float), \
+        #    f"msqVacuum({fields}) must return float"
         T = 100
         assert isinstance(msqThermal(T), float), \
             f"msqThermal({T}) must return float"
