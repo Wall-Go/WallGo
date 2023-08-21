@@ -2,8 +2,11 @@
 Classes for user input of models
 """
 import numpy as np # arrays, maths and stuff
+import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
 from .helpers import derivative # derivatives for callable functions
+from cosmoTransitions.finiteT import Jb_spline as Jb
+from cosmoTransitions.finiteT import Jf_spline as Jf
 
 
 class Particle:
@@ -109,6 +112,7 @@ class Model:
         self.lamm = lamm
 
         self.v0 = 246.22
+        # self.v0 = 246.0
         self.muh = 125.
         self.lamh = self.muh**2/(2*self.v0**2)
         self.muhsq = -self.lamh*self.v0**2
@@ -137,9 +141,9 @@ class Model:
         self.Mt = 172.76
 
         self.g0 = 2*self.MW/self.v0
-        self.g1 = self.g0*np.sqrt((self.MZ/self.MW)**2-1)
+        self.g1 = self.g0*math.sqrt((self.MZ/self.MW)**2-1)
         self.g2 = self.g0
-        self.yt = np.sqrt(1/2)*self.g0*self.Mt/self.MW
+        self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
 
 
         self.musT = (
@@ -164,8 +168,6 @@ class Model:
                 'lams': self.lams,
                 'lamm': self.lamm
         }
-
-        print(self.musT)
 
     def V0(self,X,show_V=False):
         '''
@@ -307,9 +309,9 @@ class Model:
             differences or derivatives.
         '''
         T = np.asanyarray(T, dtype=float)
-        print("debug")
-        print(X)
-        return
+        # print("debug")
+        # print(X)
+        # return
         X = np.asanyarray(X, dtype=float)
         print(X)
         bosons = self.boson_massSq(X,T)
@@ -319,8 +321,6 @@ class Model:
         V += self.V1T(bosons, fermions, T, include_radiation)
         return np.real(V)
 
-
-xsm = Model(1,217.,1.,1.2)
 
 
 

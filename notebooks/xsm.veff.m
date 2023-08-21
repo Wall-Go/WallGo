@@ -181,8 +181,8 @@ Jf[y_?NumericQ]:=((4\[Pi])/(2\[Pi])^3) NIntegrate[x^2 Log[1+Exp[-Sqrt[x^2+y^2]]]
 VT =T^4 (scalar(3 Jb[Sqrt[mGsq]/T] + Jb[Sqrt[mminussq]/T] + Jb[Sqrt[mplussq]/T]) +  top ((-4Nc)Jf[Sqrt[mtsq]/T])+ gauge (4-1)( 2 Jb[Sqrt[mWsq]/T] + Jb[Sqrt[mZsq]/T])
 + masslessDoF((1+(Nc^2-1))(4-1)Jb[0/T]+(-1) (90-12)Jf[0/T]+ghost(-1)(((2Jb[0/T] + Jb[0/T]) + Jb[0/T] + (Nc^2-1)Jb[0/T]))));
 
-(*Veff =    tree Vtree[h,s] +  cw Vcw + vt VT;*)
-Veff =     Vtree[h,s] +   Vcw +  VT;
+Veff =    tree Vtree[h,s] +  cw Vcw + vt VT;
+(*Veff=Vtree[h,s]+Vcw+VT;*)
 
 
 (* Test minimisation:*)
@@ -195,7 +195,7 @@ Nc = 3;
 
 {Ms,\[Lambda]hs,\[Lambda]s} = {160,1.2,1.0}; (* new BM point from Benoits paper!*)
 
-{Mh,Mw,Mz, Mt,v0} = {125,80,91,173,246}; (* rougher number by Benoit *)
+{Mh,Mw,Mz, Mt,v0} = {125,80,91,173,246.22}; (* rougher number by Benoit *)
 
 Gf = 1.1663787 10^-5; (* this is not used by Benoit! *)
 (*Mt = 172.76;
@@ -235,8 +235,8 @@ T =   100;
 removeFlags = {masslessDoF-> 1, otherFermions-> 1, gluons-> 1, photon-> 1, gauge-> 1 , scalar -> 1,top-> 1,ghost-> 1};
 
 Print["Compare value of the Veff with Benoit at some arbitrary point: "]
-Veff /. removeFlags /. h-> 125 /. s-> 160 // Expand // N  // Quiet
-%/.{tree->1,cw->1,vt->1}
+Veff /. removeFlags /. h-> 110 /. s-> 130 // Expand // N  // Quiet
+%/.{tree->1,cw->0,vt->0}
 (*%/.{top->1,gauge->0,scalar->0}*)
 
 
