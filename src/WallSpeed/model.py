@@ -20,6 +20,32 @@ class Particle:
         isOutOfEquilibrium,
         collisionPrefactors,
     ):
+        r"""Initialisation
+
+        Parameters
+        ----------
+        name : string
+            A string naming the particle.
+        msqVacuum : function
+            Function :math:`m^2_0(\phi)`, should take a float and return one.
+        msqThermal : function
+            Function :math:`m^2_T(T)`, should take a float and return one.
+        statistics : {\"Fermion\", \"Boson\"}
+            Particle statistics.
+        inEquilibrium : boole
+            True if particle is treated as in local equilibrium.
+        ultrarelativistic : boole
+            True if particle is treated as ultrarelativistic.
+        collisionPrefactors : list
+            Coefficients of collision integrals, :math:`\sim g^4`, currently
+            must be of length 3.
+
+        Returns
+        -------
+        cls : Particle
+            An object of the Particle class.
+        """
+
         self.msqVacuum = msqVaccum
         self.msqThermal = msqThermal
         self.dof = dof
