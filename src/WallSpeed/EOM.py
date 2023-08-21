@@ -2,6 +2,8 @@ import numpy as np
 
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
+from .Thermodynamics import Thermodynamics
+from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative # derivatives for callable functions
 
@@ -15,16 +17,19 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     # Initial conditions for velocity, hydro boundaries, wall parameters and
     # temperature profile
 
+    thermo = Thermodynamics(freeEnergy)
+    hydro = Hydrodynamics(thermo)
+
     if wallVelocityLTE is not None:
         wallVelocity = 0.9 * wallVelocityLTE
         maxWallVelocity = wallVelocityLTE
     else:
         wallVelocity = np.sqrt(1 / 3)
-        maxWallVelocity = findJouguetVelocity(model, TNucl)
+        maxWallVelocity = hydro.vJ
 
     offEquilDeltas = 0
 
-    c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
+    c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
 
     def ddVddf(freeEnergy,X,whichfield):
         X = np.asanyarray(X)
@@ -72,7 +77,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         oldWallOffSet = wallParameters[3]
         oldError = error
 
-        c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallVelocity)
+        c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
 
         wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid)
 
@@ -85,7 +90,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
             offEquilDeltas,
             Tplus,
             Tminus,
-            model,
+            freeEnergy,
             grid,
         )
 
@@ -96,7 +101,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         offEquilDeltas = boltzmannSolver.getDeltas()
 
         intermediateRes = root(
-            momentsOfWallEoM, wallParameters, args=(offEquilDeltas, model)
+            momentsOfWallEoM, wallParameters, args=(offEquilDeltas, freeEnergy, hydro)
         )
 
         wallParameters = intermediateRes.x
@@ -111,8 +116,8 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     return wallParameters
 
 
-def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy):
-    c1, c2, Tplus, Tminus = findHydroBoundaries(TNucl, wallParameters[0])
+def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro):
+    c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallParameters[0])
     Tprofile, vprofile = findPlasmaProfile(
         c1,
         c2,
