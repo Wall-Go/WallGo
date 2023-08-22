@@ -583,15 +583,15 @@ def findPlasmaProfilePoint(
     velocityAtCenter = 0.5 #this is not correct
     Tout30, Tout33 = deltaToTmunu(velocityAtCenter,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)
 
-    s1 = c1 - offEquilDeltas[0, 3]
-    s2 = c2 - offEquilDeltas[3, 3]
+    s1 = c1 - Tout30
+    s2 = c2 - Tout33
 
     Tavg = 0.5 * (Tplus + Tminus)
 
     minRes = minimize(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         Tavg,
-        bounds=(0, None),
+        bounds=(0, None), #some problem happens here
         tol=1e-9,
     )
     # TODO: A fail safe
@@ -663,13 +663,6 @@ def deltaToTmunu(
     ubar3 = u0
 
     h = 0.5 * freeEnergy.findPhases(Tm)[1,0]*(1 - np.tanh(grid.xiValues / higgsWidth))
-
-    print("------")
-
-    print(np.asanyarray(h).shape)
-    print(np.zeros(len(h)).shape)
-
-    print(len(h))
 
     T30 = ((3*delta20 - delta02 - particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*u3*u0+
            (3*delta02 - delta20 + particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
