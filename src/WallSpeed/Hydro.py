@@ -254,7 +254,8 @@ class Hydro:
         wSym = self.thermodynamics.wSym(Tp)
         c1 = wSym*self.gammasq(vp)*vp
         c2 = self.thermodynamics.pSym(Tp)+wSym*self.gammasq(vp)*vp**2
-        return (c1, c2, Tp, Tm)
+        vAtz0 = self.mu(vwTry,vp)
+        return (c1, c2, Tp, Tm, vAtz0)
     
     def findvwLTE(self):
         r"""

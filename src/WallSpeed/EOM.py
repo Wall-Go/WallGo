@@ -28,7 +28,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         wallVelocity = np.sqrt(1 / 3)
         maxWallVelocity = hydro.vJ
 
-    c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
+    c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
 
     def ddVddf(freeEnergy,X,whichfield):
         X = np.asanyarray(X)
@@ -79,13 +79,15 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         oldWallOffSet = wallParameters[3]
         oldError = error
 
-        c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
+
 
         wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
 
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
+            velocityAtz0,
             higgsWidth,
             singletWidth,
             wallOffSet,
@@ -533,6 +535,7 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
 def findPlasmaProfile(
     c1,
     c2,
+    velocityAtz0,
     higgsWidth,
     singletWidth,
     wallOffSet,
@@ -564,7 +567,7 @@ def findPlasmaProfile(
         )
 
         T, vPlasma = findPlasmaProfilePoint(
-            c1, c2, freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
+            c1, c2, velocityAtz0,freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
         )
 
         temperatureProfile.append(T)
@@ -574,14 +577,13 @@ def findPlasmaProfile(
 
 
 def findPlasmaProfilePoint(
-    c1,c2,freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
+    c1,c2,velocityAtz0,freeEnergy, h, dhdz, s, dsdz, higgsWidth, offEquilDeltas,particle, Tplus, Tminus,grid
 ):
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
 
-    velocityAtCenter = 0.5 #this is not correct
-    Tout30, Tout33 = deltaToTmunu(velocityAtCenter,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)
+    Tout30, Tout33 = deltaToTmunu(velocityAtz0,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)
 
     s1 = c1 - Tout30
     s2 = c2 - Tout33
