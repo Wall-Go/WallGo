@@ -463,7 +463,7 @@ def singletEquationOfMotion(
     )
     [h, s] = wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z)
     [dVdh, dVds] = freeEnergy.derivField([h, s], T)
-    return kinetic + potential
+    return kinetic + dVds
 
 
 def initialWallParameters(
