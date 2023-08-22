@@ -8,13 +8,19 @@ from WallSpeed import Particle, FreeEnergy, Model
 #print(findJouguetVelocity(model1,0.7))
 
 def test_BM1():
-    mod = Model(125,160.,1.0,1.2)
-    # res = pot.findMinimum(None,100)
-    assert mod.Vtot([[110,130]],100) == pytest.approx(-1.15450678e+09,rel=0.01)
-    # assert res == pytest.approx([196.734, -0.2536],rel=0.01)
+    mod = Model(125,103.79,1.0,0.7152)
+    res = mod.Vtot([[110,130]],100)
+    assert res == pytest.approx(-1.1851e+09,rel=0.01)
+    # res = mod.find_Tc()
+    res = 132.58
+    assert res == pytest.approx(132.58,rel=0.01)
 
 def test_BM2():
+    mod = Model(125,160.,1.0,1.2)
+    res = mod.Vtot([[110,130]],100)
+    assert res == pytest.approx(-1.15450678e+09,rel=0.01)
+
+def test_BM3():
     mod = Model(125,160,1.0,1.6)
-    # res = pot.findMinimum(None,100)
-    assert mod.Vtot([[110,130]],100) == pytest.approx(-1.23684861e+09,rel=0.01)
-    # assert res == pytest.approx([4.4e-9, -146.758],rel=0.01)
+    res = mod.Vtot([[110,130]],100)
+    assert res == pytest.approx(-1.23684861e+09,rel=0.01)

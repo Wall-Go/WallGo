@@ -12,6 +12,7 @@ from WallSpeed import Particle, FreeEnergy, Model
 
 """
 Model definition
+inhertis from Model
 """
 print("Model: xSM\n")
 
@@ -119,12 +120,13 @@ print(f"{thermo.ddpBrok(100)=}")
 
 
 print("internal model")
-# xsm = Model(1,217.,1.,1.2)
-xsm = Model(125,160.,1.0,1.2)
+# xsm = Model(125,103.79,1.0,0.7152)
+xsm = Model(125,160,1.0,1.6)
 print(xsm.Vtot([[110,130]],100))
 params=xsm.params
 pprint(params)
-Tc = xsm.Tc
+Tc = 132.58 # this is the target Tc
+# Tc = xsm.Tc
 Tn = 100 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 fxSM = FreeEnergy(xsm.Vtot, Tc, Tn, params=params)
@@ -153,7 +155,6 @@ top = Particle(
     inEquilibrium=False,
     ultrarelativistic=False,
     collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
-    # collisionPrefactors=[g**4, g**4, g**4],
 )
 particles = [top]
 print("\ntop quark:", top)

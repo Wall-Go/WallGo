@@ -192,8 +192,8 @@ Nf = 3;
 Nc = 3;
 
 {Ms,\[Lambda]hs,\[Lambda]s} = {160,1.6,1.0}; (* BM point by Tuomas and Jorinde: this gets stuck to singlet phase in Benoits low order approximation without daisies etc. *)
-
 (*{Ms,\[Lambda]hs,\[Lambda]s} = {160,1.2,1.0}; (* new BM point from Benoits paper!*)*)
+{Ms,\[Lambda]hs,\[Lambda]s} = {103.79,0.7152,1.0}; (* new BM point from Benoits paper!*)
 
 {Mh,Mw,Mz, Mt,v0} = {125,80,91,173,246.22}; (* rougher number by Benoit *)
 

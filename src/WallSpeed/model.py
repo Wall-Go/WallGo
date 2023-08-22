@@ -112,7 +112,6 @@ class Model:
         self.lamm = lamm
 
         self.v0 = 246.22
-        # self.v0 = 246.0
         self.muh = 125.
         self.lamh = self.muh**2/(2*self.v0**2)
         self.muhsq = -self.lamh*self.v0**2
@@ -175,12 +174,12 @@ class Model:
             'yt': self.yt
         }
 
+        # this is just a mock Tc and needs to be included in cls FreeEnergy
         self.Tc = np.sqrt((
                 + self.muhT*self.lams*self.muhsq
                 - self.musT*self.lamh*self.mussq
                 - np.sqrt(self.lamh*self.lams)*(-self.musT*self.muhsq+self.muhT*self.mussq)
             ) / (self.musT**2*self.lamh - self.muhT**2*self.lams))
-
 
     def V0(self,X,show_V=False):
         '''
@@ -188,9 +187,7 @@ class Model:
         X
         '''
         X = np.asanyarray(X)
-        h1 = X[...,0]
-        s1 = X[...,1]
-
+        h1,s1 = X[...,0],X[...,1]
         V = (
            +1/2*self.muhsq*h1**2
            +1/2*self.mussq*s1**2
@@ -253,8 +250,6 @@ class Model:
         :func:`Vtot`.
         '''
         m2, nb, c = bosons
-        #V = np.sum(n*m2*m2 * (np.log(np.abs(m2/self.mu4Dsq) + 1e-100)
-        #                      - c), axis=-1)
         V = np.sum(self.Jcw(m2,nb,c), axis=-1)
 
         m2, nf = fermions
@@ -322,11 +317,7 @@ class Model:
             differences or derivatives.
         '''
         T = np.asanyarray(T)
-        # print("debug")
-        # print(X)
-        # return
         X = np.asanyarray(X)
-        # print(X)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
@@ -469,7 +460,7 @@ class FreeEnergy:
             return self.dfdPhi(X, T)
         else:
             X = np.asanyarray(X, dtype=float)
-            # this needs generalising to arbitrary fields
+            # TODO generalise to arbitrary fields
             h, s = X[..., 0], X[..., 1]
             Xdh = X.copy()
             Xdh[..., 0] += self.dPhi * np.ones_like(h)
@@ -522,19 +513,14 @@ class FreeEnergy:
 
         muh2_abs = abs(p["muhsq"]) / 20
         mus2_abs = abs(p["mussq"]) / 20
-        lambdaH_sqrt = np.sqrt(p["lamh"])
-        lambdaS_sqrt = np.sqrt(p["lams"])
+        lamh_sqrt = np.sqrt(p["lamh"])
+        lams_sqrt = np.sqrt(p["lams"])
         muhT_squared = p["muhT"] * T**2
         musT_squared = p["musT"] * T**2
 
-        mhsq = np.sqrt(-min(-muh2_abs, p["muhsq"] + muhT_squared) / lambdaH_sqrt)
-        mssq = np.sqrt(-min(-mus2_abs, p["mussq"] + musT_squared) / lambdaS_sqrt)
+        mhsq = np.sqrt(-min(-muh2_abs, p["muhsq"] + muhT_squared) / lamh_sqrt)
+        mssq = np.sqrt(-min(-mus2_abs, p["mussq"] + musT_squared) / lams_sqrt)
 
-        # mssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-        # mhsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
-
-        # This should be overridden.
-        #return np.array([[m1, 0], [0, m2]])
         return [[mhsq, 0], [0, mssq]]
 
 
@@ -572,18 +558,9 @@ class FreeEnergy:
             wT = optimize.minimize_scalar(fs,(wT,2*wT),(0,10*wT)).x
         return np.array([[vT,0],[0,wT]])
 
-        # result = optimize.minimize(self.Vtot, X, args=(T,),
-        #                            method='Nelder-Mead',
-        #                            tol=1e-12,options={'disp': False})
-
-        # #hardcoded!
-        # p = self.params
-        # hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
-        # ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-        # return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
     def findPhasesAnalytical(self, T):
-        """Finds all phases at a given temperature T
+        """Finds all phases at a given temperature T (hard coded version)
 
         Parameters
         ----------
@@ -596,8 +573,25 @@ class FreeEnergy:
             A list of phases
 
         """
-        # hardcoded!
         p = self.params
         hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
+
+    def find_Tc(self,delta_T=1,Tmax=500):
+        """Determines the critical temperature between two scalar phases
+
+        Parameters
+        ----------
+        delta_T : float
+            Temperature increment for critical temperature search.
+        Tmax : float
+            Maximal temperature bracket for Tcrit search
+
+        Returns
+        -------
+        Tc : array_like
+            Critical temperature
+
+        """
+        DVtot = lambda v,w,T: self.Vtot([v,0],T)-self.Vtot([0,w],T)
