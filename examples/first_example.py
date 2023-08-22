@@ -10,11 +10,6 @@ from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy, Model
 
-
-# xsm = Model(1,217.,1.,1.2)
-xsm = Model(125,160.,1.0,1.2)
-print(xsm.Vtot([[110,130]],100))
-
 """
 Model definition
 """

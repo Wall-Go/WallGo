@@ -193,7 +193,7 @@ Nc = 3;
 
 {Ms,\[Lambda]hs,\[Lambda]s} = {160,1.6,1.0}; (* BM point by Tuomas and Jorinde: this gets stuck to singlet phase in Benoits low order approximation without daisies etc. *)
 
-{Ms,\[Lambda]hs,\[Lambda]s} = {160,1.2,1.0}; (* new BM point from Benoits paper!*)
+(*{Ms,\[Lambda]hs,\[Lambda]s} = {160,1.2,1.0}; (* new BM point from Benoits paper!*)*)
 
 {Mh,Mw,Mz, Mt,v0} = {125,80,91,173,246.22}; (* rougher number by Benoit *)
 
@@ -236,8 +236,11 @@ removeFlags = {masslessDoF-> 1, otherFermions-> 1, gluons-> 1, photon-> 1, gauge
 
 Print["Compare value of the Veff with Benoit at some arbitrary point: "]
 Veff /. removeFlags /. h-> 110 /. s-> 130 // Expand // N  // Quiet
-%/.{tree->1,cw->0,vt->0}
+%/.{tree->1,cw->1,vt->1}
 (*%/.{top->1,gauge->0,scalar->0}*)
+
+
+(53574.70475221^2 1)(-(3/2)+Log[53574.70475221/\[Mu]sq])
 
 
 (***********)

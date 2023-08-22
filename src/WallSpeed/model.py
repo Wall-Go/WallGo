@@ -158,16 +158,29 @@ class Model:
                 +self.lamm/24
                 )
 
+    
         '''
         Define dictionary of used parameters
         '''
-        self.pars = {
-                'muhsq': self.muhsq,
-                'mussq': self.mussq,
-                'lamh': self.lamh,
-                'lams': self.lams,
-                'lamm': self.lamm
+        self.params = {
+            'muhsq': self.muhsq,
+            'mussq': self.mussq,
+            'lamh': self.lamh,
+            'lams': self.lams,
+            'lamm': self.lamm,
+            'muhT': self.muhT,
+            'musT': self.musT,
+            'g1': self.g1,
+            'g2': self.g2,
+            'yt': self.yt
         }
+
+        self.Tc = np.sqrt((
+                + self.muhT*self.lams*self.muhsq
+                - self.musT*self.lamh*self.mussq
+                - np.sqrt(self.lamh*self.lams)*(-self.musT*self.muhsq+self.muhT*self.mussq)
+            ) / (self.musT**2*self.lamh - self.muhT**2*self.lams))
+
 
     def V0(self,X,show_V=False):
         '''
@@ -308,20 +321,18 @@ class Model:
             terms from the effective potential. Useful for calculating
             differences or derivatives.
         '''
-        T = np.asanyarray(T, dtype=float)
+        T = np.asanyarray(T)
         # print("debug")
         # print(X)
         # return
-        X = np.asanyarray(X, dtype=float)
-        print(X)
+        X = np.asanyarray(X)
+        # print(X)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
         V += self.V1(bosons, fermions)
         V += self.V1T(bosons, fermions, T, include_radiation)
-        return np.real(V)
-
-
+        return np.real(V)[0]
 
 
 class FreeEnergy:
@@ -374,7 +385,7 @@ class FreeEnergy:
             self.dfdT = dfdT
             self.dfdPhi = dfdPhi
         else:
-            self.f = lambda v, T: f(v, T, **params)
+            self.f = lambda X, T: f(X, T)
             if dfdT is None:
                 self.dfdT = None
             else:
@@ -457,7 +468,7 @@ class FreeEnergy:
         if self.dfdPhi is not None:
             return self.dfdPhi(X, T)
         else:
-            X = np.asanyarray(X)
+            X = np.asanyarray(X, dtype=float)
             # this needs generalising to arbitrary fields
             h, s = X[..., 0], X[..., 1]
             Xdh = X.copy()
@@ -513,14 +524,14 @@ class FreeEnergy:
         mus2_abs = abs(p["mussq"]) / 20
         lambdaH_sqrt = np.sqrt(p["lamh"])
         lambdaS_sqrt = np.sqrt(p["lams"])
-        muhT_squared = p["th"] * T**2
-        musT_squared = p["ts"] * T**2
+        muhT_squared = p["muhT"] * T**2
+        musT_squared = p["musT"] * T**2
 
         mhsq = np.sqrt(-min(-muh2_abs, p["muhsq"] + muhT_squared) / lambdaH_sqrt)
         mssq = np.sqrt(-min(-mus2_abs, p["mussq"] + musT_squared) / lambdaS_sqrt)
 
-        # mssq = (-p["ts"]*T**2+p["mussq"])/p["lams"]
-        # mhsq = (-p["th"]*T**2+p["muhsq"])/p["lamh"]
+        # mssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
+        # mhsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
 
         # This should be overridden.
         #return np.array([[m1, 0], [0, m2]])
@@ -544,11 +555,9 @@ class FreeEnergy:
         if X is None:
             X = self.approxZeroTMin(T)
             X = np.asanyarray(X)
-        #print(X)
-            
-        p = self.params
-        #print(self.f(X,T))
 
+        p = self.params
+        
         fh = lambda h: self.f([abs(h),0],T)
         fs = lambda s: self.f([0,abs(s)],T)
         
@@ -569,8 +578,8 @@ class FreeEnergy:
 
         # #hardcoded!
         # p = self.params
-        # hsq = (-p["th"]*T**2+p["muhsq"])/p["lamh"]
-        # ssq = (-p["ts"]*T**2+p["mussq"])/p["lams"]
+        # hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
+        # ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
         # return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
     def findPhasesAnalytical(self, T):
@@ -589,6 +598,6 @@ class FreeEnergy:
         """
         # hardcoded!
         p = self.params
-        hsq = (-p["th"]*T**2+p["muhsq"])/p["lamh"]
-        ssq = (-p["ts"]*T**2+p["mussq"])/p["lams"]
+        hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
+        ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
