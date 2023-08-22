@@ -16,9 +16,9 @@ class BoltzmannBackground:
         polynomialBasis="Cardinal",
     ):
         self.vw = vw
-        self.velocityProfile = velocityProfile
-        self.fieldProfile = fieldProfile
-        self.temperatureProfile = temperatureProfile
+        self.velocityProfile = np.asarray(velocityProfile)
+        self.fieldProfile = np.asarray(fieldProfile)
+        self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
 
 
@@ -215,12 +215,13 @@ class BoltzmannSolver:
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[:, np.newaxis, np.newaxis]
+        field = self.background.fieldProfile[..., np.newaxis, np.newaxis]
         v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
         vw = self.background.vw
 
         # fluctuation mode
         statistics = -1 if self.particle.statistics == "Fermion" else 1
+        # TODO: indices order not consistent across different functions.
         msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
 

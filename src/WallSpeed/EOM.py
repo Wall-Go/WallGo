@@ -505,9 +505,9 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, freeEnergy):
         freeEnergy([higgsVEV, 0], T) + freeEnergy([0, singletVEV], T)
     )
 
-    print(higgsWidth, singletWidth, wallOffSet)
+    # print(higgsWidth, singletWidth, wallOffSet)
 
-    print(kinetic + potential)
+    # print(kinetic + potential)
 
     return kinetic + potential
 
@@ -574,7 +574,7 @@ def findPlasmaProfile(
         temperatureProfile.append(T)
         velocityProfile.append(vPlasma)
 
-    return temperatureProfile, velocityProfile
+    return np.array(temperatureProfile), np.array(velocityProfile)
 
 
 def findPlasmaProfilePoint(
@@ -599,8 +599,8 @@ def findPlasmaProfilePoint(
     )
     # TODO: A fail safe
 
-    if temperatureProfileEqLHS(h, s, dhdz, dsdz, minRes.x, s1, s2, freeEnergy) >= 0:
-        T = minRes.x
+    if temperatureProfileEqLHS(h, s, dhdz, dsdz, minRes.x[0], s1, s2, freeEnergy) >= 0:
+        T = minRes.x[0]
         vPlasma = plasmaVelocity(h, s, T, s1, freeEnergy)
         return T, vPlasma
 
