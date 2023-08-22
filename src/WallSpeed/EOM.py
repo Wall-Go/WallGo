@@ -583,17 +583,17 @@ def findPlasmaProfilePoint(
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
 
-    Tout30, Tout33 = deltaToTmunu(velocityAtz0,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)
+    Tout30, Tout33 = deltaToTmunu(h,velocityAtz0,Tminus,offEquilDeltas,higgsWidth,grid,particle,freeEnergy)  #this should not give Tout30 for the full grid, but only for one gridpoint
 
-    s1 = c1 - Tout30
+    s1 = c1 - Tout30 
     s2 = c2 - Tout33
 
     Tavg = 0.5 * (Tplus + Tminus)
 
     minRes = minimize(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
-        Tavg,
-        bounds=(0, None), #some problem happens here
+        x0 = Tavg,
+        bounds=[(0, None)], #some problem happens here
         tol=1e-9,
     )
     # TODO: A fail safe
@@ -642,6 +642,7 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy):
 
 
 def deltaToTmunu(
+    h,
     velocityAtCenter,
     Tm,
     offEquilDeltas,
@@ -651,10 +652,10 @@ def deltaToTmunu(
     freeEnergy
 ):
 
-    delta00 = offEquilDeltas["00"]
-    delta11 = offEquilDeltas["11"]
-    delta02 = offEquilDeltas["02"]
-    delta20 = offEquilDeltas["20"]
+    delta00 = offEquilDeltas["00"][0]   #this is not correct! need to evaluate it at the proper z value!!
+    delta11 = offEquilDeltas["11"][0]
+    delta02 = offEquilDeltas["02"][0]
+    delta20 = offEquilDeltas["20"][0]
 
     def gammasq(v): #move to helper functions?
         return 1./(1.-v**2)
@@ -664,12 +665,11 @@ def deltaToTmunu(
     ubar0 = u3
     ubar3 = u0
 
-    h = 0.5 * freeEnergy.findPhases(Tm)[1,0]*(1 - np.tanh(grid.xiValues / higgsWidth))
 
-    T30 = ((3*delta20 - delta02 - particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*u3*u0+
-           (3*delta02 - delta20 + particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
-    T33 = ((3*delta20 - delta02 - particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*u3*u3+
-           (3*delta02 - delta20 + particle.msqVacuum(np.transpose([np.asanyarray(h),np.zeros(len(h))]))*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+    T30 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u0+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
+    T33 = ((3*delta20 - delta02 - particle.msqVacuum([h,0])*delta00)*u3*u3+
+           (3*delta02 - delta20 + particle.msqVacuum([h,0])*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
 
     return T30, T33
 
