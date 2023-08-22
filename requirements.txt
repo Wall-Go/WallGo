@@ -3,3 +3,4 @@ numpy
 pytest
 setuptools
 findiff
+cosmotransitions
