@@ -625,7 +625,7 @@ def findPlasmaProfilePoint(
     )
     # TODO: Can the function have multiple zeros?
 
-    T = res.x
+    T = res.x #should this just be T = res?
     vPlasma = plasmaVelocity(h, s, T, s1, freeEnergy)
     return T, vPlasma
 
