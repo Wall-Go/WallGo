@@ -522,7 +522,7 @@ def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid,freeEnergy):
     for z in grid.xiValues:
         wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
 
-    return wallProfileGrid
+    return np.transpose(wallProfileGrid)
 
 
 def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
@@ -553,7 +553,7 @@ def findPlasmaProfile(
     temperatureProfile = []
     velocityProfile = []
     for index in range(len(grid.xiValues)):
-        z = grid.xiValues(index)
+        z = grid.xiValues[index]
         higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
         h = 0.5 * higgsVEV * (1 - np.tanh(z / higgsWidth))
         dhdz = (
