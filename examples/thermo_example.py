@@ -7,6 +7,7 @@ from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
+from WallSpeed.Hydro import Hydro
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy, Model
 
@@ -143,6 +144,18 @@ print(f"{thermo.pSym(100)=}")
 print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
 
+print("--------------")
+print("Testing the hydrodynamics againast Benoit's earlier results")
+xsm = Model(125,103.79,1.0,0.7152)
+params = xsm.params
+Tc = 132.58
+Tn = 129.61
+fxSM = FreeEnergy(xsm.Vtot, Tc, Tn, params=params)
+thermo = Thermodynamics(fxSM)
+hydro = Hydro(thermo)
+vJ = hydro.vJ
+print("Jouguet velocity")
+print(vJ)
 
 
 
