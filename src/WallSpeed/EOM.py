@@ -124,7 +124,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
 def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid):
     wallVelocity, higgsWidth, singletWidth, wallOffSet = wallParameters
-    c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(wallVelocity)
+    c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
     Tprofile, vprofile = findPlasmaProfile(
         c1,
         c2,
