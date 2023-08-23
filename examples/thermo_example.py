@@ -154,12 +154,15 @@ fxSM = FreeEnergy(xsm.Vtot, Tc, Tn, params=params)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vJ = hydro.vJ
-c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.528)
+#c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.528)
 
 print("Jouguet velocity")
 print(vJ)
-print("c1,c2")
-print(c1,c2)
+print(thermo.pBrok(129.6))
+print(thermo.pSym(130.9))
+
+#print("c1,c2")
+#print(c1,c2)
 
 
 
