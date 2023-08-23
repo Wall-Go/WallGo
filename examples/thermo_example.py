@@ -145,7 +145,7 @@ print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
 
 print("--------------")
-print("Testing the hydrodynamics againast Benoit's earlier results")
+print("Testing the hydrodynamics against Benoit's earlier results")
 xsm = Model(125,103.79,1.0,0.7152)
 params = xsm.params
 Tc = 132.58
@@ -154,8 +154,13 @@ fxSM = FreeEnergy(xsm.Vtot, Tc, Tn, params=params)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vJ = hydro.vJ
+c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.528)
+
 print("Jouguet velocity")
 print(vJ)
+print("c1,c2")
+print(c1,c2)
+
 
 
 
