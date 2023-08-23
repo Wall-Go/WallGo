@@ -123,6 +123,8 @@ print(f"{thermo.ddpBrok(100)=}")
 print("internal model")
 # xsm = Model(125,103.79,1.0,0.7152)
 xsm = Model(125,160,1.0,1.6)
+xsm = Model(125,80,1.0,0.5)
+print(f"{xsm.Vtot([[100,100]],100)=}")
 params=xsm.params
 pprint(params)
 Tc = 132.58 # this is the target Tc
@@ -145,13 +147,15 @@ print(f"{thermo.ddpBrok(100)=}")
 
 print("--------------")
 print("Testing the hydrodynamics against Benoit's earlier results")
-xsm = Model(125,103.79,1.0,0.7152)
+xsm = Model(125,120,1.0,0.9)
 print(f"{xsm.Vtot([[110,130]],100)=}")
 params = xsm.params
-Tc = 132.58
-Tn = 129.61
+Tc = 108.22
+Tn = 100
 fxSM = FreeEnergy(xsm.Vtot, Tc, Tn, params=params)
 print(f"{fxSM.findPhases(100)=}")
+print(f"{fxSM.findPhases(100.1)=}")
+print(f"{fxSM.findPhases(103.1)=}")
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vJ = hydro.vJ
@@ -159,8 +163,8 @@ vJ = hydro.vJ
 
 print("Jouguet velocity")
 print(vJ)
-print(thermo.pBrok(129.6))
-print(thermo.pSym(130.9))
+print(thermo.pBrok(100.1))
+print(thermo.pSym(103.1))
 
 #print("c1,c2")
 #print(c1,c2)
