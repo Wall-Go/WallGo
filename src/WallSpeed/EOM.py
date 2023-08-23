@@ -128,6 +128,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
     Tprofile, vprofile = findPlasmaProfile(
         c1,
         c2,
+        velocityAtz0,
         higgsWidth,
         singletWidth,
         wallOffSet,
