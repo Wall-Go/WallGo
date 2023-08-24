@@ -150,6 +150,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         singletWidth,
         wallOffSet,
         freeEnergy,
+        particle,
         offEquilDeltas,
         Tprofile,  #correct?
     )
@@ -194,6 +195,7 @@ def higgsPressureMoment(
     singletWidth,
     wallOffSet,
     freeEnergy,
+    particle,
     offEquilDeltas,
     Tfunc,
 ):
@@ -206,13 +208,14 @@ def higgsPressureMoment(
             wallOffSet,
             z,
             freeEnergy,
+            particle,
             offEquilDeltas,
-            Tfunc(z),
+#            Tfunc(z),      #this gave an error
+            Tfunc,   # is this ok?
         ),
         -20 * higgsWidth,
         20 * higgsWidth,
     )
-
 
 def higgsPressureLocal(
     higgsVEV,
@@ -222,6 +225,7 @@ def higgsPressureLocal(
     wallOffSet,
     z,
     freeEnergy,
+    particle,
     offEquilDeltas,
     T,
 ):
@@ -234,6 +238,7 @@ def higgsPressureLocal(
         wallOffSet,
         z,
         freeEnergy,
+        particle,
         offEquilDeltas,
         T,
     )
@@ -625,7 +630,8 @@ def findPlasmaProfilePoint(
     )
     # TODO: Can the function have multiple zeros?
 
-    T = res.x #should this just be T = res?
+#    T = res.x 
+    T = res   #is this okay?
     vPlasma = plasmaVelocity(h, s, T, s1, freeEnergy)
     return T, vPlasma
 

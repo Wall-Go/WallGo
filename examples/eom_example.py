@@ -121,4 +121,5 @@ top = Particle(
     collisionPrefactors=[g**4, g**4, g**4],
 )
 
+
 findWallVelocityLoop(top,fxSM,None,1,grid)
