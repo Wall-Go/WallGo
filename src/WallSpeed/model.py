@@ -111,7 +111,7 @@ class Model:
         self.lams = lams
         self.lamm = lamm
 
-        self.v0 = 246.22
+        self.v0 = 246.
         self.muh = 125.
         self.lamh = self.muh**2/(2*self.v0**2)
         self.muhsq = -self.lamh*self.v0**2
@@ -137,7 +137,7 @@ class Model:
         '''
         self.MW = 80.379
         self.MZ = 91.1876
-        self.Mt = 172.76
+        self.Mt = 173.
 
         self.g0 = 2*self.MW/self.v0
         self.g1 = self.g0*math.sqrt((self.MZ/self.MW)**2-1)
@@ -174,12 +174,6 @@ class Model:
             'yt': self.yt
         }
 
-        # this is just a mock Tc and needs to be included in cls FreeEnergy
-        self.Tc = np.sqrt((
-                + self.muhT*self.lams*self.muhsq
-                - self.musT*self.lamh*self.mussq
-                - np.sqrt(self.lamh*self.lams)*(-self.musT*self.muhsq+self.muhT*self.mussq)
-            ) / (self.musT**2*self.lamh - self.muhT**2*self.lams))
 
     def V0(self,X,show_V=False):
         '''
@@ -330,8 +324,8 @@ class FreeEnergy:
     def __init__(
         self,
         f,
-        Tc,
-        Tnucl,
+        Tc=None,
+        Tnucl=None,
         dfdT=None,
         dfdPhi=None,
         dPhi=1e-3,
@@ -385,8 +379,15 @@ class FreeEnergy:
                 self.dfdPhi = None
             else:
                 self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
-        self.Tc = Tc
-        self.Tnucl = Tnucl
+
+        if Tc is None:
+            raise ValueError("No critical temperature defined")    
+        else:     
+            self.Tc = Tc
+        if Tnucl is None:
+            raise ValueError("No nucleation temperature defined")    
+        else:  
+            self.Tnucl = Tnucl
         self.dPhi = dPhi
         self.dT = dPhi
         self.params = params # Would not normally be stored. Here temporarily.
@@ -523,6 +524,24 @@ class FreeEnergy:
 
         return [[mhsq, 0], [0, mssq]]
 
+    def interpolatePhases(self,Ti,Tf,dT):
+        """Interpolates the minima of all phases for a given termperature range
+
+        Parameters
+        ----------
+        Ti : float
+            Lower limit of the temperature bracket
+
+        Tf : float
+            Upper limit of the temperature bracket
+
+        dT : float
+            Increment during the interpolation
+
+        Returns
+        -------
+
+        """
 
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
@@ -578,12 +597,12 @@ class FreeEnergy:
         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
-    def find_Tc(self,delta_T=1,Tmax=500):
+    def findTc(self,dT=1,Tmax=500):
         """Determines the critical temperature between two scalar phases
 
         Parameters
         ----------
-        delta_T : float
+        dT : float
             Temperature increment for critical temperature search.
         Tmax : float
             Maximal temperature bracket for Tcrit search
