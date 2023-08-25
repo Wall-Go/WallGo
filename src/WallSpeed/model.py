@@ -380,17 +380,35 @@ class FreeEnergy:
             else:
                 self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
 
+        self.dPhi = dPhi
+        self.dT = dPhi
+        self.params = params # Would not normally be stored. Here temporarily.
+
         if Tc is None:
-            raise ValueError("No critical temperature defined")    
+            print("No critical temperature defined")
+            self.findTc()
+            print("Found Tc=",self.Tc)
+            # raise ValueError("No critical temperature defined")    
         else:     
             self.Tc = Tc
         if Tnucl is None:
             raise ValueError("No nucleation temperature defined")    
         else:  
             self.Tnucl = Tnucl
-        self.dPhi = dPhi
-        self.dT = dPhi
-        self.params = params # Would not normally be stored. Here temporarily.
+        FreeEnergy.__validateInput(self.Tc,Tnucl)
+
+        
+    @staticmethod
+    def __validateInput(
+        Tc,
+        Tn
+    ):
+        """
+        Checks input fits expectations
+        """
+
+        assert Tc > Tn, \
+            f"Tc must be larger than Tn"
 
     def __call__(self, X, T):
         """
@@ -524,7 +542,7 @@ class FreeEnergy:
 
         return [[mhsq, 0], [0, mssq]]
 
-    def interpolatePhases(self,Ti,Tf,dT):
+    def interpolateMinima(self,Ti,Tf,dT):
         """Interpolates the minima of all phases for a given termperature range
 
         Parameters
@@ -542,6 +560,7 @@ class FreeEnergy:
         -------
 
         """
+        
 
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
@@ -560,22 +579,25 @@ class FreeEnergy:
         if X is None:
             X = self.approxZeroTMin(T)
             X = np.asanyarray(X)
-
-        p = self.params
         
         fh = lambda h: self.f([abs(h),0],T)
         fs = lambda s: self.f([0,abs(s)],T)
         
-        vT,wT = X[0,0],X[1,1]
-        if fh(vT) < fh(0) and fh(3*vT) > fh(vT):
-            vT = optimize.minimize_scalar(fh,(0,vT,3*vT)).x
-        else:
-            vT = optimize.minimize_scalar(fh,(vT,2*vT),(0,10*vT)).x
-        if fs(wT) < fs(0) and fs(3*wT) > fs(wT):
-            wT = optimize.minimize_scalar(fs,(0,wT,3*wT)).x
-        else:
-            wT = optimize.minimize_scalar(fs,(wT,2*wT),(0,10*wT)).x
-        return np.array([[vT,0],[0,wT]])
+        fX = [fh,fs]
+        vmin = []
+
+        for i in range(len(X)):
+            vT=X[i,i]
+            cond1 = fX[i](vT) < fX[i](0)
+            cond2 = fX[i](3*vT) > fX[i](vT)
+            if cond1 and cond2:
+                vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
+            else:
+                vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
+            
+            vmin.append(vT)
+
+        return np.array([[vmin[0],0],[0,vmin[1]]])
 
 
     def findPhasesAnalytical(self, T):
@@ -613,4 +635,18 @@ class FreeEnergy:
             Critical temperature
 
         """
-        DVtot = lambda v,w,T: self.Vtot([v,0],T)-self.Vtot([0,w],T)
+        # DVtot = lambda v,w,T: self.Vtot([v,0],T)-self.Vtot([0,w],T)
+        Tmin = 1
+        steps = 12
+        Tmid = (Tmax + Tmin) / 2
+        for n in range(steps):
+            minMin = self.findPhases(Tmin)[0]
+            minMax = self.findPhases(Tmax)[0]
+            minMid = self.findPhases(Tmid)[0]
+            if minMid[0] < 2:
+                Tmax = Tmid
+            else:
+                Tmin = Tmid
+            Tmid = (Tmax + Tmin) / 2
+
+        self.Tc = Tmid

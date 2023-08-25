@@ -23,7 +23,7 @@ def test_BM1():
     params = mod.params
     res = mod.Vtot([[110,130]],100)
     assert res == pytest.approx(-1.19018205e+09,rel=1e-2)
-    free = FreeEnergy(mod.Vtot, Tc, Tn, params=params)
+    free = FreeEnergy(mod.Vtot, Tc, Tnucl=Tn, params=params)
     res = free.findPhases(100)
     np.testing.assert_allclose(res,[[195.03215146, 0.],[0.,104.86914171]],rtol=1e-2)
     # res = mod.find_Tc()

@@ -20,6 +20,7 @@ params = mod.params
 pprint(params)
 
 Tc = 108.22
+Tc = None
 Tn = 100
 print(f"{Tc=}, {Tn=}")
 
