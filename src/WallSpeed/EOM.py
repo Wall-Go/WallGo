@@ -2,6 +2,7 @@ import numpy as np
 
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
+from scipy.interpolate import UnivariateSpline
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
@@ -83,7 +84,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
 
         wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
-
+        
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
@@ -102,13 +103,15 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
         boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
-
-        offEquilDeltas = boltzmannSolver.getDeltas()
-
+        
+        # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
+        print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
+        # offEquilDeltas = boltzmannSolver.getDeltas()
 
         intermediateRes = root(
             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, freeEnergy, hydro, particle, grid)
         )
+        print(intermediateRes)
 
         wallParameters = intermediateRes.x
 
@@ -118,7 +121,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
             + ((singletWidth - oldSingletWidth) / singletWidth) ** 2
             + (wallOffSet - oldWallOffSet) ** 2
         )
-
+    
     return wallParameters
 
 
@@ -142,6 +145,12 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
 
     higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
     singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    
+    # Define a function returning the local temparature by interpolating through Tprofile.
+    Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
+    
+    # Define a function returning the local Delta00 function by interpolating through offEquilDeltas['00'].
+    offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
 
     mom1 = higgsPressureMoment(
         higgsVEV,
@@ -151,8 +160,8 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         wallOffSet,
         freeEnergy,
         particle,
-        offEquilDeltas,
-        Tprofile,  #correct?
+        offEquilDelta00,
+        Tfunc,  #correct?
     )
     mom2 = higgsStretchMoment(
         higgsVEV,
@@ -161,8 +170,9 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         singletWidth,
         wallOffSet,
         freeEnergy,
-        offEquilDeltas,
-        Tprofile,
+        particle,
+        offEquilDelta00,
+        Tfunc,
     )
     mom3 = singletPressureMoment(
         higgsVEV,
@@ -171,8 +181,8 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         singletWidth,
         wallOffSet,
         freeEnergy,
-        offEquilDeltas,
-        Tprofile,
+        offEquilDelta00,
+        Tfunc,
     )
     mom4 = singletStretchMoment(
         higgsVEV,
@@ -181,10 +191,10 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         singletWidth,
         wallOffSet,
         freeEnergy,
-        offEquilDeltas,
-        Tprofile,
+        offEquilDelta00,
+        Tfunc,
     )
-
+    
     return [mom1, mom2, mom3, mom4]
 
 
@@ -196,7 +206,7 @@ def higgsPressureMoment(
     wallOffSet,
     freeEnergy,
     particle,
-    offEquilDeltas,
+    offEquilDelta00,
     Tfunc,
 ):
     return quad(
@@ -209,13 +219,13 @@ def higgsPressureMoment(
             z,
             freeEnergy,
             particle,
-            offEquilDeltas,
-#            Tfunc(z),      #this gave an error
-            Tfunc,   # is this ok?
+            offEquilDelta00(z),
+            Tfunc(z),      #this gave an error
+            # Tfunc,   # is this ok?
         ),
         -20 * higgsWidth,
         20 * higgsWidth,
-    )
+    )[0]
 
 def higgsPressureLocal(
     higgsVEV,
@@ -226,7 +236,7 @@ def higgsPressureLocal(
     z,
     freeEnergy,
     particle,
-    offEquilDeltas,
+    offEquilDelta00,
     T,
 ):
     dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
@@ -239,7 +249,7 @@ def higgsPressureLocal(
         z,
         freeEnergy,
         particle,
-        offEquilDeltas,
+        offEquilDelta00,
         T,
     )
 
@@ -251,7 +261,8 @@ def higgsStretchMoment(
     singletWidth,
     wallOffSet,
     freeEnergy,
-    offEquilDeltas,
+    particle,
+    offEquilDelta00,
     Tfunc,
 ):
     return quad(
@@ -263,12 +274,13 @@ def higgsStretchMoment(
             wallOffSet,
             z,
             freeEnergy,
-            offEquilDeltas,
+            particle,
+            offEquilDelta00(z),
             Tfunc(z),
         ),
         -20 * higgsWidth,
         20 * higgsWidth,
-    )
+    )[0]
 
 
 def higgsStretchLocal(
@@ -279,7 +291,8 @@ def higgsStretchLocal(
     wallOffSet,
     z,
     freeEnergy,
-    offEquilDeltas,
+    particle,
+    offEquilDelta00,
     T,
 ):
     dhdz = -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
@@ -295,7 +308,8 @@ def higgsStretchLocal(
             wallOffSet,
             z,
             freeEnergy,
-            offEquilDeltas,
+            particle,
+            offEquilDelta00,
             T,
         )
     )
@@ -310,7 +324,7 @@ def higgsEquationOfMotion(
     z,
     freeEnergy,
     particle,
-    offEquilDeltas,
+    offEquilDelta00,
     T,
 ):
     zLHiggs = z / higgsWidth
@@ -334,7 +348,7 @@ def higgsEquationOfMotion(
         0.5
         * 12
         * dmtdh(particle,[h,s])
-        * offEquilDeltas[0, 0]
+        * offEquilDelta00
     )
     return kinetic + dVdh + offEquil
 
@@ -346,7 +360,7 @@ def singletPressureMoment(
     singletWidth,
     wallOffSet,
     freeEnergy,
-    offEquilDeltas,
+    offEquilDelta00,
     Tfunc,
 ):
     return quad(
@@ -358,12 +372,12 @@ def singletPressureMoment(
             wallOffSet,
             z,
             freeEnergy,
-            offEquilDeltas,
+            offEquilDelta00(z),
             Tfunc(z),
         ),
         -(20 + np.abs(wallOffSet)) * singletWidth,
         (20 + np.abs(wallOffSet)) * singletWidth,
-    )
+    )[0]
 
 
 def singletPressureLocal(
@@ -374,7 +388,7 @@ def singletPressureLocal(
     wallOffSet,
     z,
     freeEnergy,
-    offEquilDeltas,
+    offEquilDelta00,
     T,
 ):
     dsdz = (
@@ -388,7 +402,7 @@ def singletPressureLocal(
         wallOffSet,
         z,
         freeEnergy,
-        offEquilDeltas,
+        offEquilDelta00,
         T,
     )
 
@@ -400,7 +414,7 @@ def singletStretchMoment(
     singletWidth,
     wallOffSet,
     freeEnergy,
-    offEquilDeltas,
+    offEquilDelta00,
     Tfunc,
 ):
     return quad(
@@ -412,12 +426,12 @@ def singletStretchMoment(
             wallOffSet,
             z,
             freeEnergy,
-            offEquilDeltas,
+            offEquilDelta00(z),
             Tfunc(z),
         ),
         -(20 + np.abs(wallOffSet)) * singletWidth,
         (20 + np.abs(wallOffSet)) * singletWidth,
-    )
+    )[0]
 
 
 def singletStretchLocal(
@@ -428,7 +442,7 @@ def singletStretchLocal(
     wallOffSet,
     z,
     freeEnergy,
-    offEquilDeltas,
+    offEquilDelta00,
     T,
 ):
     dsdz = (
@@ -446,7 +460,7 @@ def singletStretchLocal(
             wallOffSet,
             z,
             freeEnergy,
-            offEquilDeltas,
+            offEquilDelta00,
             T,
         )
     )
@@ -460,7 +474,7 @@ def singletEquationOfMotion(
     wallOffSet,
     z,
     freeEnergy,
-    offEquilDeltas,
+    offEquilDelta00,
     T,
 ):
     zLSingletOff = z / singletWidth + wallOffSet
@@ -590,7 +604,7 @@ def findPlasmaProfilePoint(
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
-
+    
     Tout30, Tout33 = deltaToTmunu(index,h,velocityAtz0,Tminus,offEquilDeltas,grid,particle,freeEnergy)
 
     s1 = c1 - Tout30 
@@ -620,7 +634,7 @@ def findPlasmaProfilePoint(
     while temperatureProfileEqLHS(h, s, dhdz, dsdz, TUpperBound, s1, s2, freeEnergy) < 0:
         TStep *= 2
         TUpperBound = TLowerBound + TStep
-
+    
     res = brentq(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         TLowerBound,
@@ -643,7 +657,7 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy):
     return (
         0.5 * (dhdz**2 + dsdz**2)
         - freeEnergy([h, s], T)
-        - 0.5 * T*freeEnergy.derivT([h, s], T)
+        + 0.5 * T*freeEnergy.derivT([h, s], T)
         + 0.5 * np.sqrt(4 * s1**2 + T*freeEnergy.derivT([h, s], T) ** 2)
         - s2
     )

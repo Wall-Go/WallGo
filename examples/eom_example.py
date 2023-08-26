@@ -122,4 +122,4 @@ top = Particle(
 )
 
 
-findWallVelocityLoop(top,fxSM,None,1,grid)
+print(findWallVelocityLoop(top,fxSM,None,1,grid))
