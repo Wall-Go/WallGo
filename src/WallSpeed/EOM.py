@@ -3,6 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, brentq, root
 from scipy.integrate import quad
 from scipy.interpolate import UnivariateSpline
+import matplotlib.pyplot as plt
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
@@ -611,7 +612,7 @@ def findPlasmaProfilePoint(
     s2 = c2 - Tout33
 
     Tavg = 0.5 * (Tplus + Tminus)
-
+    
     minRes = minimize(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         x0 = Tavg,
@@ -659,7 +660,7 @@ def temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy):
         0.5 * (dhdz**2 + dsdz**2)
         - freeEnergy([h, s], T)
         + 0.5 * T*freeEnergy.derivT([h, s], T)
-        + 0.5 * np.sqrt(4 * s1**2 + T*freeEnergy.derivT([h, s], T) ** 2)
+        + 0.5 * np.sqrt(4 * s1**2 + (T*freeEnergy.derivT([h, s], T)) ** 2)
         - s2
     )
 
@@ -699,4 +700,4 @@ def deltaToTmunu(
 
 def plasmaVelocity(h, s, T, s1, freeEnergy):
     dVdT = freeEnergy.derivT([h, s], T)
-    return (-T * dVdT  + np.sqrt(4 * s1**2 + T * dVdT**2)) / (2 * s1)
+    return (T * dVdT  + np.sqrt(4 * s1**2 + (T * dVdT)**2)) / (2 * s1)
