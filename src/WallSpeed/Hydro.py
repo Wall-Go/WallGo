@@ -37,7 +37,7 @@ class Hydro:
         
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
-        Tmin,Tmax = self.Tnucl,1.5*self.Tnucl
+        Tmin,Tmax = self.Tnucl,self.thermodynamics.Tc
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
         while bracket1*bracket2 > 0 and Tmax < 10*self.Tnucl:
             Tmin = Tmax
@@ -50,6 +50,7 @@ class Hydro:
             tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root 
         else: # If we cannot bracket the root, use the 'secant' method instead.
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root 
+        
         vp = np.sqrt((pSym - self.thermodynamics.pBrok(tmSol))*(pSym + self.thermodynamics.eBrok(tmSol))/(eSym - self.thermodynamics.eBrok(tmSol))/(eSym + self.thermodynamics.pBrok(tmSol)))
         return(vp)
     
@@ -250,7 +251,7 @@ class Hydro:
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
-            return (vp,vm,Tp,Tm)
+            return (vp,vm,Tp,Tm,self.mu(vwTry,vp))
         wSym = self.thermodynamics.wSym(Tp)
         c1 = wSym*self.gammasq(vp)*vp
         c2 = self.thermodynamics.pSym(Tp)+wSym*self.gammasq(vp)*vp**2
