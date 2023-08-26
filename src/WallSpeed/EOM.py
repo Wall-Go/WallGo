@@ -615,7 +615,8 @@ def findPlasmaProfilePoint(
     minRes = minimize(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         x0 = Tavg,
-        bounds=[(0, None)],
+#        bounds=[(0, None)],
+        bounds=[(0,freeEnergy.Tc)],
         tol=1e-9,
     )
     # TODO: A fail safe
