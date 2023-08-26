@@ -1,6 +1,6 @@
 import numpy as np
 
-from scipy.optimize import minimize, brentq, root
+from scipy.optimize import minimize, minimize_scalar, brentq, root
 from scipy.integrate import quad
 from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
@@ -613,17 +613,18 @@ def findPlasmaProfilePoint(
 
     Tavg = 0.5 * (Tplus + Tminus)
     
-    minRes = minimize(
+    minRes = minimize_scalar(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
-        x0 = Tavg,
+        # x0 = Tavg,
 #        bounds=[(0, None)],
-        bounds=[(0,freeEnergy.Tc)],
+        method='Bounded',
+        bounds=[0,freeEnergy.Tc],
         tol=1e-9,
     )
     # TODO: A fail safe
 
-    if temperatureProfileEqLHS(h, s, dhdz, dsdz, minRes.x[0], s1, s2, freeEnergy) >= 0:
-        T = minRes.x[0]
+    if temperatureProfileEqLHS(h, s, dhdz, dsdz, minRes.x, s1, s2, freeEnergy) >= 0:
+        T = minRes.x
         vPlasma = plasmaVelocity(h, s, T, s1, freeEnergy)
         return T, vPlasma
 
