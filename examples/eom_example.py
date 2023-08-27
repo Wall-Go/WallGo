@@ -7,7 +7,7 @@ from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
-#from WallSpeed.eomHydro import findWallVelocityLoop
+from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy
 from WallSpeed.EOM import findWallVelocityLoop
 
@@ -121,5 +121,16 @@ top = Particle(
     collisionPrefactors=[g**4, g**4, g**4],
 )
 
+"""
+Compute the wall velocity in local thermal equilibrium
+"""
+thermo = Thermodynamics(fxSM)
+hydro = Hydro(thermo)
+vwLTE = hydro.findvwLTE()
+print("The wall velocity in local thermal equilibrium is")
+print(vwLTE)
 
+"""
+Compute the wall velocity with out-of-equilibrium effects
+"""
 print(findWallVelocityLoop(top,fxSM,None,1,grid))

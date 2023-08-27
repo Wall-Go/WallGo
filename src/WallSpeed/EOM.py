@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
 from scipy.integrate import quad
 from scipy.interpolate import UnivariateSpline
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
