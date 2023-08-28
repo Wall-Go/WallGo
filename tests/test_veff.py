@@ -29,6 +29,7 @@ def test_BM1():
     # res = mod.find_Tc()
     res = 108.22
     assert res == pytest.approx(Tc,rel=1e-2)
+    free.interpolateMinima(0,1.2*Tc,1)
     thermo = Thermodynamics(free)
     hydro = Hydro(thermo)
     res = hydro.vJ

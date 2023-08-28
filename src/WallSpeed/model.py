@@ -397,6 +397,9 @@ class FreeEnergy:
             self.Tnucl = Tnucl
         FreeEnergy.__validateInput(self.Tc,Tnucl)
 
+        self.Ti_int = None
+        self.Tf_int = None
+
         
     @staticmethod
     def __validateInput(
@@ -558,9 +561,27 @@ class FreeEnergy:
 
         Returns
         -------
-
+        univariate splines
+        scipy.univariate splines has the advantage of derivative() method
         """
-        
+        if Tf < Ti:
+            raise ValueError("Interpolation range not well defined: Tf below Ti")    
+
+        min_nodes = 10
+        n_nodes = max(min_nodes, int(np.ceil((Tf-Ti)/dT)))
+        Trange = np.linspace(Ti,Tf,n_nodes)
+
+        h,s = [],[]
+        for T in Trange:
+            mins = self.findPhases(T)
+            h.append(mins[0,0])
+            s.append(mins[1,1])
+        self.Ti_int = Ti
+        self.Tf_int = Tf
+        self.Xint = [
+            interpolate.UnivariateSpline(Trange,h,s=0),
+            interpolate.UnivariateSpline(Trange,s,s=0)]
+
 
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
@@ -576,48 +597,33 @@ class FreeEnergy:
             A list of phases
 
         """
-        if X is None:
-            X = self.approxZeroTMin(T)
-            X = np.asanyarray(X)
-        
-        fh = lambda h: self.f([abs(h),0],T)
-        fs = lambda s: self.f([0,abs(s)],T)
-        
-        fX = [fh,fs]
-        vmin = []
+        if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
+            vmin = [self.Xint[0](T),self.Xint[1](T)]
 
-        for i in range(len(X)):
-            vT=X[i,i]
-            cond1 = fX[i](vT) < fX[i](0)
-            cond2 = fX[i](3*vT) > fX[i](vT)
-            if cond1 and cond2:
-                vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
-            else:
-                vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
+        else:
+            if X is None:
+                X = self.approxZeroTMin(T)
+                X = np.asanyarray(X)
             
-            vmin.append(vT)
+            fh = lambda h: self.f([abs(h),0],T)
+            fs = lambda s: self.f([0,abs(s)],T)
+            
+            fX = [fh,fs]
+            vmin = []
+
+            for i in range(len(X)):
+                vT=X[i,i]
+                cond1 = fX[i](vT) < fX[i](0)
+                cond2 = fX[i](3*vT) > fX[i](vT)
+                if cond1 and cond2:
+                    vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
+                else:
+                    vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
+                
+                vmin.append(vT)
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
 
-
-    def findPhasesAnalytical(self, T):
-        """Finds all phases at a given temperature T (hard coded version)
-
-        Parameters
-        ----------
-        T : float
-            The temperature for which to find the phases.
-
-        Returns
-        -------
-        phases : array_like
-            A list of phases
-
-        """
-        p = self.params
-        hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
-        ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-        return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
     def findTc(self,dT=1,Tmax=500):
         """Determines the critical temperature between two scalar phases

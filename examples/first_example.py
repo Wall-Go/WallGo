@@ -7,6 +7,7 @@ from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
+from WallSpeed.Hydro import Hydro
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy, Model
 
@@ -106,7 +107,32 @@ Tc = mod.Tc
 Tn = 100 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
+
+# overriding whole class is porably not so ideal
+# class FreeEnergy(FreeEnergy):
+
+#     def findPhases(self, T):
+#         """Finds all phases at a given temperature T (hard coded version)
+
+#         Parameters
+#         ----------
+#         T : float
+#             The temperature for which to find the phases.
+
+#         Returns
+#         -------
+#         phases : array_like
+#             A list of phases
+
+#         """
+#         p = self.params
+#         hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
+#         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
+#         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
+
+
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM.interpolateMinima(0,1.2*Tc,1)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
 print(f"{fxSM.derivT([0, 1], 100)=}")
@@ -118,6 +144,18 @@ print("\nThermodynamics:", thermo)
 print(f"{thermo.pSym(100)=}")
 print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
+
+# checking Tplus and Tminus
+thermo = Thermodynamics(fxSM)
+hydro = Hydro(thermo)
+vJ = hydro.vJ
+c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.59)
+
+print("Jouguet velocity")
+print(vJ)
+
+print("c1,c2")
+print(c1,c2)
 
 # defining particles which are out of equilibrium for WallGo
 top = Particle(
