@@ -384,6 +384,9 @@ class FreeEnergy:
         self.dT = dPhi
         self.params = params # Would not normally be stored. Here temporarily.
 
+        self.Ti_int = None
+        self.Tf_int = None
+
         if Tc is None:
             print("No critical temperature defined")
             self.findTc()
@@ -396,9 +399,6 @@ class FreeEnergy:
         else:  
             self.Tnucl = Tnucl
         FreeEnergy.__validateInput(self.Tc,Tnucl)
-
-        self.Ti_int = None
-        self.Tf_int = None
 
         
     @staticmethod
