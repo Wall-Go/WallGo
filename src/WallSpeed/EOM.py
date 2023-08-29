@@ -107,7 +107,8 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         
         # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
         print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
-        # offEquilDeltas = boltzmannSolver.getDeltas()
+        offEquilDeltas = boltzmannSolver.getDeltas()
+        print(offEquilDeltas)
         
         for i in range(1): # Can run this loop several times to increase the accuracy of the approximation
             wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
