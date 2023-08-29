@@ -120,8 +120,6 @@ top = Particle(
 particles = [top]
 print("\ntop quark:", top)
 
-print(top.msqVacuum(np.transpose([[1,2,3],[2,2,2]])))
-
 # grid size
 M = 20
 N = 20
