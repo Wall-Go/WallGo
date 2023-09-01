@@ -8,7 +8,7 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
-from .helpers import derivative # derivatives for callable functions
+from .helpers import derivative, gammasq # derivatives for callable functions
 
 
 def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
@@ -783,9 +783,6 @@ def deltaToTmunu(
     delta11 = offEquilDeltas["11"][index]
     delta02 = offEquilDeltas["02"][index]
     delta20 = offEquilDeltas["20"][index]
-
-    def gammasq(v): #move to helper functions?
-        return 1./(1.-v**2)
 
     u0 = np.sqrt(gammasq(velocityAtCenter))
     u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter

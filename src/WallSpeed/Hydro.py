@@ -4,6 +4,7 @@ from scipy.optimize import root_scalar,root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .Thermodynamics import Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
+from .helpers import gammasq, mu
 
 
 class Hydro:
@@ -142,25 +143,14 @@ class Hydro:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
         return vp, vm, Tp, Tm
     
-    def gammasq(self, v):
-        r"""
-        Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
-        """
-        return 1./(1. - v*v)
-    
-    def mu(self, xi, v):
-        """
-        Lorentz-transformed velocity
-        """
-        return (xi - v)/(1. - xi*v)
     
     def shockDE(self, v, xiAndT):
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
         """
         xi, T = xiAndT
-        eq1 = self.gammasq(v) * (1. - v*xi)*(self.mu(xi,v)**2/self.thermodynamics.csqSym(T)-1.)*xi/2./v
-        eq2 = self.thermodynamics.wSym(T)/self.thermodynamics.dpSym(T)*self.gammasq(v)*self.mu(xi,v)
+        eq1 = gammasq(v) * (1. - v*xi)*(mu(xi,v)**2/self.thermodynamics.csqSym(T)-1.)*xi/2./v
+        eq2 = self.thermodynamics.wSym(T)/self.thermodynamics.dpSym(T)*gammasq(v)*mu(xi,v)
         return [eq1,eq2]
         
     def solveHydroShock(self, vw, vp, Tp):
@@ -170,10 +160,10 @@ class Hydro:
         
         def shock(v, xiAndT):
             xi, T = xiAndT
-            return self.mu(xi,v)*xi - self.thermodynamics.csqSym(T)
+            return mu(xi,v)*xi - self.thermodynamics.csqSym(T)
         shock.terminal = True
         xi0T0 = [vw,Tp]
-        vpcent = self.mu(vw,vp)
+        vpcent = mu(vw,vp)
         if shock(vpcent,xi0T0) > 0:
             vm_sh = vpcent
             xi_sh = vw
@@ -188,7 +178,7 @@ class Hydro:
             xi_sh,Tm_sh = solshock.y[:,-1]
         
         def TiiShock(tn): #continuity of Tii
-            return self.thermodynamics.wSym(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wSym(Tm_sh)*self.mu(xi_sh,vm_sh)*self.gammasq(self.mu(xi_sh,vm_sh))
+            return self.thermodynamics.wSym(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wSym(Tm_sh)*mu(xi_sh,vm_sh)*gammasq(mu(xi_sh,vm_sh))
         Tmin,Tmax = 0.9*self.Tnucl,Tm_sh
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.Tnucl/10:
@@ -251,11 +241,11 @@ class Hydro:
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
-            return (vp,vm,Tp,Tm,self.mu(vwTry,vp))
+            return (vp,vm,Tp,Tm,mu(vwTry,vp))
         wSym = self.thermodynamics.wSym(Tp)
-        c1 = wSym*self.gammasq(vp)*vp
-        c2 = self.thermodynamics.pSym(Tp)+wSym*self.gammasq(vp)*vp**2
-        vAtz0 = self.mu(vwTry,vp)
+        c1 = wSym*gammasq(vp)*vp
+        c2 = self.thermodynamics.pSym(Tp)+wSym*gammasq(vp)*vp**2
+        vAtz0 = mu(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)
 
     
