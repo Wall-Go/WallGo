@@ -68,6 +68,8 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
+    print(initializedWallParameters)
+
     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
     offEquilDeltas = {"00": np.zeros(grid.M-1), "02": np.zeros(grid.M-1), "20": np.zeros(grid.M-1), "11": np.zeros(grid.M-1)}
