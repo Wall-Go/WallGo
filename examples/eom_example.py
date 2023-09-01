@@ -83,7 +83,7 @@ Tc = np.sqrt(
     )
     / (ts**2*lamh - th**2*lams)
 )
-Tn = 110 # only Tn is strictly necessary
+Tn = 111 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 # defining the free energy for WallGo
