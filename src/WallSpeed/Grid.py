@@ -179,6 +179,7 @@ class Grid:
         r"""
         Transforms coordinates to [-1, 1] interval
         """
+        #shouldn't you call this xi instead of z?
         z_compact = z / np.sqrt(L_xi**2 + z**2)
         pz_compact = np.tanh(pz / 2 / T)
         pp_compact = 1 - 2 * np.exp(-pp / T)
@@ -188,6 +189,7 @@ class Grid:
         r"""
         Transforms coordinates from [-1, 1] interval (inverse of compactify).
         """
+        #shouldn't you call this xi instead of z?
         z = L_xi * z_compact / np.sqrt(1 - z_compact**2)
         pz = 2 * T * np.arctanh(pz_compact)
         pp = -T * np.log((1 - pp_compact) / 2)
@@ -197,6 +199,7 @@ class Grid:
         r"""
         Derivative of transforms coordinates to [-1, 1] interval
         """
+        #shouldn't you call this xi instead of z?
         dz_compact = L_xi**2 / (L_xi**2 + z**2)**1.5
         dpz_compact = 1 / 2 / T / np.cosh(pz / 2 / T)**2
         dpp_compact = 2 / T * np.exp(-pp / T)
