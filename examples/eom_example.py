@@ -115,24 +115,24 @@ print(f"{Tc=}, {Tn=}")
 # overriding whole class is porably not so ideal
 # class FreeEnergy(FreeEnergy):
 
-#     def findPhases(self, T):
-#         """Finds all phases at a given temperature T (hard coded version)
+def findPhases(self, T):
+    """Finds all phases at a given temperature T (hard coded version)
 
-#         Parameters
-#         ----------
-#         T : float
-#             The temperature for which to find the phases.
+    Parameters
+    ----------
+    T : float
+    The temperature for which to find the phases.
 
-#         Returns
-#         -------
-#         phases : array_like
-#             A list of phases
+    Returns
+    -------
+    phases : array_like
+    A list of phases
 
-#         """
-#         p = self.params
-#         hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
-#         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-#         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
+    """
+    p = self.params
+    hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
+    ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
+    return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
