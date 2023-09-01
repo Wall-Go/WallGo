@@ -149,7 +149,7 @@ print(f"{thermo.ddpBrok(100)=}")
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vJ = hydro.vJ
-c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.59)
+c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.59)
 
 print("Jouguet velocity")
 print(vJ)
