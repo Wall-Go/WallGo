@@ -52,8 +52,10 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
                 order=4,
             )
 
-    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],0))
-    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],1))
+    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],0))
+    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],1))
+
+    print(hMass,sMass)
     
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
@@ -142,8 +144,8 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, singletWidth, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
     
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
     
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
@@ -217,8 +219,8 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         # TODO: Update offEquilDeltas at each evaluation
         c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(x)
         Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, delta, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-        higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-        singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+        higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+        singletVEV = freeEnergy.findPhases(Tplus)[1,1]
         Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
         return higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, particle, offEquilDelta00, Tfunc)+singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, offEquilDelta00, Tfunc)
     
@@ -247,8 +249,8 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         grid,
     )
 
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
     
     # Define a function returning the local temparature by interpolating through Tprofile.
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
