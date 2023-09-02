@@ -24,7 +24,7 @@ Model definition
 """
 class xSM(Model):
     def __init__(self):
-        self.v0 = 246.
+        self.v0 = 246.22
         self.muhsq = 7825.
         self.lamh = 0.129074
         self.mussq = 10774.6
