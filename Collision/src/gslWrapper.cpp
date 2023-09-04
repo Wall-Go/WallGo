@@ -11,14 +11,14 @@ void gslWrapper::initializeRNG() {
     gsl_rng_env_setup();
     #pragma omp parallel 
     {
-        rng = gsl_rng_alloc(gsl_rng_default);
+        gslWrapper::rng = gsl_rng_alloc(gsl_rng_default);
     }
 }
 
 void gslWrapper::clearRNG() {
     #pragma omp parallel 
     {
-        delete rng;
+        gsl_rng_free(gslWrapper::rng);
     }
 }
 
