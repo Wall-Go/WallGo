@@ -6,69 +6,69 @@ class TestModel2Step():
     asym = 0.1
     musqq = 0.4
 
-    def __init__(self, abrok, asym, musqq, Tn):
-        self.aBrok = abrok
-        self.aSym = asym
+    def __init__(self, alowT, ahighT, musqq, Tn):
+        self.aLowT = alowT
+        self.aHighT = ahighT
         self.musq = musqq
         self.Tnucl = Tn
         self.Tc = 1
 
     #Pressure in symmetric phase
-    def pSym(self, T):
-        return T**4. + (self.aBrok - self.aSym + self.aSym*T**2 - self.musq)**2-self.musq**2
+    def pHighT(self, T):
+        return T**4. + (self.aLowT - self.aHighT + self.aHighT*T**2 - self.musq)**2-self.musq**2
 
     #T-derivative of the pressure in the symmetric phase
-    def dpSym(self, T):
-        return 4*T**3. + 4. * self.aSym * T *(self.aBrok - self.aSym + self.aSym * T**2-self.musq)
+    def dpHighT(self, T):
+        return 4*T**3. + 4. * self.aHighT * T *(self.aLowT - self.aHighT + self.aHighT * T**2-self.musq)
 
     #Second T-derivative of the pressure in the symmetric phase
-    def ddpSym(self, T):
-        return 12.*T**2. +8 * self.aSym**2. * T**2. + 4.*self.aSym*(self.aBrok-self.aSym +self.aSym*T**2-self.musq)
+    def ddpHighT(self, T):
+        return 12.*T**2. +8 * self.aHighT**2. * T**2. + 4.*self.aHighT*(self.aLowT-self.aHighT +self.aHighT*T**2-self.musq)
 
     #Energy density in the symmetric phase
-    def eSym(self, T):
-        return T*self.dpSym(T) - self.pSym(T) 
+    def eHighT(self, T):
+        return T*self.dpHighT(T) - self.pHighT(T) 
 
     #T-derivative of the energy density in the symmetric phase
-    def deSym(self, T):
-        return T*self.ddpSym(T)
+    def deHighT(self, T):
+        return T*self.ddpHighT(T)
 
     #Enthalpy in the symmetric phase
-    def wSym(self,T):
-        return self.pSym(T)+self.eSym(T)
+    def wHighT(self,T):
+        return self.pHighT(T)+self.eHighT(T)
 
     #Sound speed squared in the symmetric phase
-    def csqSym(self,T):
-        return self.dpSym(T)/self.deSym(T)
+    def csqHighT(self,T):
+        return self.dpHighT(T)/self.deHighT(T)
 
     
     #Pressure in the broken phase
-    def pBrok(self, T):
-        return T**4. + (self.aBrok*T**2. - self.musq)**2. - self.musq**2. 
+    def pLowT(self, T):
+        return T**4. + (self.aLowT*T**2. - self.musq)**2. - self.musq**2. 
 
     #T-derivative of the pressure in the broken phase
-    def dpBrok(self, T):
-        return 4.*T**3. + 4. * self.aBrok * T *(self.aBrok*T**2 - self.musq)
+    def dpLowT(self, T):
+        return 4.*T**3. + 4. * self.aLowT * T *(self.aLowT*T**2 - self.musq)
 
     #Second T-derivative of the pressure in the broken phase 
-    def ddpBrok(self, T):
-        return 12.*T**2. +8. * self.aBrok**2. * T**2. + 4.*self.aBrok*(self.aBrok*T**2.-self.musq)
+    def ddpLowT(self, T):
+        return 12.*T**2. +8. * self.aLowT**2. * T**2. + 4.*self.aLowT*(self.aLowT*T**2.-self.musq)
 
     #Energy density in the broken phase
-    def eBrok(self, T):
-        return T*self.dpBrok(T) - self.pBrok(T)
+    def eLowT(self, T):
+        return T*self.dpLowT(T) - self.pLowT(T)
     
     #T-derivative of the energy density in the broken phase
-    def deBrok(self, T):
-        return T*self.ddpBrok(T)
+    def deLowT(self, T):
+        return T*self.ddpLowT(T)
 
     #Enthalpy in the symmetric phase
-    def wBrok(self,T):
-        return self.pBrok(T)+self.eBrok(T)
+    def wLowT(self,T):
+        return self.pLowT(T)+self.eLowT(T)
 
     #Sound speed squared in the broken phase
-    def csqBrok(self,T):
-        return self.dpBrok(T)/self.deBrok(T)
+    def csqLowT(self,T):
+        return self.dpLowT(T)/self.deLowT(T)
 
 #Defines the bag equation of state
 #Note that a factor 1/3 a_+ Tc**4 has been scaled out
@@ -79,66 +79,66 @@ class TestModelBag():
     __test__ = False
     
     def __init__(self, psi, Tn):
-        self.psi = psi #number of degrees of freedom of the broken phase divided by the number of degrees of freedom in the symmetric phase
-        self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the symmetric phase times Tc^4)
+        self.psi = psi #number of degrees of freedom of the low temperature phase divided by the number of degrees of freedom in the high temperature phase
+        self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the high temperature phase times Tc^4)
         self.Tnucl = Tn
         self.Tc = 1
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
-    def pSym(self, T):
+    def pHighT(self, T):
         return T**4. - self.eps
 
     #T-derivative of the pressure in the symmetric phase
-    def dpSym(self, T):
+    def dpHighT(self, T):
         return 4.*T**3. 
 
     #Second T-derivative of the pressure in the symmetric phase
-    def ddpSym(self, T):
+    def ddpHighT(self, T):
         return 12.*T**2. 
 
     #Energy density in the symmetric phase
-    def eSym(self, T):
-        return T*self.dpSym(T) - self.pSym(T) 
+    def eHighT(self, T):
+        return T*self.dpHighT(T) - self.pHighT(T) 
 
     #T-derivative of the energy density in the symmetric phase
-    def deSym(self, T):
-        return T*self.ddpSym(T)
+    def deHighT(self, T):
+        return T*self.ddpHighT(T)
 
     #Enthalpy in the symmetric phase
-    def wSym(self,T):
-        return self.pSym(T)+self.eSym(T)
+    def wHighT(self,T):
+        return self.pHighT(T)+self.eHighT(T)
 
     #Sound speed squared in the symmetric phase
-    def csqSym(self,T):
+    def csqHighT(self,T):
         return 1/3.
 
     
     #Pressure in the broken phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
-    def pBrok(self, T):
+    def pLowT(self, T):
         return self.psi*T**4. 
 
     #T-derivative of the pressure in the broken phase
-    def dpBrok(self, T):
+    def dpLowT(self, T):
         return 4.*self.psi*T**3.
 
     #Second T-derivative of the pressure in the broken phase 
-    def ddpBrok(self, T):
+    def ddpLowT(self, T):
         return 12.*self.psi*T**2.
     
     #Energy density in the broken phase
-    def eBrok(self, T):
-        return T*self.dpBrok(T) - self.pBrok(T)
+    def eLowT(self, T):
+        return T*self.dpLowT(T) - self.pLowT(T)
     
     #T-derivative of the energy density in the broken phase
-    def deBrok(self, T):
-        return T*self.ddpBrok(T)
+    def deLowT(self, T):
+        return T*self.ddpLowT(T)
 
     #Enthalpy in the symmetric phase
-    def wBrok(self,T):
-        return self.pBrok(T)+self.eBrok(T)
+    def wLowT(self,T):
+        return self.pLowT(T)+self.eLowT(T)
 
     #Sound speed squared in the broken phase
-    def csqBrok(self,T):
+    def csqLowT(self,T):
         return 1/3.
 
     
@@ -160,63 +160,63 @@ class TestModelTemplate():
         self.ap = 3*wn/(self.mu*Tn**self.mu)
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
         self.eps = 0
-        self.eps = (self.pSym(Tn)-self.pBrok(Tn)-cb2*(self.eSym(Tn)-self.eBrok(Tn)-3*wn*alN))/(1+cb2)
+        self.eps = (self.pHighT(Tn)-self.pLowT(Tn)-cb2*(self.eHighT(Tn)-self.eLowT(Tn)-3*wn*alN))/(1+cb2)
 
     #Pressure in symmetric phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
-    def pSym(self, T):
+    def pHighT(self, T):
         return self.ap*T**self.mu/3 - self.eps
 
     #T-derivative of the pressure in the symmetric phase
-    def dpSym(self, T):
+    def dpHighT(self, T):
         return self.mu*self.ap*T**(self.mu-1)/3
 
     #Second T-derivative of the pressure in the symmetric phase
-    def ddpSym(self, T):
+    def ddpHighT(self, T):
         return self.mu*(self.mu-1)*self.ap*T**(self.mu-2)/3 
 
     #Energy density in the symmetric phase
-    def eSym(self, T):
-        return T*self.dpSym(T) - self.pSym(T) 
+    def eHighT(self, T):
+        return T*self.dpHighT(T) - self.pHighT(T) 
 
     #T-derivative of the energy density in the symmetric phase
-    def deSym(self, T):
-        return T*self.ddpSym(T)
+    def deHighT(self, T):
+        return T*self.ddpHighT(T)
 
     #Enthalpy in the symmetric phase
-    def wSym(self,T):
-        return T*self.dpSym(T)
+    def wHighT(self,T):
+        return T*self.dpHighT(T)
 
     #Sound speed squared in the symmetric phase
-    def csqSym(self,T):
+    def csqHighT(self,T):
         return self.cs2
 
     
     #Pressure in the broken phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
-    def pBrok(self, T):
+    def pLowT(self, T):
         return self.am*T**self.nu/3
 
     #T-derivative of the pressure in the broken phase
-    def dpBrok(self, T):
+    def dpLowT(self, T):
         return self.nu*self.am*T**(self.nu-1)/3
 
     #Second T-derivative of the pressure in the broken phase 
-    def ddpBrok(self, T):
+    def ddpLowT(self, T):
         return self.nu*(self.nu-1)*self.am*T**(self.nu-2)/3
     
     #Energy density in the broken phase
-    def eBrok(self, T):
-        return T*self.dpBrok(T) - self.pBrok(T)
+    def eLowT(self, T):
+        return T*self.dpLowT(T) - self.pLowT(T)
     
     #T-derivative of the energy density in the broken phase
-    def deBrok(self, T):
-        return T*self.ddpBrok(T)
+    def deLowT(self, T):
+        return T*self.ddpLowT(T)
 
     #Enthalpy in the symmetric phase
-    def wBrok(self,T):
-        return T*self.dpBrok(T)
+    def wLowT(self,T):
+        return T*self.dpLowT(T)
 
     #Sound speed squared in the broken phase
-    def csqBrok(self,T):
+    def csqLowT(self,T):
         return self.cb2
 
 
