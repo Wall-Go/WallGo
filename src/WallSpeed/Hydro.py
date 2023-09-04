@@ -21,17 +21,17 @@ class Hydro:
         Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics,
         using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity.
         """
-        pHighT = self.thermodynamics.pHighT(self.Tnucl)
-        eHighT = self.thermodynamics.eHighT(self.Tnucl)
+        pSym = self.thermodynamics.pSym(self.Tnucl)
+        eSym = self.thermodynamics.eSym(self.Tnucl)
         def vpDerivNum(tm): # The numerator of the derivative of v+^2
-            pLowT = self.thermodynamics.pLowT(tm)
-            eLowT = self.thermodynamics.eLowT(tm)
-            num1 = pHighT - pLowT # First factor in the numerator of v+^2
-            num2 = pHighT + eLowT
-            den1 = eHighT - eLowT # First factor in the denominator of v+^2
-            den2 = eHighT + pLowT 
-            dnum1 = - self.thermodynamics.dpLowT(tm) # T-derivative of first factor wrt tm
-            dnum2 = self.thermodynamics.deLowT(tm)
+            pBrok = self.thermodynamics.pBrok(tm)
+            eBrok = self.thermodynamics.eBrok(tm)
+            num1 = pSym - pBrok # First factor in the numerator of v+^2
+            num2 = pSym + eBrok
+            den1 = eSym - eBrok # First factor in the denominator of v+^2
+            den2 = eSym + pBrok 
+            dnum1 = - self.thermodynamics.dpBrok(tm) # T-derivative of first factor wrt tm
+            dnum2 = self.thermodynamics.deBrok(tm)
             dden1 = - dnum2 # T-derivative of second factor wrt tm
             dden2 = - dnum1
             return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
@@ -52,7 +52,7 @@ class Hydro:
         else: # If we cannot bracket the root, use the 'secant' method instead.
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root 
         
-        vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
+        vp = np.sqrt((pSym - self.thermodynamics.pBrok(tmSol))*(pSym + self.thermodynamics.eBrok(tmSol))/(eSym - self.thermodynamics.eBrok(tmSol))/(eSym + self.thermodynamics.pBrok(tmSol)))
         return(vp)
     
     def vpvmAndvpovm(self, Tp, Tm):
@@ -60,10 +60,10 @@ class Hydro:
         Returns :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`.
         """
         
-        pHighT,pLowT = self.thermodynamics.pHighT(Tp),self.thermodynamics.pLowT(Tm)
-        eHighT,eLowT = self.thermodynamics.eHighT(Tp),self.thermodynamics.eLowT(Tm)
-        vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
-        vpovm = (eLowT+pHighT)/(eHighT+pLowT)
+        pSym,pBrok = self.thermodynamics.pSym(Tp),self.thermodynamics.pBrok(Tm)
+        eSym,eBrok = self.thermodynamics.eSym(Tp),self.thermodynamics.eBrok(Tm)
+        vpvm = (pSym-pBrok)/(eSym-eBrok) if eSym != eBrok else (pSym-pBrok)*1e50
+        vpovm = (eBrok+pSym)/(eSym+pBrok)
         return vpvm,vpovm
     
     
@@ -73,13 +73,13 @@ class Hydro:
         """
         vp = vw
         Tp = self.Tnucl
-        pHighT,wHighT = self.thermodynamics.pHighT(Tp),self.thermodynamics.wHighT(Tp)
-        eHighT = wHighT - pHighT
+        pSym,wSym = self.thermodynamics.pSym(Tp),self.thermodynamics.wSym(Tp)
+        eSym = wSym - pSym
         
         def tmFromvpsq(tm):
-            pLowT,wLowT = self.thermodynamics.pLowT(tm),self.thermodynamics.wLowT(tm)
-            eLowT = wLowT - pLowT
-            return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
+            pBrok,wBrok = self.thermodynamics.pBrok(tm),self.thermodynamics.wBrok(tm)
+            eBrok = wBrok - pBrok
+            return vp**2*(eSym-eBrok) - (pSym-pBrok)*(eBrok+pSym)/(eSym+pBrok)
         
         Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,10*self.Tnucl],method='Bounded').x
         Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
@@ -112,12 +112,12 @@ class Hydro:
             Tpm0 = [1.1*self.Tnucl,self.Tnucl]
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
-        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqBrok(Tpm0[1])))):
+            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqBrok(Tpm0[1]))))/2
         
         def match(XpXm):
             Tpm = self.__inverseMappingT(XpXm,vwMapping)
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tpm[1]))
+            vmsq = min(vw**2,self.thermodynamics.csqBrok(Tpm[1]))
             if vp is None:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
             else:
@@ -138,7 +138,7 @@ class Hydro:
         [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
 
         ## NOTE! RuntimeWarning: invalid value encountered in sqrt
-        vm = min(vw, np.sqrt(self.thermodynamics.csqLowT(Tm)))
+        vm = min(vw, np.sqrt(self.thermodynamics.csqBrok(Tm)))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
         return vp, vm, Tp, Tm
@@ -149,8 +149,8 @@ class Hydro:
         Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
         """
         xi, T = xiAndT
-        eq1 = gammasq(v) * (1. - v*xi)*(mu(xi,v)**2/self.thermodynamics.csqHighT(T)-1.)*xi/2./v
-        eq2 = self.thermodynamics.wHighT(T)/self.thermodynamics.dpHighT(T)*gammasq(v)*mu(xi,v)
+        eq1 = gammasq(v) * (1. - v*xi)*(mu(xi,v)**2/self.thermodynamics.csqSym(T)-1.)*xi/2./v
+        eq2 = self.thermodynamics.wSym(T)/self.thermodynamics.dpSym(T)*gammasq(v)*mu(xi,v)
         return [eq1,eq2]
         
     def solveHydroShock(self, vw, vp, Tp):
@@ -160,7 +160,7 @@ class Hydro:
         
         def shock(v, xiAndT):
             xi, T = xiAndT
-            return mu(xi,v)*xi - self.thermodynamics.csqHighT(T)
+            return mu(xi,v)*xi - self.thermodynamics.csqSym(T)
         shock.terminal = True
         xi0T0 = [vw,Tp]
         vpcent = mu(vw,vp)
@@ -170,7 +170,7 @@ class Hydro:
             Tm_sh = Tp
         elif vw == vp:
             vm_sh = 0
-            xi_sh = self.thermodynamics.csqHighT(Tp)**0.5
+            xi_sh = self.thermodynamics.csqSym(Tp)**0.5
             Tm_sh = Tp
         else:
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
@@ -178,7 +178,7 @@ class Hydro:
             xi_sh,Tm_sh = solshock.y[:,-1]
         
         def TiiShock(tn): #continuity of Tii
-            return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*mu(xi_sh,vm_sh)*gammasq(mu(xi_sh,vm_sh))
+            return self.thermodynamics.wSym(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wSym(Tm_sh)*mu(xi_sh,vm_sh)*gammasq(mu(xi_sh,vm_sh))
         Tmin,Tmax = 0.9*self.Tnucl,Tm_sh
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.Tnucl/10:
@@ -201,7 +201,7 @@ class Hydro:
         The fluid equations in the shock are then solved to determine the strongest shock.
         """
         def vpnum(Tpm):
-            return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
+            return (self.thermodynamics.eBrok(Tpm[1])+self.thermodynamics.pSym(Tpm[0]),self.thermodynamics.pSym(Tpm[0])-self.thermodynamics.pBrok(Tpm[1]))
     
         Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
         return self.solveHydroShock(vw,0,Tp)
@@ -216,7 +216,7 @@ class Hydro:
                 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)
+            vpmax = min(vwTry,self.thermodynamics.csqSym(self.Tc)/vwTry)
             vpmin = 1e-5 # Minimum value of vpmin
             
             def func(vpTry):
@@ -242,9 +242,9 @@ class Hydro:
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             return (vp,vm,Tp,Tm,mu(vwTry,vp))
-        wHighT = self.thermodynamics.wHighT(Tp)
-        c1 = wHighT*gammasq(vp)*vp
-        c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammasq(vp)*vp**2
+        wSym = self.thermodynamics.wSym(Tp)
+        c1 = wSym*gammasq(vp)*vp
+        c2 = self.thermodynamics.pSym(Tp)+wSym*gammasq(vp)*vp**2
         vAtz0 = mu(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)
 
@@ -263,13 +263,13 @@ class Hydro:
             return Tntry - self.Tnucl
         def shock(vw): # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
-            return vp*vw-self.thermodynamics.csqHighT(Tp)
+            return vp*vw-self.thermodynamics.csqSym(Tp)
         
         self.success = True
         vmin = 0.01
         vmax = self.vJ
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
-            vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+            vmax = root_scalar(shock,bracket=[self.thermodynamics.csqSym(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
         fmax = func(vmax)
         if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
             return 1
@@ -304,7 +304,7 @@ class Hydro:
             Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/Tp
             return [Xp,Xm]
         else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
+            vmsq = min(vw**2,self.thermodynamics.csqBrok(Tm))
             Xm = Tm/self.Tnucl-1 if Tm > self.Tnucl else 1-self.Tnucl/Tm
             r = Tm*(1/np.sqrt(1-vmsq)-1)
             Xp = -(0.5*r+Tm-Tp)/np.sqrt((Tp-Tm)*(r+Tm-Tp))
@@ -322,7 +322,7 @@ class Hydro:
             return [Tp,Tm]
         else:
             Tm = self.Tnucl*(Xm+1) if Xm > 0 else self.Tnucl/(1-Xm)
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
+            vmsq = min(vw**2,self.thermodynamics.csqBrok(Tm))
             r = Tm*(1/np.sqrt(1-vmsq)-1)
             Tp = Tm + 0.5*r*(1+Xp/np.sqrt(1+Xp**2))
             return [Tp,Tm]

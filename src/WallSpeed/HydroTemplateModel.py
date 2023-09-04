@@ -34,21 +34,21 @@ class HydroTemplateModel:
         """
         self.thermodynamics = thermodynamics
         self.rtol,self.atol = rtol,atol
-        pHighT,pLowT = thermodynamics.pHighT(thermodynamics.Tnucl),thermodynamics.pLowT(thermodynamics.Tnucl)
-        wHighT,wLowT = thermodynamics.wHighT(thermodynamics.Tnucl),thermodynamics.wLowT(thermodynamics.Tnucl)
-        eHighT,eLowT = wHighT-pHighT,wLowT-pLowT
-        self.cLowT2 = thermodynamics.csqLowT(thermodynamics.Tnucl)
-        self.cHighT2 = thermodynamics.csqHighT(thermodynamics.Tnucl)
-        self.alN = (eHighT-eLowT-(pHighT-pLowT)/self.cLowT2)/(3*wHighT)
-        self.psiN = wLowT/wHighT
-        self.cLowT = np.sqrt(self.cLowT2)
-        self.cHighT = np.sqrt(self.cHighT2)
-        self.wN = wHighT
-        self.pN = pHighT
+        pSym,pBrok = thermodynamics.pSym(thermodynamics.Tnucl),thermodynamics.pBrok(thermodynamics.Tnucl)
+        wSym,wBrok = thermodynamics.wSym(thermodynamics.Tnucl),thermodynamics.wBrok(thermodynamics.Tnucl)
+        eSym,eBrok = wSym-pSym,wBrok-pBrok
+        self.cb2 = thermodynamics.csqBrok(thermodynamics.Tnucl)
+        self.cs2 = thermodynamics.csqSym(thermodynamics.Tnucl)
+        self.alN = (eSym-eBrok-(pSym-pBrok)/self.cb2)/(3*wSym)
+        self.psiN = wBrok/wSym
+        self.cb = np.sqrt(self.cb2)
+        self.cs = np.sqrt(self.cs2)
+        self.wN = wSym
+        self.pN = pSym
         self.Tnucl = thermodynamics.Tnucl
         
-        self.nu = 1+1/self.cLowT2
-        self.mu = 1+1/self.cHighT2
+        self.nu = 1+1/self.cb2
+        self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
         
     def findJouguetVelocity(self, alN=None): 
@@ -58,7 +58,7 @@ class HydroTemplateModel:
         """
         if alN is None:
             alN = self.alN
-        return self.cLowT*(1+np.sqrt(3*alN*(1-self.cLowT2+3*self.cLowT2*alN)))/(1+3*self.cLowT2*alN)
+        return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
     
     def get_vp(self,vm,al,branch=-1):
         r"""
@@ -80,8 +80,8 @@ class HydroTemplateModel:
             :math: `v_+`.
 
         """
-        disc = max(0, vm**4-2*self.cLowT2*vm**2*(1-6*al)+self.cLowT2**2*(1-12*vm**2*al*(1-3*al)))
-        return 0.5*(self.cLowT2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cLowT2*vm*al)
+        disc = max(0, vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al)))
+        return 0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al)
     
     def w_from_alpha(self,al):
         r"""
@@ -135,9 +135,9 @@ class HydroTemplateModel:
             Value of :math:`\alpha_+` that solves the matching equation.
 
         """
-        vm = min(self.cLowT,vw)
-        vp_max = min(self.cHighT2/vw,vw) if constraint else vm
-        al_min = max((vm-vp_max)*(self.cLowT2-vm*vp_max)/(3*self.cLowT2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu),1e-10)
+        vm = min(self.cb,vw)
+        vp_max = min(self.cs2/vw,vw) if constraint else vm
+        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu),1e-10)
         al_max = 1/3
         branch = -1
         if self.__eqWall(al_min,vm)*self.__eqWall(al_max,vm)>0:
@@ -151,8 +151,8 @@ class HydroTemplateModel:
         """
         xi,w = X
         mu_xiv = (xi-v)/(1-xi*v)
-        dwdv = w*(1+1/self.cHighT2)*mu_xiv/(1-v**2)
-        dxidv = xi*(1-v*xi)*(mu_xiv**2/self.cHighT2-1)/(2*v*(1-v**2)) if v != 0  else 1e50 #If v = 0, dxidv is set to a very high value
+        dwdv = w*(1+1/self.cs2)*mu_xiv/(1-v**2)
+        dxidv = xi*(1-v*xi)*(mu_xiv**2/self.cs2-1)/(2*v*(1-v**2)) if v != 0  else 1e50 #If v = 0, dxidv is set to a very high value
         return [dxidv,dwdv]
     
     def integrate_plasma(self,v0,vw,wp):
@@ -175,7 +175,7 @@ class HydroTemplateModel:
         """
         def event(v,X):
             xi,w = X
-            return (xi*(xi-v)/(1-xi*v) - self.cHighT2)*v
+            return (xi*(xi-v)/(1-xi*v) - self.cs2)*v
         event.terminal = True
         sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
@@ -184,10 +184,10 @@ class HydroTemplateModel:
         """
         Integrates through the shock wave and returns the residual of the matching equation at the shock front.
         """
-        vm = min(self.cLowT,vw)
+        vm = min(self.cb,vw)
         vp = self.get_vp(vm, al)
         wp = self.w_from_alpha(al)
-        if abs(vp*vw-self.cHighT2) < 1e-12: 
+        if abs(vp*vw-self.cs2) < 1e-12: 
             # If the wall is already very close to the shock front, we do not integrate through the shock wave 
             # to avoid any error due to rounding error.
             vp_sw = vw
@@ -195,8 +195,8 @@ class HydroTemplateModel:
             wm_sw = wp
         elif vw == vp:
             # If the plasma is at rest in front of the wall, there is no variation of plasma velocity and temperature in the shock wave
-            vp_sw = self.cHighT
-            vm_sw = self.cHighT
+            vp_sw = self.cs
+            vm_sw = self.cs
             wm_sw = wp
         else:
             self.temp = [vw,vp,(vw-vp)/(1-vw*vp),wp]
@@ -229,10 +229,10 @@ class HydroTemplateModel:
         
         func = lambda al: self.__shooting(vw,al)
         
-        vm = min(self.cLowT,vw)
+        vm = min(self.cb,vw)
         al_max = 1/3
-        vp_max = min(self.cHighT2/vw,vw,vm)
-        al_min = max((vm-vp_max)*(self.cLowT2-vm*vp_max)/(3*self.cLowT2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+        vp_max = min(self.cs2/vw,vw,vm)
+        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
         try:
             sol = root_scalar(func,bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
         except:
@@ -247,10 +247,10 @@ class HydroTemplateModel:
         r"""
         Returns initial guess for the solver in the matchDeflagOrHyb function.
         """
-        vm = min(vw,self.cLowT)
+        vm = min(vw,self.cb)
         al = None
         if vp is not None:
-            al = ((vm-vp)*(self.cLowT2-vm*vp))/(3*self.cLowT2*vm*(1-vp**2))
+            al = ((vm-vp)*(self.cb2-vm*vp))/(3*self.cb2*vm*(1-vp**2))
         else:
             al = self.solve_alpha(vw, False)
             vp = self.get_vp(vm, al)
@@ -266,10 +266,10 @@ class HydroTemplateModel:
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             return (vp,vm,Tp,Tm)
-        wHighT = self.wN*(Tp/self.Tnucl)**self.mu
-        pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
-        c1 = wHighT*vp/(1-vp**2)
-        c2 = pHighT+wHighT*vp**2/(1-vp**2)
+        wSym = self.wN*(Tp/self.Tnucl)**self.mu
+        pSym = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
+        c1 = wSym*vp/(1-vp**2)
+        c2 = pSym+wSym*vp**2/(1-vp**2)
         return (c1, c2, Tp, Tm)
     
     def max_al(self,upper_limit=100):
@@ -283,11 +283,11 @@ class HydroTemplateModel:
             returns upper_limit. The default is 100.
 
         """
-        vm = self.cLowT
+        vm = self.cb
         lower_limit = (1-self.psiN)/3
         def func(alN):
             vw = self.findJouguetVelocity(alN)
-            vp = self.cHighT2/vw
+            vp = self.cs2/vw
             ga2p,ga2m = 1/(1-vp**2),1/(1-vm**2)
             wp = (vp+vw-vw*self.mu)/(vp+vw-vp*self.mu)
             psi = self.psiN*wp**(self.nu/self.mu-1)
@@ -315,8 +315,8 @@ class HydroTemplateModel:
         Computes the wall velocity for a detonation solution.
         """
         def matching_eq(vw):
-            A = vw**2+self.cLowT2*(1-3*self.alN*(1-vw**2))
-            vm = (A+np.sqrt(A**2-4*vw**2*self.cLowT2))/(2*vw)
+            A = vw**2+self.cb2*(1-3*self.alN*(1-vw**2))
+            vm = (A+np.sqrt(A**2-4*vw**2*self.cb2))/(2*vw)
             ga2w,ga2m = 1/(1-vw**2),1/(1-vm**2)
             return vw*vm*self.alN/(1-(self.nu-1)*vw*vm)-(1-3*self.alN-(ga2w/ga2m)**(self.nu/2)*self.psiN)/(3*self.nu)
         if matching_eq(self.vJ+1e-10)*matching_eq(1-1e-10) > 0:
@@ -330,8 +330,8 @@ class HydroTemplateModel:
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a detonation solution.
         """
         vp = vw
-        X = vp**2+self.cLowT2*(1-3*(1-vp**2)*self.alN)
-        vm = (X+np.sqrt(X**2-4*self.cLowT2*vp**2))/(2*vp)
+        X = vp**2+self.cb2*(1-3*(1-vp**2)*self.alN)
+        vm = (X+np.sqrt(X**2-4*self.cb2*vp**2))/(2*vp)
         Tm = self.__find_Tm(vm, vp, self.Tnucl)
         return vp,vm,self.Tnucl,Tm
     
