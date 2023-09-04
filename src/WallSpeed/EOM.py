@@ -599,8 +599,8 @@ def initialWallParameters(
     TGuess,
     freeEnergy
 ):
-    higgsVEV = freeEnergy.findPhases(TGuess)[1,0]
-    singletVEV = freeEnergy.findPhases(TGuess)[0,1]
+    higgsVEV = freeEnergy.findPhases(TGuess)[0,0]
+    singletVEV = freeEnergy.findPhases(TGuess)[1,1]
 
     initRes = minimize(
         lambda wallParams: oneDimAction(higgsVEV, singletVEV, wallParams, TGuess, freeEnergy),
@@ -641,8 +641,8 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, freeEnergy):
 def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid,freeEnergy):
     [higgsWidth, singletWidth, wallOffSet] = staticWallParams
 
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
 
     wallProfileGrid = []
     for z in grid.xiValues:
@@ -680,13 +680,13 @@ def findPlasmaProfile(
     velocityProfile = []
     for index in range(len(grid.xiValues)):
         z = grid.xiValues[index]
-        higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
+        higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
         h = 0.5 * higgsVEV * (1 - np.tanh(z / higgsWidth))
         dhdz = (
             -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
         )
 
-        singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+        singletVEV = freeEnergy.findPhases(Tplus)[1,1]
         s = 0.5 * singletVEV * (1 + np.tanh(z / singletWidth + wallOffSet))
         dsdz = (
             0.5
