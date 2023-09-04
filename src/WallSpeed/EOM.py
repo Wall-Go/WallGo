@@ -52,8 +52,10 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
                 order=4,
             )
 
-    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],0))
-    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[0],1))
+    hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],0))
+    sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],1))
+
+    print(hMass,sMass)
     
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
@@ -67,6 +69,8 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     )
 
     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
+
+    print(initializedWallParameters)
 
     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
@@ -140,8 +144,8 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, singletWidth, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
     
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
     
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
@@ -215,8 +219,8 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         # TODO: Update offEquilDeltas at each evaluation
         c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(x)
         Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, delta, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-        higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-        singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+        higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+        singletVEV = freeEnergy.findPhases(Tplus)[1,1]
         Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
         return higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, particle, offEquilDelta00, Tfunc)+singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, offEquilDelta00, Tfunc)
     
@@ -245,8 +249,8 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         grid,
     )
 
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
     
     # Define a function returning the local temparature by interpolating through Tprofile.
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
@@ -595,8 +599,8 @@ def initialWallParameters(
     TGuess,
     freeEnergy
 ):
-    higgsVEV = freeEnergy.findPhases(TGuess)[1,0]
-    singletVEV = freeEnergy.findPhases(TGuess)[0,1]
+    higgsVEV = freeEnergy.findPhases(TGuess)[0,0]
+    singletVEV = freeEnergy.findPhases(TGuess)[1,1]
 
     initRes = minimize(
         lambda wallParams: oneDimAction(higgsVEV, singletVEV, wallParams, TGuess, freeEnergy),
@@ -637,8 +641,8 @@ def oneDimAction(higgsVEV, singletVEV, wallParams, T, freeEnergy):
 def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid,freeEnergy):
     [higgsWidth, singletWidth, wallOffSet] = staticWallParams
 
-    higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
-    singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+    higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    singletVEV = freeEnergy.findPhases(Tplus)[1,1]
 
     wallProfileGrid = []
     for z in grid.xiValues:
@@ -676,13 +680,13 @@ def findPlasmaProfile(
     velocityProfile = []
     for index in range(len(grid.xiValues)):
         z = grid.xiValues[index]
-        higgsVEV = freeEnergy.findPhases(Tminus)[1,0]
+        higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
         h = 0.5 * higgsVEV * (1 - np.tanh(z / higgsWidth))
         dhdz = (
             -0.5 * higgsVEV / (higgsWidth * np.cosh(z / higgsWidth) ** 2)
         )
 
-        singletVEV = freeEnergy.findPhases(Tplus)[0,1]
+        singletVEV = freeEnergy.findPhases(Tplus)[1,1]
         s = 0.5 * singletVEV * (1 + np.tanh(z / singletWidth + wallOffSet))
         dsdz = (
             0.5
