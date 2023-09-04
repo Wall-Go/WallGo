@@ -58,7 +58,7 @@ def test_findvwLTE():
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
     
 def test_findHydroBoundaries():
-    res1,res2 = np.zeros((N,4)),np.zeros((N,4))
+    res1,res2 = np.zeros((N,5)),np.zeros((N,5))
     psiN = 1-0.5*rng.random(N)
     alN = (1-psiN)/3+rng.random(N)
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
@@ -71,9 +71,9 @@ def test_findHydroBoundaries():
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         if np.isnan(res1[i,0]):
-            res1[i] = [0,0,0,0]
+            res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
-            res2[i] = [0,0,0,0]
+            res2[i] = [0,0,0,0,0]
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
 
 

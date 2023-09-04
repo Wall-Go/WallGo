@@ -190,7 +190,7 @@ class TestModelTemplate():
     def csqHighT(self,T):
         return self.cs2
 
-    
+   
     #Pressure in the broken phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pLowT(self, T):
         return self.am*T**self.nu/3
