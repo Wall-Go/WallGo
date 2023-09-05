@@ -21,6 +21,26 @@ class BoltzmannBackground:
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
 
+    def boostToPlasmaFrame(self):
+        """
+        Boosts background to the plasma frame
+        """
+        vPlasma = self.velocityProfile
+        v0 = self.velocityProfile[0]
+        vw = self.vw
+        self.velocityProfile = (vPlasma - v0) / (1 - vPlasma * v0)
+        self.vw = (vw - v0) / (1 - vw * v0)
+
+    def boostToWallFrame(self):
+        """
+        Boosts background to the wall frame
+        """
+        vPlasma = self.velocityProfile
+        vPlasma0 = self.velocityProfile[0]
+        vw = self.vw
+        self.velocityProfile = (vPlasma - vw) / (1 - vPlasma * vw)
+        self.vw = 0
+
 
 class BoltzmannSolver:
     """
@@ -54,13 +74,13 @@ class BoltzmannSolver:
         """
         self.grid = grid
         self.background = background
+        self.background.boostToPlasmaFrame()
         self.particle = particle
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
-        print("NOTE: missing boost between frames")
 
     def getDeltas(self, deltaF=None):
         """
