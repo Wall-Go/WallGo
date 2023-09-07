@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "WallSpeed"
+name = "WallGo"
 dynamic = ["version"]
 authors = [
     {name = "Andreas Ekstedt", email = "andreas.ekstedt@desy.de"},
@@ -33,5 +33,5 @@ dependencies = [
 readme = "README.rst"
 
 [project.urls]
-"Homepage" = "https://wallspeed.readthedocs.io/"
-"Repository" = "https://github.com/jorindevandevis/WallSpeed"
+"Homepage" = "https://wallgo.readthedocs.io/"
+"Repository" = "https://github.com/jorindevandevis/WallGo"

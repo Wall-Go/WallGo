@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import WallSpeed
+import WallGo
 
 
 @pytest.fixture
@@ -10,7 +10,7 @@ def background(M):
     field = np.ones((M - 1,))
     field[M // 2:]  = 0
     T = 100 * np.ones(M - 1)
-    return WallSpeed.BoltzmannBackground(
+    return WallGo.BoltzmannBackground(
         vw=vw,
         velocityProfile=v,
         fieldProfile=field,
@@ -21,7 +21,7 @@ def background(M):
 
 @pytest.fixture
 def particle():
-    return WallSpeed.Particle(
+    return WallGo.Particle(
         name="top",
         msqVacuum=lambda phi: 0.5 * phi**2,
         msqThermal=lambda T: 0.1 * T**2,

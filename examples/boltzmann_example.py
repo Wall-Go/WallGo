@@ -3,10 +3,10 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
-from WallSpeed.Thermodynamics import Thermodynamics
-#from WallSpeed.eomHydro import findWallVelocityLoop
-from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
+from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallGo.Thermodynamics import Thermodynamics
+#from WallGo.eomHydro import findWallVelocityLoop
+from WallGo import Particle, FreeEnergy, Grid, Polynomial
 
 """
 Grid

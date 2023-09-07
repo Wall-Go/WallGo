@@ -3,7 +3,7 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-import WallSpeed
+import WallGo
 
 
 """
@@ -12,7 +12,7 @@ inhertis from Model
 """
 print("Model: xSM\n")
 
-class xSM(WallSpeed.Model):
+class xSM(WallGo.Model):
     def __init__(self):
         self.v0 = 246.
         self.muhsq = 7825.
@@ -125,7 +125,7 @@ print(f"{Tc=}, {Tn=}")
 #         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
 
-fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = WallGo.FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
@@ -133,15 +133,15 @@ print(f"{fxSM.derivT([0, 1], 100)=}")
 print(f"{fxSM.derivField([0, 1], 100)=}")
 
 # looking at thermodynamics
-thermo = WallSpeed.Thermodynamics(fxSM)
+thermo = WallGo.Thermodynamics(fxSM)
 print("\nThermodynamics:", thermo)
 print(f"{thermo.pSym(100)=}")
 print(f"{thermo.pBrok(100)=}")
 print(f"{thermo.ddpBrok(100)=}")
 
 # checking Tplus and Tminus
-thermo = WallSpeed.Thermodynamics(fxSM)
-hydro = WallSpeed.Hydro(thermo)
+thermo = WallGo.Thermodynamics(fxSM)
+hydro = WallGo.Hydro(thermo)
 vJ = hydro.vJ
 c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.59)
 
@@ -152,7 +152,7 @@ print("c1,c2")
 print(c1,c2)
 
 # defining particles which are out of equilibrium for WallGo
-top = WallSpeed.Particle(
+top = WallGo.Particle(
     "top",
     msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: params["yt"]**2 * T**2,

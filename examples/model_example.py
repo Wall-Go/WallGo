@@ -3,13 +3,13 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Boltzmann import BoltzmannSolver
-from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Hydro import Hydro
-#from WallSpeed.eomHydro import findWallVelocityLoop
-from WallSpeed import Particle, FreeEnergy, Model
+from WallGo.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Boltzmann import BoltzmannSolver
+from WallGo.Thermodynamics import Thermodynamics
+from WallGo.Hydro import Hydro
+#from WallGo.eomHydro import findWallVelocityLoop
+from WallGo import Particle, FreeEnergy, Model
 
 
 print("--------------")

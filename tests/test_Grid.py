@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import WallSpeed
+import WallGo
 
 
 def test_GridCompactify():
@@ -11,7 +11,7 @@ def test_GridCompactify():
     N = 20
     L = 3
     T = 5
-    grid = WallSpeed.Grid(M, N, L, T)
+    grid = WallGo.Grid(M, N, L, T)
 
     chi, rz, rp = grid.getCompactCoordinates()
 
@@ -28,11 +28,11 @@ def test_GridCompactifyInversion():
     N = 20
     L = 3
     T = 5
-    grid = WallSpeed.Grid(M, N, L, T)
+    grid = WallGo.Grid(M, N, L, T)
 
     chi, rz, rp = grid.getCompactCoordinates()
     xi, pz, pp = grid.getCoordinates()
-    xi_inv, pz_inv, pp_inv = WallSpeed.Grid.decompactify(chi, rz, rp, L, T)
+    xi_inv, pz_inv, pp_inv = WallGo.Grid.decompactify(chi, rz, rp, L, T)
 
     max_diff = np.amax([abs(xi - xi_inv), abs(pz - pz_inv), abs(pp - pp_inv)])
     assert max_diff == pytest.approx(0, abs=1e-13)

@@ -3,13 +3,13 @@ An attempt to run EOM.py
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
-from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Hydro import Hydro
-from WallSpeed import Particle, FreeEnergy, Model
-from WallSpeed.EOM import findWallVelocityLoop
+from WallGo.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallGo.Thermodynamics import Thermodynamics
+from WallGo.Hydro import Hydro
+from WallGo import Particle, FreeEnergy, Model
+from WallGo.EOM import findWallVelocityLoop
 
 """
 Grid
