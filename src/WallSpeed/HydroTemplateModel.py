@@ -266,7 +266,7 @@ class HydroTemplateModel:
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
-            return (vp,vm,Tp,Tm)
+            return (vp,vm,Tp,Tm, None)
         wHighT = self.wN*(Tp/self.Tnucl)**self.mu
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = wHighT*vp/(1-vp**2)

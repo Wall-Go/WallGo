@@ -67,7 +67,7 @@ def test_findHydroBoundaries():
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallSpeed.Hydro(model,1e-10,1e-10)
         hydroTemplate = WallSpeed.HydroTemplateModel(model,1e-10,1e-10)
-        res1[i] = hydro.findHydroBoundaries(vw[i])[:4] # [:4] hack!
+        res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0,0]
