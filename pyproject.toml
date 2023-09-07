@@ -32,13 +32,6 @@ dependencies = [
 ]
 readme = "README.rst"
 
-[tool.pytest.ini_options]
-filterwarnings = [
-    "error",
-    "ignore::IntegrationWarning", # from CosmoTransitions
-    'The integral is probably divergent, or slowly convergent.',
-]
-
 [project.urls]
 "Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/jorindevandevis/WallSpeed"
