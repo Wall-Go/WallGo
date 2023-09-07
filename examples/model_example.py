@@ -44,7 +44,7 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vJ = hydro.vJ
-c1, c2, Tplus, Tminus = hydro.findHydroBoundaries(0.5229)
+c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.5229)
 
 print("Jouguet velocity")
 print(vJ)

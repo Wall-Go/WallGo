@@ -275,7 +275,7 @@ class BoltzmannSolver:
         collisionFile = self.__collisionFilename()
         collisionArray, collisionBasis, collisionN = BoltzmannSolver.readCollision(
             collisionFile,
-            "top",
+            self.particle,
         )
         assert collisionN == self.grid.N, \
             f"Collision basis size error {collisionN=}"
@@ -305,7 +305,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source
 
-    def readCollision(collisionFile, particle="top"):
+    def readCollision(collisionFile, particle):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
@@ -320,7 +320,9 @@ class BoltzmannSolver:
                     metadata.attrs["Basis Type"], 'unicode_escape',
                 )
                 BoltzmannSolver.__checkBasis(basisType)
-                collisionArray = np.array(file[particle][:])
+                collisionArray = np.array(file[particle.name][:])
+                print("Multiplying by first particle collision prefactor.")
+                collisionArray *= particle.collisionPrefactors[0]
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise

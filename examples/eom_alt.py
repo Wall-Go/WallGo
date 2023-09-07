@@ -2,7 +2,7 @@ from scipy.integrate import quad
 from scipy.optimize import minimize, brentq, root
 import numpy as np
 import matplotlib.pyplot as plt
-from Grid import Grid
+
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
@@ -50,7 +50,7 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
 
     return [h, s]
 
-def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid):
+def wallProfileOnWallSpeedGrid(staticWallParams, Tplus, Tminus, grid):
     [higgsWidth, singletWidth, wallOffSet] = staticWallParams
 
     higgsVEV = Veff.higgsVEV(Tminus)
