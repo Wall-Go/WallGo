@@ -116,7 +116,7 @@ class Model:
         self.lamh = self.muh**2/(2*self.v0**2)
         self.muhsq = -self.lamh*self.v0**2
         self.mussq = +self.mus**2-self.lamm*self.v0**2/2
-        
+
         '''
         Number of bosonic and fermionic dofs
         '''
@@ -157,7 +157,7 @@ class Model:
                 +self.lamm/24
                 )
 
-    
+
         '''
         Define dictionary of used parameters
         '''
@@ -390,17 +390,17 @@ class FreeEnergy:
         if Tc is None:
             print("No critical temperature defined")
             self.findTc()
-            print("Found Tc=",self.Tc)
-            # raise ValueError("No critical temperature defined")    
-        else:     
+            print("Found Tc=", self.Tc)
+            # raise ValueError("No critical temperature defined")
+        else:
             self.Tc = Tc
         if Tnucl is None:
-            raise ValueError("No nucleation temperature defined")    
-        else:  
+            raise ValueError("No nucleation temperature defined")
+        else:
             self.Tnucl = Tnucl
-        FreeEnergy.__validateInput(self.Tc,Tnucl)
+        FreeEnergy.__validateInput(self.Tc, Tnucl)
 
-        
+
     @staticmethod
     def __validateInput(
         Tc,
@@ -517,7 +517,7 @@ class FreeEnergy:
         """
         return -self(self.findPhases(T)[1],T)
 
-   
+
     def approxZeroTMin(self,T=0):
         """
         Returns approximate values of the zero-temperature minima.
@@ -565,7 +565,7 @@ class FreeEnergy:
         scipy.univariate splines has the advantage of derivative() method
         """
         if Tf < Ti:
-            raise ValueError("Interpolation range not well defined: Tf below Ti")    
+            raise ValueError("Interpolation range not well defined: Tf below Ti")
 
         min_nodes = 10
         n_nodes = max(min_nodes, int(np.ceil((Tf-Ti)/dT)))
@@ -604,10 +604,10 @@ class FreeEnergy:
             if X is None:
                 X = self.approxZeroTMin(T)
                 X = np.asanyarray(X)
-            
+
             fh = lambda h: self.f([abs(h),0],T)
             fs = lambda s: self.f([0,abs(s)],T)
-            
+
             fX = [fh,fs]
             vmin = []
 
@@ -619,7 +619,7 @@ class FreeEnergy:
                     vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
                 else:
                     vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
-                
+
                 vmin.append(vT)
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
