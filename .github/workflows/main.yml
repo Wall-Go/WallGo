@@ -22,4 +22,4 @@ jobs:
       - name: Install WallGo
         run: pip install .
       - name: Test with pytest
-        run: pytest -v
+        run: pytest -v tests
