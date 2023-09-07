@@ -2,7 +2,8 @@ from scipy.integrate import quad
 from scipy.optimize import minimize, brentq, root
 import numpy as np
 import matplotlib.pyplot as plt
-from Grid import Grid
+from WallSpeed import Grid
+
 
 def initialWallParameters(
     higgsWidthGuess, singletWidthGuess, wallOffSetGuess, TGuess, Veff
