@@ -35,17 +35,17 @@ class HydroTemplateModel:
         """
         self.thermodynamics = thermodynamics
         self.rtol,self.atol = rtol,atol
-        pSym,pBrok = thermodynamics.pSym(thermodynamics.Tnucl),thermodynamics.pBrok(thermodynamics.Tnucl)
-        wSym,wBrok = thermodynamics.wSym(thermodynamics.Tnucl),thermodynamics.wBrok(thermodynamics.Tnucl)
-        eSym,eBrok = wSym-pSym,wBrok-pBrok
-        self.cb2 = thermodynamics.csqBrok(thermodynamics.Tnucl)
-        self.cs2 = thermodynamics.csqSym(thermodynamics.Tnucl)
-        self.alN = (eSym-eBrok-(pSym-pBrok)/self.cb2)/(3*wSym)
-        self.psiN = wBrok/wSym
+        pHighT,pLowT = thermodynamics.pHighT(thermodynamics.Tnucl),thermodynamics.pLowT(thermodynamics.Tnucl)
+        wHighT,wLowT = thermodynamics.wHighT(thermodynamics.Tnucl),thermodynamics.wLowT(thermodynamics.Tnucl)
+        eHighT,eLowT = wHighT-pHighT,wLowT-pLowT
+        self.cb2 = thermodynamics.csqLowT(thermodynamics.Tnucl)
+        self.cs2 = thermodynamics.csqHighT(thermodynamics.Tnucl)
+        self.alN = (eHighT-eLowT-(pHighT-pLowT)/self.cb2)/(3*wHighT)
+        self.psiN = wLowT/wHighT
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
-        self.wN = wSym
-        self.pN = pSym
+        self.wN = wHighT
+        self.pN = pHighT
         self.Tnucl = thermodynamics.Tnucl
 
         self.nu = 1+1/self.cb2

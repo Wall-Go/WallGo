@@ -135,9 +135,9 @@ print(f"{fxSM.derivField([0, 1], 100)=}")
 # looking at thermodynamics
 thermo = WallSpeed.Thermodynamics(fxSM)
 print("\nThermodynamics:", thermo)
-print(f"{thermo.pSym(100)=}")
-print(f"{thermo.pBrok(100)=}")
-print(f"{thermo.ddpBrok(100)=}")
+print(f"{thermo.pHighT(100)=}")
+print(f"{thermo.pLowT(100)=}")
+print(f"{thermo.ddpLowT(100)=}")
 
 # checking Tplus and Tminus
 thermo = WallSpeed.Thermodynamics(fxSM)
