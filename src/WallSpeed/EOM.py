@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
-from scipy.integrate import quad
+from scipy.integrate import quad_vec
 from scipy.interpolate import UnivariateSpline
 #import matplotlib.pyplot as plt
 from .Thermodynamics import Thermodynamics
@@ -36,6 +36,36 @@ class EOM:
         offEquil = 0.5 * 12 * dmtdX * offEquilDelta00
         
         return d2Xdz2 + dVdX + offEquil
+    
+    def pressureLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+        X,dXdz,d2Xdz2 = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        
+        EOM = self.equationOfMotions(X, d2Xdz2, Tfunc(z), Delta00func(z))
+        
+        return -dXdz*EOM
+    
+    def pressureMoment(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+        return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
+    
+    def stretchLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+        X,dXdz,d2Xdz2 = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        
+        EOM = self.equationOfMotions(X, d2Xdz2, Tfunc(z), Delta00func(z))
+        
+        return dXdz*(2*(X-vevLowT[:,None])/(vevHighT-vevLowT)[:,None]-1)*EOM
+    
+    def stretchMoment(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+        return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
+    
+    def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
+        z_L = z[:,None]/wallWidths[None,:]
+        wallOffsetsCompleted = np.append([0], wallOffsets)
+        
+        X = np.transpose(vevLowT + 0.5*(vevHighT-vevLowT)*(1+np.tanh(z_L+wallOffsetsCompleted)))
+        dXdz = np.transpose(0.5*(vevHighT-vevLowT)/(wallWidths*np.cosh(z_L+wallOffsetsCompleted)**2))
+        d2Xdz2 = np.transpose(-(vevHighT-vevLowT)*np.tanh(z_L+wallOffsetsCompleted)/(wallWidths*np.cosh(z_L+wallOffsetsCompleted))**2)
+        
+        return X, dXdz, d2Xdz2
     
     # def higgsPressureMoment(
     #     higgsVEV,
