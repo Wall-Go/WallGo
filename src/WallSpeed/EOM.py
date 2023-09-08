@@ -22,7 +22,7 @@ class EOM:
         self.hydro = Hydro(self.thermo)
         self.wallVelocityLTE = self.hydro.findvwLTE()
         
-    def equationOfMotions(self, X, d2Xdz2, T, offEquilDelta00): 
+    def equationOfMotions(self, X, T, offEquilDelta00): 
         dVdX = self.freeEnergy.derivField(X, T)
 
         #TODO: need to generalize to more than 1 particle.
@@ -35,12 +35,12 @@ class EOM:
         dmtdX[0] = dmtdh(X)
         offEquil = 0.5 * 12 * dmtdX * offEquilDelta00
         
-        return d2Xdz2 + dVdX + offEquil
+        return dVdX + offEquil
     
     def pressureLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        X,dXdz,d2Xdz2 = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        X,dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
         
-        EOM = self.equationOfMotions(X, d2Xdz2, Tfunc(z), Delta00func(z))
+        EOM = self.equationOfMotions(X, Tfunc(z), Delta00func(z))
         
         return -dXdz*EOM
     
@@ -48,14 +48,15 @@ class EOM:
         return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
     
     def stretchLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        X,dXdz,d2Xdz2 = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        X,dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
         
-        EOM = self.equationOfMotions(X, d2Xdz2, Tfunc(z), Delta00func(z))
+        EOM = self.equationOfMotions(X, Tfunc(z), Delta00func(z))
         
         return dXdz*(2*(X-vevLowT[:,None])/(vevHighT-vevLowT)[:,None]-1)*EOM
     
     def stretchMoment(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
+        kinetic = (2/15)*(vevHighT-vevLowT)**2/wallWidths**2
+        return kinetic + quad_vec(self.stretchLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
     
     def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
         z_L = z[:,None]/wallWidths[None,:]
@@ -63,9 +64,8 @@ class EOM:
         
         X = np.transpose(vevLowT + 0.5*(vevHighT-vevLowT)*(1+np.tanh(z_L+wallOffsetsCompleted)))
         dXdz = np.transpose(0.5*(vevHighT-vevLowT)/(wallWidths*np.cosh(z_L+wallOffsetsCompleted)**2))
-        d2Xdz2 = np.transpose(-(vevHighT-vevLowT)*np.tanh(z_L+wallOffsetsCompleted)/(wallWidths*np.cosh(z_L+wallOffsetsCompleted))**2)
         
-        return X, dXdz, d2Xdz2
+        return X, dXdz
     
     # def higgsPressureMoment(
     #     higgsVEV,
