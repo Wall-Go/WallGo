@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
-from scipy.integrate import quad_vec
+from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
 #import matplotlib.pyplot as plt
 from .Thermodynamics import Thermodynamics
@@ -54,11 +54,14 @@ class EOM:
 
         wallParameters = np.concatenate(([wallVelocity], wallWidths, wallOffsets))
         
-        wallParameters = np.array([0.60665297, 0.04710031, 0.03439961, 0.33817556])
+        wallParameters = np.array([0.60665297, 0.05, 0.04, 0.2])
 
         print(wallParameters)
 
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
+        
+        # print(self.momentsOfWallEoM(np.array([0.5,0.05,0.05,0]), offEquilDeltas))#[-4818415.398740615, 443797.80971509626, 1973501.8795333474, -1058439.7855602442]
+        # raise
         
         error = self.errTol + 1
         while error > self.errTol:
@@ -93,7 +96,7 @@ class EOM:
 
             wallParameters = intermediateRes.x
 
-            error = np.sqrt((1 - oldWallVelocity/wallVelocity)**2 + np.sum((1 - oldWallWidths/wallWidths)**2) + np.sum((wallOffsets - oldWallOffsets) ** 2))
+            error = 0#np.sqrt((1 - oldWallVelocity/wallVelocity)**2 + np.sum((1 - oldWallWidths/wallWidths)**2) + np.sum((wallOffsets - oldWallOffsets) ** 2))
         
         return wallParameters
     
@@ -113,8 +116,8 @@ class EOM:
         # Define a function returning the local Delta00 function by interpolating through offEquilDeltas['00'].
         offEquilDelta00 = UnivariateSpline(self.grid.xiValues, offEquilDeltas['00'], k=3, s=0)
 
-        pressures = self.pressureMoment(vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDelta00, Tfunc)
-        stretchs = self.stretchMoment(vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDelta00, Tfunc)
+        pressures = self.pressureMoment(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, offEquilDelta00)
+        stretchs = self.stretchMoment(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, offEquilDelta00)
         
         return np.append(pressures, stretchs)
         
@@ -137,11 +140,10 @@ class EOM:
         X,dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
         
         EOM = self.equationOfMotions(X, Tfunc(z), Delta00func(z))
-        
         return -dXdz*EOM
     
     def pressureMoment(self, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
+        return quad_vec(self.pressureLocal, -1, 1, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
     
     def stretchLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
         X,dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
