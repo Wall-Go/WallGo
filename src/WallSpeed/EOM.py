@@ -11,27 +11,121 @@ from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammasq # derivatives for callable functions
 
 class EOM:
-    def __init__(self, particle, freeEnergy, grid, nbrFields, errTol):
+    def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
         self.errTol = errTol
         self.N = nbrFields
+        self.Tnucl = freeEnergy.Tnucl
         
         self.thermo = Thermodynamics(freeEnergy)
         self.hydro = Hydro(self.thermo)
         self.wallVelocityLTE = self.hydro.findvwLTE()
         
+    def findWallVelocityLoop(self):
+        """
+        Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
+        the field equation of motion iteratively.
+        """
+
+        # Initial conditions for velocity, hydro boundaries, wall parameters and
+        # temperature profile
+
+        if self.wallVelocityLTE < 1:
+            wallVelocity = 0.9 * self.wallVelocityLTE
+            maxWallVelocity = self.wallVelocityLTE
+        else:
+            wallVelocity = np.sqrt(1 / 3)
+            maxWallVelocity = self.hydro.vJ
+
+        c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        
+        wallWidthsGuess = (5/self.Tnucl)*np.ones(self.N)
+        wallOffsetsGuess = np.zeros(self.N-1)
+        wallWidths, wallOffsets = wallWidthsGuess, wallOffsetsGuess
+        # higgsWidth, singletWidth, wallOffSet = initialWallParameters(
+        #     higgsWidthGuess,
+        #     singletWidthGuess,
+        #     wallOffSetGuess,
+        #     0.5 * (Tplus + Tminus),
+        #     freeEnergy,
+        # )
+
+        wallParameters = np.concatenate(([wallVelocity], wallWidths, wallOffsets))
+        
+        wallParameters = np.array([0.60665297, 0.04710031, 0.03439961, 0.33817556])
+
+        print(wallParameters)
+
+        offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
+        
+        error = self.errTol + 1
+        while error > self.errTol:
+
+            oldWallVelocity = wallParameters[0]
+            oldWallWidths = wallParameters[1:1+self.N]
+            oldWallOffsets = wallParameters[1+self.N:]
+            oldError = error
+
+            c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+
+
+            # wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
+            
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+
+            # boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+
+            # boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
+            
+            # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
+            print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
+            # offEquilDeltas = boltzmannSolver.getDeltas()
+            # print(offEquilDeltas)
+            
+            # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
+            #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
+            #     print(f'Intermediate result: {wallParameters=}')
+
+            intermediateRes = root(self.momentsOfWallEoM, wallParameters, args=(offEquilDeltas,))
+            print(intermediateRes)
+
+            wallParameters = intermediateRes.x
+
+            error = np.sqrt((1 - oldWallVelocity/wallVelocity)**2 + np.sum((1 - oldWallWidths/wallWidths)**2) + np.sum((wallOffsets - oldWallOffsets) ** 2))
+        
+        return wallParameters
     
+    def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
+        wallVelocity = wallParameters[0]
+        wallWidths = wallParameters[1:self.N+1]
+        wallOffsets = wallParameters[self.N+1:]
+        c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+
+        vevLowT = self.freeEnergy.findPhases(Tminus)[0]
+        vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+        
+        # Define a function returning the local temparature by interpolating through Tprofile.
+        Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
+        
+        # Define a function returning the local Delta00 function by interpolating through offEquilDeltas['00'].
+        offEquilDelta00 = UnivariateSpline(self.grid.xiValues, offEquilDeltas['00'], k=3, s=0)
+
+        pressures = self.pressureMoment(vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDelta00, Tfunc)
+        stretchs = self.stretchMoment(vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDelta00, Tfunc)
+        
+        return np.append(pressures, stretchs)
         
     def equationOfMotions(self, X, T, offEquilDelta00): 
         dVdX = self.freeEnergy.derivField(X, T)
 
-        #TODO: need to generalize to more than 1 particle.
+        # TODO: need to generalize to more than 1 particle.
         def dmtdh(Y):
             Y = np.asanyarray(Y)
-            h, s = Y[0,:], Y[1:,:]
-            return derivative(lambda h: self.particle.msqVacuum(np.asanyarray([h,s])), h, dx = 1e-3, n=1, order=4)
+            # TODO: Would be nice to compute the mass derivative directly in particle.
+            return derivative(lambda x: self.particle.msqVacuum(np.append(x,Y[1:])), Y[0], dx = 1e-3, n=1, order=4)
         
         dmtdX = np.zeros_like(X)
         dmtdX[0] = dmtdh(X)
@@ -46,7 +140,7 @@ class EOM:
         
         return -dXdz*EOM
     
-    def pressureMoment(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+    def pressureMoment(self, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
         return quad_vec(self.pressureLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
     
     def stretchLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
@@ -54,14 +148,17 @@ class EOM:
         
         EOM = self.equationOfMotions(X, Tfunc(z), Delta00func(z))
         
-        return dXdz*(2*(X-vevLowT[:,None])/(vevHighT-vevLowT)[:,None]-1)*EOM
+        return dXdz*(2*(X-vevLowT)/(vevHighT-vevLowT)-1)*EOM
     
-    def stretchMoment(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
+    def stretchMoment(self, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
         kinetic = (2/15)*(vevHighT-vevLowT)**2/wallWidths**2
         return kinetic + quad_vec(self.stretchLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
     
     def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
-        z_L = z[:,None]/wallWidths[None,:]
+        if np.isscalar(z):
+            z_L = z/wallWidths
+        else:
+            z_L = z[:,None]/wallWidths[None,:]
         wallOffsetsCompleted = np.append([0], wallOffsets)
         
         X = np.transpose(vevLowT + 0.5*(vevHighT-vevLowT)*(1+np.tanh(z_L+wallOffsetsCompleted)))
@@ -75,13 +172,13 @@ class EOM:
         """
         temperatureProfile = []
         velocityProfile = []
+        
+        vevLowT = self.freeEnergy.findPhases(Tminus)[0]
+        vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+        X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+        
         for index in range(len(self.grid.xiValues)):
-            z = self.grid.xiValues[index]
-            vevLowT = self.freeEnergy.findPhases(Tminus)[0]
-            vevHighT = self.freeEnergy.findPhases(Tplus)[1]
-            X,dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
-
-            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus) 
+            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus) 
 
             temperatureProfile.append(T)
             velocityProfile.append(vPlasma)
@@ -159,128 +256,7 @@ class EOM:
     
     
         
-# def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
-#     """
-#     Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
-#     the field equation of motion iteratively.
-#     """
 
-#     # Initial conditions for velocity, hydro boundaries, wall parameters and
-#     # temperature profile
-
-#     thermo = Thermodynamics(freeEnergy)
-#     hydro = Hydro(thermo)
-
-#     if wallVelocityLTE is not None:
-#         wallVelocity = 0.9 * wallVelocityLTE
-#         maxWallVelocity = wallVelocityLTE
-#     else:
-#         wallVelocity = np.sqrt(1 / 3)
-#         maxWallVelocity = hydro.vJ
-
-#     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
-
-#     def ddVddf(freeEnergy,X,whichfield):
-#         X = np.asanyarray(X)
-#         h, s = X[..., 0], X[..., 1]
-#         if whichfield == 0:
-#             return derivative(
-#                 lambda h: freeEnergy([h,s],freeEnergy.Tnucl),
-#                 h,
-#                 dx = 1e-3,
-#                 n=2,
-#                 order=4,
-#             )
-#         else:
-#             return derivative(
-#                 lambda s: freeEnergy([h,s],freeEnergy.Tnucl),
-#                 s,
-#                 dx = 1e-3,
-#                 n=2,
-#                 order=4,
-#             )
-
-#     hMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],0))
-#     sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],1))
-
-#     print(hMass,sMass)
-    
-#     higgsWidthGuess = 1 / hMass
-#     singletWidthGuess = 1 / sMass
-#     wallOffSetGuess = 0
-#     higgsWidth, singletWidth, wallOffSet = initialWallParameters(
-#         higgsWidthGuess,
-#         singletWidthGuess,
-#         wallOffSetGuess,
-#         0.5 * (Tplus + Tminus),
-#         freeEnergy,
-#     )
-
-#     initializedWallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
-
-#     print(initializedWallParameters)
-
-#     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
-
-#     offEquilDeltas = {"00": np.zeros(grid.M-1), "02": np.zeros(grid.M-1), "20": np.zeros(grid.M-1), "11": np.zeros(grid.M-1)}
-    
-#     error = errTol + 1
-#     while error > errTol:
-
-#         oldWallVelocity = wallParameters[0]
-#         oldHiggsWidth = wallParameters[1]
-#         oldSingletWidth = wallParameters[2]
-#         oldWallOffSet = wallParameters[3]
-#         oldError = error
-
-#         c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
-
-
-#         wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
-        
-#         Tprofile, velocityProfile = findPlasmaProfile(
-#             c1,
-#             c2,
-#             velocityAtz0,
-#             higgsWidth,
-#             singletWidth,
-#             wallOffSet,
-#             offEquilDeltas,
-#             particle,
-#             Tplus,
-#             Tminus,
-#             freeEnergy,
-#             grid,
-#         )
-
-#         boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
-
-#         boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
-        
-#         # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
-#         print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
-#         # offEquilDeltas = boltzmannSolver.getDeltas()
-#         # print(offEquilDeltas)
-        
-#         for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
-#             wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
-#             print(f'Intermediate result: {wallParameters=}')
-
-#         intermediateRes = root(
-#             momentsOfWallEoM, wallParameters, args=(offEquilDeltas, freeEnergy, hydro, particle, grid)
-#         )
-#         print(intermediateRes)
-
-#         wallParameters = intermediateRes.x
-
-#         error = np.sqrt(
-#             ((wallVelocity - oldWallVelocity) / wallVelocity) ** 2
-#             + ((higgsWidth - oldHiggsWidth) / higgsWidth) ** 2
-#             + ((singletWidth - oldSingletWidth) / singletWidth) ** 2
-#             + (wallOffSet - oldWallOffSet) ** 2
-#         )
-    
-#     return wallParameters
 
 # def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, particle, grid):
 #     """
@@ -377,79 +353,6 @@ class EOM:
 #         vw = root_scalar(Ptot, bracket=[0.01,hydro.vJ-1e-6], method='brentq').root
     
 #     return [vw,Lh,Ls,delta]
-
-
-# def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid):
-#     wallVelocity, higgsWidth, singletWidth, wallOffSet = wallParameters
-#     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
-#     Tprofile, vprofile = findPlasmaProfile(
-#         c1,
-#         c2,
-#         velocityAtz0,
-#         higgsWidth,
-#         singletWidth,
-#         wallOffSet,
-#         offEquilDeltas,
-#         particle,
-#         Tplus,
-#         Tminus,
-#         freeEnergy,
-#         grid,
-#     )
-
-#     higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
-#     singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-    
-#     # Define a function returning the local temparature by interpolating through Tprofile.
-#     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-    
-#     # Define a function returning the local Delta00 function by interpolating through offEquilDeltas['00'].
-#     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
-
-#     mom1 = higgsPressureMoment(
-#         higgsVEV,
-#         higgsWidth,
-#         singletVEV,
-#         singletWidth,
-#         wallOffSet,
-#         freeEnergy,
-#         particle,
-#         offEquilDelta00,
-#         Tfunc,  #correct?
-#     )
-#     mom2 = higgsStretchMoment(
-#         higgsVEV,
-#         higgsWidth,
-#         singletVEV,
-#         singletWidth,
-#         wallOffSet,
-#         freeEnergy,
-#         particle,
-#         offEquilDelta00,
-#         Tfunc,
-#     )
-#     mom3 = singletPressureMoment(
-#         higgsVEV,
-#         higgsWidth,
-#         singletVEV,
-#         singletWidth,
-#         wallOffSet,
-#         freeEnergy,
-#         offEquilDelta00,
-#         Tfunc,
-#     )
-#     mom4 = singletStretchMoment(
-#         higgsVEV,
-#         higgsWidth,
-#         singletVEV,
-#         singletWidth,
-#         wallOffSet,
-#         freeEnergy,
-#         offEquilDelta00,
-#         Tfunc,
-#     )
-    
-#     return [mom1, mom2, mom3, mom4]
 
 
 

@@ -9,7 +9,7 @@ from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
-from WallSpeed.EOM import findWallVelocityLoop
+from WallSpeed.EOM import EOM
 
 """
 Grid
@@ -167,4 +167,5 @@ print(vwLTE)
 """
 Compute the wall velocity with out-of-equilibrium effects
 """
-print(findWallVelocityLoop(top,fxSM,None,1,grid))
+eom = EOM(top, fxSM, grid, 2)
+print(eom.findWallVelocityLoop())
