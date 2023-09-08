@@ -16,7 +16,7 @@ Grid
 """
 M = 20
 N = 20
-grid = Grid(M, N, 1, 1)
+grid = Grid(M, N, 0.05, 100)
 poly = Polynomial(grid)
 
 """
