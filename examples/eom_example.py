@@ -108,7 +108,7 @@ params=mod.params
 pprint(params)
 
 Tc = mod.Tc
-Tn = 111 # only Tn is strictly necessary
+Tn = 112 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 
@@ -168,4 +168,5 @@ print(vwLTE)
 Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOM(top, fxSM, grid, 2)
-print(eom.findWallVelocityLoop())
+# print(eom.findWallVelocityLoop())
+print(eom.findWallVelocityMinimizeAction())
