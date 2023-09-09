@@ -73,14 +73,15 @@ class EOM:
 
             c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
 
-
-            # wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
+            vevLowT = self.freeEnergy.findPhases(Tminus)[0]
+            vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+            wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
             
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
 
-            # boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
-            # boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
+            boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
             
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
             print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
@@ -100,15 +101,46 @@ class EOM:
         
         return wallParameters
     
+    def action(self, partialWallParams, lengthScale, vevLowT, vevHighT, returnGradient=False):
+        r"""
+        Computes the action by using gaussian quadratrure to integrate the Lagrangian. 
+        Uses a different tanh ansatz for the field profiles with
+        :math:`\phi_0(z)=v_0^\mathrm{low}+\frac{1}{2}(v_0^\mathrm{high}-v_0^\mathrm{low})[1+\tanh(z/L)],`
+        and
+        :math:`\phi_i(z)=v_i^\mathrm{low}+\frac{1}{2}(v_i^\mathrm{high}-v_i^\mathrm{low})\left[1+\tanh\left(\frac{z}{\alpha_i L}+\delta_i\right)\right],\quad i=1,\cdots,N-1.`
+        The parameter L is determined by the function in order to partially minimize the action. This leads to the value 
+        :math:`L=\sqrt{K/U},` where K and U are the kinetic and potential parts of the action, respectively.
+
+        Parameters
+        ----------
+        partialWallParams : array-like
+            Array of size 2*(N-1) containing :math:`(\alpha_i,\delta_i)`.
+        lengthScale : float
+            Typical length scale of the solution. Used as initial value for L.
+        vevLowT : array-like
+            VEV of the scalar fields in the low-T phase.
+        vevHighT : array-like
+            VEV of the scalar fields in the high-T phase.
+        returnGradient : bool, optional
+            If True, the function returns both the action and its gradient. The default is False.
+
+        """
+        alpha = partialWallParams[:self.N-1]
+        wallOffsets = partialWallParams[self.N-1:]
+        wallWidthsIni = lengthScale*np.append(1,alpha)
+        
+        kineticIni = np.sum((vevHighT-vevLowT)**2/(6*wallWidthsIni))
+        
+    
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.N+1]
         wallOffsets = wallParameters[self.N+1:]
         c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
-        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
         
         # Define a function returning the local temparature by interpolating through Tprofile.
         Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
@@ -168,15 +200,13 @@ class EOM:
         
         return X, dXdz
     
-    def findPlasmaProfile(self, c1, c2, velocityAtz0, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
+    def findPlasmaProfile(self, c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
         """
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
         """
         temperatureProfile = []
         velocityProfile = []
         
-        vevLowT = self.freeEnergy.findPhases(Tminus)[0]
-        vevHighT = self.freeEnergy.findPhases(Tplus)[1]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         
         for index in range(len(self.grid.xiValues)):
@@ -251,110 +281,103 @@ class EOM:
 
         return T30, T33
     
-    
-    
-    
-    
-    
-    
+    # def initialEOMSolution(self, wallParametersIni, offEquilDeltas):
+    #     """
+    #     Solves Gs=0, Gh=0, Ph-Ps=0 and Ph+Ps=0 one at a time for Ls, Lh, delta and vw, respectively.
+    #     This returns an approximate solution to the moment equations.
+
+    #     """
+    #     wallVelocity = wallParametersIni[0]
+    #     wallWidths = wallParametersIni[1:1+self.N]
+    #     wallOffsets = wallParametersIni[1+self.N:]
+    #     c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
         
-
-
-# def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, particle, grid):
-#     """
-#     Solves Gs=0, Gh=0, Ph-Ps=0 and Ph+Ps=0 one at a time for Ls, Lh, delta and vw, respectively.
-#     This returns an approximate solution to the moment equations.
-
-#     """
-#     wallVelocity, higgsWidth, singletWidth, wallOffSet = wallParametersIni
-#     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
-#     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, singletWidth, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-    
-#     higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
-#     singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-    
-#     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-#     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
-    
-#     # Solving Gs=0 for Ls
-#     Ls,Ls1,Ls2 = singletWidth,0.9*singletWidth,1.1*singletWidth
-#     Gs = lambda x: singletStretchMoment(higgsVEV, higgsWidth, singletVEV, x, wallOffSet, freeEnergy, offEquilDelta00, Tfunc)
-#     Gs1,Gs2 = Gs(Ls1),Gs(Ls2)
-#     i = 0
-#     while Gs1*Gs2 > 0 and i < 10:
-#         i += 1
-#         if abs(Gs1) < abs(Gs2):
-#             Ls2,Gs2 = Ls1,Gs1
-#             Ls1 *= 0.5
-#             Gs1 = Gs(Ls1)
-#         else:
-#             Ls1,Gs1 = Ls2,Gs2
-#             Ls2 *= 2
-#             Gs2 = Gs(Ls2)
-#     if Gs1*Gs2 <= 0:
-#         Ls = root_scalar(Gs, bracket=[Ls1,Ls2], method='brentq').root
-#     else:
-#         Ls = root_scalar(Gs, x0=Ls1, x1=Ls2, method='secant').root
-    
-#     # Solving Gh=0 for Lh
-#     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-#     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-#     Lh,Lh1,Lh2 = higgsWidth,0.9*higgsWidth,1.1*higgsWidth
-#     Gh = lambda x: higgsStretchMoment(higgsVEV, x, singletVEV, Ls, wallOffSet, freeEnergy, particle, offEquilDelta00, Tfunc)
-#     Gh1,Gh2 = Gh(Lh1),Gh(Lh2)
-#     i = 0
-#     while Gh1*Gh2 > 0 and i < 10:
-#         i += 1
-#         if abs(Gh1) < abs(Gh2):
-#             Lh2,Gh2 = Lh1,Gh1
-#             Lh1 *= 0.5
-#             Gh1 = Gh(Lh1)
-#         else:
-#             Lh1,Gh1 = Lh2,Gh2
-#             Lh2 *= 2
-#             Gh2 = Gh(Lh2)
-#     if Gh1*Gh2 <= 0:
-#         Lh = root_scalar(Gh, bracket=[Lh1,Lh2], method='brentq').root
-#     else:
-#         Lh = root_scalar(Gh, x0=Lh1, x1=Lh2, method='secant').root
+    #     vevLowT = self.freeEnergy.findPhases(Tminus)[0]
+    #     vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+    #     Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
         
-#     # Solving Ph-Ps=0 for delta
-#     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-#     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-#     delta,delta1,delta2 = wallOffSet,wallOffSet-0.1,wallOffSet+0.1
-#     Pdiff = lambda x: higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, x, freeEnergy, particle, offEquilDelta00, Tfunc)-singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, x, freeEnergy, offEquilDelta00, Tfunc)
-#     Pdiff1,Pdiff2 = Pdiff(delta1),Pdiff(delta2)
-#     i = 0
-#     while Pdiff1*Pdiff2 > 0 and i < 10:
-#         i += 1
-#         if abs(Pdiff1) < abs(Pdiff2):
-#             delta2,Pdiff2 = delta1,Pdiff1
-#             delta1 -= 0.5
-#             Pdiff1 = Pdiff(delta1)
-#         else:
-#             delta1,Pdiff1 = delta2,Pdiff2
-#             delta2 += 0.5
-#             Pdiff2 = Pdiff(delta2)
-#     if Pdiff1*Pdiff2 <= 0:
-#         delta = root_scalar(Pdiff, bracket=[delta1,delta2], method='brentq').root
-#     else:
-#         delta = root_scalar(Pdiff, x0=delta1, x1=delta2, method='secant').root
-    
-#     # Solving Ph+Ps=0 for vw
-#     def Ptot(x):
-#         # TODO: Update offEquilDeltas at each evaluation
-#         c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(x)
-#         Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, delta, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-#         higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
-#         singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-#         Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-#         return higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, particle, offEquilDelta00, Tfunc)+singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, offEquilDelta00, Tfunc)
-    
-#     vw = hydro.vJ
-#     if Ptot(0.01)*Ptot(hydro.vJ) <= 0:
-#         vw = root_scalar(Ptot, bracket=[0.01,hydro.vJ-1e-6], method='brentq').root
-    
-#     return [vw,Lh,Ls,delta]
+    #     Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
+    #     offEquilDelta00 = UnivariateSpline(self.grid.xiValues, offEquilDeltas['00'], k=3, s=0)
+        
+    #     # Solving Gs=0 for Ls
+    #     Ls,Ls1,Ls2 = singletWidth,0.9*singletWidth,1.1*singletWidth
+    #     Gs = lambda x: singletStretchMoment(higgsVEV, higgsWidth, singletVEV, x, wallOffSet, freeEnergy, offEquilDelta00, Tfunc)
+    #     Gs1,Gs2 = Gs(Ls1),Gs(Ls2)
+    #     i = 0
+    #     while Gs1*Gs2 > 0 and i < 10:
+    #         i += 1
+    #         if abs(Gs1) < abs(Gs2):
+    #             Ls2,Gs2 = Ls1,Gs1
+    #             Ls1 *= 0.5
+    #             Gs1 = Gs(Ls1)
+    #         else:
+    #             Ls1,Gs1 = Ls2,Gs2
+    #             Ls2 *= 2
+    #             Gs2 = Gs(Ls2)
+    #     if Gs1*Gs2 <= 0:
+    #         Ls = root_scalar(Gs, bracket=[Ls1,Ls2], method='brentq').root
+    #     else:
+    #         Ls = root_scalar(Gs, x0=Ls1, x1=Ls2, method='secant').root
+        
+    #     # Solving Gh=0 for Lh
+    #     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
+    #     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
+    #     Lh,Lh1,Lh2 = higgsWidth,0.9*higgsWidth,1.1*higgsWidth
+    #     Gh = lambda x: higgsStretchMoment(higgsVEV, x, singletVEV, Ls, wallOffSet, freeEnergy, particle, offEquilDelta00, Tfunc)
+    #     Gh1,Gh2 = Gh(Lh1),Gh(Lh2)
+    #     i = 0
+    #     while Gh1*Gh2 > 0 and i < 10:
+    #         i += 1
+    #         if abs(Gh1) < abs(Gh2):
+    #             Lh2,Gh2 = Lh1,Gh1
+    #             Lh1 *= 0.5
+    #             Gh1 = Gh(Lh1)
+    #         else:
+    #             Lh1,Gh1 = Lh2,Gh2
+    #             Lh2 *= 2
+    #             Gh2 = Gh(Lh2)
+    #     if Gh1*Gh2 <= 0:
+    #         Lh = root_scalar(Gh, bracket=[Lh1,Lh2], method='brentq').root
+    #     else:
+    #         Lh = root_scalar(Gh, x0=Lh1, x1=Lh2, method='secant').root
+            
+    #     # Solving Ph-Ps=0 for delta
+    #     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
+    #     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
+    #     delta,delta1,delta2 = wallOffSet,wallOffSet-0.1,wallOffSet+0.1
+    #     Pdiff = lambda x: higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, x, freeEnergy, particle, offEquilDelta00, Tfunc)-singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, x, freeEnergy, offEquilDelta00, Tfunc)
+    #     Pdiff1,Pdiff2 = Pdiff(delta1),Pdiff(delta2)
+    #     i = 0
+    #     while Pdiff1*Pdiff2 > 0 and i < 10:
+    #         i += 1
+    #         if abs(Pdiff1) < abs(Pdiff2):
+    #             delta2,Pdiff2 = delta1,Pdiff1
+    #             delta1 -= 0.5
+    #             Pdiff1 = Pdiff(delta1)
+    #         else:
+    #             delta1,Pdiff1 = delta2,Pdiff2
+    #             delta2 += 0.5
+    #             Pdiff2 = Pdiff(delta2)
+    #     if Pdiff1*Pdiff2 <= 0:
+    #         delta = root_scalar(Pdiff, bracket=[delta1,delta2], method='brentq').root
+    #     else:
+    #         delta = root_scalar(Pdiff, x0=delta1, x1=delta2, method='secant').root
+        
+    #     # Solving Ph+Ps=0 for vw
+    #     def Ptot(x):
+    #         # TODO: Update offEquilDeltas at each evaluation
+    #         c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(x)
+    #         Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, delta, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
+    #         higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
+    #         singletVEV = freeEnergy.findPhases(Tplus)[1,1]
+    #         Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
+    #         return higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, particle, offEquilDelta00, Tfunc)+singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, offEquilDelta00, Tfunc)
+        
+    #     vw = hydro.vJ
+    #     if Ptot(0.01)*Ptot(hydro.vJ) <= 0:
+    #         vw = root_scalar(Ptot, bracket=[0.01,hydro.vJ-1e-6], method='brentq').root
+        
+    #     return [vw,Lh,Ls,delta]
 
 
 
@@ -406,23 +429,5 @@ class EOM:
 #     return kinetic + potential
 
 
-# def wallProfileOnGrid(staticWallParams, Tplus, Tminus, grid,freeEnergy):
-#     [higgsWidth, singletWidth, wallOffSet] = staticWallParams
-
-#     higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
-#     singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-
-#     wallProfileGrid = []
-#     for z in grid.xiValues:
-#         wallProfileGrid.append(wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z))
-
-#     return np.transpose(wallProfileGrid)
-
-
-# def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
-#     h = 0.5 * higgsVEV * (1 - np.tanh(z / higgsWidth))
-#     s = 0.5 * singletVEV * (1 + np.tanh(z / singletWidth + wallOffSet))
-
-#     return [h, s]
 
 
