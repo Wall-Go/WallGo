@@ -269,7 +269,7 @@ class HydroTemplateModel:
             return (vp,vm,Tp,Tm, None)
         wHighT = self.wN*(Tp/self.Tnucl)**self.mu
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
-        c1 = wHighT*vp/(1-vp**2)
+        c1 = -wHighT*vp/(1-vp**2)
         c2 = pHighT+wHighT*vp**2/(1-vp**2)
         vAtz0 = mu(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)

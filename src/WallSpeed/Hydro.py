@@ -9,6 +9,20 @@ from .helpers import gammasq, mu
 
 class Hydro:
     def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
+        """Initialisation
+
+        Parameters
+        ----------
+        thermodynamics : class
+        rtol : 
+        atol: 
+
+        Returns
+        -------
+        cls: Hydro
+            An object of the Hydro class.
+
+        """
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
@@ -70,6 +84,7 @@ class Hydro:
     def matchDeton(self, vw, branch=1):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` for a detonation as a function of the wall velocity and `T_n`.
+        Note that we use the conventions that the velocities are positive, even in the wall frame.
         """
         vp = vw
         Tp = self.Tnucl
@@ -98,6 +113,8 @@ class Hydro:
         vp : double or None, optional
             Plasma velocity in front of the wall :math:`v_-`. If None, vp is determined from conservation of
             entropy. Default is None.
+
+        Note that we use the conventions that vp and vm are positive.
         """
 
         vwMapping = None
@@ -245,7 +262,7 @@ class Hydro:
             #return (vp,vm,Tp,Tm,mu(vwTry,vp))
             return (vp,vm,Tp,Tm,None)
         wHighT = self.thermodynamics.wHighT(Tp)
-        c1 = wHighT*gammasq(vp)*vp
+        c1 = -wHighT*gammasq(vp)*vp 
         c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammasq(vp)*vp**2
         vAtz0 = mu(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)
