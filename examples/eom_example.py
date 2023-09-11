@@ -1,20 +1,30 @@
 """
-A first example.
+An attempt to run EOM.py 
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-import WallSpeed
+from WallSpeed.Grid import Grid
+from WallSpeed.Polynomial import Polynomial
+from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallSpeed.Thermodynamics import Thermodynamics
+from WallSpeed.Hydro import Hydro
+from WallSpeed import Particle, FreeEnergy, Model
+from WallSpeed.EOM import findWallVelocityLoop
 
+"""
+Grid
+"""
+M = 20
+N = 20
+grid = Grid(M, N, 1, 1)
+poly = Polynomial(grid)
 
 """
 Model definition
-inhertis from Model
 """
-print("Model: xSM\n")
-
-class xSM(WallSpeed.Model):
+class xSM(Model):
     def __init__(self):
-        self.v0 = 246.
+        self.v0 = 246.22
         self.muhsq = 7825.
         self.lamh = 0.129074
         self.mussq = 10774.6
@@ -98,76 +108,63 @@ params=mod.params
 pprint(params)
 
 Tc = mod.Tc
-Tn = 100 # only Tn is strictly necessary
+Tn = 111 # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 
 # overriding whole class is porably not so ideal
-# class FreeEnergy(FreeEnergy):
+class FreeEnergy(FreeEnergy):
+    def findPhases(self, T):
+        """Finds all phases at a given temperature T (hard coded version)
 
-#     def findPhases(self, T):
-#         """Finds all phases at a given temperature T (hard coded version)
+        Parameters
+        ----------
+        T : float
+        The temperature for which to find the phases.
 
-#         Parameters
-#         ----------
-#         T : float
-#             The temperature for which to find the phases.
+        Returns
+        -------
+        phases : array_like
+        A list of phases
 
-#         Returns
-#         -------
-#         phases : array_like
-#             A list of phases
-
-#         """
-#         p = self.params
-#         hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
-#         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-#         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
+        """
+        p = self.params
+        hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
+        ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
+        return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
 
-fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
 print(f"{fxSM.derivT([0, 1], 100)=}")
 print(f"{fxSM.derivField([0, 1], 100)=}")
 
-# looking at thermodynamics
-thermo = WallSpeed.Thermodynamics(fxSM)
-print("\nThermodynamics:", thermo)
-print(f"{thermo.pHighT(100)=}")
-print(f"{thermo.pLowT(100)=}")
-print(f"{thermo.ddpLowT(100)=}")
 
-# checking Tplus and Tminus
-thermo = WallSpeed.Thermodynamics(fxSM)
-hydro = WallSpeed.Hydro(thermo)
-vJ = hydro.vJ
-c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.59)
-
-print("Jouguet velocity")
-print(vJ)
-
-print("c1,c2")
-print(c1,c2)
-
-# defining particles which are out of equilibrium for WallGo
-top = WallSpeed.Particle(
+"""
+Particle
+"""
+top = Particle(
     "top",
-    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[..., 0]**2,
+    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0]**2,
     msqThermal=lambda T: params["yt"]**2 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=False,
     collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
 )
-particles = [top]
-print("\ntop quark:", top)
 
+"""
+Compute the wall velocity in local thermal equilibrium
+"""
+thermo = Thermodynamics(fxSM)
+hydro = Hydro(thermo)
+vwLTE = hydro.findvwLTE()
+print("The wall velocity in local thermal equilibrium is")
+print(vwLTE)
 
-# # grid size
-M = 20
-N = 20
-
-# # now compute the bubble wall speed
-# # findWallVelocityLoop
+"""
+Compute the wall velocity with out-of-equilibrium effects
+"""
+print(findWallVelocityLoop(top,fxSM,None,1,grid))
