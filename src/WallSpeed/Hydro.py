@@ -8,6 +8,15 @@ from .helpers import gammasq, mu
 
 
 class Hydro:
+    """
+    Class for solving the hydrodynamic equations of the plasma,
+    at distances far enough from the wall such that the wall can be treated as infinitesimally thin.
+    NOTE: We use the conventions that the velocities are always positive, even in the wall frame (vp and vm).
+    These conventions are consistent with the literature, e.g. with arxiv:1004.4187.
+    These conventions differ from the conventions used in the EOM and Boltzmann part of the code.
+    The conversion is made in findHydroBoundaries.
+    """
+    
     def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
         """Initialisation
 
@@ -84,7 +93,6 @@ class Hydro:
     def matchDeton(self, vw, branch=1):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` for a detonation as a function of the wall velocity and `T_n`.
-        Note that we use the conventions that the velocities are positive, even in the wall frame.
         """
         vp = vw
         Tp = self.Tnucl
@@ -113,8 +121,6 @@ class Hydro:
         vp : double or None, optional
             Plasma velocity in front of the wall :math:`v_-`. If None, vp is determined from conservation of
             entropy. Default is None.
-
-        Note that we use the conventions that vp and vm are positive.
         """
 
         vwMapping = None
@@ -255,6 +261,9 @@ class Hydro:
     def findHydroBoundaries(self, vwTry):
         r"""
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
+
+        NOTE: the sign of c1 is chosen to match the convention for the fluid velocity used in EOM and
+        Hydro. In those conventions, vp would be negative, and therefore c1 has to be negative as well.
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
