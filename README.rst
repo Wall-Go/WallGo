@@ -42,4 +42,4 @@ A number of examples are collected in the directory `examples/`, include a
 .... After installing the package, these can be run directly with Python, as
 in::
 
-    python3 examples/first_example.py
+    python3 first_example.py
