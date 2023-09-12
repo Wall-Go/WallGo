@@ -3,13 +3,7 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Boltzmann import BoltzmannSolver
-from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Hydro import Hydro
-#from WallSpeed.eomHydro import findWallVelocityLoop
-from WallSpeed import Particle, FreeEnergy, Model
+import WallSpeed
 
 
 """
@@ -18,7 +12,7 @@ inhertis from Model
 """
 print("Model: xSM\n")
 
-class xSM(Model):
+class xSM(WallSpeed.Model):
     def __init__(self):
         self.v0 = 246.
         self.muhsq = 7825.
@@ -131,7 +125,7 @@ print(f"{Tc=}, {Tn=}")
 #         return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
 
 
-fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 print("\nFree energy:", fxSM)
 print(f"{fxSM([0, 1], 100)=}")
@@ -139,15 +133,15 @@ print(f"{fxSM.derivT([0, 1], 100)=}")
 print(f"{fxSM.derivField([0, 1], 100)=}")
 
 # looking at thermodynamics
-thermo = Thermodynamics(fxSM)
+thermo = WallSpeed.Thermodynamics(fxSM)
 print("\nThermodynamics:", thermo)
-print(f"{thermo.pSym(100)=}")
-print(f"{thermo.pBrok(100)=}")
-print(f"{thermo.ddpBrok(100)=}")
+print(f"{thermo.pHighT(100)=}")
+print(f"{thermo.pLowT(100)=}")
+print(f"{thermo.ddpLowT(100)=}")
 
 # checking Tplus and Tminus
-thermo = Thermodynamics(fxSM)
-hydro = Hydro(thermo)
+thermo = WallSpeed.Thermodynamics(fxSM)
+hydro = WallSpeed.Hydro(thermo)
 vJ = hydro.vJ
 c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.59)
 
@@ -158,7 +152,7 @@ print("c1,c2")
 print(c1,c2)
 
 # defining particles which are out of equilibrium for WallGo
-top = Particle(
+top = WallSpeed.Particle(
     "top",
     msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[..., 0]**2,
     msqThermal=lambda T: params["yt"]**2 * T**2,

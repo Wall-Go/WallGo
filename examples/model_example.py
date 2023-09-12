@@ -33,9 +33,9 @@ print(f"{fxSM.derivField([0, 1], 100)=}")
 # looking at thermodynamics
 thermo = Thermodynamics(fxSM)
 print("\nThermodynamics:", thermo)
-print(f"{thermo.pSym(100)=}")
-print(f"{thermo.pBrok(100)=}")
-print(f"{thermo.ddpBrok(100)=}")
+print(f"{thermo.pHighT(100)=}")
+print(f"{thermo.pLowT(100)=}")
+print(f"{thermo.ddpLowT(100)=}")
 
 # checking Tplus and Tminus
 print(f"{fxSM.findPhases(100.1)=}")
@@ -48,8 +48,8 @@ c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(0.5229)
 
 print("Jouguet velocity")
 print(vJ)
-print(thermo.pBrok(100.1))
-print(thermo.pSym(103.1))
+print(thermo.pLowT(100.1))
+print(thermo.pHighT(103.1))
 
 print("c1,c2")
 print(c1,c2)

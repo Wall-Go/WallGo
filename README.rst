@@ -9,7 +9,8 @@ Computes the bubble wall speed for cosmological phase transitions.
 Requirements
 ===========================================
 
-Based on Python 3. For necessary libraries, see `requirements.txt`.
+Based on Python 3. Necessary requirements are installed automatically with
+pip. They can be found in pyproject.toml.
 
 |
 
@@ -41,4 +42,4 @@ A number of examples are collected in the directory `examples/`, include a
 .... After installing the package, these can be run directly with Python, as
 in::
 
-    python3 examples/first_example.py
+    python3 first_example.py
