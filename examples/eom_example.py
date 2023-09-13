@@ -168,5 +168,5 @@ print(vwLTE)
 Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOM(top, fxSM, grid, 2)
-# print(eom.findWallVelocityLoop())
+#print(eom.findWallVelocityLoop())
 print(eom.findWallVelocityMinimizeAction())
