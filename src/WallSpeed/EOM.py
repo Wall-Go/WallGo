@@ -283,7 +283,7 @@ class EOM:
         s1 = c1 - Tout30 
         s2 = c2 - Tout33
         
-        minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(X, dXdz, T, s1, s2), method='Bounded', bounds=[0,self.freeEnergy.Tc], tol=1e-9)
+        minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(X, dXdz, T, s1, s2), method='Bounded', bounds=[0,self.freeEnergy.Tc])
         # TODO: A fail safe
 
         if self.temperatureProfileEqLHS(X, dXdz, minRes.x, s1, s2) >= 0:
