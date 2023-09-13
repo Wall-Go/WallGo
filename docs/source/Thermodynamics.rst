@@ -1,8 +1,8 @@
 ======================================
-Hydro
+Thermodynamics
 ======================================
 
-.. automodule:: WallSpeed.Hydro
+.. automodule:: WallSpeed.Thermodynamics
     :members:
     :inherited-members:
     :special-members: __init__

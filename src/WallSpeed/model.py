@@ -268,7 +268,7 @@ class Model:
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
-        .. todo::
+        todo
             Implement new versions of Jf and Jb that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
