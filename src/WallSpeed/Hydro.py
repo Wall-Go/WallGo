@@ -273,7 +273,7 @@ class Hydro:
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
             vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
         fmax = func(vmax)
-        if fmax > 0: # There is no deflagration or hybrid solution, we return 1.
+        if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
             return 1
         
         if not self.success:
