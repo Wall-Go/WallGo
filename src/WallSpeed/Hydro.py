@@ -232,7 +232,7 @@ class Hydro:
     def findMatching(self, vwTry):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
-        matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
+        matchDeton, for deflagrations and hybrids, the code varies `v_+` until the temperature in front of the shock equals the nucleation temperature
         """
         if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
