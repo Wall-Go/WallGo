@@ -177,11 +177,12 @@ class EOM:
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         V = self.freeEnergy(X.T, Tprofile)
+        VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
         
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
         Vref = VLowT + 0.5*(VHighT-VLowT)*(1+np.tanh(self.grid.xiValues/self.grid.L_xi))
         
-        U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V-Vref)/(1-self.grid.chiValues**2), [0])))
+        U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return U+K
         
