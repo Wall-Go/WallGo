@@ -1,16 +1,13 @@
 import numpy as np
 
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
-from scipy.integrate import quad_vec,quad
+from scipy.integrate import quad_vec
 from scipy.interpolate import UnivariateSpline
-import matplotlib.pyplot as plt
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammasq, GCLQuadrature # derivatives for callable functions
-
-from time import time
 
 class EOM:
     def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
@@ -18,7 +15,7 @@ class EOM:
         self.freeEnergy = freeEnergy
         self.grid = grid
         self.errTol = errTol
-        self.N = nbrFields
+        self.nbrFields = nbrFields
         self.Tnucl = freeEnergy.Tnucl
         
         self.thermo = Thermodynamics(freeEnergy)
@@ -43,8 +40,8 @@ class EOM:
 
         c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
         
-        wallWidthsGuess = (5/self.Tnucl)*np.ones(self.N)
-        wallOffsetsGuess = np.zeros(self.N-1)
+        wallWidthsGuess = (5/self.Tnucl)*np.ones(self.nbrFields)
+        wallOffsetsGuess = np.zeros(self.nbrFields-1)
         wallWidths, wallOffsets = wallWidthsGuess, wallOffsetsGuess
 
         wallParameters = np.concatenate(([wallVelocity], wallWidths, wallOffsets))
@@ -57,13 +54,13 @@ class EOM:
         while error > self.errTol:
 
             oldWallVelocity = wallParameters[0]
-            oldWallWidths = wallParameters[1:1+self.N]
-            oldWallOffsets = wallParameters[1+self.N:]
+            oldWallWidths = wallParameters[1:1+self.nbrFields]
+            oldWallOffsets = wallParameters[1+self.nbrFields:]
             oldError = error
             
             wallVelocity = wallParameters[0]
-            wallWidths = wallParameters[1:self.N+1]
-            wallOffsets = wallParameters[self.N+1:]
+            wallWidths = wallParameters[1:self.nbrFields+1]
+            wallOffsets = wallParameters[self.nbrFields+1:]
 
             c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
 
@@ -97,8 +94,8 @@ class EOM:
         return wallParameters
     
     def findWallVelocityMinimizeAction(self):
-        wallWidths = (5/self.Tnucl)*np.ones(self.N)
-        wallOffsets = np.zeros(self.N-1)
+        wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
+        wallOffsets = np.zeros(self.nbrFields-1)
         return self.solvePressure(0.01, self.hydro.vJ, np.append(wallWidths, wallOffsets))
     
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
@@ -134,15 +131,15 @@ class EOM:
         i = 0
         # TODO: Implement a better condition
         while i < 2:
-            wallWidths = wallParams[:self.N]
-            wallOffsets = wallParams[self.N:]
+            wallWidths = wallParams[:self.nbrFields]
+            wallOffsets = wallParams[self.nbrFields:]
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
-            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.N*[(0.1/self.Tnucl,None)]+(self.N-1)*[(-10,10)])
+            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,None)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
         
-        wallWidths = wallParams[:self.N]
-        wallOffsets = wallParams[self.N:]
+        wallWidths = wallParams[:self.nbrFields]
+        wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
@@ -171,8 +168,8 @@ class EOM:
             Dictionary containing the off-equilibrium Delta functions
 
         """
-        wallWidths = wallParams[:self.N]
-        wallOffsets = wallParams[self.N:]
+        wallWidths = wallParams[:self.nbrFields]
+        wallOffsets = wallParams[self.nbrFields:]
         
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
@@ -190,8 +187,8 @@ class EOM:
     
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
-        wallWidths = wallParameters[1:self.N+1]
-        wallOffsets = wallParameters[self.N+1:]
+        wallWidths = wallParameters[1:self.nbrFields+1]
+        wallOffsets = wallParameters[self.nbrFields+1:]
         c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
