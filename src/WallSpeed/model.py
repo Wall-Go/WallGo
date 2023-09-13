@@ -517,7 +517,6 @@ class FreeEnergy:
         """
         return -self(self.findPhases(T)[1],T)
 
-
     def approxZeroTMin(self,T=0):
         """
         Returns approximate values of the zero-temperature minima.
@@ -582,7 +581,6 @@ class FreeEnergy:
             interpolate.UnivariateSpline(Trange,h,s=0),
             interpolate.UnivariateSpline(Trange,s,s=0)]
 
-
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
 
@@ -623,7 +621,6 @@ class FreeEnergy:
                 vmin.append(vT)
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
-
 
     def findTc(self,dT=1,Tmax=500):
         """Determines the critical temperature between two scalar phases
@@ -668,24 +665,24 @@ class FreeEnergy:
         the first time this function is called, so subsequently changing it
         will not have an effect.
         """
-        X = np.asanyarray(X, dtype=float)
-        T = np.asanyarray(T, dtype=float)
+        # X = np.asanyarray(X, dtype=float)
+        # T = np.asanyarray(T, dtype=float)
         self.Ndim = 2
         self.x_eps = 1e-3
         self.deriv_order = 4
         # f1 = lambda X: np.asanyarray(self.f(X,T))[...,np.newaxis]
         try:
-            f = self._d2V
+            f1 = self._d2V
         except:
             # Create the gradient function
             self._d2V = helper_functions.hessianFunction(
-                self, self.x_eps, self.Ndim, self.deriv_order)
-            f = self._d2V
+                self.f, self.x_eps, self.Ndim, self.deriv_order)
+            f1 = self._d2V
         # Need to add extra axes to T since extra axes get added to X in
         # the helper function.
         print(T)
         print(type(X))
-        print(X.shape[:-1])
+        # print(X.shape[:-1])
 
         T = np.asanyarray(T)[...,np.newaxis]
         
@@ -693,9 +690,11 @@ class FreeEnergy:
         print(f"{T=}")
 
         # print(f1(X,T))
-        print(f(X, T))
-
-        return f(X, T, False)
+        print(self(X,T))
+        print(f1(X, T))
+        # return
+        return
+        return f1(X, T)
 
     def find_Tc(self,delta_T=1,Tmax=500):
         # todo: not the same as v0 for [0,0]
@@ -714,12 +713,14 @@ class FreeEnergy:
         
         Ts = [0]
         deltaHS = [deltaf(self.v0,self.s0,0)]
+        print(f"{deltaHS=}")
         deltaS0 = [deltaf(0,self.s0,0)]
+        print(f"{deltaS0=}")
         min_h = [test_min([self.v0,0],0)]
         min_s = [test_min([0,self.s0],0)]
         print('hello')
         print(min_h)
-        return
+        # return
 
         
         t = delta_T
@@ -742,7 +743,8 @@ class FreeEnergy:
         
         if deltaHS[-1] >= 0 and len(Ts) > 1:
             self.Tcx = optimize.root_scalar(func,bracket=(Ts[-2],Ts[-1]),rtol=1e-12,xtol=1e-12).root
-            if test_min([0,self.findPhases(T=self.Tcx)[1,1]],self.Tcx) == 1 and test_min([self.findPhases(T=self.Tcx)[0,0],0],self.Tcx) == 1: 
+            if (test_min([0,self.findPhases(T=self.Tcx)[1,1]],self.Tcx) == 1 and
+                test_min([self.findPhases(T=self.Tcx)[0,0],0],self.Tcx) == 1): 
                 self.first_order = True
                 self.Tmin = self.Tc
                 
