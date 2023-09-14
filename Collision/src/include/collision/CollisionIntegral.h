@@ -4,10 +4,6 @@
 #include <cmath>
 #include <vector>
 
-// Monte Carlo integration
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_monte_vegas.h>
-
 #include "FourVector.h"
 #include "CollElem.h"
 #include "constants.h"
@@ -26,7 +22,6 @@ inline void calculateAllCollisions() {}
 // So that 9D -> 5D reduction has been done analytically and this class calculates the rest.
 class CollisionIntegral4 {
 
-
 public:
 
     // Struct to carry info about parameters other than the 5 integration variables. 
@@ -43,16 +38,9 @@ public:
     };
 
 
-    CollisionIntegral4(std::size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {
-        //------ GSL initialization
-        gsl_rng_env_setup();
-        // Create a random number generator for the integration
-        gslRNG = gsl_rng_alloc(gsl_rng_default); // is using shared rng thread safe?
-    }
+    CollisionIntegral4(std::size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
 
-    ~CollisionIntegral4() {
-        gsl_rng_free(gslRNG);
-    }  
+    ~CollisionIntegral4() {}  
 
     void addCollisionElement(const CollElem<4> &collElem) { 
         collisionElements.push_back(collElem); 
@@ -96,7 +84,7 @@ public:
     // Returns { result, error }
     std::array<double, 2> evaluate(int m, int n, int j, int k);
 
-    inline size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
+    inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
 private:
 
@@ -110,11 +98,6 @@ private:
     const double massSquaredLowerBound = 1e-14;
 
     const Chebyshev polynomialBasis;
-
-    //--------------------------
-
-
-    gsl_rng* gslRNG;
 };
 
 
