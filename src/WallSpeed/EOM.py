@@ -45,6 +45,8 @@ class EOM:
         wallWidths, wallOffsets = wallWidthsGuess, wallOffsetsGuess
 
         wallParameters = np.concatenate(([wallVelocity], wallWidths, wallOffsets))
+        
+        wallParameters = np.array([0.6,0.04,0.04,0.2])
 
         print(wallParameters)
 
