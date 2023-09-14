@@ -8,7 +8,7 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
-from .helpers import derivative, gammasq # derivatives for callable functions
+from .helpers import derivative, gammaSq # derivatives for callable functions
 
 
 def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
@@ -56,7 +56,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     sMass = np.sqrt(ddVddf(freeEnergy,freeEnergy.findPhases(freeEnergy.Tnucl)[1],1))
 
     print(hMass,sMass)
-    
+
     higgsWidthGuess = 1 / hMass
     singletWidthGuess = 1 / sMass
     wallOffSetGuess = 0
@@ -75,7 +75,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
     wallParameters = [wallVelocity, higgsWidth, singletWidth, wallOffSet]
 
     offEquilDeltas = {"00": np.zeros(grid.M-1), "02": np.zeros(grid.M-1), "20": np.zeros(grid.M-1), "11": np.zeros(grid.M-1)}
-    
+
     error = errTol + 1
     while error > errTol:
 
@@ -89,7 +89,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
 
 
         wallProfileGrid = wallProfileOnGrid(wallParameters[1:], Tplus, Tminus, grid,freeEnergy)
-        
+
         Tprofile, velocityProfile = findPlasmaProfile(
             c1,
             c2,
@@ -108,12 +108,12 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
         boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
 
         boltzmannSolver = BoltzmannSolver(grid, boltzmannBackground, particle)
-        
+
         # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
         print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
         # offEquilDeltas = boltzmannSolver.getDeltas()
         # print(offEquilDeltas)
-        
+
         for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
             print(f'Intermediate result: {wallParameters=}')
@@ -131,7 +131,7 @@ def findWallVelocityLoop(particle, freeEnergy, wallVelocityLTE, errTol, grid):
             + ((singletWidth - oldSingletWidth) / singletWidth) ** 2
             + (wallOffSet - oldWallOffSet) ** 2
         )
-    
+
     return wallParameters
 
 def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, particle, grid):
@@ -143,13 +143,13 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
     wallVelocity, higgsWidth, singletWidth, wallOffSet = wallParametersIni
     c1, c2, Tplus, Tminus, velocityAtz0 = hydro.findHydroBoundaries(wallVelocity)
     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, singletWidth, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
-    
+
     higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
     singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-    
+
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
-    
+
     # Solving Gs=0 for Ls
     Ls,Ls1,Ls2 = singletWidth,0.9*singletWidth,1.1*singletWidth
     Gs = lambda x: singletStretchMoment(higgsVEV, higgsWidth, singletVEV, x, wallOffSet, freeEnergy, offEquilDelta00, Tfunc)
@@ -169,7 +169,7 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         Ls = root_scalar(Gs, bracket=[Ls1,Ls2], method='brentq').root
     else:
         Ls = root_scalar(Gs, x0=Ls1, x1=Ls2, method='secant').root
-    
+
     # Solving Gh=0 for Lh
     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, higgsWidth, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
@@ -191,7 +191,7 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         Lh = root_scalar(Gh, bracket=[Lh1,Lh2], method='brentq').root
     else:
         Lh = root_scalar(Gh, x0=Lh1, x1=Lh2, method='secant').root
-        
+
     # Solving Ph-Ps=0 for delta
     Tprofile, vprofile = findPlasmaProfile(c1, c2, velocityAtz0, Lh, Ls, wallOffSet, offEquilDeltas, particle, Tplus, Tminus, freeEnergy, grid)
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
@@ -213,7 +213,7 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         delta = root_scalar(Pdiff, bracket=[delta1,delta2], method='brentq').root
     else:
         delta = root_scalar(Pdiff, x0=delta1, x1=delta2, method='secant').root
-    
+
     # Solving Ph+Ps=0 for vw
     def Ptot(x):
         # TODO: Update offEquilDeltas at each evaluation
@@ -223,11 +223,11 @@ def initialEOMSolution(wallParametersIni, offEquilDeltas, freeEnergy, hydro, par
         singletVEV = freeEnergy.findPhases(Tplus)[1,1]
         Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
         return higgsPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, particle, offEquilDelta00, Tfunc)+singletPressureMoment(higgsVEV, Lh, singletVEV, Ls, delta, freeEnergy, offEquilDelta00, Tfunc)
-    
+
     vw = hydro.vJ
     if Ptot(0.01)*Ptot(hydro.vJ) <= 0:
         vw = root_scalar(Ptot, bracket=[0.01,hydro.vJ-1e-6], method='brentq').root
-    
+
     return [vw,Lh,Ls,delta]
 
 
@@ -251,10 +251,10 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
 
     higgsVEV = freeEnergy.findPhases(Tminus)[0,0]
     singletVEV = freeEnergy.findPhases(Tplus)[1,1]
-    
+
     # Define a function returning the local temparature by interpolating through Tprofile.
     Tfunc = UnivariateSpline(grid.xiValues, Tprofile, k=3, s=0)
-    
+
     # Define a function returning the local Delta00 function by interpolating through offEquilDeltas['00'].
     offEquilDelta00 = UnivariateSpline(grid.xiValues, offEquilDeltas['00'], k=3, s=0)
 
@@ -300,7 +300,7 @@ def momentsOfWallEoM(wallParameters, offEquilDeltas, freeEnergy, hydro, particle
         offEquilDelta00,
         Tfunc,
     )
-    
+
     return [mom1, mom2, mom3, mom4]
 
 
@@ -696,7 +696,7 @@ def findPlasmaProfile(
 
         T, vPlasma = findPlasmaProfilePoint(
             index,c1, c2, velocityAtz0,freeEnergy, h, dhdz, s, dsdz, offEquilDeltas,particle, Tplus, Tminus,grid
-        ) 
+        )
 
         temperatureProfile.append(T)
         velocityProfile.append(vPlasma)
@@ -710,14 +710,14 @@ def findPlasmaProfilePoint(
     """
     Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
     """
-    
+
     Tout30, Tout33 = deltaToTmunu(index,h,velocityAtz0,Tminus,offEquilDeltas,grid,particle,freeEnergy)
 
-    s1 = c1 - Tout30 
+    s1 = c1 - Tout30
     s2 = c2 - Tout33
 
     Tavg = 0.5 * (Tplus + Tminus)
-    
+
     minRes = minimize_scalar(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         # x0 = Tavg,
@@ -742,7 +742,7 @@ def findPlasmaProfilePoint(
     while temperatureProfileEqLHS(h, s, dhdz, dsdz, TUpperBound, s1, s2, freeEnergy) < 0:
         TStep *= 2
         TUpperBound = TLowerBound + TStep
-    
+
     res = brentq(
         lambda T: temperatureProfileEqLHS(h, s, dhdz, dsdz, T, s1, s2, freeEnergy),
         TLowerBound,
@@ -752,7 +752,7 @@ def findPlasmaProfilePoint(
     )
     # TODO: Can the function have multiple zeros?
 
-#    T = res.x 
+#    T = res.x
     T = res   #is this okay?
     vPlasma = plasmaVelocity(h, s, T, s1, freeEnergy)
     return T, vPlasma
@@ -788,8 +788,8 @@ def deltaToTmunu(
     delta02 = offEquilDeltas["02"][index]
     delta20 = offEquilDeltas["20"][index]
 
-    u0 = np.sqrt(gammasq(velocityAtCenter))
-    u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
+    u0 = np.sqrt(gammaSq(velocityAtCenter))
+    u3 = np.sqrt(gammaSq(velocityAtCenter))*velocityAtCenter
     ubar0 = u3
     ubar3 = u0
 

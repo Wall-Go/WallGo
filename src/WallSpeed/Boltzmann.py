@@ -4,6 +4,7 @@ import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .model import Particle
+from .helpers import boostVelocity
 
 
 class BoltzmannBackground:
@@ -28,8 +29,8 @@ class BoltzmannBackground:
         vPlasma = self.velocityProfile
         v0 = self.velocityProfile[0]
         vw = self.vw
-        self.velocityProfile = (vPlasma - v0) / (1 - vPlasma * v0)
-        self.vw = (vw - v0) / (1 - vw * v0)
+        self.velocityProfile = boostVelocity(vPlasma, v0)
+        self.vw = boostVelocity(vw, v0)
 
     def boostToWallFrame(self):
         """
@@ -38,7 +39,7 @@ class BoltzmannBackground:
         vPlasma = self.velocityProfile
         vPlasma0 = self.velocityProfile[0]
         vw = self.vw
-        self.velocityProfile = (vPlasma - vw) / (1 - vPlasma * vw)
+        self.velocityProfile = boostVelocity(vPlasma, vw)
         self.vw = 0
 
 

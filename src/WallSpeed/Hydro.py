@@ -4,7 +4,7 @@ from scipy.optimize import root_scalar,root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .Thermodynamics import Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
-from .helpers import gammasq, mu
+from .helpers import gammaSq, boostVelocity
 
 
 class Hydro:
@@ -149,8 +149,8 @@ class Hydro:
         Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
         """
         xi, T = xiAndT
-        eq1 = gammasq(v) * (1. - v*xi)*(mu(xi,v)**2/self.thermodynamics.csqHighT(T)-1.)*xi/2./v
-        eq2 = self.thermodynamics.wHighT(T)/self.thermodynamics.dpHighT(T)*gammasq(v)*mu(xi,v)
+        eq1 = gammaSq(v) * (1. - v*xi)*(boostVelocity(xi,v)**2/self.thermodynamics.csqHighT(T)-1.)*xi/2./v
+        eq2 = self.thermodynamics.wHighT(T)/self.thermodynamics.dpHighT(T)*gammaSq(v)*boostVelocity(xi,v)
         return [eq1,eq2]
 
     def solveHydroShock(self, vw, vp, Tp):
@@ -160,10 +160,10 @@ class Hydro:
 
         def shock(v, xiAndT):
             xi, T = xiAndT
-            return mu(xi,v)*xi - self.thermodynamics.csqHighT(T)
+            return boostVelocity(xi,v)*xi - self.thermodynamics.csqHighT(T)
         shock.terminal = True
         xi0T0 = [vw,Tp]
-        vpcent = mu(vw,vp)
+        vpcent = boostVelocity(vw,vp)
         if shock(vpcent,xi0T0) > 0:
             vm_sh = vpcent
             xi_sh = vw
@@ -178,7 +178,7 @@ class Hydro:
             xi_sh,Tm_sh = solshock.y[:,-1]
 
         def TiiShock(tn): #continuity of Tii
-            return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*mu(xi_sh,vm_sh)*gammasq(mu(xi_sh,vm_sh))
+            return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
         Tmin,Tmax = 0.9*self.Tnucl,Tm_sh
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.Tnucl/10:
@@ -242,12 +242,12 @@ class Hydro:
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             # not sure what is going on here
-            #return (vp,vm,Tp,Tm,mu(vwTry,vp))
+            #return (vp,vm,Tp,Tm,boostVelocity(vwTry,vp))
             return (vp,vm,Tp,Tm,None)
         wHighT = self.thermodynamics.wHighT(Tp)
-        c1 = wHighT*gammasq(vp)*vp
-        c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammasq(vp)*vp**2
-        vAtz0 = mu(vwTry,vp)
+        c1 = wHighT*gammaSq(vp)*vp
+        c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
+        vAtz0 = boostVelocity(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)
 
 

@@ -11,7 +11,7 @@ The following functions are defined to compute the wall velocity in LTE as a
 function of the sound speeds, phase transition strength and ratio of enthalpies
 """
 
-def mu(a,b):
+def boostVelocity(a,b):
   return (a-b)/(1.-a*b)
 
 # If the wall velocity is smaller than the sos, solution is deflagration, so vm = vw
@@ -51,17 +51,17 @@ def getvp(al,vm,cs2b):
 #Differential equations for v, xi and w.
 def dfdv(xiw, v, cs2):
   xi, w = xiw
-  dxidv = (mu(xi,v)**2/cs2-1.)
-  dxidv *= (1.-v*xi)*xi/2./v/(1.-v**2) 
-  dwdv = (1.+1./cs2)*mu(xi,v)*w/(1.-v**2)
+  dxidv = (boostVelocity(xi,v)**2/cs2-1.)
+  dxidv *= (1.-v*xi)*xi/2./v/(1.-v**2)
+  dwdv = (1.+1./cs2)*boostVelocity(xi,v)*w/(1.-v**2)
   return [dxidv,dwdv]
 
 def getwow(a,b):
   return a/(1.-a**2)/b*(1.-b**2)
 
 def getKandWow(vw,v0,cs2):
-   
-  
+
+
   if v0==0:
     return 0,1
 
@@ -73,12 +73,12 @@ def getKandWow(vw,v0,cs2):
   xis, wows = (sol[:,0],sol[:,1])
 
   ll=-1
-  if mu(vw,v0)*vw<=cs2:
+  if boostVelocity(vw,v0)*vw<=cs2:
     #find position of the shock
-    ll=max(int(sum(np.heaviside(cs2-(mu(xis,vs)*xis),0.0))),1)
+    ll=max(int(sum(np.heaviside(cs2-(boostVelocity(xis,vs)*xis),0.0))),1)
     vs = vs[:ll]
     xis = xis[:ll]
-    wows = wows[:ll]/wows[ll-1]*getwow(xis[-1], mu(xis[-1],vs[-1]))
+    wows = wows[:ll]/wows[ll-1]*getwow(xis[-1], boostVelocity(xis[-1],vs[-1]))
 
   Kint = simps(wows*(xis*vs)**2/(1.-vs**2), xis)
 
@@ -89,9 +89,9 @@ def alN(al,wow,cs2b,cs2s):
   return (al+da)*wow -da
 
 def getalNwow(vp,vm,vw,cs2b,cs2s):
-  Ksh,wow = getKandWow(vw,mu(vw,vp),cs2s) 
+  Ksh,wow = getKandWow(vw,boostVelocity(vw,vp),cs2s)
   #print (Ksh,wow)
-  return (alN(getal(vp,vm,cs2b),wow,cs2b,cs2s), wow) 
+  return (alN(getal(vp,vm,cs2b),wow,cs2b,cs2s), wow)
 
 def kappaNuMuModel(cs2b,cs2s,al,vw):
   #print (cs2b,cs2s,al,vw)
@@ -119,14 +119,14 @@ def kappaNuMuModel(cs2b,cs2s,al,vw):
         iv = [[vpm,alm],iv[1]]
       #print iv
     vp = (iv[1][0]+iv[0][0])/2.
-    Ksh,wow = getKandWow(vw,mu(vw,vp),cs2s)
-  
+    Ksh,wow = getKandWow(vw,boostVelocity(vw,vp),cs2s)
+
   else:
-    vp = vw 
+    vp = vw
     Ksh,wow = (0,1)
-  
+
   if mode>0:
-    Krf,wow3 = getKandWow(vw,mu(vw,vm),cs2b)
+    Krf,wow3 = getKandWow(vw,boostVelocity(vw,vm),cs2b)
     Krf*= -wow*getwow(vp,vm)
   else:
     Krf = 0
@@ -145,7 +145,7 @@ def findvwsubj(cs2b,cs2s,al,rn):
   almatch = 100
   while(abs(alplus-almatch)>error and steps<maxsteps and abs(vmid-jouguet(al,cs2b))>error and abs(vmid-0.99)>error):
     vm, mode = getvm(al,vmid,cs2b)
-      
+
     if mode<2:
       almax,wow = getalNwow(0,vm,vmid,cs2b,cs2s)
       if almax<al:
@@ -193,7 +193,7 @@ def findvwsubj(cs2b,cs2s,al,rn):
 
   else:
     return(vmidprev)
-  
+
 
 def findvwdet(cs2b,cs2s,al,rn):
   vmin = jouguet(al,cs2b)
@@ -221,7 +221,7 @@ def findvwdet(cs2b,cs2s,al,rn):
     return(0)
 
   else:
-    return(vmid) 
+    return(vmid)
 
 """
 load, alpha, cs, cb and psiN and compute the wall speed in local thermal equilibrium
