@@ -8,7 +8,30 @@ from .helpers import gammaSq, boostVelocity
 
 
 class Hydro:
+    """
+    Class for solving the hydrodynamic equations of the plasma,
+    at distances far enough from the wall such that the wall can be treated as infinitesimally thin.
+    NOTE: We use the conventions that the velocities are always positive, even in the wall frame (vp and vm).
+    These conventions are consistent with the literature, e.g. with arxiv:1004.4187.
+    These conventions differ from the conventions used in the EOM and Boltzmann part of the code.
+    The conversion is made in findHydroBoundaries.
+    """
+
     def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
+        """Initialisation
+
+        Parameters
+        ----------
+        thermodynamics : class
+        rtol :
+        atol:
+
+        Returns
+        -------
+        cls: Hydro
+            An object of the Hydro class.
+
+        """
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
@@ -209,7 +232,7 @@ class Hydro:
     def findMatching(self, vwTry):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
-        matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
+        matchDeton, for deflagrations and hybrids, the code varies `v_+` until the temperature in front of the shock equals the nucleation temperature
         """
         if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
@@ -238,6 +261,9 @@ class Hydro:
     def findHydroBoundaries(self, vwTry):
         r"""
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
+
+        NOTE: the sign of c1 is chosen to match the convention for the fluid velocity used in EOM and
+        Hydro. In those conventions, vp would be negative, and therefore c1 has to be negative as well.
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
@@ -245,7 +271,7 @@ class Hydro:
             #return (vp,vm,Tp,Tm,boostVelocity(vwTry,vp))
             return (vp,vm,Tp,Tm,None)
         wHighT = self.thermodynamics.wHighT(Tp)
-        c1 = wHighT*gammaSq(vp)*vp
+        c1 = -wHighT*gammaSq(vp)*vp
         c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
         vAtz0 = boostVelocity(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)

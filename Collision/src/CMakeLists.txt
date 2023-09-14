@@ -2,7 +2,7 @@
 set(BINARY ${CMAKE_PROJECT_NAME})
 
 # source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp WriteToHDF5.cpp)
+set(SOURCES CollisionIntegral.cpp WriteToHDF5.cpp gslWrapper.cpp)
 
 add_library(${BINARY}_lib STATIC ${SOURCES})
 
@@ -10,8 +10,14 @@ add_library(${BINARY}_lib STATIC ${SOURCES})
 add_executable(${BINARY} main.cpp)
 
 
+## By default, use OpenMP
+if(NOT USE_OMP) 
+	option(USE_OMP "Build with OpenMP support" ON)
+endif()
+
+
 ## For MacOS, may need to manually setup OpenMP
-if(APPLE)
+if(APPLE AND USE_OMP)
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 
@@ -32,8 +38,9 @@ endif()
 ## External packages
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
-find_package(OpenMP)
-
+if (USE_OMP)
+	find_package(OpenMP)
+endif()
 
 
 #---- Link to external libraries
@@ -42,10 +49,12 @@ target_link_libraries(${BINARY}_lib PUBLIC
     ${GSL_LIBRARIES}
 )
 
-if (OpenMP_CXX_FOUND)
-    target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
-else()
-    message(WARNING "==== NOTE: OpenMP installation not found, disabling multithreading")
+if (USE_OMP)
+	if (OpenMP_CXX_FOUND)
+		target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
+	else()
+		message(WARNING "==== NOTE: OpenMP installation not found, disabling multithreading")
+	endif()
 endif()
 
 #---- Header includes
