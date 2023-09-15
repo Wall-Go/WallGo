@@ -136,7 +136,7 @@ class EOM:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
-            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,None)]+(self.nbrFields-1)*[(-10,10)])
+            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,None)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
         
@@ -152,7 +152,7 @@ class EOM:
         else:
             return pressure
     
-    def action(self, wallParams, vevLowT, vevHighT, Tprofile, offEquilDeltas):
+    def action(self, wallParams, vevLowT, vevHighT, Tprofile, offEquilDelta00):
         r"""
         Computes the action by using gaussian quadratrure to integrate the Lagrangian. 
 
@@ -166,8 +166,8 @@ class EOM:
             Field values in the high-T phase.
         Tprofile : array-like
             Temperature on the grid.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDelta00 : array-like
+            Off-equilibrium function Delta00.
 
         """
         wallWidths = wallParams[:self.nbrFields]
@@ -176,7 +176,7 @@ class EOM:
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         V = self.freeEnergy(X.T, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
+        VOut = self.particle.msqVacuum(X)*offEquilDelta00
         
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
         Vref = VLowT + 0.5*(VHighT-VLowT)*(1+np.tanh(self.grid.xiValues/self.grid.L_xi))
