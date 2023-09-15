@@ -10,6 +10,7 @@ from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
+from WallSpeed.EOMGeneralShape import EOMGeneralShape
 
 """
 Grid
@@ -167,6 +168,9 @@ print(vwLTE)
 """
 Compute the wall velocity with out-of-equilibrium effects
 """
-eom = EOM(top, fxSM, grid, 2)
+eom = EOMGeneralShape(top, fxSM, grid, 2)
 #print(eom.findWallVelocityLoop())
-print(eom.findWallVelocityMinimizeAction())
+print(eom.vwIni, eom.wallWidthsIni, eom.wallOffsetsIni)
+func = lambda x: np.exp(-(x/grid.L_xi)**2)[None,:]*np.ones((2,x.size))
+z = grid.xiValues
+eom.wallProfile(z, func(z), np.array([1,2]), np.array([3,4]))
