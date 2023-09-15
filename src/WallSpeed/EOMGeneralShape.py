@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize,root_scalar
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .EOM import EOM
@@ -26,9 +26,36 @@ class EOMGeneralShape:
         self.deriv = self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]
         
     def findWallVelocity(self):
-        pass
+        return self.solvePressure(0.01, self.hydro.vJ)
+        
+    def solvePressure(self, wallVelocityMin, wallVelocityMax):
+        wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
+        wallOffsets = np.zeros(self.nbrFields-1)
+        wallParams = np.append(wallWidths, wallOffsets)
+        
+        pressureMax,_,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
+        if pressureMax < 0:
+            return 1,_,wallParamsMax
+        pressureMin,_,wallParamsMin = self.pressure(wallVelocityMin, wallParams, True)
+        if pressureMin > 0:
+            return 0,_,wallParamsMin
+        
+        def func(vw, flag=False):
+            if vw == wallVelocityMin:
+                return pressureMin
+            if vw == wallVelocityMax:
+                return pressureMax
+            
+            return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), flag)
+        
+        wallVelocity = root_scalar(func, method='brentq', bracket=[wallVelocityMin,wallVelocityMax], xtol=1e-3).root
+        _,shape,wallParams = func(wallVelocity, True)
+        return wallVelocity, shape, wallParams
     
-    def pressure(self, wallVelocity, wallParamsIni, returnOptimalWallParams=False):
+    def pressure(self, wallVelocity, wallParamsIni=None, returnOptimalWallParams=False):
+        if wallParamsIni is None:
+            wallParamsIni = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
+            
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
         
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.

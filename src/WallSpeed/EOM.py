@@ -120,7 +120,10 @@ class EOM:
         _,wallParams = func(wallVelocity, True)
         return wallVelocity, wallParams
     
-    def pressure(self, wallVelocity, wallParams, returnOptimalWallParams=False):
+    def pressure(self, wallVelocity, wallParams=None, returnOptimalWallParams=False):
+        if wallParams is None:
+            wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
+        
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
         
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.

@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 """
 Grid
 """
-M = 20
+M = 40
 N = 20
 grid = Grid(M, N, 0.05, 100)
 poly = Polynomial(grid)
@@ -170,9 +170,10 @@ print(vwLTE)
 Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOMGeneralShape(top, fxSM, grid, 2)
+print(eom.pressure(hydro.vJ),eom.eom.pressure(hydro.vJ))
 
-p,shape,wallParams = eom.pressure(0.6, np.array([0.04,0.03,0.3]),True)
-print(p,wallParams)
+vw,shape,wallParams = eom.findWallVelocity()
+print(vw,wallParams)
 plt.plot(grid.xiValues,shape.T)
 plt.grid()
 plt.show()
