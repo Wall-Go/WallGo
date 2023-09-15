@@ -1,6 +1,25 @@
 # helper functions for BubbleDet
 import findiff
+import numpy as np
 
+
+def GCLQuadrature(fGrid):
+    r"""
+    Computes the integral :math:`\int_{-1}^1 dx\frac{f(x)}{\sqrt{1-x^2}}` using Gauss-Chebyshev-Lobatto quadrature.
+
+    Parameters
+    ----------
+    fGrid : array-like
+        Value of the function f(x) to integrate on the grid :math:`x_n=-\cos\left(\frac{n\pi}{N+1}\right),\quad n=0,\cdots,N+1.`
+
+    Returns
+    -------
+    Value of the integral.
+
+    """
+    N = len(fGrid)-2
+    return (np.pi/(N+1))*np.sum(fGrid[1:-1])+(0.5*np.pi/(N+1))*(fGrid[0]+fGrid[-1])
+    
 
 def derivative(f, x, dx=1.0, n=1, order=4, scheme="center", args=None):
     r"""Computes numerical derivatives of a callable function.
