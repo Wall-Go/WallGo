@@ -144,7 +144,7 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
-        dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
+        dVdX = self.freeEnergy.derivField(X, Tprofile)
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
         
         if returnOptimalWallParams:

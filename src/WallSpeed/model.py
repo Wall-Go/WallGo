@@ -175,13 +175,13 @@ class Model:
         }
 
 
-    def V0(self,X,show_V=False):
+    def V0(self, X, show_V=False):
         '''
         Tree level effective potential
         X
         '''
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
         V = (
            +1/2*self.muhsq*h1**2
            +1/2*self.mussq*s1**2
@@ -200,7 +200,7 @@ class Model:
 
     def boson_massSq(self, X, T):
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
 
         Nbosons = 5
         dof = np.array([1,1,3,6,3])#h,s,chi,W,Z
@@ -225,7 +225,7 @@ class Model:
 
     def fermion_massSq(self, X):
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
 
         Nfermions = 1
         dof = np.array([12])
@@ -267,7 +267,7 @@ class Model:
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
-        .. todo::
+        todo:
             Implement new versions of Jf and Jb that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
@@ -365,6 +365,8 @@ class FreeEnergy:
         cls : FreeEnergy
             An object of the FreeEnergy class.
         """
+        self.nbrFields = 2
+
         if params is None:
             self.f = f
             self.dfdT = dfdT
@@ -483,18 +485,18 @@ class FreeEnergy:
         else:
             X = np.asanyarray(X, dtype=float)
             # TODO generalise to arbitrary fields
-            h, s = X[..., 0], X[..., 1]
+            h, s = X[0,...], X[1,...]
             Xdh = X.copy()
-            Xdh[..., 0] += self.dPhi * np.ones_like(h)
+            Xdh[0,...] += self.dPhi * np.ones_like(h)
             Xds = X.copy()
-            Xds[..., 1] += self.dPhi * np.ones_like(h)
+            Xds[1,...] += self.dPhi * np.ones_like(h)
 
             dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
             dfds = (self(Xds, T) - self(X, T)) / self.dPhi
 
             return_val = np.empty_like(X)
-            return_val[..., 0] = dfdh
-            return_val[..., 1] = dfds
+            return_val[0,...] = dfdh
+            return_val[1,...] = dfds
 
             return return_val
 
