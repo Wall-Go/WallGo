@@ -10,7 +10,7 @@
 #include "CollElem.h"
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
-
+#include "gslWrapper.h"
 
 
 // Print a description of all supported options
@@ -57,7 +57,7 @@ void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
 	// which means we only need j <= N/2
 
 	// m,n = Polynomial indices
-	#pragma omp parallel for collapse(4)
+	#pragma omp parallel for collapse(4) firstprivate(collisionIntegral)
 	for (int m = 2; m <= gridSizeN; ++m) 
 	for (int n = 1; n <= gridSizeN-1; ++n) {
 		// j,k = grid momentum indices 
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-
+	gslWrapper::initializeRNG();
 	// 2->2 scatterings so 4 external particles
 	using CollisionElement = CollElem<4>;
 
@@ -201,7 +201,6 @@ int main(int argc, char *argv[]) {
 
 	// How many collision terms do we need in total
 	int nCollisionTerms = countIndependentIntegrals(basisSizeN);
-
 
 	//-------------------- Measure wall clock time
 
@@ -250,5 +249,7 @@ int main(int argc, char *argv[]) {
 	printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 */
 
+	// Cleanup
+	gslWrapper::clearRNG();
 	return 0;
 }
