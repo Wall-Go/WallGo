@@ -26,9 +26,9 @@ print(f"{Tc=}, {Tn=}")
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 print("\nFree energy:", fxSM)
-print(f"{fxSM([0, 1], 100)=}")
-print(f"{fxSM.derivT([0, 1], 100)=}")
-print(f"{fxSM.derivField([0, 1], 100)=}")
+print(f"{fxSM([[0],[1]], 100)=}")
+print(f"{fxSM.derivT([[0],[1]], 100)=}")
+print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
 # looking at thermodynamics
 thermo = Thermodynamics(fxSM)
@@ -40,7 +40,7 @@ print(f"{thermo.ddpLowT(100)=}")
 # checking Tplus and Tminus
 print(f"{fxSM.findPhases(100.1)=}")
 print(f"{fxSM.findPhases(103.1)=}")
-print(f"{fxSM.find_Tc()=}")
+print(f"{fxSM.findTc()=}")
 fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)

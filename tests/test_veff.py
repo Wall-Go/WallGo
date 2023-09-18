@@ -21,8 +21,7 @@ def test_BM1():
     np.testing.assert_allclose(
         res, [[195.03215146, 0.0], [0.0, 104.86914171]], rtol=1e-2
     )
-    # res = mod.find_Tc()
-    res = 108.22
+    res = free.findTc()
     assert res == pytest.approx(Tc, rel=1e-2)
     free.interpolateMinima(0, 1.2 * Tc, 1)
     thermo = WallSpeed.Thermodynamics(free)

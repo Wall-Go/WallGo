@@ -624,13 +624,14 @@ class FreeEnergy:
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
 
-    def findTc(self,dT=1,Tmax=500):
-        """Determines the critical temperature between two scalar phases
+    def findTc(self,Tmax=150):
+        """
+        Determines the critical temperature between two scalar phases.
+        The critical temperature is determined by tracking the pressure
+        of the different phases at their minima and finding the intersection point.
 
         Parameters
         ----------
-        dT : float
-            Temperature increment for critical temperature search.
         Tmax : float
             Maximal temperature bracket for Tcrit search
 
@@ -640,126 +641,13 @@ class FreeEnergy:
             Critical temperature
 
         """
-        # DVtot = lambda v,w,T: self.Vtot([v,0],T)-self.Vtot([0,w],T)
-        Tmin = 1
-        steps = 12
-        Tmid = (Tmax + Tmin) / 2
-        for n in range(steps):
-            minMin = self.findPhases(Tmin)[0]
-            minMax = self.findPhases(Tmax)[0]
-            minMid = self.findPhases(Tmid)[0]
-            if minMid[0] < 2:
-                Tmax = Tmid
-            else:
-                Tmin = Tmid
-            Tmid = (Tmax + Tmin) / 2
 
-        self.Tc = Tmid
+        deltaf = lambda v1,v2,T: self([[v1],[0]],T)-self([[0],[v2]],T)
 
-    def d2V(self, X, T):
-        """
-        Calculates the Hessian (second derivative) matrix for the
-        finite-temperature effective potential.
-
-        This uses :func:`helper_functions.hessianFunction` to calculate the
-        matrix using finite differences, with differences
-        given by `self.x_eps`. Note that `self.x_eps` is only used directly
-        the first time this function is called, so subsequently changing it
-        will not have an effect.
-        """
-        # X = np.asanyarray(X, dtype=float)
-        # T = np.asanyarray(T, dtype=float)
-        self.Ndim = 2
-        self.x_eps = 1e-3
-        self.deriv_order = 4
-        # f1 = lambda X: np.asanyarray(self.f(X,T))[...,np.newaxis]
-        try:
-            f1 = self._d2V
-        except:
-            # Create the gradient function
-            self._d2V = helper_functions.hessianFunction(
-                self.f, self.x_eps, self.Ndim, self.deriv_order)
-            f1 = self._d2V
-        # Need to add extra axes to T since extra axes get added to X in
-        # the helper function.
-        print(T)
-        print(type(X))
-        # print(X.shape[:-1])
-
-        T = np.asanyarray(T)[...,np.newaxis]
-        
-        print(f"{X=}")
-        print(f"{T=}")
-
-        # print(f1(X,T))
-        print(self(X,T))
-        print(f1(X, T))
-        # return
-        return
-        return f1(X, T)
-
-    def find_Tc(self,delta_T=1,Tmax=500):
-        # todo: not the same as v0 for [0,0]
-        self.v0 = 246.
-        self.s0 = self.findPhases(T=0)[1,1]
-        print(f"{self.s0=}")
-        deltaf = lambda v,s,T: self([v,0],T)-self([0,s],T)
-        def test_min(X,T):
-            d2V = self.d2V(X,T)
-            if linalg.det(d2V) > 0 and d2V[0,0] > 0:
-                return 1
-            elif linalg.det(d2V) > 0 and d2V[0,0] < 0:
-                return -1
-            else:
-                return 0
-        
-        Ts = [0]
-        deltaHS = [deltaf(self.v0,self.s0,0)]
-        print(f"{deltaHS=}")
-        deltaS0 = [deltaf(0,self.s0,0)]
-        print(f"{deltaS0=}")
-        min_h = [test_min([self.v0,0],0)]
-        min_s = [test_min([0,self.s0],0)]
-        print('hello')
-        print(min_h)
-        # return
-
-        
-        t = delta_T
-        while t <= Tmax and deltaHS[-1] < 0 and deltaS0[-1] > 0 and min_h[-1] == 1:
-            Ts.append(t)
-            mins = self.findPhases(T=t)
-            min_s.append(test_min([0,mins[1,1]],t))
-            min_h.append(test_min([mins[0,0],0],t))
-            deltaHS.append(deltaf(mins[0,0],mins[1,1],t))
-            deltaS0.append(deltaf(0,mins[1,1],t))
-            # print(t,deltaHS[-1],deltaS0[-1],min_s[-1],min_h[-1])
-            t += delta_T
-        
-        # print(Ts,deltaHS,deltaS0,min_s,min_h)
-        self.first_order = False
-        self.Tmin = -1
-        def func(T):
-            mins = self.findPhases(T=T)
+        def deltaPmin(T):
+            mins = self.findPhases(T)
             return deltaf(mins[0,0],mins[1,1],T)
         
-        if deltaHS[-1] >= 0 and len(Ts) > 1:
-            self.Tcx = optimize.root_scalar(func,bracket=(Ts[-2],Ts[-1]),rtol=1e-12,xtol=1e-12).root
-            if (test_min([0,self.findPhases(T=self.Tcx)[1,1]],self.Tcx) == 1 and
-                test_min([self.findPhases(T=self.Tcx)[0,0],0],self.Tcx) == 1): 
-                self.first_order = True
-                self.Tmin = self.Tc
-                
-                for i in range(len(Ts)):
-                    if min_s[-i-1] == 1:
-                        self.Tmin = Ts[-i-1]
-                    else:
-                        break
-                if self.Tmin > 0:
-                    func = lambda T: linalg.det(self.d2V([0,self.findPhases(T=T)[1,1]],T))
-                    self.Tmin = optimize.root_scalar(func,bracket=(Ts[-i-1],Ts[-i]),rtol=1e-12,xtol=1e-12).root
-        else:
-            self.Tcx = -1
+        self.Tc = optimize.root_scalar(deltaPmin,bracket=(90,150),rtol=1e-12,xtol=1e-12).root
             
-        # self.Tmin = max(self.Tc/10,self.Tmin)
-        return self.Tcx,self.first_order,self.Tmin
+        return self.Tc
