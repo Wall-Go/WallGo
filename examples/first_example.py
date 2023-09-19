@@ -154,7 +154,7 @@ print(c1,c2)
 # defining particles which are out of equilibrium for WallGo
 top = WallSpeed.Particle(
     "top",
-    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[..., 0]**2,
+    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
     msqThermal=lambda T: params["yt"]**2 * T**2,
     statistics="Fermion",
     inEquilibrium=False,

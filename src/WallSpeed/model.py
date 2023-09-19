@@ -5,7 +5,6 @@ import numpy as np # arrays, maths and stuff
 import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
 from .helpers import derivative # derivatives for callable functions
-from cosmoTransitions import generic_potential,helper_functions
 from cosmoTransitions.finiteT import Jb_spline as Jb
 from cosmoTransitions.finiteT import Jf_spline as Jf
 
@@ -597,6 +596,9 @@ class FreeEnergy:
             A list of phases
 
         """
+        if T is None:
+            raise TypeError('Temperature is None')
+
         if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
             vmin = [self.Xint[0](T),self.Xint[1](T)]
 
@@ -623,6 +625,37 @@ class FreeEnergy:
                 vmin.append(vT)
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
+
+    def d2V(self, X, T):
+        """
+        Calculates the Hessian (second derivative) matrix for the
+        finite-temperature effective potential.
+
+        This uses :func:`helper_functions.hessianFunction` to calculate the
+        matrix using finite differences, with differences
+        given by `self.x_eps`. Note that `self.x_eps` is only used directly
+        the first time this function is called, so subsequently changing it
+        will not have an effect.
+        """
+        # X = np.asanyarray(X, dtype=float)
+        # T = np.asanyarray(T, dtype=float)
+        self.Ndim = 2
+        self.x_eps = 1e-3
+        self.deriv_order = 4
+        # f1 = lambda X: np.asanyarray(self.f(X,T))[...,np.newaxis]
+        try:
+            f1 = self._d2V
+        except:
+            # Create the gradient function
+            self._d2V = helper_functions.hessianFunction(
+                self.f, self.x_eps, self.Ndim, self.deriv_order)
+            f1 = self._d2V
+        # Need to add extra axes to T since extra axes get added to X in
+        # the helper function.
+
+        T = np.asanyarray(T)[...,np.newaxis]
+        
+        return f1(X, T)
 
     def findTc(self,Tmax=150):
         """
