@@ -103,6 +103,7 @@ class EOM:
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         pressureMax,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
         if pressureMax < 0:
+            print('Maximum pressure is negative!')
             return 1
         pressureMin,wallParamsMin = self.pressure(wallVelocityMin, wallParams, True)
         if pressureMin > 0:
