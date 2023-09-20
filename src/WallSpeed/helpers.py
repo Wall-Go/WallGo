@@ -76,13 +76,13 @@ def derivative(f, x, dx=1.0, n=1, order=4, scheme="center", args=None):
         res += c_i * fA(x_i)
     return res
 
-def gammasq(v):
+def gammaSq(v):
     r"""
     Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
     """
     return 1./(1. - v*v)
 
-def mu(xi, v):
+def boostVelocity(xi, v):
     """
     Lorentz-transformed velocity
     """

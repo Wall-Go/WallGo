@@ -7,7 +7,7 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
-from .helpers import derivative, gammasq, GCLQuadrature # derivatives for callable functions
+from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 
 class EOM:
     def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
@@ -126,6 +126,7 @@ class EOM:
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
         
         c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        print(Tplus, Tminus)
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
@@ -323,8 +324,8 @@ class EOM:
         delta02 = offEquilDeltas["02"][index]
         delta20 = offEquilDeltas["20"][index]
 
-        u0 = np.sqrt(gammasq(velocityAtCenter))
-        u3 = np.sqrt(gammasq(velocityAtCenter))*velocityAtCenter
+        u0 = np.sqrt(gammaSq(velocityAtCenter))
+        u3 = np.sqrt(gammaSq(velocityAtCenter))*velocityAtCenter
         ubar0 = u3
         ubar3 = u0
 

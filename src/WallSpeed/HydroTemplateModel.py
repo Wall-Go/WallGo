@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
-from .helpers import gammasq, mu
+from .helpers import gammaSq, boostVelocity
 
 
 class HydroTemplateModel:
