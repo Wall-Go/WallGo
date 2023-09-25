@@ -71,7 +71,7 @@ def test_solution(background, particle, M, N):
     operator, source = boltzmann.buildLinearEquations()
 
     # checking difference
-    diff = operator @ deltaF.flatten() - source
+    diff = operator @ deltaF.flatten(order="F") - source
 
     # getting norms
     diffNorm = np.linalg.norm(diff)
@@ -79,4 +79,4 @@ def test_solution(background, particle, M, N):
     ratio = diffNorm / sourceNorm
 
     # asserting solution works
-    assert ratio == pytest.approx(0, abs=1e-9)
+    assert ratio == pytest.approx(0, abs=1e-10)

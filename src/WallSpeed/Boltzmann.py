@@ -190,7 +190,7 @@ class BoltzmannSolver:
 
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
-        return np.reshape(deltaF, deltaFShape, order="C")
+        return np.reshape(deltaF, deltaFShape, order="F")
 
 
     def buildLinearEquations(self):
