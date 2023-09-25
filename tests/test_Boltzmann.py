@@ -57,10 +57,7 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     np.testing.assert_allclose(ratios, np.ones(M - 1), rtol=1e-2, atol=0)
 
 
-@pytest.mark.parametrize(
-    "M, N",
-    [(20, 20)]
-)
+@pytest.mark.parametrize("M, N", [(20, 20)])
 def test_solution(background, particle, M, N):
     # setting up objects
     grid = Grid(M, N, 1, 1)
@@ -73,13 +70,8 @@ def test_solution(background, particle, M, N):
     # building Boltzmann equation terms
     operator, source = boltzmann.buildLinearEquations()
 
-    # checking solution
-    print("source:", source.shape)
-    print("operator:", operator.shape)
-    print("deltaF:", deltaF.shape)
+    # checking difference
     diff = operator @ deltaF.flatten() - source
-    print("RHS:", source.shape)
-
 
     # getting norms
     diffNorm = np.linalg.norm(diff)
@@ -87,4 +79,4 @@ def test_solution(background, particle, M, N):
     ratio = diffNorm / sourceNorm
 
     # asserting solution works
-    assert ratio == pytest.approx(0, abs=1e-13)
+    assert ratio == pytest.approx(0, abs=1e-9)

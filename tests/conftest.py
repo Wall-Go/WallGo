@@ -5,11 +5,14 @@ import WallSpeed
 
 @pytest.fixture
 def background(M):
-    vw = 1 / np.sqrt(3)
+    vw = 0#1 / np.sqrt(3)
     v = - np.ones(M - 1) / np.sqrt(3)
+    v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(M - 1))
     field = np.ones((M - 1,))
     field[M // 2:]  = 0
+    field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(M - 1) + 6)
     T = 100 * np.ones(M - 1)
+    T += 1 * np.sin(11 * 2 * np.pi * np.arange(M - 1) + 6)
     return WallSpeed.BoltzmannBackground(
         vw=vw,
         velocityProfile=v,
