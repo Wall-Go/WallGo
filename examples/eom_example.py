@@ -11,6 +11,8 @@ from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 
+import matplotlib.pyplot as plt
+
 """
 Grid
 """
@@ -170,3 +172,4 @@ Compute the wall velocity with out-of-equilibrium effects
 eom = EOM(top, fxSM, grid, 2)
 #print(eom.findWallVelocityLoop())
 print(eom.findWallVelocityMinimizeAction())
+

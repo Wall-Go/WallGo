@@ -12,6 +12,8 @@ from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 
+from time import time
+
 """
 Grid
 """
@@ -31,6 +33,7 @@ pprint(params)
 Tc = 108.22
 Tn = 100
 print(f"{Tc=}, {Tn=}")
+
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 print("\nFree energy:", fxSM)
@@ -68,7 +71,10 @@ Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOM(top, fxSM, grid, 2)
 #print(eom.findWallVelocityLoop())
+t = time()
 print(eom.findWallVelocityMinimizeAction())
+print(time()-t)
+
 
 # now compute the bubble wall speed
 # findWallVelocityLoop

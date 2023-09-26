@@ -310,14 +310,18 @@ class Model:
             terms from the effective potential. Useful for calculating
             differences or derivatives.
         '''
-        T = np.asanyarray(T)
+        
         X = np.asanyarray(X)
+        returnScalar = (len(X.shape) == 1 and np.isscalar(T))
+        T = np.asanyarray(T)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
         V += self.V1(bosons, fermions)
         V += self.V1T(bosons, fermions, T, include_radiation)
-        return np.real(V)[0]
+        if returnScalar:
+            V = V[0]
+        return np.real(V)
 
 
 class FreeEnergy:
