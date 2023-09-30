@@ -229,65 +229,35 @@ class Hydro:
         Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
         return self.solveHydroShock(vw,0,Tp)
 
-##    def findMatching(self, vwTry):
-##        r"""
-##        Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
-##        matchDeton, for deflagrations and hybrids, the code varies `v_+` until the temperature in front of the shock equals the nucleation temperature
-##        """
-##        if vwTry > self.vJ: # Detonation
-##            vp,vm,Tp,Tm = self.matchDeton(vwTry)
-##
-##        else: # Hybrid or deflagration
-##            # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-##            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)
-##            vpmin = 1e-5 # Minimum value of vpmin
-##
-##            def func(vpTry):
-##                _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
-##                return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
-##
-##            fmin,fmax = func(vpmin),func(vpmax)
-##            if fmin*fmax <= 0:
-##                sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
-##            else:
-##                extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
-##                if extremum.fun > 0:
-##                    return (None,None,None,None) # If no deflagration solution exists, returns None.
-##                sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
-##            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
-##
-##        return (vp,vm,Tp,Tm)
-
-
-    def findMatching(self,vwTry):
+    def findMatching(self, vwTry):
         r"""
         Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
-        matchDeton, for deflagrations and hybrids, the code varies `v_+' until the temperature in front of the shock equals the nucleation temperature
+        matchDeton, for deflagrations and hybrids, the code varies `v_+` until the temperature in front of the shock equals the nucleation temperature
         """
-        if vwTry > self.vJ: #Detonation
-            vp,vm,Tp,Tm = matchDeton(vwTry)
-            
-        else: #Hybrid or deflagration
-            #loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            vpmax = np.sqrt(self.thermodynamics.csqHighT(self.Tc))
-            vpmin = 0.01 #minimum value of vpmin
-            vptry = (vpmax + vpmin)/2.
-            TnTry = 0
-            error = 10**-2 #adjust error here
-            count = 0
-            while np.abs(TnTry - self.Tnucl)/self.Tnucl > error and count <100: #get rid of this hard-coded thing
-                vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,vptry)
-                Tntry = self.solveHydroShock(vwTry,vptry,Tp)
+        if vwTry > self.vJ: # Detonation
+            vp,vm,Tp,Tm = self.matchDeton(vwTry)
 
-                if Tntry > self.Tnucl:
-                    vpmax = vptry
-                    vptry = (vpmax + vpmin)/2.
-                else:
-                    vpmin = vptry
-                    vptry = (vpmax + vpmin)/2.
-                count += 1
-                    
+        else: # Hybrid or deflagration
+            # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
+            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)
+            vpmin = 1e-5 # Minimum value of vpmin
+
+            def func(vpTry):
+                _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
+                return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
+
+            fmin,fmax = func(vpmin),func(vpmax)
+            if fmin*fmax <= 0:
+                sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
+            else:
+                extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
+                if extremum.fun > 0:
+                    return (None,None,None,None) # If no deflagration solution exists, returns None.
+                sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
+            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
+
         return (vp,vm,Tp,Tm)
+
 
     def findHydroBoundaries(self, vwTry):
         r"""
