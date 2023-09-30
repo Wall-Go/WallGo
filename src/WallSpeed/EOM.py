@@ -143,7 +143,6 @@ class EOM:
         wallWidths = wallParams[:self.nbrFields]
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-        # TODO: Change X.T to X when freeEnergy gets the right ordering.
         dVdX = self.freeEnergy.derivField(X, Tprofile)
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
         
@@ -174,8 +173,7 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
         
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-        # TODO: Change X.T to X when freeEnergy gets the right ordering.
-        V = self.freeEnergy(X.T, Tprofile)
+        V = self.freeEnergy(X, Tprofile)
         VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
         
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])

@@ -65,7 +65,7 @@ class xSM(Model):
     def Vtot(self, field, T, include_radiation = True):
         # The user defines their effective free energy
         field = np.asanyarray(field)
-        h, s = field[...,0], field[...,1]
+        h, s = field[0,...], field[1,...]
         V0 = (
             -1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4
             -1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4
@@ -82,7 +82,7 @@ class xSM(Model):
 def dfdT(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
     # The user may or may not define this
     field = np.asanyarray(field)
-    h, s = field[...,0], field[...,1]
+    h, s = field[0,...], field[1,...]
     muhT = 1/48.*(9*g2**2+3*g1**2+2*(6*yt**2 + 12*lamh+ lamm))
     musT = 1/12.*(2*lamm + 3*lams)
     return (muhT*h**2 + musT*s**2)*T - 4*b*T**3
@@ -91,14 +91,14 @@ def dfdT(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b
 def dfdPhi(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
     # The user may or may not define this
     field = np.asanyarray(field)
-    h, s = field[...,0], field[...,1]
+    h, s = field[0,...], field[1,...]
     dV0dh = -muhsq*h + lamh*h**3 + 1/2.*lamm*s**2*h
     dVTdh = muhT*h*T**2
     dV0ds = -mussq*s + lams*s**3 + 1/2.*lamm*s*h**2
     dVTds = musT*s*T**2
     return_val = np.empty_like(field)
-    return_val[..., 0] = dV0dh + dVTdh
-    return_val[..., 1] = dV0ds + dVTds
+    return_val[0,...] = dV0dh + dVTdh
+    return_val[1,...] = dV0ds + dVTds
     return return_val
 
 
@@ -137,9 +137,9 @@ class FreeEnergy(FreeEnergy):
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 print("\nFree energy:", fxSM)
-print(f"{fxSM([0, 1], 100)=}")
-print(f"{fxSM.derivT([0, 1], 100)=}")
-print(f"{fxSM.derivField([0, 1], 100)=}")
+print(f"{fxSM([[0],[1]], 100)=}")
+print(f"{fxSM.derivT([[0],[1]], 100)=}")
+print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
 
 """
@@ -147,7 +147,7 @@ Particle
 """
 top = Particle(
     "top",
-    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0]**2,
+    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
     msqThermal=lambda T: params["yt"]**2 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
