@@ -11,8 +11,6 @@ from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 
-import matplotlib.pyplot as plt
-
 """
 Grid
 """
