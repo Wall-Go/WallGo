@@ -12,6 +12,8 @@ from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 
+
+from time import time
 """
 Grid
 """
@@ -29,7 +31,8 @@ params = mod.params
 pprint(params)
 
 Tc = 108.22
-Tn = 100
+
+Tn = 100.
 print(f"{Tc=}, {Tn=}")
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params)
@@ -56,7 +59,7 @@ print("\ntop quark:", top)
 """
 Compute the wall velocity in local thermal equilibrium
 """
-fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
+fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vwLTE = hydro.findvwLTE()
@@ -68,7 +71,10 @@ Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOM(top, fxSM, grid, 2)
 #print(eom.findWallVelocityLoop())
+t = time()
 print(eom.findWallVelocityMinimizeAction())
+print(time()-t)
+
 
 # now compute the bubble wall speed
 # findWallVelocityLoop

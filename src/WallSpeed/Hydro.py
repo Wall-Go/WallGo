@@ -258,6 +258,7 @@ class Hydro:
 
         return (vp,vm,Tp,Tm)
 
+
     def findHydroBoundaries(self, vwTry):
         r"""
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.

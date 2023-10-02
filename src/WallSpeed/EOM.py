@@ -1,7 +1,7 @@
 import numpy as np
 
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
-from scipy.integrate import quad_vec
+from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
@@ -103,6 +103,8 @@ class EOM:
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         pressureMax,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
         if pressureMax < 0:
+            print('Maximum pressure is negative!')
+            print(f"{pressureMax=} {wallParamsMax=}")
             return 1
         pressureMin,wallParamsMin = self.pressure(wallVelocityMin, wallParams, True)
         if pressureMin > 0:
@@ -132,15 +134,16 @@ class EOM:
 
         i = 0
         # TODO: Implement a better condition
-        while i < 2:
+        while i < 1:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
             wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+
 #            boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
 #            boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
 #            offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
-            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,None)]+(self.nbrFields-1)*[(-10,10)])
+            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
 
@@ -183,14 +186,14 @@ class EOM:
         VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
-        Vref = VLowT + 0.5*(VHighT-VLowT)*(1+np.tanh(self.grid.xiValues/self.grid.L_xi))
 
+        Vref = (VLowT+VHighT)/2 
+        
         U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
-        return U+K
-
-
-
+        return (U+K)
+        
+        
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.nbrFields+1]
