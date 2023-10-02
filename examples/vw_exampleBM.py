@@ -12,8 +12,8 @@ from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 
-from time import time
 
+from time import time
 """
 Grid
 """
@@ -31,9 +31,9 @@ params = mod.params
 pprint(params)
 
 Tc = 108.22
+
 Tn = 100.
 print(f"{Tc=}, {Tn=}")
-
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 print("\nFree energy:", fxSM)
