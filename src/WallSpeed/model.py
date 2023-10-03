@@ -311,15 +311,12 @@ class Model:
             differences or derivatives.
         '''
         X = np.asanyarray(X)
-        returnScalar = (len(X.shape) == 1 and np.isscalar(T))
         T = np.asanyarray(T)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
         V += self.V1(bosons, fermions)
         V += self.V1T(bosons, fermions, T, include_radiation)
-        if returnScalar:
-            V = V[0]
         return np.real(V)
 
 class FreeEnergy:
@@ -507,7 +504,7 @@ class FreeEnergy:
         """
         Returns the value of the pressure as a function of temperature in the low-T phase
         """
-        return -self(self.findPhases(T)[0],T)
+        return -self(self.findPhases(T),T)[0]
 
     def pressureHighT(self,T):
         """
@@ -519,7 +516,8 @@ class FreeEnergy:
             The temperature for which to find the pressure.
 
         """
-        return -self(self.findPhases(T)[1],T)
+        return -self(self.findPhases(T),T)[1]
+        #return -self(self.findPhases(T)[1,...],T)
 
     def approxZeroTMin(self,T=0):
         """
