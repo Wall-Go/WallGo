@@ -33,6 +33,8 @@ If you use WallSpeed, please cite arXiv:....
     Grid
     Hydro
     Polynomial
+    Model
+    Thermodynamics
 
 .. toctree::
     :caption: Getting Started:
