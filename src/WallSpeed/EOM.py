@@ -99,7 +99,7 @@ class EOM:
     def findWallVelocityMinimizeAction(self):
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
-        return self.solvePressure(0.01, self.hydro.vJ, np.append(wallWidths, wallOffsets))
+        return self.solvePressure(0.01, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
 
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         pressureMax,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
