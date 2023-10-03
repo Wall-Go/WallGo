@@ -2,14 +2,16 @@ import pytest
 import numpy as np
 import WallSpeed
 
+"""
+Grid
+"""
+M = 20
+N = 20
+grid = WallSpeed.Grid(M, N, 0.05, 100)
+poly = WallSpeed.Polynomial(grid)
+
 def test_SimpleEOS():
-    """
-    Grid
-    """
-    M = 20
-    N = 20
-    grid = WallSpeed.Grid(M, N, 0.05, 100)
-    poly = WallSpeed.Polynomial(grid)
+
 
     """
     Model definition
@@ -152,3 +154,46 @@ def test_SimpleEOS():
     vwLoop = eom.findWallVelocityMinimizeAction()[0]
 
     assert(vwLoop == pytest.approx(vwLTE,rel = 1e-3))
+
+def test_BM1():
+
+    mod = WallSpeed.Model(125,120,1.0,0.9)
+    params = mod.params
+
+    Tc = 108.22
+
+    Tn = 100.
+    
+    fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
+
+    fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
+
+
+    # defining particles which are out of equilibrium for WallGo
+    top = WallSpeed.Particle(
+        "top",
+        msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0]**2,
+        msqThermal=lambda T: params["yt"]**2 * T**2,
+        statistics="Fermion",
+        inEquilibrium=False,
+        ultrarelativistic=False,
+        collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
+    )
+    particles = [top]
+
+    """
+    Compute the wall velocity in local thermal equilibrium
+    """
+    thermo = WallSpeed.Thermodynamics(fxSM)
+    hydro = WallSpeed.Hydro(thermo)
+    vwLTE = hydro.findvwLTE()
+
+    """
+    Compute the wall velocity from the loop without out-of-equilibrium effects
+    """
+    eom = WallSpeed.EOM(top, fxSM, grid, 2)
+    #print(eom.findWallVelocityLoop())
+    vwLoop = eom.findWallVelocityMinimizeAction()[0]
+
+    assert(vwLoop == pytest.approx(vwLTE,rel = 1e-2))
+
