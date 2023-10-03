@@ -166,7 +166,7 @@ def test_BM1():
     
     fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 
-    fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
+ #   fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
 
 
     # defining particles which are out of equilibrium for WallGo
