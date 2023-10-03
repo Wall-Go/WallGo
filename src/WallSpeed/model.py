@@ -610,8 +610,8 @@ class FreeEnergy:
                 X = self.approxZeroTMin(T)
                 X = np.asanyarray(X)
 
-            fh = lambda h: self.f([abs(h),0],T)
-            fs = lambda s: self.f([0,abs(s)],T)
+            fh = lambda h: self.f([[abs(h)],[0]],T)[0]
+            fs = lambda s: self.f([[0],[abs(s)]],T)[0]
 
             fX = [fh,fs]
             vmin = []
@@ -678,7 +678,7 @@ class FreeEnergy:
 
         """
 
-        deltaf = lambda v1,v2,T: self([[v1],[0]],T)-self([[0],[v2]],T)
+        deltaf = lambda v1,v2,T: self.f([[v1],[0]],T)[0]-self.f([[0],[v2]],T)[0]
 
         def deltaPmin(T):
             mins = self.findPhases(T)

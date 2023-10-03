@@ -34,9 +34,10 @@ def test_BM1():
 
 def test_BM2():
     mod = WallSpeed.Model(125, 160.0, 1.0, 1.2)
-    res = mod.Vtot([[110],[130]], 100)
-    assert res == pytest.approx(-1.15450678e09, rel=1e-2)
-
+    res = mod.Vtot([[100,110],[130,130]], 100)
+    np.testing.assert_allclose(
+        res, [-1.16182579e+09, -1.15446813e+09], rtol=1e-2
+    )
 
 def test_BM3():
     mod = WallSpeed.Model(125, 160, 1.0, 1.6)
