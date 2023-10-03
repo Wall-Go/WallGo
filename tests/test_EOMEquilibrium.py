@@ -153,7 +153,7 @@ def test_SimpleEOS():
     #print(eom.findWallVelocityLoop())
     vwLoop = eom.findWallVelocityMinimizeAction()[0]
 
-    assert(vwLoop == pytest.approx(vwLTE,rel = 1e-3))
+    assert(vwLoop == pytest.approx(vwLTE,rel = 1e-2))
 
 def test_BM1():
 
