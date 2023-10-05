@@ -80,3 +80,29 @@ def test_solution(background, particle, M, N):
 
     # asserting solution works
     assert ratio == pytest.approx(0, abs=1e-10)
+
+
+@pytest.mark.parametrize("MN_coarse, MN_fine", [(4, 6)])
+def test_convergence(background, particle, MN_coarse, MN_fine):
+    # Boltzmann equation on the coarse grid
+    grid_coarse = Grid(MN_coarse, MN_coarse, 1, 1)
+    poly_coarse = Polynomial(grid_coarse)
+    boltzmann_coarse = BoltzmannSolver(grid_coarse, background, particle)
+    deltaF_coarse = boltzmann_coarse.solveBoltzmannEquations()
+
+    # Boltzmann equation on the fine grid
+    grid_fine = Grid(MN_fine, MN_fine, 1, 1)
+    poly_fine = Polynomial(grid_fine)
+    boltzmann_fine = BoltzmannSolver(grid_fine, background, particle)
+    deltaF_fine = boltzmann_fine.solveBoltzmannEquations()
+
+    # comparing the results on the two grids
+    chi, rz, rp = grid_fine.getCompactCoordinates(endpoints=True)
+
+
+    # getting norms
+    diffNorm = np.linalg.norm(diff)
+    sourceNorm = np.linalg.norm(source)
+    ratio = diffNorm / sourceNorm
+
+    # asserting results are close
