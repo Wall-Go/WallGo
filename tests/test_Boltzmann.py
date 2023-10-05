@@ -4,6 +4,7 @@ import numpy as np  # arrays and maths
 from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannSolver
+from .conftest import background
 
 
 real_path = os.path.realpath(__file__)
@@ -15,15 +16,16 @@ dir_path = os.path.dirname(real_path)
     [#(10, 10, 1, 0, 0, 1, 0, 0),
     (25, 25, 1, 0, 0, 1, 0, 0)]
 )
-def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
+def test_Delta00(particle, M, N, a, b, c, d, e, f):
     r"""
     Tests that the Delta integral gives a known analytic result for
     :math:`\delta f = E \sqrt{(1 - \rho_z^2)(1 - \rho_\Vert)}`.
     """
     # setting up objects
+    bg = background(M)
     grid = Grid(M, N, 1, 1)
     poly = Polynomial(grid)
-    boltzmann = BoltzmannSolver(grid, background, particle)
+    boltzmann = BoltzmannSolver(grid, bg, particle)
 
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
@@ -34,7 +36,7 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     pp = pp[np.newaxis, np.newaxis, :]
 
     # fluctuation mode
-    msq = particle.msqVacuum(background.fieldProfile)
+    msq = particle.msqVacuum(bg.fieldProfile)
     msq = msq[:, np.newaxis, np.newaxis]
     E = np.sqrt(msq + pz**2 + pp**2)
 
@@ -48,7 +50,7 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
     Deltas = boltzmann.getDeltas(integrand_analytic)
 
     # comparing to analytic result
-    Delta00_analytic = background.temperatureProfile**3 * (
+    Delta00_analytic = bg.temperatureProfile**3 * (
         2 / (9 * np.pi**2) * (3 * a + c) * (3 * d + f)
     )
     ratios = Deltas["00"] / Delta00_analytic
@@ -58,11 +60,12 @@ def test_Delta00(background, particle, M, N, a, b, c, d, e, f):
 
 
 @pytest.mark.parametrize("M, N", [(20, 20)])
-def test_solution(background, particle, M, N):
+def test_solution(particle, M, N):
     # setting up objects
+    bg = background(M)
     grid = Grid(M, N, 1, 1)
     poly = Polynomial(grid)
-    boltzmann = BoltzmannSolver(grid, background, particle)
+    boltzmann = BoltzmannSolver(grid, bg, particle)
 
     # solving Boltzmann equations
     deltaF = boltzmann.solveBoltzmannEquations()
@@ -83,26 +86,42 @@ def test_solution(background, particle, M, N):
 
 
 @pytest.mark.parametrize("MN_coarse, MN_fine", [(4, 6)])
-def test_convergence(background, particle, MN_coarse, MN_fine):
+def test_convergence(particle, MN_coarse, MN_fine):
     # Boltzmann equation on the coarse grid
     grid_coarse = Grid(MN_coarse, MN_coarse, 1, 1)
     poly_coarse = Polynomial(grid_coarse)
-    boltzmann_coarse = BoltzmannSolver(grid_coarse, background, particle)
+    background_coarse = background(MN_coarse)
+    boltzmann_coarse = BoltzmannSolver(grid_coarse, background_coarse, particle)
     deltaF_coarse = boltzmann_coarse.solveBoltzmannEquations()
 
     # Boltzmann equation on the fine grid
     grid_fine = Grid(MN_fine, MN_fine, 1, 1)
     poly_fine = Polynomial(grid_fine)
-    boltzmann_fine = BoltzmannSolver(grid_fine, background, particle)
+    background_fine = background(MN_fine)
+    boltzmann_fine = BoltzmannSolver(grid_fine, background_fine, particle)
     deltaF_fine = boltzmann_fine.solveBoltzmannEquations()
 
     # comparing the results on the two grids
-    chi, rz, rp = grid_fine.getCompactCoordinates(endpoints=True)
-
+    chi, rz, rp = grid_fine.getCompactCoordinates()
+    print(f"{deltaF_coarse.shape=}")
+    print(f"{deltaF_fine.shape=}")
+    temp1 = poly_coarse.cardinal(chi, MN_coarse, "z")
+    print(f"{temp1.shape=}")
+    temp2 = poly_coarse.chebyshev(rz, MN_coarse, "pz")
+    print(f"{temp2.shape=}")
+    temp3 = poly_coarse.chebyshev(rp, MN_coarse, "pp")
+    print(f"{temp3.shape=}")
+    deltaF_coarse_fine = np.einsum(
+        "abc, ai, bj, ck -> ijk",
+        boltzmann_coarse,
+        poly_coarse.cardinal(chi, MN_coarse, "z"),
+        poly_coarse.chebyshev(rz, MN_coarse, restriction="full"),
+        poly_coarse.chebyshev(rp, MN_coarse, restriction="partial"),
+        optimize=True,
+    )
+    print(f"{deltaF_coarse_fine.shape=}")
 
     # getting norms
-    diffNorm = np.linalg.norm(diff)
-    sourceNorm = np.linalg.norm(source)
-    ratio = diffNorm / sourceNorm
+    pass
 
     # asserting results are close
