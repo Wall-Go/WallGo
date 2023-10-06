@@ -31,7 +31,7 @@ public:
 	// otherwise may run into compiler errors due to (lack of) copy constructors
 	CollElem(const std::array<ParticleSpecies, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies) {}
 
-	inline Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const {
+	Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const {
 		Mandelstam m;
 		m.s = (p1 + p2) * (p1 + p2);
 		m.t = (p1 - p3) * (p1 - p3);
@@ -40,7 +40,7 @@ public:
 	}
 
 	// Calculate |M|^2 
-	inline double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) {
+	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) {
 
 		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
 

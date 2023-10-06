@@ -2,7 +2,7 @@
 set(BINARY ${CMAKE_PROJECT_NAME})
 
 # source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp WriteToHDF5.cpp gslWrapper.cpp)
+set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp Collision.cpp)
 
 add_library(${BINARY}_lib STATIC ${SOURCES})
 
@@ -38,24 +38,31 @@ endif()
 ## External packages
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
+
 if (USE_OMP)
 	find_package(OpenMP)
 endif()
+
+
+find_package(muparser REQUIRED)
+
 
 
 #---- Link to external libraries
 target_link_libraries(${BINARY}_lib PUBLIC
     ${HDF5_LIBRARIES}
     ${GSL_LIBRARIES}
+    ${MUPARSER_LIBRARIES}
 )
 
 if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
 		target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
 	else()
-		message(WARNING "==== NOTE: OpenMP installation not found, disabling multithreading")
+		message(WARNING "OpenMP installation not found, multithreading will be DISABLED. ")
 	endif()
 endif()
+
 
 #---- Header includes
 target_include_directories(${BINARY}_lib PUBLIC
@@ -63,6 +70,7 @@ target_include_directories(${BINARY}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/thirdparty
     ${HDF5_INCLUDE_DIRS}
     ${GSL_INCLUDE_DIRS}
+    ${MUPARSER_INCLUDE_DIRS}
 )
 
 target_link_libraries(${BINARY} PRIVATE ${BINARY}_lib)

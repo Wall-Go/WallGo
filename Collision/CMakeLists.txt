@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 project(Collision VERSION 0.2.0 LANGUAGES CXX)
 # NB: project name is used across other CMake files for target names (${CMAKE_PROJECT_NAME})
 
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -23,8 +27,12 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+## Do compile with profiler support? This is off by default
+option(PROFILER "Compile with profiler flags" OFF)
+
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
+
 
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -35,10 +43,16 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable more warnings (optional)
     #add_compile_options(-Wpedantic)
     
-    ## Add flags for gprof profiling. Debug builds only
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+    
+    if (PROFILER)
     	## This flag is needed also during linking so add_compile_options doesn't do the trick apparently
     	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+    	message(STATUS "Profiler flags: -pg")
+    endif()
+
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		# no optimization here since it can interfere with profiling
 		
 		option(BUILD_UNIT_TESTS "Build unit tests" ON)
@@ -47,10 +61,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 		
     endif()
     
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    	# Optimization
+    
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    	# Optimization always for non-debug builds
     	add_compile_options(-O3)
     endif()
+    
     
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Enable warnings and treat them as errors

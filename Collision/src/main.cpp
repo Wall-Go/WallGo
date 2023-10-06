@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	gslWrapper::initializeRNG();
 
 	if (bDoTestRun) {
-		collisionsQCD(2);
+		collisionsQCD(5);
 		return 0;
 	}
 

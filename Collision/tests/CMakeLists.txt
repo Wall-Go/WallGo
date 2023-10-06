@@ -9,7 +9,6 @@ include(FetchContent)
 #set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 ## Fetch Google Test library
-include(FetchContent)
 FetchContent_Declare(
 	googletest
 	GIT_REPOSITORY https://github.com/google/googletest.git

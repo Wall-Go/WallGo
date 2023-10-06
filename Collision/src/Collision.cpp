@@ -170,7 +170,7 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
         }
         {
             // tt -> gg would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 32./9. * couplings[0]^4 * t * ( 1 / (msq[2] - t)^2 - 1 / (msq[2] - u)^2)", 
+            sprintf(buf, "M[%d,%d,%d,%d] -> 32./9. * couplings[0]^4 * t * u * ( 1 / (msq[2] - t)^2 - 1 / (msq[2] - u)^2)", 
                             particleIndex[particleName1], particleIndex[particleName1], particleIndex["gluon"], particleIndex["gluon"]);
             expr = std::string(buf);
 
