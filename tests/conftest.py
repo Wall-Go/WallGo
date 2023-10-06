@@ -3,7 +3,6 @@ import numpy as np
 import WallSpeed
 
 
-@pytest.fixture
 def background(M):
     vw = 0#1 / np.sqrt(3)
     v = - np.ones(M - 1) / np.sqrt(3)
