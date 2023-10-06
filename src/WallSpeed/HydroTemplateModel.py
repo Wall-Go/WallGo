@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
-from .helpers import gammasq, mu
+from .helpers import gammaSq, boostVelocity
 
 
 class HydroTemplateModel:
@@ -280,7 +280,7 @@ class HydroTemplateModel:
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = -wHighT*vp/(1-vp**2)
         c2 = pHighT+wHighT*vp**2/(1-vp**2)
-        vAtz0 = mu(vwTry,vp)
+        vAtz0 = boostVelocity(vwTry,vp)
         return (c1, c2, Tp, Tm, vAtz0)
 
     def max_al(self,upper_limit=100):
