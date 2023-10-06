@@ -10,13 +10,14 @@ from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 
 class EOM:
-    def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
+    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq = False, errTol=1e-6):
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
         self.Tnucl = freeEnergy.Tnucl
+        self.includeOffEq = includeOffEq
 
         self.thermo = Thermodynamics(freeEnergy)
         self.hydro = Hydro(self.thermo)
@@ -98,7 +99,7 @@ class EOM:
     def findWallVelocityMinimizeAction(self):
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
-        return self.solvePressure(0.01, self.hydro.vJ, np.append(wallWidths, wallOffsets))
+        return self.solvePressure(0.01, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
 
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         pressureMax,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
@@ -140,9 +141,11 @@ class EOM:
             wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
 
-#            boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
-#            boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
-#            offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
+            if self.includeOffEq:
+                boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+                boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
+                offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
+
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
