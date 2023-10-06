@@ -113,7 +113,7 @@ class Hydro:
 
     def matchDeflagOrHyb(self, vw, vp=None):
         r"""
-        Returns :math:`v_+, v_-, T_+, T_-` for a deflagration or hybrid when the wall velocity is given.
+        Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration or hybrid by solving the matching relations.
 
         Parameters
         ----------
@@ -125,7 +125,7 @@ class Hydro:
 
         Returns
         -------
-        :math:`v_+, v_-, T_+, T_-`: double
+        vp, vm, Tp, Tm : double
         """
 
         vwMapping = None
@@ -174,7 +174,19 @@ class Hydro:
 
     def shockDE(self, v, xiAndT):
         r"""
-        Hydrodynamic equations for the self-similar coordinate :math:`\xi` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
+        Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
+
+        Parameters
+        ----------
+        v : array
+            Fluid velocities.
+        xiAndT : array
+            Values of the self-similar coordinate :math:`\xi = r/t` and the temperature :math:`T`
+            
+        Returns
+        -------
+        eq1, eq2 : array
+            The expressions for :math:`\frac{\partial v}{\partial \xi}` and :math:`\frac{\partial v}{\partial T}`
         """
         xi, T = xiAndT
         eq1 = gammaSq(v) * (1. - v*xi)*(boostVelocity(xi,v)**2/self.thermodynamics.csqHighT(T)-1.)*xi/2./v
@@ -183,7 +195,23 @@ class Hydro:
 
     def solveHydroShock(self, vw, vp, Tp):
         r"""
-        Solves the hydrodynamic equations in the shock for a given wall velocity and `v_+, T_+` and determines the position of the shock. Returns the nucleation temperature.
+        Solves the hydrodynamic equations in the shock for a given wall velocity :math:`v_w` and matching parameters :math:`v_+,T_+`
+        and returns the corresponding nucleation temperature :math:`T_n`, which is the temperature of the plasma in front of the shock. 
+
+        Parameters
+        ----------
+        vw : double
+            Wall velocity
+        vp : double
+            Value of the fluid velocity in the wall frame, right in front of the bubble
+        Tp : double
+            Value of the fluid temperature right in front of the bubble
+
+        Returns
+        -------
+        Tn : double
+            Nucleation temperature
+
         """
 
         def shock(v, xiAndT):
@@ -224,9 +252,20 @@ class Hydro:
 
     def strongestShock(self, vw):
         r"""
-        Returns the minimum temperature for which a shock can exist.
-        For the strongest shock, :math:`v_+=0`, which yields `T_+,T_-`.
-        The fluid equations in the shock are then solved to determine the strongest shock.
+        Finds the smallest nucleation temperature for which a shock can exist.
+        For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
+        The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
+
+        Parameters
+        ----------
+        vw : double
+            The wall velocity
+
+        Returns
+        -------
+        Tn : double
+            The nucleation temperature with the strongest possible shock
+        
         """
         def vpnum(Tpm):
             return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
@@ -236,8 +275,20 @@ class Hydro:
 
     def findMatching(self, vwTry):
         r"""
-        Returns :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and the nucleation temperature. For detonations, these follow directly from the function
-        matchDeton, for deflagrations and hybrids, the code varies `v_+` until the temperature in front of the shock equals the nucleation temperature
+        Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function of the wall velocity and for the nucleation temperature of the model.
+        For detonations, these follow directly from :func:`matchDeton`,
+        for deflagrations and hybrids, the code varies :math:`v_+` until the temperature in front of the shock equals the nucleation temperature
+
+        Parameters
+        ----------
+        vwTry : double
+            The value of the wall velocity
+
+        Returns
+        -------
+        vp,vm,Tp,Tm : double
+            The value of the fluid velocities in the wall frame and the temperature right in front of the wall and right behind the wall.
+
         """
         if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
@@ -266,10 +317,21 @@ class Hydro:
 
     def findHydroBoundaries(self, vwTry):
         r"""
-        Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
+        Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid velocity in right in front of the wall) for the scalar and plasma equations of motion for a given wall velocity and the model's nucletion temperature.
 
-        NOTE: the sign of c1 is chosen to match the convention for the fluid velocity used in EOM and
-        Hydro. In those conventions, vp would be negative, and therefore c1 has to be negative as well.
+        NOTE: the sign of :math:`c_1` is chosen to match the convention for the fluid velocity used in EOM and
+        Hydro. In those conventions, math:`v_+` would be negative, and therefore :math:`c_1` has to be negative as well.
+
+        Parameters
+        ----------
+        vwTry : double
+            The value of the wall velocity
+
+        Returns
+        -------
+        c1,c2,Tp,Tm, vAtz0 : double
+            The boundary conditions for the scalar field and plasma equation of motion
+
         """
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
