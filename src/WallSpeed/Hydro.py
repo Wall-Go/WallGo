@@ -11,6 +11,7 @@ class Hydro:
     """
     Class for solving the hydrodynamic equations of the plasma,
     at distances far enough from the wall such that the wall can be treated as infinitesimally thin.
+
     NOTE: We use the conventions that the velocities are always positive, even in the wall frame (vp and vm).
     These conventions are consistent with the literature, e.g. with arxiv:1004.4187.
     These conventions differ from the conventions used in the EOM and Boltzmann part of the code.
@@ -121,6 +122,10 @@ class Hydro:
         vp : double or None, optional
             Plasma velocity in front of the wall :math:`v_-`. If None, vp is determined from conservation of
             entropy. Default is None.
+
+        Returns
+        -------
+        :math:`v_+, v_-, T_+, T_-`: double
         """
 
         vwMapping = None
