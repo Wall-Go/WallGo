@@ -42,8 +42,14 @@ class Hydro:
 
     def findJouguetVelocity(self):
         r"""
-        Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics,
+        Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics, and at the model's nucleation temperature,
         using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity.
+
+        Returns
+        -------
+        vJ: double
+            The value of the Jouguet velocity for this model.
+        
         """
         pHighT = self.thermodynamics.pHighT(self.Tnucl)
         eHighT = self.thermodynamics.eHighT(self.Tnucl)
@@ -81,7 +87,19 @@ class Hydro:
 
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
-        Returns :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`.
+        Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`, from the matching conditions.
+
+        Parameters
+        ----------
+        Tp : double
+            Plasma temperature right in front of the bubble wall
+        Tm : double
+            Plasma temperature right behind the bubble wall
+        
+        Returns
+        -------
+        vpvm, vpovm: double
+            `v_+v_-` and :math:`v_+/v_-`
         """
 
         pHighT,pLowT = self.thermodynamics.pHighT(Tp),self.thermodynamics.pLowT(Tm)
@@ -93,7 +111,20 @@ class Hydro:
 
     def matchDeton(self, vw, branch=1):
         r"""
-        Returns :math:`v_+, v_-, T_+, T_-` for a detonation as a function of the wall velocity and `T_n`.
+        Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+` and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
+
+        Parameters
+        ---------
+        vw : double
+            Wall velocity
+        branch : int
+            Don't think this is used, can we remove it?
+
+        Returns
+        -------
+        vp,vm,Tp,Tm : double
+            The value of the fluid velocities in the wall frame and the temperature right in front of the wall and right behind the wall.
+
         """
         vp = vw
         Tp = self.Tnucl
@@ -125,7 +156,9 @@ class Hydro:
 
         Returns
         -------
-        vp, vm, Tp, Tm : double
+        vp,vm,Tp,Tm : double
+            The value of the fluid velocities in the wall frame and the temperature right in front of the wall and right behind the wall.
+
         """
 
         vwMapping = None
@@ -347,11 +380,19 @@ class Hydro:
 
     def findvwLTE(self):
         r"""
-        Returns the wall velocity in local thermal equilibrium for a given nucleation temperature.
+        Returns the wall velocity in local thermal equilibrium for the model's nucleation temperature.
         The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-`.
         For small wall velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity.
         If the phase transition is too weak for a solution to exist, returns 0. If it is too strong, returns 1.
         The solution is always a deflagration or hybrid.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        vwLTE
+            The value of the wall velocity for this model in local thermal equilibrium.
         """
         def func(vw): # Function given to the root finder
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
