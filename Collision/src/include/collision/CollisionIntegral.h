@@ -86,13 +86,13 @@ public:
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
+    // 4-particle 'collision elements' that contribute to the process
+    std::vector<CollElem<4>> collisionElements;
+
 private:
 
     // upper limit on p2 integration
     const double maxIntegrationMomentum = 20.0; 
-
-    // 4-particle 'collision elements' that contribute to the process
-    std::vector<CollElem<4>> collisionElements;
 
     // Masses smaller than this are set to 0 when computing the kinematic prefactor. This is to avoid spurious singularities at small momenta
     const double massSquaredLowerBound = 1e-14;

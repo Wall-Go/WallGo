@@ -7,11 +7,12 @@
 #include <cstring>
 #include <getopt.h> // command line arguments
 
+#include "Collision.h"
 #include "CollElem.h"
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
 #include "gslWrapper.h"
-
+#include "MatrixElement.h"
 
 // Print a description of all supported options
 void printUsage(FILE *fp, const char *path) {
@@ -27,94 +28,42 @@ void printUsage(FILE *fp, const char *path) {
 
 	fprintf (fp, "  -w\t\t"
 				"Test the hdf5 output routines by writing dummy data and exit.\n");
+	fprintf (fp, "  -t\t\t"
+				"Do a short test run and exit. Useful for profiling\n");
 }
 
-// Count how many independent collision integrals there are for basis with N polynomials
-long countIndependentIntegrals(int N) {
-     long count = (N-1)*(N-1)*(N-1)*(N-1);
-     // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
-     count = std::ceil(count / 2.0);
-     // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-     if (N % 2 == 0) {
-          // how many odd m?
-          long mOdd = N / 2;
-          count -= mOdd;
-     } 
-
-     return count;
-}
-
-// Temporary routine for illustrating how we can generate all collision terms + write them to hdf5 file
-void calculateAllCollisions(CollisionIntegral4 &collisionIntegral) {
-
-	int gridSizeN = collisionIntegral.getPolynomialBasisSize();
-
-	Array4D collGrid(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
-	Array4D collGridErrors(gridSizeN-1, gridSizeN-1, gridSizeN-1, gridSizeN-1, 0.0);
-
-	std::cout << "Now evaluating all collision integrals\n" << std::endl;
-	// Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-	// which means we only need j <= N/2
-
-	// m,n = Polynomial indices
-	#pragma omp parallel for collapse(4) firstprivate(collisionIntegral)
-	for (int m = 2; m <= gridSizeN; ++m) 
-	for (int n = 1; n <= gridSizeN-1; ++n) {
-		// j,k = grid momentum indices 
-		for (int j = 1; j <= gridSizeN/2; ++j)
-		for (int k = 1; k <= gridSizeN-1; ++k) {
-
-		// Monte Carlo result for the integral + its error
-		std::array<double, 2> resultMC;
-
-			// Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-			if (2*j == gridSizeN && m % 2 != 0) {
-				resultMC[0] = 0.0;
-				resultMC[1] = 0.0;
-			} else {
-				resultMC = collisionIntegral.evaluate(m, n, j, k);
-			}
-
-			collGrid[m-2][n-1][j-1][k-1] = resultMC[0];
-			collGridErrors[m-2][n-1][j-1][k-1] = resultMC[1];
-
-		printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
-
-		} // end j,k
-	} // end m,n
-
-	// Fill in the j > N/2 elements
-	#pragma omp parallel for collapse(4)
-	for (int m = 2; m <= gridSizeN; ++m) 
-	for (int n = 1; n <= gridSizeN-1; ++n) {
-		for (int j = gridSizeN/2+1; j <= gridSizeN-1; ++j)
-		for (int k = 1; k <= gridSizeN-1; ++k) {
-			int jOther = gridSizeN - j;
-			int sign = (m % 2 == 0 ? 1 : -1);
-			collGrid[m-2][n-1][j-1][k-1] = sign * collGrid[m-2][n-1][jOther-1][k-1];
-			collGridErrors[m-2][n-1][j-1][k-1] = sign * collGridErrors[m-2][n-1][jOther-1][k-1];
-		}
-	}
-	
-	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
-	std::string filename = "collisions_N" + std::to_string(gridSizeN) + ".hdf5";
-	H5::H5File h5File(filename, H5F_ACC_TRUNC);
-
-	H5Metadata metadata;
-	metadata.basisSize = gridSizeN;
-	metadata.basisName = "Chebyshev";
-	metadata.integrator = "Vegas Monte Carlo (GSL)";
-
-
-	writeMetadata(h5File, metadata);
-
-	writeDataSet(h5File, collGrid, "top");
-	writeDataSet(h5File, collGridErrors, "top errors");
-	
-	h5File.close();
-}
 
 //***************
+
+/* Test/example routine, calculates all collision integrals with QCD interactions. 
+The structure here illustrates how the same could be done from Python with arbitrary inputs */ 
+void collisionsQCD(uint N) {
+
+	const double gs = 1.2279920495357861;
+
+    //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
+	// Thermal
+	const double mq2 = 0.251327; // quark
+	const double mg2 = 3.01593; // SU(3) gluon
+	// Vacuum, @TODO if needed
+	const double msqVacuum = 0.0;
+
+	// take top and gluon out-of-eq
+    ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
+    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2);
+	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
+
+	// Main control object
+	Collision collision(N);
+	collision.addParticle(topQuark);
+	collision.addParticle(gluon);
+	collision.addParticle(lightQuark);
+
+	collision.addCoupling(gs);
+
+	collision.calculateCollisionIntegrals();
+
+}
 
 
 int main(int argc, char *argv[]) {
@@ -141,9 +90,11 @@ int main(int argc, char *argv[]) {
 
 	//---------------
 
+	bool bDoTestRun = false;
+
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "w")) != -1) {
+	while ((opt = getopt(argc, argv, "wt")) != -1) {
 		switch (opt) {
 			case 'h':
 				// Print usage and exit
@@ -153,6 +104,10 @@ int main(int argc, char *argv[]) {
 				std::cout << "== Running HDF5 output test ==\n";
 				testHDF5();
 				return 0;
+			case 't':
+				std::cout << "== Running short test run ==\n";
+				bDoTestRun = true;
+				break;
 			case '?':
 				if (isprint(opt))
 						fprintf(stderr, "Unknown option `-%c'.\n", opt);
@@ -165,43 +120,17 @@ int main(int argc, char *argv[]) {
 	}
 
 	gslWrapper::initializeRNG();
-	// 2->2 scatterings so 4 external particles
-	using CollisionElement = CollElem<4>;
 
-	//**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
-	// Thermal
-	double mq2 = 0.251327; // quark
-	double mg2 = 3.01593; // SU(3) gluon
-	// Vacuum
-	// TODO if needed
-	double msqVacuum = 0.0;
-
-	
-	// define particles that we include in matrix elements
-	ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
-	ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2);
+	if (bDoTestRun) {
+		collisionsQCD(2);
+		return 0;
+	}
 
 
-	// Then create collision elements for 2->2 processes involving these. 
-	// By 'collision element' I mean |M|^2 * P[ij -> nm], where P is the population factor involving distribution functions.
-	// Right now the correct matrix elements are hardcoded in for the top quark. 
-	// In a real model-independent calculation this needs to either calculate the matrix elements itself (hard, probably needs its own class)
-	// or read them in from somewhere.
-	CollisionElement tt_gg({ topQuark, topQuark, gluon, gluon });
-	CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
-	CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
-	
-	const int basisSizeN = 20;
 
-	CollisionIntegral4 collInt(basisSizeN);
-	collInt.addCollisionElement(tt_gg);
-	collInt.addCollisionElement(tg_tg);
-	collInt.addCollisionElement(tq_tq);
+	collisionsQCD(20);
 
-	// How many collision terms do we need in total
-	int nCollisionTerms = countIndependentIntegrals(basisSizeN);
-
+/*
 	//-------------------- Measure wall clock time
 
 	std::cout << "Running speed test: integral C[2,1,1,1]\n";
@@ -226,11 +155,10 @@ int main(int argc, char *argv[]) {
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
-
-	// This will  calculate all required collision terms:
-	calculateAllCollisions(collInt);
+*/
 
 /*
+
 	// FOR PROFILING: just calculate a few terms and exit
 
 	std::array<double, 2> resultMC;

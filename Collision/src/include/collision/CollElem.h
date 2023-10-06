@@ -9,7 +9,7 @@
 
 #include "FourVector.h"
 #include "ParticleSpecies.h"
-
+#include "MatrixElement.h"
 
 struct Mandelstam {
 	double s, t, u;
@@ -21,6 +21,11 @@ template <std::size_t NPARTICLES>
 class CollElem {
 
 public:
+
+	constexpr static double gs = 1.2279920495357861;
+
+	// which deltaF terms are nonzero
+	std::array<bool, NPARTICLES> bDeltaF;
 
 	// Use initialization list here for setting the particle species, 
 	// otherwise may run into compiler errors due to (lack of) copy constructors
@@ -35,67 +40,28 @@ public:
 	}
 
 	// Calculate |M|^2 
-	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) const {
-
-		// !!! the matrix elements that I've hardcoded here are actually 1/N_t |M| => change this??
-
-		double matrixElementSquared = 0.0;
-
-		// Coupling 
-		double gs = 1.2279920495357861;
-		double gs4 = gs*gs*gs*gs;
-
-		// FOR NOW: hardcode in: 
-		// if (p[0] = top, p[1] = top, p[2] = gluon, p[3] = gluon) ETC. here p = particles array
-
-		// Thermal masses squared
-		double mg2 = 3.01593;
-		double mq2 = 0.251327;
+	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) {
 
 		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
-		double s = mandelstam.s;
-		double t = mandelstam.t;
-		double u = mandelstam.u;
 
-		if (particles[0].getName() == "top" && particles[1].getName() == "top" 
-			&& particles[2].getName() == "gluon" && particles[3].getName() == "gluon") 
-		{
-			// tt -> gg
-			matrixElementSquared = -64./9. * gs4 * s*t / ((t-mq2) * (t-mq2));
-
-		} 
-		else if (particles[0].getName() == "top" && particles[1].getName() == "gluon" 
-			&& particles[2].getName() == "top" && particles[3].getName() == "gluon") 
-		{
-			// tg -> tg
-			matrixElementSquared = -64./9. * gs4 * s*u / ((u-mq2) * (u-mq2)) + 16.*gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2) );
-		} 
-		else if (particles[0].getName() == "top" && particles[1].getName() == "quark" 
-			&& particles[2].getName() == "top" && particles[3].getName() == "quark")
-		{
-			// tq -> tq, q = light quark (not top)
-			// NOTE HERE: none of the external particles is gluon, yet we still need the gluon mass. So keep this in mind when generalizing
-			matrixElementSquared = 80./3. * gs4 * (s*s + u*u) / ((t-mg2) * (t-mg2));
-		}
-
-		return matrixElementSquared;
+		return matrixElement.evaluate(mandelstam.s, mandelstam.t, mandelstam.u);
 	}
 
 	// Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
 	double evaluatePopulationFactor(const std::array<FourVector, NPARTICLES> &momenta, 
-										const std::array<double, NPARTICLES> &deltaF) const {
+										const std::array<double, NPARTICLES> &deltaF) {
 
-		// delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i
+		// delfaF[i] is the out-of-equilibrium part of distribution funct. of particel i
 
 		double f1 = particles[0].fEq( momenta[0].energy() );
 		double f2 = particles[1].fEq( momenta[1].energy() );
 		double f3 = particles[2].fEq( momenta[2].energy() );
 		double f4 = particles[3].fEq( momenta[3].energy() );
 		
-		double res =  std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
-					+ std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
-					- std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
-					- std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
+		double res =  int(bDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
+					+ int(bDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
+					- int(bDeltaF[2]) * std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
+					- int(bDeltaF[3]) *std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
 
 		res = res * f1*f2*f3*f4;
 		return res;
@@ -105,7 +71,7 @@ public:
 
 	// Calculate matrix element times population factor for this 2->2 process 
 	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
-						const std::array<double, NPARTICLES> &deltaF) const {
+						const std::array<double, NPARTICLES> &deltaF) {
 
 		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
 	}
@@ -114,7 +80,13 @@ public:
 
 	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1
 	std::array<ParticleSpecies, NPARTICLES> particles;
+
+	// Parsed matrix element for this process
+	MatrixElement matrixElement;
 };
+
+
+
 
 
 /*

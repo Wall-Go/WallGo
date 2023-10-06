@@ -29,7 +29,7 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      G.params = &gslWrapper;
 
      // How many Monte Carlo iterations
-     size_t calls = 50000;
+     size_t calls = 25000;
      size_t warmupCalls = 0.1*calls;
      double mean = 0.0;
      double error = 0.0;

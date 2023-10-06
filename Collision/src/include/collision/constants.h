@@ -8,4 +8,9 @@ namespace constants {
 
 };
 
+// Def 'uint' in case the compiler doesn't do it for us 
+#if !defined(uint)
+    typedef unsigned int uint;
+#endif
+
 #endif // header guard
