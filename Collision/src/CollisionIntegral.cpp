@@ -53,7 +53,7 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
 
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
-        const IntegrandParameters &integrandParameters) const
+        const IntegrandParameters &integrandParameters)
      {
      
      double fullIntegrand = 0.0;
@@ -90,7 +90,7 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
 
      // Kinematics differs for each collision process since the masses are generally different
      // TODO optimize so that if everything is ultrarelativistic, calculate kinematic factors only once
-     for (CollElem<4> collElem : collisionElements) {
+     for (CollElem<4> &collElem : collisionElements) {
 
           // Vacuum masses squared
           std::array<double, 4> massSquared;

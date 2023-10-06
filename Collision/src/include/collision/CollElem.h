@@ -40,7 +40,7 @@ public:
 	}
 
 	// Calculate |M|^2 
-	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) {
+	inline double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta) {
 
 		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
 
