@@ -143,6 +143,7 @@ class EOM:
             wallParams = sol.x
             i += 1
         
+        print(sol)
         wallWidths = wallParams[:self.nbrFields]
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)

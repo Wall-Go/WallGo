@@ -72,7 +72,7 @@ class EOMGeneralShape:
         Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
         
         def func(deltaShape):
-            deltaShape = deltaShape.reshape(XIni.shape)
+            deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
             X = deltaShape + XIni
             dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
             # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
@@ -80,18 +80,28 @@ class EOMGeneralShape:
         
         i = 0
         # TODO: Implement a better condition and update Tprofile in the loop with the general shape
-        shape = np.zeros(self.grid.xiValues.size*self.nbrFields)
+        shape = np.zeros(self.grid.xiValues.size*self.nbrFields-1)
         while i < 1:
             sol = minimize(func, shape, method='BFGS')
             shape = sol.x
             i += 1
         
-        shape = shape.reshape(XIni.shape)
+        print(sol)
+        shape = np.concatenate((shape[:int(self.grid.xiValues.size/2)],[0],shape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
         X = XIni + shape
         dXdz = dXdzIni + np.sum(self.deriv*shape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
+        plt.plot(self.grid.xiValues,shape.T)
+        plt.grid()
+        plt.show()
+        plt.plot(self.grid.xiValues, X.T, self.grid.xiValues, XIni.T)
+        plt.grid()
+        plt.show()
+        plt.plot(self.grid.xiValues, dXdz.T, self.grid.xiValues, dXdzIni.T)
+        plt.grid()
+        plt.show()
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
+        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*np.sum(dVdX*dXdz,axis=0)/(1-self.grid.chiValues**2), [0])))
         
         if returnOptimalWallParams:
             return pressure,shape,wallParams
