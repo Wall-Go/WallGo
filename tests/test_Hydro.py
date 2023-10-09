@@ -2,10 +2,91 @@ import pytest
 import numpy as np
 from scipy.integrate import odeint
 import WallSpeed
-from .TestModel import TestModel2Step, TestModelBag
+
+# defines the toy xSM model, used in 2004.06995 and 2010.09744
+# critical temperature is at T=1
+
+class TestModel2Step(WallSpeed.Thermodynamics):
+    __test__ = False
+    abrok = 0.2
+    asym = 0.1
+    musqq = 0.4
+
+    def __init__(self, abrok, asym, musqq, Tn):
+        self.aLowT = abrok
+        self.aHighT = asym
+        self.musq = musqq
+        self.Tnucl = Tn
+        self.Tc = 1
+
+    #Pressure in high T phase
+    def pHighT(self, T):
+        return T**4. + (self.aLowT - self.aHighT + self.aHighT*T**2 - self.musq)**2-self.musq**2
+
+    #T-derivative of the pressure in the high T phase
+    def dpHighT(self, T):
+        return 4*T**3. + 4. * self.aHighT * T *(self.aLowT - self.aHighT + self.aHighT * T**2-self.musq)
+
+    #Second T-derivative of the pressure in the high T phase
+    def ddpHighT(self, T):
+        return 12.*T**2. +8 * self.aHighT**2. * T**2. + 4.*self.aHighT*(self.aLowT-self.aHighT +self.aHighT*T**2-self.musq)
+
+    #Pressure in the low T phase
+    def pLowT(self, T):
+        return T**4. + (self.aLowT*T**2. - self.musq)**2. - self.musq**2.
+
+    #T-derivative of the pressure in the low T phase
+    def dpLowT(self, T):
+        return 4.*T**3. + 4. * self.aLowT * T *(self.aLowT*T**2 - self.musq)
+
+    #Second T-derivative of the pressure in the low T phase
+    def ddpLowT(self, T):
+        return 12.*T**2. +8. * self.aLowT**2. * T**2. + 4.*self.aLowT*(self.aLowT*T**2.-self.musq)
+
+
+#Defines the bag equation of state
+#Note that a factor 1/3 a_+ Tc**4 has been scaled out
+#The critical temperature is at Tc=1, which relates psi and the (rescaled) bag constant epsilon: eps = 1-psi
+#The phase transition strength at temperature t is given by: \alpha(t) = 1/3.*(1-psi)(1/t)**4
+
+class TestModelBag(WallSpeed.Thermodynamics):
+    __test__ = False
+
+    def __init__(self, psi, Tn):
+        self.psi = psi #number of degrees of freedom of the low T phase divided by the number of degrees of freedom in the high T phase
+        self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the high T phase times Tc^4)
+        self.Tnucl = Tn
+        self.Tc = 1
+
+    #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pHighT(self, T):
+        return T**4. - self.eps
+
+    #T-derivative of the pressure in the high T phase
+    def dpHighT(self, T):
+        return 4.*T**3.
+
+    #Second T-derivative of the pressure in the high T phase
+    def ddpHighT(self, T):
+        return 12.*T**2.
+
+
+    #Pressure in the low T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pLowT(self, T):
+        return self.psi*T**4.
+
+    #T-derivative of the pressure in the low T phase
+    def dpLowT(self, T):
+        return 4.*self.psi*T**3.
+
+    #Second T-derivative of the pressure in the low T phase
+    def ddpLowT(self, T):
+        return 12.*self.psi*T**2.
 
 
 #These tests are all based on a comparison to external code which computes the same quantities
+
+
 model1 = TestModel2Step(0.2,0.1,0.4,1)
 hydro = WallSpeed.Hydro(model1)
 
@@ -108,6 +189,7 @@ def test_findMatching():
     np.testing.assert_allclose(res,(0.9, 0.894957,0.9,0.918446),rtol = 10**-2,atol = 0)
 
 ### Test local thermal equilibrium solution in bag model
+
 
 def test_LTE():
     res = np.zeros(5)
