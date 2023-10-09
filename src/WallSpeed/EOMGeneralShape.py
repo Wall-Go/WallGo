@@ -78,12 +78,18 @@ class EOMGeneralShape:
         #     # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
         #     return self.action(X, dXdz, vevLowT, vevHighT, Tprofile, offEquilDeltas['00'])
         
-        trunc = int(2*XIni.shape[1]/3)
-        def func(spectralCoeff):
+        trunc = int(XIni.shape[1]) # Adjust this number to filter out high-frequency modes. This can be useful when aliasing becomes a problem.
+        def chebToCard(spectralCoeff):
             a = np.zeros_like(XIni)
             a[:,:trunc] = np.concatenate(([0], spectralCoeff)).reshape((a.shape[0],trunc))
-            centerValue = self.polynomial.evaluateChebyshev([0], a[0], ('z',))
-            a[0,0] = centerValue/2
+            n = np.arange(a.shape[1])+2
+            meanPos = np.sum(np.where(n%2==0, -a[0]*2*n**2/(n**2-1), 0))
+            a[0,0] = 3*meanPos/8
+            cardinalCoeff = (self.polynomial.chebyshevMatrix('z')@a.T).T
+            return cardinalCoeff
+        
+        def action(spectralCoeff):
+            deltaShape = chebToCard(spectralCoeff)
             X = deltaShape + XIni
             dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
             # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
@@ -91,34 +97,38 @@ class EOMGeneralShape:
         
         i = 0
         # TODO: Implement a better condition and update Tprofile in the loop with the general shape
-        shape = np.zeros(self.grid.xiValues.size*self.nbrFields-1)
-        while i < 1:
-            sol = minimize(func, shape, method='BFGS')
-            shape = sol.x
+        spectral = np.zeros(trunc*self.nbrFields-1)
+        success = False
+        while not success and i < 10:
+            sol = minimize(action, spectral, method='Nelder-Mead')
+            success = sol.success
+            spectral = sol.x
             i += 1
         
-        print(sol)
-        shape = np.concatenate((shape[:int(self.grid.xiValues.size/2)],[0],shape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
-        X = XIni + shape
-        dXdz = dXdzIni + np.sum(self.deriv*shape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
+        cardinal = chebToCard(spectral)
+        X = XIni + cardinal
+        dXdz = dXdzIni + np.sum(self.deriv*cardinal[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
         
-        zs = np.linspace(-0.6,0.6,100)
-        chi = zs / np.sqrt(self.grid.L_xi**2 + zs**2)
-        a = np.linalg.inv(self.polynomial.chebyshevMatrix('z'))@shape.T
+        # zs = np.linspace(-0.6,0.6,100)
+        # chi = zs / np.sqrt(self.grid.L_xi**2 + zs**2)
+        # a = np.linalg.inv(self.polynomial.chebyshevMatrix('z'))@cardinal.T
         # plt.plot(zs, self.polynomial.evaluateCardinal(chi.reshape((100,1)), np.concatenate(([0],shape[1],[0])), ('z',)))
         # plt.plot(zs, self.polynomial.evaluateChebyshev(chi.reshape((100,1)), a, ('z',)))
         # plt.plot(self.grid.xiValues,shape[1])
         # plt.grid()
         # plt.show()
         
-        a[-int(a.shape[0]/3):] = 0
-        plt.plot(np.abs(a))
-        plt.yscale('log')
-        plt.show()
-        plt.plot(self.grid.xiValues, self.polynomial.chebyshevMatrix('z')@a)
-        # plt.plot(self.grid.xiValues,shape.T)
-        plt.grid()
-        plt.show()
+        # a[-int(a.shape[0]/3):] = 0
+        # plt.plot(np.abs(a))
+        # plt.yscale('log')
+        # plt.show()
+        # plt.plot(self.grid.xiValues, cardinal.T)
+        # plt.grid()
+        # plt.show()
+        # plt.plot(self.grid.xiValues, X.T)
+        # plt.plot(self.grid.xiValues, XIni.T)
+        # plt.grid()
+        # plt.show()
         
         
         # plt.plot(self.grid.xiValues,shape.T)
@@ -135,7 +145,7 @@ class EOMGeneralShape:
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*np.sum(dVdX*dXdz,axis=0)/(1-self.grid.chiValues**2), [0])))
         
         if returnOptimalWallParams:
-            return pressure,shape,wallParams
+            return pressure,cardinal,wallParams
         else:
             return pressure
     

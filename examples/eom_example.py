@@ -12,6 +12,7 @@ from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 from WallSpeed.EOMGeneralShape import EOMGeneralShape
 import matplotlib.pyplot as plt
+from time import time
 
 """
 Grid
@@ -170,14 +171,14 @@ print(vwLTE)
 Compute the wall velocity with out-of-equilibrium effects
 """
 eom = EOMGeneralShape(top, fxSM, grid, 2)
-print(eom.pressure(hydro.vJ))
+t = time()
+print(eom.findWallVelocity()[0],time()-t)
 print()
-print(eom.eom.pressure(hydro.vJ))
-
-#80: -11856527.785090184 -11754018.790285604 102508.99480457976
-#40: -11856533.446864078 -11754024.802972838 102508.64389123954
-#20: -11857141.267557306 -11753254.490408404 103886.77714890242
-#10: -10851791.935175074 -10800000.947704127 51790.987470947206
+t = time()
+print(eom.eom.findWallVelocityMinimizeAction()[0], time()-t)
+# print(eom.pressure(hydro.vJ))
+# print()
+# print(eom.eom.pressure(hydro.vJ))
 
 # vw,shape,wallParams = eom.findWallVelocity()
 # print(vw,wallParams)
