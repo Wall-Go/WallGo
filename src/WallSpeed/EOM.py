@@ -69,11 +69,11 @@ class EOM:
             vevLowT = self.freeEnergy.findPhases(Tminus)[0]
             vevHighT = self.freeEnergy.findPhases(Tplus)[1]
             
-            wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
             
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
-            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, X, Tprofile)
 
             boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
             
@@ -138,7 +138,8 @@ class EOM:
         while i < 2:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+            X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,None)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
@@ -198,7 +199,8 @@ class EOM:
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
-        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+        X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
         
         # Define a function returning the local temparature by interpolating through Tprofile.
         Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
@@ -258,14 +260,12 @@ class EOM:
         
         return X, dXdz
     
-    def findPlasmaProfile(self, c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
+    def findPlasmaProfile(self, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
         """
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
         """
         temperatureProfile = []
         velocityProfile = []
-        
-        X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus) 

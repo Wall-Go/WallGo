@@ -69,7 +69,7 @@ class EOMGeneralShape:
         wallWidths,wallOffsets = wallParams[:self.nbrFields],wallParams[self.nbrFields:]
         XIni,dXdzIni = self.eom.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         
-        Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+        Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, XIni, dXdzIni, offEquilDeltas, Tplus, Tminus)
         
         # def func(deltaShape):
         #     deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
