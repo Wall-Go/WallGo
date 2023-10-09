@@ -39,20 +39,19 @@ endif()
 find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
 
+## This is required too but we fetch it if this load fails
+find_package(muparser QUIET)
+
 if (USE_OMP)
 	find_package(OpenMP)
 endif()
 
 
-find_package(muparser REQUIRED)
-
-
-
 #---- Link to external libraries
 target_link_libraries(${BINARY}_lib PUBLIC
-    ${HDF5_LIBRARIES}
-    ${GSL_LIBRARIES}
-    ${MUPARSER_LIBRARIES}
+    HDF5::HDF5
+    GSL::gsl
+    muparser::muparser
 )
 
 if (USE_OMP)
@@ -68,9 +67,9 @@ endif()
 target_include_directories(${BINARY}_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/collision
     ${CMAKE_CURRENT_SOURCE_DIR}/include/thirdparty
-    ${HDF5_INCLUDE_DIRS}
-    ${GSL_INCLUDE_DIRS}
-    ${MUPARSER_INCLUDE_DIRS}
+    HDF5::HDF5
+    GSL::gsl
+    muparser::muparser
 )
 
 target_link_libraries(${BINARY} PRIVATE ${BINARY}_lib)
