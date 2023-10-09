@@ -71,8 +71,19 @@ class EOMGeneralShape:
         
         Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
         
-        def func(deltaShape):
-            deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
+        # def func(deltaShape):
+        #     deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
+        #     X = deltaShape + XIni
+        #     dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
+        #     # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
+        #     return self.action(X, dXdz, vevLowT, vevHighT, Tprofile, offEquilDeltas['00'])
+        
+        trunc = int(2*XIni.shape[1]/3)
+        def func(spectralCoeff):
+            a = np.zeros_like(XIni)
+            a[:,:trunc] = np.concatenate(([0], spectralCoeff)).reshape((a.shape[0],trunc))
+            centerValue = self.polynomial.evaluateChebyshev([0], a[0], ('z',))
+            a[0,0] = centerValue/2
             X = deltaShape + XIni
             dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
             # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
@@ -90,15 +101,35 @@ class EOMGeneralShape:
         shape = np.concatenate((shape[:int(self.grid.xiValues.size/2)],[0],shape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
         X = XIni + shape
         dXdz = dXdzIni + np.sum(self.deriv*shape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
-        plt.plot(self.grid.xiValues,shape.T)
+        
+        zs = np.linspace(-0.6,0.6,100)
+        chi = zs / np.sqrt(self.grid.L_xi**2 + zs**2)
+        a = np.linalg.inv(self.polynomial.chebyshevMatrix('z'))@shape.T
+        # plt.plot(zs, self.polynomial.evaluateCardinal(chi.reshape((100,1)), np.concatenate(([0],shape[1],[0])), ('z',)))
+        # plt.plot(zs, self.polynomial.evaluateChebyshev(chi.reshape((100,1)), a, ('z',)))
+        # plt.plot(self.grid.xiValues,shape[1])
+        # plt.grid()
+        # plt.show()
+        
+        a[-int(a.shape[0]/3):] = 0
+        plt.plot(np.abs(a))
+        plt.yscale('log')
+        plt.show()
+        plt.plot(self.grid.xiValues, self.polynomial.chebyshevMatrix('z')@a)
+        # plt.plot(self.grid.xiValues,shape.T)
         plt.grid()
         plt.show()
-        plt.plot(self.grid.xiValues, X.T, self.grid.xiValues, XIni.T)
-        plt.grid()
-        plt.show()
-        plt.plot(self.grid.xiValues, dXdz.T, self.grid.xiValues, dXdzIni.T)
-        plt.grid()
-        plt.show()
+        
+        
+        # plt.plot(self.grid.xiValues,shape.T)
+        # plt.grid()
+        # plt.show()
+        # plt.plot(self.grid.xiValues, X.T, self.grid.xiValues, XIni.T)
+        # plt.grid()
+        # plt.show()
+        # plt.plot(self.grid.xiValues, dXdz.T, self.grid.xiValues, dXdzIni.T)
+        # plt.grid()
+        # plt.show()
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*np.sum(dVdX*dXdz,axis=0)/(1-self.grid.chiValues**2), [0])))
