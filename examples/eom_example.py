@@ -17,7 +17,7 @@ from time import time
 """
 Grid
 """
-M = 40
+M = 20
 N = 20
 grid = Grid(M, N, 0.05, 100)
 poly = Polynomial(grid)

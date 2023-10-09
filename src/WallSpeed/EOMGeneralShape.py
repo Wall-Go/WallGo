@@ -48,7 +48,7 @@ class EOMGeneralShape:
             
             return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), flag)
         
-        wallVelocity = root_scalar(func, method='brentq', bracket=[wallVelocityMin,wallVelocityMax], xtol=1e-3).root
+        wallVelocity = root_scalar(func, method='brentq', bracket=[wallVelocityMin,wallVelocityMax], xtol=1e-8).root
         _,shape,wallParams = func(wallVelocity, True)
         return wallVelocity, shape, wallParams
     
@@ -69,8 +69,6 @@ class EOMGeneralShape:
         wallWidths,wallOffsets = wallParams[:self.nbrFields],wallParams[self.nbrFields:]
         XIni,dXdzIni = self.eom.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         
-        Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, XIni, dXdzIni, offEquilDeltas, Tplus, Tminus)
-        
         # def func(deltaShape):
         #     deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
         #     X = deltaShape + XIni
@@ -88,19 +86,23 @@ class EOMGeneralShape:
             cardinalCoeff = (self.polynomial.chebyshevMatrix('z')@a.T).T
             return cardinalCoeff
         
-        def action(spectralCoeff):
+        def action(spectralCoeff, T):
             deltaShape = chebToCard(spectralCoeff)
             X = deltaShape + XIni
             dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
             # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
-            return self.action(X, dXdz, vevLowT, vevHighT, Tprofile, offEquilDeltas['00'])
+            return self.action(X, dXdz, vevLowT, vevHighT, T, offEquilDeltas['00'])
         
         i = 0
         # TODO: Implement a better condition and update Tprofile in the loop with the general shape
         spectral = np.zeros(trunc*self.nbrFields-1)
         success = False
         while not success and i < 10:
-            sol = minimize(action, spectral, method='Nelder-Mead')
+            cardinal = chebToCard(spectral)
+            X = XIni + cardinal
+            dXdz = dXdzIni + np.sum(self.deriv*cardinal[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
+            Tprofile, velocityProfile = self.eom.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
+            sol = minimize(action, spectral, method='Nelder-Mead', args=(Tprofile,))
             success = sol.success
             spectral = sol.x
             i += 1
