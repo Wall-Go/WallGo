@@ -69,13 +69,6 @@ class EOMGeneralShape:
         wallWidths,wallOffsets = wallParams[:self.nbrFields],wallParams[self.nbrFields:]
         XIni,dXdzIni = self.eom.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         
-        # def func(deltaShape):
-        #     deltaShape = np.concatenate((deltaShape[:int(self.grid.xiValues.size/2)],[0],deltaShape[int(self.grid.xiValues.size/2):])).reshape(XIni.shape)
-        #     X = deltaShape + XIni
-        #     dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
-        #     # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
-        #     return self.action(X, dXdz, vevLowT, vevHighT, Tprofile, offEquilDeltas['00'])
-        
         trunc = int(XIni.shape[1]) # Adjust this number to filter out high-frequency modes. This can be useful when aliasing becomes a problem.
         def chebToCard(spectralCoeff):
             a = np.zeros_like(XIni)
@@ -94,7 +87,7 @@ class EOMGeneralShape:
             return self.action(X, dXdz, vevLowT, vevHighT, T, offEquilDeltas['00'])
         
         i = 0
-        # TODO: Implement a better condition and update Tprofile in the loop with the general shape
+        # TODO: Implement a better condition and update offEquilDeltas
         spectral = np.zeros(trunc*self.nbrFields-1)
         success = False
         while not success and i < 10:
@@ -111,39 +104,9 @@ class EOMGeneralShape:
         X = XIni + cardinal
         dXdz = dXdzIni + np.sum(self.deriv*cardinal[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
         
-        # zs = np.linspace(-0.6,0.6,100)
-        # chi = zs / np.sqrt(self.grid.L_xi**2 + zs**2)
-        # a = np.linalg.inv(self.polynomial.chebyshevMatrix('z'))@cardinal.T
-        # plt.plot(zs, self.polynomial.evaluateCardinal(chi.reshape((100,1)), np.concatenate(([0],shape[1],[0])), ('z',)))
-        # plt.plot(zs, self.polynomial.evaluateChebyshev(chi.reshape((100,1)), a, ('z',)))
-        # plt.plot(self.grid.xiValues,shape[1])
-        # plt.grid()
-        # plt.show()
-        
-        # a[-int(a.shape[0]/3):] = 0
-        # plt.plot(np.abs(a))
-        # plt.yscale('log')
-        # plt.show()
-        # plt.plot(self.grid.xiValues, cardinal.T)
-        # plt.grid()
-        # plt.show()
-        # plt.plot(self.grid.xiValues, X.T)
-        # plt.plot(self.grid.xiValues, XIni.T)
-        # plt.grid()
-        # plt.show()
-        
-        
-        # plt.plot(self.grid.xiValues,shape.T)
-        # plt.grid()
-        # plt.show()
-        # plt.plot(self.grid.xiValues, X.T, self.grid.xiValues, XIni.T)
-        # plt.grid()
-        # plt.show()
-        # plt.plot(self.grid.xiValues, dXdz.T, self.grid.xiValues, dXdzIni.T)
-        # plt.grid()
-        # plt.show()
         # TODO: Change X.T to X when freeEnergy gets the right ordering.
         dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
+        # TODO: Add out-of-equilibrium contribution
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*np.sum(dVdX*dXdz,axis=0)/(1-self.grid.chiValues**2), [0])))
         
         if returnOptimalWallParams:
