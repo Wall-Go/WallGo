@@ -3,7 +3,7 @@
 ## reference: https://cmake.org/cmake/help/latest/manual/cmake-developer.7.html#a-sample-find-module
 
 find_package(PkgConfig)
-pkg_check_modules(PC_MUPARSER QUIET muparser)
+pkg_check_modules(PC_MUPARSER muparser)
 
 
 find_path(MUPARSER_INCLUDE_DIR
@@ -44,25 +44,4 @@ if(MUPARSER_FOUND)
 	set(MUPARSER_INCLUDE_DIRS ${MUPARSER_INCLUDE_DIR})
 	set(MUPARSER_DEFINITIONS ${PC_MUPARSER_CFLAGS_OTHER})
 
-else()
-
-    #package not found, so most likely not installed. Let's try fetching it
-    include(FetchContent)
-    Set(FETCHCONTENT_QUIET FALSE) ## Show what the fetching is doing
-    set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-
-    FetchContent_Declare(
-        muparser
-        GIT_REPOSITORY https://github.com/beltoforion/muparser.git
-        GIT_TAG        v2.3.4
-        FIND_PACKAGE_ARGS NAMES MUPARSER
-    )
-
-    FetchContent_MakeAvailable(muparser)
-
 endif()
-
-
-
-
-

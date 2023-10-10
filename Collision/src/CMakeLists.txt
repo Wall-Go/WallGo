@@ -40,7 +40,7 @@ find_package(HDF5 REQUIRED CXX)
 find_package(GSL REQUIRED CXX)
 
 ## This is required too but we fetch it if this load fails
-find_package(muparser QUIET)
+find_package(muparser REQUIRED)
 
 if (USE_OMP)
 	find_package(OpenMP)

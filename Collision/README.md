@@ -1,13 +1,18 @@
 ## Dependencies for the C++ collision module
 
+# Required:
+
 - GSL
 
 - Official HDF5 C++ API (version >= 1.10.1) 
 
-- pybind11
+- pybind11 (https://github.com/pybind/pybind11)
 
-- OpenMP (optional)
+- Muparser (https://github.com/beltoforion/muparser/)
 
+# Optional: 
+
+- OpenMP
 
 
 ## Installing dependencies
@@ -15,25 +20,25 @@
 
 Linux:
 ```
-sudo apt-get install libgsl-dev
-sudo apt-get install libhdf5-dev
+sudo apt-get install libgsl-dev libhdf5-dev
 ```
 
 MacOS: 
 ```
-brew install gsl
-brew install hdf5
+brew install gsl hdf5
 ```
 
-For both systems the python bindings can be installed with pip:
+For both systems, pybind11 can be installed using pip:
 ```
 pip install "pybind11[global]"
 ```
+This installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda, or build it directly from source.
 
-The pybind11 installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda (have not tested).
+
+Muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/.
 
 
-## Compiling
+## Compiling the Collision module
 
 Stardard CMake build. Go to WallSpeed/Collision (where the CMakeLists.txt file is) and run:
 
@@ -53,11 +58,9 @@ To only build the C++ program, use the following cmake flag:
 cmake -DBUILD_PYTHON_MODULE=Off ..
 ```
 
-If cmake errors out due to missing external libraries, install those and try again.
+If CMake reports errors out due to missing external libraries, please make sure you have installed them as instructed above.
 
 ## TODO 
-
-- Check that the program builds fine without pybind11 installed if -DBUILD_PYTHON_MODULE=Off is used
 
 - Figure out how to cancel execution of a long C++ function from Python side. CTRL-C doesn't seem to work; need to kill the process or close the terminal
 
