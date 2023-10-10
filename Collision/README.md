@@ -27,7 +27,7 @@ brew install hdf5
 
 For both systems the python bindings can be installed with pip:
 ```
-pip install pybind11[global]
+pip install "pybind11[global]"
 ```
 
 The pybind11 installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda (have not tested).
