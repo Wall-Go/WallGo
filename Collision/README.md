@@ -1,8 +1,8 @@
 ## Dependencies for the C++ collision module
 
-- GSL monte vegas
+- GSL
 
-- Official HDF5 C++ API library, version >= 1.10.1 
+- Official HDF5 C++ API (version >= 1.10.1) 
 
 - pybind11
 
@@ -45,7 +45,7 @@ make
 make install	
 ```
 
-This will produce a standalone C++ executable in build/bin and a separate python module in build/lib. The 'make install' step will copy these to their defaultl locations at ./bin and ./pybind/lib
+This will produce a standalone C++ executable in build/bin and a separate python module in build/lib. The 'make install' step will copy these to their default locations at ./bin and ./pybind/lib
 
 To only build the C++ program, use the following cmake flag:
 
