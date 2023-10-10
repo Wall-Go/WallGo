@@ -8,19 +8,20 @@ from .helpers import GCLQuadrature
 import matplotlib.pyplot as plt
 
 class EOMGeneralShape:
-    def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
+    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
         self.Tnucl = freeEnergy.Tnucl
+        self.includeOffEq = includeOffEq
         
         self.thermo = Thermodynamics(freeEnergy)
         self.hydro = Hydro(self.thermo)
         self.wallVelocityLTE = self.hydro.findvwLTE()
         
-        self.eom = EOM(particle, freeEnergy, grid, nbrFields, errTol)
+        self.eom = EOM(particle, freeEnergy, grid, nbrFields, includeOffEq, errTol)
         
         self.polynomial = Polynomial(grid)
         self.deriv = self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]
@@ -83,7 +84,6 @@ class EOMGeneralShape:
             deltaShape = chebToCard(spectralCoeff)
             X = deltaShape + XIni
             dXdz = dXdzIni + np.sum(self.deriv*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
-            # TODO: also returns the derivative of the action with respect to deltaShape to help minimize converge.
             return self.action(X, dXdz, vevLowT, vevHighT, T, offEquilDeltas['00'])
         
         i = 0
@@ -104,8 +104,7 @@ class EOMGeneralShape:
         X = XIni + cardinal
         dXdz = dXdzIni + np.sum(self.deriv*cardinal[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+self.grid.xiValues**2)**1.5
         
-        # TODO: Change X.T to X when freeEnergy gets the right ordering.
-        dVdX = self.freeEnergy.derivField(X.T, Tprofile).T
+        dVdX = self.freeEnergy.derivField(X, Tprofile)
         # TODO: Add out-of-equilibrium contribution
         pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*np.sum(dVdX*dXdz,axis=0)/(1-self.grid.chiValues**2), [0])))
         
@@ -133,8 +132,7 @@ class EOMGeneralShape:
 
         """
         
-        # TODO: Change X.T to X when freeEnergy gets the right ordering.
-        V = self.freeEnergy(X.T, Tprofile)
+        V = self.freeEnergy(X, Tprofile)
         VOut = self.particle.msqVacuum(X)*offEquilDelta00
         
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])

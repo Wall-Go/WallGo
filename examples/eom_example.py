@@ -172,6 +172,8 @@ Compute the wall velocity with out-of-equilibrium effects
 """
 
 eom = EOM(top, fxSM, grid, 2)
-#print(eom.findWallVelocityLoop())
-print(eom.findWallVelocityMinimizeAction())
+print('Tanh ansatz:', eom.findWallVelocityMinimizeAction())
 
+
+eomGeneralShape = EOMGeneralShape(top, fxSM, grid, 2)
+print('General shape:', eomGeneralShape.findWallVelocity())

@@ -10,7 +10,7 @@ from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 
 class EOM:
-    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq = False, errTol=1e-6):
+    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
@@ -146,7 +146,7 @@ class EOM:
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
             if self.includeOffEq:
-                boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+                boltzmannBackground = BoltzmannBackground(0, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
@@ -188,8 +188,7 @@ class EOM:
 
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
-        # TODO: Change X.T to X when freeEnergy gets the right ordering.
-        V = self.freeEnergy(X.T, Tprofile)
+        V = self.freeEnergy(X, Tprofile)
         VOut = self.particle.msqVacuum(X)*offEquilDelta00
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
