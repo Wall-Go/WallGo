@@ -34,6 +34,14 @@ background = BoltzmannBackground(
     polynomialBasis=basis,
 )
 
+#test boost
+background.vw=0
+print(background.velocityProfile)
+background.boostToPlasmaFrame()
+print(background.velocityProfile)
+background.boostToWallFrame()
+print(background.velocityProfile)
+
 """
 Particle
 """
@@ -94,3 +102,5 @@ Deltas = boltzmann.getDeltas(integrand_analytic)
 Deltas_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
 print("Ratio = 1 =", Deltas["00"] / Deltas_analytic)
 print("T =", background.temperatureProfile)
+
+

@@ -175,13 +175,13 @@ class Model:
         }
 
 
-    def V0(self,X,show_V=False):
+    def V0(self, X, show_V=False):
         '''
         Tree level effective potential
         X
         '''
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
         V = (
            +1/2*self.muhsq*h1**2
            +1/2*self.mussq*s1**2
@@ -200,7 +200,7 @@ class Model:
 
     def boson_massSq(self, X, T):
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
 
         Nbosons = 5
         dof = np.array([1,1,3,6,3])#h,s,chi,W,Z
@@ -225,7 +225,7 @@ class Model:
 
     def fermion_massSq(self, X):
         X = np.asanyarray(X)
-        h1,s1 = X[...,0],X[...,1]
+        h1,s1 = X[0,...],X[1,...]
 
         Nfermions = 1
         dof = np.array([12])
@@ -267,7 +267,7 @@ class Model:
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
-        .. todo::
+        todo:
             Implement new versions of Jf and Jb that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
@@ -310,15 +310,14 @@ class Model:
             terms from the effective potential. Useful for calculating
             differences or derivatives.
         '''
-        T = np.asanyarray(T)
         X = np.asanyarray(X)
+        T = np.asanyarray(T)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
         V = self.V0(X)
         V += self.V1(bosons, fermions)
         V += self.V1T(bosons, fermions, T, include_radiation)
-        return np.real(V)[0]
-
+        return np.real(V)
 
 class FreeEnergy:
     def __init__(
@@ -365,6 +364,8 @@ class FreeEnergy:
         cls : FreeEnergy
             An object of the FreeEnergy class.
         """
+        self.nbrFields = 2
+
         if params is None:
             self.f = f
             self.dfdT = dfdT
@@ -483,18 +484,18 @@ class FreeEnergy:
         else:
             X = np.asanyarray(X, dtype=float)
             # TODO generalise to arbitrary fields
-            h, s = X[..., 0], X[..., 1]
+            h, s = X[0,...], X[1,...]
             Xdh = X.copy()
-            Xdh[..., 0] += self.dPhi * np.ones_like(h)
+            Xdh[0,...] += self.dPhi * np.ones_like(h)
             Xds = X.copy()
-            Xds[..., 1] += self.dPhi * np.ones_like(h)
+            Xds[1,...] += self.dPhi * np.ones_like(h)
 
             dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
             dfds = (self(Xds, T) - self(X, T)) / self.dPhi
 
             return_val = np.empty_like(X)
-            return_val[..., 0] = dfdh
-            return_val[..., 1] = dfds
+            return_val[0,...] = dfdh
+            return_val[1,...] = dfds
 
             return return_val
 
@@ -503,7 +504,7 @@ class FreeEnergy:
         """
         Returns the value of the pressure as a function of temperature in the low-T phase
         """
-        return -self(self.findPhases(T)[0],T)
+        return -self(self.findPhases(T),T)[0]
 
     def pressureHighT(self,T):
         """
@@ -515,8 +516,8 @@ class FreeEnergy:
             The temperature for which to find the pressure.
 
         """
-        return -self(self.findPhases(T)[1],T)
-
+        return -self(self.findPhases(T),T)[1]
+        #return -self(self.findPhases(T)[1,...],T)
 
     def approxZeroTMin(self,T=0):
         """
@@ -582,7 +583,6 @@ class FreeEnergy:
             interpolate.UnivariateSpline(Trange,h,s=0),
             interpolate.UnivariateSpline(Trange,s,s=0)]
 
-
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
 
@@ -597,6 +597,9 @@ class FreeEnergy:
             A list of phases
 
         """
+        if T is None:
+            raise TypeError('Temperature is None')
+
         if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
             vmin = [self.Xint[0](T),self.Xint[1](T)]
 
@@ -605,8 +608,8 @@ class FreeEnergy:
                 X = self.approxZeroTMin(T)
                 X = np.asanyarray(X)
 
-            fh = lambda h: self.f([abs(h),0],T)
-            fs = lambda s: self.f([0,abs(s)],T)
+            fh = lambda h: self.f([[abs(h)],[0]],T)[0]
+            fs = lambda s: self.f([[0],[abs(s)]],T)[0]
 
             fX = [fh,fs]
             vmin = []
@@ -624,14 +627,45 @@ class FreeEnergy:
 
         return np.array([[vmin[0],0],[0,vmin[1]]])
 
+    def d2V(self, X, T):
+        """
+        Calculates the Hessian (second derivative) matrix for the
+        finite-temperature effective potential.
 
-    def findTc(self,dT=1,Tmax=500):
-        """Determines the critical temperature between two scalar phases
+        This uses :func:`helper_functions.hessianFunction` to calculate the
+        matrix using finite differences, with differences
+        given by `self.x_eps`. Note that `self.x_eps` is only used directly
+        the first time this function is called, so subsequently changing it
+        will not have an effect.
+        """
+        # X = np.asanyarray(X, dtype=float)
+        # T = np.asanyarray(T, dtype=float)
+        self.Ndim = 2
+        self.x_eps = 1e-3
+        self.deriv_order = 4
+        # f1 = lambda X: np.asanyarray(self.f(X,T))[...,np.newaxis]
+        try:
+            f1 = self._d2V
+        except:
+            # Create the gradient function
+            self._d2V = helper_functions.hessianFunction(
+                self.f, self.x_eps, self.Ndim, self.deriv_order)
+            f1 = self._d2V
+        # Need to add extra axes to T since extra axes get added to X in
+        # the helper function.
+
+        T = np.asanyarray(T)[...,np.newaxis]
+        
+        return f1(X, T)
+
+    def findTc(self,Tmax=150):
+        """
+        Determines the critical temperature between two scalar phases.
+        The critical temperature is determined by tracking the pressure
+        of the different phases at their minima and finding the intersection point.
 
         Parameters
         ----------
-        dT : float
-            Temperature increment for critical temperature search.
         Tmax : float
             Maximal temperature bracket for Tcrit search
 
@@ -641,18 +675,13 @@ class FreeEnergy:
             Critical temperature
 
         """
-        # DVtot = lambda v,w,T: self.Vtot([v,0],T)-self.Vtot([0,w],T)
-        Tmin = 1
-        steps = 12
-        Tmid = (Tmax + Tmin) / 2
-        for n in range(steps):
-            minMin = self.findPhases(Tmin)[0]
-            minMax = self.findPhases(Tmax)[0]
-            minMid = self.findPhases(Tmid)[0]
-            if minMid[0] < 2:
-                Tmax = Tmid
-            else:
-                Tmin = Tmid
-            Tmid = (Tmax + Tmin) / 2
 
-        self.Tc = Tmid
+        deltaf = lambda v1,v2,T: self.f([[v1],[0]],T)[0]-self.f([[0],[v2]],T)[0]
+
+        def deltaPmin(T):
+            mins = self.findPhases(T)
+            return deltaf(mins[0,0],mins[1,1],T)
+        
+        self.Tc = optimize.root_scalar(deltaPmin,bracket=(90,150),rtol=1e-12,xtol=1e-12).root
+            
+        return self.Tc

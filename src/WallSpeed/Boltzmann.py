@@ -4,6 +4,7 @@ import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .model import Particle
+from .helpers import boostVelocity
 
 
 class BoltzmannBackground:
@@ -20,6 +21,26 @@ class BoltzmannBackground:
         self.fieldProfile = np.asarray(fieldProfile)
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
+
+    def boostToPlasmaFrame(self):
+        """
+        Boosts background to the plasma frame
+        """
+        vPlasma = self.velocityProfile
+        v0 = self.velocityProfile[0]
+        vw = self.vw
+        self.velocityProfile = boostVelocity(vPlasma, v0)
+        self.vw = boostVelocity(vw, v0)
+
+    def boostToWallFrame(self):
+        """
+        Boosts background to the wall frame
+        """
+        vPlasma = self.velocityProfile
+        vPlasma0 = self.velocityProfile[0]
+        vw = self.vw
+        self.velocityProfile = boostVelocity(vPlasma, vw)
+        self.vw = 0
 
 
 class BoltzmannSolver:
@@ -54,13 +75,13 @@ class BoltzmannSolver:
         """
         self.grid = grid
         self.background = background
+        self.background.boostToPlasmaFrame()
         self.particle = particle
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
-        print("NOTE: missing boost between frames")
 
     def getDeltas(self, deltaF=None):
         """
