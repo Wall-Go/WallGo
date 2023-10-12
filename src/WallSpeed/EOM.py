@@ -189,7 +189,7 @@ class EOM:
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDelta00
+        VOut = self.particle.msqVacuum(X)*offEquilDelta00/2
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 

@@ -133,7 +133,7 @@ class EOMGeneralShape:
         """
         
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDelta00
+        VOut = self.particle.msqVacuum(X)*offEquilDelta00/2
         
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
         Vref = VLowT + 0.5*(VHighT-VLowT)*(1+np.tanh(self.grid.xiValues/self.grid.L_xi))
