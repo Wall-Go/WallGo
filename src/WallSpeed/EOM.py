@@ -385,7 +385,7 @@ class EOM:
         return X, dXdz
 
     def findPlasmaProfile(self, c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
-        """
+        r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
         Parameters
@@ -433,7 +433,7 @@ class EOM:
         return np.array(temperatureProfile), np.array(velocityProfile)
 
     def findPlasmaProfilePoint(self, index, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
-        """
+        r"""
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
 
         Parameters
@@ -503,7 +503,7 @@ class EOM:
         return T, vPlasma
 
     def plasmaVelocity(self, X, T, s1):
-        """
+        r"""
         Computes the plasma velocity as a function of the temperature.
 
         Parameters
@@ -525,7 +525,7 @@ class EOM:
         return (T * dVdT  + np.sqrt(4 * s1**2 + (T * dVdT)**2)) / (2 * s1)
 
     def temperatureProfileEqLHS(self, X, dXdz, T, s1, s2):
-        """
+        r"""
         The LHS of Eq. (20) of arXiv:2204.13120v1.
 
         Parameters
@@ -550,7 +550,7 @@ class EOM:
         return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
 
     def deltaToTmunu(self, index, X, velocityAtCenter, offEquilDeltas):
-        """
+        r"""
         Computes the out-of-equilibrium part of the energy-momentum tensor.
 
         Parameters
