@@ -463,7 +463,7 @@ class EOM:
 
         """
 
-        Tout30, Tout33 = self.deltaToTmunu(index,X,velocityAtz0,Tminus,offEquilDeltas)
+        Tout30, Tout33 = self.deltaToTmunu(index,X,velocityAtz0,offEquilDeltas)
 
         s1 = c1 - Tout30
         s2 = c2 - Tout33
