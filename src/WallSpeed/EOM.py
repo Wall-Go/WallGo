@@ -10,7 +10,33 @@ from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 
 class EOM:
+    """
+    Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
+    """
     def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
+        """
+        Initialization 
+
+        Parameters
+        ----------
+        particle : Particle
+            Object of the class Particle, which contains the information about 
+            the out-of-equilibrium particles for which the Boltzmann equation 
+            will be solved.
+        freeEnergy : FreeEnergy
+            Object of the class FreeEnergy.
+        grid : Grid
+            Object of the class Grid.
+        nbrFields : int
+            Number of scalar fields on which the scalar potential depends.
+        errTol : double, optional
+            Error tolerance. The default is 1e-6.
+
+        Returns
+        -------
+        None.
+
+        """
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
@@ -96,11 +122,49 @@ class EOM:
         return wallParameters
 
     def findWallVelocityMinimizeAction(self):
+        """
+        Finds the wall velocity by minimizing the action and solving for the 
+        solution with 0 total pressure on the wall.
+
+        Returns
+        -------
+        wallVelocity : double
+            Value of the wall velocity that solves the scalar EOMs.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM.
+
+        """
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
         return self.solvePressure(0.01, self.hydro.vJ, np.append(wallWidths, wallOffsets))
 
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
+        r"""
+        Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity.
+
+        Parameters
+        ----------
+        wallVelocityMin : double
+            Lower bound of the bracket in which the root finder will look for a
+            solution. Should satisfy 
+            :math:`0<{\rm wallVelocityMin}<{\rm wallVelocityMax}`.
+        wallVelocityMax : double
+            Upper bound of the bracket in which the root finder will look for a
+            solution. Should satisfy 
+            :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
+        wallParams : array_like
+            Array containing a guess of the wall thicknesses and wall offsets.
+
+        Returns
+        -------
+        wallVelocity : double
+            Value of the wall velocity that solves the scalar EOMs.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM.
+
+        """
         pressureMax,wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
         if pressureMax < 0:
             print('Maximum pressure is negative!')
@@ -123,6 +187,30 @@ class EOM:
         return wallVelocity, wallParams
 
     def pressure(self, wallVelocity, wallParams, returnOptimalWallParams=False):
+        """
+        Computes the total pressure on the wall by finding the tanh profile
+        that minimizes the action.
+
+        Parameters
+        ----------
+        wallVelocity : double
+            Wall velocity at which the pressure is computed.
+        wallParams : array-like
+            Array containing a guess of the wall thicknesses and wall offsets.
+        returnOptimalWallParams : bool, optional
+            If False, only the pressure is returned. If True, both the pressure
+            and optimal wall parameters are returned. The default is False.
+
+        Returns
+        -------
+        pressure : double
+            Total pressure on the wall.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM. Only returned if 
+            returnOptimalWallParams is True.
+
+        """
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
@@ -171,9 +259,14 @@ class EOM:
         vevHighT : array-like
             Field values in the high-T phase.
         Tprofile : array-like
-            Temperature on the grid.
+            Temperature profile on the grid.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
+            
+        Returns
+        -------
+        action : double
+            Action spent by the scalar field configuration.
 
         """
         wallWidths = wallParams[:self.nbrFields]
@@ -249,6 +342,31 @@ class EOM:
         return kinetic + quad_vec(self.stretchLocal, -np.inf, np.inf, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
 
     def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
+        """
+        Computes the scalar field profile and its derivative with respect to 
+        the position in the wall.
+
+        Parameters
+        ----------
+        z : array-like
+            Position grid on which to compute the scalar field profile.
+        vevLowT : array-like
+            Scalar field VEVs in the low-T phase.
+        vevHighT : array-like
+            Scalar field VEVs in the high-T phase.
+        wallWidths : array-like
+            Array containing the wall widths.
+        wallOffsets : array-like
+            Array containing the wall offsets.
+
+        Returns
+        -------
+        X : array-like
+            Scalar field profile.
+        dXdz : array-like
+            Derivative with respect to the position of the scalar field profile.
+
+        """
         if np.isscalar(z):
             z_L = z/wallWidths
         else:
@@ -263,6 +381,37 @@ class EOM:
     def findPlasmaProfile(self, c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
         """
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
+
+        Parameters
+        ----------
+        c1 : double
+            Value of the :math:`T^{30}` component of the energy-momentum tensor.
+        c2 : double
+            Value of the :math:`T^{33}` component of the energy-momentum tensor.
+        velocityAtz0 : double
+            Plasma velocity in the wall frame at :math:`z=0`.
+        vevLowT : array-like
+            Scalar field VEVs in the low-T phase.
+        vevHighT : array-like
+            Scalar field VEVs in the high-T phase.
+        wallWidths : array-like
+            Array containing the wall widths.
+        wallOffsets : array-like
+            Array containing the wall offsets.
+        offEquilDeltas : dictionary
+            Dictionary containing the off-equilibrium Delta functions
+        Tplus : double
+            Plasma temperature in front of the wall.
+        Tminus : double
+            Plasma temperature behind the wall.
+
+        Returns
+        -------
+        temperatureProfile : array-like
+            Temperature profile in the wall.
+        velocityProfile : array-like
+            Plasma velocity profile in the wall.
+
         """
         temperatureProfile = []
         velocityProfile = []
@@ -280,6 +429,35 @@ class EOM:
     def findPlasmaProfilePoint(self, index, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
         """
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
+
+        Parameters
+        ----------
+        index : int
+            Index of the grid point on which to find the plasma profile.
+        c1 : double
+            Value of the :math:`T^{30}` component of the energy-momentum tensor.
+        c2 : double
+            Value of the :math:`T^{33}` component of the energy-momentum tensor.
+        velocityAtz0 : double
+            Plasma velocity in the wall frame at :math:`z=0`.
+        X : array-like
+            Scalar field profile.
+        dXdz : array-like
+            Derivative with respect to the position of the scalar field profile.
+        offEquilDeltas : dictionary
+            Dictionary containing the off-equilibrium Delta functions
+        Tplus : double
+            Plasma temperature in front of the wall.
+        Tminus : double
+            Plasma temperature behind the wall.
+
+        Returns
+        -------
+        T : double
+            Temperature at the point grid.xiValues[index].
+        vPlasma : double
+            Plasma velocity at the point grid.xiValues[index].
+
         """
 
         Tout30, Tout33 = self.deltaToTmunu(index,X,velocityAtz0,Tminus,offEquilDeltas)
@@ -319,16 +497,75 @@ class EOM:
         return T, vPlasma
 
     def plasmaVelocity(self, X, T, s1):
+        """
+        Computes the plasma velocity as a function of the temperature.
+
+        Parameters
+        ----------
+        X : array-like
+            Scalar field profile.
+        T : double
+            Temparature.
+        s1 : double
+            Value of :math:`T^{30}-T_{\rm out}^{30}`.
+
+        Returns
+        -------
+        double
+            Plasma velocity.
+
+        """
         dVdT = self.freeEnergy.derivT(X, T)
         return (T * dVdT  + np.sqrt(4 * s1**2 + (T * dVdT)**2)) / (2 * s1)
 
     def temperatureProfileEqLHS(self, X, dXdz, T, s1, s2):
         """
-        The LHS of Eq. (20) of arXiv:2204.13120v1
+        The LHS of Eq. (20) of arXiv:2204.13120v1.
+
+        Parameters
+        ----------
+        X : array-like
+            Scalar field profile.
+        dXdz : array-like
+            Derivative with respect to the position of the scalar field profile.
+        T : double
+            Temperature.
+        s1 : double
+            Value of :math:`T^{30}-T_{\rm out}^{30}`.
+        s2 : double
+            Value of :math:`T^{33}-T_{\rm out}^{33}`.
+
+        Returns
+        -------
+        double
+            LHS of Eq. (20) of arXiv:2204.13120v1.
+
         """
         return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
 
-    def deltaToTmunu(self, index, X, velocityAtCenter, Tm, offEquilDeltas):
+    def deltaToTmunu(self, index, X, velocityAtCenter, offEquilDeltas):
+        """
+        Computes the out-of-equilibrium part of the energy-momentum tensor.
+
+        Parameters
+        ----------
+        index : int
+            Index of the grid point on which to find the plasma profile.
+        X : array-like
+            Scalar field profile.
+        velocityAtCenter : double
+            Plasma velocity in the wall frame at :math:`z=0`.
+        offEquilDeltas : dictionary
+            Dictionary containing the off-equilibrium Delta functions
+
+        Returns
+        -------
+        T30 : double
+            Out-of-equilibrium part of :math:`T^{30}`.
+        T33 : double
+            Out-of-equilibrium part of :math:`T^{33}`.
+
+        """
         delta00 = offEquilDeltas["00"][index]
         delta11 = offEquilDeltas["11"][index]
         delta02 = offEquilDeltas["02"][index]
