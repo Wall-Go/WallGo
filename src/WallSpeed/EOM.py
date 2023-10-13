@@ -13,7 +13,7 @@ class EOM:
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
-    def __init__(self, particle, freeEnergy, grid, nbrFields, errTol=1e-6):
+    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         """
         Initialization 
 
