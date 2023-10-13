@@ -5,3 +5,4 @@ from .HydroTemplateModel import HydroTemplateModel
 from .model import FreeEnergy, Model, Particle
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
+from .EOM import EOM

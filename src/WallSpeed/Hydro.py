@@ -341,7 +341,7 @@ class Hydro:
             else:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
-                    return (None,None,None,None) # If no deflagration solution exists, returns None.
+                    return self.template.findMatching(vwTry)
                 sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
 
