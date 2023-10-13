@@ -29,6 +29,9 @@ class EOM:
             Object of the class Grid.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
+        includeOffEq : bool, optional
+            If False, all the out-of-equilibrium contributions are neglected.
+            The default is False.
         errTol : double, optional
             Error tolerance. The default is 1e-6.
 
