@@ -8,7 +8,36 @@ from .helpers import GCLQuadrature
 import matplotlib.pyplot as plt
 
 class EOMGeneralShape:
+    """
+    Class that solves the energy-momentum conservation equations and the scalar 
+    EOMs without using a tanh profile to determine the wall velocity.
+    """
     def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
+        """
+        Initialization 
+
+        Parameters
+        ----------
+        particle : Particle
+            Object of the class Particle, which contains the information about 
+            the out-of-equilibrium particles for which the Boltzmann equation 
+            will be solved.
+        freeEnergy : FreeEnergy
+            Object of the class FreeEnergy.
+        grid : Grid
+            Object of the class Grid.
+        nbrFields : int
+            Number of scalar fields on which the scalar potential depends.
+        includeOffEq : bool, optional
+            If False, all the out-of-equilibrium contributions are neglected.
+        errTol : double, optional
+            Error tolerance. The default is 1e-6.
+
+        Returns
+        -------
+        None.
+
+        """
         self.particle = particle
         self.freeEnergy = freeEnergy
         self.grid = grid
@@ -27,9 +56,49 @@ class EOMGeneralShape:
         self.deriv = self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]
         
     def findWallVelocity(self):
+        """
+        Finds the wall velocity by minimizing the action and solving for the 
+        solution with 0 total pressure on the wall.
+
+        Returns
+        -------
+        wallVelocity : double
+            Value of the wall velocity that solves the scalar EOMs.
+        shape : array-like
+            Deviation from the tanh profile in the scalar field profile.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM.
+
+        """
         return self.solvePressure(0.01, self.hydro.vJ)
         
     def solvePressure(self, wallVelocityMin, wallVelocityMax):
+        r"""
+        Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity.
+
+        Parameters
+        ----------
+        wallVelocityMin : double
+            Lower bound of the bracket in which the root finder will look for a
+            solution. Should satisfy 
+            :math:`0<{\rm wallVelocityMin}<{\rm wallVelocityMax}`.
+        wallVelocityMax : double
+            Upper bound of the bracket in which the root finder will look for a
+            solution. Should satisfy 
+            :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
+
+        Returns
+        -------
+        wallVelocity : double
+            Value of the wall velocity that solves the scalar EOMs.
+        shape : array-like
+            Deviation from the tanh profile in the scalar field profile.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM.
+
+        """
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
         wallParams = np.append(wallWidths, wallOffsets)
@@ -54,6 +123,32 @@ class EOMGeneralShape:
         return wallVelocity, shape, wallParams
     
     def pressure(self, wallVelocity, wallParamsIni=None, returnOptimalWallParams=False):
+        """
+        Computes the total pressure on the wall by finding the tanh profile
+        that minimizes the action.
+
+        Parameters
+        ----------
+        wallVelocity : double
+            Wall velocity at which the pressure is computed.
+        wallParamsIni : array-like, optional
+            Array containing a guess of the wall widths and wall offsets.
+            If None, sets the initial widths and offsets to 5/Tn and 0, respectively.
+            Default is None.
+        returnOptimalWallParams : bool, optional
+            If False, only the pressure is returned. If True, both the pressure
+            and optimal wall parameters are returned. The default is False.
+
+        Returns
+        -------
+        pressure : double
+            Total pressure on the wall.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that 
+            minimize the action and solve the EOM. Only returned if 
+            returnOptimalWallParams is True.
+
+        """
         if wallParamsIni is None:
             wallParamsIni = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
             
@@ -115,20 +210,27 @@ class EOMGeneralShape:
     
     def action(self, X, dXdz, vevLowT, vevHighT, Tprofile, offEquilDelta00):
         r"""
-        Computes the action by using gaussian quadratrure to integrate the Lagrangian. 
+        Computes the action by using gaussian quadratrure to integrate the Lagrangian.
 
         Parameters
         ----------
         X : array-like
-            Wall shape.
+            Scalar field profile.
         dXdz : array-like
-            Derivative of the wall shape.
+            Derivative with respect to the position of the scalar field profile.
+        vevLowT : array-like
+            Field values in the low-T phase.
         vevHighT : array-like
             Field values in the high-T phase.
         Tprofile : array-like
-            Temperature on the grid.
+            Temperature profile on the grid.
         offEquilDelta00 : array-like
-            Off-equilibrium function Delta00.
+            Array containing the out-of-equilibrium function Delta00.
+            
+        Returns
+        -------
+        action : double
+            Action spent by the scalar field configuration X.
 
         """
         
@@ -143,14 +245,3 @@ class EOMGeneralShape:
         S = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(K+V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         return S
     
-    def wallProfile(self, deltaShape, vevLowT, vevHighT):
-        z = self.grid.xiValues
-        z_L = z[:,None]/self.wallWidthsIni[None,:]
-        wallOffsetsCompleted = np.append([0], self.wallOffsetsIni)
-        
-        deltaShape = deltaShape.reshape(z_L.T.shape)
-        X = np.transpose(vevLowT + 0.5*(vevHighT-vevLowT)*(1+np.tanh(z_L+wallOffsetsCompleted)))+deltaShape
-        dXdz = np.transpose(0.5*(vevHighT-vevLowT)/(self.wallWidthsIni*np.cosh(z_L+wallOffsetsCompleted)**2))
-        dXdz += np.sum(self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]*deltaShape[:,None,:], axis=-1)*self.grid.L_xi**2/(self.grid.L_xi**2+z**2)**1.5
-
-        return X, dXdz
