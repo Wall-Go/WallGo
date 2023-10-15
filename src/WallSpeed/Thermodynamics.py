@@ -276,3 +276,21 @@ class Thermodynamics:
             Sound speed squared in the low-temperature phase.
         """
         return self.dpLowT(T)/self.deLowT(T)
+
+    def alpha(self,T):
+        r"""
+        The phase transition strength at the temperature :math:`T`, computed via 
+        :math:`\alpha = \frac{(eHighT(T)-pHighT(T)/csqHighT(T))-(eLowT(T)-pLowT(T)/csqLowT(T))}{3wHighT(T)}`
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        alpha : double
+            Phase transition strength.
+        """
+        return (self.eHighT(T)-self.pHighT(T)/self.csqHighT(T)-self.eLowT(T)+self.pLowT(T)/self.csqLowT(T))/3/self.wHighT(T)
+
