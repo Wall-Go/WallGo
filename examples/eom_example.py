@@ -108,7 +108,7 @@ params=mod.params
 pprint(params)
 
 Tc = mod.Tc
-Tn = 112 # only Tn is strictly necessary
+Tn = 112. # only Tn is strictly necessary
 print(f"{Tc=}, {Tn=}")
 
 
