@@ -78,9 +78,9 @@ class EOM:
             boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
 
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
-            print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
-            # offEquilDeltas = boltzmannSolver.getDeltas()
-            # print(offEquilDeltas)
+            #print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
+            offEquilDeltas = boltzmannSolver.getDeltas()
+            print(f"{offEquilDeltas=}")
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
