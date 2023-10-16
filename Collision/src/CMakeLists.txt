@@ -4,8 +4,10 @@ set(BINARY ${CMAKE_PROJECT_NAME})
 # source files for core lib (don't include the main function)
 set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp Collision.cpp)
 
-## This needs to be SHARED for pybind linking to work - why?
-add_library(${BINARY}_lib SHARED ${SOURCES})
+
+add_compile_options(-fPIC)
+add_library(${BINARY}_lib STATIC ${SOURCES})
+
 
 # main executable. Don't rebuild sources here
 add_executable(${BINARY} main.cpp)

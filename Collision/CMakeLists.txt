@@ -30,9 +30,6 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 option(PROFILER "Compile with profiler flags" OFF)
 
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
-
-
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
@@ -45,8 +42,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
     
     if (PROFILER)
-    	## This flag is needed also during linking so add_compile_options doesn't do the trick apparently
-    	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+        # profiler flags needed also for linking
+        add_compile_options(-pg)
+        add_link_options(-pg)
     	message(STATUS "Profiler flags: -pg")
     endif()
 

@@ -9,40 +9,43 @@ mq = 0.5013256549
 mg = 1.7366430109
 gs = 1.2279920495357861
 
-data = CollisionModule.InputData()
-data.values["mq"] = mq
-data.values["mg"] = mg
-data.values["gs"] = gs
-
-## Call example C++ function from the module
-#CollisionModule.pybindTestFunction(data)
 
 ##---- Constructing C++ ParticleSpecies class
 
 # # print constructor usage:
 #help(CollisionModule.ParticleSpecies)
 
-# calling the constructor. Example for a top quark:
+## calling the constructor. Example for a top quark:
+
 bInEquilibrium = False
+# Everything is ultrarelativistic 
 bUltrarelativistic = True
 ## NB: needs dimensionless mass squares, ie. m^2 / T^2 
 msqVacuum = 0.0
 msqThermal = mq*mq
 
+
+
 topQuark = CollisionModule.ParticleSpecies("top", CollisionModule.EParticleType.FERMION,
-                                bInEquilibrium, bUltrarelativistic, msqVacuum, msqThermal)
-
-## However the ParticleSpecies class doesn't have any functions that we could call, so it alone doesn't do much
-## TODO construct collision elements here using particles as input
+                                bInEquilibrium, msqVacuum, msqThermal, bUltrarelativistic)
 
 
+## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+N = 20
 
-#CollisionModule.calculateAllCollisions()
+collisionManager = CollisionModule.Collision(N)
+
+collisionManager.addCoupling(gs)
+
+
+
+
 
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
-## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here
-def constructPybindParticle(p : Particle, T : float):
+## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
+## Return value is a ParticleSpecies object
+def constructPybindParticle(p: Particle, T: float):
     r"""
         Converts 'Particle' object to ParticleSpecies object that the Collision module can understand.
         CollisionModule operates with dimensionless (m/T)^2 etc, so the temperature is taken as an input here. 
@@ -68,5 +71,5 @@ def constructPybindParticle(p : Particle, T : float):
     elif p.statistics == "FERMION":
         particleType = CollisionModule.EParticleType.FERMION
 
-    return CollisionModule.ParticleSpecies(p.name, particleType, p.inEquilibrium, p.ultrarelativistic, 
-                                p.msqVacuum / T**2.0, p.msqThermal / T**2.0)
+    return CollisionModule.ParticleSpecies(p.name, particleType, p.inEquilibrium, 
+                                p.msqVacuum / T**2.0, p.msqThermal / T**2.0,  p.ultrarelativistic)

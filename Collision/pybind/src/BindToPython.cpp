@@ -3,6 +3,7 @@
  * integral routines from Python using the pybind11 library. **/
 
 #include <iostream>
+#include <string>
 
 #include "CollisionIntegral.h"
 #include "ParticleSpecies.h"
@@ -49,14 +50,37 @@ PYBIND11_MODULE(CollisionModule, m) {
 
     //*********** Bind functions of the main control class Collision
 
-    // Constructor
-    py::class_<Collision>(m, "Collision")
-        .def(py::init<uint>(),
-        py::arg("polynomialBasisSize"),
-        "Constructor for Collision class.\n\n"
+    // READMEs for the functions
+    std::string usage_Collision = 
+        "Constructor for Collision class. \n\n"
         "Args:\n"
-        "   polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n"
-    );
+        "    polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n";
+
+    std::string usage_addParticle =
+        "Add a new particle species \n\n"
+        "Args:\n"
+        "    particle (ParticleSpecies): Particle to add\n";
+
+    std::string usage_addCoupling = 
+        "Add a new coupling constant. This is intended for action/Lagrangian parameters."
+        "Do NOT use for particle thermal/vacuum masses.\n\n"
+        "Args:\n"
+        "    coupling (double): Coupling to add\n";
+
+    std::string usage_calculateCollisionIntegrals =
+        "Calculates all collision integrals with the currently defined particle content and stores in .hdf5 file."
+        "This is the main computation routine and will typically run for a while."
+        "Call only after specifying all particles and couplings with addParticle, addCoupling\n\n";
+
+
+    py::class_<Collision>(m, "Collision")
+        .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_Collision.c_str())
+        .def("addParticle", &Collision::addParticle, usage_addParticle.c_str())
+        .def("addCoupling", &Collision::addCoupling, usage_addCoupling.c_str())
+        .def("calculateCollisionIntegrals", &Collision::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
+
+
+
 
 
 /*
