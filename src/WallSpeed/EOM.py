@@ -137,12 +137,12 @@ class EOM:
         while i < 1:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
-            wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            wallProfileGrid, wallProfileGridDerivative = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
 
-#            boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
-#            boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
-#            offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
+            boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+            boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
+            offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
@@ -185,13 +185,13 @@ class EOM:
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
-        Vref = (VLowT+VHighT)/2 
-        
+        Vref = (VLowT+VHighT)/2
+
         U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return (U+K)
-        
-        
+
+
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.nbrFields+1]
