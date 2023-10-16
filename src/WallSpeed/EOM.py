@@ -135,7 +135,7 @@ class EOM:
 
         i = 0
         # TODO: Implement a better condition
-        while i < 1:
+        while i < 2:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
             wallProfileGrid, wallProfileGridDerivative = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
@@ -154,7 +154,10 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         dVdX = self.freeEnergy.derivField(X, Tprofile)
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
+        
+        # TODO: Add the mass derivative in the Particle class and use it here.
+        dVout = 12*X[0]*offEquilDeltas['00']/2
+        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*((dVdX*dXdz)[0]+dVout*dXdz[0])/(1-self.grid.chiValues**2), [0])))
 
         if returnOptimalWallParams:
             return pressure,wallParams
@@ -184,7 +187,7 @@ class EOM:
 
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
+        VOut = 12*self.particle.msqVacuum(X)*offEquilDeltas['00']/2
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
