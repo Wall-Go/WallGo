@@ -1,5 +1,5 @@
 """
-An attempt to run EOM.py 
+An attempt to run EOM.py
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
@@ -167,7 +167,7 @@ print(vwLTE)
 """
 Compute the wall velocity with out-of-equilibrium effects
 """
-eom = EOM(top, fxSM, grid, 2)
+includeOffEq = True
+eom = EOM(top, fxSM, grid, 2, includeOffEq)
 #print(eom.findWallVelocityLoop())
 print(eom.findWallVelocityMinimizeAction())
-
