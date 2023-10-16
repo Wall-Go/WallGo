@@ -5,16 +5,76 @@
 #include <iostream>
 
 #include "CollisionIntegral.h"
+#include "ParticleSpecies.h"
+#include "Collision.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 
+
+
+PYBIND11_MODULE(CollisionModule, m) {
+
+    namespace py = pybind11;
+
+    // Bind particle type enums
+    py::enum_<EParticleType>(m, "EParticleType")
+        .value("BOSON", EParticleType::BOSON)
+        .value("FERMION", EParticleType::FERMION)
+        // Add more enum values here if needed
+        .export_values();
+    
+
+    // Bind constructor for ParticleSpecies class
+    py::class_<ParticleSpecies>(m, "ParticleSpecies")
+        .def(py::init<std::string, EParticleType, bool, bool, double, double>(),
+        py::arg("particleName"),
+        py::arg("particleType"),
+        py::arg("isInEquilibrium"),
+        py::arg("ultrarelativistic"),
+        py::arg("msqVacuum"),
+        py::arg("msqThermal"),
+        "Constructor for ParticleSpecies.\n\n"
+        "Args:\n"
+        "    particleName (str): Name of the particle species.\n"
+        "    particleType (EParticleType): Type of particle (boson or fermion).\n"
+        "    isInEquilibrium (bool): Whether the species is in equilibrium.\n"
+        "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
+        "    msqVacuum (float): Square of the vacuum mass (in units of T^2).\n"
+        "    msq_thermal (float): Square of the thermal mass (in units of T^2).\n"
+    );
+
+
+    //*********** Bind functions of the main control class Collision
+
+    // Constructor
+    py::class_<Collision>(m, "Collision")
+        .def(py::init<uint>(),
+        py::arg("polynomialBasisSize"),
+        "Constructor for Collision class.\n\n"
+        "Args:\n"
+        "   polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n"
+    );
+
+
+/*
+    // Bind the InputData struct
+    py::class_<InputData>(m, "InputData")
+        .def(pybind11::init<>())
+        .def_readwrite("values", &InputData::values);
+*/
+
+}
+
+
+/*
 // Data struct that can be passed on from python. Can be used for 'additional' inputs like matrix elements etc
 struct InputData {
     std::map<std::string, pybind11::object> values;
 };
+
 
 
 // Test function
@@ -23,49 +83,4 @@ void pybindTestFunction(const InputData& inputData) {
     std::cout << "hello test1 from laurin\n";
     (void)inputData; // suppress -Wunused-variable
 }
-
-
-PYBIND11_MODULE(CollisionModule, m) {
-
-    // Bind the InputData struct
-    pybind11::class_<InputData>(m, "InputData")
-        .def(pybind11::init<>())
-        .def_readwrite("values", &InputData::values);
-
-    // Bind functions
-    m.def("pybindTestFunction", &pybindTestFunction, 
-        "Test function to call from python");
-
-    m.def("calculateAllCollisions", &calculateAllCollisions,
-        "C++ function that calculates all collision integrals.");
-}
-
-
-/* Calculate a component of the "collision tensor" C(m,n; j,k).
-m,n refer to indices of basis polynomials and j,k refer to their pZ, pPar momenta on the grid */
-/* void CalcCollisionTensorComponent(int m, int n, int j, int k, const InputData& inputData) {
-
-    int N = 20;
-    CollisionIntegral coll(N);
-    std::cout << "Running CalcCollisionTensorComponent()\n";
-
-    std::vector<double> c = coll.CalcCollision(m, n, j, k);
-    printf("Result %g, error %g\n", c[0], c[1]);
-    printf("With 2pi error: %g, error %g\n", 2*M_PI*c[0], 2*M_PI*c[1]);
-} */
-
-// Bind to python module "collision"
-/* PYBIND11_MODULE(collision, m) {
-
-    // If need to use the CollisionIntegral class directly from python, bind it here. For now I'll skip this
-
-    // Bind the InputData struct
-    pybind11::class_<InputData>(m, "InputData")
-        .def(pybind11::init<>())
-        .def_readwrite("values", &InputData::values);
-
-    // Bind functions
-    m.def("CalcCollisionTensorComponent", &CalcCollisionTensorComponent, 
-            "Calculate a component of the 'collision tensor' C(m,j; n,k).\n m,n refer to indices of basis polynomials and j,k refer to their momenta on the grid");
-}
- */
+*/

@@ -48,10 +48,12 @@ void collisionsQCD(uint N) {
 	// Vacuum, @TODO if needed
 	const double msqVacuum = 0.0;
 
+	const bool bUltraRelativistic = true;
+
 	// take top and gluon out-of-eq
-    ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
+    ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2, bUltraRelativistic);
+    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
+	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Main control object
 	Collision collision(N);
