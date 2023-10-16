@@ -85,7 +85,6 @@ void Collision::calculateCollisionIntegrals()
     findOutOfEquilibriumParticles();
     makeParticleIndexMap();
 
-
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
     for (const ParticleSpecies& particle1 : outOfEqParticles) 
     {

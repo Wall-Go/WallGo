@@ -5,3 +5,8 @@ from .HydroTemplateModel import HydroTemplateModel
 from .model import FreeEnergy, Model, Particle
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
+from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
+
+
+## Load the collision module, gets stored in CollisionModule global var
+loadCollisionModule()

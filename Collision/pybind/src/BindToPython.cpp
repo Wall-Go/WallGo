@@ -8,15 +8,30 @@
 #include "CollisionIntegral.h"
 #include "ParticleSpecies.h"
 #include "Collision.h"
+#include "gslWrapper.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 
+/* Initialization function. We call this when the module is imported into Python.
+ * Do things like initial allocs here.
+*/
+void initModule() 
+{
+    gslWrapper::initializeRNG();
+}
 
+/* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
+But seems hard to dictate when/how this should be called in Python context.
+*/
 
-PYBIND11_MODULE(CollisionModule, m) {
+// Module definition. This block gets executed when the module is imported.
+PYBIND11_MODULE(CollisionModule, m) 
+{
+
+    initModule();
 
     namespace py = pybind11;
 
@@ -30,21 +45,21 @@ PYBIND11_MODULE(CollisionModule, m) {
 
     // Bind constructor for ParticleSpecies class
     py::class_<ParticleSpecies>(m, "ParticleSpecies")
-        .def(py::init<std::string, EParticleType, bool, bool, double, double>(),
+        .def(py::init<std::string, EParticleType, bool, double, double, bool>(),
         py::arg("particleName"),
         py::arg("particleType"),
         py::arg("isInEquilibrium"),
-        py::arg("ultrarelativistic"),
         py::arg("msqVacuum"),
         py::arg("msqThermal"),
+        py::arg("ultrarelativistic"),
         "Constructor for ParticleSpecies.\n\n"
         "Args:\n"
         "    particleName (str): Name of the particle species.\n"
         "    particleType (EParticleType): Type of particle (boson or fermion).\n"
         "    isInEquilibrium (bool): Whether the species is in equilibrium.\n"
-        "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
         "    msqVacuum (float): Square of the vacuum mass (in units of T^2).\n"
         "    msq_thermal (float): Square of the thermal mass (in units of T^2).\n"
+        "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
     );
 
 
@@ -78,6 +93,7 @@ PYBIND11_MODULE(CollisionModule, m) {
         .def("addParticle", &Collision::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &Collision::addCoupling, usage_addCoupling.c_str())
         .def("calculateCollisionIntegrals", &Collision::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
+
 
 
 
