@@ -100,10 +100,10 @@ class Particle:
             "len(collisionPrefactors) must be 3"
 
 class Model:
-    '''
+    """
     Class that generates the model given external model file
     can be overrriden by user
-    '''
+    """
     def __init__(self,mu4D,mus,lams,lamm):
         r"""Initialisation
         """
@@ -117,24 +117,24 @@ class Model:
         self.muhsq = -self.lamh*self.v0**2
         self.mussq = +self.mus**2-self.lamm*self.v0**2/2
 
-        '''
+        """
         Number of bosonic and fermionic dofs
-        '''
+        """
         self.num_boson_dof = 29
         self.num_fermion_dof = 90
-        '''
+        """
         Number of fermion generations and colors
-        '''
+        """
         self.nf = 3
         self.Nc = 3
-        '''
+        """
         3D and 4D RG scale of EFT as fraction of temperature
-        '''
+        """
         self.mu4D = mu4D
         self.mu4Dsq = mu4D*mu4D
-        '''
+        """
         Z,W,t mass, strong gauge coupling and fermion generations
-        '''
+        """
         self.MW = 80.379
         self.MZ = 91.1876
         self.Mt = 173.
@@ -158,9 +158,9 @@ class Model:
                 )
 
 
-        '''
+        """
         Define dictionary of used parameters
-        '''
+        """
         self.params = {
             'muhsq': self.muhsq,
             'mussq': self.mussq,
@@ -175,12 +175,35 @@ class Model:
         }
 
 
-    def V0(self, X, show_V=False):
-        '''
-        Tree level effective potential
-        X
-        '''
+    def V0(self, X: float, T, use_EFT=False, show_V=False):
+        """
+        Tree-level effective potential
+
+        Parameters
+        ----------
+        X : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+        T : float or array_like
+            The temperature at which to calculate the boson masses. Can be used
+            for including thermal mass corrrections. The shapes of `X` and `T`
+            should be such that ``X.shape[:-1]`` and ``T.shape`` are
+            broadcastable (that is, ``X[...,0]*T`` is a valid operation).
+
+        Returns
+        -------
+        V: tree-level effective potential 
+        """
         X = np.asanyarray(X)
+
+        if use_EFT:
+            X = X/np.sqrt(T)
+            self.muhsq += T**2*self.muhT
+            self.mussq += T**2*self.musT
+            self.lamh *= T
+            self.lams *= T
+            self.lamm *= T
+
         h1,s1 = X[0,...],X[1,...]
         V = (
            +1/2*self.muhsq*h1**2
@@ -193,23 +216,56 @@ class Model:
         return V
 
     def Jcw(self,msq,n,c):
-        '''
+        """
         Coleman-Weinberg potential
-        '''
+        """
         return n*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
 
     def boson_massSq(self, X, T):
+        """
+        Calculate the boson particle spectrum. Should be overridden by
+        subclasses.
+
+        Parameters
+        ----------
+        X : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+        T : float or array_like
+            The temperature at which to calculate the boson masses. Can be used
+            for including thermal mass corrrections. The shapes of `X` and `T`
+            should be such that ``X.shape[:-1]`` and ``T.shape`` are
+            broadcastable (that is, ``X[0,...]*T`` is a valid operation).
+
+        Returns
+        -------
+        massSq : array_like
+            A list of the boson particle masses at each input point `X`. The
+            shape should be such that
+            ``massSq.shape == (X[...,0]*T).shape + (Nbosons,)``.
+            That is, the particle index is the *last* index in the output array
+            if the input array(s) are multidimensional.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            length `Ndim`.
+        c : float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
+            other bosons.
+        """ 
         X = np.asanyarray(X)
         h1,s1 = X[0,...],X[1,...]
 
         Nbosons = 5
-        dof = np.array([1,1,3,6,3])#h,s,chi,W,Z
+        degrees_of_freedom = np.array([1,1,3,6,3])#h,s,chi,W,Z
         c = np.array([3/2,3/2,3/2,5/6,5/6])
 
-        '''
+        """
         mass matrix
         TODO: numerical determination of scalar masses from V0
-        '''
+        """
         mh2 = self.muhsq+3*self.lamh*h1**2+self.lamm*s1**2/2
         ms2 = self.mussq+3*self.lams*s1**2+self.lamm*h1**2/2
         mhs2 = self.lamm*h1*s1
@@ -221,28 +277,50 @@ class Model:
         mw = self.g2**2*h1**2/4
 
         massSq = np.column_stack((m1, m2, mChi, mw, mz))
-        return massSq,dof,c
+        return massSq, degrees_of_freedom, c
 
     def fermion_massSq(self, X):
+        """
+        Calculate the fermion particle spectrum. Should be overridden by
+        subclasses.
+
+        Parameters
+        ----------
+        X : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+
+        Returns
+        -------
+        massSq : array_like
+            A list of the fermion particle masses at each input point `X`. The
+            shape should be such that  ``massSq.shape == (X[...,0]).shape``.
+            That is, the particle index is the *last* index in the output array
+            if the input array(s) are multidimensional.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            len
+        """
         X = np.asanyarray(X)
         h1,s1 = X[0,...],X[1,...]
 
         Nfermions = 1
-        dof = np.array([12])
+        degrees_of_freedom = np.array([12])
         mt = self.yt**2*h1**2/2
         # todo include spins for each particle
 
         massSq = np.column_stack((mt,))
-        return massSq,dof
+        return massSq, degrees_of_freedom
 
     def V1(self, bosons, fermions):
-        '''
+        """
         The one-loop corrections to the zero-temperature potential
         using MS-bar renormalization.
 
         This is generally not called directly, but is instead used by
         :func:`Vtot`.
-        '''
+        """
         m2, nb, c = bosons
         V = np.sum(self.Jcw(m2,nb,c), axis=-1)
 
@@ -252,8 +330,26 @@ class Model:
 
         return V/(64*np.pi*np.pi)
 
-    def V1T(self, bosons, fermions, T, include_radiation=True):
-        '''
+    def PressureLO(self, bosons, fermions, T):
+
+        T4 = T*T*T*T
+
+        _,nb,_ = bosons
+        _,nf = fermions
+
+        V = 0;
+        if self.num_boson_dof is not None:
+            nb = self.num_boson_dof - np.sum(nb)
+            V -= nb * np.pi**4 / 45.
+        if self.num_fermion_dof is not None:
+            nf = self.num_fermion_dof - np.sum(nf)
+            V -= nf * 7*np.pi**4 / 360.
+
+        print(V/(2*np.pi*np.pi))
+        return V*T4/(2*np.pi*np.pi)
+
+    def V1T(self, bosons, fermions, T):
+        """
         The one-loop finite-temperature potential.
 
         This is generally not called directly, but is instead used by
@@ -267,33 +363,33 @@ class Model:
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
-        todo:
+        .. todo::
             Implement new versions of Jf and Jb that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
             errors when taking derivatives at very high temperature, where
             the field-independent contribution is much larger than the
             field-dependent contribution.
-        '''
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        V1T : 4d 1loop thermal potential 
+        """ 
         # This does not need to be overridden.
         T2 = (T*T)[..., np.newaxis] + 1e-100
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
-        m2, nb, c = bosons
+        m2,nb,_ = bosons
         V = np.sum(nb*Jb(m2/T2), axis=-1)
-        m2, nf = fermions
+        m2,nf = fermions
         V += np.sum(nf*Jf(m2/T2), axis=-1)
-        if include_radiation:
-            if self.num_boson_dof is not None:
-                nb = self.num_boson_dof - np.sum(nb)
-                V -= nb * np.pi**4 / 45.
-            if self.num_fermion_dof is not None:
-                nf = self.num_fermion_dof - np.sum(nf)
-                V -= nf * 7*np.pi**4 / 360.
         return V*T4/(2*np.pi*np.pi)
 
-    def Vtot(self, X, T, include_radiation=True):
-        '''
+    def Vtot(self, X, T, include_radiation=True, use_EFT=False):
+        """
         The total finite temperature effective potential.
 
         Parameters
@@ -304,19 +400,28 @@ class Model:
         T : float or array_like
             The temperature. The shapes of `X` and `T`
             should be such that ``X.shape[:-1]`` and ``T.shape`` are
-            broadcastable (that is, ``X[...,0]*T`` is a valid operation).
+            broadcastable (that is, ``X[0,...]*T`` is a valid operation).
         include_radiation : bool, optional
             If False, this will drop all field-independent radiation
             terms from the effective potential. Useful for calculating
             differences or derivatives.
-        '''
-        X = np.asanyarray(X)
+
+        Returns
+        -------
+        Vtot : total effective potential
+        """
         T = np.asanyarray(T)
+        X = np.asanyarray(X)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
-        V = self.V0(X)
-        V += self.V1(bosons, fermions)
-        V += self.V1T(bosons, fermions, T, include_radiation)
+        V = self.V0(X, T, use_EFT)
+        if use_EFT:
+            V *= T
+        else:
+            V += self.V1(bosons, fermions)
+            V += self.V1T(bosons, fermions, T)
+        if include_radiation:
+            V += self.PressureLO(bosons, fermions, T)
         return np.real(V)
 
 class FreeEnergy:
