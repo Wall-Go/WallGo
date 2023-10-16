@@ -343,8 +343,6 @@ class BoltzmannSolver:
                 )
                 BoltzmannSolver.__checkBasis(basisType)
                 collisionArray = np.array(file[particle.name][:])
-                #print("Multiplying by first particle collision prefactor.")
-                #collisionArray *= particle.collisionPrefactors[0]
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
