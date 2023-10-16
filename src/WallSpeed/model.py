@@ -104,9 +104,14 @@ class Model:
     Class that generates the model given external model file
     can be overrriden by user
     """
-    def __init__(self,mu4D,mus,lams,lamm):
+    def __init__(self,
+        mu4D,mus,lams,lamm,
+        use_EFT=False,
+        ):
         r"""Initialisation
         """
+        self.use_EFT=use_EFT
+
         self.mus = mus
         self.lams = lams
         self.lamm = lamm
@@ -175,7 +180,7 @@ class Model:
         }
 
 
-    def V0(self, X: float, T, use_EFT=False, show_V=False):
+    def V0(self, X: float, T, show_V=False):
         """
         Tree-level effective potential
 
@@ -196,26 +201,31 @@ class Model:
         """
         X = np.asanyarray(X)
 
-        if use_EFT:
-            X = X/np.sqrt(T)
-            self.muhsq += T**2*self.muhT
-            self.mussq += T**2*self.musT
-            self.lamh *= T
-            self.lams *= T
-            self.lamm *= T
+        if self.use_EFT:
+           muhsq = self.muhsq + T**2*self.muhT
+           mussq = self.mussq + T**2*self.musT
+           lamh = self.lamh*T
+           lams = self.lams*T
+           lamm = self.lamm*T
+        else:
+           muhsq = self.muhsq
+           mussq = self.mussq
+           lamh = self.lamh
+           lams = self.lams
+           lamm = self.lamm
 
         h1,s1 = X[0,...],X[1,...]
         V = (
-           +1/2*self.muhsq*h1**2
-           +1/2*self.mussq*s1**2
-           +1/4*self.lamh*h1**4
-           +1/4*self.lams*s1**4
-           +1/4*self.lamm*(h1*s1)**2)
+           +1/2*muhsq*h1**2
+           +1/2*mussq*s1**2
+           +1/4*lamh*h1**4
+           +1/4*lams*s1**4
+           +1/4*lamm*(h1*s1)**2)
         if show_V:
             print(V)
         return V
 
-    def Jcw(self,msq,n,c):
+    def Jcw(self, msq, n, c):
         """
         Coleman-Weinberg potential
         """
@@ -345,7 +355,7 @@ class Model:
             nf = self.num_fermion_dof - np.sum(nf)
             V -= nf * 7*np.pi**4 / 360.
 
-        print(V/(2*np.pi*np.pi))
+        #print(V/(2*np.pi*np.pi))
         return V*T4/(2*np.pi*np.pi)
 
     def V1T(self, bosons, fermions, T):
@@ -388,7 +398,7 @@ class Model:
         V += np.sum(nf*Jf(m2/T2), axis=-1)
         return V*T4/(2*np.pi*np.pi)
 
-    def Vtot(self, X, T, include_radiation=True, use_EFT=False):
+    def Vtot(self, X, T, include_radiation=True):
         """
         The total finite temperature effective potential.
 
@@ -412,10 +422,12 @@ class Model:
         """
         T = np.asanyarray(T)
         X = np.asanyarray(X)
+        if self.use_EFT:
+            X = X/np.sqrt(T + 1e-100)
         bosons = self.boson_massSq(X,T)
         fermions = self.fermion_massSq(X)
-        V = self.V0(X, T, use_EFT)
-        if use_EFT:
+        V = self.V0(X, T)
+        if self.use_EFT:
             V *= T
         else:
             V += self.V1(bosons, fermions)
