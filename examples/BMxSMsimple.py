@@ -101,11 +101,9 @@ def dfdPhi(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT,
 # defining the free energy for WallGo
 mod = xSM()
 params=mod.params
-pprint(params)
 
 Tc = mod.Tc
 Tn = 112 # only Tn is strictly necessary
-print(f"{Tc=}, {Tn=}")
 
 
 # overriding whole class is porably not so ideal
@@ -132,6 +130,11 @@ class FreeEnergy(FreeEnergy):
 
 fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
+
+Tc = fxSM.Tc
+pprint(params)
+print(f"{Tc=}, {Tn=}")
+
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")
 print(f"{fxSM.derivT([[0],[1]], 100)=}")
