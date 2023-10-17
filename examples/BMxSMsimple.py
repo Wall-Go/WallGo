@@ -1,3 +1,7 @@
+"""
+Benchmark model: xSM, in high-T expansion, with analytical expressions for e.g. Tc
+defines model, grid and top
+"""
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
 from WallSpeed.Grid import Grid

@@ -1,5 +1,5 @@
 """
-A first example.
+Computing the wall velocity in the xSM
 """
 import BMxSM
 from time import time
