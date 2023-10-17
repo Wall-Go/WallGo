@@ -38,8 +38,8 @@ def constructPybindParticle(p: Particle, T: float):
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
 
 
-## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 20    # "N"
+## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+polynomialBasisSize = 20    # 
 
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.Collision(polynomialBasisSize)
@@ -72,16 +72,6 @@ topQuark = Particle(
     collisionPrefactors=[0, 0, 0],
 )
 
-lightQuark = Particle(
-    name="quark",
-    msqVacuum=0.0,
-    msqThermal=lambda T: 0.251327 * T**2,
-    statistics="Boson",
-    inEquilibrium=True,
-    ultrarelativistic=True,
-    collisionPrefactors=[0, 0, 0],
-)
-
 gluon = Particle(
     name="gluon",
     msqVacuum=0.0,
@@ -92,14 +82,27 @@ gluon = Particle(
     collisionPrefactors=[0, 0, 0],
 )
 
+
+
+lightQuark = Particle(
+    name="quark",
+    msqVacuum=0.0,
+    msqThermal=lambda T: 0.251327 * T**2,
+    statistics="Fermion",
+    inEquilibrium=True,
+    ultrarelativistic=True,
+    collisionPrefactors=[0, 0, 0],
+)
+
+
 # hack
-T = 1.0
+temperatureHack = 1.0
 
-collisionManager.addParticle( constructPybindParticle(topQuark, T) )
-collisionManager.addParticle( constructPybindParticle(lightQuark, T) )
-collisionManager.addParticle( constructPybindParticle(gluon, T) )
+collisionManager.addParticle( constructPybindParticle(topQuark, temperatureHack) )
+collisionManager.addParticle( constructPybindParticle(gluon, temperatureHack) )
+collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHack) )
 
-## TODO specify file name where the matrix elements will be read from. Right now 
-## the class has these hardcoded in
+
+## TODO specify file name/path where the matrix elements will be read from? Or better, make a config file for it. Right now it's just hardcoded in
 
 collisionManager.calculateCollisionIntegrals()

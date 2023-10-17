@@ -2,7 +2,8 @@
 
 #include <array>
 
-#include <cstdio> // for sprintf, probs remove later
+#include <fstream>
+#include <regex> // Reading matrix elements from file
 #include <algorithm> // std::remove_if
 
 Collision::Collision(uint basisSize) : basisSizeN(basisSize)
@@ -132,74 +133,40 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
         return std::vector<CollElem<4>>();
     }
 
-    std::cout << "Parsing matrix elements for out-of-equilibrium pair " << pairName << "\n";
+
+    // file paths are of form MatrixElements/matrixElements_top_gluon etc
+    std::string fileName = matrixElementDirectory + "/" + matrixElementFileNameBase + "_" + particleName1 + "_" + particleName2;
+
+    std::cout << "\nAttempting to parse matrix elements for out-of-equilibrium pair " << pairName << "\n";
     
-    std::vector<CollElem<4>> collisionElements;
+    std::ifstream matrixElementFile(fileName);
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
     // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
     // Here we parse the lhs to extract indices, then parse the rhs as a math expression (function of s,t,u and couplings/masses). 
     // For each of these we make a CollElem<4> object with correct deltaF structure which we infer from the indices 
 
-    // readCollisions(particleName1, particleName2);
-    // @todo these would now be read from file. But since we don't have exported files yet, just hardcode some example expressions  
+    std::vector<CollElem<4>> collisionElements;
 
-    // hardcoding t,t since we have benchmarks for that
-    if (particleName1 == "top" && particleName2 == "top")
-    {
-        std::string expr;
-        char buf[1024];
-        // there is tt -> tt but Benoit didn't have that... so skipping for now
-
-        {
-            // tq -> tq would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 5 * 16./3. * couplings[0]^4 * (s^2 + u^2) / (msq[1] - t)^2", 
-                            particleIndex[particleName1], particleIndex["quark"], particleIndex[particleName1], particleIndex["quark"]);
-            expr = std::string(buf);
-
-            collisionElements.push_back( makeCollisionElement(particleName1, particleName2, expr) );
-        }
-        {
-            // tg -> tg would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 16./9. * couplings[0]^4 * (9 * (s^2 + t^2) / (msq[1] - t)^2 - 4*s*u / (msq[2] - u)^2)", 
-                            particleIndex[particleName1], particleIndex["gluon"], particleIndex[particleName1], particleIndex["gluon"]);
-            expr = std::string(buf);
-
-            collisionElements.push_back( makeCollisionElement(particleName1, particleName2, expr) );
-        }
-        {
-            // tt -> gg would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 32./9. * couplings[0]^4 * t * u * ( 1 / (msq[2] - t)^2 - 1 / (msq[2] - u)^2)", 
-                            particleIndex[particleName1], particleIndex[particleName1], particleIndex["gluon"], particleIndex["gluon"]);
-            expr = std::string(buf);
-
-            collisionElements.push_back( makeCollisionElement(particleName1, particleName2, expr) );
-        }
-        
+    if (!matrixElementFile.is_open()) {
+        std::cerr << "!!! Error: Failed to open matrix element file " << fileName << std::endl;
+        exit(10);
     }
-
-
-    // then doing t,g for illustration. After symmetrization it only has tg -> tg, tt -> gg
-    if (particleName1 == "top" && particleName2 == "gluon")
+    else 
     {
-        std::string expr;
-        char buf[1024];
-        { 
-            // tg -> tg would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 16./9. * couplings[0]^4 * (9 * (s^2 + t^2) / (msq[1] - t)^2 - 4 *s*u / (msq[0] - u)^2)", 
-                            particleIndex[particleName1], particleIndex[particleName2], particleIndex[particleName1], particleIndex[particleName2]);
-            expr = std::string(buf);
-
-            collisionElements.push_back( makeCollisionElement(particleName1, particleName2, expr) );
+        // Now use regex to read all lines of form M[...] -> ...
+        std::string line;
+        while (std::getline(matrixElementFile, line)) {
+            if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
+                
+                // Found matrix element, so create a CollElem from it by parsing the read line into usable form
+                collisionElements.push_back( makeCollisionElement(particleName1, particleName2, line) );
+                std::cout << "Found matrix element:\n";
+                std::cout << line << "\n";
+            }
         }
-        { 
-            // And tt -> gg would look like this
-            sprintf(buf, "M[%d,%d,%d,%d] -> 32./9. * couplings[0]^4 * t*u * (1 / (msq[0] - t)^2 + 1 / (msq[0] - u)^2 )", 
-                            particleIndex[particleName1], particleIndex[particleName1], particleIndex[particleName2], particleIndex[particleName2]);
-            expr = std::string(buf);
 
-            collisionElements.push_back( makeCollisionElement(particleName1, particleName2, expr) );
-        }
+        matrixElementFile.close();
     }
 
     bMatrixElementsDone = true;
@@ -239,6 +206,7 @@ CollElem<4> Collision::makeCollisionElement(const std::string &particleName1, co
     
     return collisionElement;
 }
+
 
 long Collision::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 {

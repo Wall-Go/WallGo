@@ -69,6 +69,14 @@ private:
     // List of out-of-equilibrium particles, handled internally
     std::vector<ParticleSpecies> outOfEqParticles;
 
+
+    // @todo config file for file paths 
+    
+    // Directory where we search for matrix elements
+    std::string matrixElementDirectory = "MatrixElements";
+
+    // Base file name for matrix element files. We append particle names to this like "_top_top"
+    std::string matrixElementFileNameBase = "matrixElements";
 };
 
 
