@@ -39,7 +39,7 @@ def constructPybindParticle(p: Particle, T: float):
 
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 20    # 
+polynomialBasisSize = 20
 
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.Collision(polynomialBasisSize)

@@ -43,9 +43,17 @@ public:
     // Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays 
     void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D& results, Array4D& errors);
 
-private:
 
+
+protected:
+
+    // Used to interrupt long-running functions. The python module will override this with its own checks
+    virtual inline bool shouldContinueEvaluation() { return true; };
+
+    // Populates the particleIndex map 
     void makeParticleIndexMap();
+
+    // Checks which particles in our current 'particles' array are out-of-eq, then stores those in outOfEqParticles
     void findOutOfEquilibriumParticles();
 
     // Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
@@ -66,7 +74,7 @@ private:
     // Failsafe flag so that we don't do anything stupid (hopefully)
     bool bMatrixElementsDone = false;
 
-    // List of out-of-equilibrium particles, handled internally
+    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
     std::vector<ParticleSpecies> outOfEqParticles;
 
 

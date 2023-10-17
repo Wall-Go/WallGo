@@ -27,6 +27,34 @@ void initModule()
 But seems hard to dictate when/how this should be called in Python context.
 */
 
+/* We bind a subclass of the Collision "control" class. 
+This way we can override some functions with python-specific functionality */
+class CollisionPython : public Collision
+{
+
+public: 
+    // Just call parent constructor
+    CollisionPython(uint basisSize) : Collision(basisSize) {}
+
+protected:
+
+    // NB: if called inside OpenMP block this does lead to core dumped on CTRL-C
+    // So @todo make a clean exit
+    virtual inline bool shouldContinueEvaluation() override 
+    {
+        // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
+        if (PyErr_CheckSignals() != 0)
+        {
+            throw pybind11::error_already_set();
+            return false;
+        }
+        return true;
+    }
+
+};
+
+
+
 // Module definition. This block gets executed when the module is imported.
 PYBIND11_MODULE(CollisionModule, m) 
 {
@@ -63,7 +91,7 @@ PYBIND11_MODULE(CollisionModule, m)
     );
 
 
-    //*********** Bind functions of the main control class Collision
+    //*********** Bind functions of the main control class
 
     // READMEs for the functions
     std::string usage_Collision = 
@@ -88,11 +116,11 @@ PYBIND11_MODULE(CollisionModule, m)
         "Call only after specifying all particles and couplings with addParticle, addCoupling\n\n";
 
 
-    py::class_<Collision>(m, "Collision")
+    py::class_<CollisionPython>(m, "Collision")
         .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_Collision.c_str())
-        .def("addParticle", &Collision::addParticle, usage_addParticle.c_str())
-        .def("addCoupling", &Collision::addCoupling, usage_addCoupling.c_str())
-        .def("calculateCollisionIntegrals", &Collision::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
+        .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
+        .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
+        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
 
 
 

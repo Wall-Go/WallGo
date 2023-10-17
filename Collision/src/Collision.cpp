@@ -44,24 +44,31 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 		for (uint j = 1; j <= N/2; ++j)
 		for (uint k = 1; k <= N-1; ++k) {
 
-		// Monte Carlo result for the integral + its error
-		std::array<double, 2> resultMC;
+            // Monte Carlo result for the integral + its error
+            std::array<double, 2> resultMC;
 
-			// Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-			if (2*j == N && m % 2 != 0) {
-				resultMC[0] = 0.0;
-				resultMC[1] = 0.0;
-			} else {
-				resultMC = collisionIntegral.evaluate(m, n, j, k);
-			}
+            // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+            if (2*j == N && m % 2 != 0) {
+                resultMC[0] = 0.0;
+                resultMC[1] = 0.0;
+            } else {
+                resultMC = collisionIntegral.evaluate(m, n, j, k);
+            }
 
-			results[m-2][n-1][j-1][k-1] = resultMC[0];
-			errors[m-2][n-1][j-1][k-1] = resultMC[1];
+            results[m-2][n-1][j-1][k-1] = resultMC[0];
+            errors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-		    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+            printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
 
+            // Evaluation control
+            if (!shouldContinueEvaluation())
+            {
+                // @TODO. For the python-bound subclass terminates inside the function anyway so not urgent
+            }
 		} // end j,k
 	} // end m,n
+
+    #pragma omp taskwait
 
 	// Fill in the j > N/2 elements
 	#pragma omp parallel for collapse(4)
@@ -75,7 +82,6 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 			errors[m-2][n-1][j-1][k-1] = sign * errors[m-2][n-1][jOther-1][k-1];
 		}
 	}
-	
 
 }
 
@@ -169,6 +175,7 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
         matrixElementFile.close();
     }
 
+    std::cout << "\n";
     bMatrixElementsDone = true;
 
     return collisionElements;

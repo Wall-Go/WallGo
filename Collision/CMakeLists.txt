@@ -30,6 +30,17 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 option(PROFILER "Compile with profiler flags" OFF)
 
 
+# Build the Python module unless the user disabled this
+OPTION(BUILD_PYTHON_MODULE "Build Python module" ON)
+
+if(BUILD_PYTHON_MODULE) 
+	add_compile_definitions(WITH_PYTHON=1) ## C++: #if WITH_PYTHON
+else() 
+    add_compile_definitions(WITH_PYTHON=0)
+endif()
+
+
+
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
