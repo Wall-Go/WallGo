@@ -358,9 +358,14 @@ class BoltzmannSolver:
         A filename convention for collision integrals.
         """
         root = os.path.dirname(__file__)
-        dir = os.path.abspath(os.path.join(root, '../../data'))
+        path = os.path.abspath(os.path.join(root, '../../'))
+        dir = os.path.join(root, '/data')
         suffix = "hdf5"
-        return f"{dir}/collisions_N{self.grid.N}.{suffix}"
+        name = f"collisions_N{self.grid.N}.{suffix}"
+        for root, dirs, files in os.walk(path):
+            if name in files:
+                return os.path.join(root, name)
+        return f"{dir}/{name}"
 
     def __checkBasis(basis):
         """
