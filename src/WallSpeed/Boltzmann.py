@@ -365,6 +365,7 @@ class BoltzmannSolver:
         if search:
             print("searching")
             for root, dirs, files in os.walk(path):
+                print(f"{root=}")
                 if name in files:
                     print("found file")
                     print(f"{path=}, {dir=}, {name=}")
