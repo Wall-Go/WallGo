@@ -50,5 +50,3 @@ docs = [
 [project.urls]
 "Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/jorindevandevis/WallSpeed"
-
-[tool.setuptools_scm]
