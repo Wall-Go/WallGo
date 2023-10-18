@@ -30,6 +30,7 @@ jobs:
                sudo apt-get update
                sudo apt-get install libgsl-dev libhdf5-dev
              elif [ "$RUNNER_OS" == "macOS" ]; then
+               brew update
                brew install gsl, hdf5
              else
                echo "$RUNNER_OS not supported"
@@ -38,9 +39,7 @@ jobs:
       - name: Install Collision
         run: |
              mkdir -p Collision/build; cd Collision/build
-             cmake ..
-             make
-             make install
+             cmake ..; make; make install
              cd ../..
       - name: Run Collision
         run: cd data; ../Collision/bin/Collision | head

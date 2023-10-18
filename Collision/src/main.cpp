@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
 	CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
 	CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
 
-	const int basisSizeN = 9;
+	const int basisSizeN = 7;
 
 	CollisionIntegral4 collInt(basisSizeN);
 	collInt.addCollisionElement(tt_gg);
