@@ -141,8 +141,8 @@ int main(int argc, char *argv[]) {
 
 	//---------------
 
-    // basis size, default value
-    int basisSizeN = 20;
+	// basis size, default value
+	int basisSizeN = 20;
 
 	// Parse command line arguments
 	int opt;
@@ -152,10 +152,10 @@ int main(int argc, char *argv[]) {
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
-            case 'n':
-                basisSizeN = int(*optarg) - int('0');
+			case 'n':
+				basisSizeN = int(*optarg) - int('0');
 				std::cout << "Running with basis size "<< basisSizeN << "\n";
-                break;
+				break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
 				testHDF5();
