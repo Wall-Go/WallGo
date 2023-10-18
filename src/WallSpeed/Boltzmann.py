@@ -357,8 +357,7 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        root = os.path.dirname(__file__)
-        dir = os.path.abspath(os.path.join(root, '../../data'))
+        dir = "../data"
         suffix = "hdf5"
         return f"{dir}/collisions_N{self.grid.N}.{suffix}"
 
