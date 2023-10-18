@@ -31,7 +31,7 @@ option(PROFILER "Compile with profiler flags" OFF)
 
 
 # Build the Python module unless the user disabled this
-OPTION(BUILD_PYTHON_MODULE "Build Python module" ON)
+option(BUILD_PYTHON_MODULE "Build Python module" ON)
 
 if(BUILD_PYTHON_MODULE) 
 	add_compile_definitions(WITH_PYTHON=1) ## C++: #if WITH_PYTHON
@@ -96,12 +96,6 @@ add_subdirectory(src)
 # Unit tests
 if(BUILD_UNIT_TESTS)
     add_subdirectory(tests)
-endif()
-
-
-# Pybind11: build the module unless flag was disabled by user 
-if(NOT BUILD_PYTHON_MODULE) 
-	option(BUILD_PYTHON_MODULE "Build Python module" ON)
 endif()
 
 

@@ -13,10 +13,8 @@ add_library(${BINARY}_lib STATIC ${SOURCES})
 add_executable(${BINARY} main.cpp)
 
 
-## By default, use OpenMP
-if(NOT USE_OMP) 
-	option(USE_OMP "Build with OpenMP support" ON)
-endif()
+## Use OpenMP by default
+option(USE_OMP "Build with OpenMP support" ON)
 
 
 ## For MacOS, may need to manually setup OpenMP
