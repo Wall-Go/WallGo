@@ -359,7 +359,7 @@ class BoltzmannSolver:
         """
         root = os.path.dirname(__file__)
         path = os.path.abspath(os.path.join(root, '../../'))
-        dir = os.path.join(root, '/data')
+        dir = os.path.join(path, '/data')
         suffix = "hdf5"
         name = f"collisions_N{self.grid.N}.{suffix}"
         for root, dirs, files in os.walk(path):
