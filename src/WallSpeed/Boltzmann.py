@@ -380,10 +380,8 @@ class BoltzmannSolver:
     def __dfeq(x, statistics):
         x = np.asarray(x)
         if np.isclose(statistics, 1, atol=1e-14):
-            return np.where(
-                x > 100, -1 / np.exp(x), -np.exp(x) / np.expm1(x) ** 2
-            )
+            return np.where(x > 100, -np.exp(-x), -np.exp(x) / np.expm1(x) ** 2)
         else:
             return np.where(
-                x > 100, -1 / np.exp(x), -np.exp(x) / (np.exp(x) + 1) ** 2
+                x > 100, -np.exp(-x), -np.exp(x) / (np.exp(x) + 1) ** 2
             )

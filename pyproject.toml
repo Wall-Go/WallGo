@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -35,3 +35,5 @@ readme = "README.rst"
 [project.urls]
 "Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/jorindevandevis/WallSpeed"
+
+[tool.setuptools_scm]
