@@ -141,14 +141,21 @@ int main(int argc, char *argv[]) {
 
 	//---------------
 
+    // basis size, default value
+    int basisSizeN = 20;
+
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "w")) != -1) {
+	while ((opt = getopt(argc, argv, "whn:")) != -1) {
 		switch (opt) {
 			case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
+            case 'n':
+                basisSizeN = int(*optarg) - int('0');
+				std::cout << "Running with basis size "<< basisSizeN << "\n";
+                break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
 				testHDF5();
@@ -191,8 +198,6 @@ int main(int argc, char *argv[]) {
 	CollisionElement tt_gg({ topQuark, topQuark, gluon, gluon });
 	CollisionElement tg_tg({ topQuark, gluon, topQuark, gluon });
 	CollisionElement tq_tq({ topQuark, lightQuark, topQuark, lightQuark });
-
-	const int basisSizeN = 5;
 
 	CollisionIntegral4 collInt(basisSizeN);
 	collInt.addCollisionElement(tt_gg);
