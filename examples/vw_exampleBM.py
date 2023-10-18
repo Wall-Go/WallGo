@@ -63,6 +63,8 @@ fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 vwLTE = hydro.findvwLTE()
+
+print(f'Jouguet velocity: {hydro.vJ}')
 print("The wall velocity in local thermal equilibrium is")
 print(vwLTE)
 
