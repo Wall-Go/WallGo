@@ -299,7 +299,7 @@ class BoltzmannSolver:
         )
 
         ##### collision operator #####
-        collisionFile = self.__collisionFilename()
+        collisionFile = self.__collisionFilename(search=True)
         collisionArray, collisionBasis, collisionN = BoltzmannSolver.readCollision(
             collisionFile,
             self.particle,
@@ -353,18 +353,19 @@ class BoltzmannSolver:
             raise
         return collisionArray, basisType, basisSize
 
-    def __collisionFilename(self):
+    def __collisionFilename(self, search=False):
         """
         A filename convention for collision integrals.
         """
         root = os.path.dirname(__file__)
-        path = os.path.abspath(os.path.join(root, '../../'))
-        dir = os.path.join(path, '/data')
+        path = os.path.abspath(os.path.join(root, "../../"))
+        dir = os.path.join(path, "data")
         suffix = "hdf5"
         name = f"collisions_N{self.grid.N}.{suffix}"
-        for root, dirs, files in os.walk(path):
-            if name in files:
-                return os.path.join(root, name)
+        if search:
+            for root, dirs, files in os.walk(path):
+                if name in files:
+                    return os.path.join(root, name)
         return f"{dir}/{name}"
 
     def __checkBasis(basis):
