@@ -23,7 +23,7 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Install WallGo Python package
-        run: pip install .
+        run: pip install .[collisions,tests]
       - name: Install os-dependent Collision requirements
         run: |
              if [ "$RUNNER_OS" == "Linux" ]; then
@@ -35,15 +35,12 @@ jobs:
                exit 1
              fi
       - name: Install Collision
-        run: pip install .[collisions]
-        run: mkdir -p Collision/build; cd Collision/build
-        run: cmake ..
-        run: make
-        run: make install
-        run: cd ../..
+        run: |
+             mkdir -p Collision/build; cd Collision/build
+             cmake ..
+             make; make install
+             cd ../..
       - name: Run Collision
-        run: cd data
-        run: ../Collision/bin/Collision | head -n10
+        run: cd data; ../Collision/bin/Collision | head
       - name: Test with pytest
-        run: pip install .[tests]
         run: pytest -v tests
