@@ -359,14 +359,18 @@ class BoltzmannSolver:
         """
         root = os.path.dirname(__file__)
         path = os.path.abspath(os.path.join(root, "../../"))
-        dir = os.path.join(path, "data")
         suffix = "hdf5"
-        name = f"collisions_N{self.grid.N}.{suffix}"
+        name = f"data/collisions_N{self.grid.N}.{suffix}"
+        print(f"{path=}, {dir=}, {name=}")
         if search:
+            print("searching")
             for root, dirs, files in os.walk(path):
                 if name in files:
+                    print("found file")
+                    print(f"{path=}, {dir=}, {name=}")
                     return os.path.join(root, name)
-        return f"{dir}/{name}"
+        print("didn't find file")
+        return f"{path}/{name}"
 
     def __checkBasis(basis):
         """
