@@ -11,7 +11,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -19,7 +20,30 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install WallGo
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install WallGo Python package
         run: pip install .
+      - name: Install os-dependent Collision requirements
+        run: |
+             if [ "$RUNNER_OS" == "Linux" ]; then
+               apt install libgsl-dev libhdf5-dev
+             elif [ "$RUNNER_OS" == "macOS" ]; then
+               brew install gsl, hdf5
+             else
+               echo "$RUNNER_OS not supported"
+               exit 1
+             fi
+      - name: Install Collision
+        run: pip install .[collisions]
+        run: mkdir -p Collision/build; cd Collision/build
+        run: cmake ..
+        run: make
+        run: make install
+        run: cd ../..
+      - name: Run Collision
+        run: cd data
+        run: ../Collision/bin/Collision | head -n10
       - name: Test with pytest
+        run: pip install .[tests]
         run: pytest -v tests
