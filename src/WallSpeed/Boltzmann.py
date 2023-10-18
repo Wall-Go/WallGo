@@ -1,4 +1,5 @@
 import os
+import warnings
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
@@ -271,8 +272,12 @@ class BoltzmannSolver:
         drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
         # equilibrium distribution, and its derivative
-        fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
-        dfEq = -np.exp(EPlasma / T) * fEq**2
+        warnings.filterwarnings("ignore", message="overflow encountered in exp")
+        fEq = BoltzmannSolver.__feq(EPlasma / T, statistics)
+        dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
+        warnings.filterwarnings(
+            "default", message="overflow encountered in exp"
+        )
 
         ##### source term #####
         source = (dfEq / T) * dchidxi * (
@@ -363,3 +368,22 @@ class BoltzmannSolver:
         """
         bases = ["Cardinal", "Chebyshev"]
         assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
+
+    @staticmethod
+    def __feq(x, statistics):
+        if np.isclose(statistics, 1, atol=1e-14):
+            return 1 / np.expm1(x)
+        else:
+            return 1 / (np.exp(x) + 1)
+
+    @staticmethod
+    def __dfeq(x, statistics):
+        x = np.asarray(x)
+        if np.isclose(statistics, 1, atol=1e-14):
+            return np.where(
+                x > 100, -1 / np.exp(x), -np.exp(x) / np.expm1(x) ** 2
+            )
+        else:
+            return np.where(
+                x > 100, -1 / np.exp(x), -np.exp(x) / (np.exp(x) + 1) ** 2
+            )
