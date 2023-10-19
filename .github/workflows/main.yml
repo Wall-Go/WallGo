@@ -38,8 +38,8 @@ jobs:
       - name: Clone muparser repository
         uses: actions/checkout@v4
         with:
-          repository: beltoforion/muparser/
-          path: main
+          repository: beltoforion/muparser
+          path: muparser
       
       - name: Install muparser
         run: |
