@@ -52,9 +52,9 @@ void collisionsQCD(uint N) {
 
 	const bool bUltraRelativistic = true;
 
-	// take top and gluon out-of-eq
+	// For now take just the top to be out-of-eq
     ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2, bUltraRelativistic);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
+    ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2, bUltraRelativistic);
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Main control object
@@ -130,14 +130,15 @@ int main(int argc, char *argv[]) {
 
 	gslWrapper::initializeRNG();
 
-	if (bDoTestRun) {
-		collisionsQCD(5);
-		return 0;
+	if (bDoTestRun) 
+	{
+		collisionsQCD(4);
+	}
+	else 
+	{
+		collisionsQCD(basisSizeN);
 	}
 
-
-
-	collisionsQCD(basisSizeN);
 
 /*
 	//-------------------- Measure wall clock time

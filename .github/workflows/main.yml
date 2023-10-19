@@ -53,6 +53,6 @@ jobs:
              cmake ..; make; make install
              cd ../..
       - name: Run Collision
-        run: cd data; ../Collision/bin/Collision -n 5
+        run: cd data; ../Collision/bin/Collision -t
       - name: Test with pytest
         run: pytest -v tests
