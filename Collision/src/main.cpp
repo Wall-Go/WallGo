@@ -7,6 +7,7 @@
 #include <cstring>
 #include <getopt.h> // command line arguments
 
+#include "Common.h"
 #include "Collision.h"
 #include "CollElem.h"
 #include "CollisionIntegral.h"
@@ -94,6 +95,7 @@ int main(int argc, char *argv[]) {
 	//---------------
 
 	bool bDoTestRun = false;
+	uint basisSizeN = 20;
 
 	// Parse command line arguments
 	int opt;
@@ -135,7 +137,7 @@ int main(int argc, char *argv[]) {
 
 
 
-	collisionsQCD(20);
+	collisionsQCD(basisSizeN);
 
 /*
 	//-------------------- Measure wall clock time
