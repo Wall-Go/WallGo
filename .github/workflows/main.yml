@@ -1,4 +1,4 @@
-name: Python tests
+name: WallGo tests
 
 on:
   pull_request:
@@ -34,6 +34,19 @@ jobs:
                echo "$RUNNER_OS not supported"
                exit 1
              fi
+
+      - name: Clone muparser repository
+        uses: actions/checkout@v4
+        with:
+          repository: beltoforion/muparser/
+          path: main
+      
+      - name: Install muparser
+        run: |
+             if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+               cd muparser && cmake . && make && sudo make install && ldconfig && cd ..
+             fi
+
       - name: Install Collision
         run: |
              mkdir -p Collision/build; cd Collision/build
