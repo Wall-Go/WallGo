@@ -25,7 +25,8 @@ void printUsage(FILE *fp, const char *path) {
 	fprintf (fp, "Available options:\n");
 	fprintf (fp, "  -h\t\t"
 				"Print this help and exit.\n");
-
+	fprintf (fp, "	-n [integer]\t\t"
+				"Set grid size (number of basis polynomials).");
 	fprintf (fp, "  -w\t\t"
 				"Test the hdf5 output routines by writing dummy data and exit.\n");
 	fprintf (fp, "  -t\t\t"
@@ -70,24 +71,24 @@ void collisionsQCD(uint N) {
 
 int main(int argc, char *argv[]) {
 
-	//--------------- How this works 
+	//--------------- How this works
 
-	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!). 
-	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed. 
+	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!).
+	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed.
 	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
 	* Currently the matrix elements are just hard coded, in a more realistic setting they would probably be read from elsewhere. */
 
 	/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
-	* These are given as inputs to CollElem when constructing CollElem objects. 
+	* These are given as inputs to CollElem when constructing CollElem objects.
 	* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
 
-	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case). 
+	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case).
 	* IE: this object calculates eq. (A1) in 2204.13120, with delta f replace with Chebyshev polynomials.
-	* Therefore the class it needs to know the size of our polynomial basis (N) and CollElem objects that make up the integral. 
+	* Therefore the class it needs to know the size of our polynomial basis (N) and CollElem objects that make up the integral.
 	* The class calculates 5D integrals with same integration variables as Benoit had. See notes in the private repo. */
 
-	/* Currently the interface between CollisionIntegral4 and CollElem is not optimal and there is some redundancy 
-	* in how the CollisionIntegral4 obtains particle masses etc. This needs to be improved in next version before we 
+	/* Currently the interface between CollisionIntegral4 and CollElem is not optimal and there is some redundancy
+	* in how the CollisionIntegral4 obtains particle masses etc. This needs to be improved in next version before we
 	* get started with generic matrix elements */
 
 	//---------------
@@ -96,12 +97,16 @@ int main(int argc, char *argv[]) {
 
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "wt")) != -1) {
+	while ((opt = getopt(argc, argv, "whn:t")) != -1) {
 		switch (opt) {
 			case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
+			case 'n':
+				basisSizeN = int(*optarg) - int('0');
+				std::cout << "Running with basis size "<< basisSizeN << "\n";
+				break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
 				testHDF5();
@@ -153,7 +158,7 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
 
-	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
+	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: "
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
