@@ -44,7 +44,7 @@ jobs:
       - name: Install muparser
         run: |
              if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
-               cd muparser && cmake . && make && sudo make install && ldconfig && cd ..
+               cd muparser && cmake . && make && sudo make install && sudo ldconfig && cd ..
              fi
 
       - name: Install Collision
