@@ -176,13 +176,13 @@ int main(int argc, char *argv[]) {
 	std::string configFileName = "config.ini";
 	ConfigParser& config = ConfigParser::get();
 
-    if (config.load(configFileName)) {
+	if (config.load(configFileName)) {
 		std::cout << "Read config:\n";
 		config.printContents();
 		std::cout << std::endl;
-    } else {
-        return 1;
-    }
+	} else {
+		return 1;
+	}
 
 
 	gslWrapper::initializeRNG();
