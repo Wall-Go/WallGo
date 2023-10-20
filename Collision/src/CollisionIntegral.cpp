@@ -5,15 +5,24 @@
 #include "CollElem.h"
 
 #include "gslWrapper.h"
-
+#include "ConfigParser.h"
 
 // This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
 std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
 
      IntegrandParameters integrandParameters = initializeIntegrandParameters(m, n, j, k); 
 
-     // Integral dimensions
+     // Integral dimensions (do NOT change this)
      constexpr size_t dim = 5;
+
+     // Read integration options from config
+     ConfigParser& config = ConfigParser::get();
+
+     const double maxIntegrationMomentum = config.getDouble("Integration", "maxIntegrationMomentum");
+     const size_t calls = config.getInt("Integration", "calls");
+     const double relativeErrorGoal = std::fabs( config.getDouble("Integration", "relativeErrorGoal") );
+     const int maxTries = config.getInt("Integration", "maxTries");
+
      // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
      double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.}; // Lower limits
      double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0*constants::pi, 2.0*constants::pi, 1., 1.}; // Upper limits
@@ -28,23 +37,59 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      G.dim = dim;
      G.params = &gslWrapper;
 
-     // How many Monte Carlo iterations
-     size_t calls = 50000;
-     size_t warmupCalls = 0.1*calls;
+     // Options for Vegas Monte Carlo integration. https://www.gnu.org/software/gsl/doc/html/montecarlo.html#vegas
+     // By default each call to gsl_monte_vegas_integrate will perform 5 iterations of the algorithm. 
+     // This could be changed with a new gsl_monte_vegas_params struct and passing that to gsl_monte_vegas_params_set().
+     // Here we use default params struct and just set the number of calls
+
+
      double mean = 0.0;
      double error = 0.0;
 
-     // Unique Monte Carlo state for this integration (NB: keep this here: thread safety)
+     // Unique Monte Carlo state for this integration. NB: keep this here: thread safety
      gsl_monte_vegas_state* gslState = gsl_monte_vegas_alloc(dim);
 
-     // Warmup?!?
+     // Start with a short warmup run. This is good for importance sampling 
+     const size_t warmupCalls = 0.2*calls;
      gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, gslWrapper::rng, gslState, &mean, &error);
-
-     /* TODO: GSL instructions on the Vegas routine did a bunch of "warmup" iterations before the actual "convergence" runs. 
-     Need to understand what the optimal usage of Vegas routines is. */
-
-     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, gslWrapper::rng, gslState, &mean, &error);
      
+
+     // Lambda to check if we've reached the accuracy goal. This requires chisq / dof to be consistent with 1, 
+     // otherwise the error is not reliable
+     auto hasConverged = [&gslState, &mean, &error, &relativeErrorGoal]() {
+
+          bool bConverged = false;
+
+          double chisq = gsl_monte_vegas_chisq(gslState); // the return value is actually chisq / dof
+          if (std::fabs(chisq - 1.0) > 0.5) {
+               // Error not reliable
+          }
+          // Handle case where integral is very close to 0
+          else if (std::fabs(mean) < 1e-8 && std::fabs(error) < relativeErrorGoal) {
+               
+               bConverged = true;
+          } 
+          // Else: "standard" case
+          else if (std::fabs(error / mean) < relativeErrorGoal)
+          {
+               bConverged = true;
+          }
+          return bConverged;
+     };
+
+
+     int currentTries = 0; 
+     while (!hasConverged()) {
+     
+          gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, gslWrapper::rng, gslState, &mean, &error);
+
+          currentTries++;
+          if (currentTries >= maxTries) {
+               std::cerr << "Warning: Integration failed to reach accuracy goal. Result: " << mean << " +/- " << error << "\n";
+               break;
+          }
+     }
+
      gsl_monte_vegas_free(gslState);
 
      return std::array<double, 2>( {mean, error} );

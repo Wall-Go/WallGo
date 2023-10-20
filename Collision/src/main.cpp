@@ -11,6 +11,7 @@
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
 #include "gslWrapper.h"
+#include "ConfigParser.h"
 
 
 // Print a description of all supported options
@@ -170,6 +171,19 @@ int main(int argc, char *argv[]) {
 				abort();
 		}
 	}
+
+	// Load config 
+	std::string configFileName = "config.ini";
+	ConfigParser& config = ConfigParser::get();
+
+    if (config.load(configFileName)) {
+		std::cout << "Read config:\n";
+		config.printContents();
+		std::cout << std::endl;
+    } else {
+        return 1;
+    }
+
 
 	gslWrapper::initializeRNG();
 	// 2->2 scatterings so 4 external particles
