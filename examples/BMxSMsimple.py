@@ -158,9 +158,11 @@ top = Particle(
     collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
 )
 
+offEqParticles = [top]
+
 """
 Define thermodynamics, hydrodynamics and equation of motion
 """
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
-eom = EOM(top, fxSM, grid, 2)
+eom = EOM(offEqParticles[0], fxSM, grid, 2)

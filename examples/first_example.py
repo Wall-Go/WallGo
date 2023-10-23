@@ -22,4 +22,4 @@ print(vJ)
 print("c1,c2")
 print(c1,c2)
 
-print("\ntop quark:", BMxSMsimple.top)
+print("\ntop quark:", BMxSMsimple.offEqParticles[0])

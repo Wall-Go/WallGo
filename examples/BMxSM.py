@@ -51,6 +51,8 @@ top = WallSpeed.Particle(
     collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
 )
 
+offEqParticles = [top]
+
 """
 Define thermodynamics, hydrodynamics and equation of motion
 """
@@ -58,4 +60,4 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
-eom = EOM(top, fxSM, grid, 2)
+eom = EOM(offEqParticles[0], fxSM, grid, 2)
