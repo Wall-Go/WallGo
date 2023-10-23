@@ -718,31 +718,28 @@ class FreeEnergy:
             raise TypeError('Temperature is None')
 
         if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
-            vmin = [self.Xint[0](T),self.Xint[1](T)]
+            vmin = [self.Xint[i](T) for i in range(self.nbrFields)]
 
         else:
             if X is None:
                 X = self.approxZeroTMin(T)
                 X = np.asanyarray(X)
 
-            fh = lambda h: self.f([[abs(h)],[0]],T)[0]
-            fs = lambda s: self.f([[0],[abs(s)]],T)[0]
-
-            fX = [fh,fs]
             vmin = []
-
             for i in range(len(X)):
+                fPhase = lambda v: self.f([[abs(v)] if j == i else [0] for j in range(len(X))],T)[0]
                 vT=X[i,i]
-                cond1 = fX[i](vT) < fX[i](0)
-                cond2 = fX[i](3*vT) > fX[i](vT)
+
+                cond1 = fPhase(vT) < fPhase(0)
+                cond2 = fPhase(3*vT) > fPhase(vT)
                 if cond1 and cond2:
-                    vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
+                    vT = optimize.minimize_scalar(fPhase, bracket=(0, vT, 3*vT)).x
                 else:
-                    vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
+                    vT = optimize.minimize_scalar(fPhase, bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
 
                 vmin.append(vT)
 
-        return np.array([[vmin[0],0],[0,vmin[1]]])
+        return np.array(np.diag(vmin))
 
     def d2V(self, X, T):
         """
