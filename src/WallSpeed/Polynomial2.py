@@ -83,6 +83,40 @@ class Polynomial:
             newBasis = self.N*(newBasis,)
         self.__checkBasis(newBasis)
         
+        for i in range(self.N):
+            if newBasis[i] != self.basis[i]:
+                # Choosing the appropriate x, n and restriction
+                x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
+                n,restriction = None,None
+                if self.endpoints[i]:
+                    if self.direction[i] == 'z':
+                        n = np.arange(self.grid.M+1)
+                    elif self.direction[i] == 'pz':
+                        n = np.arange(self.grid.N+1)
+                    else:
+                        n = np.arange(self.grid.N)
+                else:
+                    if self.direction[i] == 'z':
+                        n = np.arange(2, self.grid.M+1)
+                        restriction = 'full'
+                    elif self.direction[i] == 'pz':
+                        n = np.arange(2, self.grid.N+1)
+                        restriction = 'full'
+                    else:
+                        n = np.arange(1, self.grid.N)
+                        restriction = 'partial'
+                        
+                # Computing the Tn matrix
+                M = self.chebyshev(x[:,None], n[None,:], restriction)
+                if newBasis[i] == 'Chebyshev':
+                    M = np.linalg.inv(M)
+                M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
+                
+                # Contracting M with self.coefficient
+                self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
+        self.basis = newBasis
+                        
+        
     def chebyshev(self, x, n, restriction=None):
         r"""
         Computes the Chebyshev polynomial :math:`T_n(x)`
