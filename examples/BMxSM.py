@@ -48,7 +48,7 @@ top = WallSpeed.Particle(
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=False,
-    collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
+    collisionPrefactors=[params["g3"]**4, params["g3"]**4, params["g3"]**4],
 )
 
 offEqParticles = [top]
