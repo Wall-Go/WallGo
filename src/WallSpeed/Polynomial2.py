@@ -133,9 +133,9 @@ class Polynomial:
 
         """
         x = np.asarray(x)
-        assert x.shape[0] == self.N and 1 <= x.shape.size <= 2, 'Polynomial error: x must have a shape (self.N,:) or (self.N,).'
+        assert x.shape[0] == self.N and 1 <= len(x.shape) <= 2, 'Polynomial error: x must have a shape (self.N,:) or (self.N,).'
         singlePoint = False
-        if x.shape.size == 1:
+        if len(x.shape) == 1:
             x = x.reshape((self.N,1))
             singlePoint = True
             
@@ -214,7 +214,7 @@ class Polynomial:
 
         #Selecting the appropriate grid and resizing it
         grid = self.grid.getCompactCoordinates(True, direction)
-        completeGrid = np.expand_dims(grid, tuple(np.arange(1,(n*x).shape.size+1)))
+        completeGrid = np.expand_dims(grid, tuple(np.arange(1,len((n*x).shape)+1)))
         nGrid = grid[n]
 
         #Computing all the factor in the product defining the cardinal functions
@@ -304,7 +304,7 @@ class Polynomial:
                 basis.append('Cardinal')
             else:
                 basis.append(self.basis[i])
-        self.changeBasis(basis)
+        self.changeBasis(tuple(basis))
         
         integrand = w*self.coefficients
         newBasis, newDirection, newEndpoints = [],[],[]
