@@ -99,11 +99,11 @@ class EOM:
             vevLowT = self.freeEnergy.findPhases(Tminus)[0]
             vevHighT = self.freeEnergy.findPhases(Tplus)[1]
 
-            wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
-
-            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, wallProfileGrid, Tprofile)
+            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, X, Tprofile)
 
             boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
 
@@ -190,7 +190,7 @@ class EOM:
         _,wallParams = func(wallVelocity, True)
         return wallVelocity, wallParams
 
-    def pressure(self, wallVelocity, wallParams, returnOptimalWallParams=False):
+    def pressure(self, wallVelocity, wallParams=None, returnOptimalWallParams=False):
         """
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action.
@@ -215,6 +215,9 @@ class EOM:
             returnOptimalWallParams is True.
 
         """
+        if wallParams is None:
+            wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
+    
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
@@ -229,15 +232,16 @@ class EOM:
         while i < 1:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
-            wallProfileGrid = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+
+            X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
             if self.includeOffEq:
-                boltzmannBackground = BoltzmannBackground(0, velocityProfile, wallProfileGrid, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+                boltzmannBackground = BoltzmannBackground(0, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
-            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
+            sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
             i += 1
 
@@ -252,7 +256,7 @@ class EOM:
         else:
             return pressure
 
-    def action(self, wallParams, vevLowT, vevHighT, Tprofile, offEquilDeltas):
+    def action(self, wallParams, vevLowT, vevHighT, Tprofile, offEquilDelta00):
         r"""
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
 
@@ -266,8 +270,8 @@ class EOM:
             Field values in the high-T phase.
         Tprofile : array-like
             Temperature profile on the grid.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDelta00 : array-like
+            Off-equilibrium function Delta00.
             
         Returns
         -------
@@ -279,8 +283,9 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
 
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDeltas['00']
+        VOut = self.particle.msqVacuum(X)*offEquilDelta00/2
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
@@ -299,7 +304,9 @@ class EOM:
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
-        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus)
+
+        X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
         # Define a function returning the local temparature by interpolating through Tprofile.
         Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
@@ -384,7 +391,7 @@ class EOM:
 
         return X, dXdz
 
-    def findPlasmaProfile(self, c1, c2, velocityAtz0, vevLowT, vevHighT, wallWidths, wallOffsets, offEquilDeltas, Tplus, Tminus):
+    def findPlasmaProfile(self, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
@@ -396,14 +403,10 @@ class EOM:
             Value of the :math:`T^{33}` component of the energy-momentum tensor.
         velocityAtz0 : double
             Plasma velocity in the wall frame at :math:`z=0`.
-        vevLowT : array-like
-            Scalar field VEVs in the low-T phase.
-        vevHighT : array-like
-            Scalar field VEVs in the high-T phase.
-        wallWidths : array-like
-            Array containing the wall widths.
-        wallOffsets : array-like
-            Array containing the wall offsets.
+        X : array-like
+            Scalar field profile.
+        dXdz : array-like
+            Derivative with respect to the position of the scalar field profile.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
         Tplus : double
@@ -421,9 +424,7 @@ class EOM:
         """
         temperatureProfile = []
         velocityProfile = []
-
-        X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-
+        
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
 
