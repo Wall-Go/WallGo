@@ -1,8 +1,8 @@
 ======================================
-EOM
+HydroTemplateModel
 ======================================
 
-.. automodule:: WallSpeed.EOM
+.. automodule:: WallSpeed.HydroTemplateModel
     :members:
     :inherited-members:
     :special-members: __init__
