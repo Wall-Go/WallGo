@@ -99,7 +99,7 @@ class Polynomial:
                     if self.direction[i] == 'z':
                         n = np.arange(2, self.grid.M+1)
                         restriction = 'full'
-                    elif self.direction[i] == 'pz':
+                    elif self.direction[i] == 'pz': 
                         n = np.arange(2, self.grid.N+1)
                         restriction = 'full'
                     else:
@@ -265,6 +265,221 @@ class Polynomial:
             tn -= np.where(n%2==0,1,x)
 
         return tn
+    
+    def integrate(self, axis=None, w=None):
+        r"""
+        Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)` 
+        along some axis using Gauss-Chebyshev-Lobatto quadrature.
+
+        Parameters
+        ----------
+        axis : None, int or tuple
+            axis along which the integral is taken. Can either be None, a int or a
+            tuple of int. If None, integrate along all the axes.
+        w : array-like or None
+            Integration weight. Must be None or an array broadcastable with 
+            self.coefficients. If None, w=1. Default is None.
+
+        Returns
+        -------
+        Polynomial or float
+            If axis=None, returns a float. Otherwise, returns an object of the 
+            class Polynomial containing the coefficients of the 
+            integrated polynomial along the remaining axes. 
+
+        """
+        if w is None:
+            w = 1
+            
+        if axis is None:
+            axis = tuple(np.arange(self.N))
+        if isinstance(axis, int):
+            axis = (axis,)
+            self.__checkAxis(axis)
+        
+        # Express the integrated axes in the cardinal basis
+        basis = []
+        for i in range(self.N):
+            if i in axis:
+                basis.append('Cardinal')
+            else:
+                basis.append(self.basis[i])
+        self.changeBasis(basis)
+        
+        integrand = w*self.coefficients
+        newBasis, newDirection, newEndpoints = [],[],[]
+        for i in range(self.N):
+            if i in axis:
+                x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
+                weights = np.pi*np.ones(self.coefficients.shape[i])
+                if self.direction[i] == 'z':
+                    weights /= self.grid.M
+                elif self.direction[i] == 'pz':
+                    weights /= self.grid.N
+                elif self.direction[i] == 'pp':
+                    weights /= self.grid.N-1
+                    if not self.endpoints[i]:
+                        weights[0] /= 2
+                if self.endpoints[i]:
+                    weights[0] /= 2
+                    weights[-1] /= 2
+                integrand *= np.expand_dims(np.sqrt(1-x**2)*weights, tuple(np.arange(i))+tuple(np.arange(i+1, self.N)))
+            else:
+                newBasis.append(self.basis[i])
+                newDirection.append(self.direction[i])
+                newEndpoints.append(self.endpoints[i])
+                
+        result = np.sum(integrand, axis)
+        if isinstance(result, float):
+            return result
+        else:
+            return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
+    
+    def derivative(self, axis):
+        """
+        Computes the derivative of the polynomial and returns it in a 
+        Polynomial object.
+
+        Parameters
+        ----------
+        axis : int or tuple
+            axis along which the derivative is taken. Can either be a int or a
+            tuple of int.
+
+        Returns
+        -------
+        Polynomial
+            Object of the class Polynomial containing the coefficients of the 
+            derivative polynomial (in the compact coordinates). The axis along 
+            which the derivative is taken is always returned with the endpoints
+            in the cardinal basis.
+
+        """
+        
+        if isinstance(axis, int):
+            axis = (axis,)
+        self.__checkAxis(axis)
+        
+        coeffDeriv = np.array(self.coefficients)
+        basis, endpoints = [],[]
+        
+        for i in range(self.N):
+            if i in axis:
+                D = self.derivMatrix(self.basis[i], self.direction[i], self.endpoints[i])
+                D = np.expand_dims(D, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
+                coeffDeriv = np.sum(D*np.expand_dims(coeffDeriv, i), axis=i+1)
+                basis.append('Cardinal')
+                endpoints.append(True)
+            else:
+                basis.append(self.basis[i])
+                endpoints.append(self.endpoints[i])
+                
+        return Polynomial(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
+            
+    
+    def derivMatrix(self, basis, direction, endpoints=False):
+        """
+        Computes the derivative matrix of either the Chebyshev or cardinal polynomials in some direction.
+
+        Parameters
+        ----------
+        basis : string
+            Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
+        direction : string
+            Select the direction in which to compute the matrix. Can be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+
+        if basis == 'Cardinal':
+            return self.__cardinalDeriv(direction,endpoints)
+        elif basis == 'Chebyshev':
+            return self.__chebyshevDeriv(direction,endpoints)
+        else:
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+    
+    def __cardinalDeriv(self, direction, endpoints=False):
+        """
+        Computes the derivative matrix of the cardinal functions in some direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+
+        grid = self.grid.getCompactCoordinates(True, direction)
+
+        #Computing the diagonal part
+        diagonal = np.sum(np.where(grid[:,None]-grid[None,:] == 0, 0, np.divide(1, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0)),axis=1)
+
+        #Computing the off-diagonal part
+        offDiagonal = np.prod(np.where((grid[:,None,None]-grid[None,None,:])*(grid[None,:,None]-grid[None,None,:]) == 0, 1, np.divide(grid[None,:,None]-grid[None,None,:], grid[:,None,None]-grid[None,None,:], where=grid[:,None,None]-grid[None,None,:]!=0)),axis=-1)
+
+        #Putting all together
+        derivWithEndpoints = np.where(grid[:,None]-grid[None,:] == 0,diagonal[:,None], np.divide(offDiagonal, grid[:,None]-grid[None,:], where=grid[:,None]-grid[None,:]!=0))
+
+        deriv = None
+        if not endpoints:
+            if direction == 'z' or direction == 'pz':
+                deriv = derivWithEndpoints[1:-1,:]
+            elif direction == 'pp':
+                deriv = derivWithEndpoints[:-1,:]
+        else:
+            deriv = derivWithEndpoints
+
+        return np.transpose(deriv)
+
+    def __chebyshevDeriv(self, direction, endpoints=False):
+        """
+        Computes the derivative matrix of the Chebyshev polynomials in some direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        Returns
+        -------
+        deriv : array_like
+            Derivative matrix.
+
+        """
+
+        grid = self.grid.getCompactCoordinates(True, direction)
+        n,restriction = None,None
+        if direction == 'z':
+            n = np.arange(2-2*endpoints, grid.size)
+            restriction = 'full'
+        elif direction == 'pz':
+            n = np.arange(2-2*endpoints, grid.size)
+            restriction = 'full'
+        elif direction == 'pp':
+            n = np.arange(1-endpoints, grid.size)
+            restriction = 'partial'
+
+        deriv = n[None,:]*eval_chebyu(n[None,:]-1,grid[:,None])
+
+        if restriction == 'full' and not endpoints:
+            deriv -= np.where(n[None,:]%2==0,0,1)
+
+        return deriv
                 
     def __checkBasis(self, basis):
         assert isinstance(basis, tuple), 'Polynomial error: basis must be a tuple or a string.'
@@ -292,6 +507,12 @@ class Polynomial:
                 assert size + 2*(1-self.endpoints[i]) == self.grid.N + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
             else:
                 assert size + (1-self.endpoints[i]) == self.grid.N, f"Polynomial error: coefficients with invalid size in dimension {i}."
+                
+    def __checkAxis(self, axis):
+        assert isinstance(axis, tuple), 'Polynomial error: axis must be a tuple or a int.'
+        for x in axis:
+            assert isinstance(x, int), 'Polynomial error: axis must be a tuple of int.'
+            assert 0 <= x < self.N, 'Polynomial error: axis out of range.'
                 
     def __is_broadcastable(self, array1, array2):
         """
