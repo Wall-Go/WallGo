@@ -482,6 +482,8 @@ class FreeEnergy:
             An object of the FreeEnergy class.
         """
         self.nbrFields = 2
+        self.transField0 = 0
+        self.transField1 = 1
 
         if params is None:
             self.f = f
@@ -689,7 +691,7 @@ class FreeEnergy:
         n_nodes = max(min_nodes, int(np.ceil((Tf-Ti)/dT)))
         Trange = np.linspace(Ti,Tf,n_nodes)
 
-        vmin = [[]]*self.nbrFields
+        vmin = [[]]*2
         for T in Trange:
             mins = self.findPhases(T)
             vmin=np.append(vmin, np.diag(mins)[:, np.newaxis], axis=1)
@@ -697,7 +699,7 @@ class FreeEnergy:
         self.Tf_int = Tf
         self.Xint = [
             interpolate.UnivariateSpline(Trange,vmin[i,...],s=0)
-            for i in range(self.nbrFields)] 
+            for i in range(2)] 
 
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
@@ -717,7 +719,7 @@ class FreeEnergy:
             raise TypeError('Temperature is None')
 
         if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
-            vmin = [self.Xint[i](T) for i in range(self.nbrFields)]
+            vmin = [self.Xint[i](T) for i in range(2)]
 
         else:
             if X is None:
@@ -725,7 +727,7 @@ class FreeEnergy:
                 X = np.asanyarray(X)
 
             vmin = []
-            for i in range(len(X)):
+            for i in (self.transField0,self.transField1):
                 fPhase = lambda v: self.f([[abs(v)] if j == i else [0] for j in range(len(X))],T)[0]
                 vT=X[i,i]
 
@@ -789,7 +791,10 @@ class FreeEnergy:
 
         """
 
-        deltaf = lambda v1,v2,T: self.f([[v1],[0]],T)[0]-self.f([[0],[v2]],T)[0]
+        deltaf = lambda v0,v1,T: ( 
+            +self.f([[v0] if j == self.transField0 else [0] for j in range(self.nbrFields)],T)[0]
+            -self.f([[v1] if j == self.transField1 else [0] for j in range(self.nbrFields)],T)[0]
+        )
 
         def deltaPmin(T):
             mins = self.findPhases(T)
