@@ -689,16 +689,15 @@ class FreeEnergy:
         n_nodes = max(min_nodes, int(np.ceil((Tf-Ti)/dT)))
         Trange = np.linspace(Ti,Tf,n_nodes)
 
-        h,s = [],[]
+        vmin = [[]]*self.nbrFields
         for T in Trange:
             mins = self.findPhases(T)
-            h.append(mins[0,0])
-            s.append(mins[1,1])
+            vmin=np.append(vmin, np.diag(mins)[:, np.newaxis], axis=1)
         self.Ti_int = Ti
         self.Tf_int = Tf
         self.Xint = [
-            interpolate.UnivariateSpline(Trange,h,s=0),
-            interpolate.UnivariateSpline(Trange,s,s=0)]
+            interpolate.UnivariateSpline(Trange,vmin[i,...],s=0)
+            for i in range(self.nbrFields)] 
 
     def findPhases(self, T, X=None):
         """Finds all phases at a given temperature T
