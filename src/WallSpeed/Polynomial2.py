@@ -115,16 +115,124 @@ class Polynomial:
                 # Contracting M with self.coefficient
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
         self.basis = newBasis
-                        
         
-    def chebyshev(self, x, n, restriction=None):
+    def evaluate(self, x):
+        """
+        Evaluates the polynomial at the compact coordinates x.
+
+        Parameters
+        ----------
+        x : array-like
+            Compact coordinates at which to evaluate the polynomial. Must have 
+            a shape (self.N,:) or (self.N,).
+
+        Returns
+        -------
+        array-like
+            Values of the polynomial at x.
+
+        """
+        x = np.asarray(x)
+        assert x.shape[0] == self.N and 1 <= x.shape.size <= 2, 'Polynomial error: x must have a shape (self.N,:) or (self.N,).'
+        singlePoint = False
+        if x.shape.size == 1:
+            x = x.reshape((self.N,1))
+            singlePoint = True
+            
+        polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
+        for i in range(self.N):
+            # Choosing the appropriate n
+            n = None
+            if self.endpoints[i]:
+                if self.direction[i] == 'z':
+                    n = np.arange(self.grid.M+1)
+                elif self.direction[i] == 'pz':
+                    n = np.arange(self.grid.N+1)
+                else:
+                    n = np.arange(self.grid.N)
+            else:
+                if self.direction[i] == 'z':
+                    n = np.arange(1, self.grid.M)
+                elif self.direction[i] == 'pz':
+                    n = np.arange(1, self.grid.N)
+                else:
+                    n = np.arange(self.grid.N-1)  
+                    
+            # Computing the polynomial basis in the i direction
+            pn = None
+            if self.basis[i] == 'Cardinal':
+                pn = self.cardinal(x[i,:,None], n[None,:], self.direction[i])
+                
+            elif self.basis[i] == 'Chebyshev':
+                restriction = None
+                if not self.endpoints[i]:
+                    n += 1
+                    if self.direction[i] == 'z':
+                        restriction = 'full'
+                    elif self.direction[i] == 'pz':
+                        restriction = 'full'
+                    else:
+                        restriction = 'partial'
+                pn = self.chebyshev(x[i,:,None], n[None,:], restriction)
+                
+            polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.N+1)))
+            
+        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.N+1)))
+        if singlePoint:
+            return result[0]
+        else:
+            return result
+        
+                        
+    def cardinal(self,x,n,direction):
         r"""
-        Computes the Chebyshev polynomial :math:`T_n(x)`
+        Computes the cardinal polynomials :math:`C_n(x)` defined by grid.
 
         Parameters
         ----------
         x : array_like
-            Coordinate at which to evaluate the Chebyshev polynomial. Must be 
+            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be 
+            broadcastable with n.
+        n : array_like
+            Order of the cardinal polynomial to evaluate. Must be 
+            broadcastable with x.
+        direction : string
+            Select the direction in which to compute the matrix. 
+            Can either be 'z', 'pz' or 'pp'.
+
+        Returns
+        -------
+        cn : array_like
+            Values of the cardinal functions.
+        """
+
+        x = np.asarray(x)
+        n = np.asarray(n)
+        
+        assert self.__is_broadcastable(x, n), 'Polynomial error: x and n are not broadcastable.'
+        assert direction in self.allowedDirection, "Polynomial error: unkown direction %s" % direction
+
+        #Selecting the appropriate grid and resizing it
+        grid = self.grid.getCompactCoordinates(True, direction)
+        completeGrid = np.expand_dims(grid, tuple(np.arange(1,(n*x).shape.size+1)))
+        nGrid = grid[n]
+
+        #Computing all the factor in the product defining the cardinal functions
+        cn_partial = np.divide(x-completeGrid, nGrid-completeGrid, where=nGrid-completeGrid!=0)
+
+        #Multiplying all the factors to get the cardinal functions
+        cn = np.prod(np.where(nGrid-completeGrid==0, 1, cn_partial),axis=0)
+
+        return cn
+    
+    def chebyshev(self, x, n, restriction=None):
+        r"""
+        Computes the Chebyshev polynomial :math:`T_n(x)`.
+
+        Parameters
+        ----------
+        x : array_like
+            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be 
             broadcastable with n.
         n : array_like
             Order of the Chebyshev polynomial to evaluate. Must be 
