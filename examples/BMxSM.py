@@ -44,7 +44,7 @@ print(f"{fxSM.derivField([[0],[1]], 100)=}")
 top = WallSpeed.Particle(
     "top",
     msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
-    msqThermal=lambda T: params["yt"]**2 * T**2,
+    msqThermal=lambda T: 0.251327 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=False,
