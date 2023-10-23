@@ -311,7 +311,7 @@ class Polynomial:
         for i in range(self.N):
             if i in axis:
                 x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
-                weights = np.pi*np.ones(self.coefficients.shape[i])
+                weights = np.pi*np.ones(x.size)
                 if self.direction[i] == 'z':
                     weights /= self.grid.M
                 elif self.direction[i] == 'pz':
