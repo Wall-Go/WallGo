@@ -1,5 +1,6 @@
 """
-An attempt to run EOM.py 
+Benchmark model: xSM, as implemented earlier by Benoit
+defines model, grid and top
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
