@@ -15,13 +15,13 @@ class EOM:
     """
     def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         """
-        Initialization 
+        Initialization
 
         Parameters
         ----------
         particle : Particle
-            Object of the class Particle, which contains the information about 
-            the out-of-equilibrium particles for which the Boltzmann equation 
+            Object of the class Particle, which contains the information about
+            the out-of-equilibrium particles for which the Boltzmann equation
             will be solved.
         freeEnergy : FreeEnergy
             Object of the class FreeEnergy.
@@ -100,7 +100,7 @@ class EOM:
             vevHighT = self.freeEnergy.findPhases(Tplus)[1]
 
             X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-            
+
             Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
             boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, X, Tprofile)
@@ -108,9 +108,9 @@ class EOM:
             boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
 
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
-            print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
-            # offEquilDeltas = boltzmannSolver.getDeltas()
-            # print(offEquilDeltas)
+            #print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
+            offEquilDeltas = boltzmannSolver.getDeltas()
+            print(f"{offEquilDeltas=}")
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
@@ -127,7 +127,7 @@ class EOM:
 
     def findWallVelocityMinimizeAction(self):
         """
-        Finds the wall velocity by minimizing the action and solving for the 
+        Finds the wall velocity by minimizing the action and solving for the
         solution with 0 total pressure on the wall.
 
         Returns
@@ -135,7 +135,7 @@ class EOM:
         wallVelocity : double
             Value of the wall velocity that solves the scalar EOMs.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
+            Array containing the wall thicknesses and wall offsets that
             minimize the action and solve the EOM.
 
         """
@@ -151,11 +151,11 @@ class EOM:
         ----------
         wallVelocityMin : double
             Lower bound of the bracket in which the root finder will look for a
-            solution. Should satisfy 
+            solution. Should satisfy
             :math:`0<{\rm wallVelocityMin}<{\rm wallVelocityMax}`.
         wallVelocityMax : double
             Upper bound of the bracket in which the root finder will look for a
-            solution. Should satisfy 
+            solution. Should satisfy
             :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
         wallParams : array_like
             Array containing a guess of the wall thicknesses and wall offsets.
@@ -165,7 +165,7 @@ class EOM:
         wallVelocity : double
             Value of the wall velocity that solves the scalar EOMs.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
+            Array containing the wall thicknesses and wall offsets that
             minimize the action and solve the EOM.
 
         """
@@ -210,14 +210,14 @@ class EOM:
         pressure : double
             Total pressure on the wall.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
-            minimize the action and solve the EOM. Only returned if 
+            Array containing the wall thicknesses and wall offsets that
+            minimize the action and solve the EOM. Only returned if
             returnOptimalWallParams is True.
 
         """
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
-    
+
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
@@ -229,12 +229,16 @@ class EOM:
 
         i = 0
         # TODO: Implement a better condition
-        while i < 1:
+        while i < 2:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
 
-            X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
+            X, dXdz = self.wallProfile(
+                self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets
+            )
+            Tprofile, velocityProfile = self.findPlasmaProfile(
+                c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus
+            )
 
             if self.includeOffEq:
                 boltzmannBackground = BoltzmannBackground(0, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
@@ -249,7 +253,10 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         dVdX = self.freeEnergy.derivField(X, Tprofile)
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
+
+        # TODO: Add the mass derivative in the Particle class and use it here.
+        dVout = 12*X[0]*offEquilDeltas['00']/2
+        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*((dVdX*dXdz)[0]+dVout*dXdz[0])/(1-self.grid.chiValues**2), [0])))
 
         if returnOptimalWallParams:
             return pressure,wallParams
@@ -272,7 +279,7 @@ class EOM:
             Temperature profile on the grid.
         offEquilDelta00 : array-like
             Off-equilibrium function Delta00.
-            
+
         Returns
         -------
         action : double
@@ -285,17 +292,17 @@ class EOM:
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDelta00/2
+        VOut = 12*self.particle.msqVacuum(X)*offEquilDelta00/2
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
-        Vref = (VLowT+VHighT)/2 
-        
+        Vref = (VLowT+VHighT)/2
+
         U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return (U+K)
-        
-        
+
+
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.nbrFields+1]
@@ -356,7 +363,7 @@ class EOM:
 
     def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
         """
-        Computes the scalar field profile and its derivative with respect to 
+        Computes the scalar field profile and its derivative with respect to
         the position in the wall.
 
         Parameters
@@ -424,7 +431,7 @@ class EOM:
         """
         temperatureProfile = []
         velocityProfile = []
-        
+
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
 
@@ -586,6 +593,6 @@ class EOM:
         T30 = ((3*delta20 - delta02 - self.particle.msqVacuum(X)*delta00)*u3*u0+
                 (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
         T33 = ((3*delta20 - delta02 - self.particle.msqVacuum(X)*delta00)*u3*u3+
-                (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+                (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2. -(self.particle.msqVacuum(X)*delta00+ delta02-delta20)/2.
 
         return T30, T33
