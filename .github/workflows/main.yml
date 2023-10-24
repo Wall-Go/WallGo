@@ -37,7 +37,7 @@ jobs:
       - name: Install Collision
         run: |
              mkdir -p Collision/build; cd Collision/build
-             cmake ..; make; make install
+             cmake .. && make && make install
              cd ../..
       - name: Run Collision
         run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 5
