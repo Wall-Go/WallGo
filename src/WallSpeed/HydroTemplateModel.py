@@ -59,57 +59,86 @@ class HydroTemplateModel:
         self.vJ = self.findJouguetVelocity()
 
     def findJouguetVelocity(self, alN=None):
-        """
-        Computes the Jouguet velocity.
+        r"""
+        Finds the Jouguet velocity, corresponding to the phase transition strength :math:`\alpha_n`,
+        using :math:`v_J = c_b \frac{1 + \sqrt{3 \alpha_n(1 - c_b^2 + 3 c_b^2 \alpha_n)}}{1+ 3 c_b^2 \alpha_n}`
+        (eq. (25) of arXiv:2303.10171).
 
+        Parameters
+        ----------
+        alN : double
+            phase transition strength at the nucleation temperature, :math:`\alpha_n`.
+            If :math:`\alpha_n` is not specified, the value defined by the model is used. 
+
+        Returns
+        -------
+        vJ: double
+            The value of the Jouguet velocity.
+        
         """
+
         if alN is None:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
 
     def get_vp(self,vm,al,branch=-1):
         r"""
-        Solves the matching equation for :math: `v_+`.
+        Solves the matching equation for :math:`v_+`.
 
         Parameters
         ----------
         vm : double
-            Plasma velocity behind the wall :math: `v_-`.
+            Plasma velocity in the wall frame right behind the wall :math:`v_-`.
         al : double
-            alpha parameter in front of the wall :math: `\alpha_+`.
+            phase transition strength at the temperature right in front of the wall :math:`\alpha_+`.
         branch : int, optional
             Select the branch of the matching equation's solution. Can either be 1 for detonation or -1 for deflagration/hybrid.
             The default is -1.
 
         Returns
         -------
+        vp : double
         double
-            :math: `v_+`.
-
+            Plasma velocity in the wall frame right in front of the the wall :math:`v_+`.
+            
         """
         disc = max(0, vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al)))
         return 0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al)
 
     def w_from_alpha(self,al):
         r"""
-        Finds the enthlapy :math:`\omega_+` corresponding to :math:`\alpha_+`.
+        Finds the enthlapy :math:`\omega_+` corresponding to :math:`\alpha_+` using the equation of state of the template model.
 
         Parameters
         ----------
         al : double
-            alpha parameter in front of the wall :math: `\alpha_+`.
+            alpha parameter at the temperature :math:`T_+` in front of the wall :math:`\alpha_+`.
 
         Returns
         -------
         double
-            :math: `\omega_+`.
+            :math:`\omega_+`.
 
         """
         return (abs((1-3*self.alN)*self.mu-self.nu)+1e-100)/(abs((1-3*al)*self.mu-self.nu)+1e-100)
 
     def __find_Tm(self,vm,vp,Tp):
         r"""
-        Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+`.
+        Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+` using the matching equations.
+
+        Parameters
+        ----------
+        vm : double
+            Value of the fluid velocity in the wall frame, right behind the bubble wall
+        vp : double
+            Value of the fluid velocity in the wall frame, right in front of the bubble
+        Tp : double
+            Plasma temperature right in front of the bubble wall
+
+        Returns
+        -------
+        Tm : double
+            Plasma temperature right behind the bubble wall
         """
         ap = 3/(self.mu*self.Tnucl**self.mu)
         am = 3*self.psiN/(self.nu*self.Tnucl**self.nu)
@@ -118,15 +147,21 @@ class HydroTemplateModel:
     def __eqWall(self,al,vm,branch=-1):
         """
         Matching equation at the bubble wall.
+
+        Parameters
+        ----------
+        al : double
+            phase transition strength at the temperature right in front of the wall :math:`\alpha_+`.
+        vm : double
+            Value of the fluid velocity in the wall frame, right behind the bubble wall
         """
         vp = self.get_vp(vm,al,branch)
-        ga2m,ga2p= 1/(1-vm**2),1/(1-vp**2)
         psi = self.psiN*self.w_from_alpha(al)**(self.nu/self.mu-1)
-        return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu)
+        return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(gammaSq(vp)/gammaSq(vm))**(self.nu/2)*psi)/(3*self.nu)
 
     def solve_alpha(self,vw, constraint=True):
         r"""
-        Finds the value of :math:`\alpha_+` that solves the matching equation at the wall.
+        Finds the value of :math:`\alpha_+` that solves the matching equation at the wall by varying :math:`v_-`.
 
         Parameters
         ----------
@@ -138,7 +173,7 @@ class HydroTemplateModel:
 
         Returns
         -------
-        double
+        alp : double
             Value of :math:`\alpha_+` that solves the matching equation.
 
         """

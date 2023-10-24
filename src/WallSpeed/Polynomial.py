@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri May 19 13:41:50 2023
-
-@author: benoitlaurent
-"""
-
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 

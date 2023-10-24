@@ -22,24 +22,42 @@ class Thermodynamics:
         -------
         cls: Thermodynamics
             An object of the Thermodynamics class.
-
-        Note that the derivatives of the pressures are currently hard-coded.
-        These all need to be modified.
         """
         self.freeEnergy = freeEnergy
         self.Tnucl = freeEnergy.Tnucl
         self.Tc = freeEnergy.Tc
 
-
-
-    #Pressure in high T phase
     def pHighT(self, T):
+        """
+        Pressure in the high-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        pHighT : double
+            Pressure in the high-temperature phase.
+
+        """
         return self.freeEnergy.pressureHighT(T)
 
-    #T-derivative of the pressure in the high T phase
     def dpHighT(self, T):
-        #p = self.freeEnergy.params # hard coded!
-        #return (T**3*(p["ts"]**2 + 4*p["b"]*p["lams"])-p["ts"]*T*p["mussq"])/p["lams"]
+        """
+        Temperature derivative of the pressure in the high-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        dpHighT : double
+            Temperature derivative of the pressure in the high-temperature phase.
+        """
         return derivative(
             self.freeEnergy.pressureHighT,
             T,
@@ -48,10 +66,20 @@ class Thermodynamics:
             order=4,
         )
 
-    #Second T-derivative of the pressure in the high T phase
     def ddpHighT(self, T):
-        #p = self.freeEnergy.params # hard coded!
-        #return (3*T**2*(p["ts"]**2+4*p["b"]*p["lams"])-p["ts"]*p["mussq"])/p["lams"]
+        """
+        Second temperature derivative of the pressure in the high-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        ddpHighT : double
+            Second temperature derivative of the pressure in the high-temperature phase.
+        """
         return derivative(
             self.freeEnergy.pressureHighT,
             T,
@@ -60,30 +88,101 @@ class Thermodynamics:
             order=4,
         )
 
-    #Energy density in the high T phase
     def eHighT(self, T):
+        r"""
+        Energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        eHighT : double
+            Energy density in the high-temperature phase.
+        """
         return T*self.dpHighT(T) - self.pHighT(T)
 
-    #T-derivative of the energy density in the high T phase
     def deHighT(self, T):
+        """
+        Temperature derivative of the energy density in the high-temperature phase.
+        
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        deHighT : double
+            Temperature derivative of the energy density in the high-temperature phase.
+        """
         return T*self.ddpHighT(T)
 
-    #Enthalpy in the high T phase
     def wHighT(self,T):
+        r"""
+        Enthalpy density in the high-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        wHighT : double
+            Enthalpy density in the high-temperature phase.
+        """
         return self.pHighT(T)+self.eHighT(T)
 
-    #Sound speed squared in the high T phase
     def csqHighT(self,T):
+        r"""
+        Sound speed squared in the high-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        csqHighT : double
+            Sound speed squared in the high-temperature phase.
+        """
         return self.dpHighT(T)/self.deHighT(T)
 
-        #Pressure in the low T phase
     def pLowT(self, T):
+        """
+        Pressure in the low-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        pLowT : double
+            Pressure in the low-temperature phase.
+
+        """
         return self.freeEnergy.pressureLowT(T)
 
-    #T-derivative of the pressure in the low T phase
     def dpLowT(self, T):
-        #p = self.freeEnergy.params # hard coded!
-        #return (T**3*(p["th"]**2 + 4*p["b"]*p["lamh"])-p["th"]*T*p["muhsq"])/p["lamh"]
+        """
+        Temperature derivative of the pressure in the low-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        dpLowT : double
+            Temperature derivative of the pressure in the low-temperature phase.
+        """
         return derivative(
             self.freeEnergy.pressureLowT,
             T,
@@ -92,10 +191,20 @@ class Thermodynamics:
             order=4,
         )
 
-    #Second T-derivative of the pressure in the low T phase
     def ddpLowT(self, T):
-        #p = self.freeEnergy.params # hard coded!
-        #return (3*T**2*(p["th"]**2+4*p["b"]*p["lamh"])-p["th"]*p["muhsq"])/p["lamh"]
+        """
+        Second temperature derivative of the pressure in the low-temperature phase.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        ddpLowT : double
+            Second temperature derivative of the pressure in the low-temperature phase.
+        """
         return derivative(
             self.freeEnergy.pressureLowT,
             T,
@@ -104,18 +213,66 @@ class Thermodynamics:
             order=4,
         )
 
-    #Energy density in the low T phase
     def eLowT(self, T):
+        r"""
+        Energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        eLowT : double
+            Energy density in the low-temperature phase.
+        """
         return T*self.dpLowT(T) - self.pLowT(T)
 
-    #T-derivative of the energy density in the low T phase
     def deLowT(self, T):
+        """
+        Temperature derivative of the energy density in the low-temperature phase.
+        
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        deLowT : double
+            Temperature derivative of the energy density in the low-temperature phase.
+        """
         return T*self.ddpLowT(T)
 
-    #Enthalpy in the high T phase
     def wLowT(self,T):
+        r"""
+        Enthalpy density in the low-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        wLowT : double
+            Enthalpy density in the low-temperature phase.
+        """
         return self.pLowT(T)+self.eLowT(T)
 
-    #Sound speed squared in the low T phase
     def csqLowT(self,T):
+        r"""
+        Sound speed squared in the low-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
+
+        Parameters
+        ----------
+        T : double
+            Temperature
+
+        Returns
+        -------
+        csqLowT : double
+            Sound speed squared in the low-temperature phase.
+        """
         return self.dpLowT(T)/self.deLowT(T)

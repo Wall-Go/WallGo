@@ -1,8 +1,8 @@
 """
-An attempt to run EOM.py 
+An attempt to run EOM.py
 """
 import BMxSMsimple
-from WallSpeed.EOM import EOM
+
 """
 Compute the wall velocity in local thermal equilibrium
 """
@@ -13,6 +13,11 @@ print(vwLTE)
 """
 Compute the wall velocity from the loop without out-of-equilibrium effects
 """
-print("The wall parameters without out-of-equilibrium effects, found by minimizing the action are")
-print(BMxSMsimple.eom.findWallVelocityMinimizeAction())
 
+print("The wall parameters without out-of-equilibrium effects, found by minimizing the action are")
+
+print('Tanh ansatz:', BMxSMsimple.eom.findWallVelocityMinimizeAction())
+
+#Fix after merge!
+#eomGeneralShape = EOMGeneralShape(top, fxSM, grid, 2)
+#print('General shape:', BMxSMsimple.eomGeneralShape.findWallVelocity())
