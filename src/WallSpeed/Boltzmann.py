@@ -144,6 +144,16 @@ class BoltzmannSolver:
         measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
         measurePzPp /= (2 * np.pi)**2
 
+        # putting deltaF on momentum coordinate grid points
+        deltaFCoord = np.einsum(
+            "abc, ai, bj, ck -> ijk",
+            deltaF,
+            self.poly.matrix(self.basisM, "z"),
+            self.poly.matrix(self.basisN, "pz"),
+            self.poly.matrix(self.basisN, "pp"),
+            optimize=True,
+        )
+
         # evaluating integrals with Gaussian quadrature
         measureWeight = measurePzPp * weights
         arg00 = deltaF[:, :, 1:] / E[:, :, 1:]
@@ -382,5 +392,5 @@ class BoltzmannSolver:
             return np.where(x > 100, -np.exp(-x), -np.exp(x) / np.expm1(x) ** 2)
         else:
             return np.where(
-                x > 100, -np.exp(-x), -np.exp(x) / (np.exp(x) + 1) ** 2
+                x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
             )

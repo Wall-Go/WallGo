@@ -3,6 +3,7 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
+import matplotlib.pyplot as plt
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
@@ -11,8 +12,8 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 """
 Grid
 """
-M = 20
-N = 20
+M = 10
+N = 10
 grid = Grid(M, N, 1, 1)
 poly = Polynomial(grid)
 
@@ -67,10 +68,29 @@ print("source.shape =", source.shape)
 deltaF = boltzmann.solveBoltzmannEquations()
 print("deltaF.shape =", deltaF.shape)
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
-print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
+
+# converting to coordinate space
+deltaFCoord = np.einsum(
+    "abc, ai, bj, ck -> ijk",
+    deltaF,
+    boltzmann.poly.matrix(boltzmann.basisM, "z"),
+    boltzmann.poly.matrix(boltzmann.basisN, "pz"),
+    boltzmann.poly.matrix(boltzmann.basisN, "pp"),
+    optimize=True,
+)
+print(f"{deltaFCoord.shape=}")
+print("deltaFCoord[:, 0, 0] =", deltaFCoord[:, 0, 0])
 
 Deltas = boltzmann.getDeltas(deltaF)
 print("Deltas =", Deltas)
+
+# plotting
+chi = boltzmann.grid.getCompactCoordinates()[0]
+plt.plot(chi, Deltas["00"])
+plt.xlabel(r"$\chi$")
+plt.ylabel(r"$\Delta_{00}$")
+plt.tight_layout()
+plt.show()
 
 # now making a deltaF by hand
 deltaF = np.zeros(deltaF.shape)
@@ -102,5 +122,3 @@ Deltas = boltzmann.getDeltas(integrand_analytic)
 Deltas_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
 print("Ratio = 1 =", Deltas["00"] / Deltas_analytic)
 print("T =", background.temperatureProfile)
-
-
