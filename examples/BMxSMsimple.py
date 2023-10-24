@@ -166,6 +166,8 @@ Define thermodynamics, hydrodynamics and equation of motion
 """
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
+
+#Without out-of-equilibrium contributions
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
 
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
