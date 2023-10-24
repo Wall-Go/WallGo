@@ -10,6 +10,9 @@ from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
+from WallSpeed.EOMGeneralShape import EOMGeneralShape
+import matplotlib.pyplot as plt
+from time import time
 
 """
 Grid
@@ -167,7 +170,10 @@ print(vwLTE)
 """
 Compute the wall velocity with out-of-equilibrium effects
 """
-includeOffEq = True
-eom = EOM(top, fxSM, grid, 2, includeOffEq)
-#print(eom.findWallVelocityLoop())
-print(eom.findWallVelocityMinimizeAction())
+
+eom = EOM(top, fxSM, grid, 2, includeOffEq=True)
+print('Tanh ansatz:', eom.findWallVelocityMinimizeAction())
+
+
+eomGeneralShape = EOMGeneralShape(top, fxSM, grid, 2)
+print('General shape:', eomGeneralShape.findWallVelocity())
