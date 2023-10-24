@@ -107,10 +107,15 @@ class Polynomial:
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
+    def __sub__(self, poly):
+        return self.__add__((-1)*poly)
+        
     def __rmul__(self, poly):
         return self.__mul__(poly)
     def __radd__(self, poly):
         return self.__add__(poly)
+    def __rsub__(self, poly):
+        return (-1)*self.__sub__(poly)
     
     def __findContraction(self, poly):
         """
