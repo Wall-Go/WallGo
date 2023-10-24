@@ -144,12 +144,18 @@ int main(int argc, char *argv[]) {
 
 	// basis size, default value
 	int basisSizeN = 20;
+    // config file, default name
+    std::string configFileName = "config.ini";
 
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "whn:")) != -1) {
+	while ((opt = getopt(argc, argv, "c:hn:w")) != -1) {
 		switch (opt) {
-			case 'h':
+			case 'c':
+                configFileName = optarg;
+                std::cout << "Using config file " << configFileName << "\n";
+                break;
+            case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
@@ -172,8 +178,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Load config 
-	std::string configFileName = "config.ini";
+	// Load config
 	ConfigParser& config = ConfigParser::get();
 
 	if (config.load(configFileName)) {
