@@ -61,6 +61,91 @@ class Polynomial:
         
         self.__checkCoefficients(coefficients)
         
+    def __getitem__(self, key):
+        basis, endpoints, direction = [],[],[]
+        if not isinstance(key,tuple):
+            key = (key,)
+        n = 0
+        for i,k in enumerate(key):
+            if isinstance(k, int):
+                n += 1
+            elif isinstance(k, slice):
+                basis.append(self.basis[i])
+                direction.append(self.direction[i])
+                endpoints.append(self.endpoints[i])
+                n += 1
+            elif k is None:
+                basis.append('Cardinal')
+                direction.append('z')
+                endpoints.append(False)
+            else: 
+                raise ValueError('Polynomial error: invalid key.')
+        basis = tuple(basis) + self.basis[n:]
+        direction = tuple(direction) + self.direction[n:]
+        endpoints = tuple(endpoints) + self.endpoints[n:]
+        
+        coefficients = np.array(self.coefficients[key])
+        return Polynomial(coefficients, self.grid, basis, direction, endpoints)
+    
+    def __mul__(self, poly):
+        if isinstance(poly, Polynomial):
+            assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
+            basis,direction,endpoints = self.__findContraction(poly)
+            return Polynomial(self.coefficients*poly.coefficients)
+        else:
+            newCoeff = poly*self.coefficients
+            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+        
+    def __add__(self, poly):
+        if isinstance(poly, Polynomial):
+            assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
+            basis,direction,endpoints = self.__findContraction(poly)
+            return Polynomial(self.coefficients+poly.coefficients)
+        else:
+            newCoeff = poly+self.coefficients
+            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+        
+    def __rmul__(self, poly):
+        return self.__mul__(poly)
+    def __radd__(self, poly):
+        return self.__add__(poly)
+    
+    def __findContraction(self, poly):
+        """
+        Find the tuples basis, direction and endpoints resulting from the 
+        contraction of self and poly
+
+        Parameters
+        ----------
+        poly : Polynomial
+            Polynomial object.
+
+        Returns
+        -------
+        basis : tuple
+            basis tuple of the contracted polynomial.
+        direction : tuple
+            direction tuple of the contracted polynomial.
+        endpoints : tuple
+            endpoints tuple of the contracted polynomial.
+
+        """
+        assert self.N == poly.N, 'Polynomial error: you can only combine two Polynomial objects with the same rank.'
+        basis, endpoints, direction = [],[],[]
+        for i in range(self.N):
+            assert self.coefficients.shape[i] == 1 or poly.coefficients.shape[i] == 1 or (self.basis[i] == poly.basis[i] and self.direction[i] == poly.direction[i] and self.endpoints[i] == poly.endpoints[i]), 'Polynomial error: the two Polynomial objects are not broadcastable.'
+            if self.coefficients.shape[i] > 1:
+                basis.append(self.basis[i])
+                direction.append(self.direction[i])
+                endpoints.append(self.endpoints[i])
+            else:
+                basis.append(poly.basis[i])
+                direction.append(poly.direction[i])
+                endpoints.append(poly.endpoints[i])
+        return tuple(basis),tuple(direction),tuple(endpoints)
+        
     def changeBasis(self, newBasis):
         """
         Change the basis of the polynomial. Will change self.coefficients
@@ -501,12 +586,13 @@ class Polynomial:
             
     def __checkCoefficients(self, coefficients):
         for i,size in enumerate(self.coefficients.shape):
-            if self.direction[i] == 'z':
-                assert size + 2*(1-self.endpoints[i]) == self.grid.M + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
-            elif self.direction[i] == 'pz':
-                assert size + 2*(1-self.endpoints[i]) == self.grid.N + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
-            else:
-                assert size + (1-self.endpoints[i]) == self.grid.N, f"Polynomial error: coefficients with invalid size in dimension {i}."
+            if size > 1:
+                if self.direction[i] == 'z':
+                    assert size + 2*(1-self.endpoints[i]) == self.grid.M + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
+                elif self.direction[i] == 'pz':
+                    assert size + 2*(1-self.endpoints[i]) == self.grid.N + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
+                else:
+                    assert size + (1-self.endpoints[i]) == self.grid.N, f"Polynomial error: coefficients with invalid size in dimension {i}."
                 
     def __checkAxis(self, axis):
         assert isinstance(axis, tuple), 'Polynomial error: axis must be a tuple or a int.'
