@@ -16,6 +16,6 @@ Compute the wall velocity with out-of-equilibrium effects
 """
 #print(eom.findWallVelocityLoop())
 t = time()
-print(BMxSM.eom.findWallVelocityMinimizeAction())
+print(BMxSM.eomOffEq.findWallVelocityMinimizeAction())
 print(time()-t)
 
