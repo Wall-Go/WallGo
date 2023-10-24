@@ -10,6 +10,7 @@ from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
+from WallSpeed.EOMGeneralShape import EOMGeneralShape
 
 """
 Grid
@@ -166,3 +167,5 @@ Define thermodynamics, hydrodynamics and equation of motion
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
+
+eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)

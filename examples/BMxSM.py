@@ -11,6 +11,7 @@ from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
+from WallSpeed.EOMGeneralShape import EOMGeneralShape
 import WallSpeed
 
 """
@@ -60,4 +61,7 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
+
+#Without out-of-equilibrium contributions
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
+eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)

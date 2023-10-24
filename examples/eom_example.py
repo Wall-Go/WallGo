@@ -18,6 +18,4 @@ print("The wall parameters without out-of-equilibrium effects, found by minimizi
 
 print('Tanh ansatz:', BMxSMsimple.eom.findWallVelocityMinimizeAction())
 
-#Fix after merge!
-#eomGeneralShape = EOMGeneralShape(top, fxSM, grid, 2)
-#print('General shape:', BMxSMsimple.eomGeneralShape.findWallVelocity())
+print('General shape:', BMxSMsimple.eomGeneral.findWallVelocity())
