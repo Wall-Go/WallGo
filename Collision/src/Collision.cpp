@@ -57,7 +57,11 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 			results[m-2][n-1][j-1][k-1] = resultMC[0];
 			errors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-		    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+            // @todo 
+            bool bVerbose = false;
+            if (bVerbose) {
+		        printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+            }
 
 		} // end j,k
 	} // end m,n
