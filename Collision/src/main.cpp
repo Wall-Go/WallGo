@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	collisionsQCD(20);
+	collisionsQCD(basisSizeN);
 
 /*
 	//-------------------- Measure wall clock time
