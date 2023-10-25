@@ -60,12 +60,15 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
 
           bool bConverged = false;
 
+          // @todo I don't think we want to hardcode the lower bound here, what to do?
+          const double tooSmallNumber = 1e-8; 
+
           double chisq = gsl_monte_vegas_chisq(gslState); // the return value is actually chisq / dof
           if (std::fabs(chisq - 1.0) > 0.5) {
                // Error not reliable
           }
           // Handle case where integral is very close to 0
-          else if (std::fabs(mean) < 1e-8 && std::fabs(error) < relativeErrorGoal) {
+          else if (std::fabs(mean) < tooSmallNumber && std::fabs(error) < relativeErrorGoal) {
                
                bConverged = true;
           } 
