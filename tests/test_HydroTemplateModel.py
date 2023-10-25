@@ -2,7 +2,50 @@ import pytest
 import numpy as np
 from scipy.integrate import odeint
 import WallSpeed
-from .TestModel import TestModelTemplate
+
+class TestModelTemplate(WallSpeed.Thermodynamics):
+    __test__ = False
+
+    def __init__(self, alN, psiN, cb2, cs2, Tn, Tc, wn=1):
+        self.alN = alN # Strength parameter alpha_n of the phase transition at the nucleation temperature
+        self.psiN = psiN # Enthalpy in the low T phase divided by the enthalpy in the high T phase (both evaluated at the nucleation temperature)
+        self.cb2 = cb2
+        self.cs2 = cs2
+        self.nu = 1+1/self.cb2
+        self.mu = 1+1/self.cs2
+
+        self.Tnucl = Tn # Nucleation temperature
+        self.Tc = Tc
+        self.wn = wn # Enthalpy in the high T phase at the nucleation temperature
+        self.ap = 3*wn/(self.mu*Tn**self.mu)
+        self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
+        self.eps = 0
+        self.eps = (self.pHighT(Tn)-self.pLowT(Tn)-cb2*(self.eHighT(Tn)-self.eLowT(Tn)-3*wn*alN))/(1+cb2)
+
+    #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pHighT(self, T):
+        return self.ap*T**self.mu/3 - self.eps
+
+    #T-derivative of the pressure in the high T phase
+    def dpHighT(self, T):
+        return self.mu*self.ap*T**(self.mu-1)/3
+
+    #Second T-derivative of the pressure in the high T phase
+    def ddpHighT(self, T):
+        return self.mu*(self.mu-1)*self.ap*T**(self.mu-2)/3
+
+
+    #Pressure in the low T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
+    def pLowT(self, T):
+        return self.am*T**self.nu/3
+
+    #T-derivative of the pressure in the low T phase
+    def dpLowT(self, T):
+        return self.nu*self.am*T**(self.nu-1)/3
+
+    #Second T-derivative of the pressure in the low T phase
+    def ddpLowT(self, T):
+        return self.nu*(self.nu-1)*self.am*T**(self.nu-2)/3
 
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel

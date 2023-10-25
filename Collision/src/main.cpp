@@ -13,6 +13,7 @@
 #include "hdf5Interface.h"
 #include "gslWrapper.h"
 #include "MatrixElement.h"
+#include "ConfigParser.h"
 
 // Print a description of all supported options
 void printUsage(FILE *fp, const char *path) {
@@ -32,8 +33,8 @@ void printUsage(FILE *fp, const char *path) {
 				"Do a short test run and exit. Useful for profiling\n");
 }
 
-
 //***************
+
 
 /* Test/example routine, calculates all collision integrals with QCD interactions. 
 The structure here illustrates how the same could be done from Python with arbitrary inputs */ 
@@ -49,8 +50,8 @@ void collisionsQCD(uint N) {
 	const double msqVacuum = 0.0;
 
 	// take top and gluon out-of-eq
-    ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2);
+  ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2);
+  ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2);
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2);
 
 	// Main control object
@@ -68,38 +69,50 @@ void collisionsQCD(uint N) {
 
 int main(int argc, char *argv[]) {
 
-	//--------------- How this works 
+	//--------------- How this works
 
-	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!). 
-	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed. 
+	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!).
+	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed.
 	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
 	* Currently the matrix elements are just hard coded, in a more realistic setting they would probably be read from elsewhere. */
 
 	/* class ParticleSpecies : Quite self-explanatory. Contains info about particle statistics, masses and whether the particle species stays in equilibrium, etc.
-	* These are given as inputs to CollElem when constructing CollElem objects. 
+	* These are given as inputs to CollElem when constructing CollElem objects.
 	* The particle name property is important as it is used to read in the correct matrix element (this needs improvement in the future). */
 
-	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case). 
+	/* class CollisionIntegral4 : This describes the whole 2-by-2 collision integral for a given particle type (top quark in this case).
 	* IE: this object calculates eq. (A1) in 2204.13120, with delta f replace with Chebyshev polynomials.
-	* Therefore the class it needs to know the size of our polynomial basis (N) and CollElem objects that make up the integral. 
+	* Therefore the class it needs to know the size of our polynomial basis (N) and CollElem objects that make up the integral.
 	* The class calculates 5D integrals with same integration variables as Benoit had. See notes in the private repo. */
 
-	/* Currently the interface between CollisionIntegral4 and CollElem is not optimal and there is some redundancy 
-	* in how the CollisionIntegral4 obtains particle masses etc. This needs to be improved in next version before we 
+	/* Currently the interface between CollisionIntegral4 and CollElem is not optimal and there is some redundancy
+	* in how the CollisionIntegral4 obtains particle masses etc. This needs to be improved in next version before we
 	* get started with generic matrix elements */
 
 	//---------------
 
-	bool bDoTestRun = false;
+	// basis size, default value
+	int basisSizeN = 20;
+    bool bDoTestRun = false;
+    // config file, default name
+    std::string configFileName = "config.ini";
 
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "wt")) != -1) {
+	while ((opt = getopt(argc, argv, "tc:hn:w")) != -1) {
 		switch (opt) {
-			case 'h':
+			case 'c':
+                configFileName = optarg;
+                std::cout << "Using config file " << configFileName << "\n";
+                break;
+            case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
+			case 'n':
+				basisSizeN = int(*optarg) - int('0');
+				std::cout << "Running with basis size "<< basisSizeN << "\n";
+				break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
 				testHDF5();
@@ -119,13 +132,25 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// Load config
+	ConfigParser& config = ConfigParser::get();
+
+	if (config.load(configFileName)) {
+		std::cout << "Read config:\n";
+		config.printContents();
+		std::cout << std::endl;
+	} else {
+		return 1;
+	}
+
+
 	gslWrapper::initializeRNG();
+
 
 	if (bDoTestRun) {
 		collisionsQCD(5);
 		return 0;
 	}
-
 
 
 	collisionsQCD(20);
@@ -151,7 +176,7 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Test done, took " << elapsedTimeMs << "ms\n";
 
-	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: " 
+	std::cout << "Estimated time-per-thread for all " << nCollisionTerms << " collision integrals: "
 			<< hours << " hours " << minutes << " minutes\n";
 
 	//--------------------
