@@ -53,6 +53,6 @@ jobs:
              cmake ..; make; make install
              cd ../..
       - name: Run Collision
-        run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 5
+        run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 5 && cd ..
       - name: Test with pytest
-        run: cd ../tests && pytest -v
+        run: cd tests && pytest -v
