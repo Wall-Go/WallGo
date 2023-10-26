@@ -9,6 +9,7 @@
 #include "ParticleSpecies.h"
 #include "Collision.h"
 #include "gslWrapper.h"
+#include "ConfigParser.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -21,7 +22,20 @@
 void initModule() 
 {
     gslWrapper::initializeRNG();
+
+    ConfigParser& config = ConfigParser::get();
+
+    // @todo let's not hardcode this in
+    std::string configFileName = "config.ini";
+	if (config.load(configFileName)) {
+		std::cout << "=== Collision config ===\n\n";
+		config.printContents();
+		std::cout << std::endl;
+	} else {
+		exit(100);
+	}
 }
+
 
 /* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
 But seems hard to dictate when/how this should be called in Python context.
