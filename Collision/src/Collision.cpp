@@ -80,8 +80,10 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 	for (uint n = 1; n <= N-1; ++n) {
 		for (uint j = N/2+1; j <= N-1; ++j)
 		for (uint k = 1; k <= N-1; ++k) {
+
 			uint jOther = N - j;
-			uint sign = (m % 2 == 0 ? 1 : -1);
+			int sign = (m % 2 == 0 ? 1 : -1);
+            
 			results[m-2][n-1][j-1][k-1] = sign * results[m-2][n-1][jOther-1][k-1];
 			errors[m-2][n-1][j-1][k-1] = sign * errors[m-2][n-1][jOther-1][k-1];
 		}
