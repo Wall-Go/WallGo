@@ -14,6 +14,7 @@
 #include "hdf5Interface.h"
 #include "gslWrapper.h"
 #include "MatrixElement.h"
+#include "ConfigParser.h"
 
 // Print a description of all supported options
 void printUsage(FILE *fp, const char *path) {
@@ -34,8 +35,8 @@ void printUsage(FILE *fp, const char *path) {
 				"Do a short test run and exit. Useful for profiling\n");
 }
 
-
 //***************
+
 
 /* Test/example routine, calculates all collision integrals with QCD interactions. 
 The structure here illustrates how the same could be done from Python with arbitrary inputs */ 
@@ -74,6 +75,9 @@ int main(int argc, char *argv[]) {
 
 	//--------------- How this works
 
+	/* class Collision: This is a control class that collects all functionality in one place, 
+	* basically a replacement for main function. */
+
 	/* class CollElem : Describes a matrix element with fixed external particles (ordering matters!).
 	* This is the object that calculates |M|^2 and the statistical 'population factor' P once the external momenta are fixed.
 	* We need a separate CollElem object for each scattering process that contributes to the collision integral (tt->gg, tg->tg, tq->tq are separate CollElems)
@@ -94,14 +98,21 @@ int main(int argc, char *argv[]) {
 
 	//---------------
 
-	bool bDoTestRun = false;
-	uint basisSizeN = 20;
+	// basis size, default value
+	int basisSizeN = 20;
+    bool bDoTestRun = false;
+    // config file, default name
+    std::string configFileName = "config.ini";
 
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "whn:t")) != -1) {
+	while ((opt = getopt(argc, argv, "tc:hn:w")) != -1) {
 		switch (opt) {
-			case 'h':
+			case 'c':
+                configFileName = optarg;
+                std::cout << "Using config file " << configFileName << "\n";
+                break;
+            case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
@@ -128,11 +139,23 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// Load config
+	ConfigParser& config = ConfigParser::get();
+
+	if (config.load(configFileName)) {
+		std::cout << "Read config:\n";
+		config.printContents();
+		std::cout << std::endl;
+	} else {
+		return 1;
+	}
+
+
 	gslWrapper::initializeRNG();
 
 	if (bDoTestRun) 
 	{
-		collisionsQCD(4);
+		collisionsQCD(5);
 	}
 	else 
 	{

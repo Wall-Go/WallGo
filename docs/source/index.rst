@@ -32,6 +32,7 @@ If you use WallSpeed, please cite arXiv:....
     EoM
     Grid
     Hydro
+    HydroTemplateModel
     Polynomial
     Model
     Thermodynamics
