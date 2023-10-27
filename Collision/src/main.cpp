@@ -117,8 +117,7 @@ int main(int argc, char *argv[]) {
 				printUsage(stderr, argv[0]);
 				return 0;
 			case 'n':
-				basisSizeN = int(*optarg) - int('0');
-				std::cout << "Running with basis size "<< basisSizeN << "\n";
+				basisSizeN = std::atoi(optarg);
 				break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
@@ -149,6 +148,8 @@ int main(int argc, char *argv[]) {
 	} else {
 		return 1;
 	}
+
+	std::cout << "Running with basis size "<< basisSizeN << "\n";
 
 
 	gslWrapper::initializeRNG();

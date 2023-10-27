@@ -1,10 +1,15 @@
 #include "Collision.h"
 
 #include <array>
-
 #include <fstream>
 #include <regex> // Reading matrix elements from file
 #include <algorithm> // std::remove_if
+
+#include "ConfigParser.h"
+
+#if WITH_OMP
+    #include <omp.h>
+#endif
 
 Collision::Collision(uint basisSize) : basisSizeN(basisSize)
 {
@@ -16,7 +21,8 @@ void Collision::addParticle(const ParticleSpecies &particle)
 
     massSquares.push_back(particle.getThermalMassSquared() + particle.getVacuumMassSquared());
 
-    if (bMatrixElementsDone) {
+    if (bMatrixElementsDone) 
+    {
         std::cerr << "Warning: New particle added after parsing of matrix elements. You probably do NOT want to do this." << std::endl;
     }
 }
@@ -33,42 +39,88 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
     errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
 
+    ConfigParser& config = ConfigParser::get();
+    const bool bVerbose = config.getBool("Integration", "verbose");
+
+#if WITH_OMP
+    // OMP lock for syncing evaluation control variables
+    omp_lock_t integralCountLock;
+    omp_init_lock(&integralCountLock);
+#endif
+    // Counter to use for managing evaluation control, we don't want to use omp_lock after every single integral 
+    uint localIntegralProgress = 0;
+    // How often to print progress (every this many integrals).
+    uint evaluationControlInterval = 500;
+
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
 
-	// m,n = Polynomial indices
-	#pragma omp parallel for collapse(4) firstprivate(collisionIntegral)
+    #pragma omp taskwait
+
+    // each thread needs its collisionIntegral because the operations for computing the integrand are not thread safe!
+	#pragma omp parallel for collapse(4) firstprivate(collisionIntegral) firstprivate(localIntegralProgress)
+    // m,n = Polynomial indices
 	for (uint m = 2; m <= N; ++m) 
-	for (uint n = 1; n <= N-1; ++n) {
+	for (uint n = 1; n <= N-1; ++n) 
+    {
 		// j,k = grid momentum indices 
 		for (uint j = 1; j <= N/2; ++j)
-		for (uint k = 1; k <= N-1; ++k) {
+		for (uint k = 1; k <= N-1; ++k) 
+        {
 
             // Monte Carlo result for the integral + its error
             std::array<double, 2> resultMC;
 
             // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-            if (2*j == N && m % 2 != 0) {
+            if (2*j == N && m % 2 != 0) 
+            {
                 resultMC[0] = 0.0;
                 resultMC[1] = 0.0;
-            } else {
+            } 
+            else 
+            {
                 resultMC = collisionIntegral.evaluate(m, n, j, k);
             }
 
             results[m-2][n-1][j-1][k-1] = resultMC[0];
             errors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-            // @todo add option somewhere for verbose printing, right now just hide these so that we don't get output spam
-            bool bVerbose = false;
-            if (bVerbose) {
+            if (bVerbose) 
+            {
                 printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
             }
 
-            // Evaluation control
+            // Check if we received instructions to stop
             if (!shouldContinueEvaluation())
             {
                 // @TODO. For the python-bound subclass terminates inside the function anyway so not urgent
             }
+
+            localIntegralProgress++;
+
+            // Print progress?
+            if (localIntegralProgress % evaluationControlInterval == 0)
+            {
+                int threadID = 0;
+            #if WITH_OMP
+                omp_set_lock(&integralCountLock);
+                computedIntegralCount += localIntegralProgress;
+                omp_unset_lock(&integralCountLock);
+
+                threadID = omp_get_thread_num();
+            #else // No OpenMP
+                computedIntegralCount += localIntegralProgress;
+            #endif
+
+                if (threadID == 0)
+                {
+                    reportProgress();
+                }
+            
+                localIntegralProgress = 0;
+
+            }
+
 		} // end j,k
 	} // end m,n
 
@@ -77,9 +129,11 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 	// Fill in the j > N/2 elements
 	#pragma omp parallel for collapse(4)
 	for (uint m = 2; m <= N; ++m) 
-	for (uint n = 1; n <= N-1; ++n) {
+	for (uint n = 1; n <= N-1; ++n) 
+    {
 		for (uint j = N/2+1; j <= N-1; ++j)
-		for (uint k = 1; k <= N-1; ++k) {
+		for (uint k = 1; k <= N-1; ++k) 
+        {
 
 			uint jOther = N - j;
 			int sign = (m % 2 == 0 ? 1 : -1);
@@ -89,6 +143,12 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 		}
 	}
 
+    #pragma omp taskwait
+
+#if WITH_OMP
+    omp_destroy_lock(&integralCountLock);
+#endif
+
 }
 
 
@@ -97,6 +157,10 @@ void Collision::calculateCollisionIntegrals()
     // Particle list is assumed to be fixed from now on!
     findOutOfEquilibriumParticles();
     makeParticleIndexMap();
+
+    // Initialize evaluation control
+    totalIntegralCount = countIndependentIntegrals(basisSizeN, outOfEqParticles.size());
+    computedIntegralCount = 0;
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
     for (const ParticleSpecies& particle1 : outOfEqParticles) 
@@ -237,6 +301,16 @@ long Collision::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 
     // this was for 1 deltaF particle, for more than one we have mixing terms
     return count * outOfEqCount*outOfEqCount;
+}
+
+
+void Collision::reportProgress()
+{
+    if (totalIntegralCount != 0)
+    {
+        std::cout << "=== Collision integral progress report ===\n";
+        std::cout << computedIntegralCount << " / " << totalIntegralCount << " done.\n";  
+    }
 }
 
 

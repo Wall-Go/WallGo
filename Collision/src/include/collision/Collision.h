@@ -50,6 +50,9 @@ protected:
     // Used to interrupt long-running functions. The python module will override this with its own checks
     virtual inline bool shouldContinueEvaluation() { return true; };
 
+    // Prints stuff about how many integrals we've computed and ETC
+    virtual void reportProgress();
+
     // Populates the particleIndex map 
     void makeParticleIndexMap();
 
@@ -77,7 +80,6 @@ protected:
     // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
     std::vector<ParticleSpecies> outOfEqParticles;
 
-
     // @todo config file for file paths 
     
     // Directory where we search for matrix elements
@@ -85,6 +87,13 @@ protected:
 
     // Base file name for matrix element files. We append particle names to this like "_top_top"
     std::string matrixElementFileNameBase = "matrixElements";
+
+private:
+
+    // Evaluation control
+    long computedIntegralCount = 0;
+    long totalIntegralCount;
+    
 };
 
 
