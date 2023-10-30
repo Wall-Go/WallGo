@@ -134,6 +134,8 @@ class Model:
         self.muhsq = -self.lamh*self.v0**2
         self.mussq = +self.mus**2-self.lamm*self.v0**2/2
 
+        self.musq = [self.muhsq, self.mussq]
+
         """
         Number of bosonic and fermionic dofs
         """
@@ -161,7 +163,6 @@ class Model:
         self.g2 = self.g0
         self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
 
-
         self.musT = (
                 +1./6*lamm
                 +1./4*lams)
@@ -173,6 +174,8 @@ class Model:
                 +8*self.lamh)/16
                 +self.lamm/24
                 )
+
+        self.musqT = [self.muhT, self.musT]
 
 
         """
@@ -214,25 +217,24 @@ class Model:
         X = np.asanyarray(X)
 
         if self.use_EFT:
-           muhsq = self.muhsq + T**2*self.muhT
-           mussq = self.mussq + T**2*self.musT
-           lamh = self.lamh*T
-           lams = self.lams*T
-           lamm = self.lamm*T
+            for i in range(len(self.musq)):
+                self.musq[0] += T**2*self.musqT[0]
+            lamh = self.lamh*T
+            lams = self.lams*T
+            lamm = self.lamm*T
         else:
-           muhsq = self.muhsq
-           mussq = self.mussq
-           lamh = self.lamh
-           lams = self.lams
-           lamm = self.lamm
+            musq = self.musq
+            lamh = self.lamh
+            lams = self.lams
+            lamm = self.lamm
 
         h1,s1 = X[0,...],X[1,...]
         V = (
-           +1/2*muhsq*h1**2
-           +1/2*mussq*s1**2
-           +1/4*lamh*h1**4
-           +1/4*lams*s1**4
-           +1/4*lamm*(h1*s1)**2)
+            +1/2*musq[0]*h1**2
+            +1/2*musq[1]*s1**2
+            +1/4*lamh*h1**4
+            +1/4*lams*s1**4
+            +1/4*lamm*(h1*s1)**2)
         if show_V:
             print(V)
         return V
@@ -400,7 +402,6 @@ class Model:
         PressureLO : LO contribution to the pressure
 
         """
-
         T4 = T*T*T*T
 
         _,nb,_ = bosons
@@ -414,7 +415,6 @@ class Model:
             nf = self.num_fermion_dof - np.sum(nf)
             V -= nf * 7*np.pi**4 / 360.
 
-        #print(V/(2*np.pi*np.pi))
         return V*T4/(2*np.pi*np.pi)
 
     def V1T(self, bosons, fermions, T):
@@ -540,7 +540,13 @@ class FreeEnergy:
         cls : FreeEnergy
             An object of the FreeEnergy class.
         """
+        """
+        Number of dynamics scalars
+        """
         self.nbrFields = 2
+        """
+        Indicate which fields under go the transition
+        """
         self.transField0 = 0
         self.transField1 = 1
 
@@ -660,19 +666,13 @@ class FreeEnergy:
             return self.dfdPhi(X, T)
         else:
             X = np.asanyarray(X, dtype=float)
-            # TODO generalise to arbitrary fields
-            h, s = X[0,...], X[1,...]
-            Xdh = X.copy()
-            Xdh[0,...] += self.dPhi * np.ones_like(h)
-            Xds = X.copy()
-            Xds[1,...] += self.dPhi * np.ones_like(h)
-
-            dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
-            dfds = (self(Xds, T) - self(X, T)) / self.dPhi
-
             return_val = np.empty_like(X)
-            return_val[0,...] = dfdh
-            return_val[1,...] = dfds
+            for i in range(self.nbrFields):
+                field = X[i,...] 
+                Xd_field = X.copy()
+                Xd_field[i,...] += self.dPhi * np.ones_like(field)
+                dfd_field = (self(Xd_field,T) - self(X,T)) / self.dPhi
+                return_val[i,...] = dfd_field
 
             return return_val
 
@@ -710,7 +710,6 @@ class FreeEnergy:
            pressure in the high-temperature phase 
         """
         return -self(self.findPhases(T),T)[1]
-        #return -self(self.findPhases(T)[1,...],T)
 
     def approxZeroTMin(self,T=0):
         """
