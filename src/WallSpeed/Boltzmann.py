@@ -23,25 +23,21 @@ class BoltzmannBackground:
         self.fieldProfile = np.asarray(fieldProfile)
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
+        self.v0 = velocityProfile[len(velocityProfile) // 2]
+        self.T0 = temperatureProfile[len(temperatureProfile) // 2]
 
     def boostToPlasmaFrame(self):
         """
         Boosts background to the plasma frame
         """
-        vPlasma = self.velocityProfile
-        v0 = self.velocityProfile[0]
-        vw = self.vw
-        self.velocityProfile = boostVelocity(vPlasma, v0)
-        self.vw = boostVelocity(vw, v0)
+        self.velocityProfile = boostVelocity(self.velocityProfile, self.v0)
+        self.vw = boostVelocity(self.vw, self.v0)
 
     def boostToWallFrame(self):
         """
         Boosts background to the wall frame
         """
-        vPlasma = self.velocityProfile
-        vPlasma0 = self.velocityProfile[0]
-        vw = self.vw
-        self.velocityProfile = boostVelocity(vPlasma, vw)
+        self.velocityProfile = boostVelocity(self.velocityProfile, self.vw)
         self.vw = 0
 
 
@@ -115,8 +111,8 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # background
-        vFixed = self.background.velocityProfile[0]
-        T0 = self.background.temperatureProfile[0]
+        v0 = self.background.v0
+        T0 = self.background.T0
 
         # fluctuation mode
         msq = self.particle.msqVacuum(self.background.fieldProfile)
@@ -124,9 +120,9 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with fixed plasma profile velocity
-        gammaPlasma = 1 / np.sqrt(1 - vFixed**2)
-        EPlasma = gammaPlasma * (E - vFixed * pz)
-        PPlasma = gammaPlasma * (pz - vFixed * E)
+        gammaPlasma = 1 / np.sqrt(1 - v0**2)
+        EPlasma = gammaPlasma * (E - v0 * pz)
+        PPlasma = gammaPlasma * (pz - v0 * E)
 
         # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
         sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
