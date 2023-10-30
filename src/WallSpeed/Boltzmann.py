@@ -12,26 +12,27 @@ from .helpers import boostVelocity
 class BoltzmannBackground:
     def __init__(
         self,
-        vw,
+        velocityMid,
         velocityProfile,
         fieldProfile,
         temperatureProfile,
         polynomialBasis="Cardinal",
     ):
-        self.vw = vw
+        # assumes input is in the wall frame
+        self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
         self.fieldProfile = np.asarray(fieldProfile)
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
-        self.v0 = velocityProfile[len(velocityProfile) // 2]
-        self.T0 = temperatureProfile[len(temperatureProfile) // 2]
+        self.vMid = velocityMid
+        self.TMid = 0.5 * (temperatureProfile[0] + temperatureProfile[-1])
 
     def boostToPlasmaFrame(self):
         """
         Boosts background to the plasma frame
         """
-        self.velocityProfile = boostVelocity(self.velocityProfile, self.v0)
-        self.vw = boostVelocity(self.vw, self.v0)
+        self.velocityProfile = boostVelocity(self.velocityProfile, self.vMid)
+        self.vw = boostVelocity(self.vw, self.vMid)
 
     def boostToWallFrame(self):
         """
@@ -111,8 +112,8 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # background
-        v0 = self.background.v0
-        T0 = self.background.T0
+        vMid = self.background.vMid
+        TMid = self.background.TMid
 
         # fluctuation mode
         msq = self.particle.msqVacuum(self.background.fieldProfile)
@@ -120,9 +121,9 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with fixed plasma profile velocity
-        gammaPlasma = 1 / np.sqrt(1 - v0**2)
-        EPlasma = gammaPlasma * (E - v0 * pz)
-        PPlasma = gammaPlasma * (pz - v0 * E)
+        gammaPlasma = 1 / np.sqrt(1 - vMid**2)
+        EPlasma = gammaPlasma * (E - vMid * pz)
+        PPlasma = gammaPlasma * (pz - vMid * E)
 
         # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
         sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
@@ -135,8 +136,8 @@ class BoltzmannSolver:
         weightsPp /= np.sqrt(1 - rp[1:]**2)
         weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
         # measure, including Jacobian from coordinate compactification
-        measurePz = (2 * T0) / (1 - rz**2)
-        measurePp = T0**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
+        measurePz = (2 * TMid) / (1 - rz**2)
+        measurePp = TMid**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
         measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
         measurePzPp /= (2 * np.pi)**2
 
@@ -313,7 +314,7 @@ class BoltzmannSolver:
                 optimize=True,
             )
         # including factored-out T^2 in Collision integrals
-        collisionUnits = self.background.T0 ** 2
+        collisionUnits = self.background.TMid ** 2
         collisionArray = collisionUnits * collisionArray
 
         ##### total operator #####
