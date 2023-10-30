@@ -312,6 +312,9 @@ class BoltzmannSolver:
                 collisionArray,
                 optimize=True,
             )
+        # including factored-out T^2 in Collision integrals
+        collisionUnits = self.background.T0 ** 2
+        collisionArray = collisionUnits * collisionArray
 
         ##### total operator #####
         operator = (
