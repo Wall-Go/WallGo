@@ -88,9 +88,6 @@ public:
 
 private:
 
-    // upper limit on p2 integration
-    const double maxIntegrationMomentum = 20.0; 
-
     // 4-particle 'collision elements' that contribute to the process
     std::vector<CollElem<4>> collisionElements;
 
