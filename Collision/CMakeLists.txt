@@ -30,6 +30,27 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 option(PROFILER "Compile with profiler flags" OFF)
 
 
+## Use OpenMP by default
+option(USE_OMP "Build with OpenMP support" ON)
+
+
+## For MacOS, may need to manually setup OpenMP
+if(APPLE AND USE_OMP)
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_LIB_NAMES "libomp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "libomp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+endif()
 # Build the Python module unless the user disabled this
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 
@@ -74,8 +95,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     	# Optimization always for non-debug builds
     	add_compile_options(-O3)
     endif()
-    
-    
+
+    if (NOT USE_OMP)
+        # Disable pragma warnings, otherwise each #pragma omp would throw a warning
+        add_compile_options(-Wno-unknown-pragmas)
+    endif()
+
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Enable warnings and treat them as errors
     #add_compile_options(/W4 /WX)
