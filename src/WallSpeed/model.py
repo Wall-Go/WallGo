@@ -657,7 +657,7 @@ class FreeEnergy:
         # the helper function.
 
         T = np.asanyarray(T)[...,np.newaxis]
-        
+
         return f1(X, T)
 
     def findTc(self,Tmax=150):
@@ -683,7 +683,7 @@ class FreeEnergy:
         def deltaPmin(T):
             mins = self.findPhases(T)
             return deltaf(mins[0,0],mins[1,1],T)
-        
+
         self.Tc = optimize.root_scalar(deltaPmin,bracket=(90,150),rtol=1e-12,xtol=1e-12).root
-            
+
         return self.Tc
