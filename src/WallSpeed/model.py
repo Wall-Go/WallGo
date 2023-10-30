@@ -109,6 +109,18 @@ class Model:
         use_EFT=False,
         ):
         r"""Initialisation
+
+        Parameters
+        ----------
+        mu4D : float 
+            4d renormalisaton scale.
+        use_EFT : boole
+            True if 3d EFT is used.
+
+        Returns
+        -------
+        cls : Model 
+            An object of the Model class.
         """
         self.use_EFT=use_EFT
 
@@ -225,11 +237,30 @@ class Model:
             print(V)
         return V
 
-    def Jcw(self, msq, n, c):
+    def Jcw(self, msq, degrees_of_freedom, c):
         """
         Coleman-Weinberg potential
+
+        Parameters
+        ----------
+        msq : array_like
+            A list of the boson particle masses at each input point `X`.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            length `Ndim`.
+        c: float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
+            other bosons.
+
+        Returns
+        -------
+        Jcw : float or array_like
+            One-loop Coleman-Weinberg potential for given particle spectrum.
         """
-        return n*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
+        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
 
     def boson_massSq(self, X, T):
         """
@@ -330,6 +361,18 @@ class Model:
 
         This is generally not called directly, but is instead used by
         :func:`Vtot`.
+
+        Parameters
+        ----------
+        bosons : array of floats
+            bosonic particle spectrum (here: masses, number of dofs, ci)
+        fermions : array of floats
+            fermionic particle spectrum (here: masses, number of dofs)
+
+        Returns
+        -------
+        V1 : 1loop vacuum contribution to the pressure
+
         """
         m2, nb, c = bosons
         V = np.sum(self.Jcw(m2,nb,c), axis=-1)
@@ -341,6 +384,22 @@ class Model:
         return V/(64*np.pi*np.pi)
 
     def PressureLO(self, bosons, fermions, T):
+        """
+        Computes the leading order pressure
+        depending on the effective degrees of freedom.
+        
+        Parameters
+        ----------
+        bosons : array of floats
+            bosonic particle spectrum (here: masses, number of dofs, ci)
+        fermions : array of floats
+            fermionic particle spectrum (here: masses, number of dofs)
+
+        Returns
+        -------
+        PressureLO : LO contribution to the pressure
+
+        """
 
         T4 = T*T*T*T
 
@@ -581,14 +640,13 @@ class FreeEnergy:
             )
 
     def derivField(self, X, T):
-
         """
         The field-derivative of the effective potential.
 
         Parameters
         ----------
         X : array of floats
-            the field values (here: Higgs, singlet)
+            the background field values (e.g.: Higgs, singlet)
         T : float
             the temperature
 
@@ -622,18 +680,34 @@ class FreeEnergy:
     def pressureLowT(self,T):
         """
         Returns the value of the pressure as a function of temperature in the low-T phase
-        """
-        return -self(self.findPhases(T),T)[0]
-
-    def pressureHighT(self,T):
-        """
-        The pressure in the high-temperature (singlet) phase
+        indicated by self.transfield0 (e.g. Higgs)
 
         Parameters
         ----------
         T : float
             The temperature for which to find the pressure.
 
+        Returns
+        ----------
+        pressureLowT : float
+           pressure in the low-temperature phase 
+        """
+        return -self(self.findPhases(T),T)[0]
+
+    def pressureHighT(self,T):
+        """
+        The pressure in the high-temperature phase
+        indicated by self.transfield1 (e.g. Singlet)
+
+        Parameters
+        ----------
+        T : float
+            The temperature for which to find the pressure.
+
+        Returns
+        ----------
+        pressureHighT : float
+           pressure in the high-temperature phase 
         """
         return -self(self.findPhases(T),T)[1]
         #return -self(self.findPhases(T)[1,...],T)
@@ -681,8 +755,8 @@ class FreeEnergy:
 
         Returns
         -------
-        univariate splines
-        scipy.univariate splines has the advantage of derivative() method
+        self.Xint : array_like, univariate splines
+                scipy.univariate splines has the advantage of derivative() method
         """
         if Tf < Ti:
             raise ValueError("Interpolation range not well defined: Tf below Ti")
@@ -702,7 +776,11 @@ class FreeEnergy:
             for i in range(2)] 
 
     def findPhases(self, T, X=None):
-        """Finds all phases at a given temperature T
+        """
+        Tracks the two phases indicated at init by
+        self.transField0 and
+        self.transField1
+        at a given temperature T
 
         Parameters
         ----------
@@ -711,9 +789,8 @@ class FreeEnergy:
 
         Returns
         -------
-        phases : array_like
-            A list of phases
-
+        findPhases : array_like
+            A list of two phases
         """
         if T is None:
             raise TypeError('Temperature is None')
@@ -775,7 +852,8 @@ class FreeEnergy:
 
     def findTc(self,Tmax=150):
         """
-        Determines the critical temperature between two scalar phases.
+        Determines the critical temperature between the two scalar phases
+        indicated upon init.
         The critical temperature is determined by tracking the pressure
         of the different phases at their minima and finding the intersection point.
 
@@ -788,7 +866,6 @@ class FreeEnergy:
         -------
         Tc : array_like
             Critical temperature
-
         """
 
         deltaf = lambda v0,v1,T: ( 
