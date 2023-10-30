@@ -81,9 +81,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		# no optimization here since it can interfere with profiling
-		
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")		
 		option(BUILD_UNIT_TESTS "Build unit tests" ON)
 		message(STATUS "==== NOTE: Configuring Debug build")
 		message(STATUS "")
@@ -99,6 +97,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     if (NOT USE_OMP)
         # Disable pragma warnings, otherwise each #pragma omp would throw a warning
         add_compile_options(-Wno-unknown-pragmas)
+    endif()
+
+    ## Release build specific build options
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        add_compile_options(-Wno-dev)
     endif()
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
