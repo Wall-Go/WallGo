@@ -66,11 +66,6 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
     add_compile_options(-Wall -Wextra)
-    # Treat all warnings as errors?
-    #add_compile_options(-Werror)
-    # Enable more warnings (optional)
-    #add_compile_options(-Wpedantic)
-    
 
     
     if (PROFILER)
@@ -85,7 +80,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 		option(BUILD_UNIT_TESTS "Build unit tests" ON)
 		message(STATUS "==== NOTE: Configuring Debug build")
 		message(STATUS "")
-		
+
+        # Treat all warnings as errors?
+        #add_compile_options(-Werror)
+        # Allow compiler to become annoying
+        add_compile_options(-Wpedantic)
+        
     endif()
     
     
@@ -101,9 +101,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
     ## Release build specific build options
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        add_compile_options(-Wno-dev)
+        # add_compile_options(-Wno-dev) ## I don't think this works, at least not on clang++
     endif()
 
+
+## Visual Studio compiler stuff
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Enable warnings and treat them as errors
     #add_compile_options(/W4 /WX)
