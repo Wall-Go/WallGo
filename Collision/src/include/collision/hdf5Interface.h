@@ -13,7 +13,7 @@
 struct H5Metadata {
 	int basisSize = 1;
 	std::string basisName = "Unknown";
-	std::string integrator = "Unknown";;
+	std::string integrator = "Unknown";
 };
 
 

@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
 				printUsage(stderr, argv[0]);
 				return 0;
 			case 'n':
+				// NB: atoi is not the best option as it will happily interpret eg. "20dog" as 20
 				basisSizeN = std::atoi(optarg);
 				break;
 			case 'w':
@@ -134,8 +135,13 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "Unknown option character `\\x%x'.\n", opt);
 				return 1;
 			default:
-				abort();
+				return 1;
 		}
+	}
+
+	if (basisSizeN < 1) {
+		std::cerr << "Invalid basis size N = " << basisSizeN << "\n";
+		return 2;
 	}
 
 	// Load config
@@ -146,7 +152,7 @@ int main(int argc, char *argv[]) {
 		config.printContents();
 		std::cout << std::endl;
 	} else {
-		return 1;
+		return 3;
 	}
 
 	std::cout << "Running with basis size "<< basisSizeN << "\n";

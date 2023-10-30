@@ -42,8 +42,9 @@ But seems hard to dictate when/how this should be called in Python context.
 */
 
 /* We bind a subclass of the Collision "control" class. 
-This way we can override some functions with python-specific functionality */
-class CollisionPython : public Collision
+This way we can override some functions with python-specific functionality.
+Marking this as final prevents some non-virtual destructor warnings from clang. */
+class CollisionPython final : public Collision
 {
 
 public: 

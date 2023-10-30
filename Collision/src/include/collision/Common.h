@@ -13,7 +13,7 @@
 namespace constants {
     constexpr double pi = 3.141592653589793;
 
-};
+}
 
 
 /* Recursive boilerplate for nested D-dimensional std::vectors. 
