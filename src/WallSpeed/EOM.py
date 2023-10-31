@@ -239,6 +239,8 @@ class EOM:
             Tprofile, velocityProfile = self.findPlasmaProfile(
                 c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus
             )
+            print('The shape of the fluid velocity profile')
+            print(velocityProfile.shape)
 
             if self.includeOffEq:
                 boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
