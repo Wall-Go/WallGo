@@ -75,7 +75,7 @@ jobs:
              if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
                cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
              fi
-             if [ "$RUNNER_OS" == "Linux" ]
+             if [ "$RUNNER_OS" == "Linux" ]; then
                sudo ldconfig
              fi
 
