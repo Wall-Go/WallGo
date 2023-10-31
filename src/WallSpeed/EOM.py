@@ -441,8 +441,11 @@ class EOM:
 
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
+            if type(T) == np.ndarray: #This is a quick fix, need to figure out why it is necessary
+                temperatureProfile.append(T[0])
+            else:
+                temperatureProfile.append(T)    
 
-            temperatureProfile.append(T)
             velocityProfile.append(vPlasma)
 
         reshapedvelocityProfile = np.array(velocityProfile).reshape(self.grid.N-1,)  #Note that this is a quick fix, should figure out why it is necessary!
