@@ -25,9 +25,10 @@ field = np.ones((M - 1,))
 field[M // 2:]  = 0
 T = 100 * np.ones(M - 1)
 basis = "Cardinal"
+velocityMid = 0.5 * (v[0] + v[-1])
 
 background = BoltzmannBackground(
-    vw=vw,
+    velocityMid=velocityMid,
     velocityProfile=v,
     fieldProfile=field,
     temperatureProfile=T,
@@ -102,5 +103,3 @@ Deltas = boltzmann.getDeltas(integrand_analytic)
 Deltas_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
 print("Ratio = 1 =", Deltas["00"] / Deltas_analytic)
 print("T =", background.temperatureProfile)
-
-
