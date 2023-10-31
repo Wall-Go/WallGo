@@ -38,8 +38,8 @@ jobs:
         run: |
              mkdir -p Collision/build; cd Collision/build
              if [ "$RUNNER_OS" == "macOS" ]; then
-         		## Force apple clang compiler
-             	cmake -D CMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang -D CMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
+              ## Force apple clang compiler
+              cmake -D CMAKE_C_COMPILER=$(brew --prefix llvm)/bin/clang -D CMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++
              else
              	cmake ..
              fi
