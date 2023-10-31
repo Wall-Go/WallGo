@@ -5,12 +5,16 @@
 #include <sstream>
 #include <iomanip>
 
+#include "Common.h"
+
 /** Singleton class for reading config.ini and storing values. 
  * Usage: 
  *      Get reference from anywhere: ConfigParser& config = ConfigParser::Get();
  *      Access a value [Section] key = ... : double value = GetDouble(sectionName, key, defaultValue = 0.)
 */
-class ConfigParser {
+class COLLISION_API ConfigParser {
+
+// Macro here gives this default visibility, otherwise we may get linker errors (we had these at least on one Apple clang system)
 
 public:
 

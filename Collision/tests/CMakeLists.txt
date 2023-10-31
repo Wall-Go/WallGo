@@ -5,7 +5,7 @@ set(TEST_SOURCES test_main.cpp test_integrand.cpp test_integration.cpp)
 
 # Get latest release of Google Test from github 
 include(FetchContent)
-#Set(FETCHCONTENT_QUIET FALSE) ## Show what the fetching is doing
+Set(FETCHCONTENT_QUIET FALSE) ## Show what the fetching is doing
 #set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 ## Fetch Google Test library
@@ -13,6 +13,7 @@ FetchContent_Declare(
 	googletest
 	GIT_REPOSITORY https://github.com/google/googletest.git
 	GIT_TAG        v1.13.0
+	GIT_PROGRESS TRUE
 )
 
 # For Windows: Prevent overriding the parent project's compiler/linker settings

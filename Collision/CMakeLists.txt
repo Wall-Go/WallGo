@@ -67,6 +67,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
     add_compile_options(-Wall -Wextra)
 
+    #add_compile_options(-fvisibility=hidden)
     
     if (PROFILER)
         # profiler flags needed also for linking
