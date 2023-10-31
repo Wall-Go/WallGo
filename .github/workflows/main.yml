@@ -73,7 +73,7 @@ jobs:
       # Will install muparser without OpenMP support, our program doesn't need it here 
         run: |
              if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
-               cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && sudo ldconfig && cd ..
+               cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
              fi
 
       - name: Configure CMake for Collision
