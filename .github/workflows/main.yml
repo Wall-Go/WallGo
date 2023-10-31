@@ -32,7 +32,7 @@ jobs:
             c_compiler: gcc
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set reusable strings
         # Define useful strings like the path to build dir 
@@ -57,7 +57,7 @@ jobs:
                sudo apt-get install libgsl-dev libhdf5-dev
              elif [ "$RUNNER_OS" == "macOS" ]; then
                brew update
-               brew install gsl, hdf5
+               brew install cpp-gsl, hdf5
              else
                echo "$RUNNER_OS not supported"
                exit 1
@@ -71,9 +71,11 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ steps.strings.outputs.collision-root-dir }}
 
-      - name: Build Collision
-        run: cmake --build ${{ steps.strings.outputs.collision-build-dir }} --config ${{ matrix.build_type }}
-
+      - name: Build and install Collision
+        run: |
+          cmake --build ${{ steps.strings.outputs.collision-build-dir }} --config ${{ matrix.build_type }}
+          cmake --install ${{ steps.strings.outputs.collision-build-dir }}
+          
       - name: Run Collision
         run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 3
 
