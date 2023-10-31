@@ -239,8 +239,13 @@ class EOM:
             Tprofile, velocityProfile = self.findPlasmaProfile(
                 c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus
             )
+#            velocityProfile.reshape(self.grid.N-1,)
             print('The shape of the fluid velocity profile')
             print(velocityProfile.shape)
+#            print((velocityProfile.reshape(self.grid.N-1,)).shape)
+            print('The shape of the temperature profile')
+            print(Tprofile.shape)
+
 
             if self.includeOffEq:
                 boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
@@ -440,7 +445,11 @@ class EOM:
             temperatureProfile.append(T)
             velocityProfile.append(vPlasma)
 
-        return np.array(temperatureProfile), np.array(velocityProfile)
+        reshapedvelocityProfile = np.array(velocityProfile).reshape(self.grid.N-1,)  #Note that this is a quick fix, should figure out why it is necessary!
+        print(reshapedvelocityProfile)
+#        reshapedvelocityProfile.reshape(self.grid.N-1,)
+        print(temperatureProfile)
+        return (np.array(temperatureProfile), reshapedvelocityProfile)
 
     def findPlasmaProfilePoint(self, index, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
