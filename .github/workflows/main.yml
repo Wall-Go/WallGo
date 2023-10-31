@@ -1,4 +1,4 @@
-name: Python tests
+name: WallGo tests
 
 on:
   pull_request:
@@ -22,6 +22,11 @@ jobs:
           - os: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
+        exclude:
+          - os: ubuntu-latest
+            c_compiler: clang
+          - os: macos-latest
+            c_compiler: gcc
 
     steps:
       - uses: actions/checkout@v3
