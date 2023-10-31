@@ -4,6 +4,7 @@
 #include <fstream>
 #include <regex> // Reading matrix elements from file
 #include <algorithm> // std::remove_if
+#include <chrono>
 
 #include "ConfigParser.h"
 
@@ -42,89 +43,63 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
     ConfigParser& config = ConfigParser::get();
     const bool bVerbose = config.getBool("Integration", "verbose");
 
-#if WITH_OMP
-    // OMP lock for syncing evaluation control variables
-    omp_lock_t integralCountLock;
-    omp_init_lock(&integralCountLock);
-#endif
-    // Counter to use for managing evaluation control, we don't want to use omp_lock after every single integral 
-    uint localIntegralProgress = 0;
-    // How often to print progress (every this many integrals).
-    uint evaluationControlInterval = 500;
-
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
 
-    #pragma omp taskwait
+    startTime = std::chrono::steady_clock::now();
 
     // each thread needs its collisionIntegral because the operations for computing the integrand are not thread safe!
-	#pragma omp parallel for collapse(4) firstprivate(collisionIntegral) firstprivate(localIntegralProgress)
-    // m,n = Polynomial indices
-	for (uint m = 2; m <= N; ++m) 
-	for (uint n = 1; n <= N-1; ++n) 
+	#pragma omp parallel firstprivate(collisionIntegral)
     {
-		// j,k = grid momentum indices 
-		for (uint j = 1; j <= N/2; ++j)
-		for (uint k = 1; k <= N-1; ++k) 
+        int numThreads = 1;
+    #if WITH_OMP
+        numThreads = omp_get_num_threads();
+    #endif 
+
+        #pragma omp for collapse(4) 
+        // m,n = Polynomial indices
+        for (uint m = 2; m <= N; ++m)
+        for (uint n = 1; n <= N-1; ++n)
         {
 
-            // Monte Carlo result for the integral + its error
-            std::array<double, 2> resultMC;
-
-            // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-            if (2*j == N && m % 2 != 0) 
+            // j,k = grid momentum indices 
+            for (uint j = 1; j <= N/2; ++j)
+            for (uint k = 1; k <= N-1; ++k)
             {
-                resultMC[0] = 0.0;
-                resultMC[1] = 0.0;
-            } 
-            else 
-            {
-                resultMC = collisionIntegral.evaluate(m, n, j, k);
-            }
-
-            results[m-2][n-1][j-1][k-1] = resultMC[0];
-            errors[m-2][n-1][j-1][k-1] = resultMC[1];
-
-            if (bVerbose) 
-            {
-                printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
-            }
-
-            // Check if we received instructions to stop
-            if (!shouldContinueEvaluation())
-            {
-                // @TODO. For the python-bound subclass terminates inside the function anyway so not urgent
-            }
-
-            localIntegralProgress++;
-
-            // Print progress?
-            if (localIntegralProgress % evaluationControlInterval == 0)
-            {
-                int threadID = 0;
-            #if WITH_OMP
-                omp_set_lock(&integralCountLock);
-                computedIntegralCount += localIntegralProgress;
-                omp_unset_lock(&integralCountLock);
-
-                threadID = omp_get_thread_num();
-            #else // No OpenMP
-                computedIntegralCount += localIntegralProgress;
-            #endif
-
-                if (threadID == 0)
-                {
-                    reportProgress();
-                }
             
-                localIntegralProgress = 0;
+                // Monte Carlo result for the integral + its error
+                std::array<double, 2> resultMC;
 
-            }
+                // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+                if (2*j == N && m % 2 != 0)
+                {
+                    resultMC[0] = 0.0;
+                    resultMC[1] = 0.0;
+                }
+                else
+                {
+                    resultMC = collisionIntegral.evaluate(m, n, j, k);
+                }
 
-		} // end j,k
-	} // end m,n
+                results[m-2][n-1][j-1][k-1] = resultMC[0];
+                errors[m-2][n-1][j-1][k-1] = resultMC[1];
 
-    #pragma omp taskwait
+
+                if (bVerbose)
+                {
+                    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+                }
+
+                // Check if we received instructions to stop
+                if (!shouldContinueEvaluation())
+                {
+                    std::exit(20);
+                }
+
+            } // end j,k
+        } // end m,n
+        
+    } // end #pragma omp parallel 
 
 	// Fill in the j > N/2 elements
 	#pragma omp parallel for collapse(4)
@@ -142,12 +117,6 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 			errors[m-2][n-1][j-1][k-1] = sign * errors[m-2][n-1][jOther-1][k-1];
 		}
 	}
-
-    #pragma omp taskwait
-
-#if WITH_OMP
-    omp_destroy_lock(&integralCountLock);
-#endif
 
 }
 
@@ -306,10 +275,19 @@ long Collision::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 
 void Collision::reportProgress()
 {
-    if (totalIntegralCount != 0)
+    if (totalIntegralCount > 0)
     {
-        std::cout << "=== Collision integral progress report ===\n";
-        std::cout << computedIntegralCount << " / " << totalIntegralCount << " done.\n";  
+        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+        // times in seconds
+        double elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+        double timePerIntegral = elapsedTime / computedIntegralCount;
+        double timeRemaining = timePerIntegral * (totalIntegralCount - computedIntegralCount);
+
+        printf("elapsed %g per integral %g remaining %g\n", elapsedTime, timePerIntegral, timeRemaining);
+
+        int percentage = computedIntegralCount / totalIntegralCount;
+        std::cout << "Integrals progress: " << computedIntegralCount << " / " << totalIntegralCount << " (" << percentage << "%)."; 
+        std::cout << "Time remaining: " << std::floor(timeRemaining / 3600) << "h " << (int(timeRemaining) % 3600 ) / 60 << "min" << std::endl;
     }
 }
 

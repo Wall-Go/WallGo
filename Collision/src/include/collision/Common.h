@@ -15,6 +15,15 @@ namespace constants {
 
 }
 
+// Global functions etc
+namespace globalFuncts {
+    // Clamp number between [min, max]
+    inline double clamp(double value, double lower, double upper) 
+    {
+        return std::max(lower, std::min(value, upper));
+    }
+}
+
 
 /* Recursive boilerplate for nested D-dimensional std::vectors. 
 * Note that this has a large memory overhead - ideally we would use genuine D-dimensional arrays. */

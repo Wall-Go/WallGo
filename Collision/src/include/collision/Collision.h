@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <chrono>
 
 #include "CollElem.h"
 #include "ParticleSpecies.h"
@@ -93,6 +94,8 @@ private:
     // Evaluation control
     long computedIntegralCount = 0;
     long totalIntegralCount;
+    std::chrono::steady_clock::time_point startTime;
+
     
 };
 
