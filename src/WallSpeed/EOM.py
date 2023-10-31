@@ -239,13 +239,6 @@ class EOM:
             Tprofile, velocityProfile = self.findPlasmaProfile(
                 c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus
             )
-#            velocityProfile.reshape(self.grid.N-1,)
-            print('The shape of the fluid velocity profile')
-            print(velocityProfile.shape)
-#            print((velocityProfile.reshape(self.grid.N-1,)).shape)
-            print('The shape of the temperature profile')
-            print(Tprofile.shape)
-
 
             if self.includeOffEq:
                 boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
@@ -449,9 +442,8 @@ class EOM:
             velocityProfile.append(vPlasma)
 
         reshapedvelocityProfile = np.array(velocityProfile).reshape(self.grid.N-1,)  #Note that this is a quick fix, should figure out why it is necessary!
-        print(reshapedvelocityProfile)
-#        reshapedvelocityProfile.reshape(self.grid.N-1,)
-        print(temperatureProfile)
+ #       print(reshapedvelocityProfile)
+#        print(temperatureProfile)
         return (np.array(temperatureProfile), reshapedvelocityProfile)
 
     def findPlasmaProfilePoint(self, index, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
@@ -520,7 +512,7 @@ class EOM:
         )
         # TODO: Can the function have multiple zeros?
 
-        T = res   #is this okay?
+        T = res   #is this okay? #Maybe not? Sometimes it returns an array, sometimes a double
         vPlasma = self.plasmaVelocity(X, T, s1)
         return T, vPlasma
 
@@ -569,6 +561,15 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
+        print("-----")
+#        print(X)
+#        print(T)
+        print(np.sum(dXdz**2, axis=0))
+        print(self.freeEnergy(X, T))
+        print(T*self.freeEnergy.derivT(X, T))
+        print(s1)
+
+ #These objects do not (always) have the same shape -- depends on the model though
         return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
 
     def deltaToTmunu(self, index, X, velocityMid, offEquilDeltas):
