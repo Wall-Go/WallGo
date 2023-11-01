@@ -25,7 +25,7 @@ poly = Polynomial(grid)
 """
 Model definition
 """
-mod = WallSpeed.Model(125, 120, 1.0, 0.9)
+mod = WallSpeed.Model(125, 120, 1.0, 0.9, use_EFT=False)
 params = mod.params
 
 Tc = None
