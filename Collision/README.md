@@ -35,7 +35,7 @@ pip install "pybind11[global]"
 This installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda, or build it directly from source.
 
 
-Muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/.
+Muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/. **Note:** muparser can safely be installed without OpenMP support (-DENABLE_OPENMP=OFF) without affecting WallGo/Collision.
 
 
 ## Compiling the Collision module

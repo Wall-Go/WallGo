@@ -347,7 +347,10 @@ class BoltzmannSolver:
                     metadata.attrs["Basis Type"], 'unicode_escape',
                 )
                 BoltzmannSolver.__checkBasis(basisType)
-                collisionArray = np.array(file[particle.name][:])
+
+                # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
+                datasetName = particle.name + ", " + particle.name
+                collisionArray = np.array(file[datasetName][:])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
@@ -359,7 +362,8 @@ class BoltzmannSolver:
         """
         dir = "../data"
         suffix = "hdf5"
-        return f"{dir}/collisions_N{self.grid.N}.{suffix}"
+        # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
+        return f"{dir}/collisions_top_top_N{self.grid.N}.{suffix}"
 
     def __checkBasis(basis):
         """
