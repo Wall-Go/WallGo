@@ -141,7 +141,11 @@ class EOM:
         """
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
-        return self.solvePressure(0.01, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
+        
+        alpha = self.thermo.alpha(self.Tnucl)
+        vmin = max(1-(3*alpha)**(-10/13),0.01) #based on eq (103) of 1004.4187
+
+        return self.solvePressure(vmin, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
 
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         r"""

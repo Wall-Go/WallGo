@@ -1,8 +1,4 @@
-"""
-An attempt to run EOM.py
-"""
 import BMxSMsimple
-
 """
 Compute the wall velocity in local thermal equilibrium
 """
