@@ -333,7 +333,7 @@ class BoltzmannSolver:
 
         # reshaping indices
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
-        source = np.reshape(source, N_new)
+        source = np.reshape(source, N_new, order="C")
         operator = np.reshape(operator, (N_new, N_new), order="C")
 
         # returning results
