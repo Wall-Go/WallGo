@@ -209,7 +209,7 @@ class BoltzmannSolver:
 
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
-        return np.reshape(deltaF, deltaFShape, order="F")
+        return np.reshape(deltaF, deltaFShape, order="C")
 
 
     def buildLinearEquations(self):
@@ -328,10 +328,13 @@ class BoltzmannSolver:
             * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
+        # doing matrix-like multiplication
+        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
+
         # reshaping indices
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
         source = np.reshape(source, N_new)
-        operator = np.reshape(operator, (N_new, N_new), order="F")
+        operator = np.reshape(operator, (N_new, N_new), order="C")
 
         # returning results
         return operator, source
