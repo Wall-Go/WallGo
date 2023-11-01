@@ -82,7 +82,7 @@ deltaFCoord = np.einsum(
 print(f"{deltaFCoord.shape=}")
 print("deltaFCoord[:, 0, 0] =", deltaFCoord[:, 0, 0])
 
-Deltas = boltzmann.getDeltas(deltaF)
+Deltas = boltzmann.getDeltas()
 print("Deltas =", Deltas)
 
 # plotting

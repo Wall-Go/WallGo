@@ -153,11 +153,11 @@ class BoltzmannSolver:
 
         # evaluating integrals with Gaussian quadrature
         measureWeight = measurePzPp * weights
-        arg00 = deltaF[:, :, 1:] / E[:, :, 1:]
+        arg00 = deltaFCoord[:, :, 1:] / E[:, :, 1:]
         Deltas["00"] = np.einsum(
             "jk, ijk -> i",
             measureWeight,
-            deltaF[:, :, 1:] / E[:, :, 1:],
+            arg00,
             optimize=True,
         )
         Deltas["11"] = np.einsum(
