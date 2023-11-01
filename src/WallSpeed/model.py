@@ -39,9 +39,9 @@ class Particle:
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
-        inEquilibrium : boole
+        inEquilibrium : bool
             True if particle is treated as in local equilibrium.
-        ultrarelativistic : boole
+        ultrarelativistic : bool
             True if particle is treated as ultrarelativistic.
         collisionPrefactors : list
             Coefficients of collision integrals, :math:`\sim g^4`, currently
@@ -114,7 +114,7 @@ class Model:
         ----------
         mu4D : float 
             4d renormalisaton scale.
-        use_EFT : boole
+        use_EFT : bool
             True if 3d EFT is used.
 
         Returns
@@ -147,7 +147,7 @@ class Model:
         self.nf = 3
         self.Nc = 3
         """
-        3D and 4D RG scale of EFT as fraction of temperature
+        4D RG scale of EFT as fraction of temperature
         """
         self.mu4D = mu4D
         self.mu4Dsq = mu4D*mu4D
@@ -547,7 +547,10 @@ class FreeEnergy:
         """
         self.nbrFields = 2
         """
-        Indicate which fields under go the transition
+        self.transField`i' take values between [0,self.nbrFields-1] indicating 
+        which of the fields undergo the transition.
+        self.transField0 is the field assoiciated to the low temperature phase 
+        self.transField1 is the field assoiciated to the high temperature phase 
         """
         self.transField0 = 0
         self.transField1 = 1
