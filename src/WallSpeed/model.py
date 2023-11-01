@@ -142,6 +142,7 @@ class Model:
         self.g0 = 2*self.MW/self.v0
         self.g1 = self.g0*math.sqrt((self.MZ/self.MW)**2-1)
         self.g2 = self.g0
+        self.g3 = 1.2279920495357861
         self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
 
 
@@ -171,6 +172,7 @@ class Model:
             'musT': self.musT,
             'g1': self.g1,
             'g2': self.g2,
+            'g3': self.g3,
             'yt': self.yt
         }
 
@@ -655,7 +657,7 @@ class FreeEnergy:
         # the helper function.
 
         T = np.asanyarray(T)[...,np.newaxis]
-        
+
         return f1(X, T)
 
     def findTc(self,Tmax=150):
@@ -681,7 +683,7 @@ class FreeEnergy:
         def deltaPmin(T):
             mins = self.findPhases(T)
             return deltaf(mins[0,0],mins[1,1],T)
-        
+
         self.Tc = optimize.root_scalar(deltaPmin,bracket=(90,150),rtol=1e-12,xtol=1e-12).root
-            
+
         return self.Tc

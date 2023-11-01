@@ -26,9 +26,10 @@ field = np.ones((M - 1,))
 field[M // 2:]  = 0
 T = 100 * np.ones(M - 1)
 basis = "Cardinal"
+velocityMid = 0.5 * (v[0] + v[-1])
 
 background = BoltzmannBackground(
-    vw=vw,
+    velocityMid=velocityMid,
     velocityProfile=v,
     fieldProfile=field,
     temperatureProfile=T,

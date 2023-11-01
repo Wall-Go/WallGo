@@ -11,6 +11,7 @@
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
 #include "gslWrapper.h"
+#include "ConfigParser.h"
 
 
 // Print a description of all supported options
@@ -143,17 +144,24 @@ int main(int argc, char *argv[]) {
 
 	// basis size, default value
 	int basisSizeN = 20;
+    // config file, default name
+    std::string configFileName = "config.ini";
 
 	// Parse command line arguments
 	int opt;
-	while ((opt = getopt(argc, argv, "whn:")) != -1) {
+	while ((opt = getopt(argc, argv, "c:hn:w")) != -1) {
 		switch (opt) {
-			case 'h':
+			case 'c':
+                configFileName = optarg;
+                std::cout << "Using config file " << configFileName << "\n";
+                break;
+            case 'h':
 				// Print usage and exit
 				printUsage(stderr, argv[0]);
 				return 0;
 			case 'n':
-				basisSizeN = int(*optarg) - int('0');
+				// NB: atoi is not the best option as it will happily interpret eg. "20dog" as 20
+				basisSizeN = std::atoi(optarg);
 				std::cout << "Running with basis size "<< basisSizeN << "\n";
 				break;
 			case 'w':
@@ -167,9 +175,26 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, "Unknown option character `\\x%x'.\n", opt);
 				return 1;
 			default:
-				abort();
+				return 1;
 		}
 	}
+
+	if (basisSizeN < 1) {
+		std::cerr << "Invalid basis size N = " << basisSizeN << "\n";
+		return 2;
+	}
+
+	// Load config
+	ConfigParser& config = ConfigParser::get();
+
+	if (config.load(configFileName)) {
+		std::cout << "Read config:\n";
+		config.printContents();
+		std::cout << std::endl;
+	} else {
+		return 3;
+	}
+
 
 	gslWrapper::initializeRNG();
 	// 2->2 scatterings so 4 external particles
