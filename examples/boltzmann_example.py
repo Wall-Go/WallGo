@@ -70,19 +70,7 @@ deltaF = boltzmann.solveBoltzmannEquations()
 print("deltaF.shape =", deltaF.shape)
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
 
-# converting to coordinate space
-deltaFCoord = np.einsum(
-    "abc, ai, bj, ck -> ijk",
-    deltaF,
-    boltzmann.poly.matrix(boltzmann.basisM, "z"),
-    boltzmann.poly.matrix(boltzmann.basisN, "pz"),
-    boltzmann.poly.matrix(boltzmann.basisN, "pp"),
-    optimize=True,
-)
-print(f"{deltaFCoord.shape=}")
-print("deltaFCoord[:, 0, 0] =", deltaFCoord[:, 0, 0])
-
-Deltas = boltzmann.getDeltas()
+Deltas = boltzmann.getDeltas(deltaF=deltaF)
 print("Deltas =", Deltas)
 
 # plotting
