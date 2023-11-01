@@ -285,11 +285,15 @@ class BoltzmannSolver:
 
         ##### liouville operator #####
         liouville = (
-            dchidxi * PWall
+            dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdChi
+            - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * gammaWall / 2
+                * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
