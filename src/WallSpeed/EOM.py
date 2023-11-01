@@ -110,7 +110,6 @@ class EOM:
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
             #print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
             offEquilDeltas = boltzmannSolver.getDeltas()
-            print(f"{offEquilDeltas=}")
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
@@ -433,16 +432,16 @@ class EOM:
             Plasma velocity profile in the wall.
 
         """
-        temperatureProfile = []
-        velocityProfile = []
+        temperatureProfile = np.zeros(len(self.grid.xiValues))
+        velocityProfile = np.zeros(len(self.grid.xiValues))
 
         for index in range(len(self.grid.xiValues)):
-            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
+            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index:index+1], dXdz[:,index:index+1], offEquilDeltas, Tplus, Tminus)
 
-            temperatureProfile.append(T)
-            velocityProfile.append(vPlasma)
+            temperatureProfile[index] = T
+            velocityProfile[index] = vPlasma
 
-        return np.array(temperatureProfile), np.array(velocityProfile)
+        return temperatureProfile, velocityProfile
 
     def findPlasmaProfilePoint(self, index, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
@@ -510,7 +509,7 @@ class EOM:
         )
         # TODO: Can the function have multiple zeros?
 
-        T = res   #is this okay?
+        T = res   #is this okay? #Maybe not? Sometimes it returns an array, sometimes a double
         vPlasma = self.plasmaVelocity(X, T, s1)
         return T, vPlasma
 
@@ -559,7 +558,21 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
-        return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
+        result = (
+            0.5*np.sum(dXdz**2, axis=0)
+            - self.freeEnergy(X, T)
+            + 0.5*T*self.freeEnergy.derivT(X, T)
+            + 0.5*np.sqrt(4*s1**2
+            + (T*self.freeEnergy.derivT(X, T))**2)
+            - s2
+        )
+        result = np.asarray(result)
+        if result.shape == (1,) and len(result) == 1:
+            return result[0]
+        elif result.shape == ():
+            return result
+        else:
+            raise TypeError(f"LHS has wrong type, {result.shape=}")
 
     def deltaToTmunu(self, index, X, velocityMid, offEquilDeltas):
         r"""
