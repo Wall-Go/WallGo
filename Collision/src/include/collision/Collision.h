@@ -52,7 +52,7 @@ protected:
     virtual inline bool shouldContinueEvaluation() { return true; };
 
     // Prints stuff about how many integrals we've computed and ETC
-    virtual void reportProgress();
+    void reportProgress();
 
     // Populates the particleIndex map 
     void makeParticleIndexMap();
@@ -91,12 +91,14 @@ protected:
 
 private:
 
-    // Evaluation control
-    long computedIntegralCount = 0;
-    long totalIntegralCount;
+    // Progress tracking 
+    int computedIntegralCount = 0;
+    int totalIntegralCount;
+    // Initial progress check and time estimate after this many integrals (in one thread)
+    int initialProgressInterval = 10;
+    bool bFinishedInitialProgressCheck = false;
     std::chrono::steady_clock::time_point startTime;
-
-    
+    std::chrono::duration<double> elapsedTime;
 };
 
 

@@ -18,7 +18,8 @@ namespace constants {
 // Global functions etc
 namespace globalFuncts {
     // Clamp number between [min, max]
-    inline double clamp(double value, double lower, double upper) 
+    template <typename T>
+    inline T clamp(T value, T lower, T upper) 
     {
         return std::max(lower, std::min(value, upper));
     }
