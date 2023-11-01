@@ -82,7 +82,7 @@ class BoltzmannSolver:
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
 
-    def getDeltas(self, deltaF=None):
+    def getDeltas(self, deltaFCoord=None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -90,6 +90,9 @@ class BoltzmannSolver:
 
         Parameters
         ----------
+        deltaFCoord : array_like, optional
+            The deviation of the distribution function from local thermal
+            equilibrium, in the coordinate basis.
 
         Returns
         -------
@@ -98,8 +101,17 @@ class BoltzmannSolver:
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
-        if deltaF is None:
+        if deltaFCoord is None:
             deltaF = self.solveBoltzmannEquations()
+            # putting deltaF on momentum coordinate grid points
+            deltaFCoord = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                deltaF,
+                self.poly.matrix(self.basisM, "z"),
+                self.poly.matrix(self.basisN, "pz"),
+                self.poly.matrix(self.basisN, "pp"),
+                optimize=True,
+            )
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
@@ -140,16 +152,6 @@ class BoltzmannSolver:
         measurePp = TMid**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
         measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
         measurePzPp /= (2 * np.pi)**2
-
-        # putting deltaF on momentum coordinate grid points
-        deltaFCoord = np.einsum(
-            "abc, ai, bj, ck -> ijk",
-            deltaF,
-            self.poly.matrix(self.basisM, "z"),
-            self.poly.matrix(self.basisN, "pz"),
-            self.poly.matrix(self.basisN, "pp"),
-            optimize=True,
-        )
 
         # evaluating integrals with Gaussian quadrature
         measureWeight = measurePzPp * weights
