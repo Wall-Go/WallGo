@@ -70,7 +70,7 @@ deltaF = boltzmann.solveBoltzmannEquations()
 print("deltaF.shape =", deltaF.shape)
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
 
-Deltas = boltzmann.getDeltas(deltaF=deltaF)
+Deltas = boltzmann.getDeltas(deltaF)
 print("Deltas =", Deltas)
 
 # plotting
