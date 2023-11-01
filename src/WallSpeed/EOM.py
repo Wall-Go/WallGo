@@ -244,6 +244,7 @@ class EOM:
                 boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
+                print(f"{offEquilDeltas=}")
 
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
@@ -429,22 +430,25 @@ class EOM:
             Plasma velocity profile in the wall.
 
         """
-        temperatureProfile = []
-        velocityProfile = []
+        temperatureProfile = np.zeros(len(self.grid.xiValues))
+        velocityProfile = np.zeros(len(self.grid.xiValues))
 
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
+            """
             if type(T) == np.ndarray: #This is a quick fix, need to figure out why it is necessary
                 temperatureProfile.append(T[0])
             else:
-                temperatureProfile.append(T)    
+                temperatureProfile.append(T)
+            """
 
-            velocityProfile.append(vPlasma)
+            temperatureProfile[index] = T
+            velocityProfile[index] = vPlasma
 
-        reshapedvelocityProfile = np.array(velocityProfile).reshape(self.grid.N-1,)  #Note that this is a quick fix, should figure out why it is necessary!
- #       print(reshapedvelocityProfile)
-#        print(temperatureProfile)
-        return (np.array(temperatureProfile), reshapedvelocityProfile)
+        print(f"{temperatureProfile.shape=}, {velocityProfile.shape=}")
+        print(f"{temperatureProfile=}")
+        print(f"{velocityProfile=}")
+        return temperatureProfile, velocityProfile
 
     def findPlasmaProfilePoint(self, index, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
@@ -561,13 +565,13 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
-        print("-----")
+        #print("-----")
 #        print(X)
 #        print(T)
-        print(np.sum(dXdz**2, axis=0))
-        print(self.freeEnergy(X, T))
-        print(T*self.freeEnergy.derivT(X, T))
-        print(s1)
+        #print(np.sum(dXdz**2, axis=0))
+        #print(self.freeEnergy(X, T))
+        #print(T*self.freeEnergy.derivT(X, T))
+        #print(s1)
 
  #These objects do not (always) have the same shape -- depends on the model though
         return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
