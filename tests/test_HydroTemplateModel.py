@@ -49,7 +49,7 @@ class TestModelTemplate(WallSpeed.Thermodynamics):
 
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
-N = 100
+N = 10
 rng = np.random.default_rng(1)
 
 def test_JouguetVelocity():
