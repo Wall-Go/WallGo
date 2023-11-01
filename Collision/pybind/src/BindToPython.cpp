@@ -16,25 +16,41 @@
 #include <pybind11/stl.h>
 
 
-/* Initialization function. We call this when the module is imported into Python.
- * Do things like initial allocs here.
-*/
-void initModule() 
+namespace pythonModule 
 {
-    gslWrapper::initializeRNG();
+    bool bInitialized = false;
 
-    ConfigParser& config = ConfigParser::get();
+    /* Initialization function. This should be called from Python before doing anything else with the module.
+    * Do things like initial allocs here.
+    */
+    void initModule(const std::string& configFileName) 
+    {
 
-    // @todo let's not hardcode this in
-    std::string configFileName = "config.ini";
-	if (config.load(configFileName)) {
-		std::cout << "=== Collision config ===\n\n";
-		config.printContents();
-		std::cout << std::endl;
-	} else {
-		exit(100);
-	}
+        // Already initialized?
+        if (pythonModule::bInitialized) 
+        {
+            std::cout << "! Module already initialized, doing nothing\n";
+            return;
+        }
+
+        gslWrapper::initializeRNG();
+
+        ConfigParser& config = ConfigParser::get();
+
+        if (config.load(configFileName)) {
+            std::cout << "=== Collision config ===\n\n";
+            config.printContents();
+            std::cout << std::endl;
+        } else {
+            exit(100);
+        }
+
+        pythonModule::bInitialized = true;
+    }
 }
+
+
+
 
 
 /* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
@@ -49,7 +65,15 @@ class CollisionPython final : public Collision
 
 public: 
     // Just call parent constructor
-    CollisionPython(uint basisSize) : Collision(basisSize) {}
+    CollisionPython(uint basisSize) : Collision(basisSize) 
+    {
+        if (!pythonModule::bInitialized)
+        {
+            std::cerr << "Error: Collision constructor called, but the module has not been initialized. Please call initModule().\n";
+            std::cerr << "This error is unrecoverable!" << std::endl;
+            exit(111);
+        }
+    }
 
 protected:
 
@@ -74,9 +98,15 @@ protected:
 PYBIND11_MODULE(CollisionModule, m) 
 {
 
-    initModule();
-
     namespace py = pybind11;
+
+    // Bind variable
+    m.attr("bInitialized") = pythonModule::bInitialized;
+
+    // Bind initialization function
+    m.def("initModule", &pythonModule::initModule, py::arg("configFileName") = "./config.ini",
+        "Initialize the module. This needs to be called before using the module for anything. Takes path/name of the config file as argument (default: config.ini)"); 
+
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
@@ -137,33 +167,5 @@ PYBIND11_MODULE(CollisionModule, m)
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
 
-
-
-
-
-
-/*
-    // Bind the InputData struct
-    py::class_<InputData>(m, "InputData")
-        .def(pybind11::init<>())
-        .def_readwrite("values", &InputData::values);
-*/
-
 }
 
-
-/*
-// Data struct that can be passed on from python. Can be used for 'additional' inputs like matrix elements etc
-struct InputData {
-    std::map<std::string, pybind11::object> values;
-};
-
-
-
-// Test function
-void pybindTestFunction(const InputData& inputData) {
-
-    std::cout << "hello test1 from laurin\n";
-    (void)inputData; // suppress -Wunused-variable
-}
-*/
