@@ -38,8 +38,13 @@ def constructPybindParticle(p: Particle, T: float):
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
 
 
+## Module needs to be initialized before using. We probably want to call this in some common startup routine.
+# Argument is the config file name, we'll eventually want to read this from user input.
+CollisionModule.initModule("../Collision/config.ini")
+
+
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 20
+polynomialBasisSize = 3
 
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.Collision(polynomialBasisSize)
