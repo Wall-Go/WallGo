@@ -432,9 +432,6 @@ class EOM:
         """
         temperatureProfile = np.zeros(len(self.grid.xiValues))
         velocityProfile = np.zeros(len(self.grid.xiValues))
-        print("----- findPlasmaProfile ----")
-        print(f"{X.shape=}, {dXdz.shape=}")
-        print(f"{X.shape=}, {dXdz.shape=}")
 
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index:index+1], dXdz[:,index:index+1], offEquilDeltas, Tplus, Tminus)
