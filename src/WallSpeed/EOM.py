@@ -110,7 +110,6 @@ class EOM:
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
             #print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
             offEquilDeltas = boltzmannSolver.getDeltas()
-            print(f"{offEquilDeltas=}")
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
@@ -244,7 +243,6 @@ class EOM:
                 boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
-                print(f"{offEquilDeltas=}")
 
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
             wallParams = sol.x
