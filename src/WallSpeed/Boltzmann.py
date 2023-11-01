@@ -359,7 +359,7 @@ class BoltzmannSolver:
         """
         dir = "../data"
         suffix = "hdf5"
-        return f"{dir}/collisions_top_top_N{self.grid.N}.{suffix}"
+        return f"{dir}/collisions_N{self.grid.N}.{suffix}"
 
     def __checkBasis(basis):
         """
