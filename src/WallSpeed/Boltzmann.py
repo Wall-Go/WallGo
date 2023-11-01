@@ -218,10 +218,6 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        # derivative matrices
-        derivChi = self.poly.deriv(self.basisM, "z")
-        derivRz = self.poly.deriv(self.basisN, "pz")
-
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
@@ -232,6 +228,10 @@ class BoltzmannSolver:
         TChiMat = self.poly.matrix(self.basisM, "z")
         TRzMat = self.poly.matrix(self.basisN, "pz")
         TRpMat = self.poly.matrix(self.basisN, "pp")
+
+        # derivative matrices
+        derivChi = self.poly.deriv(self.basisM, "z")
+        derivRz = self.poly.deriv(self.basisN, "pz")
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
