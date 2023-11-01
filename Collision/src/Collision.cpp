@@ -200,11 +200,12 @@ void Collision::calculateCollisionIntegrals()
             h5File.close();
 
             // How long did this all take
-            double seconds = (std::chrono::steady_clock::now() - pairStartTime).count();
+            std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
+            double seconds = duration.count();
             int hours = seconds / 3600;
             // leftover mins
             int minutes = (seconds - hours * 3600) / 60;
-            std::cout << "[" << particle1.getName() << ", " << particle2.getName() << "] done in " << hours << "h " << minutes << std::endl;
+            std::cout << "[" << particle1.getName() << ", " << particle2.getName() << "] done in " << hours << "h " << minutes << "min." << std::endl;
 
         }
     }
