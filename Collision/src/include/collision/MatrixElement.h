@@ -33,19 +33,20 @@ public:
     // Evaluate the matrix element at s,t,u, using cached couplings and masses
     double evaluate(double s, double t, double u);
 
-public:
-
-    // Tests that our expression is valid and can be evaluated by the parser
-    void testExpression();
 
     /* Math expression parser. Might as well make it a pointer - had issues with this breaking when passing MatrixElements around with default constructors */
     mu::Parser *parser = nullptr;
     std::string expression;
-    
+
+private:
+
     double s_internal, t_internal, u_internal;
 
     std::vector<double> couplings_internal;
     std::vector<double> msq_internal;
+
+    // Tests that our expression is valid and can be evaluated by the parser
+    void testExpression();
 };
 
 #endif // header guard
