@@ -82,7 +82,7 @@ class BoltzmannSolver:
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
 
-    def getDeltas(self, deltaF=None):
+    def getDeltas(self, deltaFCoord=None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -90,6 +90,9 @@ class BoltzmannSolver:
 
         Parameters
         ----------
+        deltaFCoord : array_like, optional
+            The deviation of the distribution function from local thermal
+            equilibrium, in the coordinate basis.
 
         Returns
         -------
@@ -98,8 +101,17 @@ class BoltzmannSolver:
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
-        if deltaF is None:
+        if deltaFCoord is None:
             deltaF = self.solveBoltzmannEquations()
+            # putting deltaF on momentum coordinate grid points
+            deltaFCoord = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                deltaF,
+                self.poly.matrix(self.basisM, "z"),
+                self.poly.matrix(self.basisN, "pz"),
+                self.poly.matrix(self.basisN, "pp"),
+                optimize=True,
+            )
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
@@ -143,11 +155,11 @@ class BoltzmannSolver:
 
         # evaluating integrals with Gaussian quadrature
         measureWeight = measurePzPp * weights
-        arg00 = deltaF[:, :, 1:] / E[:, :, 1:]
+        arg00 = deltaFCoord[:, :, 1:] / E[:, :, 1:]
         Deltas["00"] = np.einsum(
             "jk, ijk -> i",
             measureWeight,
-            deltaF[:, :, 1:] / E[:, :, 1:],
+            arg00,
             optimize=True,
         )
         Deltas["11"] = np.einsum(
@@ -389,5 +401,5 @@ class BoltzmannSolver:
             return np.where(x > 100, -np.exp(-x), -np.exp(x) / np.expm1(x) ** 2)
         else:
             return np.where(
-                x > 100, -np.exp(-x), -np.exp(x) / (np.exp(x) + 1) ** 2
+                x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
             )
