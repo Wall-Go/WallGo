@@ -14,16 +14,18 @@ Grid
 """
 M = 10
 N = 10
-grid = Grid(M, N, 1, 1)
+T = 100
+L = 5/T
+grid = Grid(M, N, L, T)
 poly = Polynomial(grid)
 
 """
 Background
 """
-vw = 1 / np.sqrt(3)
+vw = 0
 v = - np.ones(M - 1) / np.sqrt(3)
-field = np.ones((M - 1,))
-field[M // 2:]  = 0
+vev = 90
+field = np.array([vev*(1-np.tanh(grid.xiValues/L))/2, vev*(1+np.tanh(grid.xiValues/L))/2])
 T = 100 * np.ones(M - 1)
 basis = "Cardinal"
 velocityMid = 0.5 * (v[0] + v[-1])
@@ -37,19 +39,19 @@ background = BoltzmannBackground(
 )
 
 #test boost
-background.vw=0
-print(background.velocityProfile)
-background.boostToPlasmaFrame()
-print(background.velocityProfile)
-background.boostToWallFrame()
-print(background.velocityProfile)
+# background.vw=0
+# print(background.velocityProfile)
+# background.boostToPlasmaFrame()
+# print(background.velocityProfile)
+# background.boostToWallFrame()
+# print(background.velocityProfile)
 
 """
 Particle
 """
 particle = Particle(
     name="top",
-    msqVacuum=lambda phi: 0.5 * phi**2,
+    msqVacuum=lambda phi: 0.5 * phi[0]**2,
     msqThermal=lambda T: 0.1 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
