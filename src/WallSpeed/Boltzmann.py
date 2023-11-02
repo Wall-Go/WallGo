@@ -209,7 +209,7 @@ class BoltzmannSolver:
 
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
-        return np.reshape(deltaF, deltaFShape, order="F")
+        return np.reshape(deltaF, deltaFShape, order="C")
 
 
     def buildLinearEquations(self):
@@ -218,10 +218,6 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        # derivative matrices
-        derivChi = self.poly.deriv(self.basisM, "z")
-        derivRz = self.poly.deriv(self.basisN, "pz")
-
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
@@ -232,6 +228,10 @@ class BoltzmannSolver:
         TChiMat = self.poly.matrix(self.basisM, "z")
         TRzMat = self.poly.matrix(self.basisN, "pz")
         TRpMat = self.poly.matrix(self.basisN, "pp")
+
+        # derivative matrices
+        derivChi = self.poly.deriv(self.basisM, "z")
+        derivRz = self.poly.deriv(self.basisN, "pz")
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -285,11 +285,15 @@ class BoltzmannSolver:
 
         ##### liouville operator #####
         liouville = (
-            dchidxi * PWall
+            dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdChi
+            - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * gammaWall / 2
+                * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
@@ -324,10 +328,13 @@ class BoltzmannSolver:
             * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
+        # doing matrix-like multiplication
+        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
+
         # reshaping indices
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
-        source = np.reshape(source, N_new)
-        operator = np.reshape(operator, (N_new, N_new), order="F")
+        source = np.reshape(source, N_new, order="C")
+        operator = np.reshape(operator, (N_new, N_new), order="C")
 
         # returning results
         return operator, source
