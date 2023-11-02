@@ -329,16 +329,15 @@ class BoltzmannSolver:
                 collisionArray,
                 optimize=True,
             )
-        # including factored-out T^2 in Collision integrals
-        collisionUnits = self.background.TMid ** 2
-        collisionArray = collisionUnits * collisionArray
-
-        ##### total operator #####
-        operator = (
-            liouville
-            + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+        # including factored-out T^2 in collision integrals
+        collisionArray = (
+            (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
             * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
+
+        ##### total operator #####
+        operator = liouville + collisionArray
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
