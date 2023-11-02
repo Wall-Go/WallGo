@@ -77,9 +77,13 @@ print("Deltas =", Deltas)
 
 # plotting
 chi = boltzmann.grid.getCompactCoordinates()[0]
-plt.plot(chi, Deltas["00"])
+plt.plot(chi, Deltas["00"], label=r"$\Delta_{00}$")
+plt.plot(chi, Deltas["02"], label=r"$\Delta_{02}$")
+plt.plot(chi, Deltas["20"], label=r"$\Delta_{20}$")
+plt.plot(chi, Deltas["11"], label=r"$\Delta_{11}$")
 plt.xlabel(r"$\chi$")
-plt.ylabel(r"$\Delta_{00}$")
+plt.ylabel(r"$\Delta\mathrm{s}$")
+plt.legend(loc="best")
 plt.tight_layout()
 plt.show()
 
