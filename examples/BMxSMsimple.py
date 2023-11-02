@@ -156,7 +156,7 @@ top = Particle(
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=False,
-    collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
+    multiplicity = 1
 )
 
 offEqParticles = [top]

@@ -5,9 +5,10 @@ from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
-from .model import Particle, FreeEnergy
+from .model import FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
+from .Particle import Particle
 
 class EOM:
     """
