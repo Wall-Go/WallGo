@@ -44,7 +44,7 @@ public:
 
 	//------------- Operator overloads
 
-    FourVector& operator=(const FourVector& other) {
+    inline FourVector& operator=(const FourVector& other) {
         if (this != &other) {
             for (int i = 0; i < NCOMPONENTS; ++i) {
                 comp[i] = other.comp[i];
@@ -54,17 +54,19 @@ public:
     }
 
 	// TODO range check
-    double& operator[](int index) {
+    inline double& operator[](int index) {
         return comp[index];
     }
 
 	// TODO range check
-    const double& operator[](int index) const {
+    inline const double& operator[](int index) const {
         return comp[index];
     }
 
+    /** profiler says that operator+ and operator- are eating surprisingly big chunk of computation time when doing Mandelstams, can we optimize? */
+
 	// Component-wise addition of two FourVectors
-    FourVector operator+(const FourVector& other) const {
+    inline FourVector operator+(const FourVector& other) const {
         FourVector result;
         for (int i = 0; i < NCOMPONENTS; ++i) {
             result.comp[i] = comp[i] + other.comp[i];
@@ -73,7 +75,7 @@ public:
     }
 
 	// Component-wise subtraction of two FourVectors
-    FourVector operator-(const FourVector& other) const {
+    inline FourVector operator-(const FourVector& other) const {
         FourVector result;
         for (int i = 0; i < NCOMPONENTS; ++i) {
             result.comp[i] = comp[i] - other.comp[i];
@@ -82,7 +84,7 @@ public:
     }
 
 	// Minkowskian dot product of FourVectors
-    double operator*(const FourVector& other) const {
+    inline double operator*(const FourVector& other) const {
 		double result = comp[0]*other.comp[0];
 		for (int i = 1; i < NCOMPONENTS; ++i) {
 			// 'mostly minus'
@@ -92,7 +94,7 @@ public:
     }
 
 	// Multiply all components by a scalar
-    FourVector operator*(double scalar) const {
+    inline FourVector operator*(double scalar) const {
         FourVector result;
         for (int i = 0; i < NCOMPONENTS; ++i) {
             result.comp[i] = comp[i] * scalar;
@@ -101,12 +103,12 @@ public:
     }
 
 	// Scalar multiplication (left operand)
-    friend FourVector operator*(double scalar, const FourVector& vector) {
+    inline friend FourVector operator*(double scalar, const FourVector& vector) {
         return vector * scalar;
     }
 
 	// Divide all components by a scalar
-    FourVector operator/(double scalar) const {
+    inline FourVector operator/(double scalar) const {
         FourVector result;
         for (int i = 0; i < NCOMPONENTS; ++i) {
             result.comp[i] = comp[i] / scalar;
@@ -114,28 +116,28 @@ public:
         return result;
     }
 
-	FourVector& operator+=(const FourVector& other) {
+	inline FourVector& operator+=(const FourVector& other) {
         for (int i = 0; i < NCOMPONENTS; ++i) {
             comp[i] += other.comp[i];
         }
         return *this;
     }
 
-    FourVector& operator-=(const FourVector& other) {
+    inline FourVector& operator-=(const FourVector& other) {
         for (int i = 0; i < NCOMPONENTS; ++i) {
             comp[i] -= other.comp[i];
         }
         return *this;
     }
     
-    FourVector& operator*=(double scalar) {
+    inline FourVector& operator*=(double scalar) {
         for (int i = 0; i < NCOMPONENTS; ++i) {
             comp[i] *= scalar;
         }
         return *this;
     }
 
-    FourVector& operator/=(double scalar) {
+    inline FourVector& operator/=(double scalar) {
         for (int i = 0; i < NCOMPONENTS; ++i) {
             comp[i] /= scalar;
         }

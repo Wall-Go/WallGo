@@ -63,6 +63,22 @@ jobs:
                exit 1
              fi
 
+      - name: Clone muparser repository
+        uses: actions/checkout@v4
+        with:
+          repository: beltoforion/muparser
+          path: muparser
+      
+      - name: Install muparser
+      # Will install muparser without OpenMP support, our program doesn't need it here. ldconfig seems to be required for linux builds
+        run: |
+             if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+               cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
+             fi
+             if [ "$RUNNER_OS" == "Linux" ]; then
+               sudo ldconfig
+             fi
+
       - name: Configure CMake for Collision
         run: >
           cmake -B ${{ steps.strings.outputs.collision-build-dir }}
@@ -80,4 +96,4 @@ jobs:
         run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 3
 
       - name: Test with pytest
-        run: cd tests; pytest -v
+        run: cd tests && pytest -v

@@ -6,7 +6,7 @@
 
 #include "FourVector.h"
 #include "CollElem.h"
-#include "constants.h"
+#include "Common.h"
 #include "PolynomialBasis.h"
 
 
@@ -71,11 +71,11 @@ public:
     NB: when comparing to output of Benoit's python code, note that he calculates 4pi * (A1), 
     and that his tg_tg term had an error in the population factor. */
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
-        const IntegrandParameters &integrandParameters) const;
+        const IntegrandParameters &integrandParameters);
 
     // Overload of the above (for testing)
     inline double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
-        int m, int n, int j, int k) const {
+        int m, int n, int j, int k) {
             
         return calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, initializeIntegrandParameters(m, n, j, k));
     }
@@ -85,11 +85,11 @@ public:
     std::array<double, 2> evaluate(int m, int n, int j, int k);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
-
-private:
-
+  
     // 4-particle 'collision elements' that contribute to the process
     std::vector<CollElem<4>> collisionElements;
+
+private:
 
     // Masses smaller than this are set to 0 when computing the kinematic prefactor. This is to avoid spurious singularities at small momenta
     const double massSquaredLowerBound = 1e-14;

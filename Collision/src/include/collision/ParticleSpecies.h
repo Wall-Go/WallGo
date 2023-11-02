@@ -16,10 +16,11 @@ class ParticleSpecies {
 public: 
 
 	ParticleSpecies(std::string speciesName, EParticleType particleType, bool speciesInEquilibrium, 
-            double msqVacuum, double msqThermal) : type(particleType)  
+		double msqVacuum, double msqThermal, bool ultrarelativistic) : type(particleType)  
 	{
 		name = speciesName;
         bInEquilibrium = speciesInEquilibrium;
+		bUltrarelativistic = ultrarelativistic;
 		vacuumMassSquared = msqVacuum;
 		thermalMassSquared = msqThermal;
 	}
@@ -48,7 +49,7 @@ public:
 private:
 	// TODO setters for these 
 	// Neglect mass in dispersion relations or not? (this flag is not used ATM)
-	bool bUltrarelativistic = true;
+	bool bUltrarelativistic;
 	// Is the particle assumed to be in thermal equilibrium?
 	bool bInEquilibrium;
 
@@ -57,7 +58,7 @@ private:
 
 	std::string name;
 
-	// Set this in constructor using initialization list
+	// Set this in the constructor
 	const EParticleType type;
 };
 

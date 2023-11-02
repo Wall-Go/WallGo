@@ -16,6 +16,8 @@ target_sources(${MODULE} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/BindToPython.cpp
 )
 
+## Link to the main lib. This inherits linkages to its PUBLIC dependencies 
+
 target_link_libraries(${MODULE} PRIVATE
 	${CMAKE_PROJECT_NAME}_lib
 )	
