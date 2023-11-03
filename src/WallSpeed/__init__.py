@@ -9,6 +9,8 @@ from .EOM import EOM
 
 from .Particle import Particle
 from .GenericModel import GenericModel
+from .EffectivePotential import EffectivePotential
+from .WallGoManager import WallGoManager
 
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded

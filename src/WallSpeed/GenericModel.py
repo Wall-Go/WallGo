@@ -3,7 +3,9 @@ from abc import ABC, abstractmethod ## Abstract Base Class
 import cmath # complex numbers
 
 ## WallGo imports
-from WallSpeed import Particle
+from .Particle import Particle
+from .EffectivePotential import EffectivePotential
+
 
 
 class GenericModel(ABC):
@@ -15,13 +17,6 @@ class GenericModel(ABC):
     ## LN: I don't know what the proper Python way of declaring interface variables is, but this works.
     ## In any case we certainly want to specify that any model should have these. 
 
-
-    ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
-    ## Here is a property definition for it. Child classes can just do modelParameters = { ... } to define it
-    @property
-    @abstractmethod
-    def modelParameters(self) -> dict[str, float]:
-        pass
 
     ## Particle array property, this should hold all particles 
     @property
@@ -35,7 +30,26 @@ class GenericModel(ABC):
     @abstractmethod
     def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
         pass
+
+    ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
+    ## Here is a property definition for it. Child classes can just do modelParameters = { ... } to define it
+    @property
+    @abstractmethod
+    def modelParameters(self) -> dict[str, float]:
+        pass
+
+
+    '''
+    ## Effective potential
+    @property
+    @abstractmethod
+    def Veff(self) -> EffectivePotential:
+        pass
+    '''
+    Veff: EffectivePotential
+
     
+    inputParameters: dict[str, float]
 
     ## Common routine for defining a new particle. Usually should not be overriden
     def addParticle(self, particleToAdd: Particle) -> None:
@@ -46,10 +60,9 @@ class GenericModel(ABC):
             self.outOfEquilibriumParticles = np.append(self.outOfEquilibriumParticles, particleToAdd)
 
 
+    ## Go from whatever input parameters to renormalized Lagrangian parameters. Override this if your inputs are something else than Lagrangian parameters
+    def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+        self.inputParameters = inputParameters
+        return {}
 
-    @abstractmethod 
-    def evaluateEffectivePotential(self, fields: np.ndarray[float], temperature: float) -> complex:
-        ## This should calculate the potential given an array of background fields. 
-        ## We allow the return value to be complex
-        raise NotImplementedError
 
