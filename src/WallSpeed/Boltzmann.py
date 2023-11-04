@@ -255,16 +255,16 @@ class BoltzmannSolver:
         v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
         vw = self.background.vw
 
-        # fit the background profiles to polynomial
-        Tpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)
-        fieldpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.fieldProfile, self.grid.M)
-        vpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M)
-
         # fluctuation mode
         statistics = -1 if self.particle.statistics == "Fermion" else 1
         # TODO: indices order not consistent across different functions.
         msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
+
+        # fit the background profiles to polynomial
+        Tpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)
+        msqpoly = numpy.polynomial.chebyshev.chebfit(chi, self.particle.msqVacuum(self.background.fieldProfile), self.grid.M)
+        vpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M)
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
