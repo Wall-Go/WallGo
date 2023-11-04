@@ -1,6 +1,7 @@
 import os
 import warnings
 import numpy as np
+import numpy.polynomial
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
@@ -236,6 +237,9 @@ class BoltzmannSolver:
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
+        # compactified coordinates
+        chi, rz, rp = self.grid.getCompactCoordinates() # compact
+
         # intertwiner matrices
         TChiMat = self.poly.matrix(self.basisM, "z")
         TRzMat = self.poly.matrix(self.basisN, "pz")
@@ -250,6 +254,11 @@ class BoltzmannSolver:
         field = self.background.fieldProfile[..., np.newaxis, np.newaxis]
         v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
         vw = self.background.vw
+
+        # fit the background profiles to polynomial
+        Tpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)
+        fieldpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.fieldProfile, self.grid.M)
+        vpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M)
 
         # fluctuation mode
         statistics = -1 if self.particle.statistics == "Fermion" else 1
