@@ -262,9 +262,9 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fit the background profiles to polynomial
-        Tpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)
-        msqpoly = numpy.polynomial.chebyshev.chebfit(chi, self.particle.msqVacuum(self.background.fieldProfile), self.grid.M)
-        vpoly = numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M)
+        Tpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M), self.grid)
+        msqpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.particle.msqVacuum(self.background.fieldProfile), self.grid.M), self.grid)
+        vpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M),self.grid)
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
