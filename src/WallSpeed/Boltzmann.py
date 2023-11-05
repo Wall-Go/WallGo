@@ -6,6 +6,7 @@ import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
 from .Polynomial import Polynomial
+from .Polynomial2 import Polynomial2
 from .model import Particle
 from .helpers import boostVelocity
 
@@ -262,9 +263,11 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fit the background profiles to polynomial
-        Tpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M), self.grid)
-        msqpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.particle.msqVacuum(self.background.fieldProfile), self.grid.M), self.grid)
-        vpoly = Polynomial(numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M),self.grid)
+#        print(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M))
+#        print(np.shape(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)))
+        Tpoly = Polynomial2(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M), self.grid,  'Cardinal','z', True)
+        msqpoly = Polynomial2(numpy.polynomial.chebyshev.chebfit(chi, self.particle.msqVacuum(self.background.fieldProfile), self.grid.M) ,self.grid,  'Cardinal','z', True)
+        vpoly = Polynomial2(numpy.polynomial.chebyshev.chebfit(chi, self.background.velocityProfile, self.grid.M), self.grid,  'Cardinal','z', True)
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)

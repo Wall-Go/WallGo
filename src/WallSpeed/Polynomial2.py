@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
-class Polynomial:
+#Renamed it Polynomial2 such that both Polynomial classes can be used in parallel
+class Polynomial2:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
         """
         Initialization of Polynomial object. 
