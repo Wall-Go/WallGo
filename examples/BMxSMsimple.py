@@ -173,7 +173,3 @@ hydro = Hydro(thermo)
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
 
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
-
-#With out-of-equilibrium contributions
-eomOffEq = EOM(offEqParticles[0], fxSM, grid, 2, True)
-eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)

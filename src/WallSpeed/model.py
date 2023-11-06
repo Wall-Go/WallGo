@@ -1,6 +1,7 @@
 """
 Classes for user input of models
 """
+from abc import abstractmethod
 import numpy as np # arrays, maths and stuff
 import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
@@ -99,7 +100,7 @@ class Particle:
         assert len(collisionPrefactors) == 3, \
             "len(collisionPrefactors) must be 3"
 
-class Model:
+class GenericModel:
     """
     Class that generates the model given external model file
     can be overrriden by user
@@ -178,68 +179,25 @@ class Model:
 
         self.musqT = [self.muhT, self.musT]
 
+    @property
+    @abstractmethod
+    def modelParameters(self) -> dict[str, float]:
+        pass
 
-        """
-        Define dictionary of used parameters
-        """
-        self.params = {
-            'muhsq': self.muhsq,
-            'mussq': self.mussq,
-            'lamh': self.lamh,
-            'lams': self.lams,
-            'lamm': self.lamm,
-            'muhT': self.muhT,
-            'musT': self.musT,
-            'g1': self.g1,
-            'g2': self.g2,
-            'g3': self.g3,
-            'yt': self.yt
-        }
+    #@property
+    #@abstractmethod
+    #def particles(self) -> np.ndarray[Particle]:
+    #    pass
 
+    @property
+    @abstractmethod
+    def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+        pass
 
-    def V0(self, fields: float, T, show_V=False):
-        """
-        Tree-level effective potential
-
-        Parameters
-        ----------
-        fields : array_like
-            Field value(s).
-            Either a single point (with length `Ndim`), or an array of points.
-        T : float or array_like
-            The temperature at which to calculate the boson masses. Can be used
-            for including thermal mass corrrections. The shapes of `fields` and `T`
-            should be such that ``fields.shape[:-1]`` and ``T.shape`` are
-            broadcastable (that is, ``fields[...,0]*T`` is a valid operation).
-
-        Returns
-        -------
-        V: tree-level effective potential 
-        """
-        fields = np.asanyarray(fields)
-
-        if self.use_EFT:
-            for i in range(len(self.musq)):
-                self.musq[0] += T**2*self.musqT[0]
-            lamh = self.lamh*T
-            lams = self.lams*T
-            lamm = self.lamm*T
-        else:
-            musq = self.musq
-            lamh = self.lamh
-            lams = self.lams
-            lamm = self.lamm
-
-        h1,s1 = fields[0,...],fields[1,...]
-        V = (
-            +1/2*musq[0]*h1**2
-            +1/2*musq[1]*s1**2
-            +1/4*lamh*h1**4
-            +1/4*lams*s1**4
-            +1/4*lamm*(h1*s1)**2)
-        if show_V:
-            print(V)
-        return V
+    @property
+    @abstractmethod
+    def treeLevelVeff(self, fields: np.ndarray[float], T, show_V=False):
+        pass
 
     def Jcw(self, msq, degrees_of_freedom, c):
         """
@@ -461,7 +419,7 @@ class Model:
         V += np.sum(nf*Jf(m2/T2), axis=-1)
         return V*T4/(2*np.pi*np.pi)
 
-    def Vtot(self, fields, T, include_radiation=True):
+    def evaluateVeff(self, fields: np.ndarray[float], T: float, include_radiation=True):
         """
         The total finite temperature effective potential.
 
@@ -489,7 +447,7 @@ class Model:
             fields = fields/np.sqrt(T + 1e-100)
         bosons = self.boson_massSq(fields,T)
         fermions = self.fermion_massSq(fields)
-        V = self.V0(fields, T)
+        V = self.treeLevelVeff(fields, T)
         if self.use_EFT:
             V *= T
         else:
@@ -502,7 +460,7 @@ class Model:
 class FreeEnergy:
     def __init__(
         self,
-        f,
+        inputModel,
         Tc=None,
         Tnucl=None,
         dfdT=None,
@@ -557,12 +515,12 @@ class FreeEnergy:
         self.transField0 = 0
         self.transField1 = 1
 
-        if params is None:
-            self.f = f
+        if inputModel.modelParameters() is None:
+            self.f = inputModel.evaluateVeff
             self.dfdT = dfdT
             self.dfdPhi = dfdPhi
         else:
-            self.f = lambda fields, T: f(fields, T)
+            self.f = lambda fields, T: inputModel.evaluateVeff(fields, T)
             if dfdT is None:
                 self.dfdT = None
             else:
@@ -574,7 +532,7 @@ class FreeEnergy:
 
         self.dPhi = dPhi
         self.dT = dPhi
-        self.params = params # Would not normally be stored. Here temporarily.
+        self.params = inputModel.modelParameters() # Would not normally be stored. Here temporarily.
 
         self.Ti_int = None
         self.Tf_int = None

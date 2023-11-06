@@ -9,10 +9,11 @@ from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
-from WallSpeed import Particle, FreeEnergy, Model
+from WallSpeed import Particle, FreeEnergy, GenericModel
 from WallSpeed.EOM import EOM
 from WallSpeed.EOMGeneralShape import EOMGeneralShape
 import WallSpeed
+from models.xSM import xSM
 
 """
 Grid
@@ -25,15 +26,14 @@ poly = Polynomial(grid)
 """
 Model definition
 """
-mod = WallSpeed.Model(125, 120, 1.0, 0.9, use_EFT=False)
-params = mod.params
+
+mod = xSM(125, 120, 1.0, 0.9, use_EFT=False)
 
 Tc = None
 Tn = 100
 
-fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
+fxSM = WallSpeed.FreeEnergy(mod, Tc, Tn)
 Tc = fxSM.Tc
-pprint(params)
 print(f"{Tc=}, {Tn=}")
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")
@@ -44,17 +44,7 @@ print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
 
 # defining particles which are out of equilibrium for WallGo
-top = WallSpeed.Particle(
-    "top",
-    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
-    msqThermal=lambda T: 0.251327 * T**2,
-    statistics="Fermion",
-    inEquilibrium=False,
-    ultrarelativistic=False,
-    collisionPrefactors=[params["g3"]**4, params["g3"]**4, params["g3"]**4],
-)
-
-offEqParticles = [top]
+offEqParticles = mod.outOfEquilibriumParticles()
 
 """
 Define thermodynamics, hydrodynamics and equation of motion
