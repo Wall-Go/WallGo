@@ -321,7 +321,7 @@ class Model:
         mz = (self.g1**2+self.g2**2)*h1**2/4
         mw = self.g2**2*h1**2/4
 
-        massSq = np.column_stack((m1, m2, mChi, mw, mz))
+        massSq = np.stack((m1, m2, mChi, mw, mz),axis=-1)
         return massSq, degrees_of_freedom, c
 
     def fermion_massSq(self, fields):
@@ -355,7 +355,7 @@ class Model:
         mt = self.yt**2*h1**2/2
         # todo include spins for each particle
 
-        massSq = np.column_stack((mt,))
+        massSq = np.stack((mt,),axis=-1)
         return massSq, degrees_of_freedom
 
     def V1(self, bosons, fermions):
@@ -375,7 +375,9 @@ class Model:
 
         Returns
         -------
-        V1 : 1loop vacuum contribution to the pressure
+        V1 : ndarray
+            1loop vacuum contribution to the pressure
+            the array has shape (fields.shape[1],)
 
         """
         m2, nb, c = bosons
