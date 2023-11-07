@@ -66,6 +66,18 @@ class xSM(WallSpeed.GenericModel):
         }
         return params
 
+    def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+        top = WallSpeed.Particle(
+            "top",
+            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2,
+            msqThermal=lambda T: self.yt * T**2,
+            statistics="Fermion",
+            inEquilibrium=False,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g2**4, self.g2**4, self.g2**4],
+        )
+        return [top]
+
     def evaluateVeff(self, field, T, include_radiation = True):
         # The user defines their effective free energy
         field = np.asanyarray(field)
@@ -147,23 +159,10 @@ print(f"{fxSM([0,1], 100)=}")
 print(f"{fxSM([[0,0],[1,10]], 100)=}")
 print(f"{fxSM.derivT([[0],[1]], 100)=}")
 print(f"{fxSM.derivField([[0],[1]], 100)=}")
-exit()
 
 
-"""
-Particle
-"""
-top = Particle(
-    "top",
-    msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
-    msqThermal=lambda T: params["yt"]**2 * T**2,
-    statistics="Fermion",
-    inEquilibrium=False,
-    ultrarelativistic=False,
-    collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
-)
-
-offEqParticles = [top]
+# defining particles which are out of equilibrium for WallGo
+offEqParticles = mod.outOfEquilibriumParticles()
 
 """
 Define thermodynamics, hydrodynamics and equation of motion
