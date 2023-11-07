@@ -106,15 +106,14 @@ class GenericModel(ABC):
     can be overrriden by user
     """
     def __init__(self,
-        mu4D,mus,lams,lamm,
         use_EFT=False,
         ):
         r"""Initialisation
 
         Parameters
         ----------
-        mu4D : float 
-            4d renormalisaton scale.
+        # mu4D : float 
+        #     4d renormalisaton scale.
         use_EFT : bool
             True if 3d EFT is used.
 
@@ -125,60 +124,7 @@ class GenericModel(ABC):
         """
         self.use_EFT=use_EFT
 
-        self.mus = mus
-        self.lams = lams
-        self.lamm = lamm
-
-        self.v0 = 246.
-        self.muh = 125.
-        self.lamh = self.muh**2/(2*self.v0**2)
-        self.muhsq = -self.lamh*self.v0**2
-        self.mussq = +self.mus**2-self.lamm*self.v0**2/2
-
-        self.musq = [self.muhsq, self.mussq]
-
-        """
-        Number of bosonic and fermionic dofs
-        """
-        self.num_boson_dof = 29
-        self.num_fermion_dof = 90
-        """
-        Number of fermion generations and colors
-        """
-        self.nf = 3
-        self.Nc = 3
-        """
-        4D RG scale of EFT as fraction of temperature
-        """
-        self.mu4D = mu4D
-        self.mu4Dsq = mu4D*mu4D
-        """
-        Z,W,t mass, strong gauge coupling and fermion generations
-        """
-        self.MW = 80.379
-        self.MZ = 91.1876
-        self.Mt = 173.
-
-        self.g0 = 2*self.MW/self.v0
-        self.g1 = self.g0*math.sqrt((self.MZ/self.MW)**2-1)
-        self.g2 = self.g0
-        self.g3 = 1.2279920495357861
-        self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
-
-        self.musT = (
-                +1./6*lamm
-                +1./4*lams)
-        self.muhT = (
-                (
-                +1*self.g1**2
-                +3*self.g2**2
-                +4./3*self.Nc*self.yt**2
-                +8*self.lamh)/16
-                +self.lamm/24
-                )
-
-        self.musqT = [self.muhT, self.musT]
-
+    
     @property
     @abstractmethod
     def modelParameters(self) -> dict[str, float]:
@@ -199,19 +145,19 @@ class GenericModel(ABC):
     def treeLevelVeff(self, fields: np.ndarray[float], T, show_V=False):
         pass
 
-    def Jcw(self, msq, degrees_of_freedom, c):
+    def Jcw(self, massSquared, degrees_of_freedom, coefficientCW):
         """
         Coleman-Weinberg potential
 
         Parameters
         ----------
-        msq : array_like
+        massSquared : array_like
             A list of the boson particle masses at each input point `fields`.
         degrees_of_freedom : float or array_like
             The number of degrees of freedom for each particle. If an array
             (i.e., different particles have different d.o.f.), it should have
             length `Ndim`.
-        c: float or array_like
+        coefficientCW : float or array_like
             A constant used in the one-loop zero-temperature effective
             potential. If an array, it should have length `Ndim`. Generally
             `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
@@ -222,7 +168,7 @@ class GenericModel(ABC):
         Jcw : float or array_like
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
-        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
+        return degrees_of_freedom * massSquared * massSquared * (np.log(np.abs(massSquared/self.mu4Dsq) + 1e-100) - coefficientCW)
 
     def boson_massSq(self, fields, T):
         """

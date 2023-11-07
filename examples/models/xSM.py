@@ -108,9 +108,54 @@ class xSM(WallSpeed.GenericModel):
         return params
 
     def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+        higgs = WallSpeed.Particle(
+            "higgs",
+            msqVacuum=lambda X: self.yt**2 * np.asanyarray(X)[0,...]**2,
+            msqThermal=lambda T: self.muhT * T**2,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        singlet = WallSpeed.Particle(
+            "singlet",
+            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2,
+            msqThermal=lambda T: self.musT * T**2,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        chi = WallSpeed.Particle(
+            "chi",
+            msqVacuum=lambda fields: self.muhsq+self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2,
+            msqThermal=lambda T: self.musT * T**2,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        z = WallSpeed.Particle(
+            "z",
+            msqVacuum=lambda fields: (self.g1**2+self.g2**2)*fields[0,...]**2/4,
+            msqThermal=lambda T: self.musT * T**2,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        w = WallSpeed.Particle(
+            "w",
+            msqVacuum=lambda fields: (self.g2**2)*fields[0,...]**2/4,
+            msqThermal=lambda T: self.musT * T**2,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
         top = WallSpeed.Particle(
             "top",
-            msqVacuum=lambda X: self.yt**2 * np.asanyarray(X)[0,...]**2,
+            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2,
             msqThermal=lambda T: 0.251327 * T**2,
             statistics="Fermion",
             inEquilibrium=False,
