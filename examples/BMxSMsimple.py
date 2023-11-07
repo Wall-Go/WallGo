@@ -78,18 +78,23 @@ class xSM(WallSpeed.GenericModel):
         )
         return [top]
 
-    def evaluateVeff(self, field, T, include_radiation = True):
-        # The user defines their effective free energy
-        field = np.asanyarray(field)
-        h, s = field[0,...], field[1,...]
+    def treeLevelVeff(self, fields):
+        fields= np.asanyarray(fields)
+        h, s = fields[0,...], fields[1,...]
         V0 = (
             - 1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4
             - 1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4
             + 1/4.*self.lamm*s**2*h**2
             + 1/4.*self.lamh*self.v0**4
         )
+        return V0
+
+    def evaluateVeff(self, fields, T, include_radiation = True):
+        # The user defines their effective free energy
+        fields= np.asanyarray(fields)
+        h, s = fields[0,...], fields[1,...]
         VT = 1/2.*(self.muhT*h**2 + self.musT*s**2)*T**2
-        V = V0 + VT
+        V = self.treeLevelVeff(fields) + VT
         if include_radiation:
             fsymT = - self.b*T**4
             V += fsymT

@@ -1,7 +1,7 @@
 """
 Classes for user input of models
 """
-from abc import abstractmethod
+from abc import ABC, abstractmethod 
 import numpy as np # arrays, maths and stuff
 import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
@@ -100,7 +100,7 @@ class Particle:
         assert len(collisionPrefactors) == 3, \
             "len(collisionPrefactors) must be 3"
 
-class GenericModel:
+class GenericModel(ABC):
     """
     Class that generates the model given external model file
     can be overrriden by user
@@ -184,10 +184,10 @@ class GenericModel:
     def modelParameters(self) -> dict[str, float]:
         pass
 
-    #@property
-    #@abstractmethod
-    #def particles(self) -> np.ndarray[Particle]:
-    #    pass
+    # @property
+    # @abstractmethod
+    # def particles(self) -> np.ndarray[Particle]:
+    #     pass
 
     @property
     @abstractmethod
