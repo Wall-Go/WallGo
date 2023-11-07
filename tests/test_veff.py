@@ -43,17 +43,17 @@ def test_BM1():
          [phaseLocation1,phaseLocation2], [[0.0, 104.86914171],[195.03215146, 0.0]], rtol=1e-4
     )
 
-    res = model.effectivePotential.findCriticalTemperature(phaseLocation1, phaseLocation2, TMin = Tn, TMax = 500)
-    assert res == pytest.approx(Tc, rel=1e-2)
+    Tcres= model.effectivePotential.findCriticalTemperature(phaseLocation1, phaseLocation2, TMin = Tn, TMax = 500)
+    assert Tcres == pytest.approx(Tc, rel=1e-2)
     # free.interpolateMinima(0, 1.2 * Tc, 1)
     phaseLocation1, VeffValue1 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation1"], Tn)
     phaseLocation2, VeffValue2 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation2"], Tn)
-    thermodynamics = WallSpeed.Thermodynamics(model.effectivePotential, Tc, Tn, phaseLocation2, phaseLocation1)
-    # hydro = WallSpeed.Hydro(thermodynamics)
-    # res = hydro.vJ
-    # assert res == pytest.approx(vJ, rel=1e-2)
-    # res = hydro.findHydroBoundaries(vw)
-    # np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-2)
+    thermodynamics = WallSpeed.Thermodynamics(model.effectivePotential, Tcres, Tn, phaseLocation2, phaseLocation1)
+    hydro = WallSpeed.Hydro(thermodynamics)
+    res = hydro.vJ
+    assert res == pytest.approx(vJ, rel=1e-2)
+    res = hydro.findHydroBoundaries(vw)
+    np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-2)
 
 
 def test_BM2():
