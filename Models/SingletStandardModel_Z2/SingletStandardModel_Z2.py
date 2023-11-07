@@ -122,7 +122,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
     def __init__(self, modelParameters: dict[str, float]):
         super().__init__(modelParameters)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
-        
+
+        self.num_boson_dof = 29 
+        self.num_fermion_dof = 90 
 
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
@@ -158,8 +160,11 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         fermionStuff = self.fermion_massSq(fields, temperature)
 
         RGScale = self.modelParameters["RGScale"]
-
-        VTotal = V0 + self.V1(bosonStuff, fermionStuff, RGScale) + self.V1T(bosonStuff, fermionStuff, temperature)
+        VTotal = (
+            + self.pressureLO(bosonStuff, fermionStuff, temperature)
+            + V0
+            + self.V1(bosonStuff, fermionStuff, RGScale) 
+            + self.V1T(bosonStuff, fermionStuff, temperature))
 
         return VTotal
 
@@ -298,7 +303,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         # this feels error prone:
 
         # h, s, chi, W, Z
-        massSq = np.column_stack((msqEig1, msqEig2, mGsq, mWsq, mZsq))
+        massSq = np.stack((msqEig1, msqEig2, mGsq, mWsq, mZsq), axis=-1)
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
 
@@ -316,7 +321,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
     
         # @todo include spins for each particle
 
-        massSq = np.column_stack((mtsq,))
+        massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
         
         return massSq, degreesOfFreedom

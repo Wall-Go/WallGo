@@ -231,7 +231,7 @@ class EffectivePotential(ABC):
         return V/(64*np.pi*np.pi)
 
 
-    def PressureLO(self, bosons, fermions, T):
+    def pressureLO(self, bosons, fermions, T):
         """
         Computes the leading order pressure
         depending on the effective degrees of freedom.
@@ -256,12 +256,12 @@ class EffectivePotential(ABC):
         V = 0
         if self.num_boson_dof is not None:
             nb = self.num_boson_dof - np.sum(nb)
-            V -= nb * np.pi**4 / 45.
+            V -= nb * np.pi**2 / 45.
         if self.num_fermion_dof is not None:
             nf = self.num_fermion_dof - np.sum(nf)
-            V -= nf * 7*np.pi**4 / 360.
+            V -= nf * 7*np.pi**2 / 360.
 
-        return V*T4/(2*np.pi*np.pi)
+        return V*T4/2
 
 
     # @todo this should be static since it doesn't really need anything apart from the inputs. 
