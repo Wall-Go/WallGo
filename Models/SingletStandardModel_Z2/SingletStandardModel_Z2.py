@@ -20,7 +20,7 @@ class SingletSM_Z2(GenericModel):
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.Veff = EffectivePotentialxSM_Z2(self.modelParameters)
+        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -123,8 +123,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         super().__init__(modelParameters)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
         
-        print(self.evaluate([120., 230.], 100.))
-
 
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
@@ -133,7 +131,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         v = fields[0] # phi ~ 1/sqrt(2) (0, v)
         x = fields[1] # just S -> S + x 
-        T = temperature
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -147,6 +144,11 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
         mh2_thermal = b2 - thermalParams["b2"]
         """
+
+        ## These need to be arrays! because FreeEnergy calls this function with a nested list of field values.
+        ## So @todo make all our funct arguments be numpy arrays?
+        v = np.asanyarray(v)
+        x = np.asanyarray(x)
 
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
@@ -355,10 +357,6 @@ def main():
     # At this point we should have all required input from the user
     # and the manager should have validated it, found phases etc.
     
-    print(manager.phaseLocation1)
-    print(manager.phaseLocation2)
-
-
 
 
 ## Don't run the main function if imported to another file

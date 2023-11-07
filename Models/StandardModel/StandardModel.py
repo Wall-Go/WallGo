@@ -6,6 +6,8 @@ from WallSpeed import Particle
 from WallSpeed import EffectivePotential
 from WallSpeed import WallGoManager
 
+### LN: This file is very WIP, test with SingletStandardModel_Z2.py instead
+
 
 class EffectivePotentialSM(EffectivePotential):
 
@@ -91,7 +93,7 @@ class StandardModel(GenericModel):
     def __init__(self):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.Veff = EffectivePotentialSM(self.modelParameters)
+        self.effectivePotential = EffectivePotentialSM(self.modelParameters)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -185,10 +187,6 @@ def main():
 
     # At this point we should have all required input from the user
     # and the manager should have validated it, found phases etc.
-    
-    print(manager.phaseLocation1)
-    print(manager.phaseLocation2)
-
 
 
 

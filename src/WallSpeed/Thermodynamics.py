@@ -1,33 +1,64 @@
-from .model import FreeEnergy
-from .helpers import derivative
+import numpy as np
 
+from .model import FreeEnergy
+from .EffectivePotential import EffectivePotential
+
+import WallSpeed.helpers
+
+""" LN: As far as I understand, this class is intended to work as an intermediator between the Veff and other parts of the code 
+that require T-dependent quantities (like Hydro).  
+I've modified this so that instead of a FreeEnergy object, this operates on an EffectivePotential object; this gets rid of one layer of complexity. 
+The potential itself does not contain info about Tc or Tn, so those are now given as inputs to the Thermodynamics constructor.
+Finally, we need some indicator of how to find the low- and high-T phases from Veff. 
+For now, just take in the field values in both phases at Tn: these can be given as initial guesses to Veff.findLocalMinimum().
+As a future improvement, I propose we pre-calculate the lowT/highT phase locations over some sensible T-range.
+
+Questions: 
+1. Is it necessary to have separate functions like pHighT, pLowT etc?
+2. Should we get rid of labels highT, lowT altogether and use something like phase1/phase2 or phaseStart/phaseEnd? 
+"""
+
+# TODO should make most functions here non-public
 
 class Thermodynamics:
     """
-    Thermodynamic functions corresponding to the potential specified
-    in the FreeEnergy class
+    Thermodynamic functions corresponding to the potential
     """
+
+    effectivePotential: EffectivePotential
 
     def __init__(
         self,
-        freeEnergy,
+        effectivePotential,
+        criticalTemperature: float,
+        nucleationTemperature: float, 
+        phaseLowT: np.ndarray[float],
+        phaseHighT: np.ndarray[float]
     ):
         """Initialisation
 
         Parameters
         ----------
-        freeEnergy : class
+        effectivePotential : class
+        nucleationTemperature : float
+        criticalTemperature : float
 
         Returns
         -------
         cls: Thermodynamics
             An object of the Thermodynamics class.
         """
-        self.freeEnergy = freeEnergy
-        self.Tnucl = freeEnergy.Tnucl
-        self.Tc = freeEnergy.Tc
+        self.effectivePotential = effectivePotential
+        self.Tnucl = nucleationTemperature
+        self.Tc = criticalTemperature
+        self.phaseLowT = phaseLowT
+        self.phaseHighT = phaseHighT
 
-    def pHighT(self, T):
+        ## temperature difference to use for derivatives. TODO this needs to be read from a config file or something
+        self.dT = 1e-3
+
+
+    def pHighT(self, T: float):
         """
         Pressure in the high-temperature phase.
 
@@ -42,7 +73,9 @@ class Thermodynamics:
             Pressure in the high-temperature phase.
 
         """
-        return self.freeEnergy.pressureHighT(T)
+        # pressure = -free energy density = -Veff at minimum
+        __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
+        return -VeffValue
 
     def dpHighT(self, T):
         """
@@ -58,14 +91,15 @@ class Thermodynamics:
         dpHighT : double
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return derivative(
-            self.freeEnergy.pressureHighT,
+        return WallSpeed.helpers.derivative(
+            self.pHighT,
             T,
-            dx=self.freeEnergy.dT,
+            dx=self.dT,
             n=1,
             order=4,
         )
 
+    ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, T):
         """
         Second temperature derivative of the pressure in the high-temperature phase.
@@ -80,10 +114,10 @@ class Thermodynamics:
         ddpHighT : double
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return derivative(
-            self.freeEnergy.pressureHighT,
+        return WallSpeed.helpers.derivative(
+            self.pHighT,
             T,
-            dx=self.freeEnergy.dT,
+            dx=self.dT,
             n=2,
             order=4,
         )
@@ -167,7 +201,9 @@ class Thermodynamics:
             Pressure in the low-temperature phase.
 
         """
-        return self.freeEnergy.pressureLowT(T)
+        # pressure = -free energy density = -Veff at minimum
+        __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseLowT, T)
+        return -VeffValue
 
     def dpLowT(self, T):
         """
@@ -183,10 +219,10 @@ class Thermodynamics:
         dpLowT : double
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return derivative(
-            self.freeEnergy.pressureLowT,
+        return WallSpeed.helpers.derivative(
+            self.pLowT,
             T,
-            dx=self.freeEnergy.dT,
+            dx=self.dT,
             n=1,
             order=4,
         )
@@ -205,10 +241,10 @@ class Thermodynamics:
         ddpLowT : double
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return derivative(
-            self.freeEnergy.pressureLowT,
+        return WallSpeed.helpers.derivative(
+            self.pLowT,
             T,
-            dx=self.freeEnergy.dT,
+            dx=self.dT,
             n=2,
             order=4,
         )

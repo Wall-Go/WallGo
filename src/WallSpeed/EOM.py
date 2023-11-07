@@ -5,16 +5,22 @@ from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
-from .model import FreeEnergy
+from .GenericModel import GenericModel
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 from .Particle import Particle
 
+
 class EOM:
+
+    model: GenericModel
+    hydro: Hydro
+    thermo: Thermodynamics 
+
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
-    def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
+    def __init__(self, particle, thermodynamics, hydro, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         """
         Initialization
 
@@ -24,8 +30,8 @@ class EOM:
             Object of the class Particle, which contains the information about
             the out-of-equilibrium particles for which the Boltzmann equation
             will be solved.
-        freeEnergy : FreeEnergy
-            Object of the class FreeEnergy.
+        model : GenericModel
+            Object of model class that implements the GenericModel interface.
         grid : Grid
             Object of the class Grid.
         nbrFields : int
@@ -42,15 +48,24 @@ class EOM:
 
         """
         self.particle = particle
-        self.freeEnergy = freeEnergy
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
-        self.Tnucl = freeEnergy.Tnucl
         self.includeOffEq = includeOffEq
 
+        """
+        ## why are these constructed here?
         self.thermo = Thermodynamics(freeEnergy)
         self.hydro = Hydro(self.thermo)
+        """
+        
+        self.thermo = thermodynamics
+        self.hydro = hydro
+        # I feel this is error prone: we should always read Tnucl from self.thermo
+        self.Tnucl = self.thermo.Tnucl
+
+        # Is it a good idea to run this in __init__?
+        print("Running LTE (hydro.findvwLTE)")
         self.wallVelocityLTE = self.hydro.findvwLTE()
 
     def findWallVelocityLoop(self):

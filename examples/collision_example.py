@@ -44,7 +44,7 @@ CollisionModule.initModule("../Collision/config.ini")
 
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 3
+polynomialBasisSize = 20
 
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.Collision(polynomialBasisSize)
@@ -65,8 +65,6 @@ These need masses in GeV units, ie. T dependent, but for this example we don't r
 a temperature. So hacking this by setting T = 1. Also, for this example the vacuum mass = 0
 """
 
-## @todo probably get rid of the collisionPrefactors variable? CollisionModule doesn't need anything like it
-
 topQuark = Particle(
     name="top",
     msqVacuum=0.0,
@@ -74,7 +72,7 @@ topQuark = Particle(
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=True,
-    collisionPrefactors=[0, 0, 0],
+    multiplicity=1,
 )
 
 gluon = Particle(
@@ -84,7 +82,7 @@ gluon = Particle(
     statistics="Boson",
     inEquilibrium=True,
     ultrarelativistic=True,
-    collisionPrefactors=[0, 0, 0],
+    multiplicity=1,
 )
 
 
@@ -96,7 +94,7 @@ lightQuark = Particle(
     statistics="Fermion",
     inEquilibrium=True,
     ultrarelativistic=True,
-    collisionPrefactors=[0, 0, 0],
+    multiplicity=5,
 )
 
 

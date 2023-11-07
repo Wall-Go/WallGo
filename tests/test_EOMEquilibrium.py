@@ -136,7 +136,7 @@ def test_SimpleEOS():
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
-        collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
+        multiplicity=1,
     )
 
     """
@@ -179,7 +179,7 @@ def test_BM1():
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
-        collisionPrefactors=[params["g2"]**4, params["g2"]**4, params["g2"]**4],
+        multiplicity=1,
     )
     particles = [top]
 

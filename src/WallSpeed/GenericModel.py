@@ -1,6 +1,5 @@
 import numpy as np
 from abc import ABC, abstractmethod ## Abstract Base Class
-import cmath # complex numbers
 
 ## WallGo imports
 from .Particle import Particle
@@ -10,7 +9,7 @@ from .EffectivePotential import EffectivePotential
 
 class GenericModel(ABC):
     '''
-    Common interface for WallGo model definitions. 
+    Common interface for WallGo model definitions. This is basically input parameters + particle definitions + effective potential.
     The user should implement this and the abstract methods below with their model-specific stuff. 
     '''
 
@@ -46,7 +45,7 @@ class GenericModel(ABC):
     def Veff(self) -> EffectivePotential:
         pass
     '''
-    Veff: EffectivePotential
+    effectivePotential: EffectivePotential
 
     
     inputParameters: dict[str, float]
