@@ -39,9 +39,9 @@ class Particle:
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
-        inEquilibrium : boole
+        inEquilibrium : bool
             True if particle is treated as in local equilibrium.
-        ultrarelativistic : boole
+        ultrarelativistic : bool
             True if particle is treated as ultrarelativistic.
         collisionPrefactors : list
             Coefficients of collision integrals, :math:`\sim g^4`, currently
@@ -100,13 +100,30 @@ class Particle:
             "len(collisionPrefactors) must be 3"
 
 class Model:
-    '''
+    """
     Class that generates the model given external model file
     can be overrriden by user
-    '''
-    def __init__(self,mu4D,mus,lams,lamm):
+    """
+    def __init__(self,
+        mu4D,mus,lams,lamm,
+        use_EFT=False,
+        ):
         r"""Initialisation
+
+        Parameters
+        ----------
+        mu4D : float 
+            4d renormalisaton scale.
+        use_EFT : bool
+            True if 3d EFT is used.
+
+        Returns
+        -------
+        cls : Model 
+            An object of the Model class.
         """
+        self.use_EFT=use_EFT
+
         self.mus = mus
         self.lams = lams
         self.lamm = lamm
@@ -117,24 +134,26 @@ class Model:
         self.muhsq = -self.lamh*self.v0**2
         self.mussq = +self.mus**2-self.lamm*self.v0**2/2
 
-        '''
+        self.musq = [self.muhsq, self.mussq]
+
+        """
         Number of bosonic and fermionic dofs
-        '''
+        """
         self.num_boson_dof = 29
         self.num_fermion_dof = 90
-        '''
+        """
         Number of fermion generations and colors
-        '''
+        """
         self.nf = 3
         self.Nc = 3
-        '''
-        3D and 4D RG scale of EFT as fraction of temperature
-        '''
+        """
+        4D RG scale of EFT as fraction of temperature
+        """
         self.mu4D = mu4D
         self.mu4Dsq = mu4D*mu4D
-        '''
+        """
         Z,W,t mass, strong gauge coupling and fermion generations
-        '''
+        """
         self.MW = 80.379
         self.MZ = 91.1876
         self.Mt = 173.
@@ -144,7 +163,6 @@ class Model:
         self.g2 = self.g0
         self.g3 = 1.2279920495357861
         self.yt = math.sqrt(1/2)*self.g0*self.Mt/self.MW
-
 
         self.musT = (
                 +1./6*lamm
@@ -158,10 +176,12 @@ class Model:
                 +self.lamm/24
                 )
 
+        self.musqT = [self.muhT, self.musT]
 
-        '''
+
+        """
         Define dictionary of used parameters
-        '''
+        """
         self.params = {
             'muhsq': self.muhsq,
             'mussq': self.mussq,
@@ -177,41 +197,120 @@ class Model:
         }
 
 
-    def V0(self, X, show_V=False):
-        '''
-        Tree level effective potential
-        X
-        '''
-        X = np.asanyarray(X)
-        h1,s1 = X[0,...],X[1,...]
+    def V0(self, fields: float, T, show_V=False):
+        """
+        Tree-level effective potential
+
+        Parameters
+        ----------
+        fields : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+        T : float or array_like
+            The temperature at which to calculate the boson masses. Can be used
+            for including thermal mass corrrections. The shapes of `fields` and `T`
+            should be such that ``fields.shape[:-1]`` and ``T.shape`` are
+            broadcastable (that is, ``fields[...,0]*T`` is a valid operation).
+
+        Returns
+        -------
+        V: tree-level effective potential 
+        """
+        fields = np.asanyarray(fields)
+
+        if self.use_EFT:
+            for i in range(len(self.musq)):
+                self.musq[0] += T**2*self.musqT[0]
+            lamh = self.lamh*T
+            lams = self.lams*T
+            lamm = self.lamm*T
+        else:
+            musq = self.musq
+            lamh = self.lamh
+            lams = self.lams
+            lamm = self.lamm
+
+        h1,s1 = fields[0,...],fields[1,...]
         V = (
-           +1/2*self.muhsq*h1**2
-           +1/2*self.mussq*s1**2
-           +1/4*self.lamh*h1**4
-           +1/4*self.lams*s1**4
-           +1/4*self.lamm*(h1*s1)**2)
+            +1/2*musq[0]*h1**2
+            +1/2*musq[1]*s1**2
+            +1/4*lamh*h1**4
+            +1/4*lams*s1**4
+            +1/4*lamm*(h1*s1)**2)
         if show_V:
             print(V)
         return V
 
-    def Jcw(self,msq,n,c):
-        '''
+    def Jcw(self, msq, degrees_of_freedom, c):
+        """
         Coleman-Weinberg potential
-        '''
-        return n*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
 
-    def boson_massSq(self, X, T):
-        X = np.asanyarray(X)
-        h1,s1 = X[0,...],X[1,...]
+        Parameters
+        ----------
+        msq : array_like
+            A list of the boson particle masses at each input point `fields`.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            length `Ndim`.
+        c: float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
+            other bosons.
+
+        Returns
+        -------
+        Jcw : float or array_like
+            One-loop Coleman-Weinberg potential for given particle spectrum.
+        """
+        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - c)
+
+    def boson_massSq(self, fields, T):
+        """
+        Calculate the boson particle spectrum. Should be overridden by
+        subclasses.
+
+        Parameters
+        ----------
+        fields : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+        T : float or array_like
+            The temperature at which to calculate the boson masses. Can be used
+            for including thermal mass corrrections. The shapes of `fields` and `T`
+            should be such that ``fields.shape[:-1]`` and ``T.shape`` are
+            broadcastable (that is, ``fields[0,...]*T`` is a valid operation).
+
+        Returns
+        -------
+        massSq : array_like
+            A list of the boson particle masses at each input point `fields`. The
+            shape should be such that
+            ``massSq.shape == (fields[...,0]*T).shape + (Nbosons,)``.
+            That is, the particle index is the *last* index in the output array
+            if the input array(s) are multidimensional.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            length `Ndim`.
+        c : float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
+            other bosons.
+        """ 
+        fields = np.asanyarray(fields)
+        h1,s1 = fields[0,...],fields[1,...]
 
         Nbosons = 5
-        dof = np.array([1,1,3,6,3])#h,s,chi,W,Z
+        degrees_of_freedom = np.array([1,1,3,6,3])#h,s,chi,W,Z
         c = np.array([3/2,3/2,3/2,5/6,5/6])
 
-        '''
+        """
         mass matrix
         TODO: numerical determination of scalar masses from V0
-        '''
+        """
         mh2 = self.muhsq+3*self.lamh*h1**2+self.lamm*s1**2/2
         ms2 = self.mussq+3*self.lams*s1**2+self.lamm*h1**2/2
         mhs2 = self.lamm*h1*s1
@@ -222,29 +321,65 @@ class Model:
         mz = (self.g1**2+self.g2**2)*h1**2/4
         mw = self.g2**2*h1**2/4
 
-        massSq = np.column_stack((m1, m2, mChi, mw, mz))
-        return massSq,dof,c
+        massSq = np.stack((m1, m2, mChi, mw, mz),axis=-1)
+        return massSq, degrees_of_freedom, c
 
-    def fermion_massSq(self, X):
-        X = np.asanyarray(X)
-        h1,s1 = X[0,...],X[1,...]
+    def fermion_massSq(self, fields):
+        """
+        Calculate the fermion particle spectrum. Should be overridden by
+        subclasses.
+
+        Parameters
+        ----------
+        fields : array_like
+            Field value(s).
+            Either a single point (with length `Ndim`), or an array of points.
+
+        Returns
+        -------
+        massSq : array_like
+            A list of the fermion particle masses at each input point `fields`. The
+            shape should be such that  ``massSq.shape == (fields[...,0]).shape``.
+            That is, the particle index is the *last* index in the output array
+            if the input array(s) are multidimensional.
+        degrees_of_freedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            len
+        """
+        fields = np.asanyarray(fields)
+        h1,s1 = fields[0,...],fields[1,...]
 
         Nfermions = 1
-        dof = np.array([12])
+        degrees_of_freedom = np.array([12])
         mt = self.yt**2*h1**2/2
         # todo include spins for each particle
 
-        massSq = np.column_stack((mt,))
-        return massSq,dof
+        massSq = np.stack((mt,),axis=-1)
+        return massSq, degrees_of_freedom
 
     def V1(self, bosons, fermions):
-        '''
+        """
         The one-loop corrections to the zero-temperature potential
         using MS-bar renormalization.
 
         This is generally not called directly, but is instead used by
         :func:`Vtot`.
-        '''
+
+        Parameters
+        ----------
+        bosons : array of floats
+            bosonic particle spectrum (here: masses, number of dofs, ci)
+        fermions : array of floats
+            fermionic particle spectrum (here: masses, number of dofs)
+
+        Returns
+        -------
+        V1 : ndarray
+            1loop vacuum contribution to the pressure
+            the array has shape (fields.shape[1],)
+
+        """
         m2, nb, c = bosons
         V = np.sum(self.Jcw(m2,nb,c), axis=-1)
 
@@ -254,8 +389,40 @@ class Model:
 
         return V/(64*np.pi*np.pi)
 
-    def V1T(self, bosons, fermions, T, include_radiation=True):
-        '''
+    def PressureLO(self, bosons, fermions, T):
+        """
+        Computes the leading order pressure
+        depending on the effective degrees of freedom.
+        
+        Parameters
+        ----------
+        bosons : array of floats
+            bosonic particle spectrum (here: masses, number of dofs, ci)
+        fermions : array of floats
+            fermionic particle spectrum (here: masses, number of dofs)
+
+        Returns
+        -------
+        PressureLO : LO contribution to the pressure
+
+        """
+        T4 = T*T*T*T
+
+        _,nb,_ = bosons
+        _,nf = fermions
+
+        V = 0;
+        if self.num_boson_dof is not None:
+            nb = self.num_boson_dof - np.sum(nb)
+            V -= nb * np.pi**4 / 45.
+        if self.num_fermion_dof is not None:
+            nf = self.num_fermion_dof - np.sum(nf)
+            V -= nf * 7*np.pi**4 / 360.
+
+        return V*T4/(2*np.pi*np.pi)
+
+    def V1T(self, bosons, fermions, T):
+        """
         The one-loop finite-temperature potential.
 
         This is generally not called directly, but is instead used by
@@ -269,56 +436,67 @@ class Model:
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
-        todo:
+        .. todo::
             Implement new versions of Jf and Jb that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
             errors when taking derivatives at very high temperature, where
             the field-independent contribution is much larger than the
             field-dependent contribution.
-        '''
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        V1T : 4d 1loop thermal potential 
+        """ 
         # This does not need to be overridden.
         T2 = (T*T)[..., np.newaxis] + 1e-100
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
-        m2, nb, c = bosons
+        m2,nb,_ = bosons
         V = np.sum(nb*Jb(m2/T2), axis=-1)
-        m2, nf = fermions
+        m2,nf = fermions
         V += np.sum(nf*Jf(m2/T2), axis=-1)
-        if include_radiation:
-            if self.num_boson_dof is not None:
-                nb = self.num_boson_dof - np.sum(nb)
-                V -= nb * np.pi**4 / 45.
-            if self.num_fermion_dof is not None:
-                nf = self.num_fermion_dof - np.sum(nf)
-                V -= nf * 7*np.pi**4 / 360.
         return V*T4/(2*np.pi*np.pi)
 
-    def Vtot(self, X, T, include_radiation=True):
-        '''
+    def Vtot(self, fields, T, include_radiation=True):
+        """
         The total finite temperature effective potential.
 
         Parameters
         ----------
-        X : array_like
+        fields : array_like
             Field value(s).
             Either a single point (with length `Ndim`), or an array of points.
         T : float or array_like
-            The temperature. The shapes of `X` and `T`
-            should be such that ``X.shape[:-1]`` and ``T.shape`` are
-            broadcastable (that is, ``X[...,0]*T`` is a valid operation).
+            The temperature. The shapes of `fields` and `T`
+            should be such that ``fields.shape[:-1]`` and ``T.shape`` are
+            broadcastable (that is, ``fields[0,...]*T`` is a valid operation).
         include_radiation : bool, optional
             If False, this will drop all field-independent radiation
             terms from the effective potential. Useful for calculating
             differences or derivatives.
-        '''
-        X = np.asanyarray(X)
+
+        Returns
+        -------
+        Vtot : total effective potential
+        """
         T = np.asanyarray(T)
-        bosons = self.boson_massSq(X,T)
-        fermions = self.fermion_massSq(X)
-        V = self.V0(X)
-        V += self.V1(bosons, fermions)
-        V += self.V1T(bosons, fermions, T, include_radiation)
+        fields = np.asanyarray(fields)
+        if self.use_EFT:
+            fields = fields/np.sqrt(T + 1e-100)
+        bosons = self.boson_massSq(fields,T)
+        fermions = self.fermion_massSq(fields)
+        V = self.V0(fields, T)
+        if self.use_EFT:
+            V *= T
+        else:
+            V += self.V1(bosons, fermions)
+            V += self.V1T(bosons, fermions, T)
+        if include_radiation:
+            V += self.PressureLO(bosons, fermions, T)
         return np.real(V)
 
 class FreeEnergy:
@@ -366,14 +544,25 @@ class FreeEnergy:
         cls : FreeEnergy
             An object of the FreeEnergy class.
         """
+        """
+        Number of dynamics scalars
+        """
         self.nbrFields = 2
+        """
+        self.transField`i' take values between [0,self.nbrFields-1] indicating 
+        which of the fields undergo the transition.
+        self.transField0 is the field assoiciated to the low temperature phase 
+        self.transField1 is the field assoiciated to the high temperature phase 
+        """
+        self.transField0 = 0
+        self.transField1 = 1
 
         if params is None:
             self.f = f
             self.dfdT = dfdT
             self.dfdPhi = dfdPhi
         else:
-            self.f = lambda X, T: f(X, T)
+            self.f = lambda fields, T: f(fields, T)
             if dfdT is None:
                 self.dfdT = None
             else:
@@ -416,13 +605,13 @@ class FreeEnergy:
         assert Tc > Tn, \
             f"Tc must be larger than Tn"
 
-    def __call__(self, X, T):
+    def __call__(self, fields, T):
         """
         The effective potential.
 
         Parameters
         ----------
-        X : array of floats
+        fields : array of floats
             the field values (here: Higgs, singlet)
         T : float
             the temperature
@@ -433,15 +622,15 @@ class FreeEnergy:
             The free energy density at this field value and temperature.
 
         """
-        return self.f(X, T)
+        return self.f(fields, T)
 
-    def derivT(self, X, T):
+    def derivT(self, fields, T):
         """
         The temperature-derivative of the effective potential.
 
         Parameters
         ----------
-        X : array of floats
+        fields : array of floats
             the field values (here: Higgs, singlet)
         T : float
             the temperature
@@ -453,51 +642,44 @@ class FreeEnergy:
             value and temperature.
         """
         if self.dfdT is not None:
-            return self.dfdT(X, T)
+            return self.dfdT(fields, T)
         else:
             return derivative(
-                lambda T: self(X, T),
+                lambda T: self(fields, T),
                 T,
                 dx=self.dT,
                 n=1,
                 order=4,
             )
 
-    def derivField(self, X, T):
-
+    def derivField(self, fields, T):
         """
         The field-derivative of the effective potential.
 
         Parameters
         ----------
-        X : array of floats
-            the field values (here: Higgs, singlet)
+        fields : array of floats
+            the background field values (e.g.: Higgs, singlet)
         T : float
             the temperature
 
         Returns
         ----------
-        dfdX : array_like
+        dfdfields : array_like
             The field derivative of the free energy density at this field
             value and temperature.
         """
         if self.dfdPhi is not None:
-            return self.dfdPhi(X, T)
+            return self.dfdPhi(fields, T)
         else:
-            X = np.asanyarray(X, dtype=float)
-            # TODO generalise to arbitrary fields
-            h, s = X[0,...], X[1,...]
-            Xdh = X.copy()
-            Xdh[0,...] += self.dPhi * np.ones_like(h)
-            Xds = X.copy()
-            Xds[1,...] += self.dPhi * np.ones_like(h)
-
-            dfdh = (self(Xdh, T) - self(X, T)) / self.dPhi
-            dfds = (self(Xds, T) - self(X, T)) / self.dPhi
-
-            return_val = np.empty_like(X)
-            return_val[0,...] = dfdh
-            return_val[1,...] = dfds
+            fields = np.asanyarray(fields, dtype=float)
+            return_val = np.empty_like(fields)
+            for i in range(self.nbrFields):
+                field = fields[i,...] 
+                dfields_dfield = fields.copy()
+                dfields_dfield[i,...] += self.dPhi * np.ones_like(field)
+                dfd_field = (self(dfields_dfield,T) - self(fields,T)) / self.dPhi
+                return_val[i,...] = dfd_field
 
             return return_val
 
@@ -505,21 +687,36 @@ class FreeEnergy:
     def pressureLowT(self,T):
         """
         Returns the value of the pressure as a function of temperature in the low-T phase
-        """
-        return -self(self.findPhases(T),T)[0]
-
-    def pressureHighT(self,T):
-        """
-        The pressure in the high-temperature (singlet) phase
+        indicated by self.transfield0 (e.g. Higgs)
 
         Parameters
         ----------
         T : float
             The temperature for which to find the pressure.
 
+        Returns
+        ----------
+        pressureLowT : float
+           pressure in the low-temperature phase 
+        """
+        return -self(self.findPhases(T),T)[0]
+
+    def pressureHighT(self,T):
+        """
+        The pressure in the high-temperature phase
+        indicated by self.transfield1 (e.g. Singlet)
+
+        Parameters
+        ----------
+        T : float
+            The temperature for which to find the pressure.
+
+        Returns
+        ----------
+        pressureHighT : float
+           pressure in the high-temperature phase 
         """
         return -self(self.findPhases(T),T)[1]
-        #return -self(self.findPhases(T)[1,...],T)
 
     def approxZeroTMin(self,T=0):
         """
@@ -548,7 +745,7 @@ class FreeEnergy:
 
         return [[mhsq, 0], [0, mssq]]
 
-    def interpolateMinima(self,Ti,Tf,dT):
+    def interpolateMinima(self, Ti, Tf, dT):
         """Interpolates the minima of all phases for a given termperature range
 
         Parameters
@@ -564,8 +761,8 @@ class FreeEnergy:
 
         Returns
         -------
-        univariate splines
-        scipy.univariate splines has the advantage of derivative() method
+        self.fieldsInt : array_like, univariate splines
+                scipy.univariate splines has the advantage of derivative() method
         """
         if Tf < Ti:
             raise ValueError("Interpolation range not well defined: Tf below Ti")
@@ -574,19 +771,22 @@ class FreeEnergy:
         n_nodes = max(min_nodes, int(np.ceil((Tf-Ti)/dT)))
         Trange = np.linspace(Ti,Tf,n_nodes)
 
-        h,s = [],[]
+        vmin = [[]]*2
         for T in Trange:
             mins = self.findPhases(T)
-            h.append(mins[0,0])
-            s.append(mins[1,1])
+            vmin=np.append(vmin, np.diag(mins)[:, np.newaxis], axis=1)
         self.Ti_int = Ti
         self.Tf_int = Tf
-        self.Xint = [
-            interpolate.UnivariateSpline(Trange,h,s=0),
-            interpolate.UnivariateSpline(Trange,s,s=0)]
+        self.fieldsInt = [
+            interpolate.UnivariateSpline(Trange,vmin[i,...],s=0)
+            for i in range(2)] 
 
-    def findPhases(self, T, X=None):
-        """Finds all phases at a given temperature T
+    def findPhases(self, T, fields=None):
+        """
+        Tracks the two phases indicated at init by
+        self.transField0 and
+        self.transField1
+        at a given temperature T
 
         Parameters
         ----------
@@ -595,41 +795,37 @@ class FreeEnergy:
 
         Returns
         -------
-        phases : array_like
-            A list of phases
-
+        findPhases : array_like
+            A list of two phases
         """
         if T is None:
             raise TypeError('Temperature is None')
 
         if self.Ti_int is not None and self.Ti_int <= T <= self.Tf_int:
-            vmin = [self.Xint[0](T),self.Xint[1](T)]
+            vmin = [self.fieldsInt[i](T) for i in range(2)]
 
         else:
-            if X is None:
-                X = self.approxZeroTMin(T)
-                X = np.asanyarray(X)
+            if fields is None:
+                fields = self.approxZeroTMin(T)
+                fields = np.asanyarray(fields)
 
-            fh = lambda h: self.f([[abs(h)],[0]],T)[0]
-            fs = lambda s: self.f([[0],[abs(s)]],T)[0]
-
-            fX = [fh,fs]
             vmin = []
+            for i in (self.transField0,self.transField1):
+                fPhase = lambda v: self.f([[abs(v)] if j == i else [0] for j in range(len(fields))],T)[0]
+                vT=fields[i,i]
 
-            for i in range(len(X)):
-                vT=X[i,i]
-                cond1 = fX[i](vT) < fX[i](0)
-                cond2 = fX[i](3*vT) > fX[i](vT)
+                cond1 = fPhase(vT) < fPhase(0)
+                cond2 = fPhase(3*vT) > fPhase(vT)
                 if cond1 and cond2:
-                    vT = optimize.minimize_scalar(fX[i], bracket=(0, vT, 3*vT)).x
+                    vT = optimize.minimize_scalar(fPhase, bracket=(0, vT, 3*vT)).x
                 else:
-                    vT = optimize.minimize_scalar(fX[i], bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
+                    vT = optimize.minimize_scalar(fPhase, bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
 
                 vmin.append(vT)
 
-        return np.array([[vmin[0],0],[0,vmin[1]]])
+        return np.array(np.diag(vmin))
 
-    def d2V(self, X, T):
+    def d2V(self, fields, T):
         """
         Calculates the Hessian (second derivative) matrix for the
         finite-temperature effective potential.
@@ -640,12 +836,12 @@ class FreeEnergy:
         the first time this function is called, so subsequently changing it
         will not have an effect.
         """
-        # X = np.asanyarray(X, dtype=float)
+        # fields = np.asanyarray(fields, dtype=float)
         # T = np.asanyarray(T, dtype=float)
         self.Ndim = 2
         self.x_eps = 1e-3
         self.deriv_order = 4
-        # f1 = lambda X: np.asanyarray(self.f(X,T))[...,np.newaxis]
+        # f1 = lambda fields: np.asanyarray(self.f(fields,T))[...,np.newaxis]
         try:
             f1 = self._d2V
         except:
@@ -653,16 +849,17 @@ class FreeEnergy:
             self._d2V = helper_functions.hessianFunction(
                 self.f, self.x_eps, self.Ndim, self.deriv_order)
             f1 = self._d2V
-        # Need to add extra axes to T since extra axes get added to X in
+        # Need to add extra axes to T since extra axes get added to fields in
         # the helper function.
 
         T = np.asanyarray(T)[...,np.newaxis]
         
-        return f1(X, T)
+        return f1(fields, T)
 
     def findTc(self,Tmax=150):
         """
-        Determines the critical temperature between two scalar phases.
+        Determines the critical temperature between the two scalar phases
+        indicated upon init.
         The critical temperature is determined by tracking the pressure
         of the different phases at their minima and finding the intersection point.
 
@@ -675,10 +872,12 @@ class FreeEnergy:
         -------
         Tc : array_like
             Critical temperature
-
         """
 
-        deltaf = lambda v1,v2,T: self.f([[v1],[0]],T)[0]-self.f([[0],[v2]],T)[0]
+        deltaf = lambda v0,v1,T: ( 
+            +self.f([[v0] if j == self.transField0 else [0] for j in range(self.nbrFields)],T)[0]
+            -self.f([[v1] if j == self.transField1 else [0] for j in range(self.nbrFields)],T)[0]
+        )
 
         def deltaPmin(T):
             mins = self.findPhases(T)

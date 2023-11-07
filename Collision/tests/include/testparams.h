@@ -11,14 +11,16 @@ struct TestParams {
     // Vacuum
     // TODO if needed
     const double msqVacuum = 0.0;
+    const bool bUltraRelativistic = true;
+
 
     const ParticleSpecies topQuark;
     const ParticleSpecies lightQuark;
 	const ParticleSpecies gluon;
-
-    TestParams() : topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2),
-                    lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2),
-                    gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2) {}
+    
+    TestParams() : topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2, bUltraRelativistic),
+                    lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic),
+                    gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2, bUltraRelativistic) {}
 
 
     // Polynomial basis size

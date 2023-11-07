@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 project(Collision VERSION 0.2.0 LANGUAGES CXX)
 # NB: project name is used across other CMake files for target names (${CMAKE_PROJECT_NAME})
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -23,35 +26,87 @@ endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+## Do compile with profiler support? This is off by default
+option(PROFILER "Compile with profiler flags" OFF)
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
+
+## Use OpenMP by default
+option(USE_OMP "Build with OpenMP support" ON)
+
+
+## For MacOS, may need to manually setup OpenMP
+if(APPLE AND USE_OMP)
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_C_LIB_NAMES "libomp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+        set(OpenMP_CXX_LIB_NAMES "libomp")
+        set(OpenMP_omp_LIBRARY omp)
+    endif()
+endif()
+# Build the Python module unless the user disabled this
+option(BUILD_PYTHON_MODULE "Build Python module" ON)
+
+if(BUILD_PYTHON_MODULE) 
+	add_compile_definitions(WITH_PYTHON=1) ## C++: #if WITH_PYTHON
+else() 
+    add_compile_definitions(WITH_PYTHON=0)
+endif()
+
+
 
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
     add_compile_options(-Wall -Wextra)
-    # Treat all warnings as errors?
-    #add_compile_options(-Werror)
-    # Enable more warnings (optional)
-    #add_compile_options(-Wpedantic)
+
+    #add_compile_options(-fvisibility=hidden)
     
-    ## Add flags for gprof profiling. Debug builds only
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    	## This flag is needed also during linking so add_compile_options doesn't do the trick apparently
-    	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
-		# no optimization here since it can interfere with profiling
-		
+    if (PROFILER)
+        # profiler flags needed also for linking
+        add_compile_options(-pg)
+        add_link_options(-pg)
+    	message(STATUS "Profiler flags: -pg")
+    endif()
+
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")		
 		option(BUILD_UNIT_TESTS "Build unit tests" ON)
 		message(STATUS "==== NOTE: Configuring Debug build")
 		message(STATUS "")
-		
+
+        # Treat all warnings as errors?
+        #add_compile_options(-Werror)
+        # Allow compiler to become annoying
+        add_compile_options(-Wpedantic)
+        
     endif()
     
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    	# Optimization
+    
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    	# Optimization always for non-debug builds
     	add_compile_options(-O3)
     endif()
-    
+
+    if (NOT USE_OMP)
+        # Disable pragma warnings, otherwise each #pragma omp would throw a warning
+        add_compile_options(-Wno-unknown-pragmas)
+    endif()
+
+    ## Release build specific build options
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        # add_compile_options(-Wno-dev) ## I don't think this works, at least not on clang++
+    endif()
+
+
+## Visual Studio compiler stuff
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Enable warnings and treat them as errors
     #add_compile_options(/W4 /WX)
@@ -72,12 +127,6 @@ add_subdirectory(src)
 # Unit tests
 if(BUILD_UNIT_TESTS)
     add_subdirectory(tests)
-endif()
-
-
-# Pybind11: build the module unless flag was disabled by user 
-if(NOT BUILD_PYTHON_MODULE) 
-	option(BUILD_PYTHON_MODULE "Build Python module" ON)
 endif()
 
 

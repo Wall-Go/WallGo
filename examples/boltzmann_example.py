@@ -3,6 +3,7 @@ A first example.
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
+import matplotlib.pyplot as plt
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 #from WallSpeed.eomHydro import findWallVelocityLoop
@@ -11,23 +12,26 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 """
 Grid
 """
-M = 20
-N = 20
-grid = Grid(M, N, 1, 1)
+M = 10
+N = 10
+T = 100
+L = 5/T
+grid = Grid(M, N, L, T)
 poly = Polynomial(grid)
 
 """
 Background
 """
-vw = 1 / np.sqrt(3)
+vw = 0
 v = - np.ones(M - 1) / np.sqrt(3)
-field = np.ones((M - 1,))
-field[M // 2:]  = 0
+vev = 90
+field = np.array([vev*(1-np.tanh(grid.xiValues/L))/2, vev*(1+np.tanh(grid.xiValues/L))/2])
 T = 100 * np.ones(M - 1)
 basis = "Cardinal"
+velocityMid = 0.5 * (v[0] + v[-1])
 
 background = BoltzmannBackground(
-    vw=vw,
+    velocityMid=velocityMid,
     velocityProfile=v,
     fieldProfile=field,
     temperatureProfile=T,
@@ -35,19 +39,19 @@ background = BoltzmannBackground(
 )
 
 #test boost
-background.vw=0
-print(background.velocityProfile)
-background.boostToPlasmaFrame()
-print(background.velocityProfile)
-background.boostToWallFrame()
-print(background.velocityProfile)
+# background.vw=0
+# print(background.velocityProfile)
+# background.boostToPlasmaFrame()
+# print(background.velocityProfile)
+# background.boostToWallFrame()
+# print(background.velocityProfile)
 
 """
 Particle
 """
 particle = Particle(
     name="top",
-    msqVacuum=lambda phi: 0.5 * phi**2,
+    msqVacuum=lambda phi: 0.5 * phi[0]**2,
     msqThermal=lambda T: 0.1 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
@@ -67,10 +71,24 @@ print("source.shape =", source.shape)
 deltaF = boltzmann.solveBoltzmannEquations()
 print("deltaF.shape =", deltaF.shape)
 print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
-print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
 
 Deltas = boltzmann.getDeltas(deltaF)
 print("Deltas =", Deltas)
+
+# plotting
+chi = boltzmann.grid.getCompactCoordinates()[0]
+fig, axs = plt.subplots(2)
+axs[0].plot(chi, Deltas["00"], label=r"$\Delta_{00}$")
+axs[0].set_xlabel(r"$\chi$")
+axs[0].set_ylabel(r"$\Delta_{00}$")
+axs[1].plot(chi, Deltas["02"], label=r"$\Delta_{02}$")
+axs[1].plot(chi, Deltas["20"], label=r"$\Delta_{20}$")
+axs[1].plot(chi, Deltas["11"], label=r"$\Delta_{11}$")
+axs[1].set_xlabel(r"$\chi$")
+axs[1].set_ylabel(r"$\Delta\mathrm{s}$")
+axs[1].legend(loc="upper left")
+plt.tight_layout()
+plt.show()
 
 # now making a deltaF by hand
 deltaF = np.zeros(deltaF.shape)
@@ -102,5 +120,3 @@ Deltas = boltzmann.getDeltas(integrand_analytic)
 Deltas_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
 print("Ratio = 1 =", Deltas["00"] / Deltas_analytic)
 print("T =", background.temperatureProfile)
-
-

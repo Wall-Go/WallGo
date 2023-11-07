@@ -68,13 +68,13 @@ class HydroTemplateModel:
         ----------
         alN : double
             phase transition strength at the nucleation temperature, :math:`\alpha_n`.
-            If :math:`\alpha_n` is not specified, the value defined by the model is used. 
+            If :math:`\alpha_n` is not specified, the value defined by the model is used.
 
         Returns
         -------
         vJ: double
             The value of the Jouguet velocity.
-        
+
         """
 
         if alN is None:
@@ -100,7 +100,7 @@ class HydroTemplateModel:
         vp : double
         double
             Plasma velocity in the wall frame right in front of the the wall :math:`v_+`.
-            
+
         """
         disc = max(0, vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al)))
         return 0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al)
@@ -315,8 +315,8 @@ class HydroTemplateModel:
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = -wHighT*vp/(1-vp**2)
         c2 = pHighT+wHighT*vp**2/(1-vp**2)
-        vAtz0 = boostVelocity(vwTry,vp)
-        return (c1, c2, Tp, Tm, vAtz0)
+        vMid = -boostVelocity(0.5*(vm+vp), vwTry)  # minus sign for convention change
+        return (c1, c2, Tp, Tm, vMid)
 
     def max_al(self,upper_limit=100):
         r"""

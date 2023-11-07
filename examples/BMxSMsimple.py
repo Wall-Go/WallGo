@@ -68,8 +68,8 @@ class xSM(Model):
         field = np.asanyarray(field)
         h, s = field[0,...], field[1,...]
         V0 = (
-            -1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4
-            -1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4
+            - 1/2.*self.muhsq*h**2 + 1/4.*self.lamh*h**4
+            - 1/2.*self.mussq*s**2 + 1/4.*self.lams*s**4
             + 1/4.*self.lamm*s**2*h**2
             + 1/4.*self.lamh*self.v0**4
         )
@@ -142,6 +142,8 @@ print(f"{Tc=}, {Tn=}")
 
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")
+print(f"{fxSM([0,1], 100)=}")
+print(f"{fxSM([[0,0],[1,10]], 100)=}")
 print(f"{fxSM.derivT([[0],[1]], 100)=}")
 print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
@@ -171,3 +173,7 @@ hydro = Hydro(thermo)
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
 
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
+
+#With out-of-equilibrium contributions
+eomOffEq = EOM(offEqParticles[0], fxSM, grid, 2, True)
+eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
