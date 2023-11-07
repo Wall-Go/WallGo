@@ -25,6 +25,7 @@ class Particle:
         msqThermal,
         statistics,
         degreesOfFreedom,
+        coefficientCW,
         inEquilibrium,
         ultrarelativistic,
         collisionPrefactors,
@@ -60,6 +61,7 @@ class Particle:
             msqThermal,
             statistics,
             degreesOfFreedom,
+            coefficientCW,
             inEquilibrium,
             ultrarelativistic,
             collisionPrefactors,
@@ -69,6 +71,7 @@ class Particle:
         self.msqThermal = msqThermal
         self.statistics = statistics
         self.degreesOfFreedom= degreesOfFreedom 
+        self.coefficientCW = coefficientCW 
         self.inEquilibrium = inEquilibrium
         self.ultrarelativistic = ultrarelativistic
         self.collisionPrefactors = collisionPrefactors
@@ -80,6 +83,7 @@ class Particle:
         msqThermal,
         statistics,
         degreesOfFreedom,
+        coefficientCW,
         inEquilibrium,
         ultrarelativistic,
         collisionPrefactors,
@@ -266,7 +270,38 @@ class GenericModel(ABC):
         massSq = np.stack((mt,),axis=-1)
         return massSq, degrees_of_freedom
 
-    def V1(self, bosons, fermions):
+    # def V1(self, bosons, fermions):
+    #     """
+    #     The one-loop corrections to the zero-temperature potential
+    #     using MS-bar renormalization.
+
+    #     This is generally not called directly, but is instead used by
+    #     :func:`Vtot`.
+
+    #     Parameters
+    #     ----------
+    #     bosons : array of floats
+    #         bosonic particle spectrum (here: masses, number of dofs, ci)
+    #     fermions : array of floats
+    #         fermionic particle spectrum (here: masses, number of dofs)
+
+    #     Returns
+    #     -------
+    #     V1 : ndarray
+    #         1loop vacuum contribution to the pressure
+    #         the array has shape (fields.shape[1],)
+
+    #     """
+    #     m2, nb, c = bosons
+    #     V = np.sum(self.Jcw(m2,nb,c), axis=-1)
+
+    #     m2, nf = fermions
+    #     c = 1.5
+    #     V -= np.sum(self.Jcw(m2,nf,c), axis=-1)
+
+    #     return V/(64*np.pi*np.pi)
+
+    def V1(self, fields):
         """
         The one-loop corrections to the zero-temperature potential
         using MS-bar renormalization.
@@ -288,12 +323,12 @@ class GenericModel(ABC):
             the array has shape (fields.shape[1],)
 
         """
-        m2, nb, c = bosons
-        V = np.sum(self.Jcw(m2,nb,c), axis=-1)
-
-        m2, nf = fermions
-        c = 1.5
-        V -= np.sum(self.Jcw(m2,nf,c), axis=-1)
+        V = 0
+        for particle in self.particles():
+            if (particle.statistics=="Boson"):
+                V += self.Jcw(particle.msqVacuum(fields), particle.degreesOfFreedom, particle.coefficientCW)
+            if (particle.statistics=="Fermion"):
+                V -= self.Jcw(particle.msqVacuum(fields), particle.degreesOfFreedom, particle.coefficientCW)
 
         return V/(64*np.pi*np.pi)
 
@@ -333,7 +368,47 @@ class GenericModel(ABC):
 
         return V*T4/(2*np.pi*np.pi)
 
-    def V1T(self, bosons, fermions, T):
+    # def V1T(self, bosons, fermions, T):
+    #     """
+    #     The one-loop finite-temperature potential.
+
+    #     This is generally not called directly, but is instead used by
+    #     :func:`Vtot`.
+
+    #     Note
+    #     ----
+    #     The `Jf` and `Jb` functions used here are
+    #     aliases for :func:`finiteT.Jf_spline` and :func:`finiteT.Jb_spline`,
+    #     each of which accept mass over temperature *squared* as inputs
+    #     (this allows for negative mass-squared values, which I take to be the
+    #     real part of the defining integrals.
+
+    #     .. todo::
+    #         Implement new versions of Jf and Jb that return zero when m=0, only
+    #         adding in the field-independent piece later if
+    #         ``include_radiation == True``. This should reduce floating point
+    #         errors when taking derivatives at very high temperature, where
+    #         the field-independent contribution is much larger than the
+    #         field-dependent contribution.
+
+    #     Parameters
+    #     ----------
+
+    #     Returns
+    #     -------
+    #     V1T : 4d 1loop thermal potential 
+    #     """ 
+    #     # This does not need to be overridden.
+    #     T2 = (T*T)[..., np.newaxis] + 1e-100
+    #          # the 1e-100 is to avoid divide by zero errors
+    #     T4 = T*T*T*T
+    #     m2,nb,_ = bosons
+    #     V = np.sum(nb*Jb(m2/T2), axis=-1)
+    #     m2,nf = fermions
+    #     V += np.sum(nf*Jf(m2/T2), axis=-1)
+    #     return V*T4/(2*np.pi*np.pi)
+
+    def V1T(self, fields, T):
         """
         The one-loop finite-temperature potential.
 
@@ -363,14 +438,18 @@ class GenericModel(ABC):
         -------
         V1T : 4d 1loop thermal potential 
         """ 
-        # This does not need to be overridden.
-        T2 = (T*T)[..., np.newaxis] + 1e-100
-             # the 1e-100 is to avoid divide by zero errors
+        T = np.asanyarray(T)
+        T2 = (T*T) + 1e-100
+             # added 1e-100 to avoid divide by zero errors
         T4 = T*T*T*T
-        m2,nb,_ = bosons
-        V = np.sum(nb*Jb(m2/T2), axis=-1)
-        m2,nf = fermions
-        V += np.sum(nf*Jf(m2/T2), axis=-1)
+
+        V = 0
+        for particle in self.particles():
+            if (particle.statistics=="Boson"):
+                V += particle.degreesOfFreedom*Jb(particle.msqVacuum(fields)/T2)
+            if (particle.statistics=="Fermion"):
+                V += particle.degreesOfFreedom*Jf(particle.msqVacuum(fields)/T2)
+
         return V*T4/(2*np.pi*np.pi)
 
     def evaluateVeff(self, fields: np.ndarray[float], T: float, include_radiation=True):
@@ -405,8 +484,10 @@ class GenericModel(ABC):
         if self.use_EFT:
             V *= T
         else:
-            V += self.V1(bosons, fermions)
-            V += self.V1T(bosons, fermions, T)
+            #V += self.V1(bosons, fermions)
+            V += self.V1(fields)
+            # V += self.V1T(bosons, fermions, T)
+            V += self.V1T(fields, T)
         if include_radiation:
             V += self.pressureLO(bosons, fermions, T)
         return np.real(V)

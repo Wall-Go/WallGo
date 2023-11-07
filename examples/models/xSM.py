@@ -109,37 +109,41 @@ class xSM(WallSpeed.GenericModel):
 
     def particles(self) -> np.ndarray[Particle]:
         mh2 = lambda fields: self.muhsq+3*self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2
-        ms2 = lambda fields: self.muhsq+3*self.lams*fields[1,...]**2+self.lamm*fields[0,...]**2/2
+        ms2 = lambda fields: self.mussq+3*self.lams*fields[1,...]**2+self.lamm*fields[0,...]**2/2
         mhs2 = lambda fields: self.lamm*fields[0,...]*fields[1,...]
         sqrt = lambda fields: np.sqrt((mh2(fields)-ms2(fields))**2+4*mhs2(fields)**2)
         m1 = lambda fields: (mh2(fields)+ms2(fields))/2+sqrt(fields)/2
         m2 = lambda fields: (mh2(fields)+ms2(fields))/2-sqrt(fields)/2
+
         higgs = WallSpeed.Particle(
             "higgs",
-            msqVacuum=lambda fields: m1(fields),
+            msqVacuum=m1,
             msqThermal=lambda T: self.muhT * T**2,
             statistics="Boson",
             degreesOfFreedom=1,
+            coefficientCW=3/2,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
         )
         singlet = WallSpeed.Particle(
             "singlet",
-            msqVacuum=lambda fields: m2(fields),
+            msqVacuum=m2,
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
             degreesOfFreedom=1,
+            coefficientCW=3/2,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
         )
         chi = WallSpeed.Particle(
             "chi",
-            msqVacuum=lambda fields: self.muhsq+self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2,
+            msqVacuum=lambda fields: self.muhsq + self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2,
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
             degreesOfFreedom=3,
+            coefficientCW=3/2,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -150,6 +154,7 @@ class xSM(WallSpeed.GenericModel):
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
             degreesOfFreedom=6,
+            coefficientCW=5/6,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -160,6 +165,7 @@ class xSM(WallSpeed.GenericModel):
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
             degreesOfFreedom=3,
+            coefficientCW=5/6,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -170,6 +176,7 @@ class xSM(WallSpeed.GenericModel):
             msqThermal=lambda T: 0.251327 * T**2,
             statistics="Fermion",
             degreesOfFreedom=12,
+            coefficientCW=3/2,
             inEquilibrium=False,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -183,6 +190,7 @@ class xSM(WallSpeed.GenericModel):
             msqThermal=lambda T: 0.251327 * T**2,
             statistics="Fermion",
             degreesOfFreedom=12,
+            coefficientCW=3/2,
             inEquilibrium=False,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
