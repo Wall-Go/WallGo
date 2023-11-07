@@ -107,21 +107,29 @@ class xSM(WallSpeed.GenericModel):
         }
         return params
 
-    def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+    def particles(self) -> np.ndarray[Particle]:
+        mh2 = lambda fields: self.muhsq+3*self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2
+        ms2 = lambda fields: self.muhsq+3*self.lams*fields[1,...]**2+self.lamm*fields[0,...]**2/2
+        mhs2 = lambda fields: self.lamm*fields[0,...]*fields[1,...]
+        sqrt = lambda fields: np.sqrt((mh2(fields)-ms2(fields))**2+4*mhs2(fields)**2)
+        m1 = lambda fields: (mh2(fields)+ms2(fields))/2+sqrt(fields)/2
+        m2 = lambda fields: (mh2(fields)+ms2(fields))/2-sqrt(fields)/2
         higgs = WallSpeed.Particle(
             "higgs",
-            msqVacuum=lambda X: self.yt**2 * np.asanyarray(X)[0,...]**2,
+            msqVacuum=lambda fields: m1(fields),
             msqThermal=lambda T: self.muhT * T**2,
             statistics="Boson",
+            degreesOfFreedom=1,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
         )
         singlet = WallSpeed.Particle(
             "singlet",
-            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2,
+            msqVacuum=lambda fields: m2(fields),
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
+            degreesOfFreedom=1,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -131,15 +139,7 @@ class xSM(WallSpeed.GenericModel):
             msqVacuum=lambda fields: self.muhsq+self.lamh*fields[0,...]**2+self.lamm*fields[1,...]**2/2,
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
-            inEquilibrium=True,
-            ultrarelativistic=False,
-            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
-        )
-        z = WallSpeed.Particle(
-            "z",
-            msqVacuum=lambda fields: (self.g1**2+self.g2**2)*fields[0,...]**2/4,
-            msqThermal=lambda T: self.musT * T**2,
-            statistics="Boson",
+            degreesOfFreedom=3,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
@@ -149,15 +149,40 @@ class xSM(WallSpeed.GenericModel):
             msqVacuum=lambda fields: (self.g2**2)*fields[0,...]**2/4,
             msqThermal=lambda T: self.musT * T**2,
             statistics="Boson",
+            degreesOfFreedom=6,
+            inEquilibrium=True,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        z = WallSpeed.Particle(
+            "z",
+            msqVacuum=lambda fields: (self.g1**2+self.g2**2)*fields[0,...]**2/4,
+            msqThermal=lambda T: self.musT * T**2,
+            statistics="Boson",
+            degreesOfFreedom=3,
             inEquilibrium=True,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
         )
         top = WallSpeed.Particle(
             "top",
-            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2,
+            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2/2,
             msqThermal=lambda T: 0.251327 * T**2,
             statistics="Fermion",
+            degreesOfFreedom=12,
+            inEquilibrium=False,
+            ultrarelativistic=False,
+            collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],
+        )
+        return [higgs,singlet,chi,w,z,top]
+
+    def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+        top = WallSpeed.Particle(
+            "top",
+            msqVacuum=lambda fields: self.yt**2 * np.asanyarray(fields)[0,...]**2/2,
+            msqThermal=lambda T: 0.251327 * T**2,
+            statistics="Fermion",
+            degreesOfFreedom=12,
             inEquilibrium=False,
             ultrarelativistic=False,
             collisionPrefactors=[self.g3**4, self.g3**4, self.g3**4],

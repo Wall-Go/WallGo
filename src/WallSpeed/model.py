@@ -24,6 +24,7 @@ class Particle:
         msqVacuum,
         msqThermal,
         statistics,
+        degreesOfFreedom,
         inEquilibrium,
         ultrarelativistic,
         collisionPrefactors,
@@ -58,6 +59,7 @@ class Particle:
             msqVacuum,
             msqThermal,
             statistics,
+            degreesOfFreedom,
             inEquilibrium,
             ultrarelativistic,
             collisionPrefactors,
@@ -66,6 +68,7 @@ class Particle:
         self.msqVacuum = msqVacuum
         self.msqThermal = msqThermal
         self.statistics = statistics
+        self.degreesOfFreedom= degreesOfFreedom 
         self.inEquilibrium = inEquilibrium
         self.ultrarelativistic = ultrarelativistic
         self.collisionPrefactors = collisionPrefactors
@@ -76,6 +79,7 @@ class Particle:
         msqVacuum,
         msqThermal,
         statistics,
+        degreesOfFreedom,
         inEquilibrium,
         ultrarelativistic,
         collisionPrefactors,
@@ -130,10 +134,10 @@ class GenericModel(ABC):
     def modelParameters(self) -> dict[str, float]:
         pass
 
-    # @property
-    # @abstractmethod
-    # def particles(self) -> np.ndarray[Particle]:
-    #     pass
+    @property
+    @abstractmethod
+    def particles(self) -> np.ndarray[Particle]:
+        pass
 
     @property
     @abstractmethod
@@ -145,13 +149,13 @@ class GenericModel(ABC):
     def treeLevelVeff(self, fields: np.ndarray[float], T, show_V=False):
         pass
 
-    def Jcw(self, massSquared, degrees_of_freedom, coefficientCW):
+    def Jcw(self, msq, degrees_of_freedom, coefficientCW):
         """
         Coleman-Weinberg potential
 
         Parameters
         ----------
-        massSquared : array_like
+        msq : array_like
             A list of the boson particle masses at each input point `fields`.
         degrees_of_freedom : float or array_like
             The number of degrees of freedom for each particle. If an array
@@ -168,7 +172,7 @@ class GenericModel(ABC):
         Jcw : float or array_like
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
-        return degrees_of_freedom * massSquared * massSquared * (np.log(np.abs(massSquared/self.mu4Dsq) + 1e-100) - coefficientCW)
+        return degrees_of_freedom * msq * msq * (np.log(np.abs(msq/self.mu4Dsq) + 1e-100) - coefficientCW)
 
     def boson_massSq(self, fields, T):
         """
@@ -293,7 +297,7 @@ class GenericModel(ABC):
 
         return V/(64*np.pi*np.pi)
 
-    def PressureLO(self, bosons, fermions, T):
+    def pressureLO(self, bosons, fermions, T):
         """
         Computes the leading order pressure
         depending on the effective degrees of freedom.
@@ -307,21 +311,25 @@ class GenericModel(ABC):
 
         Returns
         -------
-        PressureLO : LO contribution to the pressure
+        pressureLO : LO contribution to the pressure
 
         """
         T4 = T*T*T*T
 
-        _,nb,_ = bosons
-        _,nf = fermions
-
-        V = 0;
         if self.num_boson_dof is not None:
-            nb = self.num_boson_dof - np.sum(nb)
-            V -= nb * np.pi**4 / 45.
+            nb = self.num_boson_dof
         if self.num_fermion_dof is not None:
-            nf = self.num_fermion_dof - np.sum(nf)
-            V -= nf * 7*np.pi**4 / 360.
+            nf = self.num_fermion_dof
+
+        for particle in self.particles():
+            if (particle.statistics=="Boson"):
+                nb -= particle.degreesOfFreedom
+            if (particle.statistics=="Fermion"):
+                nf -= particle.degreesOfFreedom
+
+        V = (
+            - nb * 1*np.pi**4 / 45. 
+            - nf * 7*np.pi**4 / 360.)
 
         return V*T4/(2*np.pi*np.pi)
 
@@ -400,7 +408,7 @@ class GenericModel(ABC):
             V += self.V1(bosons, fermions)
             V += self.V1T(bosons, fermions, T)
         if include_radiation:
-            V += self.PressureLO(bosons, fermions, T)
+            V += self.pressureLO(bosons, fermions, T)
         return np.real(V)
 
 class FreeEnergy:
