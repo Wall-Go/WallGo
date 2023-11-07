@@ -14,45 +14,6 @@ class SingletSM_Z2(GenericModel):
     outOfEquilibriumParticles = np.array([], dtype=Particle)
     modelParameters = {}
 
-    ## Go from whatever input params --> action params
-    def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
-        super().calculateModelParameters(inputParameters)
-    
-        modelParameters = {}
-
-        v0 = inputParameters["v0"]
-        # Scalar eigenvalues
-        mh1 = inputParameters["mh1"] # 125 GeV
-        mh2 = inputParameters["mh2"]
-
-        ## these are direct inputs:
-        modelParameters["RGScale"] = inputParameters["RGScale"]
-        modelParameters["a2"] = inputParameters["a2"]
-        modelParameters["b4"] = inputParameters["b4"]
-        
-
-        modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
-        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
-        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
-        modelParameters["b2"] = mh2 - 0.5 * v0**2 * inputParameters["a2"]
-
-        ## Then the gauge/Yukawa sector
-        
-        Mt = inputParameters["Mt"] 
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
-
-        # helper
-        g0 = 2.*MW / v0
-        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
-        modelParameters["g2"] = g0
-        # Just take QCD coupling as input
-        modelParameters["g3"] = inputParameters["g3"]
-
-        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
-
-        return modelParameters
-
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
@@ -109,6 +70,49 @@ class SingletSM_Z2(GenericModel):
         self.addParticle(gluon)
 
 
+
+
+    ## Go from whatever input params --> action params
+    def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+        super().calculateModelParameters(inputParameters)
+    
+        modelParameters = {}
+
+        v0 = inputParameters["v0"]
+        # Scalar eigenvalues
+        mh1 = inputParameters["mh1"] # 125 GeV
+        mh2 = inputParameters["mh2"]
+
+        ## these are direct inputs:
+        modelParameters["RGScale"] = inputParameters["RGScale"]
+        modelParameters["a2"] = inputParameters["a2"]
+        modelParameters["b4"] = inputParameters["b4"]
+        
+
+        modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
+        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
+        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
+        modelParameters["b2"] = mh2**2 - 0.5 * v0**2 * inputParameters["a2"]
+
+        ## Then the gauge/Yukawa sector
+        
+        Mt = inputParameters["Mt"] 
+        MW = inputParameters["MW"]
+        MZ = inputParameters["MZ"]
+
+        # helper
+        g0 = 2.*MW / v0
+        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
+        modelParameters["g2"] = g0
+        # Just take QCD coupling as input
+        modelParameters["g3"] = inputParameters["g3"]
+
+        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+
+        return modelParameters
+
+
+
 # end model
 
 
@@ -119,8 +123,48 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         super().__init__(modelParameters)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
         
+        print(self.evaluate([120., 230.], 100.))
+
 
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
+        #return evaluateHighT(fields, temperature)
+        
+        # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
+
+        v = fields[0] # phi ~ 1/sqrt(2) (0, v)
+        x = fields[1] # just S -> S + x 
+        T = temperature
+
+        msq = self.modelParameters["msq"]
+        b2 = self.modelParameters["b2"]
+        lam = self.modelParameters["lambda"]
+        b4 = self.modelParameters["b4"]
+        a2 = self.modelParameters["a2"]
+
+        """
+        # Get thermal masses
+        thermalParams = self.getThermalParameters(temperature)
+        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
+        mh2_thermal = b2 - thermalParams["b2"]
+        """
+
+        # tree level potential
+        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
+
+        # From Philipp. @todo should probably use the list of defined particles here?
+        bosonStuff = self.boson_massSq(fields, temperature)
+        fermionStuff = self.fermion_massSq(fields, temperature)
+
+        RGScale = self.modelParameters["RGScale"]
+
+        VTotal = V0 + self.V1(bosonStuff, fermionStuff, RGScale) + self.V1T(bosonStuff, fermionStuff, temperature)
+
+        return VTotal
+
+
+    ## Evaluate the potential in high-T approx (but keep 4D units)
+    def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
+
         v = fields[0] # phi ~ 1/sqrt(2) (0, v)
         x = fields[1] # just S -> S + x 
         T = temperature
@@ -138,13 +182,13 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         # tree level potential
         V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 * x**2
 
-        ## @todo should have something like a static class just for defining loop integrals. NB: m^2 can be negative for scalars
+        ## @todo should have something like a static class just for defining loop integrals. NB: m^2 can be negative for scalars so make it complex
         J3 = lambda msq : -(msq + 0j)**(3/2) / (12.*np.pi) * T # keep 4D units
 
         ## Cheating a bit here and just hardcoding gauge/"goldstone" masses
         mWsq = thermalParameters["g2"]**2 * v**2 / 4.
         mZsq = (thermalParameters["g1"]**2 + thermalParameters["g2"]**2) * v**2 / 4.
-        mGsq = msq + lam*v**2
+        mGsq = msq + lam*v**2 + 0.5*a2*x**2
 
 
         ## Scalar mass matrix needs diagonalization, just doing it manually here
@@ -166,6 +210,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         return VTotal
     
     
+
+
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:
         T = temperature
@@ -206,7 +252,72 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         # skipping corrections to gauge couplings because those are not needed at O(g^3)
 
+        # But adding these as Benoit benchmark needs them explicitly...?
+        thermalParameters["mDsq1"] = mDsq1
+        thermalParameters["mDsq2"] = mDsq2
+
         return thermalParameters
+
+
+    def boson_massSq(self, fields, temperature):
+
+        # Is this necessary?
+        fields = np.asanyarray(fields)
+        v, x = fields[0,...], fields[1,...]
+
+        # TODO: numerical determination of scalar masses from V0
+
+        msq = self.modelParameters["msq"]
+        lam = self.modelParameters["lambda"]
+        yt = self.modelParameters["yt"]
+        g1 = self.modelParameters["g1"]
+        g2 = self.modelParameters["g2"]
+        
+        b2 = self.modelParameters["b2"]
+        a2 = self.modelParameters["a2"]
+        b4 = self.modelParameters["b4"]
+
+        
+        # Scalar masses, just diagonalizing manually. matrix (A C // C B)
+        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
+        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
+        C = a2 *v*x 
+        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
+
+        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
+        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
+
+        mWsq = self.modelParameters["g2"]**2 * v**2 / 4.
+        mZsq = (self.modelParameters["g1"]**2 + self.modelParameters["g2"]**2) * v**2 / 4.
+        # "Goldstones"
+        mGsq = msq + lam*v**2 + 0.5*a2*x**2
+
+
+        # this feels error prone:
+
+        # h, s, chi, W, Z
+        massSq = np.column_stack((msqEig1, msqEig2, mGsq, mWsq, mZsq))
+        degreesOfFreedom = np.array([1,1,3,6,3]) 
+        c = np.array([3/2,3/2,3/2,5/6,5/6])
+
+        return massSq, degreesOfFreedom, c
+    
+
+    def fermion_massSq(self, fields, temperature):
+
+        fields = np.asanyarray(fields)
+        v, x = fields[0,...], fields[1,...]
+
+        # Just top quark, others are taken massless
+        yt = self.modelParameters["yt"]
+        mtsq = yt**2 * v**2 / 2
+    
+        # @todo include spins for each particle
+
+        massSq = np.column_stack((mtsq,))
+        degreesOfFreedom = np.array([12])
+        
+        return massSq, degreesOfFreedom
 
 
 
@@ -214,7 +325,8 @@ def main():
 
     ## initial input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
-        "RGScale" : 91.1876,
+        #"RGScale" : 91.1876,
+        "RGScale" : 125., # <- Benoit benchmark
         "v0" : 246.0,
         "MW" : 80.379,
         "MZ" : 91.1876,
@@ -228,7 +340,6 @@ def main():
     }
 
     model = SingletSM_Z2(inputParameters)
-
 
     Tn = 100
 
