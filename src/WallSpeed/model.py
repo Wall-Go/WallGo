@@ -460,7 +460,7 @@ class GenericModel:
 class FreeEnergy:
     def __init__(
         self,
-        inputModel,
+        inputModel: GenericModel,
         Tc=None,
         Tnucl=None,
         dfdT=None,
@@ -475,8 +475,10 @@ class FreeEnergy:
 
         Parameters
         ----------
-        f : function
-            Free energy density function :math:`f(\phi, T)`.
+        inputModel : cls
+            Inherited from GenericModel
+            contains free energy density function :math:`f([\phi_1,\dots,\phi_n]^T, T)`
+            via inputModel.evaluateVeff
         Tc : float
             Value of the critical temperature, to be defined by the user
         Tnucl : float
@@ -515,24 +517,26 @@ class FreeEnergy:
         self.transField0 = 0
         self.transField1 = 1
 
-        if inputModel.modelParameters() is None:
+        if params is None:
             self.f = inputModel.evaluateVeff
             self.dfdT = dfdT
             self.dfdPhi = dfdPhi
+            self.params = inputModel.modelParameters()
         else:
+            self.params = params # Would not normally be stored. Here temporarily.
             self.f = lambda fields, T: inputModel.evaluateVeff(fields, T)
-            if dfdT is None:
-                self.dfdT = None
-            else:
-                self.dfdT = lambda v, T: dfdT(v, T, **params)
-            if dfdPhi is None:
-                self.dfdPhi = None
-            else:
-                self.dfdPhi = lambda v, T: dfdPhi(v, T, **params)
+
+        if dfdT is None:
+            self.dfdT = None
+        else:
+            self.dfdT = lambda fields, T: dfdT(fields, T, **self.params)
+        if dfdPhi is None:
+            self.dfdPhi = None
+        else:
+            self.dfdPhi = lambda fields, T: dfdPhi(fields, T, **self.params)
 
         self.dPhi = dPhi
         self.dT = dPhi
-        self.params = inputModel.modelParameters() # Would not normally be stored. Here temporarily.
 
         self.Ti_int = None
         self.Tf_int = None
@@ -780,8 +784,7 @@ class FreeEnergy:
                     vT = optimize.minimize_scalar(fPhase, bracket=(vT, 2*vT), bounds=(0, 10 * vT)).x
 
                 vmin.append(vT)
-
-        return np.array(np.diag(vmin))
+        return np.diag(vmin)
 
     def d2V(self, fields, T):
         """

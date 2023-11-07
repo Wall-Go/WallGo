@@ -34,6 +34,7 @@ Tn = 100
 
 fxSM = WallSpeed.FreeEnergy(mod, Tc, Tn)
 Tc = fxSM.Tc
+pprint(mod.modelParameters())
 print(f"{Tc=}, {Tn=}")
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")

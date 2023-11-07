@@ -4,11 +4,12 @@ defines model, grid and top
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
+import WallSpeed
 from WallSpeed.Grid import Grid
 from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
-from WallSpeed import Particle, FreeEnergy, Model
+from WallSpeed import Particle, FreeEnergy, GenericModel
 from WallSpeed.EOM import EOM
 from WallSpeed.EOMGeneralShape import EOMGeneralShape
 
@@ -23,7 +24,7 @@ poly = Polynomial(grid)
 """
 Model definition
 """
-class xSM(Model):
+class xSM(WallSpeed.GenericModel):
     def __init__(self):
         self.v0 = 246.22
         self.muhsq = 7825.
@@ -40,7 +41,16 @@ class xSM(Model):
         self.musT = 1/12.*(2*self.lamm + 3*self.lams)
         self.b = 107.75 * np.pi**2 / 90
 
-        self.params = { # putting params together into dict for WallGo
+        self.Tc = np.sqrt(
+        (
+            - self.muhT*self.lams*self.muhsq
+            + self.musT*self.lamh*self.mussq
+            - np.sqrt(self.lamh*self.lams)*(self.musT*self.muhsq-self.muhT*self.mussq)
+        )/ (self.musT**2*self.lamh - self.muhT**2*self.lams)
+        )
+    
+    def modelParameters(self) -> dict[str, float]:
+        params = { # putting params together into dict for WallGo
             "v0" : self.v0,
             "muhsq" : self.muhsq,
             "lamh" : self.lamh,
@@ -54,16 +64,9 @@ class xSM(Model):
             "musT" : self.musT,
             "b" : self.b,
         }
+        return params
 
-        self.Tc = np.sqrt(
-        (
-            - self.muhT*self.lams*self.muhsq
-            + self.musT*self.lamh*self.mussq
-            - np.sqrt(self.lamh*self.lams)*(self.musT*self.muhsq-self.muhT*self.mussq)
-        )/ (self.musT**2*self.lamh - self.muhT**2*self.lams)
-        )
-
-    def Vtot(self, field, T, include_radiation = True):
+    def evaluateVeff(self, field, T, include_radiation = True):
         # The user defines their effective free energy
         field = np.asanyarray(field)
         h, s = field[0,...], field[1,...]
@@ -80,24 +83,24 @@ class xSM(Model):
             V += fsymT
         return V
 
-def dfdT(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
+def dfdT(fields, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
     # The user may or may not define this
-    field = np.asanyarray(field)
-    h, s = field[0,...], field[1,...]
+    fields = np.asanyarray(fields)
+    h, s = fields[0,...], fields[1,...]
     muhT = 1/48.*(9*g2**2+3*g1**2+2*(6*yt**2 + 12*lamh+ lamm))
     musT = 1/12.*(2*lamm + 3*lams)
     return (muhT*h**2 + musT*s**2)*T - 4*b*T**3
 
 
-def dfdPhi(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
+def dfdPhi(fields, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT, b):
     # The user may or may not define this
-    field = np.asanyarray(field)
-    h, s = field[0,...], field[1,...]
+    fields = np.asanyarray(fields)
+    h, s = fields[0,...], fields[1,...]
     dV0dh = -muhsq*h + lamh*h**3 + 1/2.*lamm*s**2*h
     dVTdh = muhT*h*T**2
     dV0ds = -mussq*s + lams*s**3 + 1/2.*lamm*s*h**2
     dVTds = musT*s*T**2
-    return_val = np.empty_like(field)
+    return_val = np.empty_like(fields)
     return_val[0,...] = dV0dh + dVTdh
     return_val[1,...] = dV0ds + dVTds
     return return_val
@@ -105,9 +108,8 @@ def dfdPhi(field, T, v0, muhsq, lamh, mussq, lams, lamm, g2, g1, yt, muhT, musT,
 
 # defining the free energy for WallGo
 mod = xSM()
-params=mod.params
 
-Tc = mod.Tc
+Tc = mod.Tc 
 Tn = 112 # only Tn is strictly necessary
 
 
@@ -130,22 +132,22 @@ class FreeEnergy(FreeEnergy):
         p = self.params
         hsq = (-p["muhT"]*T**2+p["muhsq"])/p["lamh"]
         ssq = (-p["musT"]*T**2+p["mussq"])/p["lams"]
-        return np.array([[np.sqrt(hsq),0],[0,np.sqrt(ssq)]])
+        return np.diag([np.sqrt(hsq),np.sqrt(ssq)])
 
 
-fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
+fxSM = FreeEnergy(mod, Tc, Tn, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 
 Tc = fxSM.Tc
-pprint(params)
+pprint(mod.modelParameters())
 print(f"{Tc=}, {Tn=}")
-
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")
 print(f"{fxSM([0,1], 100)=}")
 print(f"{fxSM([[0,0],[1,10]], 100)=}")
 print(f"{fxSM.derivT([[0],[1]], 100)=}")
 print(f"{fxSM.derivField([[0],[1]], 100)=}")
+exit()
 
 
 """
