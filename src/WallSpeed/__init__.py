@@ -11,9 +11,10 @@ from .Particle import Particle
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .WallGoManager import WallGoManager
-
+from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
+
 
 ## Load the collision module, gets stored in CollisionModule global var
 loadCollisionModule()

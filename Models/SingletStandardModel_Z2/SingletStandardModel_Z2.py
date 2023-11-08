@@ -355,7 +355,13 @@ def main():
     manager = WallGoManager(model, userInput)
 
     # At this point we should have all required input from the user
-    # and the manager should have validated it, found phases etc.
+    # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
+
+    M, N = 20, 20
+    manager.initGrid(M, N)
+
+    manager.solveWall()
+
     
 
 

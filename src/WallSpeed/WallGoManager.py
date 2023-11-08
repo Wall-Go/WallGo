@@ -1,5 +1,4 @@
 import numpy as np
-import cmath # complex numbers
 
 ## WallGo imports
 from .Particle import Particle
@@ -9,6 +8,9 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
 from .EOM import EOM
 from .Grid import Grid
+
+from .Integrals import Jb
+
 
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
@@ -49,47 +51,18 @@ class WallGoManager:
         ## Validates model stuff, including Veff and that Tn < Tc
         self.initValidate()
 
-        thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
+        self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
 
-        hydro = Hydro(thermodynamics)
+        self.hydro = Hydro(self.thermodynamics)
+
 
         ## I think this is where we'd validate/init collision integrals and then end the __init__
         # Can have a separate function for doing the collision/EOM work
         # But until everything works I'm just putting test stuff here: 
 
-        # Wrong number, probably because pressure from Veff is wrong?
-        print(f"Jouguet: {hydro.vJ}")
+        print(f"Jouguet: {self.hydro.vJ}")
 
-
-
-
-        """
-        Grid (put this somewhere else)
-        """
-        M = 20
-        N = 20
-        grid = Grid(M, N, 0.05, 100)
-        # ???
-        #poly = Polynomial(grid)
-
-
-        # this should be somewhere else, if even needed. Maybe routines that need this could just read it from length of some input field array?
-        numberOfFields = 2
-
-        ### EOMs just for the first out-of-eq particle for now. TODO generalize
-        outOfEqParticle = self.model.outOfEquilibriumParticles[0]
-        
-        # Without out-of-equilibrium contributions
-        eom = EOM(outOfEqParticle, thermodynamics, hydro, grid, numberOfFields)
-        #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
-
-        """
-        #With out-of-equilibrium contributions
-        eomOffEq = EOM(offEqParticles[0], fxSM, grid, 2, True)
-        eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
-        """
-
-
+    # end __init__
 
     ## WIP/draft function, read things like Tn, approx locations of the 2 minima etc
     def readUserInput(self, userInput: dict) -> None:
@@ -119,4 +92,42 @@ class WallGoManager:
             print("Got Tc < Tn, should not happen!")
             raise RuntimeError("Invalid nucleation temperature or critical temperature")
 
+
+
+    def initGrid(self, M: int, N: int) -> Grid:
+        r"""
+        Parameters
+        ----------
+        M : int
+            Number of basis functions in the :math:`\xi` (and :math:`\chi`)
+            direction.
+        N : int
+            Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
+            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
+        """
+
+        ## LN: What are these magic numbers? Why does this need the temperature??
+        self.grid = Grid(M, N, 0.05, 100)
+        
+
+    # Call after initGrid. I guess this would be the main workload function 
+    def solveWall(self):
+
+        # this should be somewhere else, if even needed. Maybe routines that need this could just read it from length of some input field array?
+        numberOfFields = 2
+
+        ### EOMs just for the first out-of-eq particle for now. TODO generalize
+        outOfEqParticle = self.model.outOfEquilibriumParticles[0]
+        
+        ### LN: I feel this is bad use of objects, and in this case extremely unperformant. 
+        # We should only need to initialize one EOM object, then call something like eom.wallSpeedLTE(), eom.wallSpeedBoltzmann() etc
+
+        # Without out-of-equilibrium contributions
+        eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
+        #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
+        print(f"LTE wall speed: {eom.wallVelocityLTE}")
+
+        #With out-of-equilibrium contributions
+        #eomOffEq = EOM(outOfEqParticle, thermodynamics, hydro, grid, numberOfFields, includeOffEq=True)
+        #eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
         
