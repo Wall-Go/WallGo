@@ -282,9 +282,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdChi = np.einsum("ij,jbc->ibc", derivChi, T, optimize=True)
-        dvdChi = np.einsum("ij,jbc->ibc", derivChi, v, optimize=True)
-        dmsqdChi = np.einsum("ij,jbc->ibc", derivChi, msq, optimize=True)
+        dTdChi = Tpoly.derivative(0).coefficients
+        dvdChi = vpoly.derivative(0).coefficients
+        dmsqdChi = msqpoly.derivative(0).coefficients
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
