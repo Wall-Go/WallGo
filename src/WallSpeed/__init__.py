@@ -15,6 +15,5 @@ from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 
-
 ## Load the collision module, gets stored in CollisionModule global var
 loadCollisionModule()

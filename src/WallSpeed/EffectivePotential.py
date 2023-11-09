@@ -4,15 +4,13 @@ import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
 
+import WallSpeed.Integrals
 
 class EffectivePotential(ABC):
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float]):
         self.modelParameters = modelParameters
-
-        ## Makes Jb, Jf functions. @todo range of m^2 / T^2
-        self.__initThermalIntegrals()
 
 
     # do the actual calculation of Veff(phi) here
@@ -264,9 +262,8 @@ class EffectivePotential(ABC):
         return V*T4/(2*np.pi*np.pi)
 
 
-    # @todo this should be static since it doesn't really need anything apart from the inputs. 
-    # But currently Jf, Jb are defined inside the Veff class so need to move those elsewhere first
-    def V1T(self, bosons, fermions, T):
+    @staticmethod
+    def V1T(bosons, fermions, T):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
@@ -304,38 +301,10 @@ class EffectivePotential(ABC):
         """
 
         m2,nb,_ = bosons
-        V = np.sum(nb*self.Jb(m2/T**2 + 1e-100), axis=-1)
+        V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T**2 + 1e-100), axis=-1)
         m2,nf = fermions
-        V += np.sum(nf*self.Jf(m2/T**2 + 1e-100), axis=-1)
+        V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T**2 + 1e-100), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
-    
 
     
-    """This just reads Jf, Jb from a file and interpolates to generate proper Python functions
-    @todo of course we need something that generates the files. And it cannot come from CosmoTransitions....
-    """
-    def __initThermalIntegrals(self) -> None:
-
-        # where are we
-        from pathlib import Path
-        sourcePath = Path(__file__).resolve()
-        sourceDir = sourcePath.parent
-
-        JbFile = str(sourceDir) + "/finiteT_b.dat.txt"
-
-        ## Contains (x f[x]) pairs with x = (m/T)^2, read these and interpolate to get a proper function
-        dataJb = np.genfromtxt(JbFile, delimiter=' ', dtype=float, encoding=None)
-
-        x, fx = zip(*dataJb)
-        self.Jb = scipy.interpolate.interp1d(x, fx, kind='linear')
-
-        # Repeat for the fermionic version Jf
-        JfFile = str(sourceDir) + "/finiteT_f.dat.txt"
-
-        dataJf = np.genfromtxt(JfFile, delimiter=' ', dtype=float, encoding=None)
-
-        x, fx = zip(*dataJf)
-        self.Jf = scipy.interpolate.interp1d(x, fx, kind='linear')
-
-
 

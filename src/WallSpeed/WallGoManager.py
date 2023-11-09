@@ -9,9 +9,6 @@ from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodyn
 from .EOM import EOM
 from .Grid import Grid
 
-from .Integrals import Jb
-
-
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
 and is good for hiding some of our internal implementation details from the user """
@@ -49,7 +46,7 @@ class WallGoManager:
         self.readUserInput(userInput)
 
         ## Validates model stuff, including Veff and that Tn < Tc
-        self.initValidate()
+        self.validateUserInput()
 
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
 
@@ -64,6 +61,7 @@ class WallGoManager:
 
     # end __init__
 
+
     ## WIP/draft function, read things like Tn, approx locations of the 2 minima etc
     def readUserInput(self, userInput: dict) -> None:
         self.phaseLocation1Input = userInput["phaseLocation1"]
@@ -72,8 +70,8 @@ class WallGoManager:
 
         
 
-    ## Do stuff like validations and initialization of all other classes here
-    def initValidate(self) -> None:
+    ## Check that the user input makes sense in context of the specified model. IE. can be found, Tn < Tc etc
+    def validateUserInput(self) -> None:
 
         ## Find the actual minima at Tn, should be close to the user-specified locations
         self.phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(self.phaseLocation1Input, self.Tn)

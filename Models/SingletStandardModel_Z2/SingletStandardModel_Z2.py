@@ -145,7 +145,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         mh2_thermal = b2 - thermalParams["b2"]
         """
 
-        ## These need to be arrays! because FreeEnergy calls this function with a nested list of field values.
+        ## These need to be arrays! Because other classes call this function with a nested list of field values.
         ## So @todo make all our funct arguments be numpy arrays?
         v = np.asanyarray(v)
         x = np.asanyarray(x)
@@ -163,7 +163,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         return VTotal
 
-
+    
     ## Evaluate the potential in high-T approx (but keep 4D units)
     def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
 
@@ -212,7 +212,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         return VTotal
     
     
-
 
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:

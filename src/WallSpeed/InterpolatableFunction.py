@@ -1,5 +1,6 @@
 
 import numpy as np
+import numpy.typing as npt
 from abc import ABC, abstractmethod
 import scipy.interpolate
 
@@ -13,6 +14,7 @@ class InterpolatableFunction(ABC):
             3) Validating that what was read from a file makes sense, ie. matches the result given by __evaluate().
 
     Currently makes sense only for functions of one variable. 
+    Should work with numpy array input, but only if the implementation of _evaluate supports vectorization. 
 
     WallGo uses this for the thermal Jb, Jf integrals.
     """
@@ -29,7 +31,7 @@ class InterpolatableFunction(ABC):
 
 
     @abstractmethod
-    def _evaluate(self, x: float) -> float:
+    def _evaluate(self, x: npt.ArrayLike) -> npt.ArrayLike:
         # Override this with the function return value. However the __call__ method should be preferred
         # when using the function as it can make use of our interpolated values
         pass
@@ -38,17 +40,43 @@ class InterpolatableFunction(ABC):
 
     """ Non abstracts """
     
-    def __call__(self, x: float, useInterpolatedValues=True) -> float:
+    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
         
-        ## Prefer the interpolated version if we have that, or if otherwise specified
-        canUseInterpolatedValues = (self._interpolatedFunction != None) and (x <= self._rangeMax) and (x >= self._rangeMin)
-
-        if (not useInterpolatedValues or not canUseInterpolatedValues):
+        if (not useInterpolatedValues):
             return self._evaluate(x)
-        else:
-            return self._interpolatedFunction(x)
+        elif (self._interpolatedFunction == None):
+            return self._evaluate(x)
         
+        if (np.isscalar(x)):
+            canInterpolateCondition = (x <= self._rangeMax) and (x >= self._rangeMin)
+
+            if (not canInterpolateCondition):
+                return self._evaluate(x)
+            else:
+                return self._interpolatedFunction(x)
+
+        else: 
+            ## Vectorize so that interpolated values are used whenever possible
+            x = np.asanyarray(x)
+        
+            canInterpolateCondition = (x <= self._rangeMax) & (x >= self._rangeMin)
+            needsEvaluationCondition = ~canInterpolateCondition 
+
+            xInterpolateRegion = x[ canInterpolateCondition ] 
+            xEvaluateRegion = x[ needsEvaluationCondition ] # can we optimize this?
+
+            results = np.empty_like(x, dtype=float)
+
+            results[canInterpolateCondition] = self._interpolatedFunction(xInterpolateRegion)
+            
+            ## Dunno if this matters, but without this check numpy still did calls to _evaluate:
+            if (xEvaluateRegion.size != 0):
+                results[needsEvaluationCondition] = self._evaluate(xEvaluateRegion)
+
+
+            return results
     
+
     def makeInterpolationTable(self, xMin: float, xMax: float, numberOfPoints: int) -> None:
 
         ## TODO Could make this much smarter
