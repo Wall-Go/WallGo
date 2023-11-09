@@ -11,7 +11,7 @@ from .Particle import Particle
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .WallGoManager import WallGoManager
-
+from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 

@@ -5,8 +5,8 @@ import numpy as np # arrays, maths and stuff
 import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
 from .helpers import derivative # derivatives for callable functions
-from cosmoTransitions.finiteT import Jb_spline as Jb
-from cosmoTransitions.finiteT import Jf_spline as Jf
+from cosmoTransitions.finiteT import Jb_spline as Jb_Cosmotransitions
+from cosmoTransitions.finiteT import Jf_spline as Jf_Cosmotransitions
 
 
 class Model:
@@ -338,14 +338,14 @@ class Model:
 
         Note
         ----
-        The `Jf` and `Jb` functions used here are
+        The `Jf_Cosmotransitions` and `Jb_Cosmotransitions` functions used here are
         aliases for :func:`finiteT.Jf_spline` and :func:`finiteT.Jb_spline`,
         each of which accept mass over temperature *squared* as inputs
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
         .. todo::
-            Implement new versions of Jf and Jb that return zero when m=0, only
+            Implement new versions of Jf_Cosmotransitions and Jb_Cosmotransitions that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
             errors when taking derivatives at very high temperature, where
@@ -364,9 +364,9 @@ class Model:
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
         m2,nb,_ = bosons
-        V = np.sum(nb*Jb(m2/T2), axis=-1)
+        V = np.sum(nb*Jb_Cosmotransitions(m2/T2), axis=-1)
         m2,nf = fermions
-        V += np.sum(nf*Jf(m2/T2), axis=-1)
+        V += np.sum(nf*Jf_Cosmotransitions(m2/T2), axis=-1)
         return V*T4/(2*np.pi*np.pi)
 
     def Vtot(self, X, T, include_radiation=True):
