@@ -129,7 +129,7 @@ class BoltzmannSolver:
         TMid = self.background.TMid
 
         # fluctuation mode
-        msq = self.particle.msqVacuum(self.background.fieldProfile)
+        msq = self.particle.msqVacuum(self.background.fieldProfile[:, 1:-1])
         msq = msq[:, np.newaxis, np.newaxis]
         E = np.sqrt(msq + pz**2 + pp**2)
 
@@ -250,9 +250,9 @@ class BoltzmannSolver:
         derivRz = self.poly.deriv(self.basisN, "pz")
 
         # background profiles
-        T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[..., np.newaxis, np.newaxis]
-        v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
+        T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
+        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
+        v = self.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
         vw = self.background.vw
 
         # fluctuation mode
@@ -282,10 +282,10 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdChi = Tpoly.derivative(0).coefficients
-        dvdChi = vpoly.derivative(0).coefficients
-        dmsqdChi = msqpoly.derivative(0).coefficients
-
+        dTdChi = Tpoly.derivative(0).coefficients[1:-1, None, None]
+        dvdChi = vpoly.derivative(0).coefficients[1:-1, None, None]
+        dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
+        
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
         dchidxi = dchidxi[:, np.newaxis, np.newaxis]

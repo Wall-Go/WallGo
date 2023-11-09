@@ -12,8 +12,8 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 """
 Grid
 """
-M = 10
-N = 10
+M = 20
+N = 20
 T = 100
 L = 5/T
 grid = Grid(M, N, L, T)
@@ -32,9 +32,9 @@ velocityMid = 0.5 * (v[0] + v[-1])
 
 background = BoltzmannBackground(
     velocityMid=velocityMid,
-    velocityProfile=v,
-    fieldProfile=field,
-    temperatureProfile=T,
+    velocityProfile=np.concatenate(([v[0]],v,[v[-1]])),
+    fieldProfile=np.concatenate((field[:,0,None],field,field[:,-1,None]),1),
+    temperatureProfile=np.concatenate(([T[0]],T,[T[-1]])),
     polynomialBasis=basis,
 )
 
