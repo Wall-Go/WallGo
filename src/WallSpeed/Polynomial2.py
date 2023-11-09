@@ -86,27 +86,27 @@ class Polynomial2:
         endpoints = tuple(endpoints) + self.endpoints[n:]
         
         coefficients = np.array(self.coefficients[key])
-        return Polynomial(coefficients, self.grid, basis, direction, endpoints)
+        return Polynomial2(coefficients, self.grid, basis, direction, endpoints)
     
     def __mul__(self, poly):
-        if isinstance(poly, Polynomial):
+        if isinstance(poly, Polynomial2):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial(self.coefficients*poly.coefficients)
+            return Polynomial2(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
-            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+            return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
-        if isinstance(poly, Polynomial):
+        if isinstance(poly, Polynomial2):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial(self.coefficients+poly.coefficients)
+            return Polynomial2(self.coefficients+poly.coefficients)
         else:
             newCoeff = poly+self.coefficients
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
-            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+            return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __sub__(self, poly):
         return self.__add__((-1)*poly)
@@ -424,7 +424,7 @@ class Polynomial2:
         if isinstance(result, float):
             return result
         else:
-            return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
+            return Polynomial2(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
     
     def derivative(self, axis):
         """
@@ -465,7 +465,7 @@ class Polynomial2:
                 basis.append(self.basis[i])
                 endpoints.append(self.endpoints[i])
                 
-        return Polynomial(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
+        return Polynomial2(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
             
     
     def derivMatrix(self, basis, direction, endpoints=False):
