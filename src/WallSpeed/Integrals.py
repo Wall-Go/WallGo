@@ -23,7 +23,7 @@ class JbIntegral(InterpolatableFunction):
 
     ## LN: This doesn't vectorize nicely for numpy due to combination of piecewise scipy.integrate.quad and conditionals on x.
     # So for array input, let's just do a simple for loop 
-    def _evaluate(self, xInput: npt.ArrayLike) -> npt.ArrayLike:
+    def _functionImplementation(self, xInput: npt.ArrayLike) -> npt.ArrayLike:
         """
         xInput: float or numpy array of floats.
         """
@@ -61,7 +61,7 @@ class JbIntegral(InterpolatableFunction):
 # Fermionic Jf(x), in practice use with x = m^2 / T^2. This is very similar to the bosonic counterpart Jb
 class JfIntegral(InterpolatableFunction):
     
-    def _evaluate(self, xInput: npt.ArrayLike) -> npt.ArrayLike:
+    def _functionImplementation(self, xInput: npt.ArrayLike) -> npt.ArrayLike:
         """
         xInput: float or numpy array of floats.
         """
@@ -95,8 +95,8 @@ class JfIntegral(InterpolatableFunction):
             return results
 
 
-Jb = JbIntegral()
-Jf = JfIntegral()
+Jb = JbIntegral(bUseAdaptiveInterpolation=True)
+Jf = JfIntegral(bUseAdaptiveInterpolation=True)
 
 
 ##### init, TODO somewhere else
@@ -106,8 +106,8 @@ sourcePath = Path(__file__).resolve()
 sourceDir = sourcePath.parent
 
 JbFile = str(sourceDir) + "/finiteT_b.dat.txt"
-Jb.readInterpolationTable(JbFile)
+#Jb.readInterpolationTable(JbFile)
 
 
 JfFile = str(sourceDir) + "/finiteT_f.dat.txt"
-Jf.readInterpolationTable(JfFile)
+#Jf.readInterpolationTable(JfFile)
