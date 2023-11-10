@@ -5,7 +5,7 @@ from WallSpeed import GenericModel
 from WallSpeed import Particle
 from WallSpeed import EffectivePotential
 from WallSpeed import WallGoManager
-from WallSpeed import InterpolatableFunction
+from WallSpeed import FreeEnergy
 
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
@@ -22,6 +22,10 @@ class SingletSM_Z2(GenericModel):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters)
+        
+        # Initialize interpolated FreeEnergy
+        self.freeEnergy1 = FreeEnergy(self.effectivePotential, [ 0.0, 200.0 ])
+        self.freeEnergy2 = FreeEnergy(self.effectivePotential, [ 246.0, 0.0 ])
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -116,16 +120,6 @@ class SingletSM_Z2(GenericModel):
 
 # end model
 
-
-class FreeEnergy(InterpolatableFunction):
-    def __init__(self, effectivePotential: EffectivePotential):
-        self.effectivePotential = effectivePotential 
-
-    def _evaluate(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        # Override this with the function return value. However the __call__ method should be preferred
-        # when using the function as it can make use of our interpolated values
-        self.effectivePotential.findLocalMinimum(self.initialGuess , x) 
-        return
 
 
 class EffectivePotentialxSM_Z2(EffectivePotential):

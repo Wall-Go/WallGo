@@ -111,6 +111,8 @@ class EffectivePotential(ABC):
         """
             
         ## res.x is the minimum location, res.fun is the function value
+        # print(res.x)
+        print(res.fun)
         return res.x, res.fun
     
     

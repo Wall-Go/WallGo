@@ -2,6 +2,7 @@ import numpy as np
 
 from .model import FreeEnergy
 from .EffectivePotential import EffectivePotential
+from .FreeEnergy import FreeEnergy
 
 import WallSpeed.helpers
 
@@ -57,6 +58,9 @@ class Thermodynamics:
         ## temperature difference to use for derivatives. TODO this needs to be read from a config file or something
         self.dT = 1e-3
 
+        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.phaseHighT)
+        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.phaseLowT)
+
 
     def pHighT(self, T: float):
         """
@@ -74,7 +78,9 @@ class Thermodynamics:
 
         """
         # pressure = -free energy density = -Veff at minimum
-        __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
+        # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
+        # __, VeffValue = self.freeEnergyHigh(T)
+        VeffValue = self.freeEnergyHigh(T)
         return -VeffValue
 
     def dpHighT(self, T):
@@ -202,7 +208,9 @@ class Thermodynamics:
 
         """
         # pressure = -free energy density = -Veff at minimum
-        __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseLowT, T)
+        # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseLowT, T)
+        # __, VeffValue = self.freeEnergyLow(T)
+        VeffValue = self.freeEnergyLow(T)
         return -VeffValue
 
     def dpLowT(self, T):
