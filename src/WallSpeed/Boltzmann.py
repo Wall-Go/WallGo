@@ -389,7 +389,7 @@ class BoltzmannSolver:
         """
         A filename convention for collision integrals.
         """
-        dir = "../data"
+        dir = "data"
         suffix = "hdf5"
         # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
         return f"{dir}/collisions_top_top_N{self.grid.N}.{suffix}"

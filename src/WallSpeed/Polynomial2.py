@@ -95,7 +95,7 @@ class Polynomial2:
             return Polynomial2(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
@@ -105,7 +105,7 @@ class Polynomial2:
             return Polynomial2(self.coefficients+poly.coefficients)
         else:
             newCoeff = poly+self.coefficients
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __sub__(self, poly):
