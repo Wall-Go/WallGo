@@ -243,7 +243,7 @@ class EffectivePotential(ABC):
 
         Returns
         -------
-        PressureLO : LO contribution to the pressure
+        pressureLO : LO contribution to the pressure
 
         """
         T4 = T*T*T*T
@@ -254,12 +254,12 @@ class EffectivePotential(ABC):
         V = 0
         if self.num_boson_dof is not None:
             nb = self.num_boson_dof - np.sum(nb)
-            V -= nb * np.pi**2 / 45.
+            V -= nb * np.pi**4 / 45.
         if self.num_fermion_dof is not None:
             nf = self.num_fermion_dof - np.sum(nf)
-            V -= nf * 7*np.pi**2 / 360.
+            V -= nf * 7*np.pi**4 / 360.
 
-        return V*T4/2
+        return V*T4/(2*np.pi*np.pi)
 
 
     @staticmethod

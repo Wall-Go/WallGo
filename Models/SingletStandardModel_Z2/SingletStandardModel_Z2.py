@@ -5,6 +5,7 @@ from WallSpeed import GenericModel
 from WallSpeed import Particle
 from WallSpeed import EffectivePotential
 from WallSpeed import WallGoManager
+from WallSpeed import InterpolatableFunction
 
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
@@ -115,6 +116,16 @@ class SingletSM_Z2(GenericModel):
 
 # end model
 
+
+class FreeEnergy(InterpolatableFunction):
+    def __init__(self, effectivePotential: EffectivePotential):
+        self.effectivePotential = effectivePotential 
+
+    def _evaluate(self, x: npt.ArrayLike) -> npt.ArrayLike:
+        # Override this with the function return value. However the __call__ method should be preferred
+        # when using the function as it can make use of our interpolated values
+        self.effectivePotential.findLocalMinimum(self.initialGuess , x) 
+        return
 
 
 class EffectivePotentialxSM_Z2(EffectivePotential):
@@ -360,6 +371,9 @@ def main():
 
     # At this point we should have all required input from the user
     # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
+
+    res=manager.hydro.findHydroBoundaries(0.5229)
+    print(res)
 
     M, N = 20, 20
     manager.initGrid(M, N)
