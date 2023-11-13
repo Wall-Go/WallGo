@@ -13,7 +13,7 @@ class InterpolatableFunction(ABC):
             2) Producing said file for some range of inputs.
             3) Validating that what was read from a file makes sense, ie. matches the result given by __evaluate().
 
-    NB: Currently makes sense only for functions of one variable. 
+    NB: Currently makes sense only for functions of one variable. Does NOT support piecewise functions as interpolations would break for those.
     Should work with numpy array input, but only if the implementation of _functionImplementation supports vectorization. 
 
     WallGo uses this for the thermal Jb, Jf integrals and for evaluating the free energy as function of the temperature.
@@ -82,6 +82,11 @@ class InterpolatableFunction(ABC):
             fx.append(self._functionImplementation(x))
 
         self.__interpolate(xValues, fx)
+
+
+    ## Like initializeInterpolationTable but takes in precomputed function values 'fx'
+    def initializeInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
+        self.__interpolate(x, fx)
 
 
     
