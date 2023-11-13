@@ -13,12 +13,15 @@ class InterpolatableFunction(ABC):
             2) Producing said file for some range of inputs.
             3) Validating that what was read from a file makes sense, ie. matches the result given by __evaluate().
 
-    NB: Currently makes sense only for functions of one variable. 
+    NB: Currently makes sense only for functions of one variable. Does NOT support piecewise functions as interpolations would break for those.
     Should work with numpy array input, but only if the implementation of _functionImplementation supports vectorization. 
 
     WallGo uses this for the thermal Jb, Jf integrals and for evaluating the free energy as function of the temperature.
 
-    TODO what to do if the function only makes sense in some interval?
+    Special care is needed if the function evaluation fails for some input x, eg. if the function is evaluated only on some interval.
+    In this case it is the user's responsibility to return np.nan from _functionImplementation() for these input values; 
+    this will mark these points as invalid and they will not be included in interpolations. Failure to return np.nan for bad input
+    will likely break the interpolation.
     """
 
     ### Variables for adaptive interpolation
@@ -53,9 +56,10 @@ class InterpolatableFunction(ABC):
 
     @abstractmethod
     def _functionImplementation(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        # Override this with the function return value. However the __call__ method should be preferred
-        # when using the function as it can make use of our interpolated values.
-        # Do not call this directly, use the __call__ functionality instead
+        # Override this with the function return value.
+        # Do not call this directly, use the __call__ functionality instead. 
+        # If the function value is invalid for whatever reason, you should return np.nan. 
+        # This will guarantee that the invalid values are not included in interpolations 
         pass
 
 
@@ -82,6 +86,11 @@ class InterpolatableFunction(ABC):
             fx.append(self._functionImplementation(x))
 
         self.__interpolate(xValues, fx)
+
+
+    ## Like initializeInterpolationTable but takes in precomputed function values 'fx'
+    def initializeInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
+        self.__interpolate(x, fx)
 
 
     
@@ -132,16 +141,33 @@ class InterpolatableFunction(ABC):
         RESULT = self._functionImplementation(x)
 
         if (self.__bUseAdaptiveInterpolation):
-            self.__directEvaluateCount += 1
 
-            ## np.concatenate requires arrays of same shape. If the input x is nested then stuff can fail. So do this:
-            x = np.ravel(x)
-            ## Note that this will break things if our function is actually a function of many variables...
+            ## For interpolation we don't want to include points where the function is invalid. 
+            ## The assumption here is that _functionImplementation() returns np.nan if its evaluation fails
+
+            if (np.isscalar(x)):
+                if (not np.isnan(RESULT)):
+                    xValid = np.array([x])
+                else:
+                    xValid = np.array([])
+            else:
+                # input is array
                 
-            self.__directlyEvaluatedAt = np.concatenate( [x, self.__directlyEvaluatedAt] )
-            
-            if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
-                self.__updateInterpolationTable()
+                validIndices = np.where(~np.isnan(RESULT))
+                xValid = x[validIndices]
+
+                ## np.concatenate requires arrays of same shape. If the input x is nested then stuff can fail. So do this:
+                xValid = np.ravel(xValid)
+                ## Note that this will break things if our function is actually a function of many variables...
+
+
+            if (np.size(xValid) > 0):
+
+                self.__directEvaluateCount += 1
+                self.__directlyEvaluatedAt = np.concatenate( [xValid, self.__directlyEvaluatedAt] )
+                
+                if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
+                    self.__updateInterpolationTable()
 
 
         return RESULT 
