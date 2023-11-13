@@ -91,15 +91,7 @@ class InterpolatableFunction(ABC):
     ## Like initializeInterpolationTable but takes in precomputed function values 'fx'
     def initializeInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
-        ## Drop nan values
-        validIndices = np.where(~np.isnan(fx))
-        xValid = x[validIndices]
-        fxValid = fx[validIndices]
-
-        if (np.size(xValid) != np.size(x)):
-            print("Warning: initializeInterpolationTableFromValues received nan input")
-
-        self.__interpolate(xValid, fxValid)
+        self.__interpolate(x, fx)
 
 
     
@@ -155,14 +147,14 @@ class InterpolatableFunction(ABC):
             ## The assumption here is that _functionImplementation() returns np.nan if its evaluation fails
 
             if (np.isscalar(x)):
-                if (not np.isnan(RESULT)):
+                if (np.isfinite(RESULT)):
                     xValid = np.array([x])
                 else:
                     xValid = np.array([])
             else:
                 # input is array
                 
-                validIndices = np.where(~np.isnan(RESULT))
+                validIndices = np.where(np.isfinite(RESULT))
                 xValid = x[validIndices]
 
                 ## np.concatenate requires arrays of same shape. If the input x is nested then stuff can fail. So do this:
@@ -189,6 +181,20 @@ class InterpolatableFunction(ABC):
 
         x = np.asanyarray(xList)
         fx = np.asanyarray(fxList)
+
+        """Drop non-number values. Ideally we wouldn't have any to begin with, but this is not guaranteed since
+        1. This can be called from public initializeInterpolationTableFromValues with in principle any input
+        2. In adaptive routines we've filtered out x values that evaluated to nan, but if the function involves RNG 
+        then it's not ruled out that a re-evaluation in updateInterpolationTable() would not give nan
+        """
+        originalSize = np.size(x)
+
+        validIndices = np.where(np.isfinite(fx))
+        x = x[validIndices]
+        fx = fx[validIndices]
+
+        if (np.size(x) != originalSize):
+            print(f"Warning: {self.__class__.__name__}__interpolate received non-number input. These points will be dropped from interpolation.")
 
         # Rearrange so that x is strictly increasing; this is required by CubicSpline
         sortedIndices = np.argsort(x)
