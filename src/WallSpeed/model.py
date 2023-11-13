@@ -407,7 +407,7 @@ class Model:
             V += self.PressureLO(bosons, fermions, T)
         return np.real(V)
 
-class FreeEnergy:
+class FreeEnergyOld:
     def __init__(
         self,
         f,
@@ -498,7 +498,7 @@ class FreeEnergy:
             raise ValueError("No nucleation temperature defined")
         else:
             self.Tnucl = Tnucl
-        FreeEnergy.__validateInput(self.Tc, Tnucl)
+        FreeEnergyOld.__validateInput(self.Tc, Tnucl)
 
 
     @staticmethod

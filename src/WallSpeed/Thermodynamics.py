@@ -1,6 +1,5 @@
 import numpy as np
 
-from .model import FreeEnergy
 from .EffectivePotential import EffectivePotential
 from .FreeEnergy import FreeEnergy
 

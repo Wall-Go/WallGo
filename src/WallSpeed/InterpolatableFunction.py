@@ -90,7 +90,16 @@ class InterpolatableFunction(ABC):
 
     ## Like initializeInterpolationTable but takes in precomputed function values 'fx'
     def initializeInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
-        self.__interpolate(x, fx)
+
+        ## Drop nan values
+        validIndices = np.where(~np.isnan(fx))
+        xValid = x[validIndices]
+        fxValid = fx[validIndices]
+
+        if (np.size(xValid) != np.size(x)):
+            print("Warning: initializeInterpolationTableFromValues received nan input")
+
+        self.__interpolate(xValid, fxValid)
 
 
     
@@ -180,6 +189,11 @@ class InterpolatableFunction(ABC):
 
         x = np.asanyarray(xList)
         fx = np.asanyarray(fxList)
+
+        # Rearrange so that x is strictly increasing; this is required by CubicSpline
+        sortedIndices = np.argsort(x)
+        x = x[sortedIndices]
+        fx = fx[sortedIndices]
 
         self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=False)
 
