@@ -28,6 +28,13 @@ def __dfeq(x, statistics):
         return np.where(
             x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
         )
+
+def fromCardinalToChebyshev(matrix, polynomial):
+    zChange = np.transpose(polynomial.chebyshevMatrix('z'))
+    pzChange = np.transpose(polynomial.chebyshevMatrix('pz'))
+    ppChange = np.transpose(polynomial.chebyshevMatrix('pp'))
+
+    return np.einsum('ia,jb,kc,abc->ijk', zChange, pzChange, ppChange, matrix)
         
 def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
     """
@@ -192,7 +199,9 @@ print("liouvilleOperator.shape =", liouvilleOperator.shape)
 print("source.shape =", source.shape)
 print("eqDistribution.shape =", eqDistribution.shape)
 
-shouldBeSource = np.einsum("abcijk,ijk->abc", liouvilleOperator, eqDistribution)
+eqDistribution = fromCardinalToChebyshev(eqDistribution, poly)
+
+shouldBeSource = np.einsum("ijkabc,abc->ijk", liouvilleOperator, eqDistribution)
 
 difference = np.abs(source - shouldBeSource) / source
 
