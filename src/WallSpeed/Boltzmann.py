@@ -7,6 +7,7 @@ from .Grid import Grid
 from .Polynomial import Polynomial
 from .model import Particle
 from .helpers import boostVelocity
+from .WallGoUtils import getProjectRoot 
 
 
 class BoltzmannBackground:
@@ -380,9 +381,9 @@ class BoltzmannSolver:
         """
 
         # LN: We need to stop hardcoding file paths. But for now let's at least use an absolute path
-        WallGoRootDir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        WallGoRootDir = getProjectRoot()
 
-        dir = WallGoRootDir + "/data"
+        dir = str(WallGoRootDir) + "/data"
         suffix = "hdf5"
         # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
         return f"{dir}/collisions_top_top_N{self.grid.N}.{suffix}"
