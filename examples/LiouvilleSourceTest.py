@@ -201,7 +201,7 @@ print("eqDistribution.shape =", eqDistribution.shape)
 
 eqDistribution = fromCardinalToChebyshev(eqDistribution, poly)
 
-shouldBeSource = np.einsum("ijkabc,abc->ijk", liouvilleOperator, eqDistribution)
+shouldBeSource = -np.einsum("ijkabc,abc->ijk", liouvilleOperator, eqDistribution)
 
 difference = np.abs(source - shouldBeSource) / source
 
