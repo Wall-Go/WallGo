@@ -1,6 +1,7 @@
 
 from WallSpeed.CollisionModuleLoader import CollisionModule
 from WallSpeed import Particle
+from WallSpeed import WallGoRootDir
 
 
 
@@ -40,7 +41,7 @@ def constructPybindParticle(p: Particle, T: float):
 
 ## Module needs to be initialized before using. We probably want to call this in some common startup routine.
 # Argument is the config file name, we'll eventually want to read this from user input.
-CollisionModule.initModule("../Collision/config.ini")
+CollisionModule.initModule(WallGoRootDir + "/Config/CollisionDefaults.ini")
 
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
