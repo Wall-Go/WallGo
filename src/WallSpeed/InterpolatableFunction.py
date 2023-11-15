@@ -27,11 +27,13 @@ class InterpolatableFunction(ABC):
     In this case it is the user's responsibility to return np.nan from _functionImplementation() for these input values; 
     this will mark these points as invalid and they will not be included in interpolations. Failure to return np.nan for bad input
     will likely break the interpolation.
+
+    Weakness of the class: if the initial interpolation is bad, then it will remain bad.
     """
 
     ### Variables for adaptive interpolation
     # This can safely be changed at runtime and adjusted for different functions
-    _evaluationsUntilAdaptiveUpdate: int = 50
+    _evaluationsUntilAdaptiveUpdate: int = 500
     __directEvaluateCount: int = 0
     __bUseAdaptiveInterpolation: bool 
     __directlyEvaluatedAt: list ## keep list of values where the function had to be evaluated without interpolation, allows smart updating of ranges
@@ -93,7 +95,6 @@ class InterpolatableFunction(ABC):
 
     def newInterpolationTable(self, xMin: float, xMax: float, numberOfPoints: int) -> None:
 
-        ## TODO Could make this much smarter?
         xValues = np.linspace(xMin, xMax, numberOfPoints)
 
         fx = self._functionImplementation(xValues)
@@ -107,71 +108,36 @@ class InterpolatableFunction(ABC):
         self.__interpolate(x, fx)
 
 
-
     ## Add x, f(x) pairs to our pending interpolation table update 
     def scheduleForInterpolation(self, x: npt.ArrayLike, fx: npt.ArrayLike):
 
         functionValues = np.asanyarray(fx)
 
-        ## Check what kind of input we got and check for non-numbers. For array input, verify that the dimensions make sense
-        # Behold spaghetti:
-
         if (np.isscalar(x)):
-
-            ## Is this x valid for interpolation?
-            bValidResult = True
-
-            if (np.isscalar(fx)):
-                ## f(x) is scalar valued, just check that the result is number 
-                bValidResult = np.isfinite(fx)
-
-            else:
-                ## f(x) is a list, check that 1) the shape is as expected, and 2) ALL elements are valid numbers
-                fxShape = functionValues.shape
-                ## TODO more descriptive error msg
-                assert len(fxShape) == 1 # 1D array
-                assert fxShape[0] == self.__RETURN_VALUE_COUNT # correct number of returned values
-
-                bValidResult = np.all(np.isfinite(functionValues))
+            bValidResult = np.all(np.isfinite(functionValues))
 
             # put x in array format for consistency with array input
             xValid = np.array([x]) if bValidResult else np.array([])
 
         else:
-            ## Now we got many input x
+            ## Got many input x
             assert len(x) == len(functionValues)
 
-            fxShape = functionValues.shape
+            if (self.__RETURN_VALUE_COUNT > 1):
+                validIndices = np.all(np.isfinite(functionValues), axis=1)
+            else:
+                validIndices = np.all(np.isfinite(functionValues))
 
-            if (self.__RETURN_VALUE_COUNT == 1):
-                # Now there should be just one number for each x, so fx = 1D array
-                assert len(fxShape) == 1
-
-                validIndices = np.where(np.isfinite(functionValues))
-                xValid = x[validIndices]
-
-            else: 
-                
-                ## We got many x and there are many numbers for each x
-                assert len(fxShape) == 2 # 2D array
-                assert fxShape[1] == self.__RETURN_VALUE_COUNT # column count
-
-
-                ## Do a row-wise check for non-number values and include only x where all elements of f(x) are OK.
-                xValid = []
-                for i in range(len(functionValues)):
-                    if ( np.all(np.isfinite(functionValues[i])) ):
-                        xValid.append(x[i])
-               
-                xValid = np.asanyarray(xValid)
-            
+            xValid = x[validIndices]
 
             # Avoid unnecessary nested lists (is this safe?)
             xValid = np.ravel(xValid)
 
 
-        # checks done, add x to our internal work list 
+        # add x to our internal work list 
         if (np.size(xValid) > 0):
+
+            xValid = np.unique(xValid)
 
             self.__directEvaluateCount += len(xValid)
             self.__directlyEvaluatedAt = np.concatenate((self.__directlyEvaluatedAt, xValid)) # is this slow?
@@ -245,7 +211,6 @@ class InterpolatableFunction(ABC):
         self.__interpolationPoints = x
         self.__interpolationValues = fx
 
-
         
     ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
     def readInterpolationTable(self, fileToRead: str):
@@ -315,7 +280,7 @@ class InterpolatableFunction(ABC):
         else: 
 
             ## How many points to append to BOTH ends (if applicable)
-            appendPointCount = 0.1 * self._initialInterpolationPointCount
+            appendPointCount = 0.2 * self._initialInterpolationPointCount
 
             # what to append to lower end
             if (evaluatedPointMin < self.__rangeMin):
