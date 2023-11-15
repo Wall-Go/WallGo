@@ -11,6 +11,10 @@ class FreeEnergy(InterpolatableFunction):
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
 
+    # class fieldAtMinimum(InterpolatableFunction):
+    #     def _functionImplementation(self, fieldValue: npt.ArrayLike) -> npt.ArrayLike:
+    #         return fieldValue
+
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -35,3 +39,7 @@ class FreeEnergy(InterpolatableFunction):
             return np.nan
 
         return potentialAtMinimum
+
+
+
+
