@@ -212,47 +212,6 @@ class InterpolatableFunction(ABC):
         self.__interpolationValues = fx
 
         
-    ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
-    def readInterpolationTable(self, fileToRead: str):
-
-        # for logging
-        selfName = self.__class__.__name__
-
-        try:
-            ## Each line should be of form x fx, we read those and interpolate to get fx at any x in between 
-            data = np.genfromtxt(fileToRead, delimiter=' ', dtype=float, encoding=None)
-            x, fx = zip(*data)
-
-            self.__interpolate(x, fx)
-
-            ## check that what we read matches our function definition (just evaluate and compare at a few values)
-            self.__validateInterpolationTable(self.__rangeMin)
-            self.__validateInterpolationTable(self.__rangeMax)
-            self.__validateInterpolationTable((self.__rangeMax - self.__rangeMin) / 2.555)
-
-            print(f"{selfName}: Succesfully read interpolation table from file. Range [{self.__rangeMin}, {self.__rangeMax}]")
-
-        except IOError as ioError:
-            print(f"IOError! {selfName} attempted to read interpolation table from file, but got error:")
-            print(ioError)
-            print(f"This is non-fatal. Interpolation table will not be updated.\n")
-
-
-
-    def writeInterpolationTable(self, outputFileName: str):
-        
-        print(f"Storing interpolation table for function {self.__class__.__name__}, output file {outputFileName}.")
-
-        try:
-            ## Write to file, line i is of form: x[i] fx[i]
-            with open(outputFileName, "w") as file:
-                for val1, val2 in zip(self.__interpolationPoints, self.__interpolationValues):
-                    file.write(f"{val1} {val2}\n")
-
-        except Exception as e:
-            print(f"Error: {e}")
-    
-
     def __updateInterpolationTable(self):
 
         ## Where did the new evaluations happen
@@ -319,6 +278,54 @@ class InterpolatableFunction(ABC):
 
 
     # end __updateInterpolationTable()
+
+
+    ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
+    def readInterpolationTable(self, fileToRead: str):
+
+        # for logging
+        selfName = self.__class__.__name__
+
+        try:
+            ## Each line should be of form x f(x). For vector valued functions, x f1(x) f2(x) ...  
+            data = np.genfromtxt(fileToRead, delimiter=' ', dtype=float, encoding=None)
+
+            # now slice this column-wise. First column is x:
+            x = data[:, 0]
+            # and for fx we remove the first column, using magic syntax 1: to leave all others
+            fx = data[:, 1:]
+
+            self.__interpolate(x, fx)
+
+            ## check that what we read matches our function definition (just evaluate and compare at a few values)
+            self.__validateInterpolationTable(self.__rangeMin)
+            self.__validateInterpolationTable(self.__rangeMax)
+            self.__validateInterpolationTable((self.__rangeMax - self.__rangeMin) / 2.55)
+
+            print(f"{selfName}: Succesfully read interpolation table from file. Range [{self.__rangeMin}, {self.__rangeMax}]")
+
+        except IOError as ioError:
+            print(f"IOError! {selfName} attempted to read interpolation table from file, but got error:")
+            print(ioError)
+            print(f"This is non-fatal. Interpolation table will not be updated.\n")
+
+
+
+    def writeInterpolationTable(self, outputFileName: str):
+        
+
+        try:
+            ## Write to file, line i is of form: x[i] fx[i]. If our function is vector valued then x[i] fx1[i] fx2[i] ...
+
+            stackedArray = np.column_stack((self.__interpolationPoints, self.__interpolationValues))
+            np.savetxt(outputFileName, stackedArray, fmt='%.15g', delimiter=' ')
+
+            print(f"Stored interpolation table for function {self.__class__.__name__}, output file {outputFileName}.")
+
+        except Exception as e:
+            print(f"Error from {self.__class__.__name__}, function writeInterpolationTable(): {e}")
+    
+
 
     ## Test self.values with some input. Result should agree with self.evaluate(x)
     def __validateInterpolationTable(self, x: float, absoluteTolerance: float = 1e-6):
