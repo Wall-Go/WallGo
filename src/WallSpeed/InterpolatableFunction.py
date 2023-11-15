@@ -202,41 +202,7 @@ class InterpolatableFunction(ABC):
         if (self.__bUseAdaptiveInterpolation and bScheduleForInterpolation):
             self.scheduleForInterpolation(x, fx)
 
-<<<<<<< HEAD
-        if (self.__bUseAdaptiveInterpolation):
-
-            ## For interpolation we don't want to include points where the function is invalid. 
-            ## The assumption here is that _functionImplementation() returns np.nan if its evaluation fails
-
-            if (np.isscalar(x)):
-                if (np.isfinite(RESULT)):
-                    xValid = np.array([x])
-                else:
-                    xValid = np.array([])
-            else:
-                # input is array
-                
-                validIndices = np.where(np.isfinite(RESULT))
-                xValid = x[validIndices]
-
-                ## np.concatenate requires arrays of same shape. If the input x is nested then stuff can fail. So do this:
-                xValid = np.ravel(xValid)
-                ## Note that this will break things if our function is actually a function of many variables...
-
-
-            if (np.size(xValid) > 0):
-
-                self.__directEvaluateCount += 1
-                self.__directlyEvaluatedAt = np.concatenate( [xValid, self.__directlyEvaluatedAt] )
-                
-                if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
-                    self.__updateInterpolationTable()
-
-
-        return RESULT 
-=======
         return fx 
->>>>>>> GeneralizeModel
     
 
 
@@ -244,34 +210,8 @@ class InterpolatableFunction(ABC):
     ## Helper, sets our internal variables and does the actual interpolation
     def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
-<<<<<<< HEAD
-        x = np.asanyarray(xList)
-        fx = np.asanyarray(fxList)
-
-        """Drop non-number values. Ideally we wouldn't have any to begin with, but this is not guaranteed since
-        1. This can be called from public initializeInterpolationTableFromValues with in principle any input
-        2. In adaptive routines we've filtered out x values that evaluated to nan, but if the function involves RNG 
-        then it's not ruled out that a re-evaluation in updateInterpolationTable() would not give nan
-        """
-        originalSize = np.size(x)
-
-        validIndices = np.where(np.isfinite(fx))
-        x = x[validIndices]
-        fx = fx[validIndices]
-
-        if (np.size(x) != originalSize):
-            print(f"Warning: {self.__class__.__name__}__interpolate received non-number input. These points will be dropped from interpolation.")
-
-        # Rearrange so that x is strictly increasing; this is required by CubicSpline
-        sortedIndices = np.argsort(x)
-        x = x[sortedIndices]
-        fx = fx[sortedIndices]
-
-        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=False)
-=======
         ## This works even if f(x) is vector valued
         self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=False, axis=0)
->>>>>>> GeneralizeModel
 
         self.__rangeMin = np.min(x)
         self.__rangeMax = np.max(x)
