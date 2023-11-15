@@ -163,24 +163,31 @@ class InterpolatableFunction(ABC):
                 return self.__interpolatedFunction(x)
 
         else: 
-            ## Vectorize so that interpolated values are used whenever possible
-            x = np.asanyarray(x)
+
+            ## Use interpolated values whenever possible, so split the x array into two parts
+
+            # flatten in case the input x is of weird form [[ ]]
+            xRavel = np.ravel(x)
         
-            canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
+            canInterpolateCondition = (xRavel <= self.__rangeMax) & (xRavel >= self.__rangeMin)
             needsEvaluationCondition = ~canInterpolateCondition 
 
-            xInterpolateRegion = x[ canInterpolateCondition ] 
-            xEvaluateRegion = x[ needsEvaluationCondition ] # can we optimize this?
+            xInterpolateRegion = xRavel[ canInterpolateCondition ] 
+            xEvaluateRegion = xRavel[ needsEvaluationCondition ]
 
-            results = np.empty_like(x, dtype=float)
+            resultsInterpolated = self.__interpolatedFunction(xInterpolateRegion)
 
-            results[canInterpolateCondition] = self.__interpolatedFunction(xInterpolateRegion)
-            
-            ## Dunno if this matters, but without this check numpy still did calls to _functionImplementation:
-            if (xEvaluateRegion.size > 0):
-                results[needsEvaluationCondition] = self.__evaluateDirectly(xEvaluateRegion)
+            if (xEvaluateRegion.size == 0):
+                results = resultsInterpolated
+            else:
 
+                resultsEvaluated = self.__evaluateDirectly(xEvaluateRegion)
 
+                ## combine and put in same row-order as the original x
+                results = np.empty_like(xRavel, dtype=float)
+                results[canInterpolateCondition] = resultsInterpolated
+                results[needsEvaluationCondition] = resultsEvaluated
+                
             return results
         
 
@@ -203,7 +210,7 @@ class InterpolatableFunction(ABC):
     ## Helper, sets our internal variables and does the actual interpolation
     def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
-        ## This works even if f(x) is vector valued 
+        ## This works even if f(x) is vector valued
         self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=False, axis=0)
 
         self.__rangeMin = np.min(x)
@@ -290,10 +297,16 @@ class InterpolatableFunction(ABC):
             ## Each line should be of form x f(x). For vector valued functions, x f1(x) f2(x) ...  
             data = np.genfromtxt(fileToRead, delimiter=' ', dtype=float, encoding=None)
 
+            rows, columns = data.shape
+
             # now slice this column-wise. First column is x:
             x = data[:, 0]
             # and for fx we remove the first column, using magic syntax 1: to leave all others
             fx = data[:, 1:]
+
+            ## If f(x) is 1D, this actually gives it in messy format [ [fx1] [fx2] ...]. So let's fix that
+            if (columns == 2): 
+                fx = np.ravel(fx)
 
             self.__interpolate(x, fx)
 
