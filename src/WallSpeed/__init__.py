@@ -8,14 +8,12 @@ from .Thermodynamics import Thermodynamics
 from .EOM import EOM
 
 from .WallGoUtils import loadConfig
-from .WallGoUtils import getProjectRoot
+from .WallGoUtils import getPackagedDataPath
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 
-import os
+defaultConfigFile = getPackagedDataPath("WallSpeed.Config", "WallGoDefaults.ini")
 
-
-defaultConfigFile = str(getProjectRoot()) + "/Config/WallGoDefaults.ini"
 config = loadConfig(defaultConfigFile)
 
 if (config == {}):

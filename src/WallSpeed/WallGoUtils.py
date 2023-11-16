@@ -1,5 +1,5 @@
 import configparser
-from pathlib import Path
+import importlib.resources
 
 ## Put common non-physics related functions here. Common physics/math functions should go into helpers.py
 
@@ -22,8 +22,13 @@ def loadConfig(filePath: str) -> dict:
     return configDict
 
 
-def getProjectRoot() -> Path:
-    """ Returns Path object that points to WallGo root directory.
+def getPackagedDataPath(relativeModulePath: str, fileName: str) -> str:
+    """ Common routine for accessing packaged data files within WallGo, using modern importlib practices.
+        Usage: if the file is WallGo/Data/Something/example.txt, 
+        call this as getPackagedDataPath("WallGo.Data.Something", "example.txt").
+
+        Returns
+        -------
+        Path to the resource file: str.
     """
-    # This assumes dir structure <ProjectRoot>/src/<PackageName>/<ThisFile.py>, so need parent calls
-    return Path(__file__).absolute().parent.parent.parent
+    return str( importlib.resources.files(relativeModulePath).joinpath(fileName) )
