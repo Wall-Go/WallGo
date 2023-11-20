@@ -201,7 +201,7 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmann = BoltzmannSolver(grid, background, particle)
+boltzmann = BoltzmannSolver(grid, background, particle, basisN="Cardinal")
 print("BoltzmannSolver object =", boltzmann)
 liouvilleOperator, source, eqDistribution = buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmann)
 print("liouvilleOperator.shape =", liouvilleOperator.shape)
@@ -210,7 +210,8 @@ print("eqDistribution.shape =", eqDistribution.shape)
 
 flatChebFEq = -np.linalg.solve(liouvilleOperator, source)
 
-chebFEq = np.reshape(flatChebFEq, (boltzmann.grid.M - 1, boltzmann.grid.N - 1, boltzmann.grid.N - 1), order="C")
+shouldBeFEq = np.reshape(flatChebFEq, (boltzmann.grid.M - 1, boltzmann.grid.N - 1, boltzmann.grid.N - 1), order="C")
+"""
 shouldBeFEq = np.einsum(
                 "abc, ai, bj, ck -> ijk",
                 chebFEq,
@@ -220,9 +221,16 @@ shouldBeFEq = np.einsum(
                 optimize=True,
             )
 
+"""
+
 print((eqDistribution-shouldBeFEq)/eqDistribution)
 
-print(((eqDistribution-shouldBeFEq)/eqDistribution)[10,10,10])
+plt.plot(((eqDistribution-shouldBeFEq)/eqDistribution).flatten())
+plt.show()
+
+print(eqDistribution[10,10,0])
+print(((eqDistribution-shouldBeFEq)/eqDistribution)[10,10,0])
+print(((eqDistribution+shouldBeFEq)/eqDistribution)[10,10,0])
 
 exit()
 
