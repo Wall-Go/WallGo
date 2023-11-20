@@ -303,16 +303,9 @@ class EffectivePotential(ABC):
         """
         T = np.asanyarray(temperature)
         m2,nb,_ = bosons
-
-        V = np.zeros_like(T)
-
-        for m2_value, nb_value in zip(m2, nb):
-            V += nb_value * WallSpeed.Integrals.Jb(m2_value / T**2 + 1e-100)
-
+        V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T**2 + 1e-100), axis=-1)
         m2,nf = fermions
-        for m2_value, nf_value in zip(m2, nf):
-            V += nf_value * WallSpeed.Integrals.Jf(m2_value / T**2 + 1e-100)
-
+        V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T**2 + 1e-100), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
 
     

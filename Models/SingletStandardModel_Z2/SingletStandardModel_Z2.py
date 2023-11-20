@@ -171,7 +171,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
             + self.V1(bosonStuff, fermionStuff, RGScale) 
             + self.V1T(bosonStuff, fermionStuff, temperature)
         )
-        print(VTotal)
 
         return VTotal
 
