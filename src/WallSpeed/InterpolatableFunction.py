@@ -8,27 +8,29 @@ import scipy.interpolate
 class InterpolatableFunction(ABC):
     """ This is a totally-not-overengineered base class for defining optimized functions f(x) that, 
         in addition to normal evaluation, support the following: 
-            1) Reading precalculated values from a file and interpolating. 
-            Replaces the standard implementation in InterpolatedFunction._functionImplementation().
-            2) Producing said file for some range of inputs.
-            3) Validating that what was read from a file makes sense, ie. matches the result given by __evaluate().
+            - Producing and using interpolation tables in favor of direct evaluation, where applicable.
+            - Automatic adaptive updating of the interpolation table.
+            - Reading interpolation tables from a file. 
+            - Producing said file for some range of inputs.
+            - Validating that what was read from a file makes sense, ie. matches the result given by __evaluate().
 
-    NB: Currently makes sense only for functions of one variable. Does NOT support piecewise functions as interpolations would break for those.
-    Should work with numpy array input, but only if the implementation of _functionImplementation supports vectorization. 
+    WallGo uses this class for the thermal Jb, Jf integrals and for evaluating the free energy as function of the temperature.
+
+    Works with numpy array input and applying the function element-wise, but it is the user's responsibility to ensure that the 
+    implementation of _functionImplementation is compatible with this behavior. 
 
     This also works for functions returning many numbers, ie. vector functions V(x) = [V1, V2, ...]. 
-    In this case each component gets its own interpolation table. Vector functions can also be called with numpy array input,
-    in which case the return value should be array of shape (len(V), len(x)), ie. in list notation 
-    [ [V1(x1), V2(x1),...], [V1(x1), V2(x2),...]].
-
-    WallGo uses this for the thermal Jb, Jf integrals and for evaluating the free energy as function of the temperature.
+    In this case each component gets its own interpolation table. Vector functions can also be called with numpy array input.
 
     Special care is needed if the function evaluation fails for some input x, eg. if the function is evaluated only on some interval.
     In this case it is the user's responsibility to return np.nan from _functionImplementation() for these input values; 
     this will mark these points as invalid and they will not be included in interpolations. Failure to return np.nan for bad input
     will likely break the interpolation.
 
-    Weakness of the class: if the initial interpolation is bad, then it will remain bad.
+    Limitations.
+     - If the initial interpolation is bad, then it will remain bad: no functionality to improve existing interpolations, only increase of the range is possible. 
+     - Currently makes sense only for functions of one variable. 
+     - Does NOT support piecewise functions as interpolations would break for those.
     """
 
     ### Variables for adaptive interpolation
@@ -75,7 +77,9 @@ class InterpolatableFunction(ABC):
         # This will guarantee that the invalid values are not included in interpolations
         # 
         # The return value can be a scalar, or a list if the function is vector valued. 
-        # The number of elements returned needs to match self.__RETURN_VALUE_COUNT.
+        # Can also be a numpy array, in which case the function should be applied element-wise. 
+        # The number of elements returned needs to match self.__RETURN_VALUE_COUNT;
+        # for numpy array input, list length self.__RETURN_VALUE_COUNT for each x value.
         # A list containing np.nan anywhere in the list is interpreted as a failed evaluation, and
         # this input x is not included in interpolation
         pass
@@ -87,7 +91,7 @@ class InterpolatableFunction(ABC):
     def enableAdaptiveInterpolation(self):
         self.__bUseAdaptiveInterpolation = True
         self.__directEvaluateCount = 0
-        self.__directlyEvaluatedAt = []
+        self.__directlyEvaluatedAt: list[float] = []
 
     def disableAdaptiveInterpolation(self):
         self.__bUseAdaptiveInterpolation = False
@@ -130,7 +134,7 @@ class InterpolatableFunction(ABC):
 
             xValid = x[validIndices]
 
-            # Avoid unnecessary nested lists (is this safe?)
+            # Avoid unnecessary nested lists. This flattens to a 1D array, which is fine here since we're just storing x values for later
             xValid = np.ravel(xValid)
 
 
@@ -164,16 +168,14 @@ class InterpolatableFunction(ABC):
 
         else: 
 
-            ## Use interpolated values whenever possible, so split the x array into two parts
-
-            # flatten in case the input x is of weird form [[ ]]
-            xRavel = np.ravel(x)
+            ## Use interpolated values whenever possible, so split the x array into two parts.
+            ## However, be careful to preserve the array shape
         
-            canInterpolateCondition = (xRavel <= self.__rangeMax) & (xRavel >= self.__rangeMin)
+            canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
             needsEvaluationCondition = ~canInterpolateCondition 
 
-            xInterpolateRegion = xRavel[ canInterpolateCondition ] 
-            xEvaluateRegion = xRavel[ needsEvaluationCondition ]
+            xInterpolateRegion = x[ canInterpolateCondition ] 
+            xEvaluateRegion = x[ needsEvaluationCondition ]
 
             resultsInterpolated = self.__interpolatedFunction(xInterpolateRegion)
 
@@ -184,7 +186,7 @@ class InterpolatableFunction(ABC):
                 resultsEvaluated = self.__evaluateDirectly(xEvaluateRegion)
 
                 ## combine and put in same row-order as the original x
-                results = np.empty_like(xRavel, dtype=float)
+                results = np.empty_like(x, dtype=float)
                 results[canInterpolateCondition] = resultsInterpolated
                 results[needsEvaluationCondition] = resultsEvaluated
                 
@@ -279,7 +281,6 @@ class InterpolatableFunction(ABC):
             # This works, but could be made safer by rearranging the resulting arrays accordingly:
             xRange = np.concatenate( [appendPointsMin, self.__interpolationPoints, appendPointsMax] )
             fxRange = np.concatenate( [appendValuesMin, self.__interpolationValues, appendValuesMax] )
-
 
             self.__interpolate(xRange, fxRange)
 
