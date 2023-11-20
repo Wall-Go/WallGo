@@ -305,15 +305,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         # "Goldstones"
         mGsq = msq + lam*v**2 + 0.5*a2*x**2
 
-        ## Hack shape
-        T = temperature
-        msqEig1 += T*1e-1000
-        msqEig2 += T*1e-1000
-        mGsq += T*1e-1000
-        mWsq += T*1e-1000
-        mZsq += T*1e-1000
-
-
         # this feels error prone:
 
         # h, s, chi, W, Z

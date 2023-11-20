@@ -115,8 +115,19 @@ class EffectivePotential(ABC):
             return res.x, res.fun
 
         else:
-            resLocation = np.empty_like(temperature)[:, np.newaxis] # np.empty_like(temperature) will not work because the location is list [field1, field2, ...]
-            recValue = np.empty_like(temperature)
+            ## Veff(T) values in the minimum go here 
+            resValue = np.empty_like(temperature)
+
+            ## And field values in the minimum, at each T, go into resLocation. 
+            # But since each element would now be a list, need magic to get the shape right (we put the fields column-wise)
+
+            if (np.isscalar(initialGuess) or len(initialGuess.shape) == 1):
+                nColumns = initialGuess.shape[0]
+            else:
+                ## Now we for some reason got multi-dimensional array of initialGuesses. TODO will this even work?
+                _, nColumns = initialGuess.shape
+
+            resLocation = np.empty( (len(temperature), nColumns) )
 
             for i in np.ndindex(temperature.shape):
                 evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
@@ -128,7 +139,7 @@ class EffectivePotential(ABC):
         
             return resLocation, resValue
         
-    ### findLocalMinimum
+    ### end findLocalMinimum()
 
 
     ## Find Tc for two minima, search only range [TMin, TMax].
@@ -323,8 +334,7 @@ class EffectivePotential(ABC):
         if (len(T) > 1):
             T = T[:, np.newaxis]
 
-        ## LN: I've hacked boson_massSq so that the length is correct. But same hackery should be done to fermion_massSq.
-        # And pressureLO above probably need fixing too
+        # pressureLO above probably needs fixing too
 
         m2,nb,_ = bosons
         T2 = (T*T)[..., np.newaxis] + 1e-100
