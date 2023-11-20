@@ -8,6 +8,7 @@ class FreeEnergy(InterpolatableFunction):
 
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess):
         super().__init__()
+        # super().__init__(bUseAdaptiveInterpolation=False)
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
 

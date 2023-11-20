@@ -302,10 +302,22 @@ class EffectivePotential(ABC):
         T4 = T*T*T*T
         """
         T = np.asanyarray(temperature)
+
         m2,nb,_ = bosons
-        V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T**2 + 1e-100), axis=-1)
+        T2 = (T*T)[..., np.newaxis] + 1e-100
+        # nb = nb[...,np.newaxis]
+        # m2 = m2[...,np.newaxis]
+        print(T2.shape)
+        print(m2.shape)
+        print(nb.shape)
+
+        x1=np.sum(nb*m2/T2, axis=-1)
+        print(x1.shape)
+        
+
+        V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T2), axis=-1)
         m2,nf = fermions
-        V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T**2 + 1e-100), axis=-1)
+        V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T2), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
 
     
