@@ -179,15 +179,14 @@ class InterpolatableFunction(ABC):
 
             resultsInterpolated = self.__interpolatedFunction(xInterpolateRegion)
 
-            if (xEvaluateRegion.size == 0):
-                results = resultsInterpolated
-            else:
+            results = np.empty_like(x)
+            results[canInterpolateCondition] = resultsInterpolated
+
+            if (not xEvaluateRegion.size == 0):
 
                 resultsEvaluated = self.__evaluateDirectly(xEvaluateRegion)
 
-                ## combine and put in same row-order as the original x
-                results = np.empty_like(x, dtype=float)
-                results[canInterpolateCondition] = resultsInterpolated
+                ## combine and put in same order as the original x
                 results[needsEvaluationCondition] = resultsEvaluated
                 
             return results

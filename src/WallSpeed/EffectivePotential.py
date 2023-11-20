@@ -99,23 +99,37 @@ class EffectivePotential(ABC):
         minimum, functionValue : tuple, location x of the minimum and value of Veff(x) 
         """
 
-        ## Minimize real part only
-        evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
+        # I think we'll need to manually vectorize this wrt. T
 
-        res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+        if (np.isscalar(temperature)):
+            # Minimize real part only
+            evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
+            res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
 
-        # this spams a LOT:
-        """
-        if (not res.success):
-            print("Veff minimization error:", res.message)
-        """
-            
-        ## res.x is the minimum location, res.fun is the function value
-        # print(res.x)
-        # print(res.fun)
-        return res.x, res.fun
-    
-    
+            # this spams a LOT:
+            """
+            if (not res.success):
+                print("Veff minimization error:", res.message)
+            """
+            ## res.x is the minimum location, res.fun is the function value
+            return res.x, res.fun
+
+        else:
+            resLocation = np.empty_like(temperature)[:, np.newaxis] # np.empty_like(temperature) will not work because the location is list [field1, field2, ...]
+            recValue = np.empty_like(temperature)
+
+            for i in np.ndindex(temperature.shape):
+                evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
+
+                res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+
+                resLocation[i] = res.x
+                resValue[i] = res.fun
+        
+            return resLocation, resValue
+        
+    ### findLocalMinimum
+
 
     ## Find Tc for two minima, search only range [TMin, TMax].
     ## Feel free to override this.
@@ -301,7 +315,16 @@ class EffectivePotential(ABC):
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
         """
-        T = np.asanyarray(temperature)
+        #T = np.asanyarray(temperature)
+
+        ## LN: m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
+        # But make sure we don't modify the input temperature array here. 
+        T = np.atleast_1d(temperature)
+        if (len(T) > 1):
+            T = T[:, np.newaxis]
+
+        ## LN: I've hacked boson_massSq so that the length is correct. But same hackery should be done to fermion_massSq.
+        # And pressureLO above probably need fixing too
 
         m2,nb,_ = bosons
         T2 = (T*T)[..., np.newaxis] + 1e-100

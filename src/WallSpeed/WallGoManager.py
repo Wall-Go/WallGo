@@ -48,6 +48,15 @@ class WallGoManager:
         ## Validates model stuff, including Veff and that Tn < Tc
         self.validateUserInput()
 
+        """
+        print("temptemp")
+        T = np.array([101., 102., 103.])
+        res = self.model.effectivePotential.evaluate([100., 120.], T)
+        print(res)
+        res = self.model.effectivePotential.findLocalMinimum([100., 120.], T)
+        print(res)
+        """
+
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
 
         self.hydro = Hydro(self.thermodynamics)
