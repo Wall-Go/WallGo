@@ -56,7 +56,7 @@ class JbIntegral(InterpolatableFunction):
             results = np.empty_like(xInput, dtype=float) # same shape as xInput
             for i in np.ndindex(xInput.shape):
                 results[i] = wrapper(xInput[i])
-            
+
             return results
 
                     
@@ -112,8 +112,8 @@ sourcePath = Path(__file__).resolve()
 sourceDir = sourcePath.parent
 
 JbFile = str(sourceDir) + "/finiteT_b.dat.txt"
-#Jb.readInterpolationTable(JbFile)
+Jb.readInterpolationTable(JbFile)
 
 
 JfFile = str(sourceDir) + "/finiteT_f.dat.txt"
-#Jf.readInterpolationTable(JfFile)
+Jf.readInterpolationTable(JfFile)

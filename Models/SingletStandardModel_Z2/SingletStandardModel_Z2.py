@@ -305,11 +305,19 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         # "Goldstones"
         mGsq = msq + lam*v**2 + 0.5*a2*x**2
 
+        ## Hack shape
+        T = temperature
+        msqEig1 += T*1e-1000
+        msqEig2 += T*1e-1000
+        mGsq += T*1e-1000
+        mWsq += T*1e-1000
+        mZsq += T*1e-1000
+
 
         # this feels error prone:
 
         # h, s, chi, W, Z
-        massSq = np.stack((msqEig1, msqEig2, mGsq, mWsq, mZsq), axis=-1)
+        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
 
