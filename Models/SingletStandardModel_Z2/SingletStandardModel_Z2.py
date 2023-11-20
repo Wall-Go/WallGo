@@ -133,9 +133,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
-        
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
+        fields = np.asanyarray(fields) 
         v = fields[0] # phi ~ 1/sqrt(2) (0, v)
         x = fields[1] # just S -> S + x 
 
@@ -169,7 +169,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
             + self.pressureLO(bosonStuff, fermionStuff, temperature)
             + V0
             + self.V1(bosonStuff, fermionStuff, RGScale) 
-            + self.V1T(bosonStuff, fermionStuff, temperature))
+            + self.V1T(bosonStuff, fermionStuff, temperature)
+        )
+        print(VTotal)
 
         return VTotal
 
@@ -274,6 +276,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         # Is this necessary?
         fields = np.asanyarray(fields)
+        T = np.asanyarray(temperature)
         v, x = fields[0,...], fields[1,...]
 
         # TODO: numerical determination of scalar masses from V0
@@ -352,7 +355,7 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
-    Tn = 100
+    Tn = 100.
 
     userInput = {
         "Tn" : Tn,
@@ -369,10 +372,10 @@ def main():
     res=manager.hydro.findHydroBoundaries(0.5229)
     print(res)
 
-    M, N = 20, 20
-    manager.initGrid(M, N)
+    # M, N = 20, 20
+    # manager.initGrid(M, N)
 
-    manager.solveWall()
+    # manager.solveWall()
 
     
 

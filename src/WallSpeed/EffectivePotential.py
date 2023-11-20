@@ -112,7 +112,7 @@ class EffectivePotential(ABC):
             
         ## res.x is the minimum location, res.fun is the function value
         # print(res.x)
-        print(res.fun)
+        # print(res.fun)
         return res.x, res.fun
     
     
@@ -170,7 +170,7 @@ class EffectivePotential(ABC):
 
 
     @staticmethod
-    def Jcw(msq, degrees_of_freedom, c, RGScale: float):
+    def Jcw(msq: float, degrees_of_freedom: int, c: float, RGScale: float):
         """
         Coleman-Weinberg potential
 
@@ -265,7 +265,7 @@ class EffectivePotential(ABC):
 
 
     @staticmethod
-    def V1T(bosons, fermions, T):
+    def V1T(bosons, fermions, temperature: float):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
@@ -301,11 +301,18 @@ class EffectivePotential(ABC):
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
         """
-
+        T = np.asanyarray(temperature)
         m2,nb,_ = bosons
-        V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T**2 + 1e-100), axis=-1)
+
+        V = np.zeros_like(T)
+
+        for m2_value, nb_value in zip(m2, nb):
+            V += nb_value * WallSpeed.Integrals.Jb(m2_value / T**2 + 1e-100)
+
         m2,nf = fermions
-        V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T**2 + 1e-100), axis=-1)
+        for m2_value, nf_value in zip(m2, nf):
+            V += nf_value * WallSpeed.Integrals.Jf(m2_value / T**2 + 1e-100)
+
         return V*T**4 / (2*np.pi*np.pi)
 
     

@@ -80,9 +80,9 @@ class WallGoManager:
         print(f"Found phase 1: phi = {self.phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {self.phaseLocation2}, Veff(phi) = {VeffValue2}")
 
-        # ## Find the actual minima at Tn, should be close to the user-specified locations with interpolated free Energyfunctions
-        # self.phaseLocation1, VeffValue1 = self.model.freeEnergy1(self.Tn)
-        # self.phaseLocation2, VeffValue2 = self.model.freeEnergy2(self.Tn)
+        # # Find the actual minima at Tn, should be close to the user-specified locations with interpolated free Energyfunctions
+        # VeffValue1 = self.model.freeEnergy1(self.Tn)
+        # VeffValue2 = self.model.freeEnergy2(self.Tn)
 
         # print(f"Found phase 1: phi = {self.phaseLocation1}, Veff(phi) = {VeffValue1}")
         # print(f"Found phase 2: phi = {self.phaseLocation2}, Veff(phi) = {VeffValue2}")
