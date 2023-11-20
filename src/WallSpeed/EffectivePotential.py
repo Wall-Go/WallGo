@@ -338,15 +338,6 @@ class EffectivePotential(ABC):
 
         m2,nb,_ = bosons
         T2 = (T*T)[..., np.newaxis] + 1e-100
-        # nb = nb[...,np.newaxis]
-        # m2 = m2[...,np.newaxis]
-        print(T2.shape)
-        print(m2.shape)
-        print(nb.shape)
-
-        x1=np.sum(nb*m2/T2, axis=-1)
-        print(x1.shape)
-        
 
         V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T2), axis=-1)
         m2,nf = fermions

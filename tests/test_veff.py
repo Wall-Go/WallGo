@@ -102,7 +102,7 @@ def test_BM3():
     assert res.shape == (1,)
     assert res == pytest.approx([-1.23684861e09], rel=1e-2)
     res = model.effectivePotential.evaluate([110,130], 100)
-    assert res.shape == ()
+    assert res.shape == (1,)
     assert res == pytest.approx(-1.23684861e09, rel=1e-2)
 
 def test_BM4():
