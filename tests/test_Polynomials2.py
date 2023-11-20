@@ -33,7 +33,7 @@ def test_deriv():
     np.testing.assert_allclose(derivCheb.coefficients, [-1., -0.5+1/np.sqrt(2), 1., -0.5-1/np.sqrt(2), -3.],rtol=1e-15,atol=1e-15)
     
     derivCheb.changeBasis('Chebyshev')
-    np.testing.assert_allclose(derivCheb.coefficients, [-0.5,-1,-1.5,0,0],rtol=1e-5,atol=1e-5)
+    np.testing.assert_allclose(derivCheb.coefficients, [-0.5,-1,-1.5,0,0],rtol=1e-15,atol=1e-15)
     
 def test_integrate():
     polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
