@@ -135,17 +135,13 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
             * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
     )
 
-    """
-    No reshaping!
-
     # doing matrix-like multiplication
     N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
 
     # reshaping indices
     N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
     source = np.reshape(source, N_new, order="C")
-    operator = np.reshape(operator, (N_new, N_new), order="C")
-    """
+    liouville = np.reshape(liouville, (N_new, N_new), order="C")
 
     # returning results
     return liouville, source, fEq
@@ -211,6 +207,24 @@ liouvilleOperator, source, eqDistribution = buildLiouvilleOperatorSourceAndEquil
 print("liouvilleOperator.shape =", liouvilleOperator.shape)
 print("source.shape =", source.shape)
 print("eqDistribution.shape =", eqDistribution.shape)
+
+flatChebFEq = -np.linalg.solve(liouvilleOperator, source)
+
+chebFEq = np.reshape(flatChebFEq, (boltzmann.grid.M - 1, boltzmann.grid.N - 1, boltzmann.grid.N - 1), order="C")
+shouldBeFEq = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                chebFEq,
+                boltzmann.poly.matrix(boltzmann.basisM, "z"),
+                boltzmann.poly.matrix(boltzmann.basisN, "pz"),
+                boltzmann.poly.matrix(boltzmann.basisN, "pp"),
+                optimize=True,
+            )
+
+print((eqDistribution-shouldBeFEq)/eqDistribution)
+
+print(((eqDistribution-shouldBeFEq)/eqDistribution)[10,10,10])
+
+exit()
 
 eqDistribution = fromCardinalToChebyshev(eqDistribution, poly)
 
