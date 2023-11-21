@@ -30,15 +30,8 @@ def __dfeq(x, statistics):
         return np.where(
             x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
         )
-
-def fromCardinalToChebyshev(matrix, polynomial):
-    zChange = np.transpose(polynomial.chebyshevMatrix('z'))
-    pzChange = np.transpose(polynomial.chebyshevMatrix('pz'))
-    ppChange = np.transpose(polynomial.chebyshevMatrix('pp'))
-
-    return np.einsum('ia,jb,kc,abc->ijk', zChange, pzChange, ppChange, matrix)
         
-def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
+def buildSourceAndShouldBeSource(boltzmannSolver):
     """
     Constructs matrix and source for Boltzmann equation.
 
@@ -59,7 +52,7 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
     TRpMat = boltzmannSolver.poly.matrix(boltzmannSolver.basisN, "pp")
 
     # derivative matrices
-    derivChi = boltzmannSolver.poly.deriv(boltzmannSolver.basisM, "z")
+    derivChi = np.delete(boltzmannSolver.poly.deriv(boltzmannSolver.basisM, "z", endpoints=True), [0, -1], axis=0)
     derivRz = boltzmannSolver.poly.deriv(boltzmannSolver.basisN, "pz")
 
     # background profiles
@@ -106,7 +99,12 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
 
     # equilibrium distribution, and its derivative
     warnings.filterwarnings("ignore", message="overflow encountered in exp")
-    fEq = __feq(EPlasma / T, statistics)
+    fEq2 = __feq(EPlasma / T, statistics)
+    #print(fEq2.shape)
+    fEq1 = np.insert(fEq2, [0, -1], [fEq2[0], fEq2[-1]], axis=0)
+    #print(fEq1[0]-fEq1[1])
+    #print(fEq1[-1]-fEq1[-2])
+
     dfEq = __dfeq(EPlasma / T, statistics)
     warnings.filterwarnings(
         "default", message="overflow encountered in exp"
@@ -120,12 +118,14 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
     )
 
     ##### liouville operator #####
-    liouville = (
+    liouville1 = (
         dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
             * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
             * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+    )
+    liouville2 = (
         - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * gammaWall / 2
@@ -135,6 +135,11 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
             * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
     )
 
+    sbSource1 = -np.einsum("abcijk,ijk->abc", liouville1, fEq1)
+    sbSource2 = -np.einsum("abcijk,ijk->abc", liouville2, fEq2)
+
+    """
+
     # doing matrix-like multiplication
     N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
 
@@ -142,9 +147,10 @@ def buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmannSolver):
     N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
     source = np.reshape(source, N_new, order="C")
     liouville = np.reshape(liouville, (N_new, N_new), order="C")
+    """
 
     # returning results
-    return liouville, source, fEq
+    return source, sbSource1+sbSource2
 
 
 """
@@ -177,14 +183,6 @@ background = BoltzmannBackground(
     polynomialBasis=basis,
 )
 
-#test boost
-# background.vw=0
-# print(background.velocityProfile)
-# background.boostToPlasmaFrame()
-# print(background.velocityProfile)
-# background.boostToWallFrame()
-# print(background.velocityProfile)
-
 """
 Particle
 """
@@ -202,119 +200,22 @@ particle = Particle(
 Boltzmann solver
 """
 boltzmann = BoltzmannSolver(grid, background, particle, basisN="Cardinal")
-print("BoltzmannSolver object =", boltzmann)
-liouvilleOperator, source, eqDistribution = buildLiouvilleOperatorSourceAndEquilibriumDistribution(boltzmann)
-print("liouvilleOperator.shape =", liouvilleOperator.shape)
-print("source.shape =", source.shape)
-print("eqDistribution.shape =", eqDistribution.shape)
-
-flatChebFEq = -np.linalg.solve(liouvilleOperator, source)
-
-shouldBeFEq = np.reshape(flatChebFEq, (boltzmann.grid.M - 1, boltzmann.grid.N - 1, boltzmann.grid.N - 1), order="C")
-"""
-shouldBeFEq = np.einsum(
-                "abc, ai, bj, ck -> ijk",
-                chebFEq,
-                boltzmann.poly.matrix(boltzmann.basisM, "z"),
-                boltzmann.poly.matrix(boltzmann.basisN, "pz"),
-                boltzmann.poly.matrix(boltzmann.basisN, "pp"),
-                optimize=True,
-            )
 
 """
+Testing the Boltzmann solver
+"""
+source, sbSource = buildSourceAndShouldBeSource(boltzmann)
 
-print((eqDistribution-shouldBeFEq)/eqDistribution)
-
-plt.plot(((eqDistribution-shouldBeFEq)/eqDistribution).flatten())
+plt.plot(boltzmann.grid.xiValues, source[:,10,0], label=r"$S$")
+plt.plot(boltzmann.grid.xiValues, sbSource[:,10,0], label=r"$\tilde{S}=-L f_{eq}$")
+plt.plot(boltzmann.grid.xiValues, (sbSource-source)[:,10,0], label=r"$-(L f_{eq}+S)$")
+plt.xlabel(r"$\xi$")
+plt.legend()
 plt.show()
 
-print(eqDistribution[10,10,0])
-print(((eqDistribution-shouldBeFEq)/eqDistribution)[10,10,0])
-print(((eqDistribution+shouldBeFEq)/eqDistribution)[10,10,0])
-
-exit()
-
-eqDistribution = fromCardinalToChebyshev(eqDistribution, poly)
-
-shouldBeSource = -np.einsum("ijkabc,abc->ijk", liouvilleOperator, eqDistribution)
-
-difference = np.abs(source - shouldBeSource) / source
-
-print(difference[10,10,10])
-
-exit()
-
-deltaF = boltzmann.buildLiouvilleOperatorSourceAndEquilibriumDistribution()
-
-# Integrate to compute Delta using the integrate method of Polynomial2
-deltaFPoly = Polynomial2(deltaF, grid, ('Cardinal','Chebyshev','Chebyshev'), ('z','pz','pp'), False)
-E = np.sqrt(particle.msqVacuum(field)[:,None,None]+grid.pzValues[None,:,None]**2+grid.ppValues[None,None,:]**2)
-dpzdrz = 2*Tmid/(1-grid.rzValues**2)[None,:,None]
-dppdrp = Tmid/(1-grid.rpValues)[None,None,:]
-print(deltaFPoly.basis)
-Delta00Poly = deltaFPoly.integrate((1,2), dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E))
-print(Delta00Poly.coefficients.shape,deltaFPoly.basis)
-
-print((dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E)).shape,deltaFPoly.coefficients.shape)
-measure = (dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E))
-integrandPoly = deltaFPoly*measure
-func = lambda rz,rp,chi: integrandPoly.evaluate([chi,rz,rp])
-Delta00_dblquad = [integrate.dblquad(func, -1, 1, -1, 1, args=(chi,))[0] for chi in grid.chiValues]
-
-Deltas = boltzmann.getDeltas(deltaF)
-# print("Deltas =", Deltas)
-
-# plotting
-chi = boltzmann.grid.getCompactCoordinates()[0]
-fig, axs = plt.subplots(4)
-axs[0].plot(chi, Deltas["00"], label=r"$\Delta_{00}$")
-axs[0].set_xlabel(r"$\chi$")
-axs[0].set_ylabel(r"$\Delta_{00}\ \mathrm{(Boltzmann)}$")
-axs[0].grid()
-axs[1].plot(chi, Delta00Poly.coefficients, label=r"$\Delta_{00}\ \mathrm{(Poly)}$")
-axs[1].set_xlabel(r"$\chi$")
-axs[1].set_ylabel(r"$\Delta_{00}\ \mathrm{(Poly)}$")
-axs[1].grid()
-axs[2].plot(chi, Delta00_dblquad, label=r"$\Delta_{00}\ \mathrm{(dblquad)}$")
-axs[2].set_xlabel(r"$\chi$")
-axs[2].set_ylabel(r"$\Delta_{00}\ \mathrm{(dblquad)}$")
-axs[2].grid()
-axs[3].plot(chi, Deltas["02"], label=r"$\Delta_{02}$")
-axs[3].plot(chi, Deltas["20"], label=r"$\Delta_{20}$")
-axs[3].plot(chi, Deltas["11"], label=r"$\Delta_{11}$")
-axs[3].set_xlabel(r"$\chi$")
-axs[3].set_ylabel(r"$\Delta\mathrm{s}$")
-axs[3].legend(loc="upper left")
-plt.tight_layout()
+plt.plot(source.flatten(), label=r"$S$")
+plt.plot(sbSource.flatten(), label=r"$\tilde{S}=-L f_{eq}$", alpha=0.5)
+plt.plot((sbSource-source).flatten(), label=r"$-(L f_{eq}+S)$")
+plt.legend()
 plt.show()
 
-# now making a deltaF by hand
-# deltaF = np.zeros(deltaF.shape)
-# # coordinates
-# chi, rz, rp = grid.getCompactCoordinates() # compact
-# xi, pz, pp = grid.getCoordinates() # non-compact
-# xi = xi[:, np.newaxis, np.newaxis]
-# pz = pz[np.newaxis, :, np.newaxis]
-# pp = pp[np.newaxis, np.newaxis, :]
-
-# # background
-# vFixed = background.velocityProfile[0]
-# T0 = background.temperatureProfile[0]
-
-# # fluctuation mode
-# msq = particle.msqVacuum(background.fieldProfile)
-# msq = msq[:, np.newaxis, np.newaxis]
-# E = np.sqrt(msq + pz**2 + pp**2)
-
-# # integrand with known result
-# integrand_analytic = (
-#     E
-#     * np.sqrt(1 - rz[np.newaxis, :, np.newaxis]**2)
-#     * np.sqrt(1 - rp[np.newaxis, np.newaxis, :])
-# )
-
-# # test with integrand_analytic
-# Deltas = boltzmann.getDeltas(integrand_analytic)
-# Deltas_analytic = 2 * np.sqrt(2) * background.temperatureProfile**3 / np.pi
-# print("Ratio = 1 =", Deltas["00"] / Deltas_analytic)
-# print("T =", background.temperatureProfile)
