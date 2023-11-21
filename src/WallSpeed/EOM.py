@@ -310,7 +310,8 @@ class EOM:
 
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
-        V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
+        # TODO had to put here diagonal since fieldsi (2,N) and Tprofile (N) gave (N,N) result
+        V = np.diag(self.thermo.effectivePotential.evaluate(fields, Tprofile))
         VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])

@@ -384,11 +384,11 @@ class EffectivePotential(ABC):
 
         fields = np.asanyarray(fields, dtype=float)
         return_val = np.empty_like(fields)
-        for i in range(self.nbrFields):
+        for i in range(len(fields)):
             field = fields[i,...] 
             Xd_field = fields.copy()
             Xd_field[i,...] += self.dPhi * np.ones_like(field)
             dfd_field = (self.evaluate(Xd_field,T) - self.evaluate(fields,T)) / self.dPhi
-            return_val[i,...] = dfd_field
+            return_val[i,...] = np.diag(dfd_field)
 
         return return_val
