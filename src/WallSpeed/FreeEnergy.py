@@ -4,6 +4,10 @@ import numpy.typing as npt
 from .InterpolatableFunction import InterpolatableFunction
 from .EffectivePotential import EffectivePotential
 
+""" Class FreeEnergy: Describes properties of a local effective potential minimum. 
+This is used to keep track of a minimum with respect to the temperature.
+By definition: free energy density of a phase == value of Veff in its local minimum.
+"""
 class FreeEnergy(InterpolatableFunction):
 
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: list[float]):
@@ -17,6 +21,8 @@ class FreeEnergy(InterpolatableFunction):
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
+        Parameters
+        ----------
         temperature: float or numpy array of floats.
         """
 
