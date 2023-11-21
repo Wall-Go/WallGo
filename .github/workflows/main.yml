@@ -28,11 +28,8 @@ jobs:
         exclude:
           - os: ubuntu-latest
             c_compiler: clang
-          - os: macos-latest
-            c_compiler: gcc
-          - os: macos-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+#          - os: macos-latest
+#            c_compiler: gcc
 
     steps:
       - uses: actions/checkout@v4
