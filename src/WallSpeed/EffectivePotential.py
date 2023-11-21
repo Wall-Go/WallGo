@@ -5,14 +5,19 @@ from abc import ABC, abstractmethod ## Abstract Base Class
 import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
+from .helpers import derivative # derivatives for callable functions
 
 import WallSpeed.Integrals
 
 class EffectivePotential(ABC):
 
     ## In practice we'll get the model params from a GenericModel subclass 
-    def __init__(self, modelParameters: dict[str, float]):
+    def __init__(self, modelParameters: dict[str, float],
+                dPhi=1e-3,
+                dT=1e-3):
         self.modelParameters = modelParameters
+        self.dPhi = dPhi
+        self.dT = dT
 
 
     # do the actual calculation of Veff(phi) here
@@ -331,3 +336,59 @@ class EffectivePotential(ABC):
         m2,nf = fermions
         V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T2), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
+
+
+    def derivT(self, fields: np.ndarray[float], T: npt.ArrayLike):
+        """
+        The temperature-derivative of the effective potential.
+
+        Parameters
+        ----------
+        fields : array of floats
+            the field values (here: Higgs, singlet)
+        T : float
+            the temperature
+
+        Returns
+        ----------
+        dfdT : float
+            The temperature derivative of the free energy density at this field
+            value and temperature.
+        """
+
+        return derivative(
+            lambda T: self.evaluate(fields, T),
+            T,
+            dx=self.dT,
+            n=1,
+            order=4,
+        )
+
+    def derivField(self, fields: np.ndarray[float], T: npt.ArrayLike):
+        """
+        The field-derivative of the effective potential.
+
+        Parameters
+        ----------
+        fields : array of floats
+            the background field values (e.g.: Higgs, singlet)
+        T : float
+            the temperature
+
+        Returns
+        ----------
+        dfdX : array_like
+            The field derivative of the free energy density at this field
+            value and temperature.
+        """
+
+        fields = np.asanyarray(fields, dtype=float)
+        return_val = np.empty_like(fields)
+        for i in range(self.nbrFields):
+            field = fields[i,...] 
+            Xd_field = fields.copy()
+            Xd_field[i,...] += self.dPhi * np.ones_like(field)
+            dfd_field = (self.evaluate(Xd_field,T) - self.evaluate(fields,T)) / self.dPhi
+            return_val[i,...] = dfd_field
+
+        return return_val

@@ -151,5 +151,4 @@ class WallGoManager:
         #With out-of-equilibrium contributions
         eomOffEq = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=True)
         # eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
-        # print(f"Out-of-equilibirum wall speed: {eom.wallVelocityLTE}")
-        
+        print(f"Out-of-equilibirum wall speed: {eomOffEq.findWallVelocityMinimizeAction()}")
