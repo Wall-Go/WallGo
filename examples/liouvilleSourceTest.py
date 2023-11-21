@@ -56,9 +56,13 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     derivRz = boltzmannSolver.poly.deriv(boltzmannSolver.basisN, "pz")
 
     # background profiles
+    # The ones with 1 are for the extended profile
     T = boltzmannSolver.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
+    T1 = boltzmannSolver.background.temperatureProfile[:, np.newaxis, np.newaxis]
     field = boltzmannSolver.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
+    field1 = boltzmannSolver.background.fieldProfile[:, :, np.newaxis, np.newaxis]
     v = boltzmannSolver.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
+    v1 = boltzmannSolver.background.velocityProfile[:, np.newaxis, np.newaxis]
     vw = boltzmannSolver.background.vw
 
     # fluctuation mode
@@ -66,6 +70,8 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     # TODO: indices order not consistent across different functions.
     msq = boltzmannSolver.particle.msqVacuum(field)
     E = np.sqrt(msq + pz**2 + pp**2)
+    msq1 = boltzmannSolver.particle.msqVacuum(field1)
+    E1 = np.sqrt(msq1 + pz**2 + pp**2)
 
     # fit the background profiles to polynomial
 #        print(numpy.polynomial.chebyshev.chebfit(chi, boltzmannSolver.background.temperatureProfile, boltzmannSolver.grid.M))
@@ -83,6 +89,8 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     gammaPlasma = 1 / np.sqrt(1 - v**2)
     EPlasma = gammaPlasma * (E - v * pz)
     PPlasma = gammaPlasma * (pz - v * E)
+    gammaPlasma1 = 1 / np.sqrt(1 - v1**2)
+    EPlasma1 = gammaPlasma1 * (E1 - v1 * pz)
 
     # dot product of velocities
     uwBaruPl = gammaWall * gammaPlasma * (vw - v)
@@ -100,10 +108,7 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     # equilibrium distribution, and its derivative
     warnings.filterwarnings("ignore", message="overflow encountered in exp")
     fEq2 = __feq(EPlasma / T, statistics)
-    #print(fEq2.shape)
-    fEq1 = np.insert(fEq2, [0, -1], [fEq2[0], fEq2[-1]], axis=0)
-    #print(fEq1[0]-fEq1[1])
-    #print(fEq1[-1]-fEq1[-2])
+    fEq1 = __feq(EPlasma1 / T1, statistics)
 
     dfEq = __dfeq(EPlasma / T, statistics)
     warnings.filterwarnings(
