@@ -112,8 +112,8 @@ class EOM:
 
             c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
-            vevLowT = self.freeEnergy.findPhases(Tminus)[0]
-            vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+            vevLowT,_ = self.thermo.freeEnergyLow(Tminus)
+            vevHighT,_= self.thermo.freeEnergyHigh(Tplus)
 
             X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
@@ -243,8 +243,8 @@ class EOM:
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
-        vevLowT = self.freeEnergy.findPhases(Tminus)[0]
-        vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+        vevLowT,_ = self.thermo.freeEnergyLow(Tminus)
+        vevHighT,_= self.thermo.freeEnergyHigh(Tplus)
 
         i = 0
         # TODO: Implement a better condition
@@ -328,8 +328,8 @@ class EOM:
         wallOffsets = wallParameters[self.nbrFields+1:]
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
-        vevLowT = self.freeEnergy.findPhases(Tminus)[0]
-        vevHighT = self.freeEnergy.findPhases(Tplus)[1]
+        vevLowT,_ = self.thermo.freeEnergyLow(Tminus)
+        vevHighT,_= self.thermo.freeEnergyHigh(Tplus)
 
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus)
