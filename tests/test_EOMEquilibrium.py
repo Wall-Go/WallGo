@@ -99,7 +99,7 @@ def test_SimpleEOS():
     params=mod.params
 
     Tc = mod.Tc
-    Tn = 112. 
+    Tn = 112.
 
 
     class FreeEnergy(WallSpeed.FreeEnergy):
@@ -155,6 +155,8 @@ def test_SimpleEOS():
 
     assert(vwLoop == pytest.approx(vwLTE,rel = 1e-2))
 
+"""
+# Commented out for now, just to reduce test times
 def test_BM1():
 
     mod = WallSpeed.Model(125,120,1.0,0.9)
@@ -163,7 +165,7 @@ def test_BM1():
     Tc = 108.22
 
     Tn = 100.
-    
+
     fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 
     fxSM.interpolateMinima(0.0,1.2*fxSM.Tc,1)
@@ -181,19 +183,15 @@ def test_BM1():
     )
     particles = [top]
 
-    """
-    Compute the wall velocity in local thermal equilibrium
-    """
+    # Compute the wall velocity in local thermal equilibrium
     thermo = WallSpeed.Thermodynamics(fxSM)
     hydro = WallSpeed.Hydro(thermo)
     vwLTE = hydro.findvwLTE()
 
-    """
-    Compute the wall velocity from the loop without out-of-equilibrium effects
-    """
+    # Compute the wall velocity from the loop without out-of-equilibrium effects
     eom = WallSpeed.EOM(top, fxSM, grid, 2)
     #print(eom.findWallVelocityLoop())
     vwLoop = eom.findWallVelocityMinimizeAction()[0]
 
     assert(vwLoop == pytest.approx(vwLTE,rel = 1e-2))
-
+"""

@@ -15,13 +15,13 @@ class EOM:
     """
     def __init__(self, particle, freeEnergy, grid, nbrFields, includeOffEq=False, errTol=1e-6):
         """
-        Initialization 
+        Initialization
 
         Parameters
         ----------
         particle : Particle
-            Object of the class Particle, which contains the information about 
-            the out-of-equilibrium particles for which the Boltzmann equation 
+            Object of the class Particle, which contains the information about
+            the out-of-equilibrium particles for which the Boltzmann equation
             will be solved.
         freeEnergy : FreeEnergy
             Object of the class FreeEnergy.
@@ -68,7 +68,7 @@ class EOM:
             wallVelocity = np.sqrt(1 / 3)
             maxWallVelocity = self.hydro.vJ
 
-        c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         wallWidthsGuess = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsetsGuess = np.zeros(self.nbrFields-1)
@@ -94,23 +94,22 @@ class EOM:
             wallWidths = wallParameters[1:self.nbrFields+1]
             wallOffsets = wallParameters[self.nbrFields+1:]
 
-            c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+            c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
             vevLowT = self.freeEnergy.findPhases(Tminus)[0]
             vevHighT = self.freeEnergy.findPhases(Tplus)[1]
 
             X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-            
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
-            boltzmannBackground = BoltzmannBackground(wallParameters[0], velocityProfile, X, Tprofile)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus)
+
+            boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile)
 
             boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
 
             # TODO: getDeltas() is not working at the moment (it returns nan), so I turned it off to debug the rest of the loop.
-            print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
-            # offEquilDeltas = boltzmannSolver.getDeltas()
-            # print(offEquilDeltas)
+            #print('NOTE: offEquilDeltas has been set to 0 to debug the main loop.')
+            offEquilDeltas = boltzmannSolver.getDeltas()
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
             #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
@@ -127,7 +126,7 @@ class EOM:
 
     def findWallVelocityMinimizeAction(self):
         """
-        Finds the wall velocity by minimizing the action and solving for the 
+        Finds the wall velocity by minimizing the action and solving for the
         solution with 0 total pressure on the wall.
 
         Returns
@@ -135,13 +134,17 @@ class EOM:
         wallVelocity : double
             Value of the wall velocity that solves the scalar EOMs.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
+            Array containing the wall thicknesses and wall offsets that
             minimize the action and solve the EOM.
 
         """
         wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsets = np.zeros(self.nbrFields-1)
-        return self.solvePressure(0.01, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
+        
+        alpha = self.thermo.alpha(self.Tnucl)
+        vmin = max(1-(3*alpha)**(-10/13),0.01) #based on eq (103) of 1004.4187
+
+        return self.solvePressure(vmin, self.hydro.vJ-1e-6, np.append(wallWidths, wallOffsets))
 
     def solvePressure(self, wallVelocityMin, wallVelocityMax, wallParams):
         r"""
@@ -151,11 +154,11 @@ class EOM:
         ----------
         wallVelocityMin : double
             Lower bound of the bracket in which the root finder will look for a
-            solution. Should satisfy 
+            solution. Should satisfy
             :math:`0<{\rm wallVelocityMin}<{\rm wallVelocityMax}`.
         wallVelocityMax : double
             Upper bound of the bracket in which the root finder will look for a
-            solution. Should satisfy 
+            solution. Should satisfy
             :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
         wallParams : array_like
             Array containing a guess of the wall thicknesses and wall offsets.
@@ -165,7 +168,7 @@ class EOM:
         wallVelocity : double
             Value of the wall velocity that solves the scalar EOMs.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
+            Array containing the wall thicknesses and wall offsets that
             minimize the action and solve the EOM.
 
         """
@@ -210,34 +213,38 @@ class EOM:
         pressure : double
             Total pressure on the wall.
         wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that 
-            minimize the action and solve the EOM. Only returned if 
+            Array containing the wall thicknesses and wall offsets that
+            minimize the action and solve the EOM. Only returned if
             returnOptimalWallParams is True.
 
         """
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
-    
+
         offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
-        c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
 
         i = 0
         # TODO: Implement a better condition
-        while i < 1:
+        while i < 2:
             wallWidths = wallParams[:self.nbrFields]
             wallOffsets = wallParams[self.nbrFields:]
 
-            X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
+            X, dXdz = self.wallProfile(
+                self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets
+            )
+            Tprofile, velocityProfile = self.findPlasmaProfile(
+                c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus
+            )
 
             if self.includeOffEq:
-                boltzmannBackground = BoltzmannBackground(0, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+                boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, X, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
@@ -249,7 +256,10 @@ class EOM:
         wallOffsets = wallParams[self.nbrFields:]
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         dVdX = self.freeEnergy.derivField(X, Tprofile)
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(dVdX*dXdz)[0]/(1-self.grid.chiValues**2), [0])))
+
+        # TODO: Add the mass derivative in the Particle class and use it here.
+        dVout = 12*X[0]*offEquilDeltas['00']/2
+        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*((dVdX*dXdz)[0]+dVout*dXdz[0])/(1-self.grid.chiValues**2), [0])))
 
         if returnOptimalWallParams:
             return pressure,wallParams
@@ -272,7 +282,7 @@ class EOM:
             Temperature profile on the grid.
         offEquilDelta00 : array-like
             Off-equilibrium function Delta00.
-            
+
         Returns
         -------
         action : double
@@ -285,28 +295,28 @@ class EOM:
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
         V = self.freeEnergy(X, Tprofile)
-        VOut = self.particle.msqVacuum(X)*offEquilDelta00/2
+        VOut = 12*self.particle.msqVacuum(X)*offEquilDelta00/2
 
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
-        Vref = (VLowT+VHighT)/2 
-        
+        Vref = (VLowT+VHighT)/2
+
         U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return (U+K)
-        
-        
+
+
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.nbrFields+1]
         wallOffsets = wallParameters[self.nbrFields+1:]
-        c1, c2, Tplus, Tminus, velocityAtz0 = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.freeEnergy.findPhases(Tminus)[0]
         vevHighT = self.freeEnergy.findPhases(Tplus)[1]
 
         X,dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus)
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus)
 
         # Define a function returning the local temparature by interpolating through Tprofile.
         Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
@@ -356,7 +366,7 @@ class EOM:
 
     def wallProfile(self, z, vevLowT, vevHighT, wallWidths, wallOffsets):
         """
-        Computes the scalar field profile and its derivative with respect to 
+        Computes the scalar field profile and its derivative with respect to
         the position in the wall.
 
         Parameters
@@ -391,7 +401,7 @@ class EOM:
 
         return X, dXdz
 
-    def findPlasmaProfile(self, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
+    def findPlasmaProfile(self, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
@@ -401,8 +411,8 @@ class EOM:
             Value of the :math:`T^{30}` component of the energy-momentum tensor.
         c2 : double
             Value of the :math:`T^{33}` component of the energy-momentum tensor.
-        velocityAtz0 : double
-            Plasma velocity in the wall frame at :math:`z=0`.
+        velocityMid : double
+            Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         X : array-like
             Scalar field profile.
         dXdz : array-like
@@ -422,18 +432,18 @@ class EOM:
             Plasma velocity profile in the wall.
 
         """
-        temperatureProfile = []
-        velocityProfile = []
-        
+        temperatureProfile = np.zeros(len(self.grid.xiValues))
+        velocityProfile = np.zeros(len(self.grid.xiValues))
+
         for index in range(len(self.grid.xiValues)):
-            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityAtz0, X[:,index], dXdz[:,index], offEquilDeltas, Tplus, Tminus)
+            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, X[:,index:index+1], dXdz[:,index:index+1], offEquilDeltas, Tplus, Tminus)
 
-            temperatureProfile.append(T)
-            velocityProfile.append(vPlasma)
+            temperatureProfile[index] = T
+            velocityProfile[index] = vPlasma
 
-        return np.array(temperatureProfile), np.array(velocityProfile)
+        return temperatureProfile, velocityProfile
 
-    def findPlasmaProfilePoint(self, index, c1, c2, velocityAtz0, X, dXdz, offEquilDeltas, Tplus, Tminus):
+    def findPlasmaProfilePoint(self, index, c1, c2, velocityMid, X, dXdz, offEquilDeltas, Tplus, Tminus):
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
 
@@ -445,8 +455,8 @@ class EOM:
             Value of the :math:`T^{30}` component of the energy-momentum tensor.
         c2 : double
             Value of the :math:`T^{33}` component of the energy-momentum tensor.
-        velocityAtz0 : double
-            Plasma velocity in the wall frame at :math:`z=0`.
+        velocityMid : double
+            Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         X : array-like
             Scalar field profile.
         dXdz : array-like
@@ -467,7 +477,7 @@ class EOM:
 
         """
 
-        Tout30, Tout33 = self.deltaToTmunu(index,X,velocityAtz0,offEquilDeltas)
+        Tout30, Tout33 = self.deltaToTmunu(index,X,velocityMid,offEquilDeltas)
 
         s1 = c1 - Tout30
         s2 = c2 - Tout33
@@ -499,7 +509,7 @@ class EOM:
         )
         # TODO: Can the function have multiple zeros?
 
-        T = res   #is this okay?
+        T = res   #is this okay? #Maybe not? Sometimes it returns an array, sometimes a double
         vPlasma = self.plasmaVelocity(X, T, s1)
         return T, vPlasma
 
@@ -548,9 +558,23 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
-        return 0.5*np.sum(dXdz**2, axis=0) - self.freeEnergy(X, T) + 0.5*T*self.freeEnergy.derivT(X, T) + 0.5*np.sqrt(4*s1**2 + (T*self.freeEnergy.derivT(X, T))**2) - s2
+        result = (
+            0.5*np.sum(dXdz**2, axis=0)
+            - self.freeEnergy(X, T)
+            + 0.5*T*self.freeEnergy.derivT(X, T)
+            + 0.5*np.sqrt(4*s1**2
+            + (T*self.freeEnergy.derivT(X, T))**2)
+            - s2
+        )
+        result = np.asarray(result)
+        if result.shape == (1,) and len(result) == 1:
+            return result[0]
+        elif result.shape == ():
+            return result
+        else:
+            raise TypeError(f"LHS has wrong type, {result.shape=}")
 
-    def deltaToTmunu(self, index, X, velocityAtCenter, offEquilDeltas):
+    def deltaToTmunu(self, index, X, velocityMid, offEquilDeltas):
         r"""
         Computes the out-of-equilibrium part of the energy-momentum tensor.
 
@@ -560,8 +584,8 @@ class EOM:
             Index of the grid point on which to find the plasma profile.
         X : array-like
             Scalar field profile.
-        velocityAtCenter : double
-            Plasma velocity in the wall frame at :math:`z=0`.
+        velocityMid : double
+            Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
 
@@ -578,14 +602,14 @@ class EOM:
         delta02 = offEquilDeltas["02"][index]
         delta20 = offEquilDeltas["20"][index]
 
-        u0 = np.sqrt(gammaSq(velocityAtCenter))
-        u3 = np.sqrt(gammaSq(velocityAtCenter))*velocityAtCenter
+        u0 = np.sqrt(gammaSq(velocityMid))
+        u3 = np.sqrt(gammaSq(velocityMid))*velocityMid
         ubar0 = u3
         ubar3 = u0
 
         T30 = ((3*delta20 - delta02 - self.particle.msqVacuum(X)*delta00)*u3*u0+
                 (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
         T33 = ((3*delta20 - delta02 - self.particle.msqVacuum(X)*delta00)*u3*u3+
-                (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2.
+                (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2. -(self.particle.msqVacuum(X)*delta00+ delta02-delta20)/2.
 
         return T30, T33

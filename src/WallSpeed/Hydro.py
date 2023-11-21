@@ -49,7 +49,7 @@ class Hydro:
         -------
         vJ: double
             The value of the Jouguet velocity for this model.
-        
+
         """
         pHighT = self.thermodynamics.pHighT(self.Tnucl)
         eHighT = self.thermodynamics.eHighT(self.Tnucl)
@@ -95,7 +95,7 @@ class Hydro:
             Plasma temperature right in front of the bubble wall
         Tm : double
             Plasma temperature right behind the bubble wall
-        
+
         Returns
         -------
         vpvm, vpovm: double
@@ -215,7 +215,7 @@ class Hydro:
             Fluid velocities.
         xiAndT : array
             Values of the self-similar coordinate :math:`\xi = r/t` and the temperature :math:`T`
-            
+
         Returns
         -------
         eq1, eq2 : array
@@ -229,7 +229,7 @@ class Hydro:
     def solveHydroShock(self, vw, vp, Tp):
         r"""
         Solves the hydrodynamic equations in the shock for a given wall velocity :math:`v_w` and matching parameters :math:`v_+,T_+`
-        and returns the corresponding nucleation temperature :math:`T_n`, which is the temperature of the plasma in front of the shock. 
+        and returns the corresponding nucleation temperature :math:`T_n`, which is the temperature of the plasma in front of the shock.
 
         Parameters
         ----------
@@ -298,7 +298,7 @@ class Hydro:
         -------
         Tn : double
             The nucleation temperature with the strongest possible shock
-        
+
         """
         def vpnum(Tpm):
             return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
@@ -362,7 +362,7 @@ class Hydro:
 
         Returns
         -------
-        c1,c2,Tp,Tm, vAtz0 : double
+        c1,c2,Tp,Tm,vMid : double
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
@@ -374,8 +374,8 @@ class Hydro:
         wHighT = self.thermodynamics.wHighT(Tp)
         c1 = -wHighT*gammaSq(vp)*vp
         c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
-        vAtz0 = boostVelocity(vwTry,vp)
-        return (c1, c2, Tp, Tm, vAtz0)
+        vMid = -boostVelocity(0.5*(vm+vp), vwTry)  # minus sign for convention change
+        return (c1, c2, Tp, Tm, vMid)
 
 
     def findvwLTE(self):

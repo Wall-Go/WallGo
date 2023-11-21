@@ -246,7 +246,7 @@ class Polynomial:
 
         return self.chebyshev(grid, n, restriction)
 
-    def matrix(self, basis,direction, endpoints=False):
+    def matrix(self, basis, direction, endpoints=False):
         r"""
         Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
 
@@ -262,9 +262,9 @@ class Polynomial:
         """
 
         if basis == 'Cardinal':
-            return self.cardinalMatrix(direction,endpoints)
+            return self.cardinalMatrix(direction, endpoints)
         elif basis == 'Chebyshev':
-            return self.chebyshevMatrix(direction,endpoints)
+            return self.chebyshevMatrix(direction, endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
 

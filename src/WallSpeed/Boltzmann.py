@@ -1,3 +1,5 @@
+import os
+import warnings
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
@@ -10,36 +12,33 @@ from .helpers import boostVelocity
 class BoltzmannBackground:
     def __init__(
         self,
-        vw,
+        velocityMid,
         velocityProfile,
         fieldProfile,
         temperatureProfile,
         polynomialBasis="Cardinal",
     ):
-        self.vw = vw
+        # assumes input is in the wall frame
+        self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
         self.fieldProfile = np.asarray(fieldProfile)
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
+        self.vMid = velocityMid
+        self.TMid = 0.5 * (temperatureProfile[0] + temperatureProfile[-1])
 
     def boostToPlasmaFrame(self):
         """
         Boosts background to the plasma frame
         """
-        vPlasma = self.velocityProfile
-        v0 = self.velocityProfile[0]
-        vw = self.vw
-        self.velocityProfile = boostVelocity(vPlasma, v0)
-        self.vw = boostVelocity(vw, v0)
+        self.velocityProfile = boostVelocity(self.velocityProfile, self.vMid)
+        self.vw = boostVelocity(self.vw, self.vMid)
 
     def boostToWallFrame(self):
         """
         Boosts background to the wall frame
         """
-        vPlasma = self.velocityProfile
-        vPlasma0 = self.velocityProfile[0]
-        vw = self.vw
-        self.velocityProfile = boostVelocity(vPlasma, vw)
+        self.velocityProfile = boostVelocity(self.velocityProfile, self.vw)
         self.vw = 0
 
 
@@ -83,7 +82,7 @@ class BoltzmannSolver:
         self.basisN = basisN
         self.poly = Polynomial(self.grid)
 
-    def getDeltas(self, deltaF=None):
+    def getDeltas(self, deltaFCoord=None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -91,6 +90,9 @@ class BoltzmannSolver:
 
         Parameters
         ----------
+        deltaFCoord : array_like, optional
+            The deviation of the distribution function from local thermal
+            equilibrium, in the coordinate basis.
 
         Returns
         -------
@@ -99,8 +101,17 @@ class BoltzmannSolver:
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
-        if deltaF is None:
+        if deltaFCoord is None:
             deltaF = self.solveBoltzmannEquations()
+            # putting deltaF on momentum coordinate grid points
+            deltaFCoord = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                deltaF,
+                self.poly.matrix(self.basisM, "z"),
+                self.poly.matrix(self.basisN, "pz"),
+                self.poly.matrix(self.basisN, "pp"),
+                optimize=True,
+            )
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
@@ -113,8 +124,8 @@ class BoltzmannSolver:
         pp = pp[np.newaxis, np.newaxis, :]
 
         # background
-        vFixed = self.background.velocityProfile[0]
-        T0 = self.background.temperatureProfile[0]
+        vMid = self.background.vMid
+        TMid = self.background.TMid
 
         # fluctuation mode
         msq = self.particle.msqVacuum(self.background.fieldProfile)
@@ -122,9 +133,9 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # dot products with fixed plasma profile velocity
-        gammaPlasma = 1 / np.sqrt(1 - vFixed**2)
-        EPlasma = gammaPlasma * (E - vFixed * pz)
-        PPlasma = gammaPlasma * (pz - vFixed * E)
+        gammaPlasma = 1 / np.sqrt(1 - vMid**2)
+        EPlasma = gammaPlasma * (E - vMid * pz)
+        PPlasma = gammaPlasma * (pz - vMid * E)
 
         # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
         sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
@@ -137,18 +148,18 @@ class BoltzmannSolver:
         weightsPp /= np.sqrt(1 - rp[1:]**2)
         weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
         # measure, including Jacobian from coordinate compactification
-        measurePz = (2 * T0) / (1 - rz**2)
-        measurePp = T0**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
+        measurePz = (2 * TMid) / (1 - rz**2)
+        measurePp = TMid**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
         measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
         measurePzPp /= (2 * np.pi)**2
 
         # evaluating integrals with Gaussian quadrature
         measureWeight = measurePzPp * weights
-        arg00 = deltaF[:, :, 1:] / E[:, :, 1:]
+        arg00 = deltaFCoord[:, :, 1:] / E[:, :, 1:]
         Deltas["00"] = np.einsum(
             "jk, ijk -> i",
             measureWeight,
-            deltaF[:, :, 1:] / E[:, :, 1:],
+            arg00,
             optimize=True,
         )
         Deltas["11"] = np.einsum(
@@ -210,7 +221,7 @@ class BoltzmannSolver:
 
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
-        return np.reshape(deltaF, deltaFShape, order="F")
+        return np.reshape(deltaF, deltaFShape, order="C")
 
 
     def buildLinearEquations(self):
@@ -219,10 +230,6 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        # derivative matrices
-        derivChi = self.poly.deriv(self.basisM, "z")
-        derivRz = self.poly.deriv(self.basisN, "pz")
-
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
@@ -233,6 +240,10 @@ class BoltzmannSolver:
         TChiMat = self.poly.matrix(self.basisM, "z")
         TRzMat = self.poly.matrix(self.basisN, "pz")
         TRpMat = self.poly.matrix(self.basisN, "pp")
+
+        # derivative matrices
+        derivChi = self.poly.deriv(self.basisM, "z")
+        derivRz = self.poly.deriv(self.basisN, "pz")
 
         # background profiles
         T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
@@ -270,8 +281,12 @@ class BoltzmannSolver:
         drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
         # equilibrium distribution, and its derivative
-        fEq = 1 / (np.exp(EPlasma / T) - statistics * 1)
-        dfEq = -np.exp(EPlasma / T) * fEq**2
+        warnings.filterwarnings("ignore", message="overflow encountered in exp")
+        fEq = BoltzmannSolver.__feq(EPlasma / T, statistics)
+        dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
+        warnings.filterwarnings(
+            "default", message="overflow encountered in exp"
+        )
 
         ##### source term #####
         source = (dfEq / T) * dchidxi * (
@@ -282,11 +297,15 @@ class BoltzmannSolver:
 
         ##### liouville operator #####
         liouville = (
-            dchidxi * PWall
+            dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi * drzdpz * gammaWall / 2 * dmsqdChi
+            - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * gammaWall / 2
+                * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
@@ -310,18 +329,23 @@ class BoltzmannSolver:
                 collisionArray,
                 optimize=True,
             )
-
-        ##### total operator #####
-        operator = (
-            liouville
-            + TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+        # including factored-out T^2 in collision integrals
+        collisionArray = (
+            (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
             * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
+        ##### total operator #####
+        operator = liouville + collisionArray
+
+        # doing matrix-like multiplication
+        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
+
         # reshaping indices
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
-        source = np.reshape(source, N_new)
-        operator = np.reshape(operator, (N_new, N_new), order="F")
+        source = np.reshape(source, N_new, order="C")
+        operator = np.reshape(operator, (N_new, N_new), order="C")
 
         # returning results
         return operator, source
@@ -341,9 +365,10 @@ class BoltzmannSolver:
                     metadata.attrs["Basis Type"], 'unicode_escape',
                 )
                 BoltzmannSolver.__checkBasis(basisType)
-                collisionArray = np.array(file[particle.name][:])
-                print("Multiplying by first particle collision prefactor.")
-                collisionArray *= particle.collisionPrefactors[0]
+
+                # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
+                datasetName = particle.name + ", " + particle.name
+                collisionArray = np.array(file[datasetName][:])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
@@ -355,7 +380,8 @@ class BoltzmannSolver:
         """
         dir = "../data"
         suffix = "hdf5"
-        return f"{dir}/collisions_N{self.grid.N}.{suffix}"
+        # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
+        return f"{dir}/collisions_top_top_N{self.grid.N}.{suffix}"
 
     def __checkBasis(basis):
         """
@@ -363,3 +389,20 @@ class BoltzmannSolver:
         """
         bases = ["Cardinal", "Chebyshev"]
         assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
+
+    @staticmethod
+    def __feq(x, statistics):
+        if np.isclose(statistics, 1, atol=1e-14):
+            return 1 / np.expm1(x)
+        else:
+            return 1 / (np.exp(x) + 1)
+
+    @staticmethod
+    def __dfeq(x, statistics):
+        x = np.asarray(x)
+        if np.isclose(statistics, 1, atol=1e-14):
+            return np.where(x > 100, -np.exp(-x), -np.exp(x) / np.expm1(x) ** 2)
+        else:
+            return np.where(
+                x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
+            )
