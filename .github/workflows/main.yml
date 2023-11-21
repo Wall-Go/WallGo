@@ -1,4 +1,4 @@
-name: Python tests
+name: WallGo tests
 
 on:
   pull_request:
@@ -6,10 +6,13 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
+      
+      # If true, Github will cancel all other jobs in the matrix if any of them fails 
+      fail-fast: false
+
       matrix:
         os: [ubuntu-latest, macos-latest]
         build_type: [Release]
@@ -29,33 +32,68 @@ jobs:
             c_compiler: gcc
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Set reusable strings
+        # Define useful strings like the path to build dir 
+        id: strings
+        shell: bash
+        run: |
+          echo "collision-root-dir=${{ github.workspace }}/Collision" >> "$GITHUB_OUTPUT"
+          echo "collision-build-dir=${{ github.workspace }}/Collision/build" >> "$GITHUB_OUTPUT"
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install WallGo Python package
         run: pip install .[collisions,tests]
+
       - name: Install os-dependent Collision requirements
         run: |
              if [ "$RUNNER_OS" == "Linux" ]; then
                sudo apt-get update
                sudo apt-get install libgsl-dev libhdf5-dev
              elif [ "$RUNNER_OS" == "macOS" ]; then
-               brew remove azure-cli 
-               brew update 
-               brew install qt@5 xz ccache zstd webp
-               brew install gsl, hdf5
+               brew update
+               brew install gsl hdf5
              else
                echo "$RUNNER_OS not supported"
                exit 1
              fi
-      - name: Install Collision
+
+      - name: Clone muparser repository
+        uses: actions/checkout@v4
+        with:
+          repository: beltoforion/muparser
+          path: muparser
+      
+      - name: Install muparser
+      # Will install muparser without OpenMP support, our program doesn't need it here. ldconfig seems to be required for linux builds
         run: |
-             mkdir -p Collision/build; cd Collision/build
-             cmake ..; make; make install
-             cd ../..
+             if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+               cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
+             fi
+             if [ "$RUNNER_OS" == "Linux" ]; then
+               sudo ldconfig
+             fi
+
+      - name: Configure CMake for Collision
+        run: >
+          cmake -B ${{ steps.strings.outputs.collision-build-dir }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ steps.strings.outputs.collision-root-dir }}
+
+      - name: Build and install Collision
+        run: |
+          cmake --build ${{ steps.strings.outputs.collision-build-dir }} --config ${{ matrix.build_type }}
+          cmake --install ${{ steps.strings.outputs.collision-build-dir }}
+          
       - name: Run Collision
-        run: cd data; ../Collision/bin/Collision -n 5
+        run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 3
+
       - name: Test with pytest
-        run: pytest -v tests
+        run: cd tests && pytest -v
