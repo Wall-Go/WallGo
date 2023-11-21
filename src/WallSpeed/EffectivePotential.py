@@ -241,6 +241,8 @@ class EffectivePotential(ABC):
             bosonic particle spectrum (here: masses, number of dofs, ci)
         fermions : array of floats
             fermionic particle spectrum (here: masses, number of dofs)
+        RGscale: float
+            RG scale of the effective potential
 
         Returns
         -------
@@ -259,9 +261,9 @@ class EffectivePotential(ABC):
         return V/(64*np.pi*np.pi)
 
 
-    def pressureLO(self, bosons, fermions, T):
+    def pressureLO(self, bosons, fermions, T: npt.ArrayLike):
         """
-        Computes the leading order pressure
+        Computes the leading order pressure for the light degrees of freedom
         depending on the effective degrees of freedom.
         
         Parameters
@@ -270,10 +272,11 @@ class EffectivePotential(ABC):
             bosonic particle spectrum (here: masses, number of dofs, ci)
         fermions : array of floats
             fermionic particle spectrum (here: masses, number of dofs)
+        T : ArrayLike 
 
         Returns
         -------
-        pressureLO : LO contribution to the pressure
+        pressureLO : LO contribution to the pressure of light degrees of freedom
 
         """
 
@@ -287,21 +290,26 @@ class EffectivePotential(ABC):
         V = 0
         if self.num_boson_dof is not None:
             nb = self.num_boson_dof - np.sum(nb)
-            V -= nb * np.pi**4 / 45.
+            V -= nb * np.pi*np.pi / 90.
         if self.num_fermion_dof is not None:
             nf = self.num_fermion_dof - np.sum(nf)
-            V -= nf * 7*np.pi**4 / 360.
+            V -= nf * 7*np.pi*np.pi / 720.
 
-        return V*T4/(2*np.pi*np.pi)
+        return V*T4
 
 
     @staticmethod
-    def V1T(bosons, fermions, temperature: float):
+    def V1T(bosons, fermions, temperature: npt.ArrayLike):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
         Parameters
         ----------
+        bosons : ArrayLike 
+            bosonic particle spectrum (here: masses, number of dofs, ci)
+        fermions : ArrayLike 
+            fermionic particle spectrum (here: masses, number of dofs)
+        temperature: ArrayLike 
 
         Returns
         -------
@@ -315,7 +323,7 @@ class EffectivePotential(ABC):
             T = T[:, np.newaxis]
 
         m2,nb,_ = bosons
-        T2 = (T*T)[..., np.newaxis] + 1e-100
+        T2 = (T*T) + 1e-100
 
         ## NB: Jb, Jf take (mass/T)^2 as input, np.array is OK
 
@@ -323,6 +331,3 @@ class EffectivePotential(ABC):
         m2,nf = fermions
         V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T2), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
-
-    
-
