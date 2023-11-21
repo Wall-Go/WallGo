@@ -45,16 +45,20 @@ class FreeEnergy(InterpolatableFunction):
         if (np.any(fieldWentToZero)):
             return np.nan ### TODO correct shape!!!!!!!!!!!!!!!!
         
-        
+        ## For scalar input let's return a 1D numpy array. Note ordering
         if (np.isscalar(temperature)):
-            return phaseLocation, potentialAtMinimum
+
+            res = np.asanyarray(phaseLocation)
+            res = np.append(phaseLocation, potentialAtMinimum)
+
+            return res
         
         else:
             # reshape so that potentialAtMinimum is a column vector
             potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
 
-            # Join the arrays so that potentialAtMinimum is the first column and the others are as in phaseLocation
-            result = np.concatenate((potentialAtMinimum_column, phaseLocation), axis=1)
+            # Join the arrays so that potentialAtMinimum is the last column and the others are as in phaseLocation
+            result = np.concatenate((phaseLocation, potentialAtMinimum_column), axis=1)
             return result
 
 
