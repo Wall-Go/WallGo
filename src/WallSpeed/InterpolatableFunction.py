@@ -42,10 +42,11 @@ class InterpolatableFunction(ABC):
 
 
     def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1):
-
+        """ Optional argument returnValueCount should be set by the user if using list-valued functions.
+        """
         ## Vector-like functions can return many values from one input, user needs to specify this when constructing the object
         assert returnValueCount >= 1
-        self.__RETURN_VALUE_COUNT = returnValueCount
+        self.__RETURN_VALUE_COUNT = returnValueCount  # TODO deprecate this, seems unnecessary
         
 
         if (bUseAdaptiveInterpolation): 
@@ -71,30 +72,37 @@ class InterpolatableFunction(ABC):
 
     @abstractmethod
     def _functionImplementation(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        # Override this with the function return value.
-        # Do not call this directly, use the __call__ functionality instead. 
-        # If the function value is invalid for whatever reason, you should return np.nan. 
-        # This will guarantee that the invalid values are not included in interpolations
-        # 
-        # The return value can be a scalar, or a list if the function is vector valued. 
-        # Can also be a numpy array, in which case the function should be applied element-wise. 
-        # The number of elements returned needs to match self.__RETURN_VALUE_COUNT;
-        # for numpy array input, list length self.__RETURN_VALUE_COUNT for each x value.
-        # A list containing np.nan anywhere in the list is interpreted as a failed evaluation, and
-        # this input x is not included in interpolation
+        """
+        Override this with the function return value.
+        Do not call this directly, use the __call__ functionality instead. 
+        If the function value is invalid for whatever reason, you should return np.nan. 
+        This will guarantee that the invalid values are not included in interpolations
+        
+        The return value can be a scalar, or a list if the function is vector valued. 
+        Can also be a numpy array, in which case the function should be applied element-wise. 
+        The number of elements returned needs to match self.__RETURN_VALUE_COUNT;
+        for numpy array input, list length self.__RETURN_VALUE_COUNT for each x value.
+        A list containing np.nan anywhere in the list is interpreted as a failed evaluation, and
+        this input x is not included in interpolation
+        """
         pass
 
 
 
     """ Non abstracts """
 
-    def enableAdaptiveInterpolation(self):
+    def enableAdaptiveInterpolation(self) -> None:
+        """ Enables adaptive interpolation functionality. 
+        Will clear internal work arrays."""
         self.__bUseAdaptiveInterpolation = True
         self.__directEvaluateCount = 0
         self.__directlyEvaluatedAt: list[float] = []
 
-    def disableAdaptiveInterpolation(self):
+    def disableAdaptiveInterpolation(self) -> None:
+        """ Disables adaptive interpolation functionality.
+        """
         self.__bUseAdaptiveInterpolation = False
+
 
 
     def newInterpolationTable(self, xMin: float, xMax: float, numberOfPoints: int) -> None:
@@ -107,8 +115,9 @@ class InterpolatableFunction(ABC):
 
 
 
-    ## Like initializeInterpolationTable but takes in precomputed function values 'fx'
     def newInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
+        """Like initializeInterpolationTable but takes in precomputed function values 'fx'
+        """
         self.__interpolate(x, fx)
 
 
@@ -192,12 +201,11 @@ class InterpolatableFunction(ABC):
             return results
         
 
-    """Evaluate the function directly based on _functionImplementation, instead of using interpolations.
-    This also accumulates data for the adaptive interpolation functionality which is best kept separate from 
-    the abstract _functionImplementation method.
-    """
-    def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike:
-        
+    def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike: 
+        """Evaluate the function directly based on _functionImplementation, instead of using interpolations.
+        This also accumulates data for the adaptive interpolation functionality which is best kept separate from 
+        the abstract _functionImplementation method.
+        """
         fx = self._functionImplementation(x)
 
         if (self.__bUseAdaptiveInterpolation and bScheduleForInterpolation):
@@ -220,7 +228,10 @@ class InterpolatableFunction(ABC):
         self.__interpolationValues = fx
 
         
-    def __updateInterpolationTable(self):
+    
+    def __updateInterpolationTable(self) -> None:
+        """ Handles interpolation table updates for adaptive interpolation.
+        """
 
         ## Where did the new evaluations happen
         evaluatedPointMin = np.min(self.__directlyEvaluatedAt)
@@ -288,7 +299,7 @@ class InterpolatableFunction(ABC):
 
 
     ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
-    def readInterpolationTable(self, fileToRead: str):
+    def readInterpolationTable(self, fileToRead: str) -> None:
 
         # for logging
         selfName = self.__class__.__name__
@@ -324,9 +335,9 @@ class InterpolatableFunction(ABC):
 
 
 
-    def writeInterpolationTable(self, outputFileName: str):
-        
-
+    def writeInterpolationTable(self, outputFileName: str) -> None:
+        """ Write our interpolation table to file.
+        """
         try:
             ## Write to file, line i is of form: x[i] fx[i]. If our function is vector valued then x[i] fx1[i] fx2[i] ...
 
@@ -340,12 +351,14 @@ class InterpolatableFunction(ABC):
     
 
 
-    ## Test self.values with some input. Result should agree with self.evaluate(x)
-    def __validateInterpolationTable(self, x: float, absoluteTolerance: float = 1e-6):
+    ## Test the interpolation table with some input. Result should agree with self.__evaluateDirectly(x)
+    def __validateInterpolationTable(self, x: float, absoluteTolerance: float = 1e-6) -> bool:
         
         if (self.__interpolatedFunction == None or not ( self.__rangeMin <= x <= self.__rangeMax)):
             print(f"{self.__class__.__name__}: __validateInterpolationTable called, but no valid interpolation table was found.")
+            return False
 
         diff = self.__interpolatedFunction(x) - self._functionImplementation(x)
         if (np.any(np.abs(diff) > absoluteTolerance)):
             print(f"{self.__class__.__name__}: Could not validate interpolation table! Value discrepancy was {diff}")
+            return False

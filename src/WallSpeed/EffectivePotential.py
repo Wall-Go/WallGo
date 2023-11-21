@@ -1,4 +1,6 @@
 import numpy as np
+import numpy.typing as npt
+from typing import Tuple
 from abc import ABC, abstractmethod ## Abstract Base Class
 import cmath # complex numbers
 import scipy.optimize
@@ -90,13 +92,17 @@ class EffectivePotential(ABC):
 
     #### Non-abstract stuff from here on
 
-    ## Finds a local minimum starting from a given initial configuration of background fields.
-    ## Feel free to override this if your model requires more delicate minimization.
-    def findLocalMinimum(self, initialGuess: np.ndarray[float], temperature: float) -> tuple:
+    def findLocalMinimum(self, initialGuess: list[float], temperature: npt.ArrayLike) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         """
+        Finds a local minimum starting from a given initial configuration of background fields.
+        Feel free to override this if your model requires more delicate minimization.
+
         Returns
         -------
-        minimum, functionValue : tuple, location x of the minimum and value of Veff(x) 
+        minimum, functionValue : tuple. 
+        minimum: list[float] is the location x of the minimum in field space.
+        functionValue: float is Veff(x) evaluated at the minimum .
+        If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
         # I think we'll need to manually vectorize this wrt. T
@@ -161,7 +167,7 @@ class EffectivePotential(ABC):
         ## start from TMin and increase temperature in small steps until the free energy difference changes sign
 
         T = TMin
-        dT = 0.5
+        dT = 0.5 # If this is too large the high-T phase may disappear before we see the free-energy sign change. TODO better solution
         signAtStart = np.sign(freeEnergyDifference(T))
         bConverged = False
 
@@ -175,14 +181,12 @@ class EffectivePotential(ABC):
             raise RuntimeError("Could not find critical temperature")
 
 
-        # Improve Tc estimate by DeltaF = 0 in narrow range near the above T 
+        # Improve Tc estimate by solving DeltaF = 0 in narrow range near the above T 
 
         # NB: bracket will break if the function has same sign on both ends. The rough loop above should prevent this.
         rootResults = scipy.optimize.root_scalar(freeEnergyDifference, bracket=(T-dT, T), rtol=1e-8, xtol=1e-8)
 
-        # LN: In general root_scalar doesn't seem to work very well. 
-        # I think there's an issue if the low-T phase becomes unstable very quickly at T > Tc, and our initial dT was too large
-        
+
         return rootResults.root
         #return T - dT/2. # use this if the root_scalar thing doesn't work?
 
@@ -228,11 +232,8 @@ class EffectivePotential(ABC):
     ## LN: Why is this separate from Jcw?
     def V1(self, bosons, fermions, RGScale: float):
         """
-        The one-loop corrections to the zero-temperature potential
-        using MS-bar renormalization.
-
-        This is generally not called directly, but is instead used by
-        :func:`Vtot`.
+        One-loop corrections to the zero-temperature effective potential
+        in dimensional regularization.
 
         Parameters
         ----------
@@ -243,9 +244,11 @@ class EffectivePotential(ABC):
 
         Returns
         -------
-        V1 : 1loop vacuum contribution to the pressure
-
+        V1 : float 
         """
+
+        ## LN: should the return value actually be complex in general?
+
         m2, nb, c = bosons
         V = np.sum(self.Jcw(m2,nb,c, RGScale), axis=-1)
 
@@ -273,6 +276,9 @@ class EffectivePotential(ABC):
         pressureLO : LO contribution to the pressure
 
         """
+
+        # TODO is this function OK with array input?
+
         T4 = T*T*T*T
 
         _,nb,_ = bosons
@@ -294,25 +300,6 @@ class EffectivePotential(ABC):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
-        This is generally not called directly, but is instead used by
-        :func:`Vtot`.
-
-        Note
-        ----
-        The `Jf` and `Jb` functions used here are
-        aliases for :func:`finiteT.Jf_spline` and :func:`finiteT.Jb_spline`,
-        each of which accept mass over temperature *squared* as inputs
-        (this allows for negative mass-squared values, which I take to be the
-        real part of the defining integrals.
-
-        .. todo::
-            Implement new versions of Jf and Jb that return zero when m=0, only
-            adding in the field-independent piece later if
-            ``include_radiation == True``. This should reduce floating point
-            errors when taking derivatives at very high temperature, where
-            the field-independent contribution is much larger than the
-            field-dependent contribution.
-
         Parameters
         ----------
 
@@ -321,23 +308,16 @@ class EffectivePotential(ABC):
         V1T : 4d 1loop thermal potential 
         """ 
         
-        """ ??????
-        T2 = (T*T)[..., np.newaxis] + 1e-100
-             # the 1e-100 is to avoid divide by zero errors
-        T4 = T*T*T*T
-        """
-        #T = np.asanyarray(temperature)
-
-        ## LN: m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
+        ## m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
         # But make sure we don't modify the input temperature array here. 
         T = np.atleast_1d(temperature)
         if (len(T) > 1):
             T = T[:, np.newaxis]
 
-        # pressureLO above probably needs fixing too
-
         m2,nb,_ = bosons
         T2 = (T*T)[..., np.newaxis] + 1e-100
+
+        ## NB: Jb, Jf take (mass/T)^2 as input, np.array is OK
 
         V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T2), axis=-1)
         m2,nf = fermions
