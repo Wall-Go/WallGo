@@ -119,7 +119,6 @@ int main(int argc, char *argv[]) {
 			case 'n':
 				// NB: atoi is not the best option as it will happily interpret eg. "20dog" as 20
 				basisSizeN = std::atoi(optarg);
-				std::cout << "Running with basis size "<< basisSizeN << "\n";
 				break;
 			case 'w':
 				std::cout << "== Running HDF5 output test ==\n";
@@ -155,6 +154,8 @@ int main(int argc, char *argv[]) {
 	} else {
 		return 3;
 	}
+
+	std::cout << "Running with basis size "<< basisSizeN << "\n";
 
 
 	gslWrapper::initializeRNG();
