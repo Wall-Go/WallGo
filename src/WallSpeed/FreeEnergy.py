@@ -7,7 +7,7 @@ from .EffectivePotential import EffectivePotential
 class FreeEnergy(InterpolatableFunction):
 
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess):
-        super().__init__()
+        super().__init__(returnValueCount=3)
         # super().__init__(bUseAdaptiveInterpolation=False)
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
@@ -38,9 +38,7 @@ class FreeEnergy(InterpolatableFunction):
         fieldWentToZero = (np.abs(self.phaseLocationGuess) > 1.0) & (np.abs(phaseLocation) < 1e-4)
         if (np.any(fieldWentToZero)):
             return np.nan
-
-        return potentialAtMinimum
-
-
+        
+        return np.append(phaseLocation,potentialAtMinimum)
 
 

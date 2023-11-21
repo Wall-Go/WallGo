@@ -78,8 +78,8 @@ class Thermodynamics:
         """
         # pressure = -free energy density = -Veff at minimum
         # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
-        # __, VeffValue = self.freeEnergyHigh(T)
-        VeffValue = self.freeEnergyHigh(T)
+        *_, VeffValue = self.freeEnergyHigh(T)
+        print(VeffValue)
         return -VeffValue
 
     def dpHighT(self, T):
@@ -208,8 +208,8 @@ class Thermodynamics:
         """
         # pressure = -free energy density = -Veff at minimum
         # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseLowT, T)
-        # __, VeffValue = self.freeEnergyLow(T)
-        VeffValue = self.freeEnergyLow(T)
+        *_, VeffValue = self.freeEnergyLow(T)
+        print(VeffValue)
         return -VeffValue
 
     def dpLowT(self, T):
