@@ -103,6 +103,25 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     fEq2 = __feq(EPlasma / T, statistics)
     fEq1 = __feq(EPlasma1 / T1, statistics)
 
+    # Possibly changing the basis for the equilibrium distributions
+    fEq2 = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                fEq2,
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisM, "z"),
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisN, "pz"),
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisN, "pp"),
+                optimize=True,
+            )
+    
+    fEq1 = np.einsum(
+                "abc, ai, bj, ck -> ijk",
+                fEq1,
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisM, "z", endpoints=True),
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisN, "pz"),
+                boltzmannSolver.poly.matrix(boltzmannSolver.basisN, "pp"),
+                optimize=True,
+            )
+
     dfEq = __dfeq(EPlasma / T, statistics)
     warnings.filterwarnings(
         "default", message="overflow encountered in exp"
