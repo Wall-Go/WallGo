@@ -35,7 +35,7 @@ class WallGoManager:
 
     ### WallGo objects. do we really need all of these?
     #freeEnergy: FreeEnergy # I kinda feel this is redundant (effective potential)
-    thermo: Thermodynamics
+    thermodynamics: Thermodynamics
     hydro: Hydro
     grid: Grid
     # ...
@@ -59,7 +59,7 @@ class WallGoManager:
 
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
 
-        self.hydro = Hydro(self.thermodynamics)
+        self.initHydro(self.thermodynamics)
 
 
         ## I think this is where we'd validate/init collision integrals and then end the __init__
@@ -108,6 +108,11 @@ class WallGoManager:
 
 
 
+    def initHydro(self, thermodynamics: Thermodynamics) -> None:
+        self.hydro = Hydro(thermodynamics)
+
+
+
     def initGrid(self, M: int, N: int) -> Grid:
         r"""
         Parameters
@@ -123,6 +128,7 @@ class WallGoManager:
         ## LN: What are these magic numbers? Why does this need the temperature??
         self.grid = Grid(M, N, 0.05, 100)
         
+
 
     # Call after initGrid. I guess this would be the main workload function 
     def solveWall(self):
@@ -140,6 +146,7 @@ class WallGoManager:
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
         #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
         print(f"LTE wall speed: {eom.wallVelocityLTE}")
+        
 
         #With out-of-equilibrium contributions
         #eomOffEq = EOM(outOfEqParticle, thermodynamics, hydro, grid, numberOfFields, includeOffEq=True)

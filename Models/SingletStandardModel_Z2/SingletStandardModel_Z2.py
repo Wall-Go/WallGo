@@ -367,13 +367,15 @@ def main():
     # At this point we should have all required input from the user
     # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
 
-    res=manager.hydro.findHydroBoundaries(0.5229)
-    print(res)
+    c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
 
-    # M, N = 20, 20
-    # manager.initGrid(M, N)
+    print("findHydroBoundaries() result:")
+    print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
 
-    # manager.solveWall()
+    M, N = 20, 20
+    manager.initGrid(M, N)
+
+    manager.solveWall()
 
     
 
