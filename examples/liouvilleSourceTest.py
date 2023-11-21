@@ -1,5 +1,5 @@
 """
-A first example.
+Testing the construction of the Liouville operator and the source terms in the Boltzmann equation
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
@@ -13,9 +13,7 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 import warnings
 
 
-"""
-Test objects
-"""
+
 def __feq(x, statistics):
     if np.isclose(statistics, 1, atol=1e-14):
         return 1 / np.expm1(x)
@@ -30,21 +28,20 @@ def __dfeq(x, statistics):
         return np.where(
             x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
         )
-        
+
+"""
+Test objects
+"""    
 def buildSourceAndShouldBeSource(boltzmannSolver):
     """
-    Constructs matrix and source for Boltzmann equation.
-
-    Note, we make extensive use of numpy's broadcasting rules.
+    Constructs the source for Boltzmann equation,
+    and a should-be source using the Liouville operator.
     """
     # coordinates
     xi, pz, pp = boltzmannSolver.grid.getCoordinates()  # non-compact
     xi = xi[:, np.newaxis, np.newaxis]
     pz = pz[np.newaxis, :, np.newaxis]
     pp = pp[np.newaxis, np.newaxis, :]
-
-    # compactified coordinates
-    chi, rz, rp = boltzmannSolver.grid.getCompactCoordinates() # compact
 
     # intertwiner matrices
     TChiMat = boltzmannSolver.poly.matrix(boltzmannSolver.basisM, "z")
@@ -73,16 +70,12 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
     msq1 = boltzmannSolver.particle.msqVacuum(field1)
     E1 = np.sqrt(msq1 + pz**2 + pp**2)
 
-    # fit the background profiles to polynomial
-#        print(numpy.polynomial.chebyshev.chebfit(chi, boltzmannSolver.background.temperatureProfile, boltzmannSolver.grid.M))
-#        print(np.shape(numpy.polynomial.chebyshev.chebfit(chi, boltzmannSolver.background.temperatureProfile, boltzmannSolver.grid.M)))
     Tpoly = Polynomial2(boltzmannSolver.background.temperatureProfile, boltzmannSolver.grid,  'Cardinal','z', True)
     msqpoly = Polynomial2(boltzmannSolver.particle.msqVacuum(boltzmannSolver.background.fieldProfile) ,boltzmannSolver.grid,  'Cardinal','z', True)
     vpoly = Polynomial2(boltzmannSolver.background.velocityProfile, boltzmannSolver.grid,  'Cardinal','z', True)
 
     # dot products with wall velocity
     gammaWall = 1 / np.sqrt(1 - vw**2)
-    EWall = gammaWall * (E - vw * pz)
     PWall = gammaWall * (pz - vw * E)
 
     # dot products with plasma profile velocity
@@ -142,17 +135,6 @@ def buildSourceAndShouldBeSource(boltzmannSolver):
 
     sbSource1 = -np.einsum("abcijk,ijk->abc", liouville1, fEq1)
     sbSource2 = -np.einsum("abcijk,ijk->abc", liouville2, fEq2)
-
-    """
-
-    # doing matrix-like multiplication
-    N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
-
-    # reshaping indices
-    N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
-    source = np.reshape(source, N_new, order="C")
-    liouville = np.reshape(liouville, (N_new, N_new), order="C")
-    """
 
     # returning results
     return source, sbSource1+sbSource2
