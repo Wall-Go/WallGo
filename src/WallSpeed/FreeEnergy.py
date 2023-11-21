@@ -43,8 +43,18 @@ class FreeEnergy(InterpolatableFunction):
         # Here is a check that should catch "symmetry-breaking" type transitions where a field is 0 in one phase and nonzero in another
         fieldWentToZero = (np.abs(self.phaseLocationGuess) > 1.0) & (np.abs(phaseLocation) < 1e-4)
         if (np.any(fieldWentToZero)):
-            return np.nan
+            return np.nan ### TODO correct shape!!!!!!!!!!!!!!!!
         
-        return np.append(phaseLocation,potentialAtMinimum)
+        
+        if (np.isscalar(temperature)):
+            return phaseLocation, potentialAtMinimum
+        
+        else:
+            # reshape so that potentialAtMinimum is a column vector
+            potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
+
+            # Join the arrays so that potentialAtMinimum is the first column and the others are as in phaseLocation
+            result = np.concatenate((potentialAtMinimum_column, phaseLocation), axis=1)
+            return result
 
 
