@@ -154,8 +154,8 @@ class EffectivePotential(ABC):
 
 
     ## Find Tc for two minima, search only range [TMin, TMax].
-    ## Feel free to override this.
-    def findCriticalTemperature(self, minimum1: np.ndarray[float], minimum2: np.ndarray[float], TMin: float, TMax: float):
+    ## Feel free to override this if your potential needs a more sophisticated minimization algorithm.
+    def findCriticalTemperature(self, minimum1: np.ndarray[float], minimum2: np.ndarray[float], TMin: float, TMax: float) -> float:
 
         if (TMax < TMin):
             raise ValueError("findCriticalTemperature needs TMin < TMax")
