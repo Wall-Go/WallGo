@@ -45,6 +45,7 @@ class FreeEnergy(InterpolatableFunction):
         if (np.any(fieldWentToZero)):
             return np.nan ### TODO correct shape!!!!!!!!!!!!!!!!
         
+        
         ## For scalar input let's return a 1D numpy array. Note ordering
         if (np.isscalar(temperature)):
 
