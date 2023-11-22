@@ -224,18 +224,6 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
         + 1 / 2 * dmsqdChi * uwBaruPl
     )
 
-    """
-    sMomShape = source[0].shape
-    source = np.insert(source, 0, np.zeros(sMomShape), axis=0)
-    source = np.append(source, [np.zeros(sMomShape)], axis=0)
-    """
-
-    print(dchidxi1.shape)
-    print(PWall1.shape)
-    print(derivChi.shape)
-    print(dmsqdChi1.shape)
-    print(TChiMat.shape)
-
     ##### liouville operator #####
     liouvilleTooLarge = (
         dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -257,10 +245,16 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
     liouville = liouvilleTooLarge[:,:,:,1:-1,:,:]
     liouville[:,:,:,0,:,:] = liouville[:,:,:,0,:,:] + liouvilleTooLarge[:,:,:,0,:,:]
     liouville[:,:,:,-1,:,:] = liouville[:,:,:,-1,:,:] + liouvilleTooLarge[:,:,:,-1,:,:]
+    
+    N_new = (boltzmannSolver.grid.M - 1) * (boltzmannSolver.grid.N - 1) * (boltzmannSolver.grid.N - 1)
+    fEq2Flat = np.reshape(fEq2, N_new, order="C")
+    liouvilleFlat = np.reshape(liouville, (N_new, N_new), order="C")
 
-    sbSource = -np.einsum("abcijk,ijk->abc", liouville, fEq2)
+    #sbSource = -np.einsum("abcijk,ijk->abc", liouville, fEq2)
+    sbSource = -np.einsum("ai,i->a", liouvilleFlat, fEq2Flat)
 
-    # returning results
+    sbSource = np.reshape(sbSource, (boltzmannSolver.grid.M - 1, boltzmannSolver.grid.N - 1, boltzmannSolver.grid.N - 1), order="C")
+
     return source, sbSource
 
 """
@@ -314,6 +308,26 @@ boltzmann = BoltzmannSolver(grid, background, particle, basisN="Cardinal")
 """
 Testing the Boltzmann solver
 """
+
+
+fEq, sbFEq = buildEqDistrAndShouldBeEqDistr(boltzmann)
+
+plt.plot(boltzmann.grid.xiValues, fEq[:,10,0], label=r"$S$")
+plt.plot(boltzmann.grid.xiValues, sbFEq[:,10,0], label=r"$\tilde{S}=-L f_{eq}$")
+plt.plot(boltzmann.grid.xiValues, (sbFEq-fEq)[:,10,0], label=r"$-(L f_{eq}+S)$")
+plt.xlabel(r"$\xi$")
+plt.legend()
+plt.show()
+
+plt.plot(fEq.flatten(), label=r"$S$")
+plt.plot(sbFEq.flatten(), label=r"$\tilde{S}=-L f_{eq}$", alpha=0.5)
+plt.plot((sbFEq-sbFEq).flatten(), label=r"$-(L f_{eq}+S)$")
+plt.legend()
+plt.show()
+
+
+exit()
+
 source, sbSource = buildEqDistrAndShouldBeEqDistr(boltzmann)
 
 plt.plot(boltzmann.grid.xiValues, source[:,10,0], label=r"$S$")
