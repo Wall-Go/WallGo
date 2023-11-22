@@ -182,6 +182,7 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
     # dot products with wall velocity
     gammaWall = 1 / np.sqrt(1 - vw**2)
     PWall = gammaWall * (pz - vw * E)
+    PWall1 = gammaWall * (pz - vw * E1)
 
     # dot products with plasma profile velocity
     gammaPlasma = 1 / np.sqrt(1 - v**2)
@@ -197,11 +198,14 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
     dTdChi = Tpoly.derivative(0).coefficients[1:-1, None, None]
     dvdChi = vpoly.derivative(0).coefficients[1:-1, None, None]
     dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
+    dmsqdChi1 = msqpoly.derivative(0).coefficients[:, None, None]
     
     # derivatives of compactified coordinates
     dchidxi, drzdpz, drpdpp = boltzmannSolver.grid.getCompactificationDerivatives()
     dchidxi = dchidxi[:, np.newaxis, np.newaxis]
     drzdpz = drzdpz[np.newaxis, :, np.newaxis]
+    dchidxi1, drzdpz1, drpdpp1 = boltzmannSolver.grid.getCompactificationDerivatives(endpoints=True)
+    dchidxi1 = dchidxi1[:, np.newaxis, np.newaxis]
 
     # equilibrium distribution, and its derivative
     warnings.filterwarnings("ignore", message="overflow encountered in exp")
@@ -220,8 +224,20 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
         + 1 / 2 * dmsqdChi * uwBaruPl
     )
 
+    """
+    sMomShape = source[0].shape
+    source = np.insert(source, 0, np.zeros(sMomShape), axis=0)
+    source = np.append(source, [np.zeros(sMomShape)], axis=0)
+    """
+
+    print(dchidxi1.shape)
+    print(PWall1.shape)
+    print(derivChi.shape)
+    print(dmsqdChi1.shape)
+    print(TChiMat.shape)
+
     ##### liouville operator #####
-    liouville = (
+    liouvilleTooLarge = (
         dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
@@ -236,7 +252,13 @@ def buildEqDistrAndShouldBeEqDistr(boltzmannSolver):
             * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
     )
 
-    sbSource = -np.einsum("abcijk,ijk->abc", liouville, fEq1)
+    #sbSourceNoBc = -np.einsum("abcijk,ijk->abc", liouvilleTooLarge, fEq1)
+
+    liouville = liouvilleTooLarge[:,:,:,1:-1,:,:]
+    liouville[:,:,:,0,:,:] = liouville[:,:,:,0,:,:] + liouvilleTooLarge[:,:,:,0,:,:]
+    liouville[:,:,:,-1,:,:] = liouville[:,:,:,-1,:,:] + liouvilleTooLarge[:,:,:,-1,:,:]
+
+    sbSource = -np.einsum("abcijk,ijk->abc", liouville, fEq2)
 
     # returning results
     return source, sbSource
@@ -307,7 +329,7 @@ plt.plot((sbSource-source).flatten(), label=r"$-(L f_{eq}+S)$")
 plt.legend()
 plt.show()
 
-#exit()
+exit()
 
 source, sbSource = buildSourceAndShouldBeSource(boltzmann)
 
