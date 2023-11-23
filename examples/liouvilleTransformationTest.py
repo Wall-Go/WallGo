@@ -291,10 +291,11 @@ TppInv = np.linalg.inv(Tpp)
 
 mat = np.random.rand(19,19,19)
 matInCheb = cardToCheb(mat, TpzInv, TppInv)
-sbMat = chebToCard(matInCheb, poly)
 
-print(np.amin(np.abs(mat-sbMat)))
-print(np.amax(np.abs(mat-sbMat)))
+#Testing the coordinate transformation
+#sbMat = chebToCard(matInCheb, poly)
+#print("Testing the coordinate transformation", np.amin(np.abs(mat-sbMat)))
+#print("Testing the coordinate transformation", np.amax(np.abs(mat-sbMat)), "\n")
 
 """
 Testing the Boltzmann solver
@@ -335,15 +336,16 @@ sbFullRandSource = np.einsum(
                 optimize=True,
             )
 
-
+print("\nMin and max errors from the original one")
 print(np.amin(np.abs(randSource-sbRandSource)))
-print(np.amax(np.abs(randSource-sbRandSource)))
+print(np.amax(np.abs(randSource-sbRandSource)), "\n")
 
-print(np.amin(np.abs(randSource-sbTranspRandSource)))
-print(np.amax(np.abs(randSource-sbTranspRandSource)))
+#print(np.amin(np.abs(randSource-sbTranspRandSource)))
+#print(np.amax(np.abs(randSource-sbTranspRandSource)))
 
+print("Min and max errors from the hacked one")
 print(np.amin(np.abs(randSource-sbFullRandSource)))
-print(np.amax(np.abs(randSource-sbFullRandSource)))
+print(np.amax(np.abs(randSource-sbFullRandSource)), "\n")
 
 exit()
 
