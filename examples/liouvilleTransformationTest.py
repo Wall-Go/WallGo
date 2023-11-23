@@ -110,6 +110,66 @@ def buildLiouvilleOperator(self):
     # returning results
     return liouville
 
+ 
+def buildLiouvilleOperatorTransp(self):
+    """
+    Constructs matrix and source for Boltzmann equation.
+
+    Note, we make extensive use of numpy's broadcasting rules.
+    """
+    # coordinates
+    xi, pz, pp = self.grid.getCoordinates()  # non-compact
+    xi = xi[:, np.newaxis, np.newaxis]
+    pz = pz[np.newaxis, :, np.newaxis]
+    pp = pp[np.newaxis, np.newaxis, :]
+
+    # intertwiner matrices
+    TChiMat = self.poly.matrix(self.basisM, "z")
+    TRzMat = self.poly.matrix(self.basisN, "pz")
+    TRpMat = self.poly.matrix(self.basisN, "pp")
+
+    # derivative matrices
+    derivChi = self.poly.deriv(self.basisM, "z")
+    derivRz = self.poly.deriv(self.basisN, "pz")
+
+    # background profiles
+    vw = self.background.vw
+    msq = self.particle.msqVacuum(field)
+    E = np.sqrt(msq + pz**2 + pp**2)
+    
+    msqpoly = Polynomial2(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
+    
+    # dot products with wall velocity
+    gammaWall = 1 / np.sqrt(1 - vw**2)
+    PWall = gammaWall * (pz - vw * E)
+
+    # spatial derivatives of profiles
+    dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
+    
+    # derivatives of compactified coordinates
+    dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
+    dchidxi = dchidxi[:, np.newaxis, np.newaxis]
+    drzdpz = drzdpz[np.newaxis, :, np.newaxis]
+
+    ##### liouville operator #####
+    liouville = (
+        dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+            * np.transpose(TRzMat)[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+            * np.transpose(TRpMat)[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+        - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * gammaWall / 2
+            * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+            * np.transpose(TChiMat)[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+            * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+            * np.transpose(TRpMat)[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+    )
+
+    # returning results
+    return liouville
+
 
 """
 Grid
@@ -179,6 +239,7 @@ Testing the Boltzmann solver
 
 liouCheb = buildLiouvilleOperator(boltzmannCheb)
 liouCard = buildLiouvilleOperator(boltzmannCard)
+liouChebTransp = buildLiouvilleOperatorTransp(boltzmannCheb)
 
 
 randSource = np.einsum(
@@ -196,9 +257,19 @@ sbRandSource = np.einsum(
                 optimize=True,
             )
 
+cbTranspRandSource = np.einsum(
+                "qweabc, abc -> qwe",
+                liouChebTransp,
+                matInCheb,
+                optimize=True,
+            )
+
 
 print(np.amin(np.abs(randSource-sbRandSource)))
 print(np.amax(np.abs(randSource-sbRandSource)))
+
+print(np.amin(np.abs(randSource-cbTranspRandSource)))
+print(np.amax(np.abs(randSource-cbTranspRandSource)))
 
 exit()
 
