@@ -7,53 +7,9 @@ from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 
 from tests.Benchmarks.singletSM_Z2 import singletBenchmarks ## Gives a list of benchmark points for testing numbers
 
 ## These are all model dependent tests that focus on checking that effective potential gives right numbers for given benchmark points.
-## Ideally we'd have model-independent tests that check Veff functionality, and these model-dependent tests would be done elsewhere
+## Ideally we'd have model-independent tests that check Veff functionality,
+## and model-dependent tests would be done elsewhere, possibly as a part of a larger test that does a full wall speed calculation.
 
-"""
-def test_BenoitBenchmarkPoint(singletModelZ2, expectedResults):
-
-    # Get model fixture, automatically gets input dict as argument
-    model = singletModelZ2
-
-    ## Goal values
-    Tc = 108.22
-    Tn = 100
-    vJ = 0.6444
-    vw = 0.5229
-    c1 = -3331587978
-    c2 = 2976953742
-    Tplus = 103.1
-    Tminus = 100.1
-
-
-    userInput = {
-        "Tn" : Tn,
-        "phaseLocation1" : [ 0.0, 200.0 ],
-        "phaseLocation2" : [ 246.0, 0.0 ]
-    }
-    res = model.effectivePotential.evaluate([[110],[130]], 100)
-    assert res.shape == (1,)
-    assert res == pytest.approx([-1.19018205e09], rel=1e-3)
-
-    phaseLocation1, VeffValue1 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation1"], 100)
-    phaseLocation2, VeffValue2 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation2"], 100)
-    np.testing.assert_allclose(
-         [phaseLocation1,phaseLocation2], [[0.0, 104.86914171],[195.03215146, 0.0]], rtol=1e-4
-    )
-
-    Tcres= model.effectivePotential.findCriticalTemperature(phaseLocation1, phaseLocation2, TMin = Tn, TMax = 500)
-    assert Tcres == pytest.approx(Tc, rel=1e-2)
-    # free.interpolateMinima(0, 1.2 * Tc, 1)
-    phaseLocation1, VeffValue1 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation1"], Tn)
-    phaseLocation2, VeffValue2 = model.effectivePotential.findLocalMinimum(userInput["phaseLocation2"], Tn)
-    thermodynamics = WallSpeed.Thermodynamics(model.effectivePotential, Tcres, Tn, phaseLocation2, phaseLocation1)
-    hydro = WallSpeed.Hydro(thermodynamics)
-    res = hydro.vJ
-    assert res == pytest.approx(vJ, rel=1e-2)
-    res = hydro.findHydroBoundaries(vw)
-    np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-2)
-
-"""
 
 @pytest.mark.parametrize("BM, fields, temperature, expectedVeffValue", [
         (singletBenchmarks[0], [110, 130], 100, -1.19018205e+09),
@@ -89,8 +45,6 @@ def test_singletModelVeffValue(BM, fields: list, temperature: float, expectedVef
 def test_singletModelVeffValue_manyFieldPoints(BM, fields: list, temperature: float, expectedVeffValue: list[float]):
 
     relativeTolerance = 1e-6
-
-    ## Could also take model objects as inputs instead of BM. But doesn't really matter as long as the model is fast to construct
 
     model = SingletSM_Z2(BM.inputParams)
 
