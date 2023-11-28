@@ -22,6 +22,7 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      const size_t calls = config.getInt("Integration", "calls");
      const double relativeErrorGoal = std::fabs( config.getDouble("Integration", "relativeErrorGoal") );
      const int maxTries = config.getInt("Integration", "maxTries");
+     const bool bVerbose = config.getBool("Integration", "verbose");
 
      // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
      double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.}; // Lower limits
@@ -87,7 +88,9 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
 
           currentTries++;
           if (currentTries >= maxTries) {
-               std::cerr << "Warning: Integration failed to reach accuracy goal. Result: " << mean << " +/- " << error << "\n";
+               if (bVerbose) {
+                    std::cerr << "Warning: Integration failed to reach accuracy goal. Result: " << mean << " +/- " << error << "\n";
+               }
                break;
           }
      }

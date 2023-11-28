@@ -5,7 +5,6 @@ This lazy-loads the module into global CollisionModule variable.
 
 import importlib
 
-
 CollisionModule = None
 collisionModuleLoaded = False
 

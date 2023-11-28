@@ -74,7 +74,7 @@ def test_solution(particle, M, N):
     operator, source = boltzmann.buildLinearEquations()
 
     # checking difference
-    diff = operator @ deltaF.flatten(order="F") - source
+    diff = operator @ deltaF.flatten(order="C") - source
 
     # getting norms
     diffNorm = np.linalg.norm(diff)
