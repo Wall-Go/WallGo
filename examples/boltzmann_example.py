@@ -12,8 +12,8 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 """
 Grid
 """
-M = 10
-N = 10
+M = 20
+N = 20
 T = 100
 L = 5/T
 grid = Grid(M, N, L, T)

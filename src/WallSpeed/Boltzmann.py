@@ -313,7 +313,7 @@ class BoltzmannSolver:
 
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
-        collisionArray, collisionBasis, collisionN = BoltzmannSolver.readCollision(
+        collisionRaw, collisionBasis, collisionN = BoltzmannSolver.readCollision(
             collisionFile,
             self.particle,
         )
@@ -322,22 +322,24 @@ class BoltzmannSolver:
         if self.basisN != collisionBasis:
             TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
-            collisionArray = np.einsum(
-                "ac,bd,ijcd->ijab",
+            collisionRaw = np.einsum(
+                "ac,bd,cdij->abij",
                 TInvRzMat,
                 TInvRpMat,
-                collisionArray,
+                collisionRaw,
                 optimize=True,
             )
         # including factored-out T^2 in collision integrals
-        collisionArray = (
-            (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-            * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-            * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
+        collision = np.einsum(
+            "ijk,ia,bcjk->ijkabc",
+            T ** 2,
+            TChiMat,
+            collisionRaw,
+            optimize=True,
         )
 
         ##### total operator #####
-        operator = liouville + collisionArray
+        operator = liouville + collision
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
@@ -366,7 +368,7 @@ class BoltzmannSolver:
                 )
                 BoltzmannSolver.__checkBasis(basisType)
 
-                # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
+                # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now
                 datasetName = particle.name + ", " + particle.name
                 collisionArray = np.array(file[datasetName][:])
         except FileNotFoundError:
