@@ -62,7 +62,7 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmann = BoltzmannSolver(grid, background, particle)
+boltzmann = BoltzmannSolver(grid, background, particle, basisM="Cardinal", basisN="Chebyshev")
 print("BoltzmannSolver object =", boltzmann)
 operator, source = boltzmann.buildLinearEquations()
 print("operator.shape =", operator.shape)

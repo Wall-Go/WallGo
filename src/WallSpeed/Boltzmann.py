@@ -271,9 +271,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdChi = np.einsum("ij,jbc->ibc", derivChi, T, optimize=True)
-        dvdChi = np.einsum("ij,jbc->ibc", derivChi, v, optimize=True)
-        dmsqdChi = np.einsum("ij,jbc->ibc", derivChi, msq, optimize=True)
+        dTdChi = np.einsum("ij, jbc -> ibc", derivChi, T, optimize=True)
+        dvdChi = np.einsum("ij, jbc -> ibc", derivChi, v, optimize=True)
+        dmsqdChi = np.einsum("ij, jbc -> ibc", derivChi, msq, optimize=True)
 
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
@@ -297,18 +297,22 @@ class BoltzmannSolver:
 
         ##### liouville operator #####
         liouville = (
-            dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * gammaWall / 2
-                * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+            np.einsum(
+                "ijk, ia, jb, kc -> ijkabc",
+                dchidxi * PWall,
+                derivChi,
+                TRzMat,
+                TRpMat,
+                optimize=True,
+            )
+            - np.einsum(
+                "ijk, ia, jb, kc -> ijkabc",
+                gammaWall / 2 * dchidxi * drzdpz * dmsqdChi,
+                TChiMat,
+                derivRz,
+                TRpMat,
+                optimize=True,
+            )
         )
 
         ##### collision operator #####
@@ -323,7 +327,7 @@ class BoltzmannSolver:
             TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
             TInvRpMat = TInvRzMat
             collisionRaw = np.einsum(
-                "ac,bd,cdij->abij",
+                "ac, bd, cdij -> abij",
                 TInvRzMat,
                 TInvRpMat,
                 collisionRaw,
@@ -331,7 +335,7 @@ class BoltzmannSolver:
             )
         # including factored-out T^2 in collision integrals
         collision = np.einsum(
-            "ijk,ia,bcjk->ijkabc",
+            "ijk, ia, bcjk -> ijkabc",
             T ** 2,
             TChiMat,
             collisionRaw,
