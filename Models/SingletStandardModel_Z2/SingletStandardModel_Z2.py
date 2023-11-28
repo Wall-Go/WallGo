@@ -368,6 +368,8 @@ def main():
     # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
 
     c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
+    #adding this makes EOM complete but without sensible wallspeed
+    c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.01)
 
     print("findHydroBoundaries() result:")
     print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")

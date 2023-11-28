@@ -241,6 +241,7 @@ class EOM:
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
+        print(f"{wallVelocity=}")
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus)[:-1]
