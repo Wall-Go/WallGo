@@ -105,7 +105,7 @@ class BoltzmannSolver:
             deltaF = self.solveBoltzmannEquations()
             # putting deltaF on momentum coordinate grid points
             deltaFCoord = np.einsum(
-                "abc, ai, bj, ck -> ijk",
+                "abc, ia, jb, kc -> ijk",
                 deltaF,
                 self.poly.matrix(self.basisM, "z"),
                 self.poly.matrix(self.basisN, "pz"),
