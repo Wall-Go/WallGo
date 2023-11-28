@@ -1,7 +1,7 @@
 
-from WallSpeed.CollisionModuleLoader import CollisionModule
+from WallSpeed.CollisionModuleLoader import CollisionModule, collisionModuleLoaded
 from WallSpeed import Particle
-
+from WallSpeed import getPackagedDataPath
 
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
@@ -38,9 +38,14 @@ def constructPybindParticle(p: Particle, T: float):
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
 
 
+
+if (not collisionModuleLoaded):
+    raise RuntimeError("Can't run collision_example.py if the collision module is not loaded!")
+
 ## Module needs to be initialized before using. We probably want to call this in some common startup routine.
 # Argument is the config file name, we'll eventually want to read this from user input.
-CollisionModule.initModule("../Collision/config.ini")
+collisionDefaultConfig = getPackagedDataPath("WallSpeed.Config", "CollisionDefaults.ini")
+CollisionModule.initModule(collisionDefaultConfig)
 
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise

@@ -14,7 +14,8 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, macos-latest]
+#        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
         python-version: ["3.11"]
@@ -22,14 +23,14 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-          - os: macos-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+#          - os: macos-latest
+#            c_compiler: clang
+#            cpp_compiler: clang++
         exclude:
           - os: ubuntu-latest
             c_compiler: clang
-          - os: macos-latest
-            c_compiler: gcc
+#          - os: macos-latest
+#            c_compiler: gcc
 
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +57,9 @@ jobs:
                sudo apt-get update
                sudo apt-get install libgsl-dev libhdf5-dev
              elif [ "$RUNNER_OS" == "macOS" ]; then
-               brew update
+               brew remove azure-cli 
+               brew update 
+               brew install qt@5 xz ccache zstd webp
                brew install gsl hdf5
              else
                echo "$RUNNER_OS not supported"
