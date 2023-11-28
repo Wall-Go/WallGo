@@ -374,14 +374,13 @@ class BoltzmannSolver:
             raise
         return collisionArray, basisType, basisSize
 
+
     def __collisionFilename(self):
         """
         A filename convention for collision integrals.
         """
-        # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
 
-
-        # LN: We need to stop hardcoding file paths. Here using importlib to find a packaged data file
+        # LN: This is temporary, for release version we won't package collision files and certainly not hardcode them here
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
         return getPackagedDataPath("WallSpeed.Data", fileName)
