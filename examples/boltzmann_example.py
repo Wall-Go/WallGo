@@ -5,7 +5,7 @@ import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
 import matplotlib.pyplot as plt
 from scipy import integrate
-from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallSpeed.Boltzmann2 import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Polynomial2 import Polynomial2
 #from WallSpeed.eomHydro import findWallVelocityLoop
@@ -14,11 +14,11 @@ from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 """
 Grid
 """
-M = 20
-N = 20
+M = 40
+N = 19
 T = 100
 L = 5/T
-grid = Grid(M, N, L, T)
+grid = Grid(M, N, 0.35, T)
 poly = Polynomial(grid)
 
 """
