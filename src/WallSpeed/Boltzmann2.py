@@ -87,7 +87,7 @@ class BoltzmannSolver:
         collisionFile = self.__collisionFilename()
         self.readCollision(collisionFile, self.particle)
 
-    def getDeltas(self, deltaFCoord=None):
+    def getDeltas(self, deltaF=None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -95,9 +95,9 @@ class BoltzmannSolver:
 
         Parameters
         ----------
-        deltaFCoord : array_like, optional
+        deltaF : array_like, optional
             The deviation of the distribution function from local thermal
-            equilibrium, in the coordinate basis.
+            equilibrium.
 
         Returns
         -------
@@ -106,85 +106,25 @@ class BoltzmannSolver:
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
-        if deltaFCoord is None:
+        if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
-            # putting deltaF on momentum coordinate grid points
-            deltaFCoord = np.einsum(
-                "abc, ai, bj, ck -> ijk",
-                deltaF,
-                self.poly.matrix(self.basisM, "z"),
-                self.poly.matrix(self.basisN, "pz"),
-                self.poly.matrix(self.basisN, "pp"),
-                optimize=True,
-            )
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
-        # coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates() # compact
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
-        xi = xi[:, np.newaxis, np.newaxis]
-        pz = pz[np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, :]
-
-        # background
-        vMid = self.background.vMid
-        TMid = self.background.TMid
-
-        # fluctuation mode
-        msq = self.particle.msqVacuum(self.background.fieldProfile[:, 1:-1])
-        msq = msq[:, np.newaxis, np.newaxis]
-        E = np.sqrt(msq + pz**2 + pp**2)
-
-        # dot products with fixed plasma profile velocity
-        gammaPlasma = 1 / np.sqrt(1 - vMid**2)
-        EPlasma = gammaPlasma * (E - vMid * pz)
-        PPlasma = gammaPlasma * (pz - vMid * E)
-
-        # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
-        sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
-        weightsPz = np.pi / self.grid.N * np.sin(np.flip(sin_arg_Pz))**2
-        weightsPz /= np.sqrt(1 - rz**2)
-        # note, we drop the point at rp=-1, to avoid an apparent divergence.
-        # should think further about this another day.
-        sin_arg_Pp = np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1)
-        weightsPp = np.pi / (self.grid.N - 1) * np.sin(np.flip(sin_arg_Pp))**2
-        weightsPp /= np.sqrt(1 - rp[1:]**2)
-        weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
-        # measure, including Jacobian from coordinate compactification
-        measurePz = (2 * TMid) / (1 - rz**2)
-        measurePp = TMid**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
-        measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
-        measurePzPp /= (2 * np.pi)**2
-
-        # evaluating integrals with Gaussian quadrature
-        measureWeight = measurePzPp * weights
-        arg00 = deltaFCoord[:, :, 1:] / E[:, :, 1:]
-        Deltas["00"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00,
-            optimize=True,
-        )
-        Deltas["11"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * EPlasma[:, :, 1:] * PPlasma[:, :, 1:],
-            optimize=True,
-        )
-        Deltas["20"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * EPlasma[:, :, 1:]**2,
-            optimize=True,
-        )
-        Deltas["02"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * PPlasma[:, :, 1:]**2,
-            optimize=True,
-        )
+        deltaFPoly = Polynomial2(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
+        
+        field = self.background.fieldProfile[:, 1:-1]
+        pz = self.grid.pzValues[None,:,None]
+        E = np.sqrt(self.particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
+        dpzdrz = 2*self.background.TMid/(1-self.grid.rzValues**2)[None,:,None]
+        dppdrp = self.background.TMid/(1-self.grid.rpValues)[None,None,:]
+        integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
+        
+        Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
+        Deltas['20'] = deltaFPoly.integrate((1,2), E**2*integrand)
+        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2*integrand)
+        Deltas['11'] = deltaFPoly.integrate((1,2), E*pz*integrand)
 
         # returning results
         return Deltas
@@ -335,6 +275,11 @@ class BoltzmannSolver:
 
         ##### total operator #####
         operator = liouville + collisionArray
+        
+        n = self.grid.N-1
+        Nnew = n**2
+        eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
+        print(np.sort(1/np.abs(np.real(eigs)))[-4:])
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)

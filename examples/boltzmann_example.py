@@ -65,56 +65,24 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmann = BoltzmannSolver(grid, background, particle)
+boltzmann = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
 print("BoltzmannSolver object =", boltzmann)
 operator, source = boltzmann.buildLinearEquations()
 print("operator.shape =", operator.shape)
 print("source.shape =", source.shape)
 
-deltaF = boltzmann.solveBoltzmannEquations()
-print("deltaF.shape =", deltaF.shape)
-# print("deltaF[:, 0, 0] =", deltaF[:, 0, 0])
-
-# Integrate to compute Delta using the integrate method of Polynomial2
-deltaFPoly = Polynomial2(deltaF, grid, ('Cardinal','Chebyshev','Chebyshev'), ('z','pz','pp'), False)
-E = np.sqrt(particle.msqVacuum(field)[:,None,None]+grid.pzValues[None,:,None]**2+grid.ppValues[None,None,:]**2)
-dpzdrz = 2*Tmid/(1-grid.rzValues**2)[None,:,None]
-dppdrp = Tmid/(1-grid.rpValues)[None,None,:]
-print(deltaFPoly.basis)
-Delta00Poly = deltaFPoly.integrate((1,2), dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E))
-print(Delta00Poly.coefficients.shape,deltaFPoly.basis)
-
-print((dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E)).shape,deltaFPoly.coefficients.shape)
-measure = (dpzdrz*dppdrp*grid.ppValues[None,None,:]/(4*np.pi**2*E))
-integrandPoly = deltaFPoly*measure
-func = lambda rz,rp,chi: integrandPoly.evaluate([chi,rz,rp])
-Delta00_dblquad = [integrate.dblquad(func, -1, 1, -1, 1, args=(chi,))[0] for chi in grid.chiValues]
-
-Deltas = boltzmann.getDeltas(deltaF)
-# print("Deltas =", Deltas)
+Deltas = boltzmann.getDeltas()
 
 # plotting
 chi = boltzmann.grid.getCompactCoordinates()[0]
-fig, axs = plt.subplots(4)
-axs[0].plot(chi, Deltas["00"], label=r"$\Delta_{00}$")
-axs[0].set_xlabel(r"$\chi$")
-axs[0].set_ylabel(r"$\Delta_{00}\ \mathrm{(Boltzmann)}$")
-axs[0].grid()
-axs[1].plot(chi, Delta00Poly.coefficients, label=r"$\Delta_{00}\ \mathrm{(Poly)}$")
-axs[1].set_xlabel(r"$\chi$")
-axs[1].set_ylabel(r"$\Delta_{00}\ \mathrm{(Poly)}$")
-axs[1].grid()
-axs[2].plot(chi, Delta00_dblquad, label=r"$\Delta_{00}\ \mathrm{(dblquad)}$")
-axs[2].set_xlabel(r"$\chi$")
-axs[2].set_ylabel(r"$\Delta_{00}\ \mathrm{(dblquad)}$")
-axs[2].grid()
-axs[3].plot(chi, Deltas["02"], label=r"$\Delta_{02}$")
-axs[3].plot(chi, Deltas["20"], label=r"$\Delta_{20}$")
-axs[3].plot(chi, Deltas["11"], label=r"$\Delta_{11}$")
-axs[3].set_xlabel(r"$\chi$")
-axs[3].set_ylabel(r"$\Delta\mathrm{s}$")
-axs[3].legend(loc="upper left")
-plt.tight_layout()
+xi = np.linspace(-200*L,200*L,1000)
+chi2 = xi/np.sqrt(xi**2+grid.L_xi**2)
+
+plt.plot(xi, 12*Deltas['00'].evaluate(chi2[None,:]), label=r"$\Delta_{00}\ \mathrm{(Poly)}$")
+plt.xlabel(r"$\xi$")
+plt.ylabel(r"$\Delta_{00}\ \mathrm{(Poly)}$")
+plt.xlim((-20*L,20*L))
+plt.grid()
 plt.show()
 
 # now making a deltaF by hand
