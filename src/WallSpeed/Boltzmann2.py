@@ -4,7 +4,6 @@ import numpy as np
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
-from .Polynomial import Polynomial
 from .Polynomial2 import Polynomial2
 from .model import Particle
 from .helpers import boostVelocity
@@ -81,7 +80,6 @@ class BoltzmannSolver:
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
-        self.poly = Polynomial(self.grid)
         
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
@@ -184,15 +182,6 @@ class BoltzmannSolver:
         # compactified coordinates
         chi, rz, rp = self.grid.getCompactCoordinates() # compact
 
-        # intertwiner matrices
-        TChiMat = self.poly.matrix(self.basisM, "z")
-        TRzMat = self.poly.matrix(self.basisN, "pz")
-        TRpMat = self.poly.matrix(self.basisN, "pp")
-
-        # derivative matrices
-        derivChi = self.poly.deriv(self.basisM, "z")
-        derivRz = self.poly.deriv(self.basisN, "pz")
-
         # background profiles
         T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
         field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
@@ -206,11 +195,18 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fit the background profiles to polynomial
-#        print(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M))
-#        print(np.shape(numpy.polynomial.chebyshev.chebfit(chi, self.background.temperatureProfile, self.grid.M)))
         Tpoly = Polynomial2(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
         msqpoly = Polynomial2(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
         vpoly = Polynomial2(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
+        
+        # intertwiner matrices
+        TChiMat = Tpoly.matrix(self.basisM, "z")
+        TRzMat = Tpoly.matrix(self.basisN, "pz")
+        TRpMat = Tpoly.matrix(self.basisN, "pp")
+
+        # derivative matrices
+        derivChi = Tpoly.derivMatrix(self.basisM, "z")[1:-1]
+        derivRz = Tpoly.derivMatrix(self.basisN, "pz")[1:-1]
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)

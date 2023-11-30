@@ -466,7 +466,28 @@ class Polynomial2:
                 endpoints.append(self.endpoints[i])
                 
         return Polynomial2(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
-            
+    
+    def matrix(self, basis, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        basis : string
+            Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if basis == 'Cardinal':
+            return self.__cardinalMatrix(direction, endpoints)
+        elif basis == 'Chebyshev':
+            return self.__chebyshevMatrix(direction, endpoints)
+        else:
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")        
     
     def derivMatrix(self, basis, direction, endpoints=False):
         """
@@ -494,6 +515,57 @@ class Polynomial2:
             return self.__chebyshevDeriv(direction,endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+            
+    def __cardinalMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if direction == 'z':
+            return np.identity(self.grid.M-1+2*endpoints)
+        if direction == 'pz':
+            return np.identity(self.grid.N-1+2*endpoints)
+        if direction == 'pp':
+            return np.identity(self.grid.N-1+endpoints)
+
+    def __chebyshevMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        grid,n,restriction = None,None,None
+        if direction == 'z':
+            grid = self.grid.getCompactCoordinates(endpoints)[0]
+            n = np.arange(grid.size)+2-2*endpoints
+            restriction = 'full'
+        elif direction == 'pz':
+            grid = self.grid.getCompactCoordinates(endpoints)[1]
+            n = np.arange(grid.size)+2-2*endpoints
+            restriction = 'full'
+        elif direction == 'pp':
+            grid = self.grid.getCompactCoordinates(endpoints)[2]
+            n = np.arange(grid.size)+1-endpoints
+            restriction = 'partial'
+        if endpoints:
+            restriction = None
+
+        return self.chebyshev(grid[:,None], n[None,:], restriction)
     
     def __cardinalDeriv(self, direction, endpoints=False):
         """
