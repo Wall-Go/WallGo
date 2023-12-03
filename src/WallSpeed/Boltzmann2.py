@@ -1,6 +1,7 @@
 import os
 import warnings
 import numpy as np
+from copy import deepcopy
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
@@ -73,7 +74,7 @@ class BoltzmannSolver:
             An object of the BoltzmannSolver class.
         """
         self.grid = grid
-        self.background = background
+        self.background = deepcopy(background)
         self.background.boostToPlasmaFrame()
         self.particle = particle
         BoltzmannSolver.__checkBasis(basisM)
@@ -311,13 +312,14 @@ class BoltzmannSolver:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
             
-        collisionArrayT = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
+        self.collisionArray = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
         
-        n1 = np.arange(2,self.grid.N+1)
-        n2 = np.arange(1,self.grid.N)
-        Tn1 = np.cos(n1[:,None]*np.arccos(self.grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,self.grid.rzValues[None,:])
-        Tn2 = np.cos(n2[:,None]*np.arccos(self.grid.rpValues[None,:])) - 1
-        self.collisionArray = np.sum(np.linalg.inv(Tn1)[None,None,:,None,:,None]*np.linalg.inv(Tn2)[None,None,None,:,None,:]*collisionArrayT[:,:,None,None,:,:],(-1,-2))
+        if self.basisN == 'Cardinal':
+            n1 = np.arange(2,self.grid.N+1)
+            n2 = np.arange(1,self.grid.N)
+            Tn1 = np.cos(n1[:,None]*np.arccos(self.grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,self.grid.rzValues[None,:])
+            Tn2 = np.cos(n2[:,None]*np.arccos(self.grid.rpValues[None,:])) - 1
+            self.collisionArray = np.sum(np.linalg.inv(Tn1)[None,None,:,None,:,None]*np.linalg.inv(Tn2)[None,None,None,:,None,:]*self.collisionArray[:,:,None,None,:,:],(-1,-2))
 
     def __collisionFilename(self):
         """

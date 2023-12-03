@@ -65,20 +65,20 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmann = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
-print("BoltzmannSolver object =", boltzmann)
-operator, source = boltzmann.buildLinearEquations()
-print("operator.shape =", operator.shape)
-print("source.shape =", source.shape)
+boltzmannCheb = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Chebyshev')
+boltzmannCard = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
 
-Deltas = boltzmann.getDeltas()
+DeltasCheb = boltzmannCheb.getDeltas()
+DeltasCard = boltzmannCard.getDeltas()
 
 # plotting
-chi = boltzmann.grid.getCompactCoordinates()[0]
+chi = grid.getCompactCoordinates()[0]
 xi = np.linspace(-200*L,200*L,1000)
 chi2 = xi/np.sqrt(xi**2+grid.L_xi**2)
 
-plt.plot(xi, 12*Deltas['00'].evaluate(chi2[None,:]), label=r"$\Delta_{00}\ \mathrm{(Poly)}$")
+plt.plot(xi, 12*DeltasCheb['00'].evaluate(chi2[None,:]))
+plt.plot(xi, 12*DeltasCard['00'].evaluate(chi2[None,:]))
+plt.legend(('Chebyshev basis','Cardinal basis'))
 plt.xlabel(r"$\xi$")
 plt.ylabel(r"$\Delta_{00}\ \mathrm{(Poly)}$")
 plt.xlim((-20*L,20*L))
