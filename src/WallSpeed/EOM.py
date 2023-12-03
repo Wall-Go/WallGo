@@ -247,7 +247,7 @@ class EOM:
                 TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
                 XWithEndpoints = np.concatenate((vevLowT[:,None], X, vevHighT[:,None]), 1)
                 vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]]))
-                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) #first entry is 0 because that's the wall velocity in the wall frame
+                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) 
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 

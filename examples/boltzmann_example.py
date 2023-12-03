@@ -5,7 +5,7 @@ import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
 import matplotlib.pyplot as plt
 from scipy import integrate
-from WallSpeed.Boltzmann2 import BoltzmannBackground, BoltzmannSolver
+from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Polynomial2 import Polynomial2
 #from WallSpeed.eomHydro import findWallVelocityLoop
@@ -76,13 +76,29 @@ chi = grid.getCompactCoordinates()[0]
 xi = np.linspace(-200*L,200*L,1000)
 chi2 = xi/np.sqrt(xi**2+grid.L_xi**2)
 
-plt.plot(xi, 12*DeltasCheb['00'].evaluate(chi2[None,:]))
-plt.plot(xi, 12*DeltasCard['00'].evaluate(chi2[None,:]))
-plt.legend(('Chebyshev basis','Cardinal basis'))
-plt.xlabel(r"$\xi$")
-plt.ylabel(r"$\Delta_{00}\ \mathrm{(Poly)}$")
-plt.xlim((-20*L,20*L))
-plt.grid()
+fig, ax = plt.subplots(4, figsize=(6, 10), layout='constrained')
+ax[0].plot(xi, 12*DeltasCheb['00'].evaluate(chi2[None,:]))
+ax[0].plot(xi, 12*DeltasCard['00'].evaluate(chi2[None,:]))
+ax[0].legend(('Chebyshev basis','Cardinal basis'))
+ax[0].set_ylabel(r"$\Delta_{00}$")
+ax[0].set_xlim((-20*L,20*L))
+ax[0].grid()
+ax[1].plot(xi, 12*DeltasCheb['20'].evaluate(chi2[None,:]))
+ax[1].plot(xi, 12*DeltasCard['20'].evaluate(chi2[None,:]))
+ax[1].set_ylabel(r"$\Delta_{20}$")
+ax[1].set_xlim((-20*L,20*L))
+ax[1].grid()
+ax[2].plot(xi, 12*DeltasCheb['02'].evaluate(chi2[None,:]))
+ax[2].plot(xi, 12*DeltasCard['02'].evaluate(chi2[None,:]))
+ax[2].set_ylabel(r"$\Delta_{02}$")
+ax[2].set_xlim((-20*L,20*L))
+ax[2].grid()
+ax[3].plot(xi, 12*DeltasCheb['11'].evaluate(chi2[None,:]))
+ax[3].plot(xi, 12*DeltasCard['11'].evaluate(chi2[None,:]))
+ax[3].set_xlabel(r"$\xi$")
+ax[3].set_ylabel(r"$\Delta_{11}$")
+ax[3].set_xlim((-20*L,20*L))
+ax[3].grid()
 plt.show()
 
 # now making a deltaF by hand
