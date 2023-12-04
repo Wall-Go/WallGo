@@ -8,7 +8,7 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
-from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
+from .helpers import gammaSq 
 
 class EOM:
     """
@@ -264,7 +264,8 @@ class EOM:
 
         # TODO: Add the mass derivative in the Particle class and use it here.
         dVout = 12*X[0]*offEquilDeltas['00'].coefficients/2 
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*((dVdX*dXdz)[0]+dVout*dXdz[0])/(1-self.grid.chiValues**2), [0])))
+        EOMPoly = Polynomial((dVdX*dXdz)[0]+dVout*dXdz[0], self.grid)
+        pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
         if returnOptimalWallParams:
             return pressure,wallParams
@@ -305,8 +306,9 @@ class EOM:
         VLowT,VHighT = self.freeEnergy(vevLowT,Tprofile[0]),self.freeEnergy(vevHighT,Tprofile[-1])
 
         Vref = (VLowT+VHighT)/2
-
-        U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
+        
+        VPoly = Polynomial(V+VOut-Vref, self.grid)
+        U = VPoly.integrate(w=self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return (U+K)
 
@@ -616,5 +618,5 @@ class EOM:
                 (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar0+2*delta11*(u3*ubar0 + ubar3*u0))/2.
         T33 = ((3*delta20 - delta02 - self.particle.msqVacuum(X)*delta00)*u3*u3+
                 (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2. -(self.particle.msqVacuum(X)*delta00+ delta02-delta20)/2.
-
-        return T30, T33
+        #TODO: change 12 by some variable representing the number of d.o.f.
+        return 12*T30, 12*T33
