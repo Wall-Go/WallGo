@@ -65,7 +65,7 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmannCheb = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Chebyshev')
+boltzmannCheb = BoltzmannSolver(grid, background, particle, 'Chebyshev', 'Chebyshev')
 boltzmannCard = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
 
 DeltasCheb = boltzmannCheb.getDeltas()

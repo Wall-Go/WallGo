@@ -112,6 +112,7 @@ class BoltzmannSolver:
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
         deltaFPoly = Polynomial2(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
+        deltaFPoly.changeBasis('Cardinal')
         
         field = self.background.fieldProfile[:, 1:-1]
         pz = self.grid.pzValues[None,:,None]
@@ -121,13 +122,9 @@ class BoltzmannSolver:
         integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
         
         Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
-        Deltas['00'].changeBasis('Cardinal')
         Deltas['20'] = deltaFPoly.integrate((1,2), E**2*integrand)
-        Deltas['20'].changeBasis('Cardinal')
         Deltas['02'] = deltaFPoly.integrate((1,2), pz**2*integrand)
-        Deltas['02'].changeBasis('Cardinal')
         Deltas['11'] = deltaFPoly.integrate((1,2), E*pz*integrand)
-        Deltas['11'].changeBasis('Cardinal')
 
         # returning results
         return Deltas
@@ -277,10 +274,10 @@ class BoltzmannSolver:
         ##### total operator #####
         operator = liouville + collisionArray
         
-        n = self.grid.N-1
-        Nnew = n**2
-        eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
-        print(np.sort(1/np.abs(np.real(eigs)))[-4:])
+        # n = self.grid.N-1
+        # Nnew = n**2
+        # eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
+        # print(np.sort(1/np.abs(np.real(eigs)))[-4:])
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
