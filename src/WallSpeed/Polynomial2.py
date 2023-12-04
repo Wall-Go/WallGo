@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
-#Renamed it Polynomial2 such that both Polynomial classes can be used in parallel
-class Polynomial2:
+
+class Polynomial:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
         """
         Initialization of Polynomial object. 
@@ -86,27 +86,27 @@ class Polynomial2:
         endpoints = tuple(endpoints) + self.endpoints[n:]
         
         coefficients = np.array(self.coefficients[key])
-        return Polynomial2(coefficients, self.grid, basis, direction, endpoints)
+        return Polynomial(coefficients, self.grid, basis, direction, endpoints)
     
     def __mul__(self, poly):
-        if isinstance(poly, Polynomial2):
+        if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial2(self.coefficients*poly.coefficients)
+            return Polynomial(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
-            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
-            return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
-        if isinstance(poly, Polynomial2):
+        if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial2(self.coefficients+poly.coefficients)
+            return Polynomial(self.coefficients+poly.coefficients)
         else:
             newCoeff = poly+self.coefficients
-            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
-            return Polynomial2(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
+            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __sub__(self, poly):
         return self.__add__((-1)*poly)
@@ -424,7 +424,7 @@ class Polynomial2:
         if isinstance(result, float):
             return result
         else:
-            return Polynomial2(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
+            return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
     
     def derivative(self, axis):
         """
@@ -464,8 +464,7 @@ class Polynomial2:
             else:
                 basis.append(self.basis[i])
                 endpoints.append(self.endpoints[i])
-                
-        return Polynomial2(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
+        return Polynomial(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
     
     def matrix(self, basis, direction, endpoints=False):
         r"""
@@ -515,7 +514,7 @@ class Polynomial2:
             return self.__chebyshevDeriv(direction,endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
-            
+         
     def __cardinalMatrix(self, direction, endpoints=False):
         r"""
         Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.

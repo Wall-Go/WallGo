@@ -67,9 +67,7 @@ public:
     /* Evaluate all 'collision elements' at input momenta, sum them 
     and calculate the kinematic prefactor (including the integration measure)
     Specifically, this calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
-    Includes the 1/(2N) prefactor.
-    NB: when comparing to output of Benoit's python code, note that he calculates 4pi * (A1), 
-    and that his tg_tg term had an error in the population factor. */
+    Includes the 1/(2N) prefactor. */
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters);
 

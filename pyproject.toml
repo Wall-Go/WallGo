@@ -31,6 +31,20 @@ dependencies = [
 ]
 readme = "README.rst"
 
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["WallSpeed"]
+#exclude = [ ... ]
+
+[tool.setuptools.package-data]
+# specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
+WallSpeed = ["Config/*.ini", "Data/collisions_top_top_N3.hdf5"]
+
+
 [tool.setuptools_scm]
 
 [project.optional-dependencies]

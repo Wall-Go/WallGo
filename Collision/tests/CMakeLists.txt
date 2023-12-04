@@ -27,8 +27,6 @@ if(NOT googletest_POPULATED)
 	add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
-
-
 add_executable(${BINARY} ${TEST_SOURCES})
 
 target_include_directories(${BINARY} PRIVATE
