@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from scipy import integrate
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Polynomial2 import Polynomial2
+from WallSpeed.Polynomial2 import Polynomial
 #from WallSpeed.eomHydro import findWallVelocityLoop
 from WallSpeed import Particle, FreeEnergy, Grid, Polynomial
 

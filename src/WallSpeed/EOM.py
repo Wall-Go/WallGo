@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
 from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
-from .Polynomial2 import Polynomial2
+from .Polynomial2 import Polynomial
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
@@ -222,7 +222,7 @@ class EOM:
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
             
-        zeroPoly = Polynomial2(np.zeros(self.grid.M-1), self.grid)
+        zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.

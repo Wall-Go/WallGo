@@ -5,7 +5,7 @@ from copy import deepcopy
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .Grid import Grid
-from .Polynomial2 import Polynomial2
+from .Polynomial2 import Polynomial
 from .model import Particle
 from .helpers import boostVelocity
 from .WallGoUtils import getPackagedDataPath
@@ -111,7 +111,7 @@ class BoltzmannSolver:
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
-        deltaFPoly = Polynomial2(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
+        deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
         deltaFPoly.changeBasis('Cardinal')
         
         field = self.background.fieldProfile[:, 1:-1]
@@ -197,9 +197,9 @@ class BoltzmannSolver:
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fit the background profiles to polynomial
-        Tpoly = Polynomial2(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
-        msqpoly = Polynomial2(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
-        vpoly = Polynomial2(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
+        Tpoly = Polynomial(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
+        msqpoly = Polynomial(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
+        vpoly = Polynomial(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
         
         # intertwiner matrices
         TChiMat = Tpoly.matrix(self.basisM, "z")
