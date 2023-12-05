@@ -367,12 +367,12 @@ def main():
     # At this point we should have all required input from the user
     # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
 
-    c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
-    #adding this makes EOM complete but without sensible wallspeed
-    c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.01)
+    # c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
+    # #adding this makes EOM complete but without sensible wallspeedg
+    # c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.01)
 
-    print("findHydroBoundaries() result:")
-    print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
+    # print("findHydroBoundaries() result:")
+    # print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
 
     M, N = 20, 20
     manager.initGrid(M, N)

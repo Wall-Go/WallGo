@@ -67,6 +67,7 @@ class EOM:
         # Is it a good idea to run this in __init__?
         print("Running LTE (hydro.findvwLTE)")
         self.wallVelocityLTE = self.hydro.findvwLTE()
+        print(f"LTE wall speed: {self.wallVelocityLTE}")
 
     def findWallVelocityLoop(self):
         """
@@ -96,7 +97,11 @@ class EOM:
 
         print(wallParameters)
 
-        offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
+        offEquilDeltas = {
+            "00": np.zeros(self.grid.M-1),
+            "02": np.zeros(self.grid.M-1),
+            "20": np.zeros(self.grid.M-1),
+            "11": np.zeros(self.grid.M-1)}
 
         error = self.errTol + 1
         while error > self.errTol:
@@ -237,7 +242,11 @@ class EOM:
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
 
-        offEquilDeltas = {"00": np.zeros(self.grid.M-1), "02": np.zeros(self.grid.M-1), "20": np.zeros(self.grid.M-1), "11": np.zeros(self.grid.M-1)}
+        offEquilDeltas = {
+            "00": np.zeros(self.grid.M-1), 
+            "02": np.zeros(self.grid.M-1), 
+            "20": np.zeros(self.grid.M-1), 
+            "11": np.zeros(self.grid.M-1)}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 

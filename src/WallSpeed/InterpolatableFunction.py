@@ -279,13 +279,18 @@ class InterpolatableFunction(ABC):
             else:
                 appendPointsMax = np.array([])
 
-            appendValuesMin = self._functionImplementation(appendPointsMin)
-            appendValuesMax = self._functionImplementation(appendPointsMax)
+            appendValuesMin = []
+            for x in appendPointsMin:
+                appendValuesMin.append(self._functionImplementation(x))
+
+            appendValuesMax = []
+            for x in appendPointsMax:
+                appendValuesMax.append(self._functionImplementation(x))
 
             # Ordering is important since interpolation needs the x values to be ordered. 
             # This works, but could be made safer by rearranging the resulting arrays accordingly:
-            xRange = np.concatenate( (appendPointsMin, self.__interpolationPoints, appendPointsMax) )
-            fxRange = np.concatenate( (appendValuesMin, self.__interpolationValues, appendValuesMax) )
+            xRange = np.concatenate( [appendPointsMin, self.__interpolationPoints, appendPointsMax] )
+            fxRange = np.concatenate( [appendValuesMin, self.__interpolationValues, appendValuesMax] )
 
             self.__interpolate(xRange, fxRange)
 

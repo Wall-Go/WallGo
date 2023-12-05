@@ -145,7 +145,7 @@ class WallGoManager:
         # Without out-of-equilibrium contributions
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
         #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
-        print(f"LTE wall speed: {eom.wallVelocityLTE}")
+        # print(f"LTE wall speed: {eom.wallVelocityLTE}")
         
 
         #With out-of-equilibrium contributions

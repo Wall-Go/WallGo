@@ -355,14 +355,15 @@ class EffectivePotential(ABC):
             The temperature derivative of the free energy density at this field
             value and temperature.
         """
-
-        return derivative(
-            lambda T: self.evaluate(fields, T),
+        val = derivative(
+            lambda T: self.evaluate(fields, T).real,
             T,
             dx=self.dT,
             n=1,
             order=4,
         )
+        print(val)
+        return val
 
     def derivField(self, fields: np.ndarray[float], T: npt.ArrayLike):
         """
@@ -390,5 +391,6 @@ class EffectivePotential(ABC):
             Xd_field[i,...] += self.dPhi * np.ones_like(field)
             dfd_field = (self.evaluate(Xd_field,T) - self.evaluate(fields,T)) / self.dPhi
             return_val[i,...] = np.diag(dfd_field)
-
+        
+        print(return_val)
         return return_val

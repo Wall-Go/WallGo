@@ -140,6 +140,7 @@ class Thermodynamics:
         eHighT : double
             Energy density in the high-temperature phase.
         """
+        # print(T*self.dpHighT(T))
         return T*self.dpHighT(T) - self.pHighT(T)
 
     def deHighT(self, T):
