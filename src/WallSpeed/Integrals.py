@@ -101,19 +101,11 @@ class JfIntegral(InterpolatableFunction):
             return results
 
 
-Jb = JbIntegral(bUseAdaptiveInterpolation=True)
-Jf = JfIntegral(bUseAdaptiveInterpolation=True)
 
 
-##### init, TODO somewhere else
+##----------- These are configured in WallGo.initialize()
 
-from pathlib import Path
-sourcePath = Path(__file__).resolve()
-sourceDir = sourcePath.parent
-
-JbFile = str(sourceDir) + "/finiteT_b.dat.txt"
-Jb.readInterpolationTable(JbFile)
-
-
-JfFile = str(sourceDir) + "/finiteT_f.dat.txt"
-Jf.readInterpolationTable(JfFile)
+""" Thermal 1-loop integral (bosonic): :math:`J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`"""
+Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+""" Thermal 1-loop integral (fermionic): :math:`J_f(x) =  -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`"""
+Jf = JfIntegral(bUseAdaptiveInterpolation=False)

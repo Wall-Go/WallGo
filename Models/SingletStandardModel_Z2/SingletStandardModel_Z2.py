@@ -1,6 +1,7 @@
 import numpy as np
 
 ## WallGo imports
+import WallSpeed ## Whole package, in particular we get WallSpeed.initialize()
 from WallSpeed import GenericModel
 from WallSpeed import Particle
 from WallSpeed import EffectivePotential
@@ -334,6 +335,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
 
 def main():
+
+    WallSpeed.initialize()
 
     ## initial input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
