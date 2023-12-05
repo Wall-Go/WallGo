@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <chrono>
 
 #include "CollElem.h"
 #include "ParticleSpecies.h"
@@ -50,6 +51,9 @@ protected:
     // Used to interrupt long-running functions. The python module will override this with its own checks
     virtual inline bool shouldContinueEvaluation() { return true; };
 
+    // Prints stuff about how many integrals we've computed and ETC
+    void reportProgress();
+
     // Populates the particleIndex map 
     void makeParticleIndexMap();
 
@@ -77,7 +81,6 @@ protected:
     // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
     std::vector<ParticleSpecies> outOfEqParticles;
 
-
     // @todo config file for file paths 
     
     // Directory where we search for matrix elements
@@ -85,6 +88,17 @@ protected:
 
     // Base file name for matrix element files. We append particle names to this like "_top_top"
     std::string matrixElementFileNameBase = "matrixElements";
+
+private:
+
+    // Progress tracking 
+    int computedIntegralCount = 0;
+    int totalIntegralCount;
+    // Initial progress check and time estimate after this many integrals (in one thread)
+    int initialProgressInterval = 10;
+    bool bFinishedInitialProgressCheck = false;
+    std::chrono::steady_clock::time_point startTime;
+    std::chrono::duration<double> elapsedTime;
 };
 
 

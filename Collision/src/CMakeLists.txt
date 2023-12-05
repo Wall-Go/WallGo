@@ -35,6 +35,7 @@ target_link_libraries(${BINARY}_lib PUBLIC
 if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
 		target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
+		add_compile_definitions(WITH_OMP=1)
 	else()
 		message(WARNING "OpenMP installation not found, multithreading will be DISABLED. ")
 	endif()

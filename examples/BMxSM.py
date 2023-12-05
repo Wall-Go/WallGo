@@ -37,6 +37,8 @@ pprint(params)
 print(f"{Tc=}, {Tn=}")
 print("\nFree energy:", fxSM)
 print(f"{fxSM([[0],[1]], 100)=}")
+print(f"{fxSM([0,1], 100)=}")
+print(f"{fxSM([[0,0],[1,10]], 100)=}")
 print(f"{fxSM.derivT([[0],[1]], 100)=}")
 print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
