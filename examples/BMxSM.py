@@ -29,7 +29,7 @@ mod = WallSpeed.Model(125, 120, 1.0, 0.9, use_EFT=False)
 params = mod.params
 
 Tc = None
-Tn = 100
+Tn = 90
 
 fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 Tc = fxSM.Tc
@@ -63,6 +63,18 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
+
+print(hydro.vJ)
+
+print("Test the minimum temperature")
+print(hydro.findHydroBoundaries(0.01))
+print(hydro.findHydroBoundaries(0.1))
+print(hydro.findHydroBoundaries(0.2))
+print(hydro.findHydroBoundaries(0.3))
+print(hydro.findHydroBoundaries(0.4))
+print(hydro.findHydroBoundaries(0.5))
+print(hydro.findHydroBoundaries(0.6))
+print(hydro.findHydroBoundaries(0.65))
 
 #Without out-of-equilibrium contributions
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
