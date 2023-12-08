@@ -31,12 +31,18 @@ BM1 = BenchmarkPoint(
         "interpolateTemperatureRange" : (0.0, 1.2*108.22, 1.0) ## upper bound is 1.2 * Tc
     },
 
+    ## Will probs need to adjust these once we decide on what our final implementation of the benchmark model is
     expectedResults = 
     {
         "Tc" : 108.22,
         ## Phase locations at nucleation temperature
         "phaseLocation1" : [0.0, 104.85563975],
         "phaseLocation2" : [195.01844099, 0.0],
+
+        ## Jouguet velocity
+        "vJ" : 0.6444,
+        ## LTE wall velocity
+        "vwLTE" : 0.6203233205259607,
 
         ## Hydro boundaries stuff
         "c1" : -3331587978,

@@ -15,7 +15,16 @@ class EOM:
 
     model: GenericModel
     hydro: Hydro
-    thermo: Thermodynamics 
+    thermo: Thermodynamics
+
+    """LN: Very counterintuitive that this requires particle input even if includeOffEq=False. Here are some things to consider:
+        1. Is it possible to remove includeOffEq from the constructor and instead have a dedicated function for solving the EOM
+        without out-of-eq contributions?
+        2. If most of all functions here are considerably simpler when out-of-eq are not included, should there be a separate (child?) class 
+        for handling that case?
+        3. Would this class make sense if by default it doesn't have a particle associated with it. 
+        Could they instead be added on demand at runtime on demand?
+    """
 
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.

@@ -7,16 +7,22 @@ from tests.BenchmarkPoint import BenchmarkPoint
 import WallSpeed
 
 
-## This tends to be slow as it's often the first test to use the hydro fixture, so initialization takes long. Hence the marker
+## This can be somewhat slow as this is often the first test that uses Hydro fixtures
+def test_Jouguet(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
+
+    hydro, BM = singletBenchmarkHydro
+
+    vJ_expected = BM.expectedResults["vJ"]
+    vJ_result = hydro.vJ
+
+    assert vJ_result == pytest.approx(vJ_expected, rel=1e-2)
+    
+
+## This can be slow if Jb/Jf need to be evaluated at very negative (m/T)^2
 @pytest.mark.slow
 def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
 
     hydro, BM = singletBenchmarkHydro
-
-    ## Jouguet velocity
-    vJ_expected = 0.6444
-    res = hydro.vJ
-    assert res == pytest.approx(vJ_expected, rel=1e-2)
 
     vw_in = 0.5229
     res = hydro.findHydroBoundaries(vw_in)
@@ -28,3 +34,16 @@ def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, Benchmark
     Tminus = BM.expectedResults["Tminus"]
 
     np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-2)
+
+
+## Wall velocity in the Local Thermal Equilibrium approximation
+def test_vwLTE(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
+
+    hydro, BM = singletBenchmarkHydro
+
+    vwLTE_expected = BM.expectedResults["vwLTE"]
+    vwLTE_result = hydro.findvwLTE()
+
+    assert vwLTE_result == pytest.approx(vwLTE_expected, rel=1e-2)
+
+    

@@ -13,16 +13,19 @@ from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 
 
 
 
-"""----- Define some fixtures. Currently these are used for hydro boundaries test only.
+"""----- Define some fixtures. Currently these are used for hydro tests only.
 Would be good to make all our singlet-specific tests to use these for easier control.
+
+NOTE: I'm giving these session scope so that their state is preserved between tests (cleared when pytest finishes).
+This is helpful as things like FreeEnergy interpolations are slow, however it does make our tests a bit less transparent.
 """
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def singletBenchmarkPoint() -> BenchmarkPoint:
     yield BM1
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def singletBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkModel:
     inputs = singletBenchmarkPoint.inputParams
     model = SingletSM_Z2(inputs)
@@ -36,7 +39,7 @@ I'm making these return also the original benchmark point so that it's easier to
 eg. read from BenchmarkPoint.expectedResults"""
  
 ## This constructs thermodynamics without interpolating anything
-@pytest.fixture
+@pytest.fixture(scope="session")
 def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]:
 
     ## annoyingly Thermo needs Tc in the constructor, even though the class doesn't really use it
@@ -61,7 +64,7 @@ def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallS
 
 
 ## This is like the singletBenchmarkThermo fixture but interpolates the FreeEnergy objects over the temperature range specified in our BM input 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]:
     
     BM = singletBenchmarkModel.benchmarkPoint
@@ -90,7 +93,7 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
-@pytest.fixture
+@pytest.fixture(scope="session")
 def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]) -> Tuple[WallSpeed.Hydro, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
@@ -99,3 +102,49 @@ def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallSpeed.Th
     yield WallSpeed.Hydro(thermo), BM
 
 
+## This wouldn't need to be singlet-specific tbh. But it's here for now. And it really needs to get rid of the temperature argument
+@pytest.fixture(scope="session")
+def singletBenchmarkGrid() -> Tuple[WallSpeed.Grid, WallSpeed.Polynomial]:
+
+    M, N = 20, 20
+    
+    # magic 0.05
+    grid = WallSpeed.Grid(M, N, 0.05, 100)
+
+    return grid, WallSpeed.Polynomial(grid)
+
+
+
+"""Test particle. This is also defined in our main conftest.py, but maybe better to have a separate one dedicated for our singlet benchmark.
+TODO fix masses
+"""
+@pytest.fixture(scope="session")
+def singletBenchmarkParticle():
+    return WallSpeed.Particle(
+        name="top",
+        msqVacuum=lambda phi: 0.5 * phi**2,
+        msqThermal=lambda T: 0.1 * T**2,
+        statistics="Fermion",
+        inEquilibrium=False,
+        ultrarelativistic=False,
+        multiplicity=1,
+    )
+
+
+
+"""EOM object for the singlet model, no out-of-equilibrium contributions.
+This still needs a particle input though (intended??) so I'm using the particle fixture defined in our main conftest.py
+"""
+@pytest.fixture(scope="session")
+def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid) -> Tuple[WallSpeed.EOM, BenchmarkPoint]:
+    
+    thermo, BM = singletBenchmarkThermo_interpolate
+    hydro, _ = singletBenchmarkHydro
+    grid, _ = singletBenchmarkGrid
+
+    fieldCount = 2
+
+    ## TODO fix error tolerance?
+    eom = WallSpeed.EOM(singletBenchmarkParticle, thermo, hydro, grid, fieldCount, includeOffEq=False)
+
+    return eom, BM

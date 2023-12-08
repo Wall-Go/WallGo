@@ -12,6 +12,9 @@ from .BenchmarkPoint import BenchmarkPoint
 # Ugly directory structure:
 from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 
+## Call this to load Jb, Jf interpolations. Not sure if we actually want this though
+#WallSpeed.initialize()
+
 
 def background(M):
     vw = 0#1 / np.sqrt(3)
