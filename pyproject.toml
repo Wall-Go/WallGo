@@ -22,7 +22,6 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "cosmoTransitions>=2.0.6",
     "findiff>=0.9.2",
     "h5py>=3.8.0",
     "matplotlib>=3.5.1",
