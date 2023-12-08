@@ -19,6 +19,9 @@ def makeDefaultInterpolationTables():
     ## Do note that for negative input these need analytical continuation and are increasingly oscillatory,
     ## And the integrator tends to throw warnings. Whether it's physically correct to use these for negative m^2
     ## is something I'm not sure about. 
+    #Jb.newInterpolationTable(-20., 1000., pointCount)
+    #Jf.newInterpolationTable(-20., 1000., pointCount)
+
     Jb.newInterpolationTable(-20., 1000., pointCount)
     Jf.newInterpolationTable(-20., 1000., pointCount)
 

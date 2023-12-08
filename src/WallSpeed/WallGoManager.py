@@ -14,10 +14,6 @@ This should be better than writing the same stuff in every example main function
 and is good for hiding some of our internal implementation details from the user """
 class WallGoManager:
 
-    ## Very anti-pythonic way of declaring members. But Python must be something like this...?
-
-    model: GenericModel
-
     # Field values at the two phases at Tn (we go from 1 to 2)
     phaseLocation1: np.ndarray[float]   # high-T
     phaseLocation2: np.ndarray[float]   # low-T
@@ -33,14 +29,14 @@ class WallGoManager:
     # Critical temperature
     Tc: float
 
-    ### WallGo objects. do we really need all of these?
-    #freeEnergy: FreeEnergy # I kinda feel this is redundant (effective potential)
+    ### WallGo objects
+    model: GenericModel
     thermodynamics: Thermodynamics
     hydro: Hydro
     grid: Grid
     # ...
 
-    def __init__(self, inputModel, userInput: dict):
+    def __init__(self, inputModel: GenericModel, userInput: dict):
         self.model = inputModel
 
         self.readUserInput(userInput)
@@ -60,7 +56,6 @@ class WallGoManager:
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
 
         self.initHydro(self.thermodynamics)
-
 
         ## I think this is where we'd validate/init collision integrals and then end the __init__
         # Can have a separate function for doing the collision/EOM work

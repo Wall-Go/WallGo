@@ -41,13 +41,16 @@ class FreeEnergy(InterpolatableFunction):
         # not effectively vectorized due to reliance on scipy routines.
 
         # Here is a check that should catch "symmetry-breaking" type transitions where a field is 0 in one phase and nonzero in another
-        fieldWentToZero = (np.abs(self.phaseLocationGuess) > 1.0) & (np.abs(phaseLocation) < 1e-4)
-        if (np.any(fieldWentToZero)):
-            return np.nan ### TODO correct shape!!!!!!!!!!!!!!!!
-        
-        
+        bFieldWentToZero = (np.abs(self.phaseLocationGuess) > 5.0) & (np.abs(phaseLocation) < 1e-1)
+
+        ## Check that we apply row-wise
+        bEvaluationFailed = bFieldWentToZero ## & ... add other checks ...
+
         ## For scalar input let's return a 1D numpy array. Note ordering
         if (np.isscalar(temperature)):
+
+            if (np.any(bEvaluationFailed)):
+                return np.full(len(self.phaseLocationGuess + 1), np.nan)
 
             res = np.asanyarray(phaseLocation)
             res = np.append(phaseLocation, potentialAtMinimum)
@@ -55,6 +58,16 @@ class FreeEnergy(InterpolatableFunction):
             return res
         
         else:
+            ## Input was a numpy array
+
+            ## Make our failure check a boolean mask that numpy understands
+            invalidRowMask = np.any(bEvaluationFailed, axis=1)
+
+            ## Replace all elements with np.nan on rows that failed the check
+            phaseLocation[invalidRowMask, :] = np.nan
+            potentialAtMinimum[invalidRowMask] = np.nan
+        
+
             # reshape so that potentialAtMinimum is a column vector
             potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
 
