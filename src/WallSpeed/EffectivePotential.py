@@ -105,12 +105,15 @@ class EffectivePotential(ABC):
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
+        ## We kinda need to ensure that this is a numpy array
+        guessArray = np.asanyarray(initialGuess)
+
         # I think we'll need to manually vectorize this wrt. T
 
         if (np.isscalar(temperature)):
             # Minimize real part only
             evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
-            res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+            res = scipy.optimize.minimize(evaluateWrapper, guessArray)
 
             # this spams a LOT:
             """
@@ -127,18 +130,18 @@ class EffectivePotential(ABC):
             ## And field values in the minimum, at each T, go into resLocation. 
             # But since each element would now be a list, need magic to get the shape right (we put the fields column-wise)
 
-            if (np.isscalar(initialGuess) or len(initialGuess.shape) == 1):
-                nColumns = initialGuess.shape[0]
+            if (np.isscalar(guessArray) or len(guessArray.shape) == 1):
+                nColumns = guessArray.shape[0]
             else:
                 ## Now we for some reason got multi-dimensional array of initialGuesses. TODO will this even work?
-                _, nColumns = initialGuess.shape
+                _, nColumns = guessArray.shape
 
             resLocation = np.empty( (len(temperature), nColumns) )
 
             for i in np.ndindex(temperature.shape):
                 evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
 
-                res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+                res = scipy.optimize.minimize(evaluateWrapper, guessArray)
 
                 resLocation[i] = res.x
                 resValue[i] = res.fun

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 ## WallGo imports
 from .Particle import Particle
@@ -54,7 +55,7 @@ class WallGoManager:
         But this will need to be done properly in the near future.
         """
         TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
-        interpolationPointCount = int((TMax - TMin) / dT)
+        interpolationPointCount = math.ceil((TMax - TMin) / dT)
 
         self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
         self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)

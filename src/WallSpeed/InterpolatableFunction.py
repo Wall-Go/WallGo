@@ -106,6 +106,9 @@ class InterpolatableFunction(ABC):
 
 
     def newInterpolationTable(self, xMin: float, xMax: float, numberOfPoints: int) -> None:
+        """Creates a new interpolation table over given range.
+        This will purge any existing interpolation information.
+        """
 
         xValues = np.linspace(xMin, xMax, numberOfPoints)
 

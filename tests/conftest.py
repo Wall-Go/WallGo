@@ -3,9 +3,15 @@ import numpy as np
 
 import WallSpeed
 
+## should clean these imports...
+
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
-from tests.Benchmarks.BenchmarkPoint import BenchmarkPoint 
-from tests.Benchmarks.singletSM_Z2 import singletBenchmarks
+
+from .BenchmarkPoint import BenchmarkPoint
+
+# Ugly directory structure:
+from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
+
 
 def background(M):
     vw = 0#1 / np.sqrt(3)
@@ -50,6 +56,7 @@ along with just the expected results that the test in question needs.
  
 TODO should we use autouse=True for the benchmark fixtures?
 """
+
 
 
 ## NB: fixture argument name needs to be 'request'. This is due to magic
