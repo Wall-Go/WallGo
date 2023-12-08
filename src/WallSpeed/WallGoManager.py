@@ -7,6 +7,7 @@ from .EffectivePotential import EffectivePotential
 from .GenericModel import GenericModel
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
+from .HydroTemplateModel import HydroTemplateModel
 from .EOM import EOM
 from .Grid import Grid
 
@@ -51,9 +52,15 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
+        ## Use the template model to find an estimate of the minimum and maximum required temperature
+        self.hydrotemplate = HydroTemplateModel(self.thermodynamics)
+        _,_,_,TminTemplate = self.hydrotemplate(findMatching(0.01)) #Minimum temperature is obtained by Tm of a really slow wall
+        _,_,TmaxTemplate,_ = self.hydrotemplate(findmatching(hydrotemplate.vJ)) #Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
+
         """ TEMPORARY. Interpolate minima between T = [0, 1.2*Tc]. This is here because the old model example does this.
         But this will need to be done properly in the near future.
         """
+
         TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
         interpolationPointCount = math.ceil((TMax - TMin) / dT)
 
