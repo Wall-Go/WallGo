@@ -81,7 +81,7 @@ print(hydro.findHydroBoundaries(0.6))
 print(hydro.findHydroBoundaries(0.99*hydro.vJ))
 
 hydrotemplate = HydroTemplateModel(thermo)
-print(hydrotemplate.findMatching(0.66))
+print(hydrotemplate.findMatching(0.99*hydrotemplate.vJ))
 #Without out-of-equilibrium contributions
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
