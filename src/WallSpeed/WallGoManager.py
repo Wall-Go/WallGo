@@ -44,16 +44,21 @@ class WallGoManager:
         ## Validates model stuff, including Veff and that Tn < Tc
         self.validateUserInput()
 
-        """
-        print("temptemp")
-        T = np.array([101., 102., 103.])
-        res = self.model.effectivePotential.evaluate([100., 120.], T)
-        print(res)
-        res = self.model.effectivePotential.findLocalMinimum([100., 120.], T)
-        print(res)
-        """
-
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
+
+        ## Let's turn these off so that things are more transparent
+        self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
+        self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
+
+        """ TEMPORARY. Interpolate minima between T = [0, 1.2*Tc]. This is here because the old model example does this.
+        But this will need to be done properly in the near future.
+        """
+        TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
+        interpolationPointCount = int((TMax - TMin) / dT)
+
+        self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
+        self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
+
 
         self.initHydro(self.thermodynamics)
 
@@ -144,6 +149,7 @@ class WallGoManager:
         
 
         #With out-of-equilibrium contributions
-        #eomOffEq = EOM(outOfEqParticle, thermodynamics, hydro, grid, numberOfFields, includeOffEq=True)
+        eomOffEq = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=True)
+        print(f"LTE wall speed but with includeOffEq=True in EOM: {eomOffEq.wallVelocityLTE}")
         #eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
         
