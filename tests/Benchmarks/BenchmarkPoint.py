@@ -1,9 +1,25 @@
+
 ## Collect input params + other benchmark-specific data for various things in one place.
-## Other data can be things like critical/nucleation temperatures
 class BenchmarkPoint:
     
-    def __init__(self, inputParams: dict[str, float], otherData: dict[str, float] = None):
+    ## This is model-specific input like particle masses
+    inputParams: dict[str, float]
+    ## This is required input for WallGo to find the transition (Tn and approx phase locations)
+    phaseInfo: dict[str, float]
+
+    ## This is WallGo internal config info that we may want to fix on a per-benchmark basis. IE. temperature interpolation ranges
+    config: dict[str, float]
+
+    ## Expected results for the benchmark point
+    expectedResults: dict[str, float]
+
+
+    def __init__(self, inputParams: dict[str, float], phaseInfo: dict[str, float] = {}, 
+                    config: dict[str, float] = {}, expectedResults: dict[str, float] = {}):
+        
         self.inputParams = inputParams
-        self.otherData = otherData
+        self.phaseInfo = phaseInfo
+        self.config = config
+        self.expectedResults = expectedResults
 
 

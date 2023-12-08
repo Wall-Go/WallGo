@@ -6,6 +6,9 @@ from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 
 
 from tests.Benchmarks.singletSM_Z2 import singletBenchmarks ## Gives a list of benchmark points for testing numbers
 
+## Get SM + singlet hydro fixture (with interpolated FreeEnergy's)
+from tests.Benchmarks.singletSM_Z2 import singletBenchmarkHydro
+
 ## These are all model dependent tests that focus on checking that effective potential gives right numbers for given benchmark points.
 ## Ideally we'd have model-independent tests that check Veff functionality,
 ## and model-dependent tests would be done elsewhere, possibly as a part of a larger test that does a full wall speed calculation.
@@ -54,8 +57,9 @@ def test_singletModelVeffValue_manyFieldPoints(BM, fields: list, temperature: fl
 
 
 
-### Test Veff minimization
+### Test Veff minimization. This is relatively slow unless we use interpolated integrals
 
+@pytest.mark.slow
 @pytest.mark.parametrize("BM, initialGuess, temperature, expectedMinimum, expectedVeffValue", [
     (singletBenchmarks[0], [ 0.0, 200.0 ], 100, [0.0, 104.86914171], -1.223482e+09),
     (singletBenchmarks[0], [ 246.0, 0.0 ], 100, [195.03215146, 0.0], -1.231926e+09)
@@ -69,6 +73,7 @@ def test_singletModelVeffMinimization(BM, initialGuess: list[float], temperature
 
     np.testing.assert_allclose(resMinimum, expectedMinimum, rtol=relativeTolerance)
     np.testing.assert_allclose(resValue, expectedVeffValue, rtol=relativeTolerance)
+
 
 
 
