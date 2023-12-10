@@ -65,25 +65,29 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 
-print(hydro.vJ)
-
-print("Test the minimum temperature")
-print(hydro.findHydroBoundaries(0.01))
-
 hydrotemplate = HydroTemplateModel(thermo)
-print(hydrotemplate.findMatching(0.01))
+_,_,_,TminGuess = hydrotemplate.findMatching(0.01)
+_,_,TmaxGuess,_=hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
+print(f"{TminGuess=}, {TmaxGuess=}")
 
-print("Find the maximum temperature")
-print(hydro.findHydroBoundaries(0.1))
-print(hydro.findHydroBoundaries(0.3))
-print(hydro.findHydroBoundaries(0.5))
-print(hydro.findHydroBoundaries(0.6))
-print(hydro.findHydroBoundaries(0.99*hydro.vJ))
+# print("Test the minimum temperature")
+# print(hydro.findHydroBoundaries(0.01))
 
-hydrotemplate = HydroTemplateModel(thermo)
-print(hydrotemplate.findMatching(0.99*hydrotemplate.vJ))
+
+# print(hydrotemplate.findMatching(0.01))
+
+# print("Find the maximum temperature")
+# print(hydro.findHydroBoundaries(0.1))
+# print(hydro.findHydroBoundaries(0.3))
+# print(hydro.findHydroBoundaries(0.5))
+# print(hydro.findHydroBoundaries(0.6))
+# print(hydro.findHydroBoundaries(0.99*hydro.vJ))
+
+# print(hydrotemplate.findMatching(0.99*hydrotemplate.vJ))
+
 #Without out-of-equilibrium contributions
 eom = EOM(offEqParticles[0], fxSM, grid, 2)
+print(eom.findWallVelocityMinimizeAction())
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
 
 #With out-of-equilibrium contributions
