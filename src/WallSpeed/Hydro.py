@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
+    def __init__(self, thermodynamics, TminGuess=0, TmaxGuess=10, rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters
@@ -36,6 +36,8 @@ class Hydro:
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
+        self.TminGuess = TminGuess
+        self.TmaxGuess = 1.5*self.Tnucl
         self.rtol,self.atol = rtol,atol
         self.vJ = self.findJouguetVelocity()
         self.template = HydroTemplateModel(thermodynamics, rtol=1e-6, atol=1e-6)
@@ -68,7 +70,7 @@ class Hydro:
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
-        Tmin,Tmax = self.Tnucl,self.thermodynamics.Tc
+        Tmin,Tmax = self.Tnucl,self.TmaxGuess
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
         while bracket1*bracket2 > 0 and Tmax < 10*self.Tnucl:
             Tmin = Tmax
@@ -79,7 +81,7 @@ class Hydro:
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
             tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
-        else: # If we cannot bracket the root, use the 'secant' method instead.
+        else: # If we cannot bracket the root, use the 'secant' method instead. This will call thermodynamics outside of its interpolation range?
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
@@ -136,7 +138,7 @@ class Hydro:
             eLowT = wLowT - pLowT
             return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
 
-        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,10*self.Tnucl],method='Bounded').x
+        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TmaxGuess],method='Bounded').x
         Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
         vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
@@ -170,7 +172,7 @@ class Hydro:
         try:
             Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
         except:
-            Tpm0 = [1.1*self.Tnucl,self.Tnucl]
+            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl]
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
@@ -438,7 +440,7 @@ class Hydro:
         Tp,Tm = TpTm
         if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
             Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
-            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/Tp
+            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/(Tp-self.TminGuess)
             return [Xp,Xm]
         else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))

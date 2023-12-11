@@ -79,15 +79,17 @@ print(f"{TminGuess=}, {TmaxGuess=}")
 # print("Find the maximum temperature")
 # print(hydro.findHydroBoundaries(0.1))
 # print(hydro.findHydroBoundaries(0.3))
-# print(hydro.findHydroBoundaries(0.5))
-# print(hydro.findHydroBoundaries(0.6))
+print(hydro.findHydroBoundaries(0.4))
+print(hydro.findHydroBoundaries(1.01*hydro.vJ))
+print(hydro.findHydroBoundaries(0.6))
+print(hydro.findHydroBoundaries(0.8))
 # print(hydro.findHydroBoundaries(0.99*hydro.vJ))
 
 # print(hydrotemplate.findMatching(0.99*hydrotemplate.vJ))
 
 #Without out-of-equilibrium contributions
-eom = EOM(offEqParticles[0], fxSM, grid, 2)
-print(eom.findWallVelocityMinimizeAction())
+# eom = EOM(offEqParticles[0], fxSM, grid, 2)
+# print(eom.findWallVelocityMinimizeAction())
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
 
 #With out-of-equilibrium contributions
