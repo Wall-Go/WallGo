@@ -70,6 +70,8 @@ _,_,_,TminGuess = hydrotemplate.findMatching(0.01)
 _,_,TmaxGuess,_=hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
 print(f"{TminGuess=}, {TmaxGuess=}")
 
+print(f"{hydro.findvwLTE()}")
+
 # print("Test the minimum temperature")
 # print(hydro.findHydroBoundaries(0.01))
 

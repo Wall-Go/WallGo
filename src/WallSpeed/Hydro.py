@@ -439,15 +439,14 @@ class Hydro:
 
         Tp,Tm = TpTm
         if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
-            Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
-#            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/(Tp-self.TminGuess)
-            Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2))
+            Xm = np.tan(np.pi/2/(Tp-self.TminGuess)*(Tm-Tp))   #Maps Tm =TminGuess to -inf and Tm = Tp to 0
+            Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
             return [Xp,Xm]
         else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
-            Xm = Tm/self.Tnucl-1 if Tm > self.Tnucl else 1-self.Tnucl/Tm
-            r = Tm*(1/np.sqrt(1-vmsq)-1)
-            Xp = -(0.5*r+Tm-Tp)/np.sqrt((Tp-Tm)*(r+Tm-Tp))
+            Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tm=TminGuess to -inf and Tm =TmaxGuess to +inf
+            r = Tm*1/np.sqrt(1-vmsq)
+            Xp = np.tan(np.pi/2/(r-self.TminGuess)*(Tp-r)) #Maps Tp = TminGuess to -inf and Tp=Tm/sqrt(1-vm**2) to 0  
             return [Xp,Xm]
 
     def __inverseMappingT(self, XpXm, vw=None):
@@ -458,11 +457,11 @@ class Hydro:
         Xp,Xm = XpXm
         if vw is None:
             Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-            Tm = 0.5*Tp*(1+Xm/np.sqrt(1+Xm**2))
+            Tm = np.arctan(Xm)*2*(Tp-self.TminGuess)/np.pi+ Tp
             return [Tp,Tm]
         else:
-            Tm = self.Tnucl*(Xm+1) if Xm > 0 else self.Tnucl/(1-Xm)
+            Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
-            r = Tm*(1/np.sqrt(1-vmsq)-1)
-            Tp = Tm + 0.5*r*(1+Xp/np.sqrt(1+Xp**2))
+            r = Tm*(1/np.sqrt(1-vmsq))
+            Tp = np.arctan(Xp)*2*(r-self.TminGuess)/np.pi+ r
             return [Tp,Tm]
