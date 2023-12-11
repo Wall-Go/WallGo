@@ -70,9 +70,9 @@ class Hydro:
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
-        Tmin,Tmax = self.Tnucl,self.TmaxGuess
+        Tmin,Tmax = self.Tnucl,(self.TmaxGuess+self.Tnucl)/2
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
-        while bracket1*bracket2 > 0 and Tmax < 10*self.Tnucl:
+        while bracket1*bracket2 > 0 and Tmax < self.TmaxGuess:  
             Tmin = Tmax
             bracket1 = bracket2
             Tmax *= 1.5
@@ -270,9 +270,9 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = 0.9*self.Tnucl,Tm_sh
+        Tmin,Tmax = np.max([0.9*self.Tnucl,self.TminGuess]),Tm_sh
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
-        while bracket1*bracket2 > 0 and Tmin > self.Tnucl/10:
+        while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
             Tmax = Tmin
             bracket2 = bracket1
             Tmin /= 1.5
@@ -285,7 +285,7 @@ class Hydro:
 
         return Tn.root
 
-    def strongestShock(self, vw):
+    def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
         r"""
         Finds the smallest nucleation temperature for which a shock can exist.
         For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
@@ -330,7 +330,8 @@ class Hydro:
 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)
+#            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
+            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tn. Have to test if it is ok!
             vpmin = 1e-5 # Minimum value of vpmin
 
             def func(vpTry):
