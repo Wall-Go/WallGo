@@ -3,14 +3,13 @@ import numpy.typing as npt
 from abc import abstractmethod
 import scipy.integrate
 
-
 from .InterpolatableFunction import InterpolatableFunction
 
 
 r""" For 1-loop thermal potential WITHOUT high-T approximations, need to calculate
 :math:`J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))` (bosonic)
 and 
-:math:`J_f(x) =  -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))` (fermionic).
+:math:`J_f(x) = -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))` (fermionic).
 The thermal 1-loop correction from one particle species with N degrees of freedom is then
 :math:`V_1(T) = T^4/(2\pi^2) N J(m^2 / T^2)`.
 See eg. CosmoTransitions (arXiv:1109.4189, eq. (12)). 
@@ -24,6 +23,12 @@ Note also that the while the analytical continuation to x < 0 makes sense mathem
 it is physically less clear whether this is the right thing to use.
 Here we just provide implementations of J_b(x) and J_f(x); it is up to the user to decide
 how to deal with negative input.
+"""
+
+"""Usage: We define Jb and Jf are defined as InterpolatableFunction to allow optimized evaluation.
+The individual integrals are then collected in the ``Integrals`` class below. 
+WallGo provides a default Integrals object defined in WallGo's __init__.py, accessible as WallSpeed.defaultIntegrals. 
+Once WallSpeed.initialize() is called, we optimize Jb and Jf in WallSpeed.defaultIntegrals by loading their interpolation tables. 
 """
 
 
@@ -109,11 +114,19 @@ class JfIntegral(InterpolatableFunction):
             return results
 
 
+class Integrals():
+    """Class Integrals -- Just collects common integrals in one place.
+    This is better than using global objects since in some cases 
+    we prefer their interpolated versions. 
+    """
 
+    Jb: JbIntegral
+    Jf: JfIntegral
 
-##----------- These are configured in WallGo.initialize()
+    def __init__(self):
 
-""" Thermal 1-loop integral (bosonic): :math:`J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`"""
-Jb = JbIntegral(bUseAdaptiveInterpolation=False)
-""" Thermal 1-loop integral (fermionic): :math:`J_f(x) =  -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`"""
-Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+        """ Thermal 1-loop integral (bosonic): :math:`J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`"""
+        self.Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+
+        """ Thermal 1-loop integral (fermionic): :math:`J_f(x) =  -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`"""
+        self.Jf = JfIntegral(bUseAdaptiveInterpolation=False)

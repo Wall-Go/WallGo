@@ -10,12 +10,12 @@ from .EOM import EOM
 from .Particle import Particle
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
+from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy 
 from .WallGoManager import WallGoManager
 from .InterpolatableFunction import InterpolatableFunction
 
-## Import Integrals.py explicitly and alias it because I like namespaces
-from . import Integrals as Integrals
+from .Integrals import Integrals
 
 from .WallGoUtils import getSafePathToResource
 
@@ -35,6 +35,14 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 ## Load the collision module, gets stored in CollisionModule global var
 loadCollisionModule()
 
+
+"""Default integral objects for WallGo. Calling WallSpeed.initialize() optimizes these by replacing their direct computation with 
+precomputed interpolation tables."""
+defaultIntegrals = Integrals()
+defaultIntegrals.Jb.disableAdaptiveInterpolation()
+defaultIntegrals.Jf.disableAdaptiveInterpolation()
+
+
 ## Flag for checking if initialize() has been ran
 _bInitialized = False
 
@@ -50,6 +58,7 @@ def initialize() -> None:
         ## read config
         # ...
 
+        ## Initialize interpolations for our default integrals
         _initalizeIntegralInterpolations()
 
         _bInitialized = True
@@ -60,8 +69,8 @@ def initialize() -> None:
 
 def _initalizeIntegralInterpolations() -> None:
     ## TODO read these paths from config
-    Integrals.Jb.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jb.txt"))
-    Integrals.Jf.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jf.txt"))
+    defaultIntegrals.Jb.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jb.txt"))
+    defaultIntegrals.Jf.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jf.txt"))
 
 
 

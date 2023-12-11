@@ -12,9 +12,6 @@ from .BenchmarkPoint import BenchmarkPoint
 # Ugly directory structure:
 from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 
-## Call this to load Jb, Jf interpolations. Not sure if we actually want this though
-#WallSpeed.initialize()
-
 
 def background(M):
     vw = 0#1 / np.sqrt(3)
@@ -61,14 +58,15 @@ TODO should we use autouse=True for the benchmark fixtures?
 """
 
 
+##------- Old stuff, for newer fixtures see conftest.py in Benchmarks/SingletSM_Z2
 
-## NB: fixture argument name needs to be 'request'. This is due to magic
 
 ## These benchmark points will automatically be run for tests that ask for this fixture
 @pytest.fixture(scope="module", params=singletBenchmarks)
 def singletModelBenchmarkPoint(request) -> BenchmarkPoint:
     yield request.param
 
+## NB: fixture argument name needs to be 'request'. This is due to magic
 
 ## Fixture model objects for benchmarks for tests that would rather start from a model than from the inputs.  
 @pytest.fixture(scope="module", params=singletBenchmarks)

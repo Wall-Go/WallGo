@@ -4,10 +4,10 @@ import numpy as np
 import WallSpeed ## Whole package, in particular we get WallSpeed.initialize()
 from WallSpeed import GenericModel
 from WallSpeed import Particle
-from WallSpeed import EffectivePotential
 from WallSpeed import WallGoManager
 from WallSpeed import FreeEnergy
-
+## For Benoit benchmarks we need the unresummed, non-high-T potential:
+from WallSpeed import EffectivePotential_NoResum
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -23,7 +23,8 @@ class SingletSM_Z2(GenericModel):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters)
-        
+
+
         # Initialize interpolated FreeEnergy
         self.freeEnergy1 = FreeEnergy(self.effectivePotential, [ 0.0, 200.0 ])
         self.freeEnergy2 = FreeEnergy(self.effectivePotential, [ 246.0, 0.0 ])
@@ -122,8 +123,8 @@ class SingletSM_Z2(GenericModel):
 # end model
 
 
-
-class EffectivePotentialxSM_Z2(EffectivePotential):
+## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use slightly customized interpolation tables for Jb/Jf 
+class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def __init__(self, modelParameters: dict[str, float]):
         super().__init__(modelParameters)
@@ -131,6 +132,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         self.num_boson_dof = 29 
         self.num_fermion_dof = 90 
+
+
+
 
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
@@ -175,7 +179,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         return VTotal
 
-    
+
+    ## High-T stuff commented out for now
+    """
     ## Evaluate the potential in high-T approx (but keep 4D units)
     def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
 
@@ -223,7 +229,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         VTotal = V0 + V1
         return VTotal
     
-    
 
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:
@@ -270,7 +275,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         thermalParameters["mDsq2"] = mDsq2
 
         return thermalParameters
-
+    """
 
     def boson_massSq(self, fields, temperature):
 
