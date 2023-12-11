@@ -440,7 +440,8 @@ class Hydro:
         Tp,Tm = TpTm
         if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
             Xm = 0.5*(2*Tm-Tp)/np.sqrt(Tm*(Tp-Tm))
-            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/(Tp-self.TminGuess)
+#            Xp = Tp/self.Tnucl-1 if Tp > self.Tnucl else 1-self.Tnucl/(Tp-self.TminGuess)
+            Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2))
             return [Xp,Xm]
         else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
@@ -456,7 +457,7 @@ class Hydro:
 
         Xp,Xm = XpXm
         if vw is None:
-            Tp = self.Tnucl*(1+Xp) if Xp > 0 else self.Tnucl/(1-Xp)
+            Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
             Tm = 0.5*Tp*(1+Xm/np.sqrt(1+Xm**2))
             return [Tp,Tm]
         else:
