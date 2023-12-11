@@ -14,8 +14,16 @@ and
 The thermal 1-loop correction from one particle species with N degrees of freedom is then
 :math:`V_1(T) = T^4/(2\pi^2) N J(m^2 / T^2)`.
 See eg. CosmoTransitions (arXiv:1109.4189, eq. (12)). 
+
 Particularly for scalars the m^2 can be negative so we allow x < 0, 
-but we calculate the real parts of integrals only (@todo imag parts?)
+but we calculate the real parts of integrals only. 
+NB: for large negative x the integrals are slow to compute and good convergence
+is not guaranteed by the quad integrator used here.
+
+Note also that the while the analytical continuation to x < 0 makes sense mathematically, 
+it is physically less clear whether this is the right thing to use.
+Here we just provide implementations of J_b(x) and J_f(x); it is up to the user to decide
+how to deal with negative input.
 """
 
 

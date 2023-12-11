@@ -328,9 +328,16 @@ class EffectivePotential(ABC):
         m2,nb,_ = bosons
         T2 = (T*T) + 1e-100
 
-        ## NB: Jb, Jf take (mass/T)^2 as input, np.array is OK
+        ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
+        ## However, for negative m^2 the integrals become wild and convergence is both slow and bad.
+        ## So to avoid these issues we simply take the absolute value of m^2 here.
+
+        m2 = np.abs(m2)
 
         V = np.sum(nb* WallSpeed.Integrals.Jb(m2/T2), axis=-1)
+
         m2,nf = fermions
+        m2 = np.abs(m2)
+        
         V += np.sum(nf* WallSpeed.Integrals.Jf(m2/T2), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)
