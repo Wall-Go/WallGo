@@ -1,4 +1,4 @@
-## SingletSM_Z2/conftest.py -- Configure singlet model specific tests
+## SingletSM_Z2/conftest.py -- Configure singlet model specific tests. These are specifically for the benchmark model that Benoit provided
 
 import numpy as np
 import pytest
@@ -14,15 +14,15 @@ from .Benchmarks_singlet import BM1
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
 
 
-""" NOTE: We run all singlet-specific tests using interpolated Jb/Jf integrals,
-and interpolated FreeEnergy objects. For the former this is done by loading the packaged interpolation tables
-using WallSpeed.initialize(). FreeEnergy interpolations are initialized in the singletBenchmarkThermo_interpolate() fixture below.
+""" NOTE: We run all singlet-specific tests using interpolated Jb/Jf integrals and interpolated FreeEnergy objects. 
+The former are automatically loaded with the SingletSM_Z2 model and are DIFFERENT from the default WallGo interpolations
+-- this is due to difference in the interpolations used for the original benchmark tests: 
+The range is different, and extrapolations are allowed here.
+
+FreeEnergy interpolations are initialized in the singletBenchmarkThermo_interpolate() fixture below.
 Interpolations have a huge impact on performance but also affect the results somewhat.
 Bottom line is that these tests ARE sensitive to details of the interpolations!
 """
-
-## Call this to load Jb, Jf interpolations. Problem(?): can this affect other tests outside this folder?
-#WallSpeed.initialize()
 
 
 """----- Define some fixtures. Currently these are used for hydro tests only.

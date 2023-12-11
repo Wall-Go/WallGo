@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 ## WallGo imports
 import WallSpeed ## Whole package, in particular we get WallSpeed.initialize()
@@ -123,7 +124,7 @@ class SingletSM_Z2(GenericModel):
 # end model
 
 
-## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use slightly customized interpolation tables for Jb/Jf 
+## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
 class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def __init__(self, modelParameters: dict[str, float]):
@@ -133,6 +134,28 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         self.num_boson_dof = 29 
         self.num_fermion_dof = 90 
 
+
+        """For this benchmark model we do NOT use the default integrals from WallGo.
+        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
+        In real applications we recommend using the WallGo default implementations.
+        """
+        self._configureBenchmarkIntegrals()
+
+
+    def _configureBenchmarkIntegrals(self):
+        
+        ## Load custom interpolation tables for Jb/Jf. 
+        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
+        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
+        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"))
+        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"))
+        
+        self.integrals.Jb.disableAdaptiveInterpolation()
+        self.integrals.Jf.disableAdaptiveInterpolation()
+
+        # And force extrapolation because this is what CosmoTransitions does (not really reliable for very negative (m/T)^2 !)
+        self.integrals.Jb.toggleExtrapolation(True)
+        self.integrals.Jf.toggleExtrapolation(True)
 
 
 

@@ -45,7 +45,12 @@ def particle():
     )
 
 
-""" Below are some boilerplate classes and fixtures for testing stuff in SM + singlet, Z2 symmetric.
+
+
+##------- Old stuff, for newer fixtures see conftest.py in Benchmarks/SingletSM_Z2
+
+
+""" Below are some fixtures for testing stuff in SM + singlet, Z2 symmetric.
 For defining common fixtures I use the 'params = [...]' keyword; tests that call these fixtures 
 are automatically repeated with all parameters in the list. Note though that this makes it difficult
 to assert different numbers for different parameters, unless the expected results are somehow passed
@@ -56,9 +61,6 @@ along with just the expected results that the test in question needs.
  
 TODO should we use autouse=True for the benchmark fixtures?
 """
-
-
-##------- Old stuff, for newer fixtures see conftest.py in Benchmarks/SingletSM_Z2
 
 
 ## These benchmark points will automatically be run for tests that ask for this fixture

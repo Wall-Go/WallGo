@@ -40,6 +40,8 @@ class InterpolatableFunction(ABC):
     __bUseAdaptiveInterpolation: bool 
     __directlyEvaluatedAt: list ## keep list of values where the function had to be evaluated without interpolation, allows smart updating of ranges
 
+    ## These control whether extrapolation is allowed based on our interpolation table. See toggleExtrapolation() function below.
+    bAllowExtrapolation: bool
 
     def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1):
         """ Optional argument returnValueCount should be set by the user if using list-valued functions.
@@ -48,6 +50,7 @@ class InterpolatableFunction(ABC):
         assert returnValueCount >= 1
         self.__RETURN_VALUE_COUNT = returnValueCount  # TODO deprecate this, seems unnecessary
         
+        self.bAllowExtrapolation = False
 
         if (bUseAdaptiveInterpolation): 
             self.enableAdaptiveInterpolation()
@@ -91,12 +94,28 @@ class InterpolatableFunction(ABC):
 
     """ Non abstracts """
 
+    def toggleExtrapolation(self, bAllowExtrapolation: bool) -> None:
+        """Enables or disables extrapolation: values outside the interpolation range will be evaluated through extrapolation. 
+        This is not necessarily reliable and is disabled by default, but can be toggled by calling toggleExtrapolation(True).
+        NOTE: This will effectively prevent adaptive updates to the interpolation table.
+        NOTE 2: Calling this function will force a rebuild of our interpolation table.
+        """
+        self.bAllowExtrapolation = bAllowExtrapolation
+
+        ## CubicSplines build the extrapolations when initialized, so reconstruct the interpolation here
+        if self.__interpolatedFunction:
+            self.newInterpolationTableFromValues(self.__interpolationPoints, self.__interpolationValues)
+
+
+
+
     def enableAdaptiveInterpolation(self) -> None:
         """ Enables adaptive interpolation functionality. 
         Will clear internal work arrays."""
         self.__bUseAdaptiveInterpolation = True
         self.__directEvaluateCount = 0
         self.__directlyEvaluatedAt: list[float] = []
+
 
     def disableAdaptiveInterpolation(self) -> None:
         """ Disables adaptive interpolation functionality.
@@ -169,6 +188,11 @@ class InterpolatableFunction(ABC):
             return self.__evaluateDirectly(x)
         elif (self.__interpolatedFunction == None):
             return self.__evaluateDirectly(x)
+        ## Extrapolate?
+        elif (self.bAllowExtrapolation):
+            return self.__interpolatedFunction(x)
+            
+            
         
         if (np.isscalar(x)):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
@@ -223,7 +247,7 @@ class InterpolatableFunction(ABC):
     def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
         ## This works even if f(x) is vector valued
-        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=False, axis=0)
+        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=self.bAllowExtrapolation, axis=0)
 
         self.__rangeMin = np.min(x)
         self.__rangeMax = np.max(x)
@@ -297,7 +321,7 @@ class InterpolatableFunction(ABC):
 
 
     ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
-    def readInterpolationTable(self, fileToRead: str) -> None:
+    def readInterpolationTable(self, fileToRead: str, bVerbose=True) -> None:
 
         # for logging
         selfName = self.__class__.__name__
@@ -324,7 +348,8 @@ class InterpolatableFunction(ABC):
             self.__validateInterpolationTable(self.__rangeMax)
             self.__validateInterpolationTable((self.__rangeMax - self.__rangeMin) / 2.55)
 
-            print(f"{selfName}: Succesfully read interpolation table from file. Range [{self.__rangeMin}, {self.__rangeMax}]")
+            if (bVerbose):
+                print(f"{selfName}: Succesfully read interpolation table from file. Range [{self.__rangeMin}, {self.__rangeMax}]")
 
         except IOError as ioError:
             print(f"IOError! {selfName} attempted to read interpolation table from file, but got error:")
@@ -333,7 +358,7 @@ class InterpolatableFunction(ABC):
 
 
 
-    def writeInterpolationTable(self, outputFileName: str) -> None:
+    def writeInterpolationTable(self, outputFileName: str, bVerbose=True) -> None:
         """ Write our interpolation table to file.
         """
         try:
@@ -342,7 +367,8 @@ class InterpolatableFunction(ABC):
             stackedArray = np.column_stack((self.__interpolationPoints, self.__interpolationValues))
             np.savetxt(outputFileName, stackedArray, fmt='%.15g', delimiter=' ')
 
-            print(f"Stored interpolation table for function {self.__class__.__name__}, output file {outputFileName}.")
+            if (bVerbose):
+                print(f"Stored interpolation table for function {self.__class__.__name__}, output file {outputFileName}.")
 
         except Exception as e:
             print(f"Error from {self.__class__.__name__}, function writeInterpolationTable(): {e}")

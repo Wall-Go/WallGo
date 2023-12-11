@@ -69,8 +69,8 @@ def initialize() -> None:
 
 def _initalizeIntegralInterpolations() -> None:
     ## TODO read these paths from config
-    defaultIntegrals.Jb.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jb.txt"))
-    defaultIntegrals.Jf.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jf.txt"))
+    defaultIntegrals.Jb.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jb.txt"), bVerbose=False)
+    defaultIntegrals.Jf.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jf.txt"), bVerbose=False)
 
 
 

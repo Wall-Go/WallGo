@@ -197,6 +197,16 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         V = np.sum(nb* self.integrals.Jb(m2/T2), axis=-1)
 
+        if (np.any(~np.isfinite(V))):
+            
+            print("!!! Got V = ", V)
+            print("Input masses: ", m2)
+            print("Temperature: ", T)
+            print("T^2: ", T2)
+            print("m2/T2: ", m2/T2)
+            print(self.integrals.Jb(m2/T2))
+            input()
+
         m2,nf = fermions
         m2 = np.abs(m2)
 

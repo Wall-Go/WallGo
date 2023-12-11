@@ -57,7 +57,8 @@ class WallGoManager:
         _,_,_,TminTemplate = self.hydrotemplate.findMatching(0.01) #Minimum temperature is obtained by Tm of a really slow wall
         _,_,TmaxTemplate,_ = self.hydrotemplate.findMatching(self.hydrotemplate.vJ) #Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
 
-        """ TEMPORARY. Interpolate minima between T = [0, 1.2*Tc]. This is here because the old model example does this.
+
+        """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
         But this will need to be done properly in the near future.
         """
 

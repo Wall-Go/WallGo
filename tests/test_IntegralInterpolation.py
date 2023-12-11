@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import WallSpeed.Integrals
+from WallSpeed.Integrals import JbIntegral, JfIntegral
 
 ### Test real parts of Jb, Jf integrals
 
@@ -11,7 +11,7 @@ import WallSpeed.Integrals
 ])
 def test_directJb(x: float, expectedResult: float):
 
-    Jb = WallSpeed.Integrals.JbIntegral(bUseAdaptiveInterpolation=False)
+    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
     assert Jb(x) == pytest.approx(expectedResult, abs=1e-9)
     
 
@@ -21,6 +21,6 @@ def test_directJb(x: float, expectedResult: float):
 ])
 def test_directJf(x: float, expectedResult: float):
 
-    Jf = WallSpeed.Integrals.JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
     assert Jf(x) == pytest.approx(expectedResult, abs=1e-9)
     
