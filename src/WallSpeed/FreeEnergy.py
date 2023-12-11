@@ -13,6 +13,7 @@ class FreeEnergy(InterpolatableFunction):
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: list[float]):
 
         adaptiveInterpolation = True
+        ## Set return value count. Currently the InterpolatableFunction requires this to be set manually:
         returnValueCount = len(phaseLocationGuess) + 1
         super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount)
 
@@ -47,7 +48,7 @@ class FreeEnergy(InterpolatableFunction):
         bEvaluationFailed = bFieldWentToZero ## & ... add other checks ...
 
         ## For scalar input let's return a 1D numpy array. Note ordering
-        if (np.isscalar(temperature)):
+        if (np.isscalar(temperature) or np.ndim(temperature) == 0):
 
             if (np.any(bEvaluationFailed)):
                 return np.full(len(self.phaseLocationGuess + 1), np.nan)
@@ -58,7 +59,13 @@ class FreeEnergy(InterpolatableFunction):
             return res
         
         else:
-            ## Input was a numpy array
+            ## Input was a numpy array, so output should be 2D. But if there's just 1 field it can be 1D.
+            ## For consistency let's force it to be 2D.
+            if (np.ndim(phaseLocation) == 1):
+                phaseLocation = np.atleast_2d(phaseLocation)
+                phaseLocation = phaseLocation.transpose()
+
+            assert len(phaseLocation) == len(temperature)
 
             ## Make our failure check a boolean mask that numpy understands
             invalidRowMask = np.any(bEvaluationFailed, axis=1)

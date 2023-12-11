@@ -37,6 +37,12 @@ class GenericModel(ABC):
     def modelParameters(self) -> dict[str, float]:
         pass
 
+    ## How many classical fields
+    @property
+    @abstractmethod
+    def fieldCount(self) -> int:
+        pass
+
 
     '''
     ## Effective potential
@@ -46,9 +52,10 @@ class GenericModel(ABC):
         pass
     '''
     effectivePotential: EffectivePotential
-
     
     inputParameters: dict[str, float]
+    
+
 
     ## Common routine for defining a new particle. Usually should not be overriden
     def addParticle(self, particleToAdd: Particle) -> None:

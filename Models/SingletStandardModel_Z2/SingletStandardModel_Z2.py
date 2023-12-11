@@ -17,13 +17,16 @@ class SingletSM_Z2(GenericModel):
     outOfEquilibriumParticles = np.array([], dtype=Particle)
     modelParameters = {}
 
+    ## Specifying this is REQUIRED
+    fieldCount = 2
+
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters)
+        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
 
 
         # Initialize interpolated FreeEnergy
@@ -127,8 +130,8 @@ class SingletSM_Z2(GenericModel):
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
 class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
-    def __init__(self, modelParameters: dict[str, float]):
-        super().__init__(modelParameters)
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+        super().__init__(modelParameters, fieldCount)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
         self.num_boson_dof = 29 

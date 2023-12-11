@@ -16,9 +16,9 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
     integrals: Integrals
 
 
-    def __init__(self, modelParameters: dict[str, float], integrals: Integrals = None):
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int, integrals: Integrals = None):
         ##
-        super().__init__(modelParameters)
+        super().__init__(modelParameters, fieldCount)
         
         ## Use the passed Integrals object if provided, otherwise create a new one with default settings
         if integrals:

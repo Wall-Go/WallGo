@@ -1,11 +1,9 @@
-
+ 
 import numpy as np
 import numpy.typing as npt
 from abc import ABC, abstractmethod
 import scipy.interpolate
 from enum import Enum, auto
-
-
 
 ## Enums for extrapolation. Default is NONE, no extrapolation at all. 
 class EExtrapolationType(Enum):
@@ -159,9 +157,11 @@ class InterpolatableFunction(ABC):
     ## Add x, f(x) pairs to our pending interpolation table update 
     def scheduleForInterpolation(self, x: npt.ArrayLike, fx: npt.ArrayLike):
 
+        x = np.asanyarray(x)
         functionValues = np.asanyarray(fx)
 
-        if (np.isscalar(x)):
+        if (np.isscalar(x) or np.ndim(x) == 0):
+            # Just got 1 input x
             bValidResult = np.all(np.isfinite(functionValues))
 
             # put x in array format for consistency with array input
@@ -203,51 +203,55 @@ class InterpolatableFunction(ABC):
 
     def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
 
-        xArray = np.asanyarray(x)
-        assert np.all( (xArray > self.__rangeMax) | (xArray < self.__rangeMin))
+        x = np.asanyarray(x)
+        assert np.all( (x > self.__rangeMax) | (x < self.__rangeMin))
 
         bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
 
         if (not self.__interpolatedFunction or bNoExtrapolation):
-            res = self.__evaluateDirectly(xArray)
+            res = self.__evaluateDirectly(x)
         
         else:
             ## Now we have something to extrapolate
 
-            xLower = (xArray < self.__rangeMin)
-            xUpper = (xArray > self.__rangeMax)
-            res = np.empty_like(xArray)
+            xLower = (x < self.__rangeMin)
+            xUpper = (x > self.__rangeMax)
+            res = np.empty_like(x)
 
             ## Lower range
             match self.extrapolationTypeLower:
                 case EExtrapolationType.NONE:
-                    res[xLower] = self.__evaluateDirectly(xArray[xLower])
+                    res[xLower] = self.__evaluateDirectly(x[xLower])
                 case EExtrapolationType.CONSTANT:
                     res[xLower] = self.evaluateInterpolation(self.__rangeMin)
                 case EExtrapolationType.FUNCTION:
-                    res[xLower] = self.evaluateInterpolation(xArray[xLower])
+                    res[xLower] = self.evaluateInterpolation(x[xLower])
 
             ## Upper range
             match self.extrapolationTypeUpper:
                 case EExtrapolationType.NONE:
-                    res[xUpper] = self.__evaluateDirectly(xArray[xUpper])
+                    res[xUpper] = self.__evaluateDirectly(x[xUpper])
                 case EExtrapolationType.CONSTANT:
                     res[xUpper] = self.evaluateInterpolation(self.__rangeMax)
                 case EExtrapolationType.FUNCTION:
-                    res[xUpper] = self.evaluateInterpolation(xArray[xUpper])
+                    res[xUpper] = self.evaluateInterpolation(x[xUpper])
 
         return res
     
 
     def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
         
+
+        x = np.asanyarray(x)
+
         if (not useInterpolatedValues):
             return self.__evaluateDirectly(x)
         elif (self.__interpolatedFunction == None):
             return self.__evaluateDirectly(x)
       
         
-        if (np.isscalar(x)):
+        ## np.isscalar does not catch the case when x is np.ndarray of dim 0
+        if (np.isscalar(x) or np.ndim(x) == 0):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
 
             if (not canInterpolateCondition):

@@ -8,9 +8,14 @@ import scipy.interpolate
 
 class EffectivePotential(ABC):
 
+     
+    ## How many background fields. This is explicitly required so that we can have better control over array shapes 
+    fieldCount: int
+
     ## In practice we'll get the model params from a GenericModel subclass 
-    def __init__(self, modelParameters: dict[str, float]):
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         self.modelParameters = modelParameters
+        self.fieldCount = fieldCount
 
 
     
@@ -35,12 +40,17 @@ class EffectivePotential(ABC):
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
-        ## We kinda need to ensure that this is a numpy array
+        temperature = np.asanyarray(temperature)
         guessArray = np.asanyarray(initialGuess)
 
         # I think we'll need to manually vectorize this wrt. T
 
-        if (np.isscalar(temperature)):
+        ## np.isscalar(x) does not catch the case where x is np.ndarray of dim 0
+        if (np.isscalar(temperature) or np.ndim(temperature) == 0):             
+
+            ## Make sure that we only one initial guess
+            assert np.ndim(guessArray) == 0 if self.fieldCount == 1 else len(guessArray) == self.fieldCount
+
             # Minimize real part only
             evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
             res = scipy.optimize.minimize(evaluateWrapper, guessArray)
@@ -54,19 +64,33 @@ class EffectivePotential(ABC):
             return res.x, res.fun
 
         else:
-            ## Veff(T) values in the minimum go here 
+            ## Got many input temperatures. Veff(T) values in the minimum will go here 
             resValue = np.empty_like(temperature)
 
-            ## And field values in the minimum, at each T, go into resLocation. 
-            # But since each element would now be a list, need magic to get the shape right (we put the fields column-wise)
+            ## And field values in the minimum, at each T, will go into resLocation.
+            # We put them column wise, so that resLocation.shape = ( len(T), self.fieldCount ).
 
-            if (np.isscalar(guessArray) or len(guessArray.shape) == 1):
-                nColumns = guessArray.shape[0]
+            resLocation = np.empty( (len(temperature), self.fieldCount) )
+            
+            ## Make sure that we didn't get more than one initial guess for each T
+            ## TODO I hate this but dunno how to do it better:
+
+            if (self.fieldCount == 1):
+                
+                if (np.ndim(guessArray) != 0):
+                    assert len(temperature) == len(guessArray)
+
+                # Else: just got one guess which is fine, we broadcast and use that for all T
+                
             else:
-                ## Now we for some reason got multi-dimensional array of initialGuesses
-                _, nColumns = guessArray.shape
+                ## Now each initial guess is 1D in itself
+                if (np.ndim(guessArray) == 1):
+                    assert len(guessArray) == self.fieldCount
+                
+                else:
+                    assert guessArray.shape == (len(temperature), self.fieldCount)
 
-            resLocation = np.empty( (len(temperature), nColumns) )
+            ## Shapes probably ok...
 
             for i in np.ndindex(temperature.shape):
                 evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
@@ -124,9 +148,6 @@ class EffectivePotential(ABC):
         #return T - dT/2. # use this if the root_scalar thing doesn't work?
 
 
-
-
-
     def pressureLO(self, bosons, fermions, T: npt.ArrayLike):
         """
         Computes the leading order pressure for the light degrees of freedom
@@ -162,3 +183,4 @@ class EffectivePotential(ABC):
             V -= nf * 7*np.pi*np.pi / 720.
 
         return V*T4
+    
