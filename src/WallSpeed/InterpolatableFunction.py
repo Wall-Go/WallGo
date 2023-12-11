@@ -3,6 +3,18 @@ import numpy as np
 import numpy.typing as npt
 from abc import ABC, abstractmethod
 import scipy.interpolate
+from enum import Enum, auto
+
+
+
+## Enums for extrapolation. Default is NONE, no extrapolation at all. 
+class EExtrapolationType(Enum):
+    NONE = auto()
+    ## Use the boundary value
+    CONSTANT = auto()
+    ## Extrapolate the interpolated function directly
+    FUNCTION = auto()
+
 
 
 class InterpolatableFunction(ABC):
@@ -40,8 +52,8 @@ class InterpolatableFunction(ABC):
     __bUseAdaptiveInterpolation: bool 
     __directlyEvaluatedAt: list ## keep list of values where the function had to be evaluated without interpolation, allows smart updating of ranges
 
-    ## These control whether extrapolation is allowed based on our interpolation table. See toggleExtrapolation() function below.
-    bAllowExtrapolation: bool
+    ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
+    extrapolationTypeLower: EExtrapolationType; extrapolationTypeUpper: EExtrapolationType
 
     def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1):
         """ Optional argument returnValueCount should be set by the user if using list-valued functions.
@@ -50,7 +62,8 @@ class InterpolatableFunction(ABC):
         assert returnValueCount >= 1
         self.__RETURN_VALUE_COUNT = returnValueCount  # TODO deprecate this, seems unnecessary
         
-        self.bAllowExtrapolation = False
+        self.extrapolationTypeLower = EExtrapolationType.NONE
+        self.extrapolationTypeUpper = EExtrapolationType.NONE
 
         if (bUseAdaptiveInterpolation): 
             self.enableAdaptiveInterpolation()
@@ -94,13 +107,13 @@ class InterpolatableFunction(ABC):
 
     """ Non abstracts """
 
-    def toggleExtrapolation(self, bAllowExtrapolation: bool) -> None:
-        """Enables or disables extrapolation: values outside the interpolation range will be evaluated through extrapolation. 
-        This is not necessarily reliable and is disabled by default, but can be toggled by calling toggleExtrapolation(True).
+    def setExtrapolationType(self, extrapolationTypeLower: EExtrapolationType, extrapolationTypeUpper: EExtrapolationType) -> None:
+        """Changes extrapolation behavior, default is NONE. See the enum class EExtrapolationType. 
         NOTE: This will effectively prevent adaptive updates to the interpolation table.
         NOTE 2: Calling this function will force a rebuild of our interpolation table.
         """
-        self.bAllowExtrapolation = bAllowExtrapolation
+        self.extrapolationTypeLower = extrapolationTypeLower
+        self.extrapolationTypeUpper = extrapolationTypeUpper
 
         ## CubicSplines build the extrapolations when initialized, so reconstruct the interpolation here
         if self.__interpolatedFunction:
@@ -182,25 +195,65 @@ class InterpolatableFunction(ABC):
 
 
 
+    def evaluateInterpolation(self, x: npt.ArrayLike) -> npt.ArrayLike:
+        """Evaluates our interpolated function at input x
+        """
+        return self.__interpolatedFunction(x)
+
+
+    def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
+
+        xArray = np.asanyarray(x)
+        assert np.all( (xArray > self.__rangeMax) | (xArray < self.__rangeMin))
+
+        bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
+
+        if (not self.__interpolatedFunction or bNoExtrapolation):
+            res = self.__evaluateDirectly(xArray)
+        
+        else:
+            ## Now we have something to extrapolate
+
+            xLower = (xArray < self.__rangeMin)
+            xUpper = (xArray > self.__rangeMax)
+            res = np.empty_like(xArray)
+
+            ## Lower range
+            match self.extrapolationTypeLower:
+                case EExtrapolationType.NONE:
+                    res[xLower] = self.__evaluateDirectly(xArray[xLower])
+                case EExtrapolationType.CONSTANT:
+                    res[xLower] = self.evaluateInterpolation(self.__rangeMin)
+                case EExtrapolationType.FUNCTION:
+                    res[xLower] = self.evaluateInterpolation(xArray[xLower])
+
+            ## Upper range
+            match self.extrapolationTypeUpper:
+                case EExtrapolationType.NONE:
+                    res[xUpper] = self.__evaluateDirectly(xArray[xUpper])
+                case EExtrapolationType.CONSTANT:
+                    res[xUpper] = self.evaluateInterpolation(self.__rangeMax)
+                case EExtrapolationType.FUNCTION:
+                    res[xUpper] = self.evaluateInterpolation(xArray[xUpper])
+
+        return res
+    
+
     def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
         
         if (not useInterpolatedValues):
             return self.__evaluateDirectly(x)
         elif (self.__interpolatedFunction == None):
             return self.__evaluateDirectly(x)
-        ## Extrapolate?
-        elif (self.bAllowExtrapolation):
-            return self.__interpolatedFunction(x)
-            
-            
+      
         
         if (np.isscalar(x)):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
 
             if (not canInterpolateCondition):
-                return self.__evaluateDirectly(x)
+                return self.__evaluateOutOfBounds(x)
             else:
-                return self.__interpolatedFunction(x)
+                return self.evaluateInterpolation(x)
 
         else: 
 
@@ -208,25 +261,28 @@ class InterpolatableFunction(ABC):
             ## However, be careful to preserve the array shape
         
             canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
+            
             needsEvaluationCondition = ~canInterpolateCondition 
 
             xInterpolateRegion = x[ canInterpolateCondition ] 
             xEvaluateRegion = x[ needsEvaluationCondition ]
 
-            resultsInterpolated = self.__interpolatedFunction(xInterpolateRegion)
+            resultsInterpolated = self.evaluateInterpolation(xInterpolateRegion)
 
             results = np.empty_like(x)
             results[canInterpolateCondition] = resultsInterpolated
 
             if (not xEvaluateRegion.size == 0):
 
-                resultsEvaluated = self.__evaluateDirectly(xEvaluateRegion)
+                resultsEvaluated = self.__evaluateOutOfBounds(xEvaluateRegion)
 
                 ## combine and put in same order as the original x
                 results[needsEvaluationCondition] = resultsEvaluated
                 
             return results
-        
+
+
+
 
     def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike: 
         """Evaluate the function directly based on _functionImplementation, instead of using interpolations.
@@ -246,8 +302,11 @@ class InterpolatableFunction(ABC):
     ## Helper, sets our internal variables and does the actual interpolation
     def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
+        ## Can't specify different extrapolation methods for x > xmax, x < xmin in CubicSpline! This logic is handled manually in __call__()
+        bShouldExtrapolate = (self.extrapolationTypeLower == EExtrapolationType.FUNCTION) or (self.extrapolationTypeUpper == EExtrapolationType.FUNCTION)
+
         ## This works even if f(x) is vector valued
-        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=self.bAllowExtrapolation, axis=0)
+        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=bShouldExtrapolate, axis=0)
 
         self.__rangeMin = np.min(x)
         self.__rangeMax = np.max(x)
@@ -382,7 +441,7 @@ class InterpolatableFunction(ABC):
             print(f"{self.__class__.__name__}: __validateInterpolationTable called, but no valid interpolation table was found.")
             return False
 
-        diff = self.__interpolatedFunction(x) - self._functionImplementation(x)
+        diff = self.evaluateInterpolation(x) - self._functionImplementation(x)
         if (np.any(np.abs(diff) > absoluteTolerance)):
             print(f"{self.__class__.__name__}: Could not validate interpolation table! Value discrepancy was {diff}")
             return False

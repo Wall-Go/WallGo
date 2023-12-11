@@ -190,25 +190,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         T2 = (T*T) + 1e-100
 
         ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
-        ## However, for negative m^2 the integrals become wild and convergence is both slow and bad.
-        ## So to avoid these issues we simply take the absolute value of m^2 here.
-
-        m2 = np.abs(m2)
+        ## Do note that for negative m^2 the integrals become wild and convergence is both slow and bad,
+        ## so you may want to consider taking the absolute value of m^2. We will not enforce this however
 
         V = np.sum(nb* self.integrals.Jb(m2/T2), axis=-1)
 
-        if (np.any(~np.isfinite(V))):
-            
-            print("!!! Got V = ", V)
-            print("Input masses: ", m2)
-            print("Temperature: ", T)
-            print("T^2: ", T2)
-            print("m2/T2: ", m2/T2)
-            print(self.integrals.Jb(m2/T2))
-            input()
-
         m2,nf = fermions
-        m2 = np.abs(m2)
 
         V += np.sum(nf* self.integrals.Jf(m2/T2), axis=-1)
         return V*T**4 / (2*np.pi*np.pi)

@@ -63,7 +63,7 @@ class EffectivePotential(ABC):
             if (np.isscalar(guessArray) or len(guessArray.shape) == 1):
                 nColumns = guessArray.shape[0]
             else:
-                ## Now we for some reason got multi-dimensional array of initialGuesses. TODO will this even work?
+                ## Now we for some reason got multi-dimensional array of initialGuesses
                 _, nColumns = guessArray.shape
 
             resLocation = np.empty( (len(temperature), nColumns) )

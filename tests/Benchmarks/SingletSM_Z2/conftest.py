@@ -25,7 +25,7 @@ Bottom line is that these tests ARE sensitive to details of the interpolations!
 """
 
 
-"""----- Define some fixtures. Currently these are used for hydro tests only.
+"""----- Define fixtures for the singlet model.
 Would be good to make all our singlet-specific tests to use these for easier control.
 
 NOTE: I'm giving these session scope so that their state is preserved between tests (cleared when pytest finishes).

@@ -147,15 +147,25 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         ## Load custom interpolation tables for Jb/Jf. 
         # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"))
-        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"))
+        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
+        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
         
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
 
-        # And force extrapolation because this is what CosmoTransitions does (not really reliable for very negative (m/T)^2 !)
-        self.integrals.Jb.toggleExtrapolation(True)
-        self.integrals.Jf.toggleExtrapolation(True)
+        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
+        => not really reliable for very negative (m/T)^2 ! 
+        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
+        at the upper limit.
+        """
+        from WallSpeed.InterpolatableFunction import EExtrapolationType
+
+        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+        
+        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+
 
 
 
