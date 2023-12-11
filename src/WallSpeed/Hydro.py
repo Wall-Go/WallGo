@@ -37,7 +37,7 @@ class Hydro:
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
         self.TminGuess = TminGuess
-        self.TmaxGuess = 1.5*self.Tnucl
+        self.TmaxGuess = 5.*self.Tnucl
         self.rtol,self.atol = rtol,atol
         self.vJ = self.findJouguetVelocity()
         self.template = HydroTemplateModel(thermodynamics, rtol=1e-6, atol=1e-6)
