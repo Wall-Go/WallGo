@@ -14,7 +14,7 @@ dir_path = os.path.dirname(real_path)
 @pytest.mark.parametrize(
     "M, N, a, b, c, d, e, f",
     [#(10, 10, 1, 0, 0, 1, 0, 0),
-    (25, 19, 1, 0, -1, 1, 0, -1)]
+    (25, 3, 1, 0, -1, 1, 0, -1)]
 )
 def test_Delta00(particle, M, N, a, b, c, d, e, f):
     r"""

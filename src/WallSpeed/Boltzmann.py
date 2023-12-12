@@ -277,7 +277,8 @@ class BoltzmannSolver:
         # n = self.grid.N-1
         # Nnew = n**2
         # eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
-        # print(np.sort(1/np.abs(np.real(eigs)))[-4:])
+        # eigs2 = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
+        # print(np.sort(1/np.abs(np.real(eigs)))[-4:],np.sort(1/np.abs(np.real(eigs2)))[-4:])
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)

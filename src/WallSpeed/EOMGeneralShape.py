@@ -53,7 +53,7 @@ class EOMGeneralShape:
         self.eom = EOM(particle, freeEnergy, grid, nbrFields, includeOffEq, errTol)
         
         self.polynomial = Polynomial(np.empty(0), grid)
-        self.deriv = self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]
+        self.deriv = self.polynomial.derivMatrix('Cardinal', 'z', False)[None,:,:]
         
     def findWallVelocity(self):
         """
