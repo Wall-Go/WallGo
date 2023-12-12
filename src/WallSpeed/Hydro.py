@@ -82,7 +82,7 @@ class Hydro:
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
             tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
         else: # If we cannot bracket the root, use the 'secant' method instead. This will call thermodynamics outside of its interpolation range?
-            tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=1.5*Tmax, xtol=self.atol, rtol=self.rtol).root
+            tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=Tmax, xtol=self.atol, rtol=self.rtol).root
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
         return(vp)
@@ -270,7 +270,7 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = np.max([0.9*self.Tnucl,self.TminGuess]),Tm_sh
+        Tmin,Tmax = (TminGuess+self.Tnucl)/2,Tm_sh
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
             Tmax = Tmin
@@ -285,28 +285,29 @@ class Hydro:
 
         return Tn.root
 
-    def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
-        r"""
-        Finds the smallest nucleation temperature for which a shock can exist.
-        For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
-        The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
+#This function is commented out because it is never called. The purpose of the function is to find the strongest possible shock solution 
+    # def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
+    #     r"""
+    #     Finds the smallest nucleation temperature for which a shock can exist.
+    #     For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
+    #     The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
+ 
+    #     Parameters
+    #     ----------
+    #     vw : double
+    #         The wall velocity
 
-        Parameters
-        ----------
-        vw : double
-            The wall velocity
+    #     Returns
+    #     -------
+    #     Tn : double
+    #         The nucleation temperature with the strongest possible shock
 
-        Returns
-        -------
-        Tn : double
-            The nucleation temperature with the strongest possible shock
+    #     """
+    #     def vpnum(Tpm):
+    #         return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
 
-        """
-        def vpnum(Tpm):
-            return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
-
-        Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
-        return self.solveHydroShock(vw,0,Tp)
+    #     Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
+    #     return self.solveHydroShock(vw,0,Tp)
 
     def findMatching(self, vwTry):
         r"""
