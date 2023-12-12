@@ -85,7 +85,7 @@ class Grid:
 
         """
         self.M = M
-        self.N = N
+        self.N = N #This number has to be odd
         self.L_xi = L_xi
         self.T = T
 

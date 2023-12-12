@@ -124,8 +124,11 @@ class WallGoManager:
             direction.
         N : int
             Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
-            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
+            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions. 
+            This number has to be odd
         """
+        if(N%2)==0:
+            print("You have chosen an even number of momentum-grid points. The code will not work, please change it to an odd number.")
 
         ## LN: What are these magic numbers? Why does this need the temperature??
         self.grid = Grid(M, N, 0.05, 100)
