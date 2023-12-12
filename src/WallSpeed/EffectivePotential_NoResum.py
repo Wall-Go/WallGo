@@ -179,7 +179,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         -------
         V1T : 4d 1loop thermal potential 
         """ 
-        
+
         ## m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
         # But make sure we don't modify the input temperature array here. 
         T = np.atleast_1d(temperature)

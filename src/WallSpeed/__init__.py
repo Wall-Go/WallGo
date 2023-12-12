@@ -16,6 +16,7 @@ from .WallGoManager import WallGoManager
 from .InterpolatableFunction import InterpolatableFunction
 
 from .Integrals import Integrals
+from .Config import Config
 
 from .WallGoUtils import getSafePathToResource
 
@@ -43,6 +44,8 @@ defaultIntegrals.Jb.disableAdaptiveInterpolation()
 defaultIntegrals.Jf.disableAdaptiveInterpolation()
 
 
+config = Config()
+
 ## Flag for checking if initialize() has been ran
 _bInitialized = False
 
@@ -53,10 +56,14 @@ def initialize() -> None:
     """WallGo initializer. This should be called as early as possible in your program."""
 
     global _bInitialized
+    global config 
+
     if not _bInitialized:
 
-        ## read config
-        # ...
+        ## read default config
+        config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
+        
+        print(config)
 
         ## Initialize interpolations for our default integrals
         _initalizeIntegralInterpolations()
@@ -68,9 +75,14 @@ def initialize() -> None:
     
 
 def _initalizeIntegralInterpolations() -> None:
-    ## TODO read these paths from config
-    defaultIntegrals.Jb.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jb.txt"), bVerbose=False)
-    defaultIntegrals.Jf.readInterpolationTable(getSafePathToResource("Data/InterpolationTable_Jf.txt"), bVerbose=False)
+    global config 
+    
+    defaultIntegrals.Jb.readInterpolationTable(
+        getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jb")), bVerbose=False 
+        )
+    defaultIntegrals.Jf.readInterpolationTable(
+        getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
+        )
 
 
 
