@@ -172,7 +172,8 @@ class Hydro:
         try:
             Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
         except:
-            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl]
+            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
@@ -270,7 +271,7 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = (TminGuess+self.Tnucl)/2,Tm_sh
+        Tmin,Tmax = (TminGuess+self.Tnucl)/2,Tm_sh 
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
             Tmax = Tmin
