@@ -9,7 +9,6 @@ from WallSpeed.Polynomial import Polynomial
 from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallSpeed.Thermodynamics import Thermodynamics
 from WallSpeed.Hydro import Hydro
-from WallSpeed.HydroTemplateModel import HydroTemplateModel
 from WallSpeed import Particle, FreeEnergy, Model
 from WallSpeed.EOM import EOM
 from WallSpeed.EOMGeneralShape import EOMGeneralShape
@@ -65,33 +64,8 @@ fxSM.interpolateMinima(0,1.2*fxSM.Tc,1)
 thermo = Thermodynamics(fxSM)
 hydro = Hydro(thermo)
 
-hydrotemplate = HydroTemplateModel(thermo)
-_,_,_,TminGuess = hydrotemplate.findMatching(0.01)
-_,_,TmaxGuess,_=hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
-print(f"{TminGuess=}, {TmaxGuess=}")
-
-print(f"{hydro.findvwLTE()}")
-
-# print("Test the minimum temperature")
-# print(hydro.findHydroBoundaries(0.01))
-
-
-# print(hydrotemplate.findMatching(0.01))
-
-# print("Find the maximum temperature")
-# print(hydro.findHydroBoundaries(0.1))
-# print(hydro.findHydroBoundaries(0.3))
-print(hydro.findHydroBoundaries(0.4))
-print(hydro.findHydroBoundaries(1.01*hydro.vJ))
-print(hydro.findHydroBoundaries(0.6))
-print(hydro.findHydroBoundaries(0.8))
-# print(hydro.findHydroBoundaries(0.99*hydro.vJ))
-
-# print(hydrotemplate.findMatching(0.99*hydrotemplate.vJ))
-
 #Without out-of-equilibrium contributions
-# eom = EOM(offEqParticles[0], fxSM, grid, 2)
-# print(eom.findWallVelocityMinimizeAction())
+eom = EOM(offEqParticles[0], fxSM, grid, 2)
 eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
 
 #With out-of-equilibrium contributions
