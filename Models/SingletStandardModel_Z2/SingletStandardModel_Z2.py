@@ -416,7 +416,7 @@ def main():
     print("findHydroBoundaries() result:")
     print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
 
-    M, N = 20, 20
+    M, N = 20, 20 #N has to be odd #JvdV: please change!
     manager.initGrid(M, N)
 
     manager.solveWall()
