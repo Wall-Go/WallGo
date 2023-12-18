@@ -269,16 +269,25 @@ class HydroTemplateModel:
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
 
-        func = lambda al: self.__shooting(vw,al)
+        shockIntegrator = lambda al: self.__shooting(vw,al)
+
+        ## Please add reference to a paper where these can be found (with eq numbers) 
 
         vm = min(self.cb,vw)
         al_max = 1/3
         vp_max = min(self.cs2/vw,vw,vm)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+
         try:
-            sol = root_scalar(func,bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
-        except:
+            # LN: this does not seem reliable, the bracket can fail 
+            sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)
+
+        except Exception as e:
+            print("!!! Exception in HydroTemplateModel.findMatching():")
+            print(e)
+            print()
             return (None,None,None,None) # If no deflagration solution exists, returns None.
+        
         wp = self.w_from_alpha(sol.root)
         vp = self.get_vp(vm, sol.root)
         Tp = self.Tnucl*wp**(1/self.mu)

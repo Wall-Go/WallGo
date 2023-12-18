@@ -31,8 +31,14 @@ This should be better than writing the same stuff in every example main function
 and is good for hiding some of our internal implementation details from the user """
 class WallGoManager:
 
-    # Critical temperature
+    ## Critical temperature
     Tc: float
+
+    ## Locations of the two phases in field space, at nucleation temperature.
+    phasesAtTn: PhaseInfo
+
+    ## Temperature range used when solving hydrodynamical equations
+    TMin: float; TMax: float
 
     ### WallGo objects
     config: Config
@@ -61,6 +67,11 @@ class WallGoManager:
                         self.config.getfloat("PolynomialGrid", "L_xi")
         )
 
+        ## These are set properly in initTemperatureRange()
+        self.TMin = 0.
+        self.TMax = np.Inf
+
+
 
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo.
@@ -86,32 +97,11 @@ class WallGoManager:
         ## Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
 
-        """ Find critical temperature. Do we even need to do this though?? """
+        self.initTemperatureRange()
 
-        ## TODO!! upper temperature here
-        self.Tc = self.model.effectivePotential.findCriticalTemperature(self.phasesAtTn.phaseLocation1, self.phasesAtTn.phaseLocation2, 
-                                                                        TMin = self.phasesAtTn.temperature, TMax = 10 * self.phasesAtTn.temperature)
-
-        print(f"Found Tc = {self.Tc} GeV.")
-        # @todo should check that this Tc is really for the transition between the correct phases. 
-        # At the very least print the field values for the user
-
-        if (self.Tc < self.phasesAtTn.temperature):
-            raise RuntimeError(f"Got Tc < Tn, should not happen! Tn = {self.phasesAtTn.temperature}, Tc = {self.Tc}")
-
-
-        self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, phaseInput.temperature, 
-                                            phaseInput.phaseLocation2, phaseInput.phaseLocation1)
-
-        ## Let's turn these off so that things are more transparent
-        self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
-        self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
-
-        ## Use the template model to find an estimate of the minimum and maximum required temperature
-        self.hydrotemplate = HydroTemplateModel(self.thermodynamics)
-        _,_,_,TminTemplate = self.hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
-        _,_,TmaxTemplate,_ = self.hydrotemplate.findMatching(self.hydrotemplate.vJ) # Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
-
+        print(self.TMin)
+        print(self.TMax)
+        input()
 
         """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
         But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
@@ -150,6 +140,43 @@ class WallGoManager:
 
         self.phasesAtTn = foundPhaseInfo
         
+
+    def initTemperatureRange(self) -> None:
+        """ Get initial guess for the relevant temperature range and store in internal TMin, TMax"""
+
+        assert self.phasesAtTn != None
+
+        Tn = self.phasesAtTn.temperature
+
+        """ Find critical temperature. Do we even need to do this though?? """
+
+        ## TODO!! upper temperature here
+        self.Tc = self.model.effectivePotential.findCriticalTemperature(self.phasesAtTn.phaseLocation1, self.phasesAtTn.phaseLocation2, 
+                                                                        TMin = Tn, TMax = 10. * Tn)
+
+        print(f"Found Tc = {self.Tc} GeV.")
+        # @todo should check that this Tc is really for the transition between the correct phases. 
+        # At the very least print the field values for the user
+
+        if (self.Tc < self.phasesAtTn.temperature):
+            raise RuntimeError(f"Got Tc < Tn, should not happen! Tn = {self.phasesAtTn.temperature}, Tc = {self.Tc}")
+
+        ## TODO: should really not require Thermodynamics to take Tc, I guess
+        self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, Tn, 
+                                            self.phasesAtTn.phaseLocation2, self.phasesAtTn.phaseLocation1)
+
+        ## Let's turn these off so that things are more transparent
+        self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
+        self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
+
+        ## Use the template model to find an estimate of the minimum and maximum required temperature
+        hydrotemplate = HydroTemplateModel(self.thermodynamics)
+        _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
+        _,_, TMaxTemplate, _ = hydrotemplate.findMatching(hydrotemplate.vJ) # Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
+
+        self.TMin, self.TMax = TMinTemplate, TMaxTemplate
+
+
 
     def initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
         self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
