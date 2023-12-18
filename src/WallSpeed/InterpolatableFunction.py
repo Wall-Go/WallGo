@@ -4,6 +4,7 @@ import numpy.typing as npt
 from abc import ABC, abstractmethod
 import scipy.interpolate
 from enum import Enum, auto
+from typing import Callable
 
 ## Enums for extrapolation. Default is NONE, no extrapolation at all. 
 class EExtrapolationType(Enum):
@@ -50,6 +51,8 @@ class InterpolatableFunction(ABC):
     __bUseAdaptiveInterpolation: bool 
     __directlyEvaluatedAt: list ## keep list of values where the function had to be evaluated without interpolation, allows smart updating of ranges
 
+    __interpolatedFunction: Callable
+
     ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
     extrapolationTypeLower: EExtrapolationType; extrapolationTypeUpper: EExtrapolationType
 
@@ -72,8 +75,7 @@ class InterpolatableFunction(ABC):
         self.__interpolationPoints = []
         ## f(x) for x in self.__interpolationPoints
         self.__interpolationValues = []
-        
-        # this is the result of cubic interpolation
+
         self.__interpolatedFunction = None
 
 
@@ -104,6 +106,19 @@ class InterpolatableFunction(ABC):
 
 
     """ Non abstracts """
+
+    def interpolationRangeMin(self) -> float:
+        """Get lower limit of our current interpolation table."""
+        return self.__rangeMin
+    
+    def interpolationRangeMax(self) -> float:
+        """Get upper limit of our current interpolation table."""
+        return self.__rangeMax
+
+    def hasInterpolation(self) -> bool:
+        """Returns true if we have an interpolation table.
+        """
+        return (self.__interpolatedFunction != None)
 
     def setExtrapolationType(self, extrapolationTypeLower: EExtrapolationType, extrapolationTypeUpper: EExtrapolationType) -> None:
         """Changes extrapolation behavior, default is NONE. See the enum class EExtrapolationType. 
@@ -155,7 +170,7 @@ class InterpolatableFunction(ABC):
 
 
     ## Add x, f(x) pairs to our pending interpolation table update 
-    def scheduleForInterpolation(self, x: npt.ArrayLike, fx: npt.ArrayLike):
+    def scheduleForInterpolation(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
 
         x = np.asanyarray(x)
         functionValues = np.asanyarray(fx)
@@ -191,7 +206,7 @@ class InterpolatableFunction(ABC):
             self.__directlyEvaluatedAt = np.concatenate((self.__directlyEvaluatedAt, xValid)) # is this slow?
             
             if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
-                self.__updateInterpolationTable()
+                self.__adaptiveInterpolationUpdate()
 
 
 
@@ -315,7 +330,7 @@ class InterpolatableFunction(ABC):
 
         
     
-    def __updateInterpolationTable(self) -> None:
+    def __adaptiveInterpolationUpdate(self) -> None:
         """ Handles interpolation table updates for adaptive interpolation.
         """
 
@@ -323,61 +338,62 @@ class InterpolatableFunction(ABC):
         evaluatedPointMin = np.min(self.__directlyEvaluatedAt)
         evaluatedPointMax = np.max(self.__directlyEvaluatedAt)
 
-
         # Reset work variables (doing this here already to avoid spaghetti nesting)
         self.__directEvaluateCount = 0
         self.__directlyEvaluatedAt = []
 
-        if (self.__interpolatedFunction == None):
-            ## No existing interpolation table, so just make a new one for some range that seems sensible
-            # TODO could use a smarter start range here
+        appendPointCount = 0.2 * self._initialInterpolationPointCount if self.hasInterpolation() else self._initialInterpolationPointCount / 2
 
-            self.newInterpolationTable(evaluatedPointMin, evaluatedPointMax, self._initialInterpolationPointCount)
-            return 
+        self.extendInterpolationTable(evaluatedPointMin, evaluatedPointMax, appendPointCount, appendPointCount)
+            
     
-        # Now we already have a table and need to extend it, but let's not recalculate things for the range that we already have
+    def extendInterpolationTable(self, newMin: float, newMax: float, pointsMin: int, pointsMax: int) -> None:
+        """NB: This will reset internal data of adaptive interpolation.
+        """
+        if not self.hasInterpolation():
+            newPoints = int(pointsMin + pointsMax)
+            print(f"Warning: {self.__class__.__name__}.extendInterpolationRange() called without existing interpolation. "
+                  f"Creating new table in range [{newMin}, {newMax}] with {newPoints} points")
+            self.newInterpolationTable(newMin, newMax, newPoints)
+            return
+        
+        # what to append to lower end
+        if (newMin < self.__rangeMin and pointsMin > 0):
+            
+            ## Point spacing to use at new lower end 
+            spacing = np.abs(self.__rangeMin - newMin) / pointsMin
+            # arange stops one spacing before the max value, which is what we want
+            appendPointsMin = np.arange(newMin, self.__rangeMin, spacing)
+        else:
+            appendPointsMin = np.array([])
 
-        if (self.__rangeMin == None or self.__rangeMax == None):
-            print(f"Error: Bad interpolation range, should not happen! in class {self.__class__.__name__}")
-            print("Unable to update interpolation range, expect bad performance")
+        # what to append to upper end
+        if (newMax > self.__rangeMax and pointsMax > 0):
 
-        else: 
+            ## Point spacing to use at new upper end 
+            spacing = np.abs(newMax - self.__rangeMax) / pointsMax
+            appendPointsMax = np.arange(self.__rangeMax + spacing, newMax + spacing, spacing)
+        else:
+            appendPointsMax = np.array([])
 
-            ## How many points to append to BOTH ends (if applicable)
-            appendPointCount = 0.2 * self._initialInterpolationPointCount
+        
+        appendValuesMin = self._functionImplementation(appendPointsMin)
+        appendValuesMax = self._functionImplementation(appendPointsMax)
 
-            # what to append to lower end
-            if (evaluatedPointMin < self.__rangeMin):
-                
-                ## Point spacing to use at new lower end 
-                spacing = np.abs(self.__rangeMin - evaluatedPointMin) / appendPointCount
-                # arange stops one spacing before the max value, which is what we want
-                appendPointsMin = np.arange(evaluatedPointMin, self.__rangeMin, spacing)
-            else:
-                appendPointsMin = np.array([])
+        # Ordering is important since interpolation needs the x values to be ordered. 
+        # This works, but could be made safer by rearranging the resulting arrays accordingly:
+        xRange = np.concatenate( (appendPointsMin, self.__interpolationPoints, appendPointsMax) )
+        fxRange = np.concatenate( (appendValuesMin, self.__interpolationValues, appendValuesMax) )
 
-            # what to append to upper end
-            if (evaluatedPointMax > self.__rangeMax):
+        self.newInterpolationTableFromValues(xRange, fxRange)
 
-                ## Point spacing to use at new upper end 
-                spacing = np.abs(evaluatedPointMax - self.__rangeMax) / appendPointCount
-                appendPointsMax = np.arange(self.__rangeMax + spacing, evaluatedPointMax + spacing, spacing)
-            else:
-                appendPointsMax = np.array([])
+        ## Hacky reset of adaptive routines
+        if (self.__bUseAdaptiveInterpolation):
+            self.disableAdaptiveInterpolation()
+            self.enableAdaptiveInterpolation()
 
-            appendValuesMin = self._functionImplementation(appendPointsMin)
-            appendValuesMax = self._functionImplementation(appendPointsMax)
-
-            # Ordering is important since interpolation needs the x values to be ordered. 
-            # This works, but could be made safer by rearranging the resulting arrays accordingly:
-            xRange = np.concatenate( (appendPointsMin, self.__interpolationPoints, appendPointsMax) )
-            fxRange = np.concatenate( (appendValuesMin, self.__interpolationValues, appendValuesMax) )
-
-            self.__interpolate(xRange, fxRange)
-
-
-    # end __updateInterpolationTable()
-
+    # end extendInterpolationTable()
+        
 
     ## Reads precalculated values and does cubic interpolation. Stores the interpolated funct to self.values
     def readInterpolationTable(self, fileToRead: str, bVerbose=True) -> None:

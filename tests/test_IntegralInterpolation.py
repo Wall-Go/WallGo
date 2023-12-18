@@ -79,3 +79,35 @@ def test_Jb_extrapolation_constant(Jb_interpolated: JbIntegral):
     Jb.setExtrapolationType(extrapolationTypeLower=EExtrapolationType.NONE, extrapolationTypeUpper=EExtrapolationType.CONSTANT)
 
     np.testing.assert_allclose( Jb(x), np.array([8.433656, -0.70078526, Jb(10.0)]) , rtol=relativeTolerance)
+
+##
+def test_Jb_extend_range(Jb_interpolated: JbIntegral):
+
+    Jb = Jb_interpolated
+    relativeTolerance = 1e-6
+
+    newMin = Jb.interpolationRangeMin() - 2.
+    newMax = Jb.interpolationRangeMax() + 3
+
+    ## evaluate these directly for later comparison
+    JbNewMin_direct = Jb(newMin)
+    JbNewMax_direct = Jb(newMax)
+
+    Jb.extendInterpolationTable(newMin, Jb.interpolationRangeMax(), 2, 0)
+
+    assert Jb.interpolationRangeMin() == pytest.approx(newMin, rel=relativeTolerance)
+    assert Jb(newMin) == pytest.approx(JbNewMin_direct, rel=relativeTolerance)
+
+    Jb.extendInterpolationTable(Jb.interpolationRangeMin(), newMax, 0, 2)
+
+    assert Jb.interpolationRangeMax() == pytest.approx(newMax, rel=relativeTolerance)
+    assert Jb(newMax) == pytest.approx(JbNewMax_direct, rel=relativeTolerance)
+
+    ## This shouldn't do anything:
+    fakeNewMax = newMax - 2.
+    Jb.extendInterpolationTable(Jb.interpolationRangeMin(), fakeNewMax, 0, 2)
+
+    assert Jb.interpolationRangeMax() == pytest.approx(newMax, rel=relativeTolerance)
+    assert Jb(newMax) == pytest.approx(JbNewMax_direct, rel=relativeTolerance)
+
+
