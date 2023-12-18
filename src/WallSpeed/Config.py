@@ -12,6 +12,7 @@ class Config:
     def __init__(self):
 
         self.config = configparser.ConfigParser()
+        self.config.optionxform = str ## preserve case 
 
 
     def readINI(self, filePath: str):

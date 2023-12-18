@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=200., rtol=1e-6, atol=1e-6):
+    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters
@@ -458,14 +458,14 @@ class Hydro:
 
         Tp,Tm = TpTm
         if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
-            Xm = np.tan(np.pi/(Tp-self.TminGuess)*(Tm-(Tp+self.TminGuess)/2)) #Maps Tm =TminGuess to -inf and Tm = Tp to +inf
+            Xm = np.tan(np.pi/2/(Tp-self.TminGuess)*(Tm-Tp))   #Maps Tm =TminGuess to -inf and Tm = Tp to 0
             Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
             return [Xp,Xm]
         else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
             Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tm=TminGuess to -inf and Tm =TmaxGuess to +inf
-            maxTp = Tm*1/np.sqrt(1-vmsq)
-            Xp = np.tan(np.pi/(maxTp-self.TminGuess)*(Tp-(maxTp+self.TminGuess)/2)) #Maps Tp = TminGuess to -inf and Tp=Tm/sqrt(1-vm**2) to +inf  
+            r = Tm*1/np.sqrt(1-vmsq)
+            Xp = np.tan(np.pi/2/(r-self.TminGuess)*(Tp-r)) #Maps Tp = TminGuess to -inf and Tp=Tm/sqrt(1-vm**2) to 0  
             return [Xp,Xm]
 
     def __inverseMappingT(self, XpXm, vw=None):
@@ -476,11 +476,11 @@ class Hydro:
         Xp,Xm = XpXm
         if vw is None:
             Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-            Tm = np.arctan(Xm)*(Tp-self.TminGuess)/np.pi+ (Tp+ self.TminGuess)/2
+            Tm = np.arctan(Xm)*2*(Tp-self.TminGuess)/np.pi+ Tp
             return [Tp,Tm]
         else:
             Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
-            maxTp = Tm*(1/np.sqrt(1-vmsq))
-            Tp = np.arctan(Xp)*(maxTp-self.TminGuess)/np.pi+ (maxTp+ self.TminGuess)/2
+            r = Tm*(1/np.sqrt(1-vmsq))
+            Tp = np.arctan(Xp)*2*(r-self.TminGuess)/np.pi+ r
             return [Tp,Tm]

@@ -1,29 +1,37 @@
 import numpy as np
 import numpy.typing as npt
+import math
 
 from .InterpolatableFunction import InterpolatableFunction
 from .EffectivePotential import EffectivePotential
 
-""" Class FreeEnergy: Describes properties of a local effective potential minimum. 
-This is used to keep track of a minimum with respect to the temperature.
-By definition: free energy density of a phase == value of Veff in its local minimum.
-"""
-class FreeEnergy(InterpolatableFunction):
 
-    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: list[float]):
+class FreeEnergy(InterpolatableFunction):
+    """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
+    This is used to keep track of a minimum with respect to the temperature.
+    By definition: free energy density of a phase == value of Veff in its local minimum.
+    """
+
+    effectivePotential: EffectivePotential
+    ## Approx field values where the phase lies (TODO should we include T-dependence?)
+    phaseLocationGuess: list[float]
+
+    minPossibleTemperature: float ## Lowest possible temperature so that the phase is still (meta)stable 
+    maxPossibleTemperature: float ## Highest possible temperature so that the phase is still (meta)stable
+
+    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: list[float], initialInterpolationPointCount: int=1000):
 
         adaptiveInterpolation = True
         ## Set return value count. Currently the InterpolatableFunction requires this to be set manually:
         returnValueCount = len(phaseLocationGuess) + 1
-        super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount)
+        super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount, initialInterpolationPointCount=initialInterpolationPointCount)
 
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
 
-    ## TEMP TEMP
-    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
-        #print(x)
-        return super().__call__(x, useInterpolatedValues=useInterpolatedValues)
+        self.minPossibleTemperature = 0.
+        self.maxPossibleTemperature = np.Inf
+
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -86,4 +94,31 @@ class FreeEnergy(InterpolatableFunction):
             result = np.concatenate((phaseLocation, potentialAtMinimum_column), axis=1)
             return result
 
+
+
+
+    def tracePhase(self, TMin: float, TMax: float, dT: float) -> None:
+        """For now this will always update the interpolation table.
+        """
+
+        TMin = max(self.minPossibleTemperature, TMin)
+        TMax = min(self.maxPossibleTemperature, TMax)
+
+        numPoints = math.ceil((TMax-TMin) / dT)
+        if not self.hasInterpolation():
+            self.newInterpolationTable(TMin, TMax, numPoints)
+        
+        else:
+            currentPoints = self.numPoints()
+            self.extendInterpolationTable(TMin, TMax, math.ceil(numPoints / 2), math.ceil(currentPoints / 2))
+
+        """We should now have interpolation table in range [TMin, TMax]. 
+        If not, it suggests that our Veff minimization became invalid beyond some subrange [TMin', TMax']
+        ==> Phase became unstable. 
+        """
+        if (self.interpolationRangeMax() < TMax):
+            self.maxPossibleTemperature = self.interpolationRangeMax()
+        
+        if (self.interpolationRangeMin() > TMin):
+            self.minPossibleTemperature = self.interpolationRangeMin()
 

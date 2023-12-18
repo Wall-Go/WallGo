@@ -114,6 +114,11 @@ class InterpolatableFunction(ABC):
     def interpolationRangeMax(self) -> float:
         """Get upper limit of our current interpolation table."""
         return self.__rangeMax
+    
+    def numPoints(self):
+        """How many input points in our interpolation table."""
+        return len(self.__interpolationPoints)
+
 
     def hasInterpolation(self) -> bool:
         """Returns true if we have an interpolation table.
@@ -320,16 +325,37 @@ class InterpolatableFunction(ABC):
         ## Can't specify different extrapolation methods for x > xmax, x < xmin in CubicSpline! This logic is handled manually in __call__()
         bShouldExtrapolate = (self.extrapolationTypeLower == EExtrapolationType.FUNCTION) or (self.extrapolationTypeUpper == EExtrapolationType.FUNCTION)
 
+        ## Explicitly drop non-numerics
+        xFiltered, fxFiltered = self.__dropBadPoints(x, fx)
+        
         ## This works even if f(x) is vector valued
-        self.__interpolatedFunction = scipy.interpolate.CubicSpline(x, fx, extrapolate=bShouldExtrapolate, axis=0)
+        self.__interpolatedFunction = scipy.interpolate.CubicSpline(xFiltered, fxFiltered, extrapolate=bShouldExtrapolate, axis=0)
 
-        self.__rangeMin = np.min(x)
-        self.__rangeMax = np.max(x)
-        self.__interpolationPoints = x
-        self.__interpolationValues = fx
+        self.__rangeMin = np.min(xFiltered)
+        self.__rangeMax = np.max(xFiltered)
+        self.__interpolationPoints = xFiltered
+        self.__interpolationValues = fxFiltered
+
+    
+    @staticmethod
+    def __dropBadPoints(x: npt.ArrayLike, fx: npt.ArrayLike) -> tuple[npt.ArrayLike, npt.ArrayLike]:
+        """Removes non-numerical (x, fx) pairs. For 2D fx the check is applied row-wise 
+        """
+        if fx.ndim > 1:
+            validIndices = np.all(np.isfinite(fx), axis=1)
+            fxValid = fx[validIndices]
+        else:
+            ## fx is 1D array
+            validIndices = np.all(np.isfinite(fx))
+            fxValid = np.ravel( fx[validIndices] )
+
+        xValid = np.ravel( x[validIndices] )
+
+        return xValid, fxValid
 
         
-    
+
+
     def __adaptiveInterpolationUpdate(self) -> None:
         """ Handles interpolation table updates for adaptive interpolation.
         """
@@ -348,7 +374,8 @@ class InterpolatableFunction(ABC):
             
     
     def extendInterpolationTable(self, newMin: float, newMax: float, pointsMin: int, pointsMax: int) -> None:
-        """NB: This will reset internal data of adaptive interpolation.
+        """Extend our interpolation table. 
+        NB: This will reset internal data of adaptive interpolation.
         """
         if not self.hasInterpolation():
             newPoints = int(pointsMin + pointsMax)

@@ -90,8 +90,6 @@ class WallGoManager:
                     and the nucleation temperature. Transition is assumed to go phaseLocation1 --> phaseLocation2.
         """
 
-        ## LN: this routine is probably too heavy
-
         self.model.modelParameters = modelParameters
 
         ## Checks that phase input makes sense with the user-specified Veff
@@ -99,24 +97,31 @@ class WallGoManager:
 
         self.initTemperatureRange()
 
-        print(self.TMin)
-        print(self.TMax)
-        input()
+        print("Suggested T range:")
+        print(f"TMin = {self.TMin}, TMax = {self.TMax}")
+
+        """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
+        which is bonkers, but for honest comparison we probably want to use the same. On the other hand though the 
+        default range obtained above works well at least for the hydro routines in this point. So I'm commenting the following out for now.
+        """
 
         """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
         But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
         """
 
+        """
         TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
         interpolationPointCount = math.ceil((TMax - TMin) / dT)
 
         self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
         self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
+        """
+        
 
-        """LN: Giving sensible temperature ranges to Hydro seems to be very important. 
-        I propose hydro routines be changed so that we have easy control over what temperatures are used."""
+        # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
+        # I propose hydro routines be changed so that we have easy control over what temperatures are used
 
-        self.initHydro(self.thermodynamics, TMin, TMax)
+        self.initHydro(self.thermodynamics, self.TMin, self.TMax)
 
         print(f"Jouguet: {self.hydro.vJ}")
 
@@ -136,6 +141,10 @@ class WallGoManager:
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
 
+        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
+        if (VeffValue1 < VeffValue2):
+            raise RuntimeWarning(f"!!! Phase 1 has lower free energy than Phase 2, this will not work")
+
         foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
         self.phasesAtTn = foundPhaseInfo
@@ -143,6 +152,8 @@ class WallGoManager:
 
     def initTemperatureRange(self) -> None:
         """ Get initial guess for the relevant temperature range and store in internal TMin, TMax"""
+
+        ## LN: this routine is probably too heavy. We could at least drop the Tc part, or find it after FreeEnergy interpolations are done
 
         assert self.phasesAtTn != None
 
@@ -172,9 +183,29 @@ class WallGoManager:
         ## Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
-        _,_, TMaxTemplate, _ = hydrotemplate.findMatching(hydrotemplate.vJ) # Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
+        # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
+        _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
 
-        self.TMin, self.TMax = TMinTemplate, TMaxTemplate
+        ## Allow some leeway since the template model is just a rough estimate
+        TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate
+        dT = self.config.getfloat("EffectivePotential", "dT")
+
+        ## Interpolate phases and check that they remain stable in this range 
+        fHighT = self.thermodynamics.freeEnergyHigh
+        fLowT = self.thermodynamics.freeEnergyLow
+        fHighT.tracePhase(TMin, TMax, dT)
+        fLowT.tracePhase(TMin, TMax, dT)
+
+        ## If a phase became unstable we need to reduce our T range
+        if (fLowT.minPossibleTemperature > TMin):
+            TMin = fLowT.minPossibleTemperature
+
+        if (fHighT.maxPossibleTemperature < TMax):
+            TMax = fHighT.maxPossibleTemperature
+
+        self.TMin, self.TMax = TMin, TMax
+
+
 
 
 
