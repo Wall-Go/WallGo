@@ -21,6 +21,15 @@ class Config:
     def get(self, section: str, key: str) -> any:
         return self.config.get(section, key)
     
+    def getint(self, section: str, key: str) -> int:
+        return self.config.getint(section, key)
+    
+    def getfloat(self, section: str, key: str) -> float:
+        return self.config.getfloat(section, key)
+    
+    def getboolean(self, section: str, key: str) -> bool:
+        return self.config.getboolean(section, key)
+    
     def __str__(self) -> str:
         """Print the content in similar format as an .ini file would be.
         """

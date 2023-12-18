@@ -169,6 +169,9 @@ class EffectivePotential(ABC):
 
         # TODO is this function OK with array input?
 
+        ## TODO use eq. (39) from https://arxiv.org/pdf/hep-ph/0510375.pdf.
+        ## This is probably easier than having the user input degrees of freedom manually
+
         T4 = T*T*T*T
 
         _,nb,_ = bosons

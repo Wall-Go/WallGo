@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from dataclasses import dataclass
 
 ## WallGo imports
 from .Particle import Particle
@@ -10,43 +11,97 @@ from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodyn
 from .HydroTemplateModel import HydroTemplateModel
 from .EOM import EOM
 from .Grid import Grid
+from .Config import Config
+from .Integrals import Integrals
+
+from .WallGoUtils import getSafePathToResource
+
+
+@dataclass
+class PhaseInfo:
+    # Field values at the two phases at T (we go from 1 to 2)
+    phaseLocation1: np.ndarray[float]
+    phaseLocation2: np.ndarray[float]
+    temperature: float
+
+    
 
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
 and is good for hiding some of our internal implementation details from the user """
 class WallGoManager:
 
-    # Field values at the two phases at Tn (we go from 1 to 2)
-    phaseLocation1: np.ndarray[float]   # high-T
-    phaseLocation2: np.ndarray[float]   # low-T
-
-    # These are the user specified values, keep stored just in case
-    phaseLocation1Input: np.ndarray[float]
-    phaseLocation2Input: np.ndarray[float]
-
-    ## TODO we'd probably precalculate phase locations over some sensible temperature range and store them in arrays
-
-    # Nucleation temperature
-    Tn: float
     # Critical temperature
     Tc: float
 
     ### WallGo objects
+    config: Config
+    integrals: Integrals ## use a dedicated Integrals object to make management of interpolations easier
     model: GenericModel
     thermodynamics: Thermodynamics
     hydro: Hydro
     grid: Grid
+    eom: EOM
     # ...
 
-    def __init__(self, inputModel: GenericModel, userInput: dict):
-        self.model = inputModel
+    def __init__(self):
+        """do common model-independent setup here
+        """
 
-        self.readUserInput(userInput)
+        self.config = Config()
+        self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
 
-        ## Validates model stuff, including Veff and that Tn < Tc
-        self.validateUserInput()
+        self.integrals = Integrals()
 
-        self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, self.Tn, self.phaseLocation2, self.phaseLocation1)
+        self._initalizeIntegralInterpolations(self.integrals)
+
+        ## Grid
+        self._initGrid( self.config.getint("PolynomialGrid", "spatialGridSize"), 
+                        self.config.getint("PolynomialGrid", "momentumGridSize"),
+                        self.config.getfloat("PolynomialGrid", "L_xi")
+        )
+
+
+    def registerModel(self, model: GenericModel) -> None:
+        """Register a physics model with WallGo.
+        """
+        self.model = model
+
+
+    def setParameters(self, modelParameters: dict[str, float], phaseInput: PhaseInfo) -> None:
+        """Parameters
+        ----------
+        modelParameters: dict[str, float]
+                        Dict containing all QFT model parameters: 
+                        Those that enter the action and the renormalization scale.
+        phaseInput: WallGo.PhaseInfo
+                    Should contain approximate field values at the two phases that WallGo will analyze,
+                    and the nucleation temperature. Transition is assumed to go phaseLocation1 --> phaseLocation2.
+        """
+
+        ## LN: this routine is probably too heavy
+
+        self.model.modelParameters = modelParameters
+
+        ## Checks that phase input makes sense with the user-specified Veff
+        self.validatePhaseInput(phaseInput)
+
+        """ Find critical temperature. Do we even need to do this though?? """
+
+        ## TODO!! upper temperature here
+        self.Tc = self.model.effectivePotential.findCriticalTemperature(self.phasesAtTn.phaseLocation1, self.phasesAtTn.phaseLocation2, 
+                                                                        TMin = self.phasesAtTn.temperature, TMax = 10 * self.phasesAtTn.temperature)
+
+        print(f"Found Tc = {self.Tc} GeV.")
+        # @todo should check that this Tc is really for the transition between the correct phases. 
+        # At the very least print the field values for the user
+
+        if (self.Tc < self.phasesAtTn.temperature):
+            raise RuntimeError(f"Got Tc < Tn, should not happen! Tn = {self.phasesAtTn.temperature}, Tc = {self.Tc}")
+
+
+        self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, phaseInput.temperature, 
+                                            phaseInput.phaseLocation2, phaseInput.phaseLocation1)
 
         ## Let's turn these off so that things are more transparent
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
@@ -54,12 +109,12 @@ class WallGoManager:
 
         ## Use the template model to find an estimate of the minimum and maximum required temperature
         self.hydrotemplate = HydroTemplateModel(self.thermodynamics)
-        _,_,_,TminTemplate = self.hydrotemplate.findMatching(0.01) #Minimum temperature is obtained by Tm of a really slow wall
-        _,_,TmaxTemplate,_ = self.hydrotemplate.findMatching(self.hydrotemplate.vJ) #Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
+        _,_,_,TminTemplate = self.hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
+        _,_,TmaxTemplate,_ = self.hydrotemplate.findMatching(self.hydrotemplate.vJ) # Maximum temperature is obtained by Tp of the fastes possible wall (Jouguet velocity)
 
 
         """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
-        But this will need to be done properly in the near future.
+        But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
         """
 
         TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
@@ -68,54 +123,40 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
         self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
 
-        self.initHydro(self.thermodynamics)
+        """LN: Giving sensible temperature ranges to Hydro seems to be very important. 
+        I propose hydro routines be changed so that we have easy control over what temperatures are used."""
 
-        ## I think this is where we'd validate/init collision integrals and then end the __init__
-        # Can have a separate function for doing the collision/EOM work
-        # But until everything works I'm just putting test stuff here: 
+        self.initHydro(self.thermodynamics, TMin, TMax)
 
         print(f"Jouguet: {self.hydro.vJ}")
 
-    # end __init__
 
+    def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
+        """This checks that the user-specified phases are OK.
+        Specifically, the effective potential should have two minima at the given T,
+        otherwise phase transition analysis is not possible.
+        """
 
-    ## WIP/draft function, read things like Tn, approx locations of the 2 minima etc
-    def readUserInput(self, userInput: dict) -> None:
-        self.phaseLocation1Input = userInput["phaseLocation1"]
-        self.phaseLocation2Input = userInput["phaseLocation2"]
-        self.Tn = userInput["Tn"]
+        T = phaseInput.temperature
 
+        ## Find the actual minima at input T, should be close to the user-specified locations
+        phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation1, T)
+        phaseLocation2, VeffValue2 = self.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation2, T)
+
+        print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
+        print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
+
+        foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
+
+        self.phasesAtTn = foundPhaseInfo
         
 
-    ## Check that the user input makes sense in context of the specified model. IE. can be found, Tn < Tc etc
-    def validateUserInput(self) -> None:
-
-        ## Find the actual minima at Tn, should be close to the user-specified locations
-        self.phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(self.phaseLocation1Input, self.Tn)
-        self.phaseLocation2, VeffValue2 = self.model.effectivePotential.findLocalMinimum(self.phaseLocation2Input, self.Tn)
-
-        print(f"Found phase 1: phi = {self.phaseLocation1}, Veff(phi) = {VeffValue1}")
-        print(f"Found phase 2: phi = {self.phaseLocation2}, Veff(phi) = {VeffValue2}")
-
-
-        self.Tc = self.model.effectivePotential.findCriticalTemperature(self.phaseLocation1, self.phaseLocation2, TMin = self.Tn, TMax = 500)
-
-        print(f"Found Tc = {self.Tc} GeV.")
-        # @todo should check that this Tc is really for the transition between the correct phases. 
-        # At the very least print the field values for the user
-
-        if (self.Tc < self.Tn):
-            print("Got Tc < Tn, should not happen!")
-            raise RuntimeError("Invalid nucleation temperature or critical temperature")
+    def initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
+        self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
 
 
 
-    def initHydro(self, thermodynamics: Thermodynamics) -> None:
-        self.hydro = Hydro(thermodynamics)
-
-
-
-    def initGrid(self, M: int, N: int) -> Grid:
+    def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
         r"""
         Parameters
         ----------
@@ -126,35 +167,56 @@ class WallGoManager:
             Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions. 
             This number has to be odd
+        L_xi : float
+            Length scale determining transform in the xi direction.
         """
-        if(N%2)==0:
-            print("You have chosen an even number of momentum-grid points. The code will not work, please change it to an odd number.")
 
-        ## LN: What are these magic numbers? Why does this need the temperature??
-        self.grid = Grid(M, N, 0.05, 100)
+        N, M = int(N), int(M)
+        if (N % 2 == 0):
+            raise ValueError("You have chosen an even number N of momentum-grid points. WallGo only works with odd N, please change it to an odd number.")
+
+        ## TODO remove the temperature from here !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        self.grid = Grid(M, N, L_xi, 100)
         
 
 
     # Call after initGrid. I guess this would be the main workload function 
     def solveWall(self):
 
-        # this should be somewhere else, if even needed. Maybe routines that need this could just read it from length of some input field array?
-        numberOfFields = 2
+        ## Begin with Local Thermal Equilibrium approximation to wall speed
+        vwLTE = self.hydro.findvwLTE()
+
+        print(f"LTE wall speed: {vwLTE}")
+
+        print("======= Next would be EOM routines, but these are TODO. The program will now crash :^)")
+        input()
+
+        numberOfFields = self.model.fieldCount
 
         ### EOMs just for the first out-of-eq particle for now. TODO generalize
         outOfEqParticle = self.model.outOfEquilibriumParticles[0]
         
-        ### LN: I feel this is bad use of objects, and in this case extremely unperformant. 
-        # We should only need to initialize one EOM object, then call something like eom.wallSpeedLTE(), eom.wallSpeedBoltzmann() etc
 
         # Without out-of-equilibrium contributions
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
         #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
-        print(f"LTE wall speed: {eom.wallVelocityLTE}")
-        
+
+        eom.findWallVelocityMinimizeAction()
+
+        ## TODO should not need to create a new object just for this...
 
         #With out-of-equilibrium contributions
         eomOffEq = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=True)
-        print(f"LTE wall speed but with includeOffEq=True in EOM: {eomOffEq.wallVelocityLTE}")
         #eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
         
+        
+    def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
+    
+        assert self.config != None
+
+        integrals.Jb.readInterpolationTable(
+            getSafePathToResource(self.config.get("DataFiles", "InterpolationTable_Jb")), bVerbose=False 
+            )
+        integrals.Jf.readInterpolationTable(
+            getSafePathToResource(self.config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
+            )

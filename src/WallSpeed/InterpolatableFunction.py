@@ -202,9 +202,15 @@ class InterpolatableFunction(ABC):
 
 
     def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
+        """This gets called when the function is called outside the range of its interpolation table.
+        We either extrapolate (different extrapolations are possible) or evaluate the function directly based on _functionImplementation() 
+        """
 
         x = np.asanyarray(x)
-        assert np.all( (x > self.__rangeMax) | (x < self.__rangeMin))
+
+        """LN: This assert fails with a useless error if the function gets called with np.nan. Inputting np.nan is certainly not good but that's not our fault. 
+        So let's not enforce the assert."""
+        #assert np.all( (x > self.__rangeMax) | (x < self.__rangeMin))
 
         bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
 
@@ -241,7 +247,6 @@ class InterpolatableFunction(ABC):
 
     def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
         
-
         x = np.asanyarray(x)
 
         if (not useInterpolatedValues):
@@ -254,14 +259,14 @@ class InterpolatableFunction(ABC):
         if (np.isscalar(x) or np.ndim(x) == 0):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
 
-            if (not canInterpolateCondition):
-                return self.__evaluateOutOfBounds(x)
-            else:
+            if (canInterpolateCondition):
                 return self.evaluateInterpolation(x)
+            else:
+                return self.__evaluateOutOfBounds(x)
 
         else: 
 
-            ## Use interpolated values whenever possible, so split the x array into two parts.
+            ## Now input array of many x values. Use interpolated values whenever possible, so split the x array into two parts.
             ## However, be careful to preserve the array shape
         
             canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
@@ -271,21 +276,13 @@ class InterpolatableFunction(ABC):
             xInterpolateRegion = x[ canInterpolateCondition ] 
             xEvaluateRegion = x[ needsEvaluationCondition ]
 
-            resultsInterpolated = self.evaluateInterpolation(xInterpolateRegion)
-
             results = np.empty_like(x)
-            results[canInterpolateCondition] = resultsInterpolated
+            results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion)
 
-            if (not xEvaluateRegion.size == 0):
-
-                resultsEvaluated = self.__evaluateOutOfBounds(xEvaluateRegion)
-
-                ## combine and put in same order as the original x
-                results[needsEvaluationCondition] = resultsEvaluated
+            if (xEvaluateRegion.size > 0):
+                results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion)
                 
             return results
-
-
 
 
     def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike: 
@@ -300,7 +297,6 @@ class InterpolatableFunction(ABC):
 
         return fx 
     
-
 
 
     ## Helper, sets our internal variables and does the actual interpolation

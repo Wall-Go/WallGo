@@ -109,9 +109,13 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]) -> Tuple[WallSpeed.Hydro, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
+    
+    ## temperature range guesses
+    TMinGuess = BM.config["hydroTMinGuess"]
+    TMaxGuess = BM.config["hydroTMaxGuess"]
 
     ## TODO Should fix rtol, atol here so that our tests don't magically change if the class defaults change !
-    yield WallSpeed.Hydro(thermo), BM
+    yield WallSpeed.Hydro(thermo, TminGuess=TMinGuess, TmaxGuess=TMaxGuess), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now. And it really needs to get rid of the temperature argument

@@ -161,17 +161,14 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
         at the upper limit.
         """
-        from WallSpeed.InterpolatableFunction import EExtrapolationType
 
+        from WallSpeed.InterpolatableFunction import EExtrapolationType
         self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
                                                extrapolationTypeUpper = EExtrapolationType.CONSTANT)
         
         self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
                                                extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-
-
-
-
+        
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
@@ -379,7 +376,15 @@ def main():
 
     WallSpeed.initialize()
 
-    ## initial input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+    ## Create WallGo control object
+    manager = WallGoManager()
+
+
+    """Initialize your GenericModel instance. 
+    The constructor currently requires an initial parameter input, but this is likely to change in the future
+    """
+
+    ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         #"RGScale" : 91.1876,
         "RGScale" : 125., # <- Benoit benchmark
@@ -397,31 +402,47 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
-    Tn = 100.
+    """ Register the model with WallGo. This needs to be done only once. 
+    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
 
-    userInput = {
-        "Tn" : Tn,
-        "phaseLocation1" : [ 0.0, 200.0 ],
-        "phaseLocation2" : [ 246.0, 0.0 ]
-    }
-
-    ## Create control class
-    manager = WallGoManager(model, userInput)
-
-    # At this point we should have all required input from the user
-    # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
-
-    c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
-
-    print("findHydroBoundaries() result:")
-    print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
-
-    M, N = 20, 20 #N has to be odd #JvdV: please change!
-    manager.initGrid(M, N)
-
-    manager.solveWall()
-
+    ## ---- Here is where you'd start an input parameter loop if doing parameter-space scans ----
     
+    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
+    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
+    """  
+    values_mh2 = [ 120.0 ]
+    for mh2 in values_mh2:
+
+        inputParameters["mh2"] = mh2
+
+        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
+        Use the WallSpeed.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        """
+        Tn = 100. ## nucleation temperature
+        phaseInfo = WallSpeed.PhaseInfo(temperature = Tn, 
+                                        phaseLocation1 = [ 0.0, 200.0 ], 
+                                        phaseLocation2 = [ 246.0, 0.0 ])
+
+        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+            1) WallGo needs the PhaseInfo 
+            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+        """ 
+        manager.setParameters(inputParameters, phaseInfo)
+
+        ## TODO initialize collisions. Either do it here or already in registerModel(). 
+        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
+
+        """WallGo can now be used to compute wall stuff!"""
+
+        ## LN: this currently computes wall speed in different approximations. I suppose we eventually want to have different functions or options to control what to compute.
+        manager.solveWall()
+
+
+    # end parameter-space loop
+
+# end main()
 
 
 ## Don't run the main function if imported to another file

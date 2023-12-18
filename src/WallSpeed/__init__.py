@@ -13,6 +13,7 @@ from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy 
 from .WallGoManager import WallGoManager
+from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
 from .Integrals import Integrals
@@ -37,17 +38,15 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 loadCollisionModule()
 
 
+_bInitialized = False
+config = Config()
+
 """Default integral objects for WallGo. Calling WallSpeed.initialize() optimizes these by replacing their direct computation with 
 precomputed interpolation tables."""
 defaultIntegrals = Integrals()
 defaultIntegrals.Jb.disableAdaptiveInterpolation()
 defaultIntegrals.Jf.disableAdaptiveInterpolation()
 
-
-config = Config()
-
-## Flag for checking if initialize() has been ran
-_bInitialized = False
 
 ## Define a separate initializer function that does NOT get called automatically. 
 ## This is good for preventing heavy startup operations from running if the user just wants a one part of WallGo and not the full framework, eg. ``import WallGo.Integrals``.

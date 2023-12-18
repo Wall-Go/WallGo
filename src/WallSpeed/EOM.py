@@ -61,22 +61,15 @@ class EOM:
         self.errTol = errTol
         self.nbrFields = nbrFields
         self.includeOffEq = includeOffEq
-
-        """
-        ## why are these constructed here?
-        self.thermo = Thermodynamics(freeEnergy)
-        self.hydro = Hydro(self.thermo)
-        """
         
         self.thermo = thermodynamics
         self.hydro = hydro
         # I feel this is error prone: we should always read Tnucl from self.thermo
         self.Tnucl = self.thermo.Tnucl
 
-        # Is it a good idea to run this in __init__?
-        print("Running LTE (hydro.findvwLTE)")
-        self.wallVelocityLTE = self.hydro.findvwLTE()
-
+    ## OLD STUFF, use findWallVelocityMinimizeAction() instead! 
+    # Jorinde: "findWallVelocityLoop was written first, but it didn't work so well, so Benoit wrote the other functiion"
+    '''
     def findWallVelocityLoop(self):
         """
         Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
@@ -148,6 +141,9 @@ class EOM:
             error = 0#np.sqrt((1 - oldWallVelocity/wallVelocity)**2 + np.sum((1 - oldWallWidths/wallWidths)**2) + np.sum((wallOffsets - oldWallOffsets) ** 2))
 
         return wallParameters
+    '''
+    
+
 
     def findWallVelocityMinimizeAction(self):
         """

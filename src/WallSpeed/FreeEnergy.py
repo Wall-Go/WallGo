@@ -20,6 +20,10 @@ class FreeEnergy(InterpolatableFunction):
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
 
+    ## TEMP TEMP
+    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
+        #print(x)
+        return super().__call__(x, useInterpolatedValues=useInterpolatedValues)
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -51,7 +55,7 @@ class FreeEnergy(InterpolatableFunction):
         if (np.isscalar(temperature) or np.ndim(temperature) == 0):
 
             if (np.any(bEvaluationFailed)):
-                return np.full(len(self.phaseLocationGuess + 1), np.nan)
+                return np.full(len(self.phaseLocationGuess) + 1, np.nan)
 
             res = np.asanyarray(phaseLocation)
             res = np.append(phaseLocation, potentialAtMinimum)

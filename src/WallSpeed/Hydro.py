@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, TminGuess=0, TmaxGuess=10, rtol=1e-6, atol=1e-6):
+    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters
@@ -33,14 +33,20 @@ class Hydro:
             An object of the Hydro class.
 
         """
+
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
         self.TminGuess = TminGuess
-        self.TmaxGuess = 5.*self.Tnucl
+
+        # LN: can't have this since TmaxGuess is supposed to be an input
+        #self.TmaxGuess = 5.*self.Tnucl
+        self.TmaxGuess = TmaxGuess
         self.rtol,self.atol = rtol,atol
+
         self.vJ = self.findJouguetVelocity()
-        self.template = HydroTemplateModel(thermodynamics, rtol=1e-6, atol=1e-6)
+        # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
+        self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
 
     def findJouguetVelocity(self):
         r"""
@@ -70,9 +76,17 @@ class Hydro:
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
-        Tmin,Tmax = self.Tnucl,(self.TmaxGuess+self.Tnucl)/2
+
+        # LN: I guess we need to ensure that Tmax does not start from a too large value though
+        #Tmin,Tmax = self.Tnucl,(self.TmaxGuess+self.Tnucl)/2
+
+        ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
+
+        Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
+        Tmax = self.TmaxGuess
+
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
-        while bracket1*bracket2 > 0 and Tmax < self.TmaxGuess:  
+        while bracket1*bracket2 > 0 and Tmax < self.TmaxGuess:
             Tmin = Tmax
             bracket1 = bracket2
             Tmax *= 1.5
@@ -271,7 +285,7 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = (TminGuess+self.Tnucl)/2,Tm_sh 
+        Tmin,Tmax = (self.TminGuess+self.Tnucl)/2,Tm_sh 
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
         while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
             Tmax = Tmin
@@ -399,7 +413,7 @@ class Hydro:
         vwLTE
             The value of the wall velocity for this model in local thermal equilibrium.
         """
-        def func(vw): # Function given to the root finder. # LN: yea but what does it do?? 
+        def func(vw): # Function given to the root finder. # LN: yea but please use descriptive names
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
             Tntry = self.solveHydroShock(vw,vp,Tp)
             return Tntry - self.Tnucl
