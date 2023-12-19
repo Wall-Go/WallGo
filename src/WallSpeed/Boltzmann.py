@@ -1,7 +1,6 @@
 import os
 import warnings
 import numpy as np
-from scipy.special import eval_chebyt
 from copy import deepcopy
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
@@ -174,14 +173,160 @@ class BoltzmannSolver:
             doi:10.1103/PhysRevD.106.023501
         """
         # contructing the various terms in the Boltzmann equation
-        operator, source = self.buildLinearEquations()
+        print("Starting solveBoltzmannEquations")
+        operator, source, liouville, collision = self.buildLinearEquations()
 
         # solving the linear system: operator.deltaF = source
         deltaF = np.linalg.solve(operator, source)
 
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
-        return np.reshape(deltaF, deltaFShape, order="C")
+        deltaF = np.reshape(deltaF, deltaFShape, order="C")
+
+        # testing result
+        source = np.reshape(source, ((self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1)), order="C")
+        self.testSolution(deltaF, source, collision)
+
+        return result
+
+    def testSolution(self, deltaF, source, collision):
+        r"""
+        Tests the validity of a solution of the Boltzmann equation.
+
+        Parameters
+        ----------
+        solution : array_like
+            The solution to be tested, a rank 6 array, with shape
+            :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
+
+        Returns
+        -------
+
+        """
+        print("\nStarting testSolution")
+        # the right hand side, to reproduce
+        rhs = np.einsum(
+            "ijkabc, abc -> ijk",
+            collision,
+            deltaF,
+        )
+        rhs = rhs - source
+
+        # moving into Cardinal basis
+        print("moving into Cardinal basis")
+        basisTypes = (self.basisM, self.basisN, self.basisN)
+        basisNames = ('z', 'pz', 'pp')
+        deltaFPoly = Polynomial(
+            deltaF, self.grid, basisTypes, basisNames, False
+        )
+        deltaFPoly.changeBasis('Cardinal')
+
+        # the left hand side, finite differences
+        print("the left hand side, finite differences")
+        chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
+        xi, pz, pp = self.grid.getCoordinates(endpoints=False)
+        xi = xi[:, np.newaxis, np.newaxis]
+        pz = pz[np.newaxis, :, np.newaxis]
+        pp = pp[np.newaxis, np.newaxis, :]
+        dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
+
+        vw = self.background.vw
+        gammaWall = 1 / np.sqrt(1 - vw**2)
+
+        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
+        msq = self.particle.msqVacuum(field)
+        E = np.sqrt(msq + pz**2 + pp**2)
+        msqpoly = Polynomial(
+            self.particle.msqVacuum(self.background.fieldProfile),
+            self.grid,
+            'Cardinal',
+            'z',
+            True,
+        )
+        PWall = gammaWall * (pz - vw * E)
+
+        # checking msq derivatives
+        print("\ntesting msq derivatives")
+        h = 1e-4
+        deriv1 = (
+            msqpoly.evaluate(np.array([chi + h]))
+            - msqpoly.evaluate(np.array([chi - h]))
+        ) / (2 * h)
+        deriv2 = np.asarray(msqpoly.derivative(axis=0))[1:-1]
+        diffMsqDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
+        print(f"diff dMsq/dchi = {diffMsqDeriv}")
+
+        # checking field derivatives
+        print("\ntesting field derivatives")
+        deriv1 = (
+            deltaFPoly.evaluate(np.array([chi + h, rz, rp]))
+            - deltaFPoly.evaluate(np.array([chi - h, rz, rp]))
+        ) / (2 * h)
+        deriv2 = np.asarray(deltaFPoly.derivative(axis=0))[1:-1, :, :]
+        diffFieldDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
+        print(f"diff dField/dchi = {diffFieldDeriv}")
+        
+        deriv1 = (
+            deltaFPoly.evaluate(np.array([chi, rz + h, rp]))
+            - deltaFPoly.evaluate(np.array([chi, rz - h, rp]))
+        ) / (2 * h)
+        deriv2 = np.asarray(deltaFPoly.derivative(axis=1))[:, 1:-1, :]
+        diffFieldDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
+        print(f"diff dField/drz = {diffFieldDeriv}")
+
+        # OG: should use derivative() from helpers.py, for more accurate results
+        print("\nputting the left hand side together")
+        print(f"Input shapes: {np.array([chi + h, rz, rp]).shape}")
+        lhs = (
+            dchidxi[:, np.newaxis, np.newaxis] * (
+                PWall * (
+                    deltaFPoly.evaluate(np.array([chi + h, rz, rp]))
+                    - deltaFPoly.evaluate(np.array([chi - h, rz, rp]))
+                ) / (2 * h)
+                - gammaWall / 2 * drzdpz * (
+                    msqpoly.evaluate(np.array([chi + h]))
+                    - msqpoly.evaluate(np.array([chi - h]))
+                ) / (2 * h) * (
+                    deltaFPoly.evaluate(np.array([chi, rz + h, rp]))
+                    - deltaFPoly.evaluate(np.array([chi, rz - h, rp]))
+                ) / (2 * h)
+            )
+        )
+
+        # quantifying discrepancy with finite difference approximation
+        print("\n quantifying differences")
+        lhsNorm = np.linalg.norm(lhs)
+        rhsNorm = np.linalg.norm(rhs)
+        diffFiniteDifference = np.linalg.norm(lhs - rhs) / rhsNorm
+        print(f"{lhsNorm = }")
+        print(f"{rhsNorm = }")
+        print(f"{diffFiniteDifference = }")
+
+        exit()
+
+        # testing result
+        # optimistic estimate of convergence in momentum directions
+        convergenceOptimistic = (
+            np.linalg.norm(result[:, -1, -1]) / np.linalg.norm(result[:, 0, 0])
+        )
+        print(f"{convergenceOptimistic = }")
+        convergencePz = np.linalg.norm(result, axis=(0, 2))
+        convergencePp = np.linalg.norm(result, axis=(0, 1))
+        x = self.grid.rzValues
+        y = np.log(convergencePz)
+        popt, pcov = np.polyfit(x, y, 1, cov=True)
+        print(f"fit parameters {popt[0]}({np.sqrt(pcov[0][0])}), {popt[1]}({np.sqrt(pcov[1][1])})")
+
+        # testing other stuff
+        basisTypes = (self.basisM, self.basisN, self.basisN)
+        basisNames = ('z', 'pz', 'pp')
+        deltaFPoly = Polynomial(
+            result, self.grid, basisTypes, basisNames, False
+        )
+        deltaFPoly.changeBasis('Cardinal')
+        exit()
+
+        return result
 
 
     def buildLinearEquations(self):
@@ -190,14 +335,15 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
+        print("Starting buildLinearEquations")
         # coordinates
-        xi, pz, pp = self.grid.getCoordinates()  # non-compact
+        xi, pz, pp = self.grid.getCoordinates(endpoints=False)  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
         # compactified coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates() # compact
+        chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False) # compact
 
         # background profiles
         T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
@@ -245,7 +391,6 @@ class BoltzmannSolver:
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
-        EWall = gammaWall * (E - vw * pz)
         PWall = gammaWall * (pz - vw * E)
 
         # dot products with plasma profile velocity
@@ -282,6 +427,7 @@ class BoltzmannSolver:
         )
 
         ##### liouville operator #####
+        print("Building liouville operator")
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -298,14 +444,23 @@ class BoltzmannSolver:
         )
 
         # including factored-out T^2 in collision integrals
-        collisionArray = (
+        print("Building collision operator")
+        collision = (
             (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
             * self.collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
         ##### total operator #####
-        operator = liouville + collisionArray
+        print("Summing operators")
+        print(f"Shapes: {liouville.shape=}, {collision.shape=}")
+        operator = liouville + collision
+
+        # reshaping indices
+        print("reshaping indices")
+        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
+        source = np.reshape(source, N_new, order="C")
+        operator = np.reshape(operator, (N_new, N_new), order="C")
 
         # n = self.grid.N-1
         # Nnew = n**2
@@ -313,16 +468,9 @@ class BoltzmannSolver:
         # eigs2 = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
         # print(np.sort(1/np.abs(np.real(eigs)))[-4:],np.sort(1/np.abs(np.real(eigs2)))[-4:])
 
-        # doing matrix-like multiplication
-        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
-
-        # reshaping indices
-        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
-        source = np.reshape(source, N_new, order="C")
-        operator = np.reshape(operator, (N_new, N_new), order="C")
-
         # returning results
-        return operator, source
+        print("Ending buildLinearEquations")
+        return operator, source, liouville, collision
 
     def readCollision(self, collisionFile, particle):
         """

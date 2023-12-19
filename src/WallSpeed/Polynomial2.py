@@ -230,7 +230,8 @@ class Polynomial:
 
         """
         x = np.asarray(x)
-        assert x.shape[0] == self.N and 1 <= len(x.shape) <= 2, 'Polynomial error: x must have a shape (self.N,:) or (self.N,).'
+        assert x.shape[0] == self.N and 1 <= len(x.shape) <= 2,\
+            f'Polynomial error: x has shape {x.shape} but must be ({self.N},:) or ({self.N},).'
         singlePoint = False
         if len(x.shape) == 1:
             x = x.reshape((self.N,1))

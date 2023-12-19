@@ -13,8 +13,11 @@ dir_path = os.path.dirname(real_path)
 
 @pytest.mark.parametrize(
     "M, N, a, b, c, d, e, f",
-    [#(10, 10, 1, 0, 0, 1, 0, 0),
-    (25, 3, 1, 0, -1, 1, 0, -1)]
+    [(25, 19, 1, 0, 0, 1, 0, 0),
+    (25, 19, 1, 0, -1, 1, 0, 1),
+    (25, 19, 1, 0, 1, 1, 0, -1),
+    (25, 19, 1, 0, -1, 1, 0, -1),
+    (3, 3, 1, 0, -1, 1, 0, -1)]
 )
 def test_Delta00(particle, M, N, a, b, c, d, e, f):
     r"""
@@ -42,7 +45,7 @@ def test_Delta00(particle, M, N, a, b, c, d, e, f):
 
     # integrand with known result
     eps = 2e-16
-    integrand_analytic = E * np.sqrt((1 - rz**2) * (1 - rp)**2/(1-rp**2+eps)) / (np.log(2 / (1 - rp)) + eps)
+    integrand_analytic = E * np.sqrt((1 - rz**2) * (1 - rp)**2 / (1 - rp**2 + eps)) / (np.log(2 / (1 - rp)) + eps)
     integrand_analytic *= (a + b * rz + c * rz**2)
     integrand_analytic *= (d + e * rp + f * rp**2)
 
@@ -50,16 +53,11 @@ def test_Delta00(particle, M, N, a, b, c, d, e, f):
     Deltas = boltzmann.getDeltas(integrand_analytic)
 
     # comparing to analytic result
-    # Delta00_analytic = bg.temperatureProfile**3 * (
-    #     2 / (9 * np.pi**2) * (3 * a + c) * (3 * d + f)
-    # )
-    Delta00_analytic = (2*a + c)*(2*d + f)*bg.temperatureProfile**3/8
-    print(Deltas["00"].coefficients)
-    print(Delta00_analytic[1:-1])
+    Delta00_analytic = (2 * a + c)*(2 * d + f)* bg.temperatureProfile**3 / 8
     ratios = Deltas["00"].coefficients / Delta00_analytic[1:-1]
 
     # asserting result
-    np.testing.assert_allclose(ratios, np.ones(M - 1), rtol=1e-2, atol=0)
+    np.testing.assert_allclose(ratios, np.ones(M - 1), rtol=1e-14, atol=0)
 
 
 @pytest.mark.parametrize("M, N", [(3, 3)])
@@ -85,4 +83,4 @@ def test_solution(particle, M, N):
     ratio = diffNorm / sourceNorm
 
     # asserting solution works
-    assert ratio == pytest.approx(0, abs=1e-9)
+    assert ratio == pytest.approx(0, abs=1e-14)
