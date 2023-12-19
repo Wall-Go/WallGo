@@ -355,6 +355,10 @@ class BoltzmannSolver:
         )
 
         if self.basisN != basisType:
+            print("--------------------")
+            print(f"Changing basis of collision integrals in BoltzmannSolver from {basisType} to {self.basisN}")
+            print("Testing two different implementations")
+
             # OG: The following is equivalent to Benoit's original implementation
             collisionPoly = Polynomial(
                 self.collisionArray,
@@ -363,8 +367,8 @@ class BoltzmannSolver:
                 ("pz", "pp", "pz", "pp"),
                 False,
             )
-            Tn1 = collisionPoly.matrix("Chebyshev", "pz", endpoints=False)
-            Tn2 = collisionPoly.matrix("Chebyshev", "pp", endpoints=False)
+            Tn1 = collisionPoly.matrix(basisType, "pz", endpoints=False)
+            Tn2 = collisionPoly.matrix(basisType, "pp", endpoints=False)
             self.collisionArray = np.einsum(
                 "ec, fd, abef -> abcd",
                 np.linalg.inv(Tn1),
@@ -374,12 +378,12 @@ class BoltzmannSolver:
             )
 
             # OG: Why doesn't the following work?
-            collisionPoly.changeBasis(("Cardinal", "Cardinal", self.basisN, self.basisN))
+            collisionPoly.changeBasis(
+                ("Cardinal", "Cardinal", self.basisN, self.basisN)
+            )
             normOriginal = np.linalg.norm(self.collisionArray)
             normAlt = np.linalg.norm(np.asarray(collisionPoly))
             normDiff = np.linalg.norm(self.collisionArray - np.asarray(collisionPoly))
-            print("--------------------")
-            print("Testing basis changes in BoltzmannSolver.readCollision")
             print(f"norm(original) = {normOriginal}")
             print(f"norm(alt)      = {normAlt}, should equal norm(original)")
             print(f"norm(diff)     = {normDiff / normOriginal}, should be << 1")
