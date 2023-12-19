@@ -5,30 +5,30 @@ from scipy.special import eval_chebyt,eval_chebyu
 class Polynomial:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
         """
-        Initialization of Polynomial object. 
+        Initialization of Polynomial object.
 
         Parameters
         ----------
         coefficients : array-like
-            Array of rank N containing the coefficients of a polynomial defined 
+            Array of rank N containing the coefficients of a polynomial defined
             by the object grid.
         grid : Grid
             An object of the Grid class defining the polynomial.
         basis : string or tuple of strings, optional
-            Tuple of length N specifying in what basis each dimension of 
+            Tuple of length N specifying in what basis each dimension of
             coefficients is defined. Each component can either be 'Cardinal' or
-            'Chebyshev'. Can also be a single string, in which case all the 
-            dimensions are assumed to be in that basis. The default is 
+            'Chebyshev'. Can also be a single string, in which case all the
+            dimensions are assumed to be in that basis. The default is
             'Cardinal'.
         direction : string or tuple of strings, optional
-            Tuple of length N specifying what direction each dimension of 
+            Tuple of length N specifying what direction each dimension of
             coefficients represents. Each component can either be 'z', 'pz' or
-            'pp'. Can also be a single string, in which case all the 
+            'pp'. Can also be a single string, in which case all the
             dimensions are assumed to be in that direction. The default is 'z'.
         endpoints : bool or tuple of bool, optional
-            Tuple of length N specifying wheither each dimension includes the 
-            endpoints. Can also be a single bool, in which case all the 
-            dimensions are assumed to be the same. If False, the polynomial is 
+            Tuple of length N specifying wheither each dimension includes the
+            endpoints. Can also be a single bool, in which case all the
+            dimensions are assumed to be the same. If False, the polynomial is
             assumed to be 0 at the endpoints. The default is False.
 
         Returns
@@ -36,32 +36,32 @@ class Polynomial:
         None.
 
         """
-        
+
         self.coefficients = np.asanyarray(coefficients)
         self.N = len(self.coefficients.shape)
         self.grid = grid
-        
+
         self.allowedBasis = ['Cardinal','Chebyshev']
         self.allowedDirection = ['z','pz','pp']
-        
+
         if isinstance(basis, str):
             basis = self.N*(basis,)
         self.__checkBasis(basis)
-            
+
         if isinstance(direction, str):
             direction = self.N*(direction,)
         self.__checkDirection(direction)
-            
+
         if isinstance(endpoints, bool):
             endpoints = self.N*(endpoints,)
         self.__checkEndpoints(endpoints)
-            
+
         self.basis = basis
         self.direction = direction
         self.endpoints = endpoints
-        
+
         self.__checkCoefficients(coefficients)
-        
+
     def __getitem__(self, key):
         basis, endpoints, direction = [],[],[]
         if not isinstance(key,tuple):
@@ -79,15 +79,21 @@ class Polynomial:
                 basis.append('Cardinal')
                 direction.append('z')
                 endpoints.append(False)
-            else: 
+            else:
                 raise ValueError('Polynomial error: invalid key.')
         basis = tuple(basis) + self.basis[n:]
         direction = tuple(direction) + self.direction[n:]
         endpoints = tuple(endpoints) + self.endpoints[n:]
-        
+
         coefficients = np.array(self.coefficients[key])
         return Polynomial(coefficients, self.grid, basis, direction, endpoints)
-    
+
+    def __array__(self):
+        """
+        OG: I put this in temporarily. To ask Benoit about.
+        """
+        return self.coefficients
+
     def __mul__(self, poly):
         if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
@@ -97,7 +103,7 @@ class Polynomial:
             newCoeff = poly*self.coefficients
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
-        
+
     def __add__(self, poly):
         if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
@@ -107,20 +113,20 @@ class Polynomial:
             newCoeff = poly+self.coefficients
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
-        
+
     def __sub__(self, poly):
         return self.__add__((-1)*poly)
-        
+
     def __rmul__(self, poly):
         return self.__mul__(poly)
     def __radd__(self, poly):
         return self.__add__(poly)
     def __rsub__(self, poly):
         return (-1)*self.__sub__(poly)
-    
+
     def __findContraction(self, poly):
         """
-        Find the tuples basis, direction and endpoints resulting from the 
+        Find the tuples basis, direction and endpoints resulting from the
         contraction of self and poly
 
         Parameters
@@ -151,7 +157,7 @@ class Polynomial:
                 direction.append(poly.direction[i])
                 endpoints.append(poly.endpoints[i])
         return tuple(basis),tuple(direction),tuple(endpoints)
-        
+
     def changeBasis(self, newBasis):
         """
         Change the basis of the polynomial. Will change self.coefficients
@@ -160,9 +166,9 @@ class Polynomial:
         Parameters
         ----------
         newBasis : string or tuple of strings, optional
-            Tuple of length N specifying in what basis each dimension of 
-            self.coefficients is defined. Each component can either be 
-            'Cardinal' or 'Chebyshev'. Can also be a single string, in which 
+            Tuple of length N specifying in what basis each dimension of
+            self.coefficients is defined. Each component can either be
+            'Cardinal' or 'Chebyshev'. Can also be a single string, in which
             case all the dimensions are assumed to be in that basis.
 
         Returns
@@ -173,7 +179,7 @@ class Polynomial:
         if isinstance(newBasis, str):
             newBasis = self.N*(newBasis,)
         self.__checkBasis(newBasis)
-        
+
         for i in range(self.N):
             if newBasis[i] != self.basis[i]:
                 # Choosing the appropriate x, n and restriction
@@ -190,23 +196,23 @@ class Polynomial:
                     if self.direction[i] == 'z':
                         n = np.arange(2, self.grid.M+1)
                         restriction = 'full'
-                    elif self.direction[i] == 'pz': 
+                    elif self.direction[i] == 'pz':
                         n = np.arange(2, self.grid.N+1)
                         restriction = 'full'
                     else:
                         n = np.arange(1, self.grid.N)
                         restriction = 'partial'
-                        
+
                 # Computing the Tn matrix
                 M = self.chebyshev(x[:,None], n[None,:], restriction)
                 if newBasis[i] == 'Chebyshev':
                     M = np.linalg.inv(M)
                 M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
-                
+
                 # Contracting M with self.coefficient
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
         self.basis = newBasis
-        
+
     def evaluate(self, x):
         """
         Evaluates the polynomial at the compact coordinates x.
@@ -214,7 +220,7 @@ class Polynomial:
         Parameters
         ----------
         x : array-like
-            Compact coordinates at which to evaluate the polynomial. Must have 
+            Compact coordinates at which to evaluate the polynomial. Must have
             a shape (self.N,:) or (self.N,).
 
         Returns
@@ -229,7 +235,7 @@ class Polynomial:
         if len(x.shape) == 1:
             x = x.reshape((self.N,1))
             singlePoint = True
-            
+
         polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
         for i in range(self.N):
             # Choosing the appropriate n
@@ -247,13 +253,13 @@ class Polynomial:
                 elif self.direction[i] == 'pz':
                     n = np.arange(1, self.grid.N)
                 else:
-                    n = np.arange(self.grid.N-1)  
-                    
+                    n = np.arange(self.grid.N-1)
+
             # Computing the polynomial basis in the i direction
             pn = None
             if self.basis[i] == 'Cardinal':
                 pn = self.cardinal(x[i,:,None], n[None,:], self.direction[i])
-                
+
             elif self.basis[i] == 'Chebyshev':
                 restriction = None
                 if not self.endpoints[i]:
@@ -265,16 +271,16 @@ class Polynomial:
                     else:
                         restriction = 'partial'
                 pn = self.chebyshev(x[i,:,None], n[None,:], restriction)
-                
+
             polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.N+1)))
-            
+
         result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.N+1)))
         if singlePoint:
             return result[0]
         else:
             return result
-        
-                        
+
+
     def cardinal(self,x,n,direction):
         r"""
         Computes the cardinal polynomials :math:`C_n(x)` defined by grid.
@@ -282,13 +288,13 @@ class Polynomial:
         Parameters
         ----------
         x : array_like
-            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be 
+            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be
             broadcastable with n.
         n : array_like
-            Order of the cardinal polynomial to evaluate. Must be 
+            Order of the cardinal polynomial to evaluate. Must be
             broadcastable with x.
         direction : string
-            Select the direction in which to compute the matrix. 
+            Select the direction in which to compute the matrix.
             Can either be 'z', 'pz' or 'pp'.
 
         Returns
@@ -299,7 +305,7 @@ class Polynomial:
 
         x = np.asarray(x)
         n = np.asarray(n)
-        
+
         assert self.__is_broadcastable(x, n), 'Polynomial error: x and n are not broadcastable.'
         assert direction in self.allowedDirection, "Polynomial error: unkown direction %s" % direction
 
@@ -315,7 +321,7 @@ class Polynomial:
         cn = np.prod(np.where(nGrid-completeGrid==0, 1, cn_partial),axis=0)
 
         return cn
-    
+
     def chebyshev(self, x, n, restriction=None):
         r"""
         Computes the Chebyshev polynomial :math:`T_n(x)`.
@@ -323,14 +329,14 @@ class Polynomial:
         Parameters
         ----------
         x : array_like
-            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be 
+            Compact coordinate at which to evaluate the Chebyshev polynomial. Must be
             broadcastable with n.
         n : array_like
-            Order of the Chebyshev polynomial to evaluate. Must be 
+            Order of the Chebyshev polynomial to evaluate. Must be
             broadcastable with x.
         restriction : None or string, optional
-            Select the restriction on the Chebyshev basis. If None, evaluates 
-            the unrestricted basis. If 'full', the polynomials are 0 at 
+            Select the restriction on the Chebyshev basis. If None, evaluates
+            the unrestricted basis. If 'full', the polynomials are 0 at
             :math:`x=\pm 1`. If 'partial', the polynomials are 0 at :math:`x=+1`.
 
         Returns
@@ -342,7 +348,7 @@ class Polynomial:
 
         x = np.asarray(x)
         n = np.asarray(n)
-        
+
         assert self.__is_broadcastable(x, n), 'Polynomial error: x and n are not broadcastable.'
 
         #Computing the unrestricted basis
@@ -353,13 +359,13 @@ class Polynomial:
         if restriction == 'partial':
             tn -= 1
         elif restriction == 'full':
-            tn -= np.where(n%2==0,1,x)
+            tn -= np.where(n % 2 == 0, 1, x)
 
         return tn
-    
+
     def integrate(self, axis=None, w=None):
         r"""
-        Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)` 
+        Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)`
         along some axis using Gauss-Chebyshev-Lobatto quadrature.
 
         Parameters
@@ -368,26 +374,26 @@ class Polynomial:
             axis along which the integral is taken. Can either be None, a int or a
             tuple of int. If None, integrate along all the axes.
         w : array-like or None
-            Integration weight. Must be None or an array broadcastable with 
+            Integration weight. Must be None or an array broadcastable with
             self.coefficients. If None, w=1. Default is None.
 
         Returns
         -------
         Polynomial or float
-            If axis=None, returns a float. Otherwise, returns an object of the 
-            class Polynomial containing the coefficients of the 
-            integrated polynomial along the remaining axes. 
+            If axis=None, returns a float. Otherwise, returns an object of the
+            class Polynomial containing the coefficients of the
+            integrated polynomial along the remaining axes.
 
         """
         if w is None:
             w = 1
-            
+
         if axis is None:
             axis = tuple(np.arange(self.N))
         if isinstance(axis, int):
             axis = (axis,)
             self.__checkAxis(axis)
-        
+
         # Express the integrated axes in the cardinal basis
         basis = []
         for i in range(self.N):
@@ -396,7 +402,7 @@ class Polynomial:
             else:
                 basis.append(self.basis[i])
         self.changeBasis(tuple(basis))
-        
+
         integrand = w*self.coefficients
         newBasis, newDirection, newEndpoints = [],[],[]
         for i in range(self.N):
@@ -419,16 +425,16 @@ class Polynomial:
                 newBasis.append(self.basis[i])
                 newDirection.append(self.direction[i])
                 newEndpoints.append(self.endpoints[i])
-                
+
         result = np.sum(integrand, axis)
         if isinstance(result, float):
             return result
         else:
             return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
-    
+
     def derivative(self, axis):
         """
-        Computes the derivative of the polynomial and returns it in a 
+        Computes the derivative of the polynomial and returns it in a
         Polynomial object.
 
         Parameters
@@ -440,20 +446,20 @@ class Polynomial:
         Returns
         -------
         Polynomial
-            Object of the class Polynomial containing the coefficients of the 
-            derivative polynomial (in the compact coordinates). The axis along 
+            Object of the class Polynomial containing the coefficients of the
+            derivative polynomial (in the compact coordinates). The axis along
             which the derivative is taken is always returned with the endpoints
             in the cardinal basis.
 
         """
-        
+
         if isinstance(axis, int):
             axis = (axis,)
         self.__checkAxis(axis)
-        
+
         coeffDeriv = np.array(self.coefficients)
         basis, endpoints = [],[]
-        
+
         for i in range(self.N):
             if i in axis:
                 D = self.derivMatrix(self.basis[i], self.direction[i], self.endpoints[i])
@@ -465,7 +471,7 @@ class Polynomial:
                 basis.append(self.basis[i])
                 endpoints.append(self.endpoints[i])
         return Polynomial(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
-    
+
     def matrix(self, basis, direction, endpoints=False):
         r"""
         Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
@@ -486,8 +492,8 @@ class Polynomial:
         elif basis == 'Chebyshev':
             return self.__chebyshevMatrix(direction, endpoints)
         else:
-            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")        
-    
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+
     def derivMatrix(self, basis, direction, endpoints=False):
         """
         Computes the derivative matrix of either the Chebyshev or cardinal polynomials in some direction.
@@ -514,7 +520,7 @@ class Polynomial:
             return self.__chebyshevDeriv(direction,endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
-         
+
     def __cardinalMatrix(self, direction, endpoints=False):
         r"""
         Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
@@ -565,7 +571,7 @@ class Polynomial:
             restriction = None
 
         return self.chebyshev(grid[:,None], n[None,:], restriction)
-    
+
     def __cardinalDeriv(self, direction, endpoints=False):
         """
         Computes the derivative matrix of the cardinal functions in some direction.
@@ -642,25 +648,25 @@ class Polynomial:
             deriv -= np.where(n[None,:]%2==0,0,1)
 
         return deriv
-                
+
     def __checkBasis(self, basis):
         assert isinstance(basis, tuple), 'Polynomial error: basis must be a tuple or a string.'
         assert len(basis) == self.N, 'Polynomial error: basis must be a tuple of length N.'
         for x in basis:
             assert x in self.allowedBasis, "Polynomial error: unkown basis %s" % x
-            
+
     def __checkDirection(self, direction):
         assert isinstance(direction, tuple), 'Polynomial error: direction must be a tuple or a string.'
         assert len(direction) == self.N, 'Polynomial error: direction must be a tuple of length N.'
         for x in direction:
             assert x in self.allowedDirection, "Polynomial error: unkown direction %s" % x
-            
+
     def __checkEndpoints(self, endpoints):
         assert isinstance(endpoints, tuple), 'Polynomial error: endpoints must be a tuple or a bool.'
         assert len(endpoints) == self.N, 'Polynomial error: endpoints must be a tuple of length N.'
         for x in endpoints:
             assert isinstance(x, bool), "Polynomial error: endpoints can only contain bool."
-            
+
     def __checkCoefficients(self, coefficients):
         for i,size in enumerate(self.coefficients.shape):
             if size > 1:
@@ -670,13 +676,13 @@ class Polynomial:
                     assert size + 2*(1-self.endpoints[i]) == self.grid.N + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
                 else:
                     assert size + (1-self.endpoints[i]) == self.grid.N, f"Polynomial error: coefficients with invalid size in dimension {i}."
-                
+
     def __checkAxis(self, axis):
         assert isinstance(axis, tuple), 'Polynomial error: axis must be a tuple or a int.'
         for x in axis:
             assert isinstance(x, int), 'Polynomial error: axis must be a tuple of int.'
             assert 0 <= x < self.N, 'Polynomial error: axis out of range.'
-                
+
     def __is_broadcastable(self, array1, array2):
         """
         Verifies that array1 and array2 are broadcastable, which mean that they
@@ -701,7 +707,3 @@ class Polynomial:
             else:
                 return False
         return True
-        
-        
-        
-        

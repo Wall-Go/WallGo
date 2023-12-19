@@ -1,6 +1,7 @@
 import os
 import warnings
 import numpy as np
+from scipy.special import eval_chebyt
 from copy import deepcopy
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
@@ -81,7 +82,7 @@ class BoltzmannSolver:
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
-        
+
         ##### collision operator #####
         collisionFile = self.__collisionFilename()
         self.readCollision(collisionFile, self.particle)
@@ -111,20 +112,34 @@ class BoltzmannSolver:
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
-        deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
+        # constructing polynomial representation and changing to Cardinal basis
+        basisTypes = (self.basisM, self.basisN, self.basisN)
+        basisNames = ('z','pz','pp')
+        deltaFPoly = Polynomial(
+            deltaF, self.grid, basisTypes, basisNames, False
+        )
         deltaFPoly.changeBasis('Cardinal')
-        
+
+        # introducing some shorthands for equations below
         field = self.background.fieldProfile[:, 1:-1]
-        pz = self.grid.pzValues[None,:,None]
-        E = np.sqrt(self.particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
-        dpzdrz = 2*self.background.TMid/(1-self.grid.rzValues**2)[None,:,None]
-        dppdrp = self.background.TMid/(1-self.grid.rpValues)[None,None,:]
-        integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
-        
+        msq = self.particle.msqVacuum(field)[:, None, None]
+        pz = self.grid.pzValues[None, :, None]
+        pp = self.grid.ppValues[None, None, :]
+        TMid = self.background.TMid
+        rz = self.grid.rzValues[None, :, None]
+        rp = self.grid.rpValues[None, None, :]
+
+        # base integrand
+        E = np.sqrt(msq + pz**2 + pp**2)
+        dpzdrz = 2 * TMid / (1 - rz**2)
+        dppdrp = TMid / (1 - rp)
+        integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
+
+        # integrations
         Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
-        Deltas['20'] = deltaFPoly.integrate((1,2), E**2*integrand)
-        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2*integrand)
-        Deltas['11'] = deltaFPoly.integrate((1,2), E*pz*integrand)
+        Deltas['20'] = deltaFPoly.integrate((1,2), E**2 * integrand)
+        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2 * integrand)
+        Deltas['11'] = deltaFPoly.integrate((1,2), E * pz * integrand)
 
         # returning results
         return Deltas
@@ -196,11 +211,29 @@ class BoltzmannSolver:
         msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
 
-        # fit the background profiles to polynomial
-        Tpoly = Polynomial(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
-        msqpoly = Polynomial(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
-        vpoly = Polynomial(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
-        
+        # fit the background profiles to polynomials
+        Tpoly = Polynomial(
+            self.background.temperatureProfile,
+            self.grid,
+            'Cardinal',
+            'z',
+            True,
+        )
+        msqpoly = Polynomial(
+            self.particle.msqVacuum(self.background.fieldProfile),
+            self.grid,
+            'Cardinal',
+            'z',
+            True,
+        )
+        vpoly = Polynomial(
+            self.background.velocityProfile,
+            self.grid,
+            'Cardinal',
+            'z',
+            True,
+        )
+
         # intertwiner matrices
         TChiMat = Tpoly.matrix(self.basisM, "z")
         TRzMat = Tpoly.matrix(self.basisN, "pz")
@@ -227,7 +260,7 @@ class BoltzmannSolver:
         dTdChi = Tpoly.derivative(0).coefficients[1:-1, None, None]
         dvdChi = vpoly.derivative(0).coefficients[1:-1, None, None]
         dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
-        
+
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
         dchidxi = dchidxi[:, np.newaxis, np.newaxis]
@@ -273,7 +306,7 @@ class BoltzmannSolver:
 
         ##### total operator #####
         operator = liouville + collisionArray
-        
+
         # n = self.grid.N-1
         # Nnew = n**2
         # eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
@@ -307,30 +340,59 @@ class BoltzmannSolver:
                 )
                 BoltzmannSolver.__checkBasis(basisType)
 
-                # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
+                # LN: currently the dataset names are of form
+                # "particle1, particle2". Here it's just "top, top" for now.
                 datasetName = particle.name + ", " + particle.name
                 collisionArray = np.array(file[datasetName][:])
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
-            
-        self.collisionArray = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
-        
-        if self.basisN == 'Cardinal':
-            n1 = np.arange(2,self.grid.N+1)
-            n2 = np.arange(1,self.grid.N)
-            Tn1 = np.cos(n1[:,None]*np.arccos(self.grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,self.grid.rzValues[None,:])
-            Tn2 = np.cos(n2[:,None]*np.arccos(self.grid.rpValues[None,:])) - 1
-            self.collisionArray = np.sum(np.linalg.inv(Tn1)[None,None,:,None,:,None]*np.linalg.inv(Tn2)[None,None,None,:,None,:]*self.collisionArray[:,:,None,None,:,:],(-1,-2))
+
+        # converting between conventions
+        self.collisionArray = np.transpose(
+            np.flip(collisionArray, (2, 3)),
+            (2, 3, 0, 1),
+        )
+
+        if self.basisN != basisType:
+            collisionPoly = Polynomial(
+                self.collisionArray,
+                self.grid,
+                ("Cardinal", "Cardinal", basisType, basisType),
+                ("pz", "pp", "pz", "pp"),
+                False,
+            )
+
+            # OG: The following is equivalent to Benoit's original implementation
+            Tn1 = collisionPoly.matrix("Chebyshev", "pz", endpoints=False)
+            Tn2 = collisionPoly.matrix("Chebyshev", "pp", endpoints=False)
+            self.collisionArray = np.einsum(
+                "ec, fd, abef -> abcd",
+                np.linalg.inv(Tn1),
+                np.linalg.inv(Tn2),
+                self.collisionArray,
+                optimize=True,
+            )
+
+            # OG: Why doesn't the following work?
+            collisionPoly.changeBasis(("Cardinal", "Cardinal", self.basisN, self.basisN))
+            normOriginal = np.linalg.norm(self.collisionArray)
+            normAlt = np.linalg.norm(np.asarray(collisionPoly))
+            normDiff = np.linalg.norm(self.collisionArray - np.asarray(collisionPoly))
+            print("--------------------")
+            print("Testing basis changes in BoltzmannSolver.readCollision")
+            print(f"norm(original) = {normOriginal}")
+            print(f"norm(alt)      = {normAlt}, should equal norm(original)")
+            print(f"norm(diff)     = {normDiff / normOriginal}, should be << 1")
+            print("--------------------")
 
     def __collisionFilename(self):
         """
         A filename convention for collision integrals.
         """
-        # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
+        # LN: This will need generalization. And do we want just one gargantuan
+        # file with all out-of-eq pairs, or are individual files better?
 
-
-        # LN: We need to stop hardcoding file paths. Here using importlib to find a packaged data file
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
         return getPackagedDataPath("WallSpeed.Data", fileName)
