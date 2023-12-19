@@ -355,6 +355,7 @@ class BoltzmannSolver:
         )
 
         if self.basisN != basisType:
+            # OG: The following is equivalent to Benoit's original implementation
             collisionPoly = Polynomial(
                 self.collisionArray,
                 self.grid,
@@ -362,8 +363,6 @@ class BoltzmannSolver:
                 ("pz", "pp", "pz", "pp"),
                 False,
             )
-
-            # OG: The following is equivalent to Benoit's original implementation
             Tn1 = collisionPoly.matrix("Chebyshev", "pz", endpoints=False)
             Tn2 = collisionPoly.matrix("Chebyshev", "pp", endpoints=False)
             self.collisionArray = np.einsum(
