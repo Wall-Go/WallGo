@@ -13,9 +13,6 @@ class GenericModel(ABC):
     The user should implement this and the abstract methods below with their model-specific stuff. 
     '''
 
-    ## LN: I don't know what the proper Python way of declaring interface variables is, but this works.
-    ## In any case we certainly want to specify that any model should have these. 
-
 
     ## Particle array property, this should hold all particles 
     @property

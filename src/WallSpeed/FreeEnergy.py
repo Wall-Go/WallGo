@@ -42,6 +42,9 @@ class FreeEnergy(InterpolatableFunction):
 
         phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(self.phaseLocationGuess, temperature)
 
+        ## Make sure the field-independent but T-dependent contribution to free energy is included
+        potentialAtMinimum = np.real( self.effectivePotential.evaluateWithConstantPart(phaseLocation, temperature) )
+
         # Important: Minimization may not always work as intended, 
         # for example the minimum we're looking for may not even exist at the input temperature.
         # This will break interpolations unless we validate the result here. 

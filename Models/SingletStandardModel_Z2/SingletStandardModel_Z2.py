@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 import os
 
 ## WallGo imports
@@ -122,8 +123,6 @@ class SingletSM_Z2(GenericModel):
 
         return modelParameters
 
-
-
 # end model
 
 
@@ -169,6 +168,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
                                                extrapolationTypeUpper = EExtrapolationType.CONSTANT)
         
+    
+    ## ---------- EffectivePotential overrides. The user needs to define evaluate() and fieldIndependentPart()
+        
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
@@ -202,15 +204,34 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
+        ## No need to explicitly include the field-independent part here
+
         RGScale = self.modelParameters["RGScale"]
         VTotal = (
-            + self.pressureLO(bosonStuff, fermionStuff, temperature)
-            + V0
+            V0
             + self.V1(bosonStuff, fermionStuff, RGScale) 
             + self.V1T(bosonStuff, fermionStuff, temperature)
         )
 
         return VTotal
+    
+
+    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """Need to explicitly compute field-independent but T-dependent parts.
+        At leading order this is just (minus) the pressure of a Stefan-Boltzmann gas.
+        """
+
+        ## Standard Model part: See Eq (39) in hep-ph/0510375. Need to compute degrees of freedom: see eqs. (4),(5) in the reference for group theory factors 
+        Nc = 3 ## How many QCD colors
+        dA = 3 ## Number of SU2 generators
+        dF = 2
+        nf = 3
+        p = np.pi**2 * temperature**4 / 90. * ( 2 + 2*dA + 2*(Nc**2 - 1) + 2*dF + 2*7./8.*nf * (dF + 1 + Nc * (dF + 2)) )
+        ## Add one DOF from the singlet
+        p += 1
+        ## Return free energy, so minus the pressure
+        return -p
+
 
 
     ## High-T stuff commented out for now
@@ -417,6 +438,8 @@ def main():
 
         inputParameters["mh2"] = mh2
 
+        modelParameters = model.calculateModelParameters(inputParameters)
+
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallSpeed.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
@@ -429,14 +452,15 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(inputParameters, phaseInfo)
+        manager.setParameters(modelParameters, phaseInfo)
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
 
         """WallGo can now be used to compute wall stuff!"""
 
-        ## LN: this currently computes wall speed in different approximations. I suppose we eventually want to have different functions or options to control what to compute.
+        ## LN: this currently computes wall speed in different approximations. 
+        ## I suppose we eventually want to have different functions or options to control what to compute.
         manager.solveWall()
 
 

@@ -7,10 +7,32 @@ import scipy.optimize
 import scipy.interpolate
 
 class EffectivePotential(ABC):
+    """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
+    and computing free energies (pressures) in the two phases.
+    
+    NB: Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
+    However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
+    Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
+    This class does not enforce any particular normalization of the potential, however you are REQUIRED to provide a definition of fieldIndependentPart()
+    that computes the full T-dependent but field-independent contribution to Veff. IE the pressure at phi = 0.
 
-     
+    The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
+    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
+    """
+
+    """
+    Internal logic related to the pressure: 
+        1. evaluate() computes Veff(phi) in some normalization (can be anything)
+        2. In normalize() we compute Veff(phi) - Veff(0), removing the field-independent parts of the user-defined evaluate()
+        3. fieldIndependentPart() computes the full field-independent part that can contain eg. light fermions that are often NOT included in evaluate()
+        4. In Thermodynamics we compute the pressure from -p = Veff(phi) - Veff(0) + fieldIndependentPart()
+    """
+
     ## How many background fields. This is explicitly required so that we can have better control over array shapes 
     fieldCount: int
+
+    ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
+    fieldLowerBound: float = 1e-8
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
@@ -21,7 +43,9 @@ class EffectivePotential(ABC):
     
     @abstractmethod
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
-        # do the actual calculation of Veff(phi) here
+        """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
+        at the input field configuration and temperature. Normalization of the potential does not matter: You may eg. choose Veff(0) = 0.
+        """
         raise NotImplementedError
     
 
@@ -135,55 +159,56 @@ class EffectivePotential(ABC):
                 break
 
         if (not bConverged):
-            raise RuntimeError("Could not find critical temperature")
+            raise RuntimeWarning("Could not find critical temperature")
+            return None
 
 
         # Improve Tc estimate by solving DeltaF = 0 in narrow range near the above T 
 
         # NB: bracket will break if the function has same sign on both ends. The rough loop above should prevent this.
-        rootResults = scipy.optimize.root_scalar(freeEnergyDifference, bracket=(T-dT, T), rtol=1e-8, xtol=1e-8)
-
+        rootResults = scipy.optimize.root_scalar(freeEnergyDifference, bracket=(T-dT, T), rtol=1e-6, xtol=1e-6)
 
         return rootResults.root
-        #return T - dT/2. # use this if the root_scalar thing doesn't work?
 
 
-    def pressureLO(self, bosons, fermions, T: npt.ArrayLike):
+    def normalize(self, fields: np.ndarray[float], T: npt.ArrayLike) -> complex:
+        """Compute Veff(phi) - Veff(0), ie. subtract field-independent part.
+        NB: In reality uses phi = fieldLowerBound instead of phi = 0 to avoid spurious 0/0 behavior.
         """
-        Computes the leading order pressure for the light degrees of freedom
-        depending on the effective degrees of freedom.
+        zero = np.full_like(fields, self.fieldLowerBound)
+
+        print(fields)
+        print(T)
+        input()
+
+        return self.evaluate(fields, T) - self.evaluate(zero, T)
+
+
+    def evaluateWithConstantPart(self, fields: np.ndarray[float], temperature: npt.ArrayLike) -> complex:
+        """Computed Veff(phi) - Veff(0) + fieldIndependentPart().
+        Point here is this expression gives the full free energy including field-independent parts, 
+        no matter how Veff(phi) is normalized.
+        """
+        return self.normalize(fields, temperature) + self.fieldIndependentPart(temperature)
+
+
+
+    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """
+        Computes the full field-independent part of the effective potential. More specifically,
+        the output of this needs to give the free-energy density for a phase at phi = 0. 
+        Strictly speaking it is enough to give the temperature-dependent but field-independent parts.
+        For concreteness, for a leading-order computation in the Standard Model this should return 106.75*pi^2/90 * T^4.
+        
+        See also the documentation of the EffectivePotential class.
         
         Parameters
         ----------
-        bosons : array of floats
-            bosonic particle spectrum (here: masses, number of dofs, ci)
-        fermions : array of floats
-            fermionic particle spectrum (here: masses, number of dofs)
-        T : ArrayLike 
+        temperature : ArrayLike 
 
         Returns
         -------
-        pressureLO : LO contribution to the pressure of light degrees of freedom
-
+        npt.ArrayLike 
         """
 
-        # TODO is this function OK with array input?
-
-        ## TODO use eq. (39) from https://arxiv.org/pdf/hep-ph/0510375.pdf.
-        ## This is probably easier than having the user input degrees of freedom manually
-
-        T4 = T*T*T*T
-
-        _,nb,_ = bosons
-        _,nf = fermions
-
-        V = 0
-        if self.num_boson_dof is not None:
-            nb = self.num_boson_dof - np.sum(nb)
-            V -= nb * np.pi*np.pi / 90.
-        if self.num_fermion_dof is not None:
-            nf = self.num_fermion_dof - np.sum(nf)
-            V -= nf * 7*np.pi*np.pi / 720.
-
-        return V*T4
-    
+        raise NotImplementedError
