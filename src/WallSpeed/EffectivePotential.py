@@ -14,18 +14,14 @@ class EffectivePotential(ABC):
     fieldCount: int
 
     ## In practice we'll get the model params from a GenericModel subclass 
-<<<<<<< HEAD
-    def __init__(self, modelParameters: dict[str, float],
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int,
                 dPhi=1e-3,
-                dT=1e-3):
-        self.modelParameters = modelParameters
-        self.dPhi = dPhi
-        self.dT = dT
-=======
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+                dT=1e-3
+                ):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
->>>>>>> GeneralizeModel
+        self.dPhi = dPhi
+        self.dT = dT
 
 
     
