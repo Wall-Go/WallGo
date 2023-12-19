@@ -12,7 +12,7 @@ from .WallGoUtils import getPackagedDataPath
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 
-defaultConfigFile = getPackagedDataPath("WallSpeed.Config", "WallGoDefaults.ini")
+defaultConfigFile = getPackagedDataPath("WallGo.Config", "WallGoDefaults.ini")
 
 config = loadConfig(defaultConfigFile)
 

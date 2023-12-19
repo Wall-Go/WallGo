@@ -4,15 +4,15 @@ defines model, grid and top
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Boltzmann import BoltzmannBackground, BoltzmannSolver
-from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Hydro import Hydro
-from WallSpeed import Particle, FreeEnergy, Model
-from WallSpeed.EOM import EOM
-from WallSpeed.EOMGeneralShape import EOMGeneralShape
-import WallSpeed
+from WallGo.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallGo.Thermodynamics import Thermodynamics
+from WallGo.Hydro import Hydro
+from WallGo import Particle, FreeEnergy, Model
+from WallGo.EOM import EOM
+from WallGo.EOMGeneralShape import EOMGeneralShape
+import WallGo
 
 """
 Grid
@@ -25,13 +25,13 @@ poly = Polynomial(grid)
 """
 Model definition
 """
-mod = WallSpeed.Model(125, 120, 1.0, 0.9, use_EFT=False)
+mod = WallGo.Model(125, 120, 1.0, 0.9, use_EFT=False)
 params = mod.params
 
 Tc = None
 Tn = 100
 
-fxSM = WallSpeed.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
+fxSM = WallGo.FreeEnergy(mod.Vtot, Tc, Tn, params=params)
 Tc = fxSM.Tc
 pprint(params)
 print(f"{Tc=}, {Tn=}")
@@ -44,7 +44,7 @@ print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
 
 # defining particles which are out of equilibrium for WallGo
-top = WallSpeed.Particle(
+top = WallGo.Particle(
     "top",
     msqVacuum=lambda X: params["yt"]**2 * np.asanyarray(X)[0,...]**2,
     msqThermal=lambda T: 0.251327 * T**2,

@@ -333,7 +333,7 @@ class BoltzmannSolver:
         # LN: We need to stop hardcoding file paths. Here using importlib to find a packaged data file
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
-        return getPackagedDataPath("WallSpeed.Data", fileName)
+        return getPackagedDataPath("WallGo.Data", fileName)
 
 
     def __checkBasis(basis):
