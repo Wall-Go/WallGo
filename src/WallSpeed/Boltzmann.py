@@ -184,7 +184,7 @@ class BoltzmannSolver:
         deltaF = np.reshape(deltaF, deltaFShape, order="C")
 
         # testing result
-        source = np.reshape(source, ((self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1)), order="C")
+        source = np.reshape(source, deltaFShape, order="C")
         self.testSolution(deltaF, source, collision)
 
         return result
@@ -225,7 +225,6 @@ class BoltzmannSolver:
         print("the left hand side, finite differences")
         chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
         xi, pz, pp = self.grid.getCoordinates(endpoints=False)
-        xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
@@ -255,17 +254,28 @@ class BoltzmannSolver:
         deriv2 = np.asarray(msqpoly.derivative(axis=0))[1:-1]
         diffMsqDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
         print(f"diff dMsq/dchi = {diffMsqDeriv}")
+        print(f"expected of order {h**2}")
 
         # checking field derivatives
         print("\ntesting field derivatives")
+        gridPlusChi = np.stack(
+            (chi + h, rz, rp), axis=0,
+        )
+        gridMinusChi = np.stack(
+            (chi - h, rz, rp), axis=0,
+        )
+        print(f"{np.array(gridMinusChi).shape = }")
         deriv1 = (
-            deltaFPoly.evaluate(np.array([chi + h, rz, rp]))
-            - deltaFPoly.evaluate(np.array([chi - h, rz, rp]))
+            deltaFPoly.evaluate(gridPlusChi)
+            - deltaFPoly.evaluate(gridMinusChi)
         ) / (2 * h)
         deriv2 = np.asarray(deltaFPoly.derivative(axis=0))[1:-1, :, :]
+        print(f"{deriv1.shape = }")
+        print(f"{deriv2.shape = }")
+        print("OG: shapes are wrong. Want input which is (3, 18^3) to get (18^3) output, or we are just evaluating on some 'diagonal' points.")
         diffFieldDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
         print(f"diff dField/dchi = {diffFieldDeriv}")
-        
+
         deriv1 = (
             deltaFPoly.evaluate(np.array([chi, rz + h, rp]))
             - deltaFPoly.evaluate(np.array([chi, rz - h, rp]))

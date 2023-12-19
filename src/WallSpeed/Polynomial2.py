@@ -276,6 +276,7 @@ class Polynomial:
             polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.N+1)))
 
         result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.N+1)))
+        print(f"evaluate check: {x.shape=}, {result.shape=}")
         if singlePoint:
             return result[0]
         else:
