@@ -72,7 +72,7 @@ def test_findMatching():
     alN = (1-psiN)/3+rng.random(N)
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
-    vw = 0.2*rng.random(N)
+    vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallSpeed.Hydro(model,1e-6,500,1e-10,1e-10)
@@ -93,7 +93,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallSpeed.Hydro(model)
+        hydro = WallSpeed.Hydro(model,1e-6,10,1e-10,1e-10)
         hydroTemplate = WallSpeed.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
