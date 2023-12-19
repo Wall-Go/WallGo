@@ -253,7 +253,6 @@ class WallGoManager:
 
         ### EOMs just for the first out-of-eq particle for now. TODO generalize
         outOfEqParticle = self.model.outOfEquilibriumParticles[0]
-        
 
         # Without out-of-equilibrium contributions
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
