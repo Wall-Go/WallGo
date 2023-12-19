@@ -1,7 +1,7 @@
 
 from WallGo.CollisionModuleLoader import CollisionModule, collisionModuleLoaded
 from WallGo import Particle
-from WallGo import getPackagedDataPath
+from WallGo import getSafePathToResource
 
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
@@ -44,7 +44,7 @@ if (not collisionModuleLoaded):
 
 ## Module needs to be initialized before using. We probably want to call this in some common startup routine.
 # Argument is the config file name, we'll eventually want to read this from user input.
-collisionDefaultConfig = getPackagedDataPath("WallGo.Config", "CollisionDefaults.ini")
+collisionDefaultConfig = getSafePathToResource("Config/CollisionDefaults.ini")
 CollisionModule.initModule(collisionDefaultConfig)
 
 
