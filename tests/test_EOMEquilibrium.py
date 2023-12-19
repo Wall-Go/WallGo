@@ -10,8 +10,12 @@ N = 20
 grid = WallSpeed.Grid(M, N, 0.05, 100)
 poly = WallSpeed.Polynomial(grid)
 
-def test_SimpleEOS():
+""" LN: I'm dropping this from the automated tests for now. See test_EOM_singlet.py for a similar test."""
 
+
+@pytest.mark.slow
+def old_test_SimpleEOS():
+##def test_SimpleEOS():
 
     """
     Model definition

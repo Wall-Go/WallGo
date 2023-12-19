@@ -15,7 +15,16 @@ class EOM:
 
     model: GenericModel
     hydro: Hydro
-    thermo: Thermodynamics 
+    thermo: Thermodynamics
+
+    """LN: Very counterintuitive that this requires particle input even if includeOffEq=False. Here are some things to consider:
+        1. Is it possible to remove includeOffEq from the constructor and instead have a dedicated function for solving the EOM
+        without out-of-eq contributions?
+        2. If most of all functions here are considerably simpler when out-of-eq are not included, should there be a separate (child?) class 
+        for handling that case?
+        3. Would this class make sense if by default it doesn't have a particle associated with it. 
+        Could they instead be added on demand at runtime on demand?
+    """
 
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
@@ -52,23 +61,15 @@ class EOM:
         self.errTol = errTol
         self.nbrFields = nbrFields
         self.includeOffEq = includeOffEq
-
-        """
-        ## why are these constructed here?
-        self.thermo = Thermodynamics(freeEnergy)
-        self.hydro = Hydro(self.thermo)
-        """
         
         self.thermo = thermodynamics
         self.hydro = hydro
         # I feel this is error prone: we should always read Tnucl from self.thermo
         self.Tnucl = self.thermo.Tnucl
 
-        # Is it a good idea to run this in __init__?
-        print("Running LTE (hydro.findvwLTE)")
-        self.wallVelocityLTE = self.hydro.findvwLTE()
-        print(f"LTE wall speed: {self.wallVelocityLTE}")
-
+    ## OLD STUFF, use findWallVelocityMinimizeAction() instead! 
+    # Jorinde: "findWallVelocityLoop was written first, but it didn't work so well, so Benoit wrote the other functiion"
+    '''
     def findWallVelocityLoop(self):
         """
         Finds the wall velocity by solving hydrodynamics, the Boltzmann equation and
@@ -144,6 +145,9 @@ class EOM:
             error = 0#np.sqrt((1 - oldWallVelocity/wallVelocity)**2 + np.sum((1 - oldWallWidths/wallWidths)**2) + np.sum((wallOffsets - oldWallOffsets) ** 2))
 
         return wallParameters
+    '''
+    
+
 
     def findWallVelocityMinimizeAction(self):
         """

@@ -3,9 +3,15 @@ import numpy as np
 
 import WallSpeed
 
+## should clean these imports...
+
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
-from tests.Benchmarks.BenchmarkPoint import BenchmarkPoint 
-from tests.Benchmarks.singletSM_Z2 import singletBenchmarks
+
+from .BenchmarkPoint import BenchmarkPoint
+
+# Ugly directory structure:
+from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
+
 
 def background(M):
     vw = 0#1 / np.sqrt(3)
@@ -39,7 +45,12 @@ def particle():
     )
 
 
-""" Below are some boilerplate classes and fixtures for testing stuff in SM + singlet, Z2 symmetric.
+
+
+##------- Old stuff, for newer fixtures see conftest.py in Benchmarks/SingletSM_Z2
+
+
+""" Below are some fixtures for testing stuff in SM + singlet, Z2 symmetric.
 For defining common fixtures I use the 'params = [...]' keyword; tests that call these fixtures 
 are automatically repeated with all parameters in the list. Note though that this makes it difficult
 to assert different numbers for different parameters, unless the expected results are somehow passed
@@ -52,13 +63,12 @@ TODO should we use autouse=True for the benchmark fixtures?
 """
 
 
-## NB: fixture argument name needs to be 'request'. This is due to magic
-
 ## These benchmark points will automatically be run for tests that ask for this fixture
 @pytest.fixture(scope="module", params=singletBenchmarks)
 def singletModelBenchmarkPoint(request) -> BenchmarkPoint:
     yield request.param
 
+## NB: fixture argument name needs to be 'request'. This is due to magic
 
 ## Fixture model objects for benchmarks for tests that would rather start from a model than from the inputs.  
 @pytest.fixture(scope="module", params=singletBenchmarks)

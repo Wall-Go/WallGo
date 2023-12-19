@@ -1,12 +1,14 @@
 import numpy as np
+import os
 
 ## WallGo imports
+import WallSpeed ## Whole package, in particular we get WallSpeed.initialize()
 from WallSpeed import GenericModel
 from WallSpeed import Particle
-from WallSpeed import EffectivePotential
 from WallSpeed import WallGoManager
 from WallSpeed import FreeEnergy
-
+## For Benoit benchmarks we need the unresummed, non-high-T potential:
+from WallSpeed import EffectivePotential_NoResum
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -15,14 +17,18 @@ class SingletSM_Z2(GenericModel):
     outOfEquilibriumParticles = np.array([], dtype=Particle)
     modelParameters = {}
 
+    ## Specifying this is REQUIRED
+    fieldCount = 2
+
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters)
-        
+        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
+
+
         # Initialize interpolated FreeEnergy
         self.freeEnergy1 = FreeEnergy(self.effectivePotential, [ 0.0, 200.0 ])
         self.freeEnergy2 = FreeEnergy(self.effectivePotential, [ 246.0, 0.0 ])
@@ -121,16 +127,48 @@ class SingletSM_Z2(GenericModel):
 # end model
 
 
+## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
+class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
-class EffectivePotentialxSM_Z2(EffectivePotential):
-
-    def __init__(self, modelParameters: dict[str, float]):
-        super().__init__(modelParameters)
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+        super().__init__(modelParameters, fieldCount)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
         self.num_boson_dof = 29 
         self.num_fermion_dof = 90 
 
+
+        """For this benchmark model we do NOT use the default integrals from WallGo.
+        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
+        In real applications we recommend using the WallGo default implementations.
+        """
+        self._configureBenchmarkIntegrals()
+
+
+    def _configureBenchmarkIntegrals(self):
+        
+        ## Load custom interpolation tables for Jb/Jf. 
+        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
+        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
+        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
+        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
+        
+        self.integrals.Jb.disableAdaptiveInterpolation()
+        self.integrals.Jf.disableAdaptiveInterpolation()
+
+        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
+        => not really reliable for very negative (m/T)^2 ! 
+        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
+        at the upper limit.
+        """
+
+        from WallSpeed.InterpolatableFunction import EExtrapolationType
+        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+        
+        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+        
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
         #return evaluateHighT(fields, temperature)
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
@@ -174,7 +212,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
         return VTotal
 
-    
+
+    ## High-T stuff commented out for now
+    """
     ## Evaluate the potential in high-T approx (but keep 4D units)
     def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
 
@@ -222,7 +262,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         VTotal = V0 + V1
         return VTotal
     
-    
 
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:
@@ -269,7 +308,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
         thermalParameters["mDsq2"] = mDsq2
 
         return thermalParameters
-
+    """
 
     def boson_massSq(self, fields, temperature):
 
@@ -335,7 +374,17 @@ class EffectivePotentialxSM_Z2(EffectivePotential):
 
 def main():
 
-    ## initial input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+    WallSpeed.initialize()
+
+    ## Create WallGo control object
+    manager = WallGoManager()
+
+
+    """Initialize your GenericModel instance. 
+    The constructor currently requires an initial parameter input, but this is likely to change in the future
+    """
+
+    ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         #"RGScale" : 91.1876,
         "RGScale" : 125., # <- Benoit benchmark
@@ -353,33 +402,47 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
-    Tn = 100.
+    """ Register the model with WallGo. This needs to be done only once. 
+    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
 
-    userInput = {
-        "Tn" : Tn,
-        "phaseLocation1" : [ 0.0, 200.0 ],
-        "phaseLocation2" : [ 246.0, 0.0 ]
-    }
-
-    ## Create control class
-    manager = WallGoManager(model, userInput)
-
-    # At this point we should have all required input from the user
-    # and the manager should have validated it, found phases etc. So proceed to wall speed calculations
-
-    # c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.5229)
-    # #adding this makes EOM complete but without sensible wallspeedg
-    # c1, c2, Tp, Tm, vMid = manager.hydro.findHydroBoundaries(0.01)
-
-    # print("findHydroBoundaries() result:")
-    # print(f"c1 = {c1}, c2 = {c2}, Tp = {Tp}, Tm = {Tm}, vMid = {vMid}")
-
-    M, N = 20, 20
-    manager.initGrid(M, N)
-
-    manager.solveWall()
-
+    ## ---- Here is where you'd start an input parameter loop if doing parameter-space scans ----
     
+    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
+    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
+    """  
+    values_mh2 = [ 120.0 ]
+    for mh2 in values_mh2:
+
+        inputParameters["mh2"] = mh2
+
+        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
+        Use the WallSpeed.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        """
+        Tn = 100. ## nucleation temperature
+        phaseInfo = WallSpeed.PhaseInfo(temperature = Tn, 
+                                        phaseLocation1 = [ 0.0, 200.0 ], 
+                                        phaseLocation2 = [ 246.0, 0.0 ])
+
+        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+            1) WallGo needs the PhaseInfo 
+            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+        """ 
+        manager.setParameters(inputParameters, phaseInfo)
+
+        ## TODO initialize collisions. Either do it here or already in registerModel(). 
+        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
+
+        """WallGo can now be used to compute wall stuff!"""
+
+        ## LN: this currently computes wall speed in different approximations. I suppose we eventually want to have different functions or options to control what to compute.
+        manager.solveWall()
+
+
+    # end parameter-space loop
+
+# end main()
 
 
 ## Don't run the main function if imported to another file

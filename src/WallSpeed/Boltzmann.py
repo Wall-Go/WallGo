@@ -7,7 +7,7 @@ from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
 from .helpers import boostVelocity
-from .WallGoUtils import getPackagedDataPath
+from .WallGoUtils import getSafePathToResource
 
 class BoltzmannBackground:
     def __init__(
@@ -105,7 +105,7 @@ class BoltzmannSolver:
             deltaF = self.solveBoltzmannEquations()
             # putting deltaF on momentum coordinate grid points
             deltaFCoord = np.einsum(
-                "abc, ai, bj, ck -> ijk",
+                "abc, ia, jb, kc -> ijk",
                 deltaF,
                 self.poly.matrix(self.basisM, "z"),
                 self.poly.matrix(self.basisN, "pz"),
@@ -374,17 +374,16 @@ class BoltzmannSolver:
             raise
         return collisionArray, basisType, basisSize
 
+
     def __collisionFilename(self):
         """
         A filename convention for collision integrals.
         """
-        # LN: This will need generalization. And do we want just one gargantuan file with all out-of-eq pairs, or are individual files better?
 
-
-        # LN: We need to stop hardcoding file paths. Here using importlib to find a packaged data file
+        # LN: This is temporary, for release version we won't package collision files and certainly not hardcode them here
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
-        return getPackagedDataPath("WallSpeed.Data", fileName)
+        return getSafePathToResource("Data/" + fileName)
 
 
     def __checkBasis(basis):

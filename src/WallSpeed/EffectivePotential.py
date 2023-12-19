@@ -7,93 +7,33 @@ import scipy.optimize
 import scipy.interpolate
 from .helpers import derivative # derivatives for callable functions
 
-import WallSpeed.Integrals
-
 class EffectivePotential(ABC):
 
+     
+    ## How many background fields. This is explicitly required so that we can have better control over array shapes 
+    fieldCount: int
+
     ## In practice we'll get the model params from a GenericModel subclass 
+<<<<<<< HEAD
     def __init__(self, modelParameters: dict[str, float],
                 dPhi=1e-3,
                 dT=1e-3):
         self.modelParameters = modelParameters
         self.dPhi = dPhi
         self.dT = dT
+=======
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+        self.modelParameters = modelParameters
+        self.fieldCount = fieldCount
+>>>>>>> GeneralizeModel
 
 
-    # do the actual calculation of Veff(phi) here
+    
     @abstractmethod
     def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
+        # do the actual calculation of Veff(phi) here
         raise NotImplementedError
     
-
-    ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps  
-    ## define a separate helper class for the output (holds mass squares, dofs etc)
-    @abstractmethod
-    def boson_massSq(self, fields, temperature):
-        """
-        Calculate the boson particle spectrum. Should be overridden by
-        subclasses.
-
-        Parameters
-        ----------
-        fields : array_like
-            Field value(s).
-            Either a single point (with length `Ndim`), or an array of points.
-        temperature : float or array_like
-            The temperature at which to calculate the boson masses. Can be used
-            for including thermal mass corrrections. The shapes of `fields` and `temperature`
-            should be such that ``fields.shape[:-1]`` and ``temperature.shape`` are
-            broadcastable (that is, ``fields[0,...]*T`` is a valid operation).
-
-        Returns
-        -------
-        massSq : array_like
-            A list of the boson particle masses at each input point `X`. The
-            shape should be such that
-            ``massSq.shape == (X[...,0]*T).shape + (Nbosons,)``.
-            That is, the particle index is the *last* index in the output array
-            if the input array(s) are multidimensional.
-        degrees_of_freedom : float or array_like
-            The number of degrees of freedom for each particle. If an array
-            (i.e., different particles have different d.o.f.), it should have
-            length `Ndim`.
-        c : float or array_like
-            A constant used in the one-loop zero-temperature effective
-            potential. If an array, it should have length `Ndim`. Generally
-            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
-            other bosons.
-        """ 
-        pass
-
-    
-    # LN: I included temperature here since it's confusing that the boson version takes T but this one doesn't
-    @abstractmethod
-    def fermion_massSq(self, fields, temperature):
-        """
-        Calculate the fermion particle spectrum. Should be overridden by
-        subclasses.
-
-        Parameters
-        ----------
-        fields : array_like
-            Field value(s).
-            Either a single point (with length `Ndim`), or an array of points.
-        temperature : float or array_like
-
-        Returns
-        -------
-        massSq : array_like
-            A list of the fermion particle masses at each input point `field`. The
-            shape should be such that  ``massSq.shape == (field[...,0]).shape``.
-            That is, the particle index is the *last* index in the output array
-            if the input array(s) are multidimensional.
-        degreesOfFreedom : float or array_like
-            The number of degrees of freedom for each particle. If an array
-            (i.e., different particles have different d.o.f.), it should have
-            len
-        """
-        pass
-
 
     #### Non-abstract stuff from here on
 
@@ -110,12 +50,20 @@ class EffectivePotential(ABC):
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
+        temperature = np.asanyarray(temperature)
+        guessArray = np.asanyarray(initialGuess)
+
         # I think we'll need to manually vectorize this wrt. T
 
-        if (np.isscalar(temperature)):
+        ## np.isscalar(x) does not catch the case where x is np.ndarray of dim 0
+        if (np.isscalar(temperature) or np.ndim(temperature) == 0):             
+
+            ## Make sure that we only one initial guess
+            assert np.ndim(guessArray) == 0 if self.fieldCount == 1 else len(guessArray) == self.fieldCount
+
             # Minimize real part only
             evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
-            res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+            res = scipy.optimize.minimize(evaluateWrapper, guessArray)
 
             # this spams a LOT:
             """
@@ -126,24 +74,38 @@ class EffectivePotential(ABC):
             return res.x, res.fun
 
         else:
-            ## Veff(T) values in the minimum go here 
+            ## Got many input temperatures. Veff(T) values in the minimum will go here 
             resValue = np.empty_like(temperature)
 
-            ## And field values in the minimum, at each T, go into resLocation. 
-            # But since each element would now be a list, need magic to get the shape right (we put the fields column-wise)
+            ## And field values in the minimum, at each T, will go into resLocation.
+            # We put them column wise, so that resLocation.shape = ( len(T), self.fieldCount ).
 
-            if (np.isscalar(initialGuess) or len(initialGuess.shape) == 1):
-                nColumns = initialGuess.shape[0]
+            resLocation = np.empty( (len(temperature), self.fieldCount) )
+            
+            ## Make sure that we didn't get more than one initial guess for each T
+            ## TODO I hate this but dunno how to do it better:
+
+            if (self.fieldCount == 1):
+                
+                if (np.ndim(guessArray) != 0):
+                    assert len(temperature) == len(guessArray)
+
+                # Else: just got one guess which is fine, we broadcast and use that for all T
+                
             else:
-                ## Now we for some reason got multi-dimensional array of initialGuesses. TODO will this even work?
-                _, nColumns = initialGuess.shape
+                ## Now each initial guess is 1D in itself
+                if (np.ndim(guessArray) == 1):
+                    assert len(guessArray) == self.fieldCount
+                
+                else:
+                    assert guessArray.shape == (len(temperature), self.fieldCount)
 
-            resLocation = np.empty( (len(temperature), nColumns) )
+            ## Shapes probably ok...
 
             for i in np.ndindex(temperature.shape):
                 evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
 
-                res = scipy.optimize.minimize(evaluateWrapper, initialGuess)
+                res = scipy.optimize.minimize(evaluateWrapper, guessArray)
 
                 resLocation[i] = res.x
                 resValue[i] = res.fun
@@ -196,76 +158,6 @@ class EffectivePotential(ABC):
         #return T - dT/2. # use this if the root_scalar thing doesn't work?
 
 
-
-    ## @todo do we want this, or use Philipp's version Jcw below?
-    @staticmethod
-    def ColemanWeinberg(massSquared: float, RGScale: float, c: float) -> complex:
-        return massSquared**2 / (64.*np.pi**2) * ( np.log(massSquared / RGScale**2 + 0j) - c)
-
-
-    @staticmethod
-    def Jcw(msq: float, degrees_of_freedom: int, c: float, RGScale: float):
-        """
-        Coleman-Weinberg potential
-
-        Parameters
-        ----------
-        msq : array_like
-            A list of the boson particle masses at each input point `X`.
-        degrees_of_freedom : float or array_like
-            The number of degrees of freedom for each particle. If an array
-            (i.e., different particles have different d.o.f.), it should have
-            length `Ndim`.
-        c: float or array_like
-            A constant used in the one-loop zero-temperature effective
-            potential. If an array, it should have length `Ndim`. Generally
-            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
-            other bosons.
-        RGScale: float
-            Renormalization scale to use. Should not be an array.
-
-        Returns
-        -------
-        Jcw : float or array_like
-            One-loop Coleman-Weinberg potential for given particle spectrum.
-        """
-        # do we want to take abs of the mass??
-        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/RGScale**2) + 1e-100) - c)
-    
-
-
-    ## LN: Why is this separate from Jcw?
-    def V1(self, bosons, fermions, RGScale: float):
-        """
-        One-loop corrections to the zero-temperature effective potential
-        in dimensional regularization.
-
-        Parameters
-        ----------
-        bosons : array of floats
-            bosonic particle spectrum (here: masses, number of dofs, ci)
-        fermions : array of floats
-            fermionic particle spectrum (here: masses, number of dofs)
-        RGscale: float
-            RG scale of the effective potential
-
-        Returns
-        -------
-        V1 : float 
-        """
-
-        ## LN: should the return value actually be complex in general?
-
-        m2, nb, c = bosons
-        V = np.sum(self.Jcw(m2,nb,c, RGScale), axis=-1)
-
-        m2, nf = fermions
-        c = 1.5
-        V -= np.sum(self.Jcw(m2,nf,c, RGScale), axis=-1)
-
-        return V/(64*np.pi*np.pi)
-
-
     def pressureLO(self, bosons, fermions, T: npt.ArrayLike):
         """
         Computes the leading order pressure for the light degrees of freedom
@@ -286,6 +178,9 @@ class EffectivePotential(ABC):
         """
 
         # TODO is this function OK with array input?
+
+        ## TODO use eq. (39) from https://arxiv.org/pdf/hep-ph/0510375.pdf.
+        ## This is probably easier than having the user input degrees of freedom manually
 
         T4 = T*T*T*T
 

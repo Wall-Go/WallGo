@@ -20,6 +20,10 @@ Questions:
 
 # TODO should make most functions here non-public
 
+## LN: I don't think this needs Tc tbh. It seems to be only accessed in Hydro, and used to set some upper bounds?
+## In which case I'd propose Hydro to use separate variables for its T-range for more flexibility, 
+## and so that we don't have to store Tc in many places. 
+  
 class Thermodynamics:
     """
     Thermodynamic functions corresponding to the potential

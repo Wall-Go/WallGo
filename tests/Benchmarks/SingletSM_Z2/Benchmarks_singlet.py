@@ -1,7 +1,9 @@
-import numpy as np
-from .BenchmarkPoint import BenchmarkPoint
 
+from tests.BenchmarkPoint import BenchmarkPoint
+
+## BM1 = _the_ Benoit benchmark point 
 BM1 = BenchmarkPoint( 
+    inputParams =
     {
     "RGScale" : 125., # <- Benoit's value
     "v0" : 246.0,
@@ -15,9 +17,41 @@ BM1 = BenchmarkPoint(
     "a2" : 0.9,
     "b4" : 1.0
     },
-    # otherData:
+
+    phaseInfo = 
     {
-    }
+        "Tn" : 100.,
+        ## Guesses for phase locations
+        "phaseLocation1" : [ 0.0, 200.0 ],
+        "phaseLocation2" : [ 246.0, 0.0]
+    },
+
+    config = {
+        ## Give TMin, TMax, dT as a tuple
+        "interpolateTemperatureRange" : (0.0, 1.2*108.22, 1.0), ## upper bound is 1.2 * Tc
+        "hydroTMinGuess" : 0.0,
+        "hydroTMaxGuess" : 1.2*108.22
+    },
+
+    ## Will probs need to adjust these once we decide on what our final implementation of the benchmark model is
+    expectedResults = 
+    {
+        "Tc" : 108.22,
+        ## Phase locations at nucleation temperature
+        "phaseLocation1" : [0.0, 104.85563975],
+        "phaseLocation2" : [195.01844099, 0.0],
+
+        ## Jouguet velocity
+        "vJ" : 0.6444,
+        ## LTE wall velocity
+        "vwLTE" : 0.6203233205259607,
+
+        ## Hydro boundaries stuff
+        "c1" : -3331587978,
+        "c2" : 2976953742,
+        "Tplus" : 103.1,
+        "Tminus" : 100.1,
+    } 
 )
 
 
@@ -72,5 +106,5 @@ BM4 = BenchmarkPoint(
     {}
 )
 
-
+## 
 singletBenchmarks = [ BM1, BM2, BM3, BM4 ]

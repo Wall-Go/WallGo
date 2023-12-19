@@ -75,7 +75,7 @@ def test_findMatching():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallSpeed.Hydro(model,1e-10,1e-10)
+        hydro = WallSpeed.Hydro(model,1e-6,500,1e-10,1e-10)
         hydroTemplate = WallSpeed.HydroTemplateModel(model,1e-10,1e-10)
         res1[i] = hydro.findMatching(vw[i])
         res2[i] = hydroTemplate.findMatching(vw[i])
@@ -93,7 +93,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallSpeed.Hydro(model)
+        hydro = WallSpeed.Hydro(model,1e-6,10,1e-10,1e-10)
         hydroTemplate = WallSpeed.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
@@ -108,7 +108,7 @@ def test_findHydroBoundaries():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallSpeed.Hydro(model,1e-10,1e-10)
+        hydro = WallSpeed.Hydro(model,1e-6,500,1e-10,1e-10)
         hydroTemplate = WallSpeed.HydroTemplateModel(model,1e-10,1e-10)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])

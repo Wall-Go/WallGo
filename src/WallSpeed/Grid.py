@@ -85,7 +85,7 @@ class Grid:
 
         """
         self.M = M
-        self.N = N
+        self.N = N #This number has to be odd
         self.L_xi = L_xi
         self.T = T
 
@@ -101,7 +101,7 @@ class Grid:
             self.chiValues, self.rzValues, self.rpValues, L_xi, T
         )
 
-    def getCompactCoordinates(self, endpoints=False):
+    def getCompactCoordinates(self, endpoints=False, direction=None):
         r"""
         Return compact coordinates of grid.
 
@@ -109,6 +109,10 @@ class Grid:
         ----------
         endpoints : Bool, optional
             If True, include endpoints of grid. Default is False.
+        direction : string or None, optional
+            Specifies which coordinates to return. Can either be 'z', 'pz', 
+            'pp' or None. If None, returns a tuple containing the 3 directions.
+            Default is None.
 
         Returns
         ----------
@@ -123,9 +127,17 @@ class Grid:
             chi = np.array([-1] + list(self.chiValues) + [1])
             rz = np.array([-1] + list(self.rzValues) + [1])
             rp = np.array(list(self.rpValues) + [1])
-            return chi, rz, rp
         else:
-            return self.chiValues, self.rzValues, self.rpValues
+            chi,rz,rp = self.chiValues, self.rzValues, self.rpValues
+            
+        if direction == 'z':
+            return chi
+        elif direction == 'pz':
+            return rz
+        elif direction == 'pp':
+            return rp
+        else:
+            return chi, rz, rp
 
     def getCoordinates(self, endpoints=False):
         r"""
