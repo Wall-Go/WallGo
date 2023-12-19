@@ -253,7 +253,7 @@ class EffectivePotential(ABC):
             n=1,
             order=4,
         )
-        print(val)
+        # print(val)
         return val
 
     def derivField(self, fields: np.ndarray[float], T: npt.ArrayLike):
@@ -283,5 +283,5 @@ class EffectivePotential(ABC):
             dfd_field = (self.evaluate(Xd_field,T) - self.evaluate(fields,T)) / self.dPhi
             return_val[i,...] = np.diag(dfd_field)
         
-        print(return_val)
+        # print(return_val)
         return return_val
