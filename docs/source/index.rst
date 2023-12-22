@@ -4,7 +4,7 @@ WallGo documentation
 
 WallGo is a Python package for computing the bubble wall speed in
 cosmological phase transitions. The code is open source and free to use.
-If you use WallSpeed, please cite arXiv:....
+If you use WallGo, please cite arXiv:....
 
 .. image:: desy.jpeg
     :width: 400
