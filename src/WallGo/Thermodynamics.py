@@ -3,7 +3,7 @@ import numpy as np
 from .EffectivePotential import EffectivePotential
 from .FreeEnergy import FreeEnergy
 
-import WallSpeed.helpers
+import WallGo.helpers
 
 """ LN: As far as I understand, this class is intended to work as an intermediator between the Veff and other parts of the code 
 that require T-dependent quantities (like Hydro).  
@@ -99,7 +99,7 @@ class Thermodynamics:
         dpHighT : double
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallSpeed.helpers.derivative(
+        return WallGo.helpers.derivative(
             self.pHighT,
             T,
             dx=self.dT,
@@ -122,7 +122,7 @@ class Thermodynamics:
         ddpHighT : double
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallSpeed.helpers.derivative(
+        return WallGo.helpers.derivative(
             self.pHighT,
             T,
             dx=self.dT,
@@ -228,7 +228,7 @@ class Thermodynamics:
         dpLowT : double
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallSpeed.helpers.derivative(
+        return WallGo.helpers.derivative(
             self.pLowT,
             T,
             dx=self.dT,
@@ -250,7 +250,7 @@ class Thermodynamics:
         ddpLowT : double
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallSpeed.helpers.derivative(
+        return WallGo.helpers.derivative(
             self.pLowT,
             T,
             dx=self.dT,

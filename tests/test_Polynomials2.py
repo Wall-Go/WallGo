@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from WallSpeed.Polynomial2 import Polynomial
-from WallSpeed.Grid import Grid
+from WallGo.Polynomial2 import Polynomial
+from WallGo.Grid import Grid
 
 grid = Grid(4,4,1,1)
 

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Grid import Grid
 
 def test_cardinal():
     r"""

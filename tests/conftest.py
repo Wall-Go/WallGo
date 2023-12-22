@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
-
-import WallSpeed
+import WallGo
 
 ## should clean these imports...
 
@@ -15,18 +14,18 @@ from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 
 def background(M):
     vw = 0#1 / np.sqrt(3)
-    v = - np.ones(M - 1) / np.sqrt(3)
-    v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(M - 1))
+    v = - np.ones(M + 1) / np.sqrt(3)
+    v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(M + 1))
     velocityMid = 0.5 * (v[0] + v[-1])
-    field = np.ones((M - 1,))
+    field = np.ones((M + 1,))
     field[M // 2:]  = 0
-    field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(M - 1) + 6)
-    T = 100 * np.ones(M - 1)
-    T += 1 * np.sin(11 * 2 * np.pi * np.arange(M - 1) + 6)
-    return WallSpeed.BoltzmannBackground(
+    field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(M + 1) + 6)
+    T = 100 * np.ones(M + 1)
+    # T += 1 * np.sin(11 * 2 * np.pi * np.arange(M + 1) + 6)
+    return WallGo.BoltzmannBackground(
         velocityMid=velocityMid,
         velocityProfile=v,
-        fieldProfile=field,
+        fieldProfile=field[None,:],
         temperatureProfile=T,
         polynomialBasis="Cardinal",
     )
@@ -34,9 +33,9 @@ def background(M):
 
 @pytest.fixture
 def particle():
-    return WallSpeed.Particle(
+    return WallGo.Particle(
         name="top",
-        msqVacuum=lambda phi: 0.5 * phi**2,
+        msqVacuum=lambda phi: 0.5 * phi[0]**2,
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
         inEquilibrium=False,

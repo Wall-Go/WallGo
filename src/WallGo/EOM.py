@@ -3,6 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
 from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
+from .Polynomial2 import Polynomial
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .GenericModel import GenericModel
@@ -245,12 +246,9 @@ class EOM:
         """
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
-
-        offEquilDeltas = {
-            "00": np.zeros(self.grid.M-1), 
-            "02": np.zeros(self.grid.M-1), 
-            "20": np.zeros(self.grid.M-1), 
-            "11": np.zeros(self.grid.M-1)}
+            
+        zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
+        offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
@@ -274,7 +272,10 @@ class EOM:
             )
 
             if self.includeOffEq:
-                boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, fields, Tprofile) #first entry is 0 because that's the wall velocity in the wall frame
+                TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
+                XWithEndpoints = np.concatenate((vevLowT[:,None], fields, vevHighT[:,None]), 1)
+                vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]]))
+                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) 
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
@@ -288,8 +289,9 @@ class EOM:
         dVdX = self.thermo.effectivePotential.derivField(X, Tprofile)
 
         # TODO: Add the mass derivative in the Particle class and use it here.
-        dVout = 12*X[0]*offEquilDeltas['00']/2
-        pressure = -GCLQuadrature(np.concatenate(([0], self.grid.L_xi*((dVdX*dXdz)[0]+dVout*dXdz[0])/(1-self.grid.chiValues**2), [0])))
+        dVout = 12*X[0]*offEquilDeltas['00'].coefficients/2 
+        EOMPoly = Polynomial((dVdX*dXdz)[0]+dVout*dXdz[0], self.grid)
+        pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
         if returnOptimalWallParams:
             return pressure,wallParams
@@ -332,8 +334,9 @@ class EOM:
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
 
         Vref = (VLowT+VHighT)/2
-
-        U = GCLQuadrature(np.concatenate(([0], self.grid.L_xi*(V+VOut-Vref)/(1-self.grid.chiValues**2), [0])))
+        
+        VPoly = Polynomial(V+VOut-Vref, self.grid)
+        U = VPoly.integrate(w=self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
         return (U+K)
 
@@ -629,10 +632,10 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = offEquilDeltas["00"][index]
-        delta11 = offEquilDeltas["11"][index]
-        delta02 = offEquilDeltas["02"][index]
-        delta20 = offEquilDeltas["20"][index]
+        delta00 = offEquilDeltas["00"].coefficients[index]
+        delta11 = offEquilDeltas["11"].coefficients[index]
+        delta02 = offEquilDeltas["02"].coefficients[index]
+        delta20 = offEquilDeltas["20"].coefficients[index]
 
         u0 = np.sqrt(gammaSq(velocityMid))
         u3 = np.sqrt(gammaSq(velocityMid))*velocityMid
