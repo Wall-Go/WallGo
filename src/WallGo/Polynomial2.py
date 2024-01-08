@@ -38,7 +38,7 @@ class Polynomial:
         """
         
         self.coefficients = np.asanyarray(coefficients)
-        self.N = len(self.coefficients.shape)
+        self.N = len(self.coefficients.shape) #Can we use another symbol here? Easy to confuse this with Grid.N
         self.grid = grid
         
         self.allowedBasis = ['Cardinal','Chebyshev']
@@ -95,6 +95,8 @@ class Polynomial:
             return Polynomial(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
+            if self.N != len(newCoeff):
+                print(self.N, len(newCoeff)) 
             assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
