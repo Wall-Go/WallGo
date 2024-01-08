@@ -10,6 +10,7 @@ from WallGo import WallGoManager
 from WallGo import FreeEnergy
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
+from WallGo import Fields
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -31,8 +32,8 @@ class SingletSM_Z2(GenericModel):
 
 
         # Initialize interpolated FreeEnergy
-        self.freeEnergy1 = FreeEnergy(self.effectivePotential, [ 0.0, 200.0 ])
-        self.freeEnergy2 = FreeEnergy(self.effectivePotential, [ 246.0, 0.0 ])
+        self.freeEnergy1 = FreeEnergy(self.effectivePotential, Fields( [0.0], [200.0] ))
+        self.freeEnergy2 = FreeEnergy(self.effectivePotential, Fields( [246.0], [0.0] ))
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -171,13 +172,12 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     
     ## ---------- EffectivePotential overrides. The user needs to define evaluate() and fieldIndependentPart()
         
-    def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
-        #return evaluateHighT(fields, temperature)
+    def evaluate(self, fields: Fields, temperature: float) -> complex:
+
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
-        fields = np.asanyarray(fields) 
-        v = fields[0] # phi ~ 1/sqrt(2) (0, v)
-        x = fields[1] # just S -> S + x 
+        # phi ~ 1/sqrt(2) (0, v), S ~ x
+        v, x = fields.GetField(0), fields.GetField(1)
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -191,11 +191,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
         mh2_thermal = b2 - thermalParams["b2"]
         """
-
-        ## These need to be arrays! Because other classes call this function with a nested list of field values.
-        ## So @todo make all our funct arguments be numpy arrays?
-        v = np.asanyarray(v)
-        x = np.asanyarray(x)
 
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
@@ -331,12 +326,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return thermalParameters
     """
 
-    def boson_massSq(self, fields, temperature):
+    def boson_massSq(self, fields: Fields, temperature):
 
-        # Is this necessary?
-        fields = np.asanyarray(fields)
-        T = np.asanyarray(temperature)
-        v, x = fields[0,...], fields[1,...]
+        v, x = fields.GetField(0), fields.GetField(1)
 
         # TODO: numerical determination of scalar masses from V0
 
@@ -375,10 +367,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return massSq, degreesOfFreedom, c
     
 
-    def fermion_massSq(self, fields, temperature):
+    def fermion_massSq(self, fields: Fields, temperature):
 
-        fields = np.asanyarray(fields)
-        v, x = fields[0,...], fields[1,...]
+        v, x = fields.GetField(0), fields.GetField(1)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
@@ -445,8 +436,9 @@ def main():
         """
         Tn = 100. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = [ 0.0, 200.0 ], 
-                                        phaseLocation2 = [ 246.0, 0.0 ])
+                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
+                                        phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
+        
 
         """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
             1) WallGo needs the PhaseInfo 

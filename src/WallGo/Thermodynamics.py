@@ -5,6 +5,8 @@ from .FreeEnergy import FreeEnergy
 
 import WallGo.helpers
 
+from .Fields import Fields
+
 """ LN: As far as I understand, this class is intended to work as an intermediator between the Veff and other parts of the code 
 that require T-dependent quantities (like Hydro).  
 I've modified this so that instead of a FreeEnergy object, this operates on an EffectivePotential object; this gets rid of one layer of complexity. 
@@ -36,8 +38,8 @@ class Thermodynamics:
         effectivePotential,
         criticalTemperature: float,
         nucleationTemperature: float, 
-        phaseLowT: np.ndarray[float],
-        phaseHighT: np.ndarray[float]
+        phaseLowT: Fields,
+        phaseHighT: Fields
     ):
         """Initialisation
 
@@ -82,7 +84,7 @@ class Thermodynamics:
         """
         # pressure = -free energy density = -Veff at minimum
         # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
-        *_, VeffValue = self.freeEnergyHigh(T)
+        VeffValue = self.freeEnergyHigh(T).getVeffValue()
         return -VeffValue
 
     def dpHighT(self, T):
@@ -210,7 +212,7 @@ class Thermodynamics:
 
         """
 
-        *_, VeffValue = self.freeEnergyLow(T)
+        VeffValue = self.freeEnergyLow(T).getVeffValue()
         return -VeffValue
 
     def dpLowT(self, T):

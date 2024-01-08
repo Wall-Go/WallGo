@@ -4,6 +4,17 @@ import math
 
 from .InterpolatableFunction import InterpolatableFunction
 from .EffectivePotential import EffectivePotential
+from .Fields import Fields
+
+class FreeEnergyValueType(np.ndarray):
+        
+    def __new__(cls, arr: np.ndarray):
+        obj = arr.view(cls)
+        return obj
+    
+    def getVeffValue(self):
+        ## Our last column is value of the potential at minimum
+        return self[:, -1]
 
 
 class FreeEnergy(InterpolatableFunction):
@@ -14,16 +25,16 @@ class FreeEnergy(InterpolatableFunction):
 
     effectivePotential: EffectivePotential
     ## Approx field values where the phase lies (TODO should we include T-dependence?)
-    phaseLocationGuess: list[float]
+    phaseLocationGuess: Fields
 
     minPossibleTemperature: float ## Lowest possible temperature so that the phase is still (meta)stable 
     maxPossibleTemperature: float ## Highest possible temperature so that the phase is still (meta)stable
 
-    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: list[float], initialInterpolationPointCount: int=1000):
+    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: Fields, initialInterpolationPointCount: int=1000):
 
         adaptiveInterpolation = True
         ## Set return value count. Currently the InterpolatableFunction requires this to be set manually:
-        returnValueCount = len(phaseLocationGuess) + 1
+        returnValueCount = phaseLocationGuess.NumFields() + 1
         super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount, initialInterpolationPointCount=initialInterpolationPointCount)
 
         self.effectivePotential = effectivePotential 
@@ -33,7 +44,7 @@ class FreeEnergy(InterpolatableFunction):
         self.maxPossibleTemperature = np.Inf
 
 
-    def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def _functionImplementation(self, temperature: npt.ArrayLike) -> FreeEnergyValueType:
         """
         Parameters
         ----------
@@ -56,48 +67,31 @@ class FreeEnergy(InterpolatableFunction):
         # Issue with this approach is that it doesn't vectorize. Might not be a big loss however since findLocalMinimum itself is 
         # not effectively vectorized due to reliance on scipy routines.
 
+        """TODO make the following work independently of how the Field array is organized.
+        Too much hardcoded slicing right now."""
+
         # Here is a check that should catch "symmetry-breaking" type transitions where a field is 0 in one phase and nonzero in another
         bFieldWentToZero = (np.abs(self.phaseLocationGuess) > 5.0) & (np.abs(phaseLocation) < 1e-1)
 
         ## Check that we apply row-wise
         bEvaluationFailed = bFieldWentToZero ## & ... add other checks ...
 
-        ## For scalar input let's return a 1D numpy array. Note ordering
-        if (np.isscalar(temperature) or np.ndim(temperature) == 0):
+        ## Make our failure check a boolean mask that numpy understands
+        invalidRowMask = np.any(bEvaluationFailed, axis=1)
 
-            if (np.any(bEvaluationFailed)):
-                return np.full(len(self.phaseLocationGuess) + 1, np.nan)
+        ## Replace all elements with np.nan on rows that failed the check
+        phaseLocation[invalidRowMask, :] = np.nan
+        potentialAtMinimum[invalidRowMask] = np.nan
 
-            res = np.asanyarray(phaseLocation)
-            res = np.append(phaseLocation, potentialAtMinimum)
+        # reshape so that potentialAtMinimum is a column vector
+        potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
 
-            return res
-        
-        else:
-            ## Input was a numpy array, so output should be 2D. But if there's just 1 field it can be 1D.
-            ## For consistency let's force it to be 2D.
-            if (np.ndim(phaseLocation) == 1):
-                phaseLocation = np.atleast_2d(phaseLocation)
-                phaseLocation = phaseLocation.transpose()
+        # Join the arrays so that potentialAtMinimum is the last column and the others are as in phaseLocation
+        result = np.concatenate((phaseLocation, potentialAtMinimum_column), axis=1)
 
-            assert len(phaseLocation) == len(temperature)
-
-            ## Make our failure check a boolean mask that numpy understands
-            invalidRowMask = np.any(bEvaluationFailed, axis=1)
-
-            ## Replace all elements with np.nan on rows that failed the check
-            phaseLocation[invalidRowMask, :] = np.nan
-            potentialAtMinimum[invalidRowMask] = np.nan
-        
-
-            # reshape so that potentialAtMinimum is a column vector
-            potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
-
-            # Join the arrays so that potentialAtMinimum is the last column and the others are as in phaseLocation
-            result = np.concatenate((phaseLocation, potentialAtMinimum_column), axis=1)
-            return result
-
-
+        ## This is now a 2D array where rows are [f1, f2, ..., Veff]
+        return FreeEnergyValueType(result)
+    
 
 
     def tracePhase(self, TMin: float, TMax: float, dT: float) -> None:

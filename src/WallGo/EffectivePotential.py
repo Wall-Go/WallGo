@@ -6,11 +6,14 @@ import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
 
+from .Fields import Fields
+
+
 class EffectivePotential(ABC):
     """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
     and computing free energies (pressures) in the two phases.
     
-    NB: Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
+    Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
     However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
     This class does not enforce any particular normalization of the potential, however you are REQUIRED to provide a definition of fieldIndependentPart()
@@ -40,18 +43,39 @@ class EffectivePotential(ABC):
         self.fieldCount = fieldCount
 
 
-    
     @abstractmethod
-    def evaluate(self, fields: np.ndarray[float], temperature: float) -> complex:
+    def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
         at the input field configuration and temperature. Normalization of the potential does not matter: You may eg. choose Veff(0) = 0.
+        
         """
         raise NotImplementedError
     
 
+    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """
+        Computes the full field-independent part of the effective potential. More specifically,
+        the output of this needs to give the free-energy density for a phase at phi = 0. 
+        Strictly speaking it is enough to give the temperature-dependent but field-independent parts.
+        For concreteness, for a leading-order computation in the Standard Model this should return 106.75*pi^2/90 * T^4.
+        
+        See also the documentation of the EffectivePotential class.
+        
+        Parameters
+        ----------
+        temperature : ArrayLike 
+
+        Returns
+        -------
+        npt.ArrayLike 
+        """
+
+        raise NotImplementedError
+
+
     #### Non-abstract stuff from here on
 
-    def findLocalMinimum(self, initialGuess: list[float], temperature: npt.ArrayLike) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike) -> Tuple[Fields, npt.ArrayLike]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.
@@ -64,74 +88,44 @@ class EffectivePotential(ABC):
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
-        temperature = np.asanyarray(temperature)
-        guessArray = np.asanyarray(initialGuess)
+        # I think we'll need to manually vectorize this in case we got many field/temperature points
+        T = np.atleast_1d(temperature)
 
-        # I think we'll need to manually vectorize this wrt. T
+        numPoints = max(T.shape[0], initialGuess.NumPoints())
 
-        ## np.isscalar(x) does not catch the case where x is np.ndarray of dim 0
-        if (np.isscalar(temperature) or np.ndim(temperature) == 0):             
+        ## Reshape for broadcasting
+        guesses = initialGuess.Resize(numPoints, initialGuess.NumFields())
+        T = np.resize(T, (numPoints))
 
-            ## Make sure that we only one initial guess
-            assert np.ndim(guessArray) == 0 if self.fieldCount == 1 else len(guessArray) == self.fieldCount
+        resValue = np.empty_like(T)
+        resLocation = np.empty_like(guesses)
 
-            # Minimize real part only
-            evaluateWrapper = lambda fields: self.evaluate(fields, temperature).real
-            res = scipy.optimize.minimize(evaluateWrapper, guessArray)
+        for i in range(0, numPoints):
 
-            # this spams a LOT:
+            """Numerically minimize the potential wrt. fields. 
+            We can pass a fields array to scipy routines normally, but scipy seems to forcibly convert back to standard ndarray
+            causing issues in the Veff evaluate function if it uses extended functionality from the Fields class. 
+            So we need a wrapper that casts back to Fields type. It also needs to fix the temperature, and we only minimize the real part
             """
-            if (not res.success):
-                print("Veff minimization error:", res.message)
-            """
-            ## res.x is the minimum location, res.fun is the function value
-            return res.x, res.fun
 
-        else:
-            ## Got many input temperatures. Veff(T) values in the minimum will go here 
-            resValue = np.empty_like(temperature)
+            def evaluateWrapper(fieldArray: np.ndarray):
+                fields = Fields.CastFromNumpy(fieldArray)
+                return self.evaluate(fields, T[i]).real
 
-            ## And field values in the minimum, at each T, will go into resLocation.
-            # We put them column wise, so that resLocation.shape = ( len(T), self.fieldCount ).
+            guess = guesses.GetFieldPoint(i)
 
-            resLocation = np.empty( (len(temperature), self.fieldCount) )
-            
-            ## Make sure that we didn't get more than one initial guess for each T
-            ## TODO I hate this but dunno how to do it better:
+            res = scipy.optimize.minimize(evaluateWrapper, guess)
 
-            if (self.fieldCount == 1):
-                
-                if (np.ndim(guessArray) != 0):
-                    assert len(temperature) == len(guessArray)
+            resLocation[i] = res.x
+            resValue[i] = res.fun
 
-                # Else: just got one guess which is fine, we broadcast and use that for all T
-                
-            else:
-                ## Now each initial guess is 1D in itself
-                if (np.ndim(guessArray) == 1):
-                    assert len(guessArray) == self.fieldCount
-                
-                else:
-                    assert guessArray.shape == (len(temperature), self.fieldCount)
-
-            ## Shapes probably ok...
-
-            for i in np.ndindex(temperature.shape):
-                evaluateWrapper = lambda fields: self.evaluate(fields, temperature[i]).real
-
-                res = scipy.optimize.minimize(evaluateWrapper, guessArray)
-
-                resLocation[i] = res.x
-                resValue[i] = res.fun
-        
-            return resLocation, resValue
-        
-    ### end findLocalMinimum()
-
+        ## Need to cast the field location
+        return Fields.CastFromNumpy(resLocation), resValue
+    
 
     ## Find Tc for two minima, search only range [TMin, TMax].
     ## Feel free to override this if your potential needs a more sophisticated minimization algorithm.
-    def findCriticalTemperature(self, minimum1: np.ndarray[float], minimum2: np.ndarray[float], TMin: float, TMax: float) -> float:
+    def findCriticalTemperature(self, minimum1: Fields, minimum2: Fields, TMin: float, TMax: float) -> float:
 
         if (TMax < TMin):
             raise ValueError("findCriticalTemperature needs TMin < TMax")
@@ -177,10 +171,6 @@ class EffectivePotential(ABC):
         """
         zero = np.full_like(fields, self.fieldLowerBound)
 
-        print(fields)
-        print(T)
-        input()
-
         return self.evaluate(fields, T) - self.evaluate(zero, T)
 
 
@@ -190,25 +180,3 @@ class EffectivePotential(ABC):
         no matter how Veff(phi) is normalized.
         """
         return self.normalize(fields, temperature) + self.fieldIndependentPart(temperature)
-
-
-
-    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """
-        Computes the full field-independent part of the effective potential. More specifically,
-        the output of this needs to give the free-energy density for a phase at phi = 0. 
-        Strictly speaking it is enough to give the temperature-dependent but field-independent parts.
-        For concreteness, for a leading-order computation in the Standard Model this should return 106.75*pi^2/90 * T^4.
-        
-        See also the documentation of the EffectivePotential class.
-        
-        Parameters
-        ----------
-        temperature : ArrayLike 
-
-        Returns
-        -------
-        npt.ArrayLike 
-        """
-
-        raise NotImplementedError

@@ -13,15 +13,16 @@ from .EOM import EOM
 from .Grid import Grid
 from .Config import Config
 from .Integrals import Integrals
+from .Fields import Fields
+
 
 from .WallGoUtils import getSafePathToResource
-
 
 @dataclass
 class PhaseInfo:
     # Field values at the two phases at T (we go from 1 to 2)
-    phaseLocation1: np.ndarray[float]
-    phaseLocation2: np.ndarray[float]
+    phaseLocation1: Fields
+    phaseLocation2: Fields
     temperature: float
 
     

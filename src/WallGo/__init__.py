@@ -8,6 +8,7 @@ from .Thermodynamics import Thermodynamics
 from .EOM import EOM
 
 from .Particle import Particle
+from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
