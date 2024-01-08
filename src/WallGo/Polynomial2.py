@@ -95,9 +95,7 @@ class Polynomial:
             return Polynomial(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
-            if self.N != len(newCoeff):
-                print(self.N, len(newCoeff)) 
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
