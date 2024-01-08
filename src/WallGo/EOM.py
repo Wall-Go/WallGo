@@ -328,7 +328,7 @@ class EOM:
 
         # TODO had to put here diagonal since fieldsi (2,N) and Tprofile (N) gave (N,N) result
         V = np.diag(self.thermo.effectivePotential.evaluate(fields, Tprofile))
-        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00/2
+        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
