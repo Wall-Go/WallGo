@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from WallSpeed.Integrals import JbIntegral, JfIntegral
-from WallSpeed.InterpolatableFunction import EExtrapolationType
+from WallGo.Integrals import JbIntegral, JfIntegral
+from WallGo.InterpolatableFunction import EExtrapolationType
 
 ### Test real parts of Jb, Jf integrals
 

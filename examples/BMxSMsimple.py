@@ -4,13 +4,13 @@ defines model, grid and top
 """
 import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Thermodynamics import Thermodynamics
-from WallSpeed.Hydro import Hydro
-from WallSpeed import Particle, FreeEnergy, Model
-from WallSpeed.EOM import EOM
-from WallSpeed.EOMGeneralShape import EOMGeneralShape
+from WallGo.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Thermodynamics import Thermodynamics
+from WallGo.Hydro import Hydro
+from WallGo import Particle, FreeEnergy, Model
+from WallGo.EOM import EOM
+from WallGo.EOMGeneralShape import EOMGeneralShape
 
 """
 Grid

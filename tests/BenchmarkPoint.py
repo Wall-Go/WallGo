@@ -1,4 +1,4 @@
-import WallSpeed.GenericModel
+import WallGo.GenericModel
 
 ## Collect input params + other benchmark-specific data for various things in one place.
 class BenchmarkPoint:
@@ -28,10 +28,10 @@ class BenchmarkModel:
     """This just holds a model instance + BenchmarkPoint.
     """
 
-    model: WallSpeed.GenericModel
+    model: WallGo.GenericModel
     benchmarkPoint: BenchmarkPoint
 
-    def __init__(self, model: WallSpeed.GenericModel, benchmarkPoint: BenchmarkPoint):
+    def __init__(self, model: WallGo.GenericModel, benchmarkPoint: BenchmarkPoint):
 
         self.model = model
         self.benchmarkPoint = benchmarkPoint

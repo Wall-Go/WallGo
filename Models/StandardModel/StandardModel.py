@@ -1,10 +1,10 @@
 import numpy as np
 
 ## WallGo imports
-from WallSpeed import GenericModel
-from WallSpeed import Particle
-from WallSpeed import EffectivePotential
-from WallSpeed import WallGoManager
+from WallGo import GenericModel
+from WallGo import Particle
+from WallGo import EffectivePotential
+from WallGo import WallGoManager
 
 ### LN: This file is very WIP, test with SingletStandardModel_Z2.py instead
 

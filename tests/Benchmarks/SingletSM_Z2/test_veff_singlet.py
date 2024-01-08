@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import WallSpeed
+import WallGo
 
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
 

@@ -4,11 +4,11 @@ from typing import Tuple
 
 from tests.BenchmarkPoint import BenchmarkPoint
 
-import WallSpeed
+import WallGo
 
 
 ## This can be somewhat slow as this is often the first test that uses Hydro fixtures
-def test_Jouguet(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
+def test_Jouguet(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoint]):
 
     hydro, BM = singletBenchmarkHydro
 
@@ -20,7 +20,7 @@ def test_Jouguet(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
 
 ## This can be slow if Jb/Jf need to be evaluated at very negative (m/T)^2
 @pytest.mark.slow
-def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
+def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoint]):
 
     hydro, BM = singletBenchmarkHydro
 
@@ -37,7 +37,7 @@ def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, Benchmark
 
 
 ## Wall velocity in the Local Thermal Equilibrium approximation
-def test_vwLTE(singletBenchmarkHydro: Tuple[WallSpeed.Hydro, BenchmarkPoint]):
+def test_vwLTE(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoint]):
 
     hydro, BM = singletBenchmarkHydro
 

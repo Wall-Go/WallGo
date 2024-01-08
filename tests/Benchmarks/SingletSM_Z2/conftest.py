@@ -5,7 +5,7 @@ import pytest
 import math
 from typing import Tuple
 
-import WallSpeed
+import WallGo
 
 from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
@@ -52,7 +52,7 @@ eg. read from BenchmarkPoint.expectedResults"""
  
 ## This constructs thermodynamics without interpolating anything
 @pytest.fixture(scope="session")
-def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]:
+def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallGo.Thermodynamics, BenchmarkPoint]:
 
     ## annoyingly Thermo needs Tc in the constructor, even though the class doesn't really use it
 
@@ -65,7 +65,7 @@ def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallS
 
     ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though, 
     ## so WallGo could safely assume that the transition is always phase1 -> phase2
-    thermo = WallSpeed.Thermodynamics(singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1)
+    thermo = WallGo.Thermodynamics(singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1)
 
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
@@ -77,7 +77,7 @@ def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallS
 
 ## This is like the singletBenchmarkThermo fixture but interpolates the FreeEnergy objects over the temperature range specified in our BM input 
 @pytest.fixture(scope="session")
-def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]:
+def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallGo.Thermodynamics, BenchmarkPoint]:
     
     BM = singletBenchmarkModel.benchmarkPoint
 
@@ -88,7 +88,7 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
     ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though, 
     ## so WallGo could safely assume that the transition is always phase1 -> phase2
-    thermo = WallSpeed.Thermodynamics(singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1)
+    thermo = WallGo.Thermodynamics(singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1)
 
     ## Let's turn these off so that things are more transparent
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
@@ -106,7 +106,7 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
 @pytest.fixture(scope="session")
-def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallSpeed.Thermodynamics, BenchmarkPoint]) -> Tuple[WallSpeed.Hydro, BenchmarkPoint]:
+def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallGo.Thermodynamics, BenchmarkPoint]) -> Tuple[WallGo.Hydro, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
     
@@ -115,19 +115,19 @@ def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallSpeed.Th
     TMaxGuess = BM.config["hydroTMaxGuess"]
 
     ## TODO Should fix rtol, atol here so that our tests don't magically change if the class defaults change !
-    yield WallSpeed.Hydro(thermo, TminGuess=TMinGuess, TmaxGuess=TMaxGuess), BM
+    yield WallGo.Hydro(thermo, TminGuess=TMinGuess, TmaxGuess=TMaxGuess), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now. And it really needs to get rid of the temperature argument
 @pytest.fixture(scope="session")
-def singletBenchmarkGrid() -> Tuple[WallSpeed.Grid, WallSpeed.Polynomial]:
+def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
     M, N = 20, 20
     
     # magic 0.05
-    grid = WallSpeed.Grid(M, N, 0.05, 100)
+    grid = WallGo.Grid(M, N, 0.05, 100)
 
-    return grid, WallSpeed.Polynomial(grid)
+    return grid, WallGo.Polynomial(grid)
 
 
 
@@ -136,7 +136,7 @@ TODO fix masses
 """
 @pytest.fixture(scope="session")
 def singletBenchmarkParticle():
-    return WallSpeed.Particle(
+    return WallGo.Particle(
         name="top",
         msqVacuum=lambda phi: 0.5 * phi**2,
         msqThermal=lambda T: 0.1 * T**2,
@@ -152,7 +152,7 @@ def singletBenchmarkParticle():
 This still needs a particle input though (intended??) so I'm using the particle fixture defined in our main conftest.py
 """
 @pytest.fixture(scope="session")
-def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid) -> Tuple[WallSpeed.EOM, BenchmarkPoint]:
+def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
     hydro, _ = singletBenchmarkHydro
@@ -161,6 +161,6 @@ def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkTh
     fieldCount = 2
 
     ## TODO fix error tolerance?
-    eom = WallSpeed.EOM(singletBenchmarkParticle, thermo, hydro, grid, fieldCount, includeOffEq=False)
+    eom = WallGo.EOM(singletBenchmarkParticle, thermo, hydro, grid, fieldCount, includeOffEq=False)
 
     return eom, BM

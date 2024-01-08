@@ -3,13 +3,13 @@ import numpy.typing as npt
 import os
 
 ## WallGo imports
-import WallSpeed ## Whole package, in particular we get WallSpeed.initialize()
-from WallSpeed import GenericModel
-from WallSpeed import Particle
-from WallSpeed import WallGoManager
-from WallSpeed import FreeEnergy
+import WallGo ## Whole package, in particular we get WallGo.initialize()
+from WallGo import GenericModel
+from WallGo import Particle
+from WallGo import WallGoManager
+from WallGo import FreeEnergy
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallSpeed import EffectivePotential_NoResum
+from WallGo import EffectivePotential_NoResum
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -161,7 +161,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         at the upper limit.
         """
 
-        from WallSpeed.InterpolatableFunction import EExtrapolationType
+        from WallGo.InterpolatableFunction import EExtrapolationType
         self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
                                                extrapolationTypeUpper = EExtrapolationType.CONSTANT)
         
@@ -395,7 +395,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
 def main():
 
-    WallSpeed.initialize()
+    WallGo.initialize()
 
     ## Create WallGo control object
     manager = WallGoManager()
@@ -441,10 +441,10 @@ def main():
         modelParameters = model.calculateModelParameters(inputParameters)
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallSpeed.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
         Tn = 100. ## nucleation temperature
-        phaseInfo = WallSpeed.PhaseInfo(temperature = Tn, 
+        phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = [ 0.0, 200.0 ], 
                                         phaseLocation2 = [ 246.0, 0.0 ])
 

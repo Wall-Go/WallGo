@@ -6,11 +6,11 @@ Wallgo is under active development, with plans for future versions with
 additional functionality. The latest developments are available from our
 `git repository`_.
 
-.. _git repository: https://github.com/jorindevandevis/WallSpeed
+.. _git repository: https://github.com/jorindevandevis/WallGo
 
 To install the development version, run the following::
 
-    git clone https://github.com/jorindevandevis/WallSpeed.git
+    git clone https://github.com/jorindevandevis/WallGo.git
     cd bubble_det
     pip install -e .
 

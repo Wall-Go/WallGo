@@ -18,7 +18,7 @@ print(sys.path)
 
 # -- Project information -----------------------------------------------------
 
-project = "WallSpeed"
+project = "WallGo"
 copyright = "2023, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
 Benoit Laurent, Lauri Niemi, Philipp Schicho, Tuomas Tenkanen, and \
 Jorinde van de Vis"

@@ -27,8 +27,8 @@ how to deal with negative input.
 
 """Usage: We define Jb and Jf are defined as InterpolatableFunction to allow optimized evaluation.
 The individual integrals are then collected in the ``Integrals`` class below. 
-WallGo provides a default Integrals object defined in WallGo's __init__.py, accessible as WallSpeed.defaultIntegrals. 
-Once WallSpeed.initialize() is called, we optimize Jb and Jf in WallSpeed.defaultIntegrals by loading their interpolation tables. 
+WallGo provides a default Integrals object defined in WallGo's __init__.py, accessible as WallGo.defaultIntegrals. 
+Once WallGo.initialize() is called, we optimize Jb and Jf in WallGo.defaultIntegrals by loading their interpolation tables. 
 """
 
 

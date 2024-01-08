@@ -50,7 +50,7 @@ def wallProfile(higgsVEV, singletVEV, higgsWidth, singletWidth, wallOffSet, z):
 
     return [h, s]
 
-def wallProfileOnWallSpeedGrid(staticWallParams, Tplus, Tminus, grid):
+def wallProfileOnWallGoGrid(staticWallParams, Tplus, Tminus, grid):
     [higgsWidth, singletWidth, wallOffSet] = staticWallParams
 
     higgsVEV = Veff.higgsVEV(Tminus)

@@ -41,7 +41,7 @@ loadCollisionModule()
 _bInitialized = False
 config = Config()
 
-"""Default integral objects for WallGo. Calling WallSpeed.initialize() optimizes these by replacing their direct computation with 
+"""Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by replacing their direct computation with 
 precomputed interpolation tables."""
 defaultIntegrals = Integrals()
 defaultIntegrals.Jb.disableAdaptiveInterpolation()
