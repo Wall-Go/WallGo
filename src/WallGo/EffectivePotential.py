@@ -165,16 +165,15 @@ class EffectivePotential(ABC):
         return rootResults.root
 
 
-    def normalize(self, fields: np.ndarray[float], T: npt.ArrayLike) -> complex:
+    def normalize(self, fields: Fields, T: npt.ArrayLike) -> complex:
         """Compute Veff(phi) - Veff(0), ie. subtract field-independent part.
         NB: In reality uses phi = fieldLowerBound instead of phi = 0 to avoid spurious 0/0 behavior.
         """
         zero = np.full_like(fields, self.fieldLowerBound)
-
         return self.evaluate(fields, T) - self.evaluate(zero, T)
 
 
-    def evaluateWithConstantPart(self, fields: np.ndarray[float], temperature: npt.ArrayLike) -> complex:
+    def evaluateWithConstantPart(self, fields: Fields, temperature: npt.ArrayLike) -> complex:
         """Computed Veff(phi) - Veff(0) + fieldIndependentPart().
         Point here is this expression gives the full free energy including field-independent parts, 
         no matter how Veff(phi) is normalized.

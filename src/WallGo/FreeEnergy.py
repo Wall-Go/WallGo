@@ -13,8 +13,18 @@ class FreeEnergyValueType(np.ndarray):
         return obj
     
     def getVeffValue(self):
-        ## Our last column is value of the potential at minimum
-        return self[:, -1]
+        """Returns value of the effective potential at a free-energy minimum.
+        Returns a scalar if we only contain info for one temperature, otherwise returns a 1D array.
+        """ 
+        ## Our last column is value of the potential at minimum. 
+        if (self.ndim < 2):
+            values = self[-1]
+        else:
+            values = self[:, -1]
+            if (len(values) == 1):
+                values = values[0]
+
+        return values
 
 
 class FreeEnergy(InterpolatableFunction):
@@ -44,7 +54,12 @@ class FreeEnergy(InterpolatableFunction):
         self.maxPossibleTemperature = np.Inf
 
 
-    def _functionImplementation(self, temperature: npt.ArrayLike) -> FreeEnergyValueType:
+
+    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> FreeEnergyValueType:
+        return FreeEnergyValueType( super().__call__(x, useInterpolatedValues) )
+
+
+    def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Parameters
         ----------
@@ -53,8 +68,19 @@ class FreeEnergy(InterpolatableFunction):
 
         phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(self.phaseLocationGuess, temperature)
 
-        ## Make sure the field-independent but T-dependent contribution to free energy is included
+        """We now need to make sure the field-independent but T-dependent contribution to free energy is included. 
+        In principle this means we just call effectivePotential::evaluateWithConstantPart().
+        But here's a problem: currently if calling Veff with N field points and N temperatures, then numpy decideds to 
+        produce a NxN array as a result. This means we end up doing unnecessary computations, and the resulting Veff values 
+        are in wrong format!
+
+        No solution currently, probably need to enforce correct broadcasting directly in Veff. As a hacky fix for the formatting I take the diagonal here.
+        """
+
         potentialAtMinimum = np.real( self.effectivePotential.evaluateWithConstantPart(phaseLocation, temperature) )
+
+        if (potentialAtMinimum.ndim > 1):
+            potentialAtMinimum = np.diagonal(potentialAtMinimum).copy() ## need to take a hard copy since np.diagonal gives just a read-only view
 
         # Important: Minimization may not always work as intended, 
         # for example the minimum we're looking for may not even exist at the input temperature.
@@ -83,16 +109,17 @@ class FreeEnergy(InterpolatableFunction):
         phaseLocation[invalidRowMask, :] = np.nan
         potentialAtMinimum[invalidRowMask] = np.nan
 
+
         # reshape so that potentialAtMinimum is a column vector
         potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
+
 
         # Join the arrays so that potentialAtMinimum is the last column and the others are as in phaseLocation
         result = np.concatenate((phaseLocation, potentialAtMinimum_column), axis=1)
 
         ## This is now a 2D array where rows are [f1, f2, ..., Veff]
-        return FreeEnergyValueType(result)
+        return result
     
-
 
     def tracePhase(self, TMin: float, TMax: float, dT: float) -> None:
         """For now this will always update the interpolation table.

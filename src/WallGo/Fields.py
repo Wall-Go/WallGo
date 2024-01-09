@@ -15,8 +15,8 @@ class Fields(np.ndarray):
 
     """Developer note! This is subclass of np.ndarray so in principle we can pass this to scipy routines directly, 
     eg. as the initial guess array in ``scipy.optimize.minimize(someFunction, array)``. 
-    But scipy seems to forcibly convert back to standard np.ndarray, so the someFunction cannot actually make use of our extended functionality.
-    So eg. GetField(i) will not work, which is very unfortunate.
+    But scipy seems to forcibly convert back to standard np.ndarray, so if the someFunction wants to use extended functionality
+    of the Fields class then a wrapper with explicit cast is needed.
     """
 
     # Custom constructor that stacks 1D arrays or lists of field-space points into a 2D array 

@@ -266,9 +266,6 @@ class HydroTemplateModel:
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution when the wall velocity is vw.
         """
-        print(vw)
-        print(self.vJ)
-        
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
 
