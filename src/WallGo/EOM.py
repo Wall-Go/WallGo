@@ -291,7 +291,10 @@ class EOM:
         # TODO: Add the mass derivative in the Particle class and use it here.
         dVout = 12*X[0]*offEquilDeltas['00'].coefficients/2 
         EOMPoly = Polynomial((dVdX*dXdz)[0]+dVout*dXdz[0], self.grid)
+        print(f"{dVdX=}, {dXdz}")
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+
+        print(f"{pressure=}")
 
         if returnOptimalWallParams:
             return pressure,wallParams
