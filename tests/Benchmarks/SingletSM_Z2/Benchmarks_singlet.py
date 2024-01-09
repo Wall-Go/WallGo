@@ -1,3 +1,4 @@
+import WallGo.Fields
 
 from tests.BenchmarkPoint import BenchmarkPoint
 
@@ -22,8 +23,8 @@ BM1 = BenchmarkPoint(
     {
         "Tn" : 100.,
         ## Guesses for phase locations
-        "phaseLocation1" : [ 0.0, 200.0 ],
-        "phaseLocation2" : [ 246.0, 0.0]
+        "phaseLocation1" : WallGo.Fields([ 0.0, 200.0 ]),
+        "phaseLocation2" : WallGo.Fields([ 246.0, 0.0])
     },
 
     config = {
@@ -38,8 +39,8 @@ BM1 = BenchmarkPoint(
     {
         "Tc" : 108.22,
         ## Phase locations at nucleation temperature
-        "phaseLocation1" : [0.0, 104.85563975],
-        "phaseLocation2" : [195.01844099, 0.0],
+        "phaseLocation1" : WallGo.Fields([0.0, 104.85563975]),
+        "phaseLocation2" : WallGo.Fields([195.01844099, 0.0]),
 
         ## Jouguet velocity
         "vJ" : 0.6444,

@@ -1,6 +1,8 @@
 import pytest
 import numpy as np
 import WallGo
+import WallGo.GenericModel
+import WallGo.EffectivePotential
 
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
 
@@ -11,11 +13,10 @@ from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
 
 @pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
-        ([110, 130], 100, -1.19018205e+09),
+        (WallGo.Fields([110, 130]), 100, -1.19018205e+09),
 ])
-def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: list, temperature: float, expectedVeffValue: float):
+def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
 
-    v, x = fields
     relativeTolerance = 1e-6
 
     ## Could also take model objects as inputs instead of BM. But doesn't really matter as long as the model is fast to construct
@@ -24,20 +25,17 @@ def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: li
 
     ## This tests real part only!!
 
-    res = model.effectivePotential.evaluate([v, x], temperature)
+    #res = model.effectivePotential.evaluate(fields, temperature)
+    res = model.effectivePotential.evaluateWithConstantPart(fields, temperature)
     assert res == pytest.approx( expectedVeffValue, rel=relativeTolerance)
     
-    ## Let's test field input in different list/array forms
-    res = model.effectivePotential.evaluate([[v], [x]], temperature)
-    assert res == pytest.approx( [expectedVeffValue], rel=relativeTolerance) ## Looks like this passes even if the list structure is not exactly the same
-    assert res.shape == (1,)
 
 
 ## Same as test_singletModelVeffValue but gives the Veff list of field-space points
 @pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
-        ([[100,110],[130,130]], 100, [-1.194963e+09, -1.190182e+09]),
+        (WallGo.Fields([[100,110],[130,130]]), 100, [-1.194963e+09, -1.190182e+09]),
 ])
-def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkModel, fields: list, temperature: float, expectedVeffValue: list[float]):
+def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
 
     relativeTolerance = 1e-6
 
@@ -50,10 +48,10 @@ def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkM
 
 
 @pytest.mark.parametrize("initialGuess, temperature, expectedMinimum, expectedVeffValue", [
-    ([ 0.0, 200.0 ], 100, [0.0, 104.86914171], -1.223482e+09),
-    ([ 246.0, 0.0 ], 100, [195.03215146, 0.0], -1.231926e+09)
+    (WallGo.Fields([ 0.0, 200.0 ]), 100, WallGo.Fields([0.0, 104.86914171]), -1.223482e+09),
+    (WallGo.Fields([ 246.0, 0.0 ]), 100, WallGo.Fields([195.03215146, 0.0]), -1.231926e+09)
 ])
-def test_singletModelVeffMinimization(singletBenchmarkModel: BenchmarkModel, initialGuess: list[float], temperature: float, expectedMinimum: list[float], expectedVeffValue: float):
+def test_singletModelVeffMinimization(singletBenchmarkModel: BenchmarkModel, initialGuess: WallGo.Fields, temperature: float, expectedMinimum: WallGo.Fields, expectedVeffValue: float):
 
     relativeTolerance = 1e-3
     model = singletBenchmarkModel.model
@@ -69,9 +67,9 @@ def test_singletModelVeffMinimization(singletBenchmarkModel: BenchmarkModel, ini
 
 @pytest.mark.slow
 @pytest.mark.parametrize("minimum1, minimum2, expectedTc", [
-    ([ 0.0, 200.0 ], [ 246.0, 0.0 ], 108.22)
+    (WallGo.Fields([ 0.0, 200.0 ]), WallGo.Fields([ 246.0, 0.0 ]), 108.22)
 ])
-def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkModel, minimum1: list[float], minimum2: list[float], expectedTc: float):
+def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkModel, minimum1: WallGo.Fields, minimum2: WallGo.Fields, expectedTc: float):
 
     relativeTolerance = 1e-3
 
