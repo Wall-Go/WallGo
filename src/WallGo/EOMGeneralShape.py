@@ -3,7 +3,7 @@ from scipy.optimize import minimize,root_scalar
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .EOM import EOM
-from .Polynomial import Polynomial
+from .Polynomial2 import Polynomial
 from .helpers import GCLQuadrature
 import matplotlib.pyplot as plt
 
@@ -52,8 +52,8 @@ class EOMGeneralShape:
         
         self.eom = EOM(particle, freeEnergy, grid, nbrFields, includeOffEq, errTol)
         
-        self.polynomial = Polynomial(grid)
-        self.deriv = self.polynomial.deriv('Cardinal', 'z', False)[None,:,:]
+        self.polynomial = Polynomial(np.empty(0), grid)
+        self.deriv = self.polynomial.derivMatrix('Cardinal', 'z', False)[None,:,:]
         
     def findWallVelocity(self):
         """

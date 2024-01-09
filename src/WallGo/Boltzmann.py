@@ -73,16 +73,19 @@ class BoltzmannSolver:
             An object of the BoltzmannSolver class.
         """
         self.grid = grid
-        self.background = background
+        self.background = deepcopy(background)
         self.background.boostToPlasmaFrame()
         self.particle = particle
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
         self.basisM = basisM
         self.basisN = basisN
-        self.poly = Polynomial(self.grid)
+        
+        ##### collision operator #####
+        collisionFile = self.__collisionFilename()
+        self.readCollision(collisionFile, self.particle)
 
-    def getDeltas(self, deltaFCoord=None):
+    def getDeltas(self, deltaF=None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -90,9 +93,9 @@ class BoltzmannSolver:
 
         Parameters
         ----------
-        deltaFCoord : array_like, optional
+        deltaF : array_like, optional
             The deviation of the distribution function from local thermal
-            equilibrium, in the coordinate basis.
+            equilibrium.
 
         Returns
         -------
@@ -101,85 +104,26 @@ class BoltzmannSolver:
             which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
-        if deltaFCoord is None:
+        if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
-            # putting deltaF on momentum coordinate grid points
-            deltaFCoord = np.einsum(
-                "abc, ia, jb, kc -> ijk",
-                deltaF,
-                self.poly.matrix(self.basisM, "z"),
-                self.poly.matrix(self.basisN, "pz"),
-                self.poly.matrix(self.basisN, "pp"),
-                optimize=True,
-            )
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
-        # coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates() # compact
-        xi, pz, pp = self.grid.getCoordinates() # non-compact
-        xi = xi[:, np.newaxis, np.newaxis]
-        pz = pz[np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, :]
-
-        # background
-        vMid = self.background.vMid
-        TMid = self.background.TMid
-
-        # fluctuation mode
-        msq = self.particle.msqVacuum(self.background.fieldProfile)
-        msq = msq[:, np.newaxis, np.newaxis]
-        E = np.sqrt(msq + pz**2 + pp**2)
-
-        # dot products with fixed plasma profile velocity
-        gammaPlasma = 1 / np.sqrt(1 - vMid**2)
-        EPlasma = gammaPlasma * (E - vMid * pz)
-        PPlasma = gammaPlasma * (pz - vMid * E)
-
-        # weights for Gauss-Lobatto quadrature (endpoints plus extrema)
-        sin_arg_Pz = np.pi / self.grid.N * np.arange(1, self.grid.N)
-        weightsPz = np.pi / self.grid.N * np.sin(np.flip(sin_arg_Pz))**2
-        weightsPz /= np.sqrt(1 - rz**2)
-        # note, we drop the point at rp=-1, to avoid an apparent divergence.
-        # should think further about this another day.
-        sin_arg_Pp = np.pi / (self.grid.N - 1) * np.arange(1, self.grid.N - 1)
-        weightsPp = np.pi / (self.grid.N - 1) * np.sin(np.flip(sin_arg_Pp))**2
-        weightsPp /= np.sqrt(1 - rp[1:]**2)
-        weights = weightsPz[:, np.newaxis] * weightsPp[np.newaxis, :]
-        # measure, including Jacobian from coordinate compactification
-        measurePz = (2 * TMid) / (1 - rz**2)
-        measurePp = TMid**2 / (1 - rp[1:]) * np.log(2 / (1 - rp[1:]))
-        measurePzPp = measurePz[:, np.newaxis] * measurePp[np.newaxis, :]
-        measurePzPp /= (2 * np.pi)**2
-
-        # evaluating integrals with Gaussian quadrature
-        measureWeight = measurePzPp * weights
-        arg00 = deltaFCoord[:, :, 1:] / E[:, :, 1:]
-        Deltas["00"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00,
-            optimize=True,
-        )
-        Deltas["11"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * EPlasma[:, :, 1:] * PPlasma[:, :, 1:],
-            optimize=True,
-        )
-        Deltas["20"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * EPlasma[:, :, 1:]**2,
-            optimize=True,
-        )
-        Deltas["02"] = np.einsum(
-            "jk, ijk -> i",
-            measureWeight,
-            arg00 * PPlasma[:, :, 1:]**2,
-            optimize=True,
-        )
+        deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
+        deltaFPoly.changeBasis('Cardinal')
+        
+        field = self.background.fieldProfile[:, 1:-1]
+        pz = self.grid.pzValues[None,:,None]
+        E = np.sqrt(self.particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
+        dpzdrz = 2*self.background.TMid/(1-self.grid.rzValues**2)[None,:,None]
+        dppdrp = self.background.TMid/(1-self.grid.rpValues)[None,None,:]
+        integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
+        
+        Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
+        Deltas['20'] = deltaFPoly.integrate((1,2), E**2*integrand)
+        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2*integrand)
+        Deltas['11'] = deltaFPoly.integrate((1,2), E*pz*integrand)
 
         # returning results
         return Deltas
@@ -236,19 +180,13 @@ class BoltzmannSolver:
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
-        # intertwiner matrices
-        TChiMat = self.poly.matrix(self.basisM, "z")
-        TRzMat = self.poly.matrix(self.basisN, "pz")
-        TRpMat = self.poly.matrix(self.basisN, "pp")
-
-        # derivative matrices
-        derivChi = self.poly.deriv(self.basisM, "z")
-        derivRz = self.poly.deriv(self.basisN, "pz")
+        # compactified coordinates
+        chi, rz, rp = self.grid.getCompactCoordinates() # compact
 
         # background profiles
-        T = self.background.temperatureProfile[:, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[..., np.newaxis, np.newaxis]
-        v = self.background.velocityProfile[:, np.newaxis, np.newaxis]
+        T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
+        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
+        v = self.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
         vw = self.background.vw
 
         # fluctuation mode
@@ -256,6 +194,20 @@ class BoltzmannSolver:
         # TODO: indices order not consistent across different functions.
         msq = self.particle.msqVacuum(field)
         E = np.sqrt(msq + pz**2 + pp**2)
+
+        # fit the background profiles to polynomial
+        Tpoly = Polynomial(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
+        msqpoly = Polynomial(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
+        vpoly = Polynomial(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
+        
+        # intertwiner matrices
+        TChiMat = Tpoly.matrix(self.basisM, "z")
+        TRzMat = Tpoly.matrix(self.basisN, "pz")
+        TRpMat = Tpoly.matrix(self.basisN, "pp")
+
+        # derivative matrices
+        derivChi = Tpoly.derivMatrix(self.basisM, "z")[1:-1]
+        derivRz = Tpoly.derivMatrix(self.basisN, "pz")[1:-1]
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
@@ -271,10 +223,10 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # spatial derivatives of profiles
-        dTdChi = np.einsum("ij,jbc->ibc", derivChi, T, optimize=True)
-        dvdChi = np.einsum("ij,jbc->ibc", derivChi, v, optimize=True)
-        dmsqdChi = np.einsum("ij,jbc->ibc", derivChi, msq, optimize=True)
-
+        dTdChi = Tpoly.derivative(0).coefficients[1:-1, None, None]
+        dvdChi = vpoly.derivative(0).coefficients[1:-1, None, None]
+        dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
+        
         # derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
         dchidxi = dchidxi[:, np.newaxis, np.newaxis]
@@ -311,33 +263,21 @@ class BoltzmannSolver:
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
-        ##### collision operator #####
-        collisionFile = self.__collisionFilename()
-        collisionArray, collisionBasis, collisionN = BoltzmannSolver.readCollision(
-            collisionFile,
-            self.particle,
-        )
-        assert collisionN == self.grid.N, \
-            f"Collision basis size error {collisionN=}"
-        if self.basisN != collisionBasis:
-            TInvRzMat = self.poly.intertwiner(collisionBasis, self.basisN)
-            TInvRpMat = TInvRzMat
-            collisionArray = np.einsum(
-                "ac,bd,ijcd->ijab",
-                TInvRzMat,
-                TInvRpMat,
-                collisionArray,
-                optimize=True,
-            )
         # including factored-out T^2 in collision integrals
         collisionArray = (
             (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-            * collisionArray[np.newaxis, :, :, np.newaxis, :, :]
+            * self.collisionArray[np.newaxis, :, :, np.newaxis, :, :]
         )
 
         ##### total operator #####
         operator = liouville + collisionArray
+        
+        # n = self.grid.N-1
+        # Nnew = n**2
+        # eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
+        # eigs2 = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
+        # print(np.sort(1/np.abs(np.real(eigs)))[-4:],np.sort(1/np.abs(np.real(eigs2)))[-4:])
 
         # doing matrix-like multiplication
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
@@ -350,7 +290,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source
 
-    def readCollision(collisionFile, particle):
+    def readCollision(self, collisionFile, particle):
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
@@ -372,7 +312,15 @@ class BoltzmannSolver:
         except FileNotFoundError:
             print("BoltzmannSolver error: %s not found" % collisionFile)
             raise
-        return collisionArray, basisType, basisSize
+            
+        self.collisionArray = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
+        
+        if self.basisN == 'Cardinal':
+            n1 = np.arange(2,self.grid.N+1)
+            n2 = np.arange(1,self.grid.N)
+            Tn1 = np.cos(n1[:,None]*np.arccos(self.grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,self.grid.rzValues[None,:])
+            Tn2 = np.cos(n2[:,None]*np.arccos(self.grid.rpValues[None,:])) - 1
+            self.collisionArray = np.sum(np.linalg.inv(Tn1)[None,None,:,None,:,None]*np.linalg.inv(Tn2)[None,None,None,:,None,:]*self.collisionArray[:,:,None,None,:,:],(-1,-2))
 
 
     def __collisionFilename(self):

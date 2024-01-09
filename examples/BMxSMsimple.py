@@ -16,7 +16,7 @@ from WallGo.EOMGeneralShape import EOMGeneralShape
 Grid
 """
 M = 20
-N = 20
+N = 19
 grid = Grid(M, N, 0.05, 100)
 poly = Polynomial(grid)
 
@@ -137,15 +137,15 @@ fxSM = FreeEnergy(mod.Vtot, Tc, Tn, params=params, dfdPhi=dfdPhi)
 fxSM.interpolateMinima(0,1.2*Tc,1)
 
 Tc = fxSM.Tc
-pprint(params)
-print(f"{Tc=}, {Tn=}")
+# pprint(params)
+# print(f"{Tc=}, {Tn=}")
 
-print("\nFree energy:", fxSM)
-print(f"{fxSM([[0],[1]], 100)=}")
-print(f"{fxSM([0,1], 100)=}")
-print(f"{fxSM([[0,0],[1,10]], 100)=}")
-print(f"{fxSM.derivT([[0],[1]], 100)=}")
-print(f"{fxSM.derivField([[0],[1]], 100)=}")
+# print("\nFree energy:", fxSM)
+# print(f"{fxSM([[0],[1]], 100)=}")
+# print(f"{fxSM([0,1], 100)=}")
+# print(f"{fxSM([[0,0],[1,10]], 100)=}")
+# print(f"{fxSM.derivT([[0],[1]], 100)=}")
+# print(f"{fxSM.derivField([[0],[1]], 100)=}")
 
 
 """
