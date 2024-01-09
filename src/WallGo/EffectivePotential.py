@@ -57,7 +57,7 @@ class EffectivePotential(ABC):
         Computes the full field-independent part of the effective potential. More specifically,
         the output of this needs to give the free-energy density for a phase at phi = 0. 
         Strictly speaking it is enough to give the temperature-dependent but field-independent parts.
-        For concreteness, for a leading-order computation in the Standard Model this should return 106.75*pi^2/90 * T^4.
+        For concreteness, at leading-order in high-T expansion in the Standard Model this should return 106.75*pi^2/90 * T^4.
         
         See also the documentation of the EffectivePotential class.
         

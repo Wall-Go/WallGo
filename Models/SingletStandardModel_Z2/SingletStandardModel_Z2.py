@@ -339,7 +339,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
-        yt = self.modelParameters["yt"]
         g1 = self.modelParameters["g1"]
         g2 = self.modelParameters["g2"]
         
@@ -357,8 +356,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
         msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
 
-        mWsq = self.modelParameters["g2"]**2 * v**2 / 4.
-        mZsq = (self.modelParameters["g1"]**2 + self.modelParameters["g2"]**2) * v**2 / 4.
+        mWsq = g2**2 * v**2 / 4.
+        mZsq = (g1**2 + g2**2) * v**2 / 4.
         # "Goldstones"
         mGsq = msq + lam*v**2 + 0.5*a2*x**2
 
