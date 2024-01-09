@@ -221,9 +221,14 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         dA = 3 ## Number of SU2 generators
         dF = 2
         nf = 3
-        p = np.pi**2 * temperature**4 / 90. * ( 2 + 2*dA + 2*(Nc**2 - 1) + 2*dF + 2*7./8.*nf * (dF + 1 + Nc * (dF + 2)) )
+
+        dofs = 2 + 2*dA + 2*(Nc**2 - 1) + 2*dF + 2*7./8.*nf * (dF + 1 + Nc * (dF + 2))
         ## Add one DOF from the singlet
-        p += 1
+        dofs += 1
+
+        ## Leading order pressure:
+        p = np.pi**2 * temperature**4 / 90. * dofs
+
         ## Return free energy, so minus the pressure
         return -p
 
