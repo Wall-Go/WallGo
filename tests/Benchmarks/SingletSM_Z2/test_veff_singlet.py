@@ -14,6 +14,7 @@ from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
 @pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
         (WallGo.Fields([110, 130]), 100, -1.19018205e+09),
+        (WallGo.Fields([130, 130]), 100, -1.17839699e+09),
 ])
 def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
 
@@ -33,7 +34,7 @@ def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: Wa
 
 ## Same as test_singletModelVeffValue but gives the Veff list of field-space points
 @pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
-        (WallGo.Fields([[100,110],[130,130]]), 100, [-1.194963e+09, -1.190182e+09]),
+        (WallGo.Fields([[110,130],[130,130]]), 100, [-1.19018205e+09, -1.17839699e+09]),
 ])
 def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
 
@@ -42,7 +43,7 @@ def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkM
     model = singletBenchmarkModel.model
 
     ## This tests real part only!!
-    res = model.effectivePotential.evaluate(fields, temperature)
+    res = model.effectivePotential.evaluateWithConstantPart(fields, temperature)
     np.testing.assert_allclose(res, expectedVeffValue, rtol=relativeTolerance)
 
 
@@ -57,6 +58,9 @@ def test_singletModelVeffMinimization(singletBenchmarkModel: BenchmarkModel, ini
     model = singletBenchmarkModel.model
 
     resMinimum, resValue = model.effectivePotential.findLocalMinimum(initialGuess, temperature)
+
+    ## The expected value is for full V(phi) + constants(T) so include that
+    resValue = model.effectivePotential.evaluateWithConstantPart(resMinimum, temperature)
 
     np.testing.assert_allclose(resMinimum, expectedMinimum, rtol=relativeTolerance)
     np.testing.assert_allclose(resValue, expectedVeffValue, rtol=relativeTolerance)

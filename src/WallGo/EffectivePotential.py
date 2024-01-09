@@ -16,8 +16,8 @@ class EffectivePotential(ABC):
     Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
     However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
-    This class does not enforce any particular normalization of the potential, however you are REQUIRED to provide a definition of fieldIndependentPart()
-    that computes the full T-dependent but field-independent contribution to Veff. IE the pressure at phi = 0.
+    This class does not enforce any particular normalization of the potential, however you are REQUIRED to provide a definition of constantTerms()
+    that should add T-dependent but field-indepent terms to the potential so that the full T-dependency of free energies can be computed. 
 
     The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
     You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
@@ -26,9 +26,8 @@ class EffectivePotential(ABC):
     """
     Internal logic related to the pressure: 
         1. evaluate() computes Veff(phi) in some normalization (can be anything)
-        2. In normalize() we compute Veff(phi) - Veff(0), removing the field-independent parts of the user-defined evaluate()
-        3. fieldIndependentPart() computes the full field-independent part that can contain eg. light fermions that are often NOT included in evaluate()
-        4. In Thermodynamics we compute the pressure from -p = Veff(phi) - Veff(0) + fieldIndependentPart()
+        2. constantTerms() computes additional T-dependent but field-independent terms that were neglected in evaluate(), eg. light fermion contributions to ideal gas pressure.
+        3. In Thermodynamics we compute the pressure from -p = Veff.evaluate(phi, T) + constantTerms(T)
     """
 
     ## How many background fields. This is explicitly required so that we can have better control over array shapes 
@@ -46,19 +45,24 @@ class EffectivePotential(ABC):
     @abstractmethod
     def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
-        at the input field configuration and temperature. Normalization of the potential does not matter: You may eg. choose Veff(0) = 0.
-        
+        at the input field configuration and temperature.  Normalization of the potential does not matter: You may eg. choose Veff(0) = 0.
         """
-        raise NotImplementedError
+        raise NotImplementedError("You are required to give an expression for the effective potential.")
     
 
-    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """
-        Computes the full field-independent part of the effective potential. More specifically,
-        the output of this needs to give the free-energy density for a phase at phi = 0. 
-        Strictly speaking it is enough to give the temperature-dependent but field-independent parts.
-        For concreteness, at leading-order in high-T expansion in the Standard Model this should return 106.75*pi^2/90 * T^4.
-        
+    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """Computes additional terms to the effective potential that are required to be field-independent, hence ``constant``.
+        These are still allowed to depend on the temperature. The purpose of this function is that the combination
+            `V_{full} = evaluate(fields, T) + constantTerms(T)` 
+        gives the full free-energy density corresponding to the input field configuration and temperature.
+
+        While many phase-transition quantities depend only on the field-dependent part, the ``constant`` part is
+        required for hydrodynamical computations (eg. for the sound speed in LTE approximation).
+
+        For example, in the high-T expansion at leading order this should add ideal gas contributions to (minus the) pressure
+        from light particles that are often not integrated over in the field-dependent evaluation function. 
+        T-independent constant terms need not be included.
+
         See also the documentation of the EffectivePotential class.
         
         Parameters
@@ -70,7 +74,7 @@ class EffectivePotential(ABC):
         npt.ArrayLike 
         """
 
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
     #### Non-abstract stuff from here on
@@ -165,17 +169,7 @@ class EffectivePotential(ABC):
         return rootResults.root
 
 
-    def normalize(self, fields: Fields, T: npt.ArrayLike) -> complex:
-        """Compute Veff(phi) - Veff(0), ie. subtract field-independent part.
-        NB: In reality uses phi = fieldLowerBound instead of phi = 0 to avoid spurious 0/0 behavior.
-        """
-        zero = np.full_like(fields, self.fieldLowerBound)
-        return self.evaluate(fields, T) - self.evaluate(zero, T)
-
-
     def evaluateWithConstantPart(self, fields: Fields, temperature: npt.ArrayLike) -> complex:
-        """Computed Veff(phi) - Veff(0) + fieldIndependentPart().
-        Point here is this expression gives the full free energy including field-independent parts, 
-        no matter how Veff(phi) is normalized.
+        """Computed Veff.evaluate(phi, T) + constantTerms(T), ie. full free-energy density.
         """
-        return self.normalize(fields, temperature) + self.fieldIndependentPart(temperature)
+        return self.evaluate(fields, temperature) + self.constantTerms(temperature)

@@ -134,6 +134,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         super().__init__(modelParameters, fieldCount)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
+        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
         self.num_boson_dof = 29 
         self.num_fermion_dof = 90 
 
@@ -199,7 +200,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
-        ## No need to explicitly include the field-independent part here
+        ## No need to explicitly include field-independent parts here (they go in constantTerms())
 
         RGScale = self.modelParameters["RGScale"]
         VTotal = (
@@ -211,27 +212,20 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return VTotal
     
 
-    def fieldIndependentPart(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """Need to explicitly compute field-independent but T-dependent parts.
-        At leading order this is just (minus) the pressure of a Stefan-Boltzmann gas.
+    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """Need to explicitly compute field-independent but T-dependent parts
+        that were NOT already added in evaluate(). At leading order these are just
+        (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
         """
 
-        ## Standard Model part: See Eq (39) in hep-ph/0510375. Need to compute degrees of freedom: see eqs. (4),(5) in the reference for group theory factors 
-        Nc = 3 ## How many QCD colors
-        dA = 3 ## Number of SU2 generators
-        dF = 2
-        nf = 3
+        ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
-        dofs = 2 + 2*dA + 2*(Nc**2 - 1) + 2*dF + 2*7./8.*nf * (dF + 1 + Nc * (dF + 2))
-        ## Add one DOF from the singlet
-        dofs += 1
+        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
+        dofsBoson = self.num_boson_dof - 14
+        dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
 
-        ## Leading order pressure:
-        p = np.pi**2 * temperature**4 / 90. * dofs
-
-        ## Return free energy, so minus the pressure
-        return -p
-
+        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
+        return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
 
 
     ## High-T stuff commented out for now
@@ -373,7 +367,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def fermion_massSq(self, fields: Fields, temperature):
 
-        v, x = fields.GetField(0), fields.GetField(1)
+        v= fields.GetField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
