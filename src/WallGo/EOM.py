@@ -326,26 +326,33 @@ class EOM:
 
             sol = minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
 
-            print(sol)
-            input()
-            wallParams = sol.x
+            ## Put the resulting width, offset back in WallParams format
+            wallArray = sol.x
+            wallParams = WallParams(widths = wallArray[:self.nbrFields], offsets = wallArray[self.nbrFields:])
+            
             i += 1
 
-        wallWidths = wallParams[:self.nbrFields]
-        wallOffsets = wallParams[self.nbrFields:]
-        X, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-        dVdX = self.thermo.effectivePotential.derivField(X, Tprofile)
+
+        fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
+        
+        dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
 
         # TODO: Add the mass derivative in the Particle class and use it here.
-        dVout = 12*X[0]*offEquilDeltas['00'].coefficients/2 
-        EOMPoly = Polynomial((dVdX*dXdz)[0]+dVout*dXdz[0], self.grid)
-        print(f"{dVdX=}, {dXdz}")
+
+        """This undocumented magic is calculating pressure on the wall ASSUMING only the first field has interactions with out-of-eq particles (top).
+        Meaning that this needs a rewrite! 
+        """
+        dVout = 12 * fields.GetField(0) * offEquilDeltas['00'].coefficients / 2
+
+
+        term1 = dVdX * dXdz
+        term2 = dVout[:, np.newaxis] * dXdz
+
+        EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
-        print(f"{pressure=}")
-
         if returnOptimalWallParams:
-            return pressure,wallParams
+            return pressure, wallParams
         else:
             return pressure
 
@@ -379,9 +386,7 @@ class EOM:
         #fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
 
-
-        # TODO had to put here diagonal since fieldsi (2,N) and Tprofile (N) gave (N,N) result
-        V = np.diag(self.thermo.effectivePotential.evaluate(fields, Tprofile))
+        V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
         VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
@@ -389,11 +394,11 @@ class EOM:
 
         Vref = (VLowT+VHighT)/2
         
-        ## Dunno whats going on here. Polynomial.integrate() here should always return a Polynomial object according to usage, 
-        ## which definitely should not work with scipy.optimize.minimize(). But why did it work in the old version then?
-        
+        ## Dunno whats going on here. Polynomial.integrate() here should always return a float according to usage.
+        ## But I still get a Polynomial object, why? 
+
         VPoly = Polynomial(V+VOut-Vref, self.grid)
-        U = VPoly.integrate(w=self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        U = VPoly.integrate(w = self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
         res: Polynomial = U + K        

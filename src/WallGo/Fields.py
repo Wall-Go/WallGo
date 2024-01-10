@@ -82,3 +82,19 @@ class Fields(np.ndarray):
         ## Fields are on columns
         return self[:, i]
     
+    def GetFieldPreserveShape(self, i: int) -> 'Fields':
+        """Like GetField(i), but returns an array of same shape as the original Fields object.
+        We leave only values corresponding to the field 'i', setting other elements to zero.
+        """
+
+        ## Our field i is on column i
+        newFields = np.zeros_like(self)
+        newFields[:, i] = self[:, i]
+        return newFields
+
+    def SetField(self, i: int, fieldArray: np.ndarray) -> None:
+        """Set new values to our field at index i. Operates in place
+        """
+        self[:, i] = fieldArray
+
+    

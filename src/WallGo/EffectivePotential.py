@@ -11,6 +11,25 @@ from .helpers import derivative
 from .Fields import Fields
 
 
+class VeffInput():
+    """Input to Veff is pairs of field-space points and temperatures.
+    You can pass many points at once, but the sizes need to be compatible. 
+    These are possible (we broadcast):
+        - One field point, one temperature
+        - One field point, many temperatures
+        - Many field points, one temperatures
+        - Many fields points, many temperatures. Sizes need to match
+    """
+
+    fields: Fields ## 2D
+    temperature: np.ndarray ## 1D
+
+    def __init__(self, fields: Fields, temperature: np.ndarray):
+        return ### todo
+        
+
+
+
 class EffectivePotential(ABC):
     """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
     and computing free energies (pressures) in the two phases.
@@ -176,7 +195,7 @@ class EffectivePotential(ABC):
 
 
     def evaluateWithConstantPart(self, fields: Fields, temperature: npt.ArrayLike) -> complex:
-        """Computed Veff.evaluate(phi, T) + constantTerms(T), ie. full free-energy density.
+        """Compute Veff.evaluate(phi, T) + constantTerms(T), ie. full free-energy density.
         """
         return self.evaluate(fields, temperature) + self.constantTerms(temperature)
 
@@ -194,3 +213,35 @@ class EffectivePotential(ABC):
         return der
 
 
+
+    def derivField(self, fields: Fields, temperature: npt.ArrayLike):
+        """
+        Compute field-derivative of the effective potential with respect to all background fields,
+        at given temperature.
+
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : float
+            the temperature
+
+        Returns
+        ----------
+        dfdX : list[Fields]
+            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        """
+
+        ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
+
+
+        T = temperature
+        res = np.empty_like(fields)
+
+        for idx in range(fields.NumFields()):
+            fieldsOffset = self.dPhi * fields.GetFieldPreserveShape(idx)
+
+            dVdphi = ( self.evaluate(fields + fieldsOffset, T) - self.evaluate(fields, T) ) / self.dPhi
+            res.SetField(idx, dVdphi)
+
+        return res

@@ -361,6 +361,8 @@ class Polynomial:
 
         return tn
     
+
+    ## LN: This doesn't seem to work as intended. in EOM.action() I still got a Polynomial object as result even if axis=None
     def integrate(self, axis=None, w=None):
         r"""
         Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)` 

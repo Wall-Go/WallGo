@@ -186,6 +186,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         b4 = self.modelParameters["b4"]
         a2 = self.modelParameters["a2"]
 
+        RGScale = self.modelParameters["RGScale"]
+
         """
         # Get thermal masses
         thermalParams = self.getThermalParameters(temperature)
@@ -202,7 +204,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         ## No need to explicitly include field-independent parts here (they go in constantTerms())
 
-        RGScale = self.modelParameters["RGScale"]
         VTotal = (
             V0
             + self.V1(bosonStuff, fermionStuff, RGScale) 

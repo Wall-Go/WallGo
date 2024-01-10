@@ -3,6 +3,7 @@ import numpy as np
 import WallGo
 import WallGo.GenericModel
 import WallGo.EffectivePotential
+import WallGo.Fields
 
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
 
@@ -85,3 +86,4 @@ def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkMod
     Tc = model.effectivePotential.findCriticalTemperature(minimum1, minimum2, TMin, TMax)
 
     assert Tc == pytest.approx(expectedTc, rel=relativeTolerance)
+

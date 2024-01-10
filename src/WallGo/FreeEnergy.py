@@ -86,12 +86,15 @@ class FreeEnergy(InterpolatableFunction):
 
         No solution currently, probably need to enforce correct broadcasting directly in Veff. As a hacky fix for the formatting I take the diagonal here.
         """
+        ## Actually the above seems to be fixed now, V1T was just implemented very badly. But leaving the comments here just in case
 
         potentialAtMinimum = np.real( self.effectivePotential.evaluateWithConstantPart(phaseLocation, temperature) )
 
+        """
         if (potentialAtMinimum.ndim > 1):
             potentialAtMinimum = np.diagonal(potentialAtMinimum).copy() ## need to take a hard copy since np.diagonal gives just a read-only view
-
+        """
+            
         # Important: Minimization may not always work as intended, 
         # for example the minimum we're looking for may not even exist at the input temperature.
         # This will break interpolations unless we validate the result here. 
