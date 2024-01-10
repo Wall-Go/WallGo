@@ -427,7 +427,15 @@ class Polynomial:
                 newEndpoints.append(self.endpoints[i])
                 
         result = np.sum(integrand, axis)
+
+        ## This check fails too easily with extended types
+        """
         if isinstance(result, float):
+            return result
+        """
+
+        result = np.asanyarray(result)
+        if result.ndim == 0:
             return result
         else:
             return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))

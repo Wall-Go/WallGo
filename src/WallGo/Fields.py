@@ -80,7 +80,8 @@ class Fields(np.ndarray):
         as a 1D array.
         """
         ## Fields are on columns
-        return self[:, i]
+        return self[:, i].view(np.ndarray)
+    
     
     def GetFieldPreserveShape(self, i: int) -> 'Fields':
         """Like GetField(i), but returns an array of same shape as the original Fields object.

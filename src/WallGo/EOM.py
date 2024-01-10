@@ -334,7 +334,6 @@ class EOM:
 
 
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
-        
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
 
         # TODO: Add the mass derivative in the Particle class and use it here.
@@ -344,17 +343,18 @@ class EOM:
         """
         dVout = 12 * fields.GetField(0) * offEquilDeltas['00'].coefficients / 2
 
-
         term1 = dVdX * dXdz
         term2 = dVout[:, np.newaxis] * dXdz
 
         EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
+
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
         if returnOptimalWallParams:
             return pressure, wallParams
         else:
             return pressure
+
 
     def action(self, wallParams: WallParams, vevLowT: Fields, vevHighT: Fields, Tprofile: np.ndarray, offEquilDelta00: np.ndarray) -> float:
         r"""
@@ -394,19 +394,11 @@ class EOM:
 
         Vref = (VLowT+VHighT)/2
         
-        ## Dunno whats going on here. Polynomial.integrate() here should always return a float according to usage.
-        ## But I still get a Polynomial object, why? 
-
         VPoly = Polynomial(V+VOut-Vref, self.grid)
         U = VPoly.integrate(w = self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
-        res: Polynomial = U + K        
-
-        ## force result to float. Dunno if this is a good way
-        res = res.coefficients
-
-        return res
+        return U + K  
 
 
     def momentsOfWallEoM(self, wallParameters, offEquilDeltas):

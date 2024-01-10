@@ -73,7 +73,6 @@ class WallGoManager:
         self.TMax = np.Inf
 
 
-
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo.
         """
