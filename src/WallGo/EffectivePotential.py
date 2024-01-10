@@ -6,6 +6,8 @@ import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
 
+from .helpers import derivative
+
 from .Fields import Fields
 
 
@@ -40,6 +42,10 @@ class EffectivePotential(ABC):
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
+
+        ## Used for derivatives. TODO read from config file probably
+        self.dT = 1e-3
+        self.dPhi = 1e-3 ## field difference
 
 
     @abstractmethod
@@ -173,3 +179,18 @@ class EffectivePotential(ABC):
         """Computed Veff.evaluate(phi, T) + constantTerms(T), ie. full free-energy density.
         """
         return self.evaluate(fields, temperature) + self.constantTerms(temperature)
+
+
+    def derivT(self, fields: Fields, temperature: npt.ArrayLike):
+        """Calculate derivative of (real part of) the effective potential with respect to temperature.
+        """
+        der = derivative(
+            lambda T: self.evaluate(fields, T).real,
+            temperature,
+            dx = self.dT,
+            n = 1,
+            order = 4
+        )
+        return der
+
+

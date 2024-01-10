@@ -3,12 +3,15 @@ import warnings
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
+from copy import deepcopy
+
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
 from .helpers import boostVelocity
 from .WallGoUtils import getSafePathToResource
 
+## LN: why is the field profile here?
 class BoltzmannBackground:
     def __init__(
         self,
@@ -49,9 +52,9 @@ class BoltzmannSolver:
 
     def __init__(
         self,
-        grid,
-        background,
-        particle,
+        grid: Grid,
+        background: BoltzmannBackground,
+        particle: Particle,
         basisM="Cardinal",
         basisN="Chebyshev",
     ):
@@ -89,7 +92,7 @@ class BoltzmannSolver:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
-        These are defined in equation (15) of [LC22]_.
+        These are defined in equation (15) of 2204.13120 [LC22]_.
 
         Parameters
         ----------

@@ -247,13 +247,13 @@ class WallGoManager:
 
         print(f"LTE wall speed: {vwLTE}")
 
-        print("======= Next would be EOM routines, but these are TODO. The program will now crash :^)")
-        input()
-
         numberOfFields = self.model.fieldCount
 
         ### EOMs just for the first out-of-eq particle for now. TODO generalize
         outOfEqParticle = self.model.outOfEquilibriumParticles[0]
+
+
+        print("=== Begin EOM ===")
 
         # Without out-of-equilibrium contributions
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)

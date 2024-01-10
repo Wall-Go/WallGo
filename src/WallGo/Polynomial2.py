@@ -105,7 +105,11 @@ class Polynomial:
             return Polynomial(self.coefficients+poly.coefficients)
         else:
             newCoeff = poly+self.coefficients
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+
+            ## LN: Dunno how it's possible that I get errors from here, due to taking len() of a scalar! But here's a "fix"
+            newCoeff = np.asanyarray(newCoeff)
+            assert newCoeff.ndim == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __sub__(self, poly):

@@ -4,8 +4,29 @@ from typing import Tuple, Union
 
 
 ## Dunno if this inheritance is a good idea. But this way we can force a common shape for field arrays while automatically being numpy compatible
+
+
+## One point in field space. This is 1D array.
+class FieldPoint(np.ndarray):
+
+    def __new__(cls, arr: np.ndarray):
+        if (arr.ndim > 1):
+            raise ValueError("FieldPoint must be 1D")
+        
+        return arr.view(cls)
+    
+    def NumFields(self):
+        """Returns how many background fields we contain
+        """
+        return self.shape[0]
+    
+    def GetField(self, i: int):
+        return self[i]
+
+
+
 class Fields(np.ndarray):
-    """Simple class for holding background fields in common format.
+    """Simple class for holding collections of background fields in common format.
 
     If the theory has N background fields, then a field-space point is defined by a list of length N.
     This array describes a collection of field-space points, so that the shape is (numPoints, numFields). 
@@ -20,7 +41,7 @@ class Fields(np.ndarray):
     """
 
     # Custom constructor that stacks 1D arrays or lists of field-space points into a 2D array 
-    def __new__(cls, *fieldSpacePoints: Tuple[npt.ArrayLike]):
+    def __new__(cls, *fieldSpacePoints: Tuple[FieldPoint]):
         obj = np.row_stack(fieldSpacePoints)
         obj = np.atleast_2d(obj)
         return obj.view(cls)
@@ -49,12 +70,14 @@ class Fields(np.ndarray):
         newShape = (newNumPoints, newNumFields)
         return np.resize(self, newShape).view(Fields)
 
-    def GetFieldPoint(self, i: int) -> np.ndarray[float]:
-        """Get a field space point. NB: no validation so will error if the index is out of bounds"""
-        return self[i]
+    def GetFieldPoint(self, i: int) -> FieldPoint:
+        """Get a field space point. It would be a 1D array, but we cast to a FieldPoint object for consistency. 
+        NB: no validation so will error if the index is out of bounds"""
+        return self[i].view(FieldPoint)
     
     def GetField(self, i: int) -> np.ndarray[float]:
         """Get field at index i. Ie. if the theory has N background fields f_i, this will give all values of field f_i
+        as a 1D array.
         """
         ## Fields are on columns
         return self[:, i]

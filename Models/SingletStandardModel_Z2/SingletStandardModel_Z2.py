@@ -43,7 +43,7 @@ class SingletSM_Z2(GenericModel):
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields[0]**2
+        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 

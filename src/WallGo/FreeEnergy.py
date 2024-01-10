@@ -25,7 +25,17 @@ class FreeEnergyValueType(np.ndarray):
                 values = values[0]
 
         return values
-
+    
+    def getFields(self):
+        """Returns Fields array corresponding to local free energy minimum.
+        """
+        ## Last column is Veff value, other columns are fields
+        if (self.ndim < 2):
+            values = self[:-1]
+        else:
+            values = self[:, :-1]
+        return Fields.CastFromNumpy(values)
+    
 
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
