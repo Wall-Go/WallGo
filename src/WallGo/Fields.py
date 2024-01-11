@@ -4,7 +4,7 @@ from typing import Tuple, Union
 
 
 ## Dunno if this inheritance is a good idea. But this way we can force a common shape for field arrays while automatically being numpy compatible
-
+# https://numpy.org/doc/stable/user/basics.subclassing.html
 
 ## One point in field space. This is 1D array.
 class FieldPoint(np.ndarray):
@@ -24,6 +24,7 @@ class FieldPoint(np.ndarray):
         return self[i]
 
 
+## TODO should not have SetField(), GetField() because numpy already has setfield(), getfield() ... lol
 
 class Fields(np.ndarray):
     """Simple class for holding collections of background fields in common format.
@@ -52,6 +53,10 @@ class Fields(np.ndarray):
         obj = np.atleast_2d(obj)
         return obj.view(cls)
     
+    def __array_finalize__(self, obj):
+        if obj is None: return
+
+
     @staticmethod
     def CastFromNumpy(arr: np.ndarray) -> 'Fields':
         """
@@ -95,13 +100,13 @@ class Fields(np.ndarray):
         """
 
         ## Our field i is on column i
-        newFields = np.zeros_like(self)
+        newFields = np.zeros_like(self, dtype=float)
         newFields[:, i] = self[:, i]
         return newFields
 
-    def SetField(self, i: int, fieldArray: np.ndarray) -> None:
-        """Set new values to our field at index i. Operates in place
-        """
-        self[:, i] = fieldArray
 
+    def SetField(self, i: int, fieldArray: np.ndarray) -> 'Fields':
+        # Set new values to our field at index i. Operates in place. Is this safe actually...?
+        self[:, i] = fieldArray
+        return self
     

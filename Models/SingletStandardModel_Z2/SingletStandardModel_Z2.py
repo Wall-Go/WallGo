@@ -371,7 +371,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def fermion_massSq(self, fields: Fields, temperature):
 
-        v= fields.GetField(0)
+        v = fields.GetField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]

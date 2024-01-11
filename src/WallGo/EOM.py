@@ -24,12 +24,26 @@ class WallParams():
     widths: np.ndarray ## 1D array
     offsets: np.ndarray ## 1D array
 
+    def __add__(self, other):
+        return WallParams(widths = (self.widths + other.widths), offsets = (self.offsets + other.offsets) )
+
+    def __sub__(self, other):
+        return WallParams(widths = (self.widths - other.widths), offsets = (self.offsets - other.offsets) )
+
+    def __mul__(self, other):
+        ## does not work if other = WallParams type
+        return WallParams(widths = self.widths * other, offsets = self.offsets * other )
+
+    def __truediv__(self, other):
+        ## does not work if other = WallParams type
+        return WallParams(widths = self.widths / other, offsets = self.offsets / other )
+
 
 class EOM:
 
     model: GenericModel
     hydro: Hydro
-    thermo: Thermodynamics
+    thermo: Thermodynamics ## thermo here is used pretty messily but is useful: gives access to both FreeEnergy objects and Veff
 
     """LN: Very counterintuitive that this requires particle input even if includeOffEq=False. Here are some things to consider:
         1. Is it possible to remove includeOffEq from the constructor and instead have a dedicated function for solving the EOM
@@ -184,8 +198,9 @@ class EOM:
 
         alpha = self.thermo.alpha(self.Tnucl)
         vmin = max(1-(3*alpha)**(-10./13.),0.01) #based on eq (103) of 1004.4187
+        vmax = self.hydro.vJ-1e-6
 
-        return self.solveWall(vmin, self.hydro.vJ-1e-6, wallParams)
+        return self.solveWall(vmin, vmax, wallParams)
     
 
     ## LN: Right so this actually solves wall properties and not the pressure! So changed the name
@@ -225,7 +240,7 @@ class EOM:
             print(f"{pressureMax=} {wallParamsMax=}")
             #return 1
             return 1, wallParamsMax
-        
+    
         pressureMin, wallParamsMin = self.pressure(wallVelocityMin, wallParamsGuess, True)
         if pressureMin > 0:
             ## If this is a bad outcome then we should warn about it. TODO
@@ -234,15 +249,23 @@ class EOM:
 
         ## This computes pressure on the wall with a given wall speed and WallParams that looks hacky
         def pressureWrapper(vw):
+
+            ## What are these? Doing float == float comparison is not useful nor reliable
+            """
             if vw == wallVelocityMin:
                 return pressureMin
             if vw == wallVelocityMax:
                 return pressureMax
+            """
+            if vw <= wallVelocityMin:
+                return pressureMin
+            if vw >= wallVelocityMax:
+                return pressureMax
 
-            # Don't return wall params
+            # Don't return wall params. But this seems pretty evil: pressure() modifies the wallParams it gets as input!
             return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
-        wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket=[wallVelocityMin,wallVelocityMax], xtol=1e-3).root
+        wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
         #_,wallParams = pressureWrapper(wallVelocity, True)
 
         # Get wall params:
@@ -281,6 +304,10 @@ class EOM:
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
         """
+
+        
+        """NB: This function is EXTREMELY slow """
+
 
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
@@ -360,20 +387,9 @@ class EOM:
 
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
-        ## something in the pressure computation goes wrong here
+        ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
-        polyInput = term1.GetField(0) + term2.GetField(0)
-
-
-        print(f"{dVdX=}")
-        print(f"{dXdz=}")
-        print(f"{term1=}")
-        print(f"{term2=}")
-
-        print(f"{dVout=}")
-        print(f"{polyInput=}")
         print(f"{pressure=}")
-        input()
 
         if returnOptimalWallParams:
             return pressure, wallParams

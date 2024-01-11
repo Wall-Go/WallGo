@@ -203,14 +203,22 @@ class EffectivePotential(ABC):
         """
 
         ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
+        ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
-        T = temperature
-        res = np.empty_like(fields)
+        res = np.empty_like(fields, dtype=float)
 
         for idx in range(fields.NumFields()):
-            fieldsOffset = self.dPhi * fields.GetFieldPreserveShape(idx)
 
-            dVdphi = ( self.evaluate(fields + fieldsOffset, T) - self.evaluate(fields, T) ) / self.dPhi
+            fieldsOffset = np.zeros_like(fields, dtype=float)
+            fieldsOffset.SetField(idx, np.full( fields.NumPoints(), self.dPhi, dtype=float))
+
+            veff1 = self.evaluate(fields, temperature)
+            veff2 = self.evaluate(fields + fieldsOffset, temperature)
+
+            ## Do we need to worry about float point accuracy??
+
+            dVdphi = ( veff2 - veff1 ) / self.dPhi
+
             res.SetField(idx, dVdphi)
 
         return res

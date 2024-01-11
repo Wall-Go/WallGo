@@ -15,8 +15,7 @@ from .Config import Config
 from .Integrals import Integrals
 from .Fields import Fields
 
-
-from .WallGoUtils import getSafePathToResource
+from .WallGoUtils import getSafePathToResource, clamp
 
 @dataclass
 class PhaseInfo:
@@ -178,12 +177,17 @@ class WallGoManager:
         """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
         But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
         """
-        """
-        TMin, TMax= 0.0, 1.2*self.thermodynamics.Tc
-        """
 
-        ## Allow some leeway since the template model is just a rough estimate
+        ## temp temp!
+        TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
+        
+
+        """Allow some leeway since the template model is just a rough estimate. 
+        But don't let Tmax be higher than Tc as there the equation of state is probably not well defined, and Hydro doesn't like it.
+        """
         TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate
+        TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
+
         dT = self.config.getfloat("EffectivePotential", "dT")
 
         ## Interpolate phases and check that they remain stable in this range 
