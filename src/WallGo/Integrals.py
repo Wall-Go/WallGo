@@ -125,8 +125,8 @@ class Integrals():
 
     def __init__(self):
 
-        """ Thermal 1-loop integral (bosonic): :math:`J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`"""
+        r""" Thermal 1-loop integral (bosonic): :math:`J_b(x) = \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`"""
         self.Jb = JbIntegral(bUseAdaptiveInterpolation=False)
 
-        """ Thermal 1-loop integral (fermionic): :math:`J_f(x) =  -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`"""
+        r""" Thermal 1-loop integral (fermionic): :math:`J_f(x) = -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`"""
         self.Jf = JfIntegral(bUseAdaptiveInterpolation=False)

@@ -284,7 +284,7 @@ class EOM:
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
         vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
 
-        ## No idea whats going on in this loop!
+        ## LN: What's this loop?
         i = 0
         # TODO: Implement a better condition
         while i < 2:
@@ -299,36 +299,37 @@ class EOM:
 
             if self.includeOffEq:
                 TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
-                XWithEndpoints = np.concatenate((vevLowT[:,None], fields, vevHighT[:,None]), 1)
-                vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]]))
+                XWithEndpoints = np.concatenate((vevLowT[:,None], fields, vevHighT[:,None]), 1) # LN TODO probs need a different axis here
+                vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
                 boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) 
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
 
-            ## Next need to solve wallWidth and wallOffset(?). scipy should work with 2D array input so no need for a loop. 
-            ## For this we wallParams in a numpy 2D array:
-            wallArray = np.concatenate( (wallParams.widths, wallParams.offsets) ) 
+            ## Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
+            ## NOT including the first offset which we keep at 0.
+            wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
             
-            ## Where do the bounds here come from!?
-            
+            ## This gives WallParams back from the above array, putting 0 as the first offset
+            def __toWallParams(_wallArray: np.ndarray) -> WallParams:
+                offsets = np.concatenate( ([0], _wallArray[self.nbrFields:]) )
+                return WallParams(widths = _wallArray[:self.nbrFields], offsets = offsets)
+
+            ## LN: Where do these bounds come from!?
             ## first width, then offset
-            lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , self.nbrFields * [-10.] ))
-            upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , self.nbrFields * [10.] ))
+            lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , (self.nbrFields-1) * [-10.] ))
+            upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , (self.nbrFields-1) * [10.] ))
             bounds = scipy.optimize.Bounds(lb = lowerBounds, ub = upperBounds)
 
             ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
             def actionWrapper(wallArray: np.ndarray, *args) -> float:
-                wallParams = WallParams(widths = wallArray[:self.nbrFields], offsets = wallArray[self.nbrFields:])
-                return self.action(wallParams, *args)
+                return self.action( __toWallParams(wallArray), *args )
             
-            ## LN: I think the old version somehow manages to vectorize this...? but it was incomprehensible. TODO...?
 
             sol = minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
 
             ## Put the resulting width, offset back in WallParams format
-            wallArray = sol.x
-            wallParams = WallParams(widths = wallArray[:self.nbrFields], offsets = wallArray[self.nbrFields:])
+            wallParams = __toWallParams(sol.x)
             
             i += 1
 
@@ -583,10 +584,12 @@ class EOM:
         s1 = c1 - Tout30
         s2 = c2 - Tout33
 
-        ## LN shouldn't have the bounds hardcoded here
+        ## TODO figure out better bounds
         minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dXdz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
         # TODO: A fail safe
 
+
+        ## Whats this? shouldn't we check that LHS == 0 ?
         if self.temperatureProfileEqLHS(fields, dXdz, minRes.x, s1, s2) >= 0:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
@@ -607,7 +610,7 @@ class EOM:
             TLowerBound,
             TUpperBound,
             xtol=1e-9,
-            rtol=1e-9,
+            rtol=1e-9, ## ???
         )
         # TODO: Can the function have multiple zeros?
 
@@ -634,8 +637,10 @@ class EOM:
             Plasma velocity.
 
         """
-        dVdT = self.thermo.effectivePotential.derivT(fields, T)
-        return (T * dVdT  + np.sqrt(4 * s1**2 + (T * dVdT)**2)) / (2 * s1)
+        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
+        w = -T * self.thermo.effectivePotential.derivT(fields, T)
+
+        return (-w  + np.sqrt(4*s1**2 + w**2)) / (2 * s1)
 
     def temperatureProfileEqLHS(self, fields: Fields, dXdz: Fields, T: float, s1: float, s2: float):
         r"""
@@ -660,12 +665,14 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
+        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
+        w = -T * self.thermo.effectivePotential.derivT(fields, T)
+
         result = (
             + 0.5*np.sum(dXdz**2, axis=0)
             - self.thermo.effectivePotential.evaluate(fields, T)
-            + 0.5*T*self.thermo.effectivePotential.derivT(fields, T)
-            + 0.5*np.sqrt(4*s1**2
-            + (T*self.thermo.effectivePotential.derivT(fields, T))**2)
+            - 0.5*w
+            + 0.5*np.sqrt(4*s1**2 + w**2)
             - s2
         )
         result = np.asarray(result)

@@ -99,23 +99,6 @@ class WallGoManager:
 
         print("Suggested T range:")
         print(f"TMin = {self.TMin}, TMax = {self.TMax}")
-
-        """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
-        which is bonkers, but for honest comparison we probably want to use the same. On the other hand though the 
-        default range obtained above works well at least for the hydro routines in this point. So I'm commenting the following out for now.
-        """
-
-        """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
-        But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
-        """
-
-        """
-        TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
-        interpolationPointCount = math.ceil((TMax - TMin) / dT)
-
-        self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
-        self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
-        """
         
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
@@ -185,6 +168,19 @@ class WallGoManager:
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
+
+
+        """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
+        which is bonkers, but for honest comparison we probably want to use the same. On the other hand though the 
+        default range obtained above works well at least for the hydro routines in this point. So I'm commenting the following out for now.
+        """
+
+        """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
+        But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
+        """
+        """
+        TMin, TMax= 0.0, 1.2*self.thermodynamics.Tc
+        """
 
         ## Allow some leeway since the template model is just a rough estimate
         TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate

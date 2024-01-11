@@ -203,8 +203,9 @@ class EffectivePotential(ABC):
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with respect to temperature.
         """
+        ## Needs to include the T-dependent constant part as this is used for hydro/EOM routines
         der = derivative(
-            lambda T: self.evaluate(fields, T).real,
+            lambda T: self.evaluateWithConstantPart(fields, T).real,
             temperature,
             dx = self.dT,
             n = 1,
