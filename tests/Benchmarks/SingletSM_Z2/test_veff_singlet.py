@@ -27,8 +27,7 @@ def test_singletModelVeffValue(singletBenchmarkModel: BenchmarkModel, fields: Wa
 
     ## This tests real part only!!
 
-    #res = model.effectivePotential.evaluate(fields, temperature)
-    res = model.effectivePotential.evaluateWithConstantPart(fields, temperature)
+    res = model.effectivePotential.evaluate(fields, temperature)
     assert res == pytest.approx( expectedVeffValue, rel=relativeTolerance)
     
 
@@ -44,7 +43,7 @@ def test_singletModelVeffValue_manyFieldPoints(singletBenchmarkModel: BenchmarkM
     model = singletBenchmarkModel.model
 
     ## This tests real part only!!
-    res = model.effectivePotential.evaluateWithConstantPart(fields, temperature)
+    res = model.effectivePotential.evaluate(fields, temperature)
     np.testing.assert_allclose(res, expectedVeffValue, rtol=relativeTolerance)
 
 
@@ -61,7 +60,7 @@ def test_singletModelVeffMinimization(singletBenchmarkModel: BenchmarkModel, ini
     resMinimum, resValue = model.effectivePotential.findLocalMinimum(initialGuess, temperature)
 
     ## The expected value is for full V(phi) + constants(T) so include that
-    resValue = model.effectivePotential.evaluateWithConstantPart(resMinimum, temperature)
+    resValue = model.effectivePotential.evaluate(resMinimum, temperature)
 
     np.testing.assert_allclose(resMinimum, expectedMinimum, rtol=relativeTolerance)
     np.testing.assert_allclose(resValue, expectedVeffValue, rtol=relativeTolerance)

@@ -46,5 +46,3 @@ def test_Fields_invalid(fieldArrays):
     with pytest.raises(ValueError):
         Fields(fieldArrays)
     ## Something like Field(1, 2, 3) should fail too, but we need to throw this manually. TODO
-
-

@@ -37,19 +37,18 @@ class EffectivePotential(ABC):
     Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
     However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
-    This class does not enforce any particular normalization of the potential, however you are REQUIRED to provide a definition of constantTerms()
-    that should add T-dependent but field-indepent terms to the potential so that the full T-dependency of free energies can be computed. 
+    With in mind, WallGo requires that the effective potential is defined with full T-dependence included.
 
     The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
     You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
     """
 
+    """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
+    separating the field-dependent parts of Veff(phi, T) and the T-dependent constant terms. This was done in intermediate commits
+    but scrapped because it was too error prone (Veff appears in too many places). But let's keep this possibility in mind. 
+    If attempting this, keep full Veff as the default and use the field-only part internally when needed.
     """
-    Internal logic related to the pressure: 
-        1. evaluate() computes Veff(phi) in some normalization (can be anything)
-        2. constantTerms() computes additional T-dependent but field-independent terms that were neglected in evaluate(), eg. light fermion contributions to ideal gas pressure.
-        3. In Thermodynamics we compute the pressure from -p = Veff.evaluate(phi, T) + constantTerms(T)
-    """
+
 
     ## How many background fields. This is explicitly required so that we can have better control over array shapes 
     fieldCount: int
@@ -70,37 +69,13 @@ class EffectivePotential(ABC):
     @abstractmethod
     def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
-        at the input field configuration and temperature.  Normalization of the potential does not matter: You may eg. choose Veff(0) = 0.
+        at the input field configuration and temperature. 
+        
+        Normalization of the potential DOES matter: You have to ensure that full T-dependence is included.
+        Pay special attention to field-independent "constant" terms such as (minus the) pressure from light fermions. 
         """
         raise NotImplementedError("You are required to give an expression for the effective potential.")
     
-
-    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """Computes additional terms to the effective potential that are required to be field-independent, hence ``constant``.
-        These are still allowed to depend on the temperature. The purpose of this function is that the combination
-            `V_{full} = evaluate(fields, T) + constantTerms(T)` 
-        gives the full free-energy density corresponding to the input field configuration and temperature.
-
-        While many phase-transition quantities depend only on the field-dependent part, the ``constant`` part is
-        required for hydrodynamical computations (eg. for the sound speed in LTE approximation).
-
-        For example, in the high-T expansion at leading order this should add ideal gas contributions to (minus the) pressure
-        from light particles that are often not integrated over in the field-dependent evaluation function. 
-        T-independent constant terms need not be included.
-
-        See also the documentation of the EffectivePotential class.
-        
-        Parameters
-        ----------
-        temperature : ArrayLike 
-
-        Returns
-        -------
-        npt.ArrayLike 
-        """
-
-        raise NotImplementedError()
-
 
     #### Non-abstract stuff from here on
 
@@ -194,18 +169,12 @@ class EffectivePotential(ABC):
         return rootResults.root
 
 
-    def evaluateWithConstantPart(self, fields: Fields, temperature: npt.ArrayLike) -> complex:
-        """Compute Veff.evaluate(phi, T) + constantTerms(T), ie. full free-energy density.
-        """
-        return self.evaluate(fields, temperature) + self.constantTerms(temperature)
-
-
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with respect to temperature.
         """
-        ## Needs to include the T-dependent constant part as this is used for hydro/EOM routines
+
         der = derivative(
-            lambda T: self.evaluateWithConstantPart(fields, T).real,
+            lambda T: self.evaluate(fields, T).real,
             temperature,
             dx = self.dT,
             n = 1,
@@ -234,7 +203,6 @@ class EffectivePotential(ABC):
         """
 
         ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
-
 
         T = temperature
         res = np.empty_like(fields)

@@ -79,7 +79,7 @@ class FreeEnergy(InterpolatableFunction):
         phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(self.phaseLocationGuess, temperature)
 
         """We now need to make sure the field-independent but T-dependent contribution to free energy is included. 
-        In principle this means we just call effectivePotential::evaluateWithConstantPart().
+        In principle this means we just call effectivePotential::evaluate().
         But here's a problem: currently if calling Veff with N field points and N temperatures, then numpy decideds to 
         produce a NxN array as a result. This means we end up doing unnecessary computations, and the resulting Veff values 
         are in wrong format!
@@ -88,7 +88,7 @@ class FreeEnergy(InterpolatableFunction):
         """
         ## Actually the above seems to be fixed now, V1T was just implemented very badly. But leaving the comments here just in case
 
-        potentialAtMinimum = np.real( self.effectivePotential.evaluateWithConstantPart(phaseLocation, temperature) )
+        potentialAtMinimum = np.real( self.effectivePotential.evaluate(phaseLocation, temperature) )
 
         """
         if (potentialAtMinimum.ndim > 1):

@@ -40,6 +40,12 @@ class Fields(np.ndarray):
     of the Fields class then a wrapper with explicit cast is needed.
     """
 
+    ## Axis identifier: operate on same field type over different field-space points 
+    overFieldPoints: int = 0
+    ## Axis identifier: operate on over different fields at same field-space point
+    overFieldTypes: int = 1
+
+
     # Custom constructor that stacks 1D arrays or lists of field-space points into a 2D array 
     def __new__(cls, *fieldSpacePoints: Tuple[FieldPoint]):
         obj = np.row_stack(fieldSpacePoints)

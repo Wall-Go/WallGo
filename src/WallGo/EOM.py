@@ -14,7 +14,7 @@ from .GenericModel import GenericModel
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
 from .Particle import Particle
-from .Fields import Fields
+from .Fields import Fields, FieldPoint
 from .Grid import Grid
 
 
@@ -162,7 +162,6 @@ class EOM:
     '''
     
 
-
     def findWallVelocityMinimizeAction(self):
         """
         Finds the wall velocity by minimizing the action and solving for the
@@ -177,12 +176,8 @@ class EOM:
             minimize the action and solve the EOM.
 
         """
-        # ## ??????????? why is wallOffsets different size?
-        # wallWidths = (5/self.Tnucl)*np.ones(self.nbrFields)
-        # wallOffsets = np.zeros(self.nbrFields-1)
-        
-        ## I guess we here give initial guesses for wallWidths and wallOffsets. Offset = how much field i is shifted from field 0 in position space
-        ## For some reason offsets was different length previously
+
+        # LN: note that I've made widths and offsets be same size. Previously offsets was one element shorter
 
         wallParams = WallParams(widths = (5/self.Tnucl)*np.ones(self.nbrFields), 
                                 offsets = np.zeros(self.nbrFields))
@@ -190,12 +185,14 @@ class EOM:
         alpha = self.thermo.alpha(self.Tnucl)
         vmin = max(1-(3*alpha)**(-10./13.),0.01) #based on eq (103) of 1004.4187
 
-        return self.solvePressure(vmin, self.hydro.vJ-1e-6, wallParams)
+        return self.solveWall(vmin, self.hydro.vJ-1e-6, wallParams)
     
 
-    def solvePressure(self, wallVelocityMin: float, wallVelocityMax: float, wallParams: WallParams):
+    ## LN: Right so this actually solves wall properties and not the pressure! So changed the name
+    #def solvePressure(self, wallVelocityMin: float, wallVelocityMax: float, wallParams: WallParams):
+    def solveWall(self, wallVelocityMin: float, wallVelocityMax: float, wallParamsGuess: WallParams) -> Tuple[float, WallParams]:
         r"""
-        Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity.
+        Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity and wall thicknesses/offsets.
 
         Parameters
         ----------
@@ -207,7 +204,7 @@ class EOM:
             Upper bound of the bracket in which the root finder will look for a
             solution. Should satisfy
             :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
-        wallParams : WallParams
+        wallParamsGuess : WallParams
             Contains a guess of the wall thicknesses and wall offsets.
 
         Returns
@@ -219,29 +216,41 @@ class EOM:
             minimize the action and solve the EOM.
 
         """
-        pressureMax, wallParamsMax = self.pressure(wallVelocityMax, wallParams, True)
+
+        ## LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
+
+        pressureMax, wallParamsMax = self.pressure(wallVelocityMax, wallParamsGuess, True)
         if pressureMax < 0:
             print('Maximum pressure is negative!')
             print(f"{pressureMax=} {wallParamsMax=}")
-            return 1
-        pressureMin, wallParamsMin = self.pressure(wallVelocityMin, wallParams, True)
+            #return 1
+            return 1, wallParamsMax
+        
+        pressureMin, wallParamsMin = self.pressure(wallVelocityMin, wallParamsGuess, True)
         if pressureMin > 0:
-            return 0
+            ## If this is a bad outcome then we should warn about it. TODO
+            #return 0
+            return 0, wallParamsMin
 
-        def pressureWrapper(vw, flag=False):
+        ## This computes pressure on the wall with a given wall speed and WallParams that looks hacky
+        def pressureWrapper(vw):
             if vw == wallVelocityMin:
                 return pressureMin
             if vw == wallVelocityMax:
                 return pressureMax
 
-            return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), flag)
+            # Don't return wall params
+            return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
         wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket=[wallVelocityMin,wallVelocityMax], xtol=1e-3).root
-        _,wallParams = pressureWrapper(wallVelocity, True)
+        #_,wallParams = pressureWrapper(wallVelocity, True)
+
+        # Get wall params:
+        _, wallParams = self.pressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)
         return wallVelocity, wallParams
 
 
-    def pressure(self, wallVelocity: float, wallParams: WallParams, returnOptimalWallParams=False):
+    def pressure(self, wallVelocity: float, wallParams: WallParams, returnOptimalWallParams: bool=False):
         """
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action.
@@ -278,7 +287,7 @@ class EOM:
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
-        print(f"{wallVelocity=}")
+        #print(f"{wallVelocity=}")
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
@@ -289,6 +298,7 @@ class EOM:
         # TODO: Implement a better condition
         while i < 2:
     
+            ## here dXdz are z-derivatives of the fields
             fields, dXdz = self.wallProfile(
                 self.grid.xiValues, vevLowT, vevHighT, wallParams
             )
@@ -333,7 +343,6 @@ class EOM:
             
             i += 1
 
-
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
 
@@ -350,6 +359,21 @@ class EOM:
         EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
 
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+
+        ## something in the pressure computation goes wrong here
+
+        polyInput = term1.GetField(0) + term2.GetField(0)
+
+
+        print(f"{dVdX=}")
+        print(f"{dXdz=}")
+        print(f"{term1=}")
+        print(f"{term2=}")
+
+        print(f"{dVout=}")
+        print(f"{polyInput=}")
+        print(f"{pressure=}")
+        input()
 
         if returnOptimalWallParams:
             return pressure, wallParams
@@ -380,15 +404,13 @@ class EOM:
             Action spent by the scalar field configuration.
 
         """
-        #wallWidths = wallParams[:self.nbrFields]
-        #wallOffsets = wallParams[self.nbrFields:]
+
         wallWidths = wallParams.widths
 
-        #fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
 
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
-        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2
+        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2 # Whats this?
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -486,20 +508,20 @@ class EOM:
             Derivative with respect to the position of the scalar field profile.
 
         """
+
         if np.isscalar(z):
             z_L = z / wallParams.widths
         else:
             ## Broadcast mess needed
             z_L = z[:,None] / wallParams.widths[None,:]
 
-        ## Not needed: wallParams.offsets has already len = nbrFields
-        #wallOffsetsCompleted = np.append([0], wallOffsets)
+        ## LN: Should match eq (37) in the ref. But the description there makes no sense so hard to say. Please clarify
 
-        ## do these need transpose? old version had that
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
         dXdz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
 
         return fields, dXdz
+
 
     def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dXdz: Fields, 
                           offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -543,6 +565,7 @@ class EOM:
             velocityProfile[index] = vPlasma
 
         return temperatureProfile, velocityProfile
+    
 
     def findPlasmaProfilePoint(self, index: int, c1: float, c2: float, velocityMid: float, fields: Fields, dXdz: Fields, 
                                offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[float, float]:
@@ -579,6 +602,8 @@ class EOM:
 
         """
 
+        ## What's going on in this function? Please explain your logic
+
         Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
 
         s1 = c1 - Tout30
@@ -588,12 +613,12 @@ class EOM:
         minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dXdz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
         # TODO: A fail safe
 
-
         ## Whats this? shouldn't we check that LHS == 0 ?
         if self.temperatureProfileEqLHS(fields, dXdz, minRes.x, s1, s2) >= 0:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
             return T, vPlasma
+
 
         TLowerBound = minRes.x
         TStep = np.abs(Tplus - TLowerBound)
@@ -604,6 +629,7 @@ class EOM:
         while self.temperatureProfileEqLHS(fields, dXdz, TUpperBound, s1, s2) < 0:
             TStep *= 2
             TUpperBound = TLowerBound + TStep
+
 
         res = brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dXdz, T, s1, s2),
@@ -642,7 +668,7 @@ class EOM:
 
         return (-w  + np.sqrt(4*s1**2 + w**2)) / (2 * s1)
 
-    def temperatureProfileEqLHS(self, fields: Fields, dXdz: Fields, T: float, s1: float, s2: float):
+    def temperatureProfileEqLHS(self, fields: FieldPoint, dXdz: FieldPoint, T: float, s1: float, s2: float):
         r"""
         The LHS of Eq. (20) of arXiv:2204.13120v1.
 
@@ -668,13 +694,16 @@ class EOM:
         ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
         w = -T * self.thermo.effectivePotential.derivT(fields, T)
 
+        kineticTerm = 0.5*np.sum(dXdz**2).view(np.ndarray)
+
+        ## eff potential at this field point and temperature. NEEDS the T-dep constant
+        veff = self.thermo.effectivePotential.evaluate(fields, T)
+
         result = (
-            + 0.5*np.sum(dXdz**2, axis=0)
-            - self.thermo.effectivePotential.evaluate(fields, T)
-            - 0.5*w
-            + 0.5*np.sqrt(4*s1**2 + w**2)
-            - s2
+            kineticTerm ## TODO probably force axis here. But need to guarantee correct field type first, so need some refactoring
+            - veff - 0.5*w + 0.5*np.sqrt(4*s1**2 + w**2) - s2
         )
+
         result = np.asarray(result)
         if result.shape == (1,) and len(result) == 1:
             return result[0]

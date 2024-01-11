@@ -254,7 +254,10 @@ class WallGoManager:
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
         #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
 
-        eom.findWallVelocityMinimizeAction()
+        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams=}")
 
         ## TODO should not need to create a new object just for this...
 
