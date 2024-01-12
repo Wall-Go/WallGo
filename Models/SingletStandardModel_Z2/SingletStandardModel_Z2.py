@@ -471,7 +471,6 @@ def main():
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
 
-        """
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
@@ -480,8 +479,7 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{wallParams.widths=}")
         print(f"{wallParams.offsets=}")
-        """
-        
+
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
