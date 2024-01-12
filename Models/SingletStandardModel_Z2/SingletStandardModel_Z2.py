@@ -453,9 +453,37 @@ def main():
 
         """WallGo can now be used to compute wall stuff!"""
 
-        ## LN: this currently computes wall speed in different approximations. 
-        ## I suppose we eventually want to have different functions or options to control what to compute.
-        manager.solveWall()
+        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+
+        vwLTE = manager.wallSpeedLTE()
+
+        print(f"LTE wall speed: {vwLTE}")
+
+        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+
+        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+        wallParams: WallGo.WallParams
+
+        """
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+
+        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams.widths=}")
+        print(f"{wallParams.offsets=}")
+        """
+        
+        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+        bIncludeOffEq = True
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+
+        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams.widths=}")
+        print(f"{wallParams.offsets=}")
 
 
     # end parameter-space loop

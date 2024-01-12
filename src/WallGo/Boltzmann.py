@@ -11,7 +11,7 @@ from .Particle import Particle
 from .helpers import boostVelocity
 from .WallGoUtils import getSafePathToResource
 
-## LN: why is the field profile here?
+
 class BoltzmannBackground:
     def __init__(
         self,
@@ -75,6 +75,8 @@ class BoltzmannSolver:
         cls : BoltzmannSolver
             An object of the BoltzmannSolver class.
         """
+        ## LN: This description is definitely not up to date!
+
         self.grid = grid
         self.background = deepcopy(background)
         self.background.boostToPlasmaFrame()

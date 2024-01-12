@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from dataclasses import dataclass
+from typing import Tuple
 
 ## WallGo imports
 from .Particle import Particle
@@ -15,6 +16,7 @@ from .Config import Config
 from .Integrals import Integrals
 from .Fields import Fields
 
+from .EOM import WallParams
 from .WallGoUtils import getSafePathToResource, clamp
 
 @dataclass
@@ -237,39 +239,29 @@ class WallGoManager:
         self.grid = Grid(M, N, L_xi, 100)
         
 
+    def wallSpeedLTE(self) -> float:
+        """Solves wall speed in the Local Thermal Equilibrium approximation.
+        """
 
-    # Call after initGrid. I guess this would be the main workload function 
-    def solveWall(self):
+        return self.hydro.findvwLTE()
 
-        ## Begin with Local Thermal Equilibrium approximation to wall speed
-        vwLTE = self.hydro.findvwLTE()
 
-        print(f"LTE wall speed: {vwLTE}")
+    # Call after initGrid. I guess this would be the main workload function
+    def solveWall(self, bIncludeOffEq: bool) -> Tuple[float, WallParams]:
+        """Returns wall speed and wall parameters (widths and offsets).
+        """
 
         numberOfFields = self.model.fieldCount
 
         ### EOMs just for the first out-of-eq particle for now. TODO generalize
         outOfEqParticle = self.model.outOfEquilibriumParticles[0]
 
-
-        print("=== Begin EOM ===")
-
-        # Without out-of-equilibrium contributions
-        eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
-        #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
+        eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=bIncludeOffEq)
 
         wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
+        return wallVelocity, wallParams
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams=}")
 
-        ## TODO should not need to create a new object just for this...
-
-        #With out-of-equilibrium contributions
-        eomOffEq = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=True)
-        #eomGeneralOffEq = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2, True)
-        
-        
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
     
         assert self.config != None
