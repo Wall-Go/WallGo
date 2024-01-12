@@ -13,6 +13,8 @@ def test_equilibriumEOM_singlet(singletBenchmarkEOM_equilibrium: Tuple[WallGo.EO
     Compute the wall velocity from the loop without out-of-equilibrium effects.
     This should match the LTE wall velocity
     """
+
+    ## WIP
     
     eom, BM = singletBenchmarkEOM_equilibrium
 

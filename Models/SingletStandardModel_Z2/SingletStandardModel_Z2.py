@@ -43,7 +43,7 @@ class SingletSM_Z2(GenericModel):
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields[0]**2
+        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
@@ -171,8 +171,11 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
                                                extrapolationTypeUpper = EExtrapolationType.CONSTANT)
         
     
-    ## ---------- EffectivePotential overrides. The user needs to define evaluate() and fieldIndependentPart()
-        
+
+    ## ---------- EffectivePotential overrides. 
+    # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
+    # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
+
     def evaluate(self, fields: Fields, temperature: float) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
@@ -185,6 +188,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         lam = self.modelParameters["lambda"]
         b4 = self.modelParameters["b4"]
         a2 = self.modelParameters["a2"]
+
+        RGScale = self.modelParameters["RGScale"]
 
         """
         # Get thermal masses
@@ -200,11 +205,10 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
-        ## No need to explicitly include field-independent parts here (they go in constantTerms())
 
-        RGScale = self.modelParameters["RGScale"]
         VTotal = (
-            V0
+            V0 
+            + self.constantTerms(temperature)
             + self.V1(bosonStuff, fermionStuff, RGScale) 
             + self.V1T(bosonStuff, fermionStuff, temperature)
         )
@@ -214,7 +218,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
-        that were NOT already added in evaluate(). At leading order these are just
+        that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
         (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
         """
 
@@ -367,7 +371,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
     def fermion_massSq(self, fields: Fields, temperature):
 
-        v= fields.GetField(0)
+        v = fields.GetField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]

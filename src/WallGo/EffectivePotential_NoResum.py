@@ -182,20 +182,25 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         ## m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
         # But make sure we don't modify the input temperature array here. 
-        T = np.atleast_1d(temperature)
-        if (len(T) > 1):
-            T = T[:, np.newaxis]
+        T = np.asanyarray(temperature)
+        
+        T2 = T*T + 1e-100
 
-        m2,nb,_ = bosons
-        T2 = (T*T) + 1e-100
+        ## Need reshaping mess for numpy broadcasting to work
+        if (T2.ndim > 0): 
+            T2 = T2[:, np.newaxis]
 
         ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
         ## Do note that for negative m^2 the integrals become wild and convergence is both slow and bad,
         ## so you may want to consider taking the absolute value of m^2. We will not enforce this however
+            
+        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong array T input. 
+        ## TODO really not a fan of hardcoded axis index 
+         
+        m2, nb, _ = bosons
+        V = np.sum(nb* self.integrals.Jb(m2 / T2), axis=-1)
 
-        V = np.sum(nb* self.integrals.Jb(m2/T2), axis=-1)
-
-        m2,nf = fermions
-
-        V += np.sum(nf* self.integrals.Jf(m2/T2), axis=-1)
+        m2, nf = fermions
+        V += np.sum(nf* self.integrals.Jf(m2 / T2), axis=-1)
+        
         return V*T**4 / (2*np.pi*np.pi)

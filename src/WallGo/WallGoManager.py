@@ -15,8 +15,7 @@ from .Config import Config
 from .Integrals import Integrals
 from .Fields import Fields
 
-
-from .WallGoUtils import getSafePathToResource
+from .WallGoUtils import getSafePathToResource, clamp
 
 @dataclass
 class PhaseInfo:
@@ -73,7 +72,6 @@ class WallGoManager:
         self.TMax = np.Inf
 
 
-
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo.
         """
@@ -100,23 +98,6 @@ class WallGoManager:
 
         print("Suggested T range:")
         print(f"TMin = {self.TMin}, TMax = {self.TMax}")
-
-        """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
-        which is bonkers, but for honest comparison we probably want to use the same. On the other hand though the 
-        default range obtained above works well at least for the hydro routines in this point. So I'm commenting the following out for now.
-        """
-
-        """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
-        But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
-        """
-
-        """
-        TMin, TMax, dT = 0.0, 1.2*self.thermodynamics.Tc, 1.0
-        interpolationPointCount = math.ceil((TMax - TMin) / dT)
-
-        self.thermodynamics.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
-        self.thermodynamics.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
-        """
         
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
@@ -187,8 +168,26 @@ class WallGoManager:
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
 
-        ## Allow some leeway since the template model is just a rough estimate
-        TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate
+
+        """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
+        which is bonkers, but for honest comparison we probably want to use the same. On the other hand though the 
+        default range obtained above works well at least for the hydro routines in this point. So I'm commenting the following out for now.
+        """
+
+        """ TEMPORARY. Interpolate FreeEnergy between T = [0, 1.2*Tc]. This is here because the old model example does this.
+        But this will need to be done properly in the near future, using the temperatures from HydroTemplateModel.
+        """
+
+        ## temp temp!
+        TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
+        
+
+        """Allow some leeway since the template model is just a rough estimate. 
+        But don't let Tmax be higher than Tc as there the equation of state is probably not well defined, and Hydro doesn't like it.
+        """
+        TMin, TMax = 0.8*TMinTemplate, 1.1*TMaxTemplate   #JvdV: need to investigate this bound further - choosing the prefactor of TMaxTemplate too large affects the result
+#        TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
+
         dT = self.config.getfloat("EffectivePotential", "dT")
 
         ## Interpolate phases and check that they remain stable in this range 
@@ -247,20 +246,22 @@ class WallGoManager:
 
         print(f"LTE wall speed: {vwLTE}")
 
-        print("======= Next would be EOM routines, but these are TODO. The program will now crash :^)")
-        input()
-
         numberOfFields = self.model.fieldCount
 
         ### EOMs just for the first out-of-eq particle for now. TODO generalize
         outOfEqParticle = self.model.outOfEquilibriumParticles[0]
-        
+
+
+        print("=== Begin EOM ===")
 
         # Without out-of-equilibrium contributions
         eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields)
         #eomGeneral = EOMGeneralShape(offEqParticles[0], fxSM, grid, 2)
 
-        eom.findWallVelocityMinimizeAction()
+        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams=}")
 
         ## TODO should not need to create a new object just for this...
 

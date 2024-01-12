@@ -1,5 +1,6 @@
 
 import importlib.resources
+import numpy as np
 
 ## Put common non-physics related functions here. Common physics/math functions should go into helpers.py
 
@@ -19,3 +20,8 @@ def getSafePathToResource(relativePathToResource: str) -> str:
     packageName = __package__ or "WallGo"
 
     return importlib.resources.files(packageName) / relativePathToResource
+
+
+def clamp(x: float, min: float, max: float) -> float:
+    """Clamp x in range [min, max], inclusive."""
+    return np.clip(x, min, max)

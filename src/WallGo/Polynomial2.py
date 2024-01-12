@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
+
 class Polynomial:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
         """
@@ -37,7 +38,7 @@ class Polynomial:
         """
         
         self.coefficients = np.asanyarray(coefficients)
-        self.N = len(self.coefficients.shape)
+        self.N = len(self.coefficients.shape) #Can we use another symbol here? Easy to confuse this with Grid.N
         self.grid = grid
         
         self.allowedBasis = ['Cardinal','Chebyshev']
@@ -94,7 +95,7 @@ class Polynomial:
             return Polynomial(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
@@ -104,7 +105,11 @@ class Polynomial:
             return Polynomial(self.coefficients+poly.coefficients)
         else:
             newCoeff = poly+self.coefficients
-            assert len(newCoeff) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+
+            ## LN: Dunno how it's possible that I get errors from here, due to taking len() of a scalar! But here's a "fix"
+            newCoeff = np.asanyarray(newCoeff)
+            assert newCoeff.ndim == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __sub__(self, poly):
@@ -356,6 +361,7 @@ class Polynomial:
 
         return tn
     
+
     def integrate(self, axis=None, w=None):
         r"""
         Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)` 
@@ -420,7 +426,14 @@ class Polynomial:
                 newEndpoints.append(self.endpoints[i])
                 
         result = np.sum(integrand, axis)
+
+        ## This check fails too easily with extended types
+        """
         if isinstance(result, float):
+            return result
+        """
+        
+        if np.asanyarray(result).ndim == 0:
             return result
         else:
             return Polynomial(result, self.grid, tuple(newBasis), tuple(newDirection), tuple(newEndpoints))
@@ -463,9 +476,29 @@ class Polynomial:
             else:
                 basis.append(self.basis[i])
                 endpoints.append(self.endpoints[i])
-                
         return Polynomial(coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints))
-            
+    
+    def matrix(self, basis, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        basis : string
+            Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if basis == 'Cardinal':
+            return self.__cardinalMatrix(direction, endpoints)
+        elif basis == 'Chebyshev':
+            return self.__chebyshevMatrix(direction, endpoints)
+        else:
+            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")        
     
     def derivMatrix(self, basis, direction, endpoints=False):
         """
@@ -493,6 +526,57 @@ class Polynomial:
             return self.__chebyshevDeriv(direction,endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+         
+    def __cardinalMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        if direction == 'z':
+            return np.identity(self.grid.M-1+2*endpoints)
+        if direction == 'pz':
+            return np.identity(self.grid.N-1+2*endpoints)
+        if direction == 'pp':
+            return np.identity(self.grid.N-1+endpoints)
+
+    def __chebyshevMatrix(self, direction, endpoints=False):
+        r"""
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` computed in a specific direction.
+
+        Parameters
+        ----------
+        direction : string
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+        endpoints : Bool, optional
+            If True, include endpoints of grid. Default is False.
+
+        """
+
+        grid,n,restriction = None,None,None
+        if direction == 'z':
+            grid = self.grid.getCompactCoordinates(endpoints)[0]
+            n = np.arange(grid.size)+2-2*endpoints
+            restriction = 'full'
+        elif direction == 'pz':
+            grid = self.grid.getCompactCoordinates(endpoints)[1]
+            n = np.arange(grid.size)+2-2*endpoints
+            restriction = 'full'
+        elif direction == 'pp':
+            grid = self.grid.getCompactCoordinates(endpoints)[2]
+            n = np.arange(grid.size)+1-endpoints
+            restriction = 'partial'
+        if endpoints:
+            restriction = None
+
+        return self.chebyshev(grid[:,None], n[None,:], restriction)
     
     def __cardinalDeriv(self, direction, endpoints=False):
         """

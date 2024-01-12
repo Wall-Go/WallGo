@@ -15,7 +15,7 @@ def test_Jouguet(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoint]):
     vJ_expected = BM.expectedResults["vJ"]
     vJ_result = hydro.vJ
 
-    assert vJ_result == pytest.approx(vJ_expected, rel=1e-2)
+    assert vJ_result == pytest.approx(vJ_expected, rel=1e-3)
     
 
 ## This can be slow if Jb/Jf need to be evaluated at very negative (m/T)^2
@@ -33,7 +33,7 @@ def test_hydroBoundaries(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoi
     Tplus = BM.expectedResults["Tplus"]
     Tminus = BM.expectedResults["Tminus"]
 
-    np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-2)
+    np.testing.assert_allclose(res[:4], (c1, c2, Tplus, Tminus), rtol=1e-3)
 
 
 ## Wall velocity in the Local Thermal Equilibrium approximation
@@ -44,6 +44,6 @@ def test_vwLTE(singletBenchmarkHydro: Tuple[WallGo.Hydro, BenchmarkPoint]):
     vwLTE_expected = BM.expectedResults["vwLTE"]
     vwLTE_result = hydro.findvwLTE()
 
-    assert vwLTE_result == pytest.approx(vwLTE_expected, rel=1e-2)
+    assert vwLTE_result == pytest.approx(vwLTE_expected, rel=1e-3)
 
     

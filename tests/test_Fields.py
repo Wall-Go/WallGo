@@ -46,5 +46,14 @@ def test_Fields_invalid(fieldArrays):
     with pytest.raises(ValueError):
         Fields(fieldArrays)
     ## Something like Field(1, 2, 3) should fail too, but we need to throw this manually. TODO
+        
 
+@pytest.mark.parametrize("fields, fieldNumber, newField", [
+    (Fields( [[1, 2, 3]] ), 1, np.asarray([10])) ,
+    (Fields( [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ), 1, np.asarray([10, 11, 12]))    
+])
+def test_SetField(fields, fieldNumber, newField):
 
+    fields.SetField(fieldNumber, newField)
+    np.testing.assert_array_equal( fields.GetField(fieldNumber), newField)
+    

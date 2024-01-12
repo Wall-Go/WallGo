@@ -25,7 +25,17 @@ class FreeEnergyValueType(np.ndarray):
                 values = values[0]
 
         return values
-
+    
+    def getFields(self):
+        """Returns Fields array corresponding to local free energy minimum.
+        """
+        ## Last column is Veff value, other columns are fields
+        if (self.ndim < 2):
+            values = self[:-1]
+        else:
+            values = self[:, :-1]
+        return Fields.CastFromNumpy(values)
+    
 
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
@@ -69,19 +79,22 @@ class FreeEnergy(InterpolatableFunction):
         phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(self.phaseLocationGuess, temperature)
 
         """We now need to make sure the field-independent but T-dependent contribution to free energy is included. 
-        In principle this means we just call effectivePotential::evaluateWithConstantPart().
+        In principle this means we just call effectivePotential::evaluate().
         But here's a problem: currently if calling Veff with N field points and N temperatures, then numpy decideds to 
         produce a NxN array as a result. This means we end up doing unnecessary computations, and the resulting Veff values 
         are in wrong format!
 
         No solution currently, probably need to enforce correct broadcasting directly in Veff. As a hacky fix for the formatting I take the diagonal here.
         """
+        ## Actually the above seems to be fixed now, V1T was just implemented very badly. But leaving the comments here just in case
 
-        potentialAtMinimum = np.real( self.effectivePotential.evaluateWithConstantPart(phaseLocation, temperature) )
+        potentialAtMinimum = np.real( self.effectivePotential.evaluate(phaseLocation, temperature) )
 
+        """
         if (potentialAtMinimum.ndim > 1):
             potentialAtMinimum = np.diagonal(potentialAtMinimum).copy() ## need to take a hard copy since np.diagonal gives just a read-only view
-
+        """
+            
         # Important: Minimization may not always work as intended, 
         # for example the minimum we're looking for may not even exist at the input temperature.
         # This will break interpolations unless we validate the result here. 
