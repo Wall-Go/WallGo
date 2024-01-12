@@ -124,7 +124,6 @@ class EOM:
     
 
     ## LN: Right so this actually solves wall properties and not the pressure! So changed the name
-    #def solvePressure(self, wallVelocityMin: float, wallVelocityMax: float, wallParams: WallParams):
     def solveWall(self, wallVelocityMin: float, wallVelocityMax: float, wallParamsGuess: WallParams) -> Tuple[float, WallParams]:
         r"""
         Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity and wall thicknesses/offsets.
@@ -154,14 +153,14 @@ class EOM:
 
         ## LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
 
-        pressureMax, wallParamsMax = self.pressure(wallVelocityMax, wallParamsGuess, True)
+        pressureMax, wallParamsMax = self.wallPressure(wallVelocityMax, wallParamsGuess, True)
         if pressureMax < 0:
             print('Maximum pressure is negative!')
             print(f"{pressureMax=} {wallParamsMax=}")
             #return 1
             return 1, wallParamsMax
     
-        pressureMin, wallParamsMin = self.pressure(wallVelocityMin, wallParamsGuess, True)
+        pressureMin, wallParamsMin = self.wallPressure(wallVelocityMin, wallParamsGuess, True)
         if pressureMin > 0:
             ## If this is a bad outcome then we should warn about it. TODO
             #return 0
@@ -176,24 +175,24 @@ class EOM:
                 return pressureMin
             if vw == wallVelocityMax:
                 return pressureMax
-            """
+            """ 
             if vw <= wallVelocityMin:
                 return pressureMin
             if vw >= wallVelocityMax:
                 return pressureMax
 
-            # Don't return wall params. But this seems pretty evil: pressure() modifies the wallParams it gets as input!
-            return self.pressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
+            # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
+            return self.wallPressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
         wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
         #_,wallParams = pressureWrapper(wallVelocity, True)
 
         # Get wall params:
-        _, wallParams = self.pressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)
+        _, wallParams = self.wallPressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)
         return wallVelocity, wallParams
 
 
-    def pressure(self, wallVelocity: float, wallParams: WallParams, returnOptimalWallParams: bool=False):
+    def wallPressure(self, wallVelocity: float, wallParams: WallParams, returnOptimalWallParams: bool=False):
         """
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action.
@@ -245,6 +244,9 @@ class EOM:
         # TODO: Implement a better condition
         while i < 2:
     
+            fields: Fields
+            dXdz: Fields
+
             ## here dXdz are z-derivatives of the fields
             fields, dXdz = self.wallProfile(
                 self.grid.xiValues, vevLowT, vevHighT, wallParams
@@ -254,11 +256,16 @@ class EOM:
                 c1, c2, velocityMid, fields, dXdz, offEquilDeltas, Tplus, Tminus
             )
 
+            """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
+            Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile()
+            """
+            ## Solve Boltzmann equation to get out-of-equilibrium contributions
             if self.includeOffEq:
                 TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
-                XWithEndpoints = np.concatenate((vevLowT[:,None], fields, vevHighT[:,None]), 1) # LN TODO probs need a different axis here
+                fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
                 vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
-                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) 
+
+                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
                 boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 

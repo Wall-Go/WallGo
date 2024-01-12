@@ -83,7 +83,9 @@ class BoltzmannSolver:
         self.particle = particle
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
+        ## Position space
         self.basisM = basisM
+        ## Momentum space
         self.basisN = basisN
         
         ##### collision operator #####
@@ -253,6 +255,7 @@ class BoltzmannSolver:
         )
 
         ##### liouville operator #####
+        ## LN: OOF! Is this really the best way?
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -267,7 +270,7 @@ class BoltzmannSolver:
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
-
+       
         # including factored-out T^2 in collision integrals
         collisionArray = (
             (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -301,6 +304,8 @@ class BoltzmannSolver:
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
         See equation (30) of [LC22]_.
+
+        Only works with HDF5 files.
         """
         try:
             with h5py.File(collisionFile, "r") as file:
@@ -314,10 +319,13 @@ class BoltzmannSolver:
                 # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
                 datasetName = particle.name + ", " + particle.name
                 collisionArray = np.array(file[datasetName][:])
+
         except FileNotFoundError:
-            print("BoltzmannSolver error: %s not found" % collisionFile)
-            raise
-            
+            raise FileNotFoundError("Error loading collision integrals: %s not found" % collisionFile)
+        
+
+        ## LN: What's this ?!
+
         self.collisionArray = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
         
         if self.basisN == 'Cardinal':
