@@ -82,8 +82,6 @@ class Thermodynamics:
             Pressure in the high-temperature phase.
 
         """
-        # pressure = -free energy density = -Veff at minimum
-        # __, VeffValue = self.effectivePotential.findLocalMinimum(self.phaseHighT, T)
         VeffValue = self.freeEnergyHigh(T).getVeffValue()
         return -VeffValue
 
@@ -146,7 +144,6 @@ class Thermodynamics:
         eHighT : double
             Energy density in the high-temperature phase.
         """
-        # print(T*self.dpHighT(T))
         return T*self.dpHighT(T) - self.pHighT(T)
 
     def deHighT(self, T):
@@ -339,5 +336,6 @@ e
         alpha : double
             Phase transition strength.
         """
+        # LN: Please add reference to a paper and eq number
         return (self.eHighT(T)-self.pHighT(T)/self.csqHighT(T)-self.eLowT(T)+self.pLowT(T)/self.csqLowT(T))/3/self.wHighT(T)
 

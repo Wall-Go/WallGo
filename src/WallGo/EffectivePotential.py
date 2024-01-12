@@ -11,25 +11,6 @@ from .helpers import derivative
 from .Fields import Fields
 
 
-class VeffInput():
-    """Input to Veff is pairs of field-space points and temperatures.
-    You can pass many points at once, but the sizes need to be compatible. 
-    These are possible (we broadcast):
-        - One field point, one temperature
-        - One field point, many temperatures
-        - Many field points, one temperatures
-        - Many fields points, many temperatures. Sizes need to match
-    """
-
-    fields: Fields ## 2D
-    temperature: np.ndarray ## 1D
-
-    def __init__(self, fields: Fields, temperature: np.ndarray):
-        return ### todo
-        
-
-
-
 class EffectivePotential(ABC):
     """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
     and computing free energies (pressures) in the two phases.

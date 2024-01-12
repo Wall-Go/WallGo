@@ -183,15 +183,18 @@ class Hydro:
 
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
-        try:
-            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
-        except:
-            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
-            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
-        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
-            Tpm0[0] = 1.01*Tpm0[1]
-        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+        #JvdV: commented it out - as it lead to an unreasonable range
+#        try:
+#            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+#        except:
+#            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+#            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+#        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+#            Tpm0[0] = 1.01*Tpm0[1]
+#        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
+#            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+
+        Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
         def match(XpXm): #Don't call this match!!!!
             Tpm = self.__inverseMappingT(XpXm,vwMapping)
