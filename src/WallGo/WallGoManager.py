@@ -185,8 +185,8 @@ class WallGoManager:
         """Allow some leeway since the template model is just a rough estimate. 
         But don't let Tmax be higher than Tc as there the equation of state is probably not well defined, and Hydro doesn't like it.
         """
-        TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate
-        TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
+        TMin, TMax = 0.8*TMinTemplate, 1.1*TMaxTemplate   #JvdV: need to investigate this bound further - choosing the prefactor of TMaxTemplate too large affects the result
+#        TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
 
         dT = self.config.getfloat("EffectivePotential", "dT")
 
