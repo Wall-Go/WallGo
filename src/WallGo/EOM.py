@@ -44,29 +44,24 @@ class EOM:
     model: GenericModel
     hydro: Hydro
     thermo: Thermodynamics ## thermo here is used pretty messily but is useful: gives access to both FreeEnergy objects and Veff
+    boltzmannSolver: BoltzmannSolver
 
-    """LN: Very counterintuitive that this requires particle input even if includeOffEq=False. Here are some things to consider:
-        1. Is it possible to remove includeOffEq from the constructor and instead have a dedicated function for solving the EOM
-        without out-of-eq contributions?
-        2. If most of all functions here are considerably simpler when out-of-eq are not included, should there be a separate (child?) class 
-        for handling that case?
-        3. Would this class make sense if by default it doesn't have a particle associated with it. 
-        Could they instead be added on demand at runtime on demand?
-    """
+    # LN: Changed this so that the constructor takes a BoltzmannSolver instance instead of a Particle. 
+    # This is better: can access all out-of-eq particles through BoltzmannSolver if needed. 
+    # Currently the particle-specific things in this class are hardcoded so that they only make sense for top quark only, and are completely model specific. 
+    # So big TODO: generalize this. As a temporary hack, the particle is set in __init__() as the first particle in boltzmannSolver's particle list.
 
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
-    def __init__(self, particle: Particle, thermodynamics: Thermodynamics, hydro: Hydro, grid: Grid, nbrFields: int, includeOffEq: bool=False, errTol=1e-6):
+    def __init__(self, boltzmannSolver: BoltzmannSolver, thermodynamics: Thermodynamics, hydro: Hydro, grid: Grid, nbrFields: int, includeOffEq: bool=False, errTol=1e-6):
         """
         Initialization
 
         Parameters
         ----------
-        particle : Particle
-            Object of the class Particle, which contains the information about
-            the out-of-equilibrium particles for which the Boltzmann equation
-            will be solved.
+        boltzmannSolver : BoltzmannSolver
+            BoltzmannSolver instance.
         model : GenericModel
             Object of model class that implements the GenericModel interface.
         grid : Grid
@@ -84,7 +79,13 @@ class EOM:
         None.
 
         """
-        self.particle = particle
+
+        assert isinstance(boltzmannSolver, BoltzmannSolver)
+        assert isinstance(thermodynamics, Thermodynamics)
+        assert isinstance(hydro, Hydro)
+        assert isinstance(grid, Grid)
+
+        self.boltzmannSolver = boltzmannSolver
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
@@ -92,8 +93,11 @@ class EOM:
         
         self.thermo = thermodynamics
         self.hydro = hydro
-        # I feel this is error prone: we should always read Tnucl from self.thermo
+        ## LN: Dunno if we want to store this here tbh
         self.Tnucl = self.thermo.Tnucl
+
+        ## HACK. Hardcode reference to first particle in boltzmannSolver's list. Will be removed or generalized later
+        self.particle = self.boltzmannSolver.offEqParticles[0]
 
 
     def findWallVelocityMinimizeAction(self):
@@ -260,18 +264,19 @@ class EOM:
             """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
             Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile()
             """
-            ## Solve Boltzmann equation to get out-of-equilibrium contributions
+            ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
             if self.includeOffEq:
                 TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
                 fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
                 vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
 
+                ## Prepare a new background for Boltzmann
                 boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
-                boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
-                offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
+                self.boltzmannSolver.setBackground(boltzmannBackground)
 
+                offEquilDeltas = self.boltzmannSolver.getDeltas()
 
-            ## Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
+            ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
             ## NOT including the first offset which we keep at 0.
             wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
             
@@ -300,8 +305,6 @@ class EOM:
 
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
-
-        # TODO: Add the mass derivative in the Particle class and use it here.
 
         """This undocumented magic is calculating pressure on the wall ASSUMING only the first field has interactions with out-of-eq particles (top).
         Meaning that this needs a rewrite! 
@@ -354,6 +357,9 @@ class EOM:
         fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
 
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
+
+
+        ## LN: needs rewrite, hardcoding top quark here is no-no for general models
         VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2 # Whats this?
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
@@ -633,6 +639,7 @@ class EOM:
         ubar3 = u0
 
         ## Where do these come from?
+        ## LN: needs rewrite, what happens with many out-of-eq particles?
         T30 = (
             + (3*delta20 - delta02 - self.particle.msqVacuum(fields)*delta00)*u3*u0
             + (3*delta02 - delta20 + self.particle.msqVacuum(fields)*delta00)*ubar3*ubar0

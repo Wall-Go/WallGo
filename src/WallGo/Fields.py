@@ -110,3 +110,12 @@ class Fields(np.ndarray):
         self[:, i] = fieldArray
         return self
     
+    def TakeSlice(self, idx_start: int, idx_end: int, axis: int) -> 'Fields':
+        """Take slice along specified axis. Output is as you'd expect from a 2D numpy array,
+        but we cast to Fields object. Input indices are INCLUSIVE. 
+        NB: no range checking here. 
+        """
+        if (axis == self.overFieldPoints):
+            return self[idx_start:idx_end, :]
+        else:
+            return self[:, idx_start:idx_end]

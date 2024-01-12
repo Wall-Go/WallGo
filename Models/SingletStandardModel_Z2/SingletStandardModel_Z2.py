@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 import os
+import pathlib
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -15,8 +16,8 @@ from WallGo import Fields
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
 
-    particles = np.array([], dtype=Particle)
-    outOfEquilibriumParticles = np.array([], dtype=Particle)
+    particles = []
+    outOfEquilibriumParticles = []
     modelParameters = {}
 
     ## Specifying this is REQUIRED
@@ -421,8 +422,14 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- Here is where you'd start an input parameter loop if doing parameter-space scans ----
+    ## ---- File name for collisions integrals. Currently we just load this
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_top_top_N11.hdf5" 
+    manager.loadCollisionFile(collisionFileName)
+
+
+    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
     
+
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  

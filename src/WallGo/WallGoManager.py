@@ -15,6 +15,7 @@ from .Grid import Grid
 from .Config import Config
 from .Integrals import Integrals
 from .Fields import Fields
+from .Boltzmann import BoltzmannSolver
 
 from .EOM import WallParams
 from .WallGoUtils import getSafePathToResource, clamp
@@ -50,7 +51,8 @@ class WallGoManager:
     hydro: Hydro
     grid: Grid
     eom: EOM
-    # ...
+    boltzmannSolver: BoltzmannSolver
+
 
     def __init__(self):
         """do common model-independent setup here
@@ -63,6 +65,8 @@ class WallGoManager:
 
         self._initalizeIntegralInterpolations(self.integrals)
 
+        ## -- Order of initialization matters here
+
         ## Grid
         self._initGrid( self.config.getint("PolynomialGrid", "spatialGridSize"), 
                         self.config.getint("PolynomialGrid", "momentumGridSize"),
@@ -73,11 +77,18 @@ class WallGoManager:
         self.TMin = 0.
         self.TMax = np.Inf
 
+        self._initBoltzmann()
+
 
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo.
         """
+        assert isinstance(model, GenericModel)
         self.model = model
+
+        ## Update Boltzmann off-eq particle list to match that defined in model
+        self.boltzmannSolver.updateParticleList( model.outOfEquilibriumParticles )
+
 
 
     def setParameters(self, modelParameters: dict[str, float], phaseInput: PhaseInfo) -> None:
@@ -105,7 +116,7 @@ class WallGoManager:
         # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
 
-        self.initHydro(self.thermodynamics, self.TMin, self.TMax)
+        self._initHydro(self.thermodynamics, self.TMin, self.TMax)
 
         print(f"Jouguet: {self.hydro.vJ}")
 
@@ -164,7 +175,7 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
-        ## Use the template model to find an estimate of the minimum and maximum required temperature
+        ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
@@ -181,18 +192,18 @@ class WallGoManager:
         """
 
         ## temp temp!
-        TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
+        #TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
         
 
         """Allow some leeway since the template model is just a rough estimate. 
-        But don't let Tmax be higher than Tc as there the equation of state is probably not well defined, and Hydro doesn't like it.
+        NB: In generaly situations, TMax (TMin) cannot be arbitrarily large (small) because both phases need to remain (meta)stable over the range.
         """
         TMin, TMax = 0.8*TMinTemplate, 1.1*TMaxTemplate   #JvdV: need to investigate this bound further - choosing the prefactor of TMaxTemplate too large affects the result
-#        TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
+        #TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
 
         dT = self.config.getfloat("EffectivePotential", "dT")
 
-        ## Interpolate phases and check that they remain stable in this range 
+        ## ---- Interpolate phases and check that they remain stable in this range 
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
         fHighT.tracePhase(TMin, TMax, dT)
@@ -211,7 +222,7 @@ class WallGoManager:
 
 
 
-    def initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
+    def _initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
         self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
 
 
@@ -239,6 +250,15 @@ class WallGoManager:
         self.grid = Grid(M, N, L_xi, 100)
         
 
+    def _initBoltzmann(self):
+        ## Hardcode the basis types here: Cardinal for position, Chebyshev for momentum
+        self.boltzmannSolver = BoltzmannSolver(self.grid, basisM = "Cardinal", basisN = "Chebyshev")
+
+
+    def loadCollisionFile(self, fileName: str) -> None:
+        self.boltzmannSolver.readCollision(fileName)
+
+
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation.
         """
@@ -253,10 +273,7 @@ class WallGoManager:
 
         numberOfFields = self.model.fieldCount
 
-        ### EOMs just for the first out-of-eq particle for now. TODO generalize
-        outOfEqParticle = self.model.outOfEquilibriumParticles[0]
-
-        eom = EOM(outOfEqParticle, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=bIncludeOffEq)
+        eom = EOM(self.boltzmannSolver, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=bIncludeOffEq)
 
         wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
         return wallVelocity, wallParams
