@@ -177,6 +177,7 @@ class EOM:
             if vw == wallVelocityMax:
                 return pressureMax
             """
+            ## LN: Someone please check what the correct behavior here should be. Or if we even need these at all
             if vw <= wallVelocityMin:
                 return pressureMin
             if vw >= wallVelocityMax:
