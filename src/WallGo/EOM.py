@@ -250,15 +250,15 @@ class EOM:
         while i < 2:
     
             fields: Fields
-            dXdz: Fields
+            dPhidz: Fields
 
-            ## here dXdz are z-derivatives of the fields
-            fields, dXdz = self.wallProfile(
+            ## here dPhidz are z-derivatives of the fields
+            fields, dPhidz = self.wallProfile(
                 self.grid.xiValues, vevLowT, vevHighT, wallParams
             )
 
             Tprofile, velocityProfile = self.findPlasmaProfile(
-                c1, c2, velocityMid, fields, dXdz, offEquilDeltas, Tplus, Tminus
+                c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus
             )
 
             """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
@@ -303,7 +303,7 @@ class EOM:
             
             i += 1
 
-        fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
+        fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
 
         """This undocumented magic is calculating pressure on the wall ASSUMING only the first field has interactions with out-of-eq particles (top).
@@ -311,8 +311,8 @@ class EOM:
         """
         dVout = 12 * fields.GetField(0) * offEquilDeltas['00'].coefficients / 2
 
-        term1 = dVdX * dXdz
-        term2 = dVout[:, np.newaxis] * dXdz
+        term1 = dVdX * dPhidz
+        term2 = dVout[:, np.newaxis] * dPhidz
 
         EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
 
@@ -354,7 +354,7 @@ class EOM:
 
         wallWidths = wallParams.widths
 
-        fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
+        fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
 
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
@@ -396,7 +396,7 @@ class EOM:
         -------
         fields : array-like
             Scalar field profile.
-        dXdz : array-like
+        dPhidz : array-like
             Derivative with respect to the position of the scalar field profile.
 
         """
@@ -410,12 +410,12 @@ class EOM:
         ## LN: Should match eq (37) in the ref. But the description there makes no sense so hard to say. Please clarify
 
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
-        dXdz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
+        dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
 
-        return fields, dXdz
+        return fields, dPhidz
 
 
-    def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dXdz: Fields, 
+    def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
                           offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
@@ -430,7 +430,7 @@ class EOM:
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         fields : array-like
             Scalar field profile.
-        dXdz : array-like
+        dPhidz : array-like
             Derivative with respect to the position of the scalar field profile.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
@@ -451,7 +451,7 @@ class EOM:
         velocityProfile = np.zeros(len(self.grid.xiValues))
 
         for index in range(len(self.grid.xiValues)):
-            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, fields.GetFieldPoint(index), dXdz.GetFieldPoint(index), offEquilDeltas, Tplus, Tminus)
+            T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, fields.GetFieldPoint(index), dPhidz.GetFieldPoint(index), offEquilDeltas, Tplus, Tminus)
 
             temperatureProfile[index] = T
             velocityProfile[index] = vPlasma
@@ -459,7 +459,7 @@ class EOM:
         return temperatureProfile, velocityProfile
     
 
-    def findPlasmaProfilePoint(self, index: int, c1: float, c2: float, velocityMid: float, fields: Fields, dXdz: Fields, 
+    def findPlasmaProfilePoint(self, index: int, c1: float, c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
                                offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[float, float]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
@@ -476,7 +476,7 @@ class EOM:
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         fields : Fields
             Scalar field profile.
-        dXdz : Fields
+        dPhidz : Fields
             Derivative with respect to the position of the scalar field profile.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
@@ -502,11 +502,11 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dXdz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
+        minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
-        if self.temperatureProfileEqLHS(fields, dXdz, minRes.x, s1, s2) >= 0:
+        if self.temperatureProfileEqLHS(fields, dPhidz, minRes.x, s1, s2) >= 0:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
             return T, vPlasma
@@ -518,13 +518,13 @@ class EOM:
             TStep = np.abs(Tminus - TLowerBound)
 
         TUpperBound = TLowerBound + TStep
-        while self.temperatureProfileEqLHS(fields, dXdz, TUpperBound, s1, s2) < 0:
+        while self.temperatureProfileEqLHS(fields, dPhidz, TUpperBound, s1, s2) < 0:
             TStep *= 2
             TUpperBound = TLowerBound + TStep
 
 
         res = brentq(
-            lambda T: self.temperatureProfileEqLHS(fields, dXdz, T, s1, s2),
+            lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
             TLowerBound,
             TUpperBound,
             xtol=1e-9,
@@ -560,7 +560,7 @@ class EOM:
 
         return (-w  + np.sqrt(4*s1**2 + w**2)) / (2 * s1)
 
-    def temperatureProfileEqLHS(self, fields: FieldPoint, dXdz: FieldPoint, T: float, s1: float, s2: float):
+    def temperatureProfileEqLHS(self, fields: FieldPoint, dPhidz: FieldPoint, T: float, s1: float, s2: float):
         r"""
         The LHS of Eq. (20) of arXiv:2204.13120v1.
 
@@ -568,7 +568,7 @@ class EOM:
         ----------
         fields : array-like
             Scalar field profile.
-        dXdz : array-like
+        dPhidz : array-like
             Derivative with respect to the position of the scalar field profile.
         T : double
             Temperature.
@@ -586,7 +586,7 @@ class EOM:
         ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
         w = -T * self.thermo.effectivePotential.derivT(fields, T)
 
-        kineticTerm = 0.5*np.sum(dXdz**2).view(np.ndarray)
+        kineticTerm = 0.5*np.sum(dPhidz**2).view(np.ndarray)
 
         ## eff potential at this field point and temperature. NEEDS the T-dep constant
         veff = self.thermo.effectivePotential.evaluate(fields, T)
@@ -710,9 +710,9 @@ class EOM:
             vevLowT = self.thermo.freeEnergyLow(Tminus)[:-1]
             vevHighT = self.thermo.freeEnergyHigh(Tplus)[:-1]
 
-            fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+            fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
 
-            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityMid, fields, dXdz, offEquilDeltas, Tplus, Tminus)
+            Tprofile, velocityProfile = self.findPlasmaProfile(c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus)
 
             boltzmannBackground = BoltzmannBackground(velocityMid, velocityProfile, fields, Tprofile)
 
@@ -745,8 +745,8 @@ class EOM:
         vevLowT = self.thermo.freeEnergyLow(Tminus)[:-1]
         vevHighT = self.thermo.freeEnergyHigh(Tplus)[:-1]
 
-        fields, dXdz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
-        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityMid, fields, dXdz, offEquilDeltas, Tplus, Tminus)
+        fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallWidths, wallOffsets)
+        Tprofile, vprofile = self.findPlasmaProfile(c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus)
 
         # Define a function returning the local temparature by interpolating through Tprofile.
         Tfunc = UnivariateSpline(self.grid.xiValues, Tprofile, k=3, s=0)
@@ -775,20 +775,20 @@ class EOM:
         return dVdX + offEquil
 
     def pressureLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        fields, dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        fields, dPhidz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
 
         EOM = self.equationOfMotions(fields, Tfunc(z), Delta00func(z))
-        return -dXdz*EOM
+        return -dPhidz*EOM
 
     def pressureMoment(self, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
         return quad_vec(self.pressureLocal, -1, 1, args=(vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func))[0]
 
     def stretchLocal(self, z, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
-        fields, dXdz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
+        fields, dPhidz = self.wallProfile(z, vevLowT, vevHighT, wallWidths, wallOffsets)
 
         EOM = self.equationOfMotions(fields, Tfunc(z), Delta00func(z))
 
-        return dXdz*(2*(fields-vevLowT)/(vevHighT-vevLowT)-1)*EOM
+        return dPhidz*(2*(fields-vevLowT)/(vevHighT-vevLowT)-1)*EOM
 
     def stretchMoment(self, vevLowT, vevHighT, wallWidths, wallOffsets, Tfunc, Delta00func):
         kinetic = (2/15)*(vevHighT-vevLowT)**2/wallWidths**2
