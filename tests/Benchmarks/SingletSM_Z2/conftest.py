@@ -164,3 +164,12 @@ def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkTh
     eom = WallGo.EOM(singletBenchmarkParticle, thermo, hydro, grid, fieldCount, includeOffEq=False)
 
     return eom, BM
+
+
+@pytest.fixture(scope="session")
+def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, grid: WallGo.Grid):
+
+    singletBenchmarkModel
+
+    boltzmannSolver = WallGo.BoltzmannSolver(grid, basisM = "Cardinal", basisN = "Chebyshev")
+    boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
