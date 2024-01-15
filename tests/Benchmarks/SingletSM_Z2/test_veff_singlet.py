@@ -86,3 +86,19 @@ def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkMod
 
     assert Tc == pytest.approx(expectedTc, rel=relativeTolerance)
 
+@pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
+        (WallGo.Fields([110, 130]), 100, WallGo.Fields([512754.5552253, 1437167.06776619])),
+        (WallGo.Fields([130, 130]), 100, WallGo.Fields([670916.4147377, 1712203.95803452]))
+])
+def test_singletModelDerivField(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
+
+    relativeTolerance = 1e-6
+
+    ## Could also take model objects as inputs instead of BM. But doesn't really matter as long as the model is fast to construct
+
+    model = singletBenchmarkModel.model
+
+    ## This tests real part only!!
+
+    res = model.effectivePotential.derivField(fields, temperature)
+    assert res == pytest.approx( expectedVeffValue, rel=relativeTolerance)
