@@ -40,7 +40,7 @@ Muparser needs to be manually installed from source. Please follow the installat
 
 ## Compiling the Collision module
 
-Stardard CMake build. Go to WallSpeed/Collision (where the CMakeLists.txt file is) and run:
+Stardard CMake build. Go to WallGo/Collision (where the CMakeLists.txt file is) and run:
 
 ```
 mkdir build

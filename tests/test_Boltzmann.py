@@ -1,9 +1,9 @@
 import pytest # for tests
 import os # for path names
 import numpy as np  # arrays and maths
-from WallSpeed.Grid import Grid
-from WallSpeed.Polynomial import Polynomial
-from WallSpeed.Boltzmann import BoltzmannSolver
+from WallGo.Grid import Grid
+from WallGo.Polynomial import Polynomial
+from WallGo.Boltzmann import BoltzmannSolver
 from .conftest import background
 
 

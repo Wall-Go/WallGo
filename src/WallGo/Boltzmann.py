@@ -8,7 +8,7 @@ from .Grid import Grid
 from .Polynomial2 import Polynomial
 from .model import Particle
 from .helpers import boostVelocity
-from .WallGoUtils import getPackagedDataPath
+from .WallGoUtils import getSafePathToResource
 
 class BoltzmannBackground:
     def __init__(
@@ -556,7 +556,7 @@ class BoltzmannSolver:
 
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
-        return getPackagedDataPath("WallSpeed.Data", fileName)
+        return getSafePathToResource("Data/" + fileName)
 
 
     def __checkBasis(basis):
