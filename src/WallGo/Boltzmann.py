@@ -201,6 +201,12 @@ class BoltzmannSolver:
             the last coefficient of a Chebyshev polynomial expansion
             is the same order-of-magnitude as the truncation error.
 
+        Parameters
+        ----------
+        deltaF : array_like
+            The solution for which to estimate the truncation error,
+            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
+        
         Returns
         -------
         truncationError : float
@@ -237,13 +243,14 @@ class BoltzmannSolver:
 
         Parameters
         ----------
-        solution : array_like
-            The solution to be tested, a rank 6 array, with shape
-            :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.
+        deltaF : array_like
+            The solution for which to estimate the discretisation error,
+            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
 
         Returns
         -------
-
+        finiteDifferenceError : float
+            Relative deviation from a finite difference estimate.
         """
         # the right hand side, to reproduce, with collision term removed
         rhs = source - np.einsum(
