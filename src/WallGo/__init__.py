@@ -5,6 +5,7 @@ from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM
+from .EOM import WallParams
 
 from .Particle import Particle
 from .Fields import Fields

@@ -14,11 +14,9 @@ def test_equilibriumEOM_singlet(singletBenchmarkEOM_equilibrium: Tuple[WallGo.EO
     This should match the LTE wall velocity
     """
 
-    ## WIP
-    
     eom, BM = singletBenchmarkEOM_equilibrium
 
-    vwLoop = eom.findWallVelocityMinimizeAction()[0]
+    vwLoop, _ = eom.findWallVelocityMinimizeAction()
     vwLTE = BM.expectedResults["vwLTE"]
 
     assert(vwLoop == pytest.approx(vwLTE, rel = 1e-2))

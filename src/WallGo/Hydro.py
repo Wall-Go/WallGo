@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-3, atol=1e-6):
+    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters

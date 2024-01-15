@@ -194,7 +194,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         ## Do note that for negative m^2 the integrals become wild and convergence is both slow and bad,
         ## so you may want to consider taking the absolute value of m^2. We will not enforce this however
             
-        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong array T input. 
+        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong with array T input. 
         ## TODO really not a fan of hardcoded axis index 
          
         m2, nb, _ = bosons

@@ -15,17 +15,17 @@ class GenericModel(ABC):
     '''
 
 
-    ## Particle array property, this should hold all particles 
+    ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones) 
     @property
     @abstractmethod
-    def particles(self) -> np.ndarray[Particle]:
+    def particles(self) -> list[Particle]:
         pass
 
 
     ## Another particle array for holding just the out-of-equilibrium particles
     @property
     @abstractmethod
-    def outOfEquilibriumParticles(self) -> np.ndarray[Particle]:
+    def outOfEquilibriumParticles(self) -> list[Particle]:
         pass
 
     ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
@@ -55,13 +55,14 @@ class GenericModel(ABC):
     
 
 
-    ## Common routine for defining a new particle. Usually should not be overriden
     def addParticle(self, particleToAdd: Particle) -> None:
-        self.particles = np.append(self.particles, particleToAdd)
+        ## Common routine for defining a new particle. Usually should not be overriden
+
+        self.particles.append(particleToAdd)
         
         # add to out-of-eq particles too if applicable
         if (not particleToAdd.inEquilibrium):
-            self.outOfEquilibriumParticles = np.append(self.outOfEquilibriumParticles, particleToAdd)
+            self.outOfEquilibriumParticles.append(particleToAdd)
 
 
     ## Go from whatever input parameters to renormalized Lagrangian parameters. Override this if your inputs are something else than Lagrangian parameters

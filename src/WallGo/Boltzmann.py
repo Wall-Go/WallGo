@@ -6,38 +6,43 @@ import codecs # for decoding unicode string from hdf5 file
 from copy import deepcopy
 
 from .Grid import Grid
-from .Polynomial import Polynomial
+from .Polynomial2 import Polynomial
 from .Particle import Particle
 from .helpers import boostVelocity
 from .WallGoUtils import getSafePathToResource
+from .Fields import Fields
 
-## LN: why is the field profile here?
+"""LN: What's going on with the fieldProfile array here? When constructing a background in EOM.wallPressure(), 
+it explicitly reshapes the input fieldProfile to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
+that just removes the endspoints.
+"""
+
 class BoltzmannBackground:
     def __init__(
         self,
-        velocityMid,
-        velocityProfile,
-        fieldProfile,
-        temperatureProfile,
-        polynomialBasis="Cardinal",
+        velocityMid: np.ndarray,
+        velocityProfile: np.ndarray,
+        fieldProfile: Fields,
+        temperatureProfile: np.ndarray,
+        polynomialBasis: str = "Cardinal",
     ):
         # assumes input is in the wall frame
         self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfile = np.asarray(fieldProfile)
+        self.fieldProfile = fieldProfile.view(Fields) ## NEEDS to be Fields object
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
         self.vMid = velocityMid
         self.TMid = 0.5 * (temperatureProfile[0] + temperatureProfile[-1])
 
-    def boostToPlasmaFrame(self):
+    def boostToPlasmaFrame(self) -> None:
         """
         Boosts background to the plasma frame
         """
         self.velocityProfile = boostVelocity(self.velocityProfile, self.vMid)
         self.vw = boostVelocity(self.vw, self.vMid)
 
-    def boostToWallFrame(self):
+    def boostToWallFrame(self) -> None:
         """
         Boosts background to the wall frame
         """
@@ -50,11 +55,18 @@ class BoltzmannSolver:
     Class for solving Boltzmann equations for small deviations from equilibrium.
     """
 
+    grid: Grid
+    offEqParticles: list[Particle]
+    background: BoltzmannBackground
+    collisionArray: np.ndarray
+
+    """ LN: I've changed the constructor so that neither the background nor particle is required here. This way we can 
+    have a persistent BoltzmannSolver object (in WallGoManager) that does not need to re-read collision integrals all the time.
+    Particles can also be stored in a persistent list. 
+    """
     def __init__(
         self,
         grid: Grid,
-        background: BoltzmannBackground,
-        particle: Particle,
         basisM="Cardinal",
         basisN="Chebyshev",
     ):
@@ -75,18 +87,37 @@ class BoltzmannSolver:
         cls : BoltzmannSolver
             An object of the BoltzmannSolver class.
         """
+        ## LN: This description is definitely not up to date!
+
         self.grid = grid
-        self.background = deepcopy(background)
-        self.background.boostToPlasmaFrame()
-        self.particle = particle
+
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
+        ## Position polynomial type
         self.basisM = basisM
+        ## Momentum polynomial type
         self.basisN = basisN
+
+        ## These are set, and can be updated, by our member functions (to be called externally)
+        self.background = None
+        self.offEqParticles = []
+        self.collisionArray = None
+
+
+
+    ## LN: Use this instead of requiring the background already in constructor
+    def setBackground(self, background: BoltzmannBackground) -> None:
+        self.background = deepcopy(background) ## do we need a deepcopy? Does this even work generally?
+        self.background.boostToPlasmaFrame()
+
+
+    def updateParticleList(self, offEqParticles: list[Particle]) -> None:
+
+        for p in offEqParticles:
+            assert isinstance(p, Particle)
+
+        self.offEqParticles = offEqParticles
         
-        ##### collision operator #####
-        collisionFile = self.__collisionFilename()
-        self.readCollision(collisionFile, self.particle)
 
     def getDeltas(self, deltaF=None):
         """
@@ -110,17 +141,29 @@ class BoltzmannSolver:
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
+        ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
+        particle = self.offEqParticles[0]
+
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
         deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM,self.basisN,self.basisN), ('z','pz','pp'), False)
         deltaFPoly.changeBasis('Cardinal')
-        
-        field = self.background.fieldProfile[:, 1:-1]
+
+
+        ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
+        field = self.background.fieldProfile.TakeSlice(1, -1, axis = self.background.fieldProfile.overFieldPoints)
+
+        ## LN: Please comment what these unholy slicings are doing
+
         pz = self.grid.pzValues[None,:,None]
-        E = np.sqrt(self.particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
+
+        E = np.sqrt(particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
+
+
         dpzdrz = 2*self.background.TMid/(1-self.grid.rzValues**2)[None,:,None]
         dppdrp = self.background.TMid/(1-self.grid.rpValues)[None,None,:]
+
         integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
         
         Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
@@ -177,6 +220,12 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
+
+        ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
+        particle = self.offEqParticles[0]
+
+        ## LN: Please comment what these unholy slicings are doing and why!
+
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
@@ -186,21 +235,33 @@ class BoltzmannSolver:
         # compactified coordinates
         chi, rz, rp = self.grid.getCompactCoordinates() # compact
 
-        # background profiles
-        T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
-        v = self.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
         vw = self.background.vw
 
-        # fluctuation mode
-        statistics = -1 if self.particle.statistics == "Fermion" else 1
-        # TODO: indices order not consistent across different functions.
-        msq = self.particle.msqVacuum(field)
+        # background profiles
+        T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
+        v = self.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
+
+        ## all field points apart from the boundaries (why?)
+        field = self.background.fieldProfile.TakeSlice(1, -1, axis = self.background.fieldProfile.overFieldPoints)
+        
+
+        ## --- HACK. Apparently we need to add more axes, but this destroys the common Field object layout. 
+        ## So do this: compute particle mass-squared first in usual way, then add axes both to field and msq and proceed 
+        ## as previously.
+        
+        #field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis] # <- this was the old thing. 
+
+        msq = particle.msqVacuum(field)
+        
+        ## add axes
+        msq = msq[:, np.newaxis, np.newaxis].view(np.ndarray)
+        field = field[:, :, np.newaxis, np.newaxis].view(np.ndarray)
+
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fit the background profiles to polynomial
         Tpoly = Polynomial(self.background.temperatureProfile, self.grid,  'Cardinal','z', True)
-        msqpoly = Polynomial(self.particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
+        msqpoly = Polynomial(particle.msqVacuum(self.background.fieldProfile) ,self.grid,  'Cardinal','z', True)
         vpoly = Polynomial(self.background.velocityProfile, self.grid,  'Cardinal','z', True)
         
         # intertwiner matrices
@@ -236,6 +297,9 @@ class BoltzmannSolver:
         drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
         # equilibrium distribution, and its derivative
+
+        statistics = -1 if particle.statistics == "Fermion" else 1
+
         warnings.filterwarnings("ignore", message="overflow encountered in exp")
         fEq = BoltzmannSolver.__feq(EPlasma / T, statistics)
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
@@ -251,6 +315,7 @@ class BoltzmannSolver:
         )
 
         ##### liouville operator #####
+        ## LN: OOF! Is this really the best way? Please explain the slicings
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -265,7 +330,7 @@ class BoltzmannSolver:
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
-
+       
         # including factored-out T^2 in collision integrals
         collisionArray = (
             (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -293,13 +358,20 @@ class BoltzmannSolver:
         # returning results
         return operator, source
 
-    def readCollision(self, collisionFile, particle):
+
+    def readCollision(self, collisionFile: str) -> None:
         """
         Collision integrals, a rank 4 array, with shape
         :py:data:`(len(pz), len(pp), len(pz), len(pp))`.
 
         See equation (30) of [LC22]_.
+
+        Only works with HDF5 files.
         """
+
+        ## LN: This is currently hardcoded to work only with the first particle in our list. TODO generalize
+        particle = self.offEqParticles[0]
+
         try:
             with h5py.File(collisionFile, "r") as file:
                 metadata = file["metadata"]
@@ -309,13 +381,20 @@ class BoltzmannSolver:
                 )
                 BoltzmannSolver.__checkBasis(basisType)
 
+                assert basisSize == self.grid.N, f"Momentum grid size mismatch when loading collision integrals! Got {basisSize}, expected {self.grid.N}"
+
                 # LN: currently the dataset names are of form "particle1, particle2". Here it's just top, top for now  
                 datasetName = particle.name + ", " + particle.name
                 collisionArray = np.array(file[datasetName][:])
+
+                print("Read collision file %s, dataset: %s" % (collisionFile, datasetName))
+
         except FileNotFoundError:
-            print("BoltzmannSolver error: %s not found" % collisionFile)
-            raise
-            
+            raise FileNotFoundError("Error loading collision integrals: %s not found" % collisionFile)
+        
+
+        ## LN: What's this ?!
+
         self.collisionArray = np.transpose(np.flip(collisionArray,(2,3)),(2,3,0,1))
         
         if self.basisN == 'Cardinal':
@@ -324,18 +403,20 @@ class BoltzmannSolver:
             Tn1 = np.cos(n1[:,None]*np.arccos(self.grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,self.grid.rzValues[None,:])
             Tn2 = np.cos(n2[:,None]*np.arccos(self.grid.rpValues[None,:])) - 1
             self.collisionArray = np.sum(np.linalg.inv(Tn1)[None,None,:,None,:,None]*np.linalg.inv(Tn2)[None,None,None,:,None,:]*self.collisionArray[:,:,None,None,:,:],(-1,-2))
+            ## OOF!
 
 
+    ## LN: old, we don't need this
+    """     
     def __collisionFilename(self):
-        """
-        A filename convention for collision integrals.
-        """
+        #A filename convention for collision integrals.
 
         # LN: This is temporary, for release version we won't package collision files and certainly not hardcode them here
         suffix = "hdf5"
         fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
         return getSafePathToResource("Data/" + fileName)
 
+    """
 
     def __checkBasis(basis):
         """
@@ -354,6 +435,8 @@ class BoltzmannSolver:
     @staticmethod
     def __dfeq(x, statistics):
         x = np.asarray(x)
+
+        ## LN: What are the x > 100 here??
         if np.isclose(statistics, 1, atol=1e-14):
             return np.where(x > 100, -np.exp(-x), -np.exp(x) / np.expm1(x) ** 2)
         else:

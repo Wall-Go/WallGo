@@ -44,8 +44,6 @@ def singletBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkMod
 
     yield BenchmarkModel(model, singletBenchmarkPoint)
 
-
-
 """----- Fixtures for more complicated things that depend on the model/Veff. 
 I'm making these return also the original benchmark point so that it's easier to validate results, 
 eg. read from BenchmarkPoint.expectedResults"""
@@ -122,23 +120,18 @@ def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallGo.Therm
 @pytest.fixture(scope="session")
 def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
-    M, N = 20, 20
+    M, N = 22, 11
     
     # magic 0.05
     grid = WallGo.Grid(M, N, 0.05, 100)
 
     return grid, WallGo.Polynomial(grid)
 
-
-
-"""Test particle. This is also defined in our main conftest.py, but maybe better to have a separate one dedicated for our singlet benchmark.
-TODO fix masses
-"""
 @pytest.fixture(scope="session")
-def singletBenchmarkParticle():
+def singletBenchmarkParticle() -> WallGo.Particle:
     return WallGo.Particle(
         name="top",
-        msqVacuum=lambda phi: 0.5 * phi**2,
+        msqVacuum=lambda phi: 0.5 * phi.GetField(0)**2,
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
         inEquilibrium=False,
@@ -146,21 +139,28 @@ def singletBenchmarkParticle():
         multiplicity=1,
     )
 
-
-
 """EOM object for the singlet model, no out-of-equilibrium contributions.
 This still needs a particle input though (intended??) so I'm using the particle fixture defined in our main conftest.py
 """
+
 @pytest.fixture(scope="session")
-def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
+def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid):
+
+    boltzmannSolver = WallGo.BoltzmannSolver(singletBenchmarkGrid, basisM = "Cardinal", basisN = "Chebyshev")
+    boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
+    return boltzmannSolver
+
+@pytest.fixture(scope="session")
+def singletBenchmarkEOM_equilibrium(singletBenchmarkBoltzmannSolver, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid: WallGo.Grid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
     hydro, _ = singletBenchmarkHydro
     grid, _ = singletBenchmarkGrid
+    boltzmannSolver = singletBenchmarkBoltzmannSolver
 
     fieldCount = 2
 
     ## TODO fix error tolerance?
-    eom = WallGo.EOM(singletBenchmarkParticle, thermo, hydro, grid, fieldCount, includeOffEq=False)
+    eom = WallGo.EOM(boltzmannSolver, thermo, hydro, grid, fieldCount, includeOffEq=False)
 
     return eom, BM

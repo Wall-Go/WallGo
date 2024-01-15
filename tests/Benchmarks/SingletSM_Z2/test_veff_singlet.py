@@ -86,3 +86,32 @@ def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkMod
 
     assert Tc == pytest.approx(expectedTc, rel=relativeTolerance)
 
+
+## ---- Derivative tests
+
+@pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
+        (WallGo.Fields([110, 130]), 100, WallGo.Fields([512754.5552253, 1437167.06776619])),
+        (WallGo.Fields([130, 130]), 100, WallGo.Fields([670916.4147377, 1712203.95803452]))
+])
+def test_singletModelDerivField(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
+
+    relativeTolerance = 1e-6
+
+    model = singletBenchmarkModel.model
+
+    res = model.effectivePotential.derivField(fields, temperature)
+    assert res == pytest.approx(expectedVeffValue, rel=relativeTolerance)
+
+
+@pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
+        (WallGo.Fields([110, 130]), 100, -46660927.93128967),
+        (WallGo.Fields([130, 130]), 100, -46494985.30003357)
+])
+def test_singletModelDerivT(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: float):
+
+    relativeTolerance = 1e-6
+
+    model = singletBenchmarkModel.model
+
+    res = model.effectivePotential.derivT(fields, temperature)
+    assert res == pytest.approx(expectedVeffValue, rel=relativeTolerance)

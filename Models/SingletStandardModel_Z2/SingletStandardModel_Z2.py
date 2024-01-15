@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 import os
+import pathlib
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -15,8 +16,8 @@ from WallGo import Fields
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
 
-    particles = np.array([], dtype=Particle)
-    outOfEquilibriumParticles = np.array([], dtype=Particle)
+    particles = []
+    outOfEquilibriumParticles = []
     modelParameters = {}
 
     ## Specifying this is REQUIRED
@@ -421,8 +422,14 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- Here is where you'd start an input parameter loop if doing parameter-space scans ----
+    ## ---- File name for collisions integrals. Currently we just load this
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_top_top_N11.hdf5" 
+    manager.loadCollisionFile(collisionFileName)
+
+
+    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
     
+
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
@@ -453,9 +460,35 @@ def main():
 
         """WallGo can now be used to compute wall stuff!"""
 
-        ## LN: this currently computes wall speed in different approximations. 
-        ## I suppose we eventually want to have different functions or options to control what to compute.
-        manager.solveWall()
+        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+
+        vwLTE = manager.wallSpeedLTE()
+
+        print(f"LTE wall speed: {vwLTE}")
+
+        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+
+        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+        wallParams: WallGo.WallParams
+
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+
+        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams.widths=}")
+        print(f"{wallParams.offsets=}")
+
+        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+        bIncludeOffEq = True
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+
+        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+
+        print(f"{wallVelocity=}")
+        print(f"{wallParams.widths=}")
+        print(f"{wallParams.offsets=}")
 
 
     # end parameter-space loop

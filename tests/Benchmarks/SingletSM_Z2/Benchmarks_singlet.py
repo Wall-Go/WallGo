@@ -29,9 +29,9 @@ BM1 = BenchmarkPoint(
 
     config = {
         ## Give TMin, TMax, dT as a tuple
-        "interpolateTemperatureRange" : (0.0, 1.2*108.22, 1.0), ## upper bound is 1.2 * Tc
-        "hydroTMinGuess" : 0.0,
-        "hydroTMaxGuess" : 1.2*108.22
+        "interpolateTemperatureRange" : (79.85352365651234, 122.82493098783233, 0.5), ##Set by hand to appropriate values, obtained from Template model
+        "hydroTMinGuess" : 79.85352365651234, ##Set by hand to appropriate value, obtained from Template model
+        "hydroTMaxGuess" : 122.82493098783233 ##Set by hand to appropriate value, obtained from Template model
     },
 
     ## Will probs need to adjust these once we decide on what our final implementation of the benchmark model is
