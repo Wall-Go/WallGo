@@ -102,3 +102,21 @@ def test_singletModelDerivField(singletBenchmarkModel: BenchmarkModel, fields: W
 
     res = model.effectivePotential.derivField(fields, temperature)
     assert res == pytest.approx( expectedVeffValue, rel=relativeTolerance)
+
+
+@pytest.mark.parametrize("fields, temperature, expectedVeffValue", [
+        (WallGo.Fields([110, 130]), 100, -46660927.93128967),
+        (WallGo.Fields([130, 130]), 100, -46494985.30003357)
+])
+def test_singletModelDerivT(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
+
+    relativeTolerance = 1e-6
+
+    ## Could also take model objects as inputs instead of BM. But doesn't really matter as long as the model is fast to construct
+
+    model = singletBenchmarkModel.model
+
+    ## This tests real part only!!
+
+    res = model.effectivePotential.derivT(fields, temperature)
+    assert res == pytest.approx( expectedVeffValue, rel=relativeTolerance)
