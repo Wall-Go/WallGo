@@ -161,8 +161,14 @@ class BoltzmannSolver:
         E = np.sqrt(particle.msqVacuum(field)[:,None,None]+pz**2+self.grid.ppValues[None,None,:]**2)
 
 
+        ## Temperature here should be the T-scale of grid instead of TMid. By Benoit
+        """
         dpzdrz = 2*self.background.TMid/(1-self.grid.rzValues**2)[None,:,None]
         dppdrp = self.background.TMid/(1-self.grid.rpValues)[None,None,:]
+        """
+
+        dpzdrz = 2*self.grid.momentumFalloffT/(1-self.grid.rzValues**2)[None,:,None]
+        dppdrp = self.grid.momentumFalloffT/(1-self.grid.rpValues)[None,None,:]
 
         integrand = dpzdrz*dppdrp*self.grid.ppValues[None,None,:]/(4*np.pi**2*E)
         
