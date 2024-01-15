@@ -187,7 +187,10 @@ class BoltzmannSolver:
         source = np.reshape(source, deltaFShape, order="C")
         truncationError = self.estimateTruncationError(deltaF)
         print(f"{truncationError=}")
-        self.estimateFiniteDifferenceError(deltaF, source, collision)
+        finiteDifferenceError = self.estimateFiniteDifferenceError(
+                deltaF, source, collision
+        )
+        print(f"{finiteDifferenceError=}")
 
         return deltaF
 
@@ -209,21 +212,23 @@ class BoltzmannSolver:
         deltaFPoly = Polynomial(
             deltaF, self.grid, basisTypes, basisNames, False
         )
+
+        # mean(|deltaF|) in the Cardinal basis as the norm
+        deltaFPoly.changeBasis('Cardinal')
+        deltaFMeanAbs = np.mean(abs(deltaFPoly.coefficients[:, :, :]))
+
+        # last coefficient in Chebyshev basis estimates error
         deltaFPoly.changeBasis('Chebyshev')
 
         # estimating truncation errors in each direction
-        truncationErrorChi = (
-            np.linalg.norm(deltaFPoly[-1, :, :]) / np.linalg.norm(deltaFPoly[0, :, :])
-        )
-        truncationErrorPz = (
-            np.linalg.norm(deltaFPoly[:, -1, :]) / np.linalg.norm(deltaFPoly[:, 0, :])
-        )
-        truncationErrorPp = (
-            np.linalg.norm(deltaFPoly[:, :, -1]) / np.linalg.norm(deltaFPoly[:, :, 0])
-        )
-        print(f"Truncation errors: {truncationErrorChi=}, {truncationErrorPz=}, {truncationErrorPp=}")
-        return max(
-            (truncationErrorChi, truncationErrorPz, truncationErrorPp)
+        truncationErrorChi = np.mean(abs(deltaFPoly.coefficients[-1, :, :]))
+        truncationErrorPz = np.mean(abs(deltaFPoly.coefficients[:, -1, :]))
+        truncationErrorPp = np.mean(abs(deltaFPoly.coefficients[:, :, -1]))
+
+        # estimating the total truncation error as the maximum of these three
+        return (
+            max((truncationErrorChi, truncationErrorPz, truncationErrorPp))
+            / deltaFMeanAbs
         )
 
     def estimateFiniteDifferenceError(self, deltaF, source, collision):
@@ -240,9 +245,7 @@ class BoltzmannSolver:
         -------
 
         """
-        print("\nStarting testSolution")
-        # the right hand side, to reproduce
-        # with collision term removed
+        # the right hand side, to reproduce, with collision term removed
         rhs = source - np.einsum(
             "ijkabc, abc -> ijk",
             collision,
@@ -250,7 +253,6 @@ class BoltzmannSolver:
         )
 
         # moving into Cardinal basis
-        print("moving into Cardinal basis")
         basisTypes = (self.basisM, self.basisN, self.basisN)
         basisNames = ('z', 'pz', 'pp')
         deltaFPoly = Polynomial(
@@ -258,8 +260,7 @@ class BoltzmannSolver:
         )
         deltaFPoly.changeBasis('Cardinal')
 
-        # the left hand side, finite differences
-        print("the left hand side, finite differences")
+        # starting computation of the left hand side, with finite differences
         chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
         xi, pz, pp = self.grid.getCoordinates(endpoints=False)
         pz = pz[np.newaxis, :, np.newaxis]
@@ -331,38 +332,7 @@ class BoltzmannSolver:
         )
 
         # quantifying discrepancy with finite difference approximation
-        errorFiniteDiff = np.linalg.norm(lhs - rhs) / np.linalg.norm(rhs)
-        print(f"{errorFiniteDiff = }")
-
-        # testing result
-        # optimistic estimate of convergence in momentum directions
-        convergenceOptimistic = (
-            np.linalg.norm(deltaF[:, -1, -1]) / np.linalg.norm(deltaF[:, 0, 0])
-        )
-        print(f"{convergenceOptimistic = }")
-        convergencePz = np.linalg.norm(deltaF, axis=(0, 2))
-        convergencePp = np.linalg.norm(deltaF, axis=(0, 1))
-        x = self.grid.rzValues
-        y = np.log(convergencePz)
-        popt, pcov = np.polyfit(x, y, 1, cov=True)
-        print(f"fit parameters {popt[0]}({np.sqrt(pcov[0][0])}), {popt[1]}({np.sqrt(pcov[1][1])})")
-        print(f"estimated error = {np.exp(popt[1])}")
-        x = self.grid.rpValues
-        y = np.log(convergencePp)
-        popt, pcov = np.polyfit(x, y, 1, cov=True)
-        print(f"fit parameters {popt[0]}({np.sqrt(pcov[0][0])}), {popt[1]}({np.sqrt(pcov[1][1])})")
-        print(f"estimated error = {np.exp(popt[1])}")
-
-        # testing other stuff
-        basisTypes = (self.basisM, self.basisN, self.basisN)
-        basisNames = ('z', 'pz', 'pp')
-        deltaFPoly = Polynomial(
-            deltaF, self.grid, basisTypes, basisNames, False
-        )
-        deltaFPoly.changeBasis('Cardinal')
-        exit()
-
-        return result
+        return np.linalg.norm(lhs - rhs) / np.linalg.norm(rhs)
 
 
     def buildLinearEquations(self):
@@ -371,7 +341,6 @@ class BoltzmannSolver:
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        print("Starting buildLinearEquations")
         # coordinates
         xi, pz, pp = self.grid.getCoordinates(endpoints=False)  # non-compact
         xi = xi[:, np.newaxis, np.newaxis]
@@ -463,7 +432,6 @@ class BoltzmannSolver:
         )
 
         ##### liouville operator #####
-        print("Building liouville operator")
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -480,7 +448,6 @@ class BoltzmannSolver:
         )
 
         # including factored-out T^2 in collision integrals
-        print("Building collision operator")
         collision = (
             (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
             * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
@@ -488,12 +455,9 @@ class BoltzmannSolver:
         )
 
         ##### total operator #####
-        print("Summing operators")
-        print(f"Shapes: {liouville.shape=}, {collision.shape=}")
         operator = liouville + collision
 
         # reshaping indices
-        print("reshaping indices")
         N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
         source = np.reshape(source, N_new, order="C")
         operator = np.reshape(operator, (N_new, N_new), order="C")
@@ -505,7 +469,6 @@ class BoltzmannSolver:
         # print(np.sort(1/np.abs(np.real(eigs)))[-4:],np.sort(1/np.abs(np.real(eigs2)))[-4:])
 
         # returning results
-        print("Ending buildLinearEquations")
         return operator, source, liouville, collision
 
     def readCollision(self, collisionFile, particle):
