@@ -4,7 +4,7 @@ import numpy as np  # arrays and maths
 import pathlib 
 
 from WallGo.Grid import Grid
-from WallGo.Polynomial2 import Polynomial
+from WallGo.Polynomial import Polynomial
 from WallGo.Boltzmann import BoltzmannSolver
 
 

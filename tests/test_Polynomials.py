@@ -3,172 +3,41 @@ import pytest
 from WallGo.Polynomial import Polynomial
 from WallGo.Grid import Grid
 
-def test_cardinal():
-    r"""
-    Tests if the cardinal basis evaluated on the grid returns a Kronecker delta
+grid = Grid(4,4,1,1)
 
-    """
+# Test on the polynomial 1/2+x-x^2/2-x^3
+
+def test_evaluate():
+    polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
+    polyCheb = Polynomial([-0.25,-0.25,0],grid,'Chebyshev','z',False)
+    x = [[-1,-0.3,0.2,0.7,1]]
+    np.testing.assert_allclose(polyCard.evaluate(x),[0., 0.182, 0.672, 0.612, 0.],rtol=1e-15,atol=1e-15)
+    np.testing.assert_allclose(polyCheb.evaluate(x),[0., 0.182, 0.672, 0.612, 0.],rtol=1e-15,atol=1e-15)
     
-    grid = Grid(16,21,1,1)
-    chiValues,rzValues,rpValues = grid.getCompactCoordinates(True)
+def test_changeBasis():
+    polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
+    polyCheb = Polynomial([-0.25,-0.25,0],grid,'Chebyshev','z',False)
+    polyCard.changeBasis('Chebyshev')
+    polyCheb.changeBasis('Cardinal')
+    np.testing.assert_allclose(polyCard.coefficients, [-0.25,-0.25,0],rtol=1e-15,atol=1e-15)
+    np.testing.assert_allclose(polyCheb.coefficients, [(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],rtol=1e-15,atol=1e-15)
     
-    pol = Polynomial(grid)
+def test_deriv():
+    polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
+    polyCheb = Polynomial([-0.25,-0.25,0],grid,'Chebyshev','z',False)
     
-    cardChi = pol.cardinal(chiValues,np.arange(chiValues.size),'z')    
-    cardRz = pol.cardinal(rzValues,np.arange(rzValues.size),'pz')   
-    cardRp = pol.cardinal(rpValues,np.arange(rpValues.size),'pp')   
-        
-    maxDiffChi = np.amax(np.abs(cardChi-np.identity(chiValues.size)))
-    maxDiffRz = np.amax(np.abs(cardRz-np.identity(rzValues.size)))
-    maxDiffRp = np.amax(np.abs(cardRp-np.identity(rpValues.size)))
+    derivCard = polyCard.derivative(axis=0)
+    derivCheb = polyCheb.derivative(axis=0)
     
-    assert maxDiffChi == pytest.approx(0,abs=1e-10) and maxDiffRz == pytest.approx(0,abs=1e-10) and maxDiffRp == pytest.approx(0,abs=1e-10)
+    np.testing.assert_allclose(derivCard.coefficients, [-1., -0.5+1/np.sqrt(2), 1., -0.5-1/np.sqrt(2), -3.],rtol=1e-15,atol=1e-15)
+    np.testing.assert_allclose(derivCheb.coefficients, [-1., -0.5+1/np.sqrt(2), 1., -0.5-1/np.sqrt(2), -3.],rtol=1e-15,atol=1e-15)
     
-def test_evaluateCardinal():
-    """
-    Interpolates a function f by a cardinal series and tests if this is a good approximation on and between the grid points.
-
-    """
+    derivCheb.changeBasis('Chebyshev')
+    np.testing.assert_allclose(derivCheb.coefficients, [-0.5,-1,-1.5,0,0],rtol=1e-15,atol=1e-15)
     
-    M,N = 20,20
-    grid = Grid(M,N,1,1)
-    #grid.chiValues = np.linspace(-1,1,M+1)[1:-1]
-    #grid.rzValues = np.linspace(-1,1,N+1)[1:-1]
-    #grid.rpValues = np.linspace(-1,1,N)[:-1]
-    pol = Polynomial(grid)
-    chiValues,rzValues,rpValues = grid.getCompactCoordinates(True)
+def test_integrate():
+    polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
+    polyCheb = Polynomial([-0.25,-0.25,0],grid,'Chebyshev','z',False)
     
-    f = lambda x,y,z: np.exp(-(2*x)**2-(3*y)**2-(1.5*z)**2)*(1-x**2)*(1-y**2)*(1-z)
-    
-    fGrid = f(chiValues[:,None,None],rzValues[None,:,None],rpValues[None,None,:])
-    fOffGrid = f((chiValues[:-1,None,None]+chiValues[1:,None,None])/2,(rzValues[None,:-1,None]+rzValues[None,1:,None])/2,(rpValues[None,None,:-1]+rpValues[None,None,1:])/2)
-    
-    # fOnGridSeries = np.zeros(fGrid.shape)
-    # fOffGridSeries = np.zeros((M,N,N-1))
-    
-    completeGrid = np.transpose(np.meshgrid(chiValues,rzValues,rpValues,indexing='ij'), axes=(1,2,3,0))
-    completeOffGrid = np.transpose(np.meshgrid((chiValues[:-1]+chiValues[1:])/2,(rzValues[:-1]+rzValues[1:])/2,(rpValues[:-1]+rpValues[1:])/2
-                                                ,indexing='ij'), axes=(1,2,3,0))
-    
-    fOnGridSeries = pol.evaluateCardinal(completeGrid,fGrid)
-    fOffGridSeries = pol.evaluateCardinal(completeOffGrid,fGrid)
-    
-    # for i in range(M+1):
-    #     for j in range(N+1):
-    #         for k in range(N):
-    #             fOnGridSeries[i,j,k] = pol.evaluateCardinal([chiValues[i],rzValues[j],rpValues[k]],fGrid)
-    #             if i<M and j<N and k<N-1:
-    #                 fOffGridSeries[i,j,k] = pol.evaluateCardinal([(chiValues[i]+chiValues[i+1])/2,(rzValues[j]+rzValues[j+1])/2,(rpValues[k]+rpValues[k+1])/2],fGrid)
-    
-    maxDiffOnGrid = np.amax(np.abs(fOnGridSeries-fGrid))
-    maxDiffOffGrid = np.amax(np.abs(fOffGridSeries-fOffGrid))
-    
-    assert maxDiffOnGrid == pytest.approx(0,abs=1e-10) and maxDiffOffGrid == pytest.approx(0,abs=1e-4)
-    
-def test_evaluateChebyshev():
-    """
-    Interpolates a function f by a cardinal series and tests if this is a good approximation on and between the grid points.
-
-    """
-    
-    M,N = 20,20
-    grid = Grid(M,N,1,1)
-    pol = Polynomial(grid)
-    chiValues,rzValues,rpValues = grid.getCompactCoordinates(False)
-    
-    f = lambda x,y,z: np.exp(-(2*x)**2-(3*y)**2-(1.5*z)**2)*(1-x**2)*(1-y**2)*(1-z)
-    
-    fGrid = f(chiValues[:,None,None],rzValues[None,:,None],rpValues[None,None,:])
-    fOffGrid = f((chiValues[:-1,None,None]+chiValues[1:,None,None])/2,(rzValues[None,:-1,None]+rzValues[None,1:,None])/2,(rpValues[None,None,:-1]+rpValues[None,None,1:])/2)
-    
-    completeGrid = np.transpose(np.meshgrid(chiValues,rzValues,rpValues,indexing='ij'), axes=(1,2,3,0))
-    completeOffGrid = np.transpose(np.meshgrid((chiValues[:-1]+chiValues[1:])/2,(rzValues[:-1]+rzValues[1:])/2,(rpValues[:-1]+rpValues[1:])/2
-                                                ,indexing='ij'), axes=(1,2,3,0))
-    
-    matrix = np.linalg.inv(pol.chebyshevMatrix('z'))[:,None,None,:,None,None]*np.linalg.inv(pol.chebyshevMatrix('pz'))[None,:,None,None,:,None]*np.linalg.inv(pol.chebyshevMatrix('pp'))[None,None,:,None,None,:]
-    spectral = np.sum(matrix*fGrid[None,None,None,:,:,:],axis=(-3,-2,-1))
-    
-    fOnGridSeries = pol.evaluateChebyshev(completeGrid,spectral)
-    fOffGridSeries = pol.evaluateChebyshev(completeOffGrid,spectral)
-    
-    maxDiffOnGrid = np.amax(np.abs(fOnGridSeries-fGrid))
-    maxDiffOffGrid = np.amax(np.abs(fOffGridSeries-fOffGrid))
-    
-    assert maxDiffOnGrid == pytest.approx(0,abs=1e-10) and maxDiffOffGrid == pytest.approx(0,abs=1e-4)
-    
-    
-def test_cardinalDeriv():
-    """
-    Compares the cardinal derivative matrices to finite difference derivatives.
-
-    """
-    h = 1e-6
-    
-    M,N = 20,21
-    grid = Grid(M,N,1,1)
-    pol = Polynomial(grid)
-    chiValues,rzValues,rpValues = grid.getCompactCoordinates(True)
-    
-    finiteDerivChi = (pol.cardinal(chiValues+h,np.arange(M+1),'z')-pol.cardinal(chiValues-h,np.arange(M+1),'z'))/(2*h)
-    finiteDerivRz = (pol.cardinal(rzValues+h,np.arange(N+1),'pz')-pol.cardinal(rzValues-h,np.arange(N+1),'pz'))/(2*h)
-        
-    maxDiffChi = np.amax(np.abs(finiteDerivChi-pol.cardinalDeriv('z',True)))
-    maxDiffRz = np.amax(np.abs(finiteDerivRz-pol.cardinalDeriv('pz',True)))
-    assert maxDiffChi == pytest.approx(0,abs=1e-6) and maxDiffRz == pytest.approx(0,abs=1e-6)
-    
-def test_chebyshevDeriv():
-    """
-    Compares the Chebyshev derivative matrices to finite difference derivatives.
-
-    """
-    h = 1e-6
-    
-    M,N = 20,21
-    grid = Grid(M,N,1,1)
-    pol = Polynomial(grid)
-    chiValues,rzValues,rpValues = grid.getCompactCoordinates(False)
-    
-    finiteDerivChi = (pol.chebyshev(chiValues+h,np.arange(2,M+1),'full')-pol.chebyshev(chiValues-h,np.arange(2,M+1),'full'))/(2*h)
-    finiteDerivRz = (pol.chebyshev(rzValues+h,np.arange(2,N+1),'full')-pol.chebyshev(rzValues-h,np.arange(2,N+1),'full'))/(2*h)
-        
-    maxDiffChi = np.amax(np.abs(finiteDerivChi-pol.chebyshevDeriv('z',False)))
-    maxDiffRz = np.amax(np.abs(finiteDerivRz-pol.chebyshevDeriv('pz',False)))
-    assert maxDiffChi == pytest.approx(0,abs=1e-6) and maxDiffRz == pytest.approx(0,abs=1e-6)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+    assert np.isclose(polyCard.integrate(w=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)
+    assert np.isclose(polyCheb.integrate(w=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)

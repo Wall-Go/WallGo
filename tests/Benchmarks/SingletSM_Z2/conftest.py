@@ -125,8 +125,10 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
     # magic 0.05
     grid = WallGo.Grid(M, N, 0.05, 100)
 
-    return grid, WallGo.Polynomial(grid)
+    return grid
 
+"""
+## TODO sensible masses
 @pytest.fixture(scope="session")
 def singletBenchmarkParticle() -> WallGo.Particle:
     return WallGo.Particle(
@@ -138,10 +140,9 @@ def singletBenchmarkParticle() -> WallGo.Particle:
         ultrarelativistic=False,
         multiplicity=1,
     )
-
-"""EOM object for the singlet model, no out-of-equilibrium contributions.
-This still needs a particle input though (intended??) so I'm using the particle fixture defined in our main conftest.py
 """
+
+
 
 @pytest.fixture(scope="session")
 def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid):
@@ -150,12 +151,14 @@ def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singl
     boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
     return boltzmannSolver
 
+
+## EOM object for the singlet model, no out-of-equilibrium contributions.
 @pytest.fixture(scope="session")
 def singletBenchmarkEOM_equilibrium(singletBenchmarkBoltzmannSolver, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid: WallGo.Grid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
     hydro, _ = singletBenchmarkHydro
-    grid, _ = singletBenchmarkGrid
+    grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
 
     fieldCount = 2

@@ -6,7 +6,7 @@ import codecs # for decoding unicode string from hdf5 file
 from copy import deepcopy
 
 from .Grid import Grid
-from .Polynomial2 import Polynomial
+from .Polynomial import Polynomial
 from .Particle import Particle
 from .helpers import boostVelocity
 from .WallGoUtils import getSafePathToResource

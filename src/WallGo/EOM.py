@@ -7,7 +7,7 @@ import scipy.optimize
 from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
 from scipy.integrate import quad_vec,quad
 from scipy.interpolate import UnivariateSpline
-from .Polynomial2 import Polynomial
+from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .GenericModel import GenericModel
