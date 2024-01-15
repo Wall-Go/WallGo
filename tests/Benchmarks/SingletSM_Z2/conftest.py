@@ -151,7 +151,7 @@ def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singl
     return boltzmannSolver
 
 @pytest.fixture(scope="session")
-def singletBenchmarkEOM_equilibrium(singletBenchmarkBoltzmannSolver, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
+def singletBenchmarkEOM_equilibrium(singletBenchmarkBoltzmannSolver, singletBenchmarkThermo_interpolate, singletBenchmarkHydro, singletBenchmarkGrid: WallGo.Grid) -> Tuple[WallGo.EOM, BenchmarkPoint]:
     
     thermo, BM = singletBenchmarkThermo_interpolate
     hydro, _ = singletBenchmarkHydro

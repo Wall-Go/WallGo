@@ -14,8 +14,6 @@ def test_equilibriumEOM_singlet(singletBenchmarkEOM_equilibrium: Tuple[WallGo.EO
     This should match the LTE wall velocity
     """
 
-    ## WIP
-    
     eom, BM = singletBenchmarkEOM_equilibrium
 
     vwLoop, _ = eom.findWallVelocityMinimizeAction()
