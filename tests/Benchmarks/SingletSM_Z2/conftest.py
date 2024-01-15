@@ -122,29 +122,12 @@ def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallGo.Therm
 @pytest.fixture(scope="session")
 def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
-    M, N = 20, 20
+    M, N = 22, 11
     
     # magic 0.05
     grid = WallGo.Grid(M, N, 0.05, 100)
 
     return grid, WallGo.Polynomial(grid)
-
-
-
-"""Test particle. This is also defined in our main conftest.py, but maybe better to have a separate one dedicated for our singlet benchmark.
-TODO fix masses
-"""
-@pytest.fixture(scope="session")
-def singletBenchmarkParticle():
-    return WallGo.Particle(
-        name="top",
-        msqVacuum=lambda phi: 0.5 * phi**2,
-        msqThermal=lambda T: 0.1 * T**2,
-        statistics="Fermion",
-        inEquilibrium=False,
-        ultrarelativistic=False,
-        multiplicity=1,
-    )
 
 
 
@@ -167,9 +150,7 @@ def singletBenchmarkEOM_equilibrium(singletBenchmarkParticle, singletBenchmarkTh
 
 
 @pytest.fixture(scope="session")
-def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, grid: WallGo.Grid):
+def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid):
 
-    singletBenchmarkModel
-
-    boltzmannSolver = WallGo.BoltzmannSolver(grid, basisM = "Cardinal", basisN = "Chebyshev")
+    boltzmannSolver = WallGo.BoltzmannSolver(singletBenchmarkGrid, basisM = "Cardinal", basisN = "Chebyshev")
     boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
