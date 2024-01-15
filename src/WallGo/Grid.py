@@ -128,7 +128,7 @@ class Grid:
             rz = np.array([-1] + list(self.rzValues) + [1])
             rp = np.array(list(self.rpValues) + [1])
         else:
-            chi,rz,rp = self.chiValues, self.rzValues, self.rpValues
+            chi, rz, rp = self.chiValues, self.rzValues, self.rpValues
             
         if direction == 'z':
             return chi

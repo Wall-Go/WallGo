@@ -185,11 +185,48 @@ class BoltzmannSolver:
 
         # testing result
         source = np.reshape(source, deltaFShape, order="C")
-        self.testSolution(deltaF, source, collision)
+        truncationError = self.estimateTruncationError(deltaF)
+        print(f"{truncationError=}")
+        self.estimateFiniteDifferenceError(deltaF, source, collision)
 
-        return result
+        return deltaF
 
-    def testSolution(self, deltaF, source, collision):
+    def estimateTruncationError(self, deltaF):
+        r"""
+        Quick estimate of the polynomial truncation error using
+        John Boyd's Rule-of-thumb-2:
+            the last coefficient of a Chebyshev polynomial expansion
+            is the same order-of-magnitude as the truncation error.
+
+        Returns
+        -------
+        truncationError : float
+            Estimate of the relative trucation error.
+        """
+        # constructing Polynomial
+        basisTypes = (self.basisM, self.basisN, self.basisN)
+        basisNames = ('z', 'pz', 'pp')
+        deltaFPoly = Polynomial(
+            deltaF, self.grid, basisTypes, basisNames, False
+        )
+        deltaFPoly.changeBasis('Chebyshev')
+
+        # estimating truncation errors in each direction
+        truncationErrorChi = (
+            np.linalg.norm(deltaFPoly[-1, :, :]) / np.linalg.norm(deltaFPoly[0, :, :])
+        )
+        truncationErrorPz = (
+            np.linalg.norm(deltaFPoly[:, -1, :]) / np.linalg.norm(deltaFPoly[:, 0, :])
+        )
+        truncationErrorPp = (
+            np.linalg.norm(deltaFPoly[:, :, -1]) / np.linalg.norm(deltaFPoly[:, :, 0])
+        )
+        print(f"Truncation errors: {truncationErrorChi=}, {truncationErrorPz=}, {truncationErrorPp=}")
+        return max(
+            (truncationErrorChi, truncationErrorPz, truncationErrorPp)
+        )
+
+    def estimateFiniteDifferenceError(self, deltaF, source, collision):
         r"""
         Tests the validity of a solution of the Boltzmann equation.
 
@@ -205,12 +242,12 @@ class BoltzmannSolver:
         """
         print("\nStarting testSolution")
         # the right hand side, to reproduce
-        rhs = np.einsum(
+        # with collision term removed
+        rhs = source - np.einsum(
             "ijkabc, abc -> ijk",
             collision,
             deltaF,
         )
-        rhs = rhs - source
 
         # moving into Cardinal basis
         print("moving into Cardinal basis")
@@ -244,94 +281,83 @@ class BoltzmannSolver:
         )
         PWall = gammaWall * (pz - vw * E)
 
-        # checking msq derivatives
-        print("\ntesting msq derivatives")
+        # msq finite difference derivative
         h = 1e-4
-        deriv1 = (
-            msqpoly.evaluate(np.array([chi + h]))
-            - msqpoly.evaluate(np.array([chi - h]))
-        ) / (2 * h)
-        deriv2 = np.asarray(msqpoly.derivative(axis=0))[1:-1]
-        diffMsqDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
-        print(f"diff dMsq/dchi = {diffMsqDeriv}")
-        print(f"expected of order {h**2}")
+        dMsqdChi = (
+            -1 / 12 * msqpoly.evaluate(np.array([chi + 2 * h]))
+            + 2 / 3 * msqpoly.evaluate(np.array([chi + h]))
+            - 2 / 3 * msqpoly.evaluate(np.array([chi - h]))
+            + 1 / 12 * msqpoly.evaluate(np.array([chi - 2 * h]))
+        ) / h
 
-        # checking field derivatives
-        print("\ntesting field derivatives")
-        gridPlusChi = np.stack(
-            (chi + h, rz, rp), axis=0,
-        )
-        gridMinusChi = np.stack(
-            (chi - h, rz, rp), axis=0,
-        )
-        print(f"{np.array(gridMinusChi).shape = }")
-        deriv1 = (
-            deltaFPoly.evaluate(gridPlusChi)
-            - deltaFPoly.evaluate(gridMinusChi)
-        ) / (2 * h)
-        deriv2 = np.asarray(deltaFPoly.derivative(axis=0))[1:-1, :, :]
-        print(f"{deriv1.shape = }")
-        print(f"{deriv2.shape = }")
-        print("OG: shapes are wrong. Want input which is (3, 18^3) to get (18^3) output, or we are just evaluating on some 'diagonal' points.")
-        diffFieldDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
-        print(f"diff dField/dchi = {diffFieldDeriv}")
+        # d(deltaF)/d(chi) finite difference derivative
+        dFdChi = np.zeros_like(deltaF)
+        # OG: Is there a better way to write this than with the for loop?
+        for i_rz in range(self.grid.N - 1):
+            for i_rp in range(self.grid.N - 1):
+                # OG: This seems a clunky construction
+                rz_to_stack = [rz[i_rz]] * len(rz)
+                rp_to_stack = [rp[i_rp]] * len(rp)
+                # OG: Can we use derivative() from helpers.py here?
+                dFdChi[:, i_rz, i_rp] = (
+                    -1 / 12 * deltaFPoly.evaluate(np.stack((chi + 2 * h, rz_to_stack, rp_to_stack), axis=0))
+                    + 2 / 3 * deltaFPoly.evaluate(np.stack((chi + h, rz_to_stack, rp_to_stack), axis=0))
+                    - 2 / 3 * deltaFPoly.evaluate(np.stack((chi - h, rz_to_stack, rp_to_stack), axis=0))
+                    + 1 / 12 * deltaFPoly.evaluate(np.stack((chi - 2 * h, rz_to_stack, rp_to_stack), axis=0))
+                ) / h
 
-        deriv1 = (
-            deltaFPoly.evaluate(np.array([chi, rz + h, rp]))
-            - deltaFPoly.evaluate(np.array([chi, rz - h, rp]))
-        ) / (2 * h)
-        deriv2 = np.asarray(deltaFPoly.derivative(axis=1))[:, 1:-1, :]
-        diffFieldDeriv = np.linalg.norm(deriv1 - deriv2) / np.linalg.norm(deriv1)
-        print(f"diff dField/drz = {diffFieldDeriv}")
+        # d(deltaF)/d(rz) finite difference derivative
+        dFdRz = np.zeros_like(deltaF)
+        for i_chi in range(self.grid.M - 1):
+            for i_rp in range(self.grid.N - 1):
+                chi_to_stack = [chi[i_chi]] * len(chi)
+                rp_to_stack = [rp[i_rp]] * len(rp)
+                dFdRz[i_chi, :, i_rp] = (
+                    -1 / 12 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz + 2 * h, rp_to_stack), axis=0))
+                    + 2 / 3 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz + h, rp_to_stack), axis=0))
+                    - 2 / 3 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz - h, rp_to_stack), axis=0))
+                    + 1 / 12 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz - 2 * h, rp_to_stack), axis=0))
+                ) / h
 
-        # OG: should use derivative() from helpers.py, for more accurate results
-        print("\nputting the left hand side together")
-        print(f"Input shapes: {np.array([chi + h, rz, rp]).shape}")
         lhs = (
             dchidxi[:, np.newaxis, np.newaxis] * (
-                PWall * (
-                    deltaFPoly.evaluate(np.array([chi + h, rz, rp]))
-                    - deltaFPoly.evaluate(np.array([chi - h, rz, rp]))
-                ) / (2 * h)
-                - gammaWall / 2 * drzdpz * (
-                    msqpoly.evaluate(np.array([chi + h]))
-                    - msqpoly.evaluate(np.array([chi - h]))
-                ) / (2 * h) * (
-                    deltaFPoly.evaluate(np.array([chi, rz + h, rp]))
-                    - deltaFPoly.evaluate(np.array([chi, rz - h, rp]))
-                ) / (2 * h)
+                PWall * dFdChi
+                - gammaWall / 2 * (
+                    drzdpz[np.newaxis, :, np.newaxis]
+                    * dMsqdChi[:, np.newaxis, np.newaxis]
+                    * dFdRz
+                )
             )
         )
 
         # quantifying discrepancy with finite difference approximation
-        print("\n quantifying differences")
-        lhsNorm = np.linalg.norm(lhs)
-        rhsNorm = np.linalg.norm(rhs)
-        diffFiniteDifference = np.linalg.norm(lhs - rhs) / rhsNorm
-        print(f"{lhsNorm = }")
-        print(f"{rhsNorm = }")
-        print(f"{diffFiniteDifference = }")
-
-        exit()
+        errorFiniteDiff = np.linalg.norm(lhs - rhs) / np.linalg.norm(rhs)
+        print(f"{errorFiniteDiff = }")
 
         # testing result
         # optimistic estimate of convergence in momentum directions
         convergenceOptimistic = (
-            np.linalg.norm(result[:, -1, -1]) / np.linalg.norm(result[:, 0, 0])
+            np.linalg.norm(deltaF[:, -1, -1]) / np.linalg.norm(deltaF[:, 0, 0])
         )
         print(f"{convergenceOptimistic = }")
-        convergencePz = np.linalg.norm(result, axis=(0, 2))
-        convergencePp = np.linalg.norm(result, axis=(0, 1))
+        convergencePz = np.linalg.norm(deltaF, axis=(0, 2))
+        convergencePp = np.linalg.norm(deltaF, axis=(0, 1))
         x = self.grid.rzValues
         y = np.log(convergencePz)
         popt, pcov = np.polyfit(x, y, 1, cov=True)
         print(f"fit parameters {popt[0]}({np.sqrt(pcov[0][0])}), {popt[1]}({np.sqrt(pcov[1][1])})")
+        print(f"estimated error = {np.exp(popt[1])}")
+        x = self.grid.rpValues
+        y = np.log(convergencePp)
+        popt, pcov = np.polyfit(x, y, 1, cov=True)
+        print(f"fit parameters {popt[0]}({np.sqrt(pcov[0][0])}), {popt[1]}({np.sqrt(pcov[1][1])})")
+        print(f"estimated error = {np.exp(popt[1])}")
 
         # testing other stuff
         basisTypes = (self.basisM, self.basisN, self.basisN)
         basisNames = ('z', 'pz', 'pp')
         deltaFPoly = Polynomial(
-            result, self.grid, basisTypes, basisNames, False
+            deltaF, self.grid, basisTypes, basisNames, False
         )
         deltaFPoly.changeBasis('Cardinal')
         exit()
