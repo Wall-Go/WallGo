@@ -107,6 +107,9 @@ class WallGoManager:
         ## Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
 
+        ## Change the falloff scale in grid now that we have a good guess for the plasma temperature
+        self.grid.changeMomentumFalloffScale( phaseInput.temperature )
+
         self.initTemperatureRange()
 
         print("Suggested T range:")
@@ -223,6 +226,7 @@ class WallGoManager:
 
 
     def _initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
+        """"""
         self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
 
 
@@ -242,12 +246,17 @@ class WallGoManager:
             Length scale determining transform in the xi direction.
         """
 
+        ## To initialize Grid we need to specify a "temperature" scale that has analogous role as L_xi, but for the momenta.
+        ## In practice this scale needs to be close to temperature near the wall, but we don't know that yet, so just initialize with some value here 
+        ## and update once the nucleation temperature is obtained.
+        
+        initialMomentumFalloffScale = 50.
+
         N, M = int(N), int(M)
         if (N % 2 == 0):
             raise ValueError("You have chosen an even number N of momentum-grid points. WallGo only works with odd N, please change it to an odd number.")
 
-        ## TODO remove the temperature from here !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        self.grid = Grid(M, N, L_xi, 100)
+        self.grid = Grid(M, N, L_xi, initialMomentumFalloffScale)
         
 
     def _initBoltzmann(self):

@@ -38,22 +38,22 @@ class Polynomial:
         """
         
         self.coefficients = np.asanyarray(coefficients)
-        self.N = len(self.coefficients.shape) #Can we use another symbol here? Easy to confuse this with Grid.N
+        self.rank = len(self.coefficients.shape)
         self.grid = grid
         
         self.allowedBasis = ['Cardinal','Chebyshev']
         self.allowedDirection = ['z','pz','pp']
         
         if isinstance(basis, str):
-            basis = self.N*(basis,)
+            basis = self.rank*(basis,)
         self.__checkBasis(basis)
             
         if isinstance(direction, str):
-            direction = self.N*(direction,)
+            direction = self.rank*(direction,)
         self.__checkDirection(direction)
             
         if isinstance(endpoints, bool):
-            endpoints = self.N*(endpoints,)
+            endpoints = self.rank*(endpoints,)
         self.__checkEndpoints(endpoints)
             
         self.basis = basis
@@ -95,7 +95,7 @@ class Polynomial:
             return Polynomial(self.coefficients*poly.coefficients)
         else:
             newCoeff = poly*self.coefficients
-            assert len(newCoeff.shape) == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert len(newCoeff.shape) == self.rank, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
     def __add__(self, poly):
@@ -108,7 +108,7 @@ class Polynomial:
 
             ## LN: Dunno how it's possible that I get errors from here, due to taking len() of a scalar! But here's a "fix"
             newCoeff = np.asanyarray(newCoeff)
-            assert newCoeff.ndim == self.N, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
+            assert newCoeff.ndim == self.rank, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
             
             return Polynomial(newCoeff, self.grid, self.basis, self.direction, self.endpoints)
         
@@ -142,9 +142,9 @@ class Polynomial:
             endpoints tuple of the contracted polynomial.
 
         """
-        assert self.N == poly.N, 'Polynomial error: you can only combine two Polynomial objects with the same rank.'
+        assert self.rank == poly.rank, 'Polynomial error: you can only combine two Polynomial objects with the same rank.'
         basis, endpoints, direction = [],[],[]
-        for i in range(self.N):
+        for i in range(self.rank):
             assert self.coefficients.shape[i] == 1 or poly.coefficients.shape[i] == 1 or (self.basis[i] == poly.basis[i] and self.direction[i] == poly.direction[i] and self.endpoints[i] == poly.endpoints[i]), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             if self.coefficients.shape[i] > 1:
                 basis.append(self.basis[i])
@@ -175,10 +175,10 @@ class Polynomial:
 
         """
         if isinstance(newBasis, str):
-            newBasis = self.N*(newBasis,)
+            newBasis = self.rank*(newBasis,)
         self.__checkBasis(newBasis)
         
-        for i in range(self.N):
+        for i in range(self.rank):
             if newBasis[i] != self.basis[i]:
                 # Choosing the appropriate x, n and restriction
                 x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
@@ -205,7 +205,7 @@ class Polynomial:
                 M = self.chebyshev(x[:,None], n[None,:], restriction)
                 if newBasis[i] == 'Chebyshev':
                     M = np.linalg.inv(M)
-                M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
+                M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.rank+1)))
                 
                 # Contracting M with self.coefficient
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
@@ -219,7 +219,7 @@ class Polynomial:
         ----------
         x : array-like
             Compact coordinates at which to evaluate the polynomial. Must have 
-            a shape (self.N,:) or (self.N,).
+            a shape (self.rank,:) or (self.rank,).
 
         Returns
         -------
@@ -228,14 +228,14 @@ class Polynomial:
 
         """
         x = np.asarray(x)
-        assert x.shape[0] == self.N and 1 <= len(x.shape) <= 2, 'Polynomial error: x must have a shape (self.N,:) or (self.N,).'
+        assert x.shape[0] == self.rank and 1 <= len(x.shape) <= 2, 'Polynomial error: x must have a shape (self.rank,:) or (self.rank,).'
         singlePoint = False
         if len(x.shape) == 1:
-            x = x.reshape((self.N,1))
+            x = x.reshape((self.rank,1))
             singlePoint = True
             
         polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
-        for i in range(self.N):
+        for i in range(self.rank):
             # Choosing the appropriate n
             n = None
             if self.endpoints[i]:
@@ -270,9 +270,9 @@ class Polynomial:
                         restriction = 'partial'
                 pn = self.chebyshev(x[i,:,None], n[None,:], restriction)
                 
-            polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.N+1)))
+            polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.rank+1)))
             
-        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.N+1)))
+        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.rank+1)))
         if singlePoint:
             return result[0]
         else:
@@ -388,14 +388,14 @@ class Polynomial:
             w = 1
             
         if axis is None:
-            axis = tuple(np.arange(self.N))
+            axis = tuple(np.arange(self.rank))
         if isinstance(axis, int):
             axis = (axis,)
             self.__checkAxis(axis)
         
         # Express the integrated axes in the cardinal basis
         basis = []
-        for i in range(self.N):
+        for i in range(self.rank):
             if i in axis:
                 basis.append('Cardinal')
             else:
@@ -404,7 +404,7 @@ class Polynomial:
         
         integrand = w*self.coefficients
         newBasis, newDirection, newEndpoints = [],[],[]
-        for i in range(self.N):
+        for i in range(self.rank):
             if i in axis:
                 x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
                 weights = np.pi*np.ones(x.size)
@@ -419,7 +419,7 @@ class Polynomial:
                 if self.endpoints[i]:
                     weights[0] /= 2
                     weights[-1] /= 2
-                integrand *= np.expand_dims(np.sqrt(1-x**2)*weights, tuple(np.arange(i))+tuple(np.arange(i+1, self.N)))
+                integrand *= np.expand_dims(np.sqrt(1-x**2)*weights, tuple(np.arange(i))+tuple(np.arange(i+1, self.rank)))
             else:
                 newBasis.append(self.basis[i])
                 newDirection.append(self.direction[i])
@@ -466,10 +466,10 @@ class Polynomial:
         coeffDeriv = np.array(self.coefficients)
         basis, endpoints = [],[]
         
-        for i in range(self.N):
+        for i in range(self.rank):
             if i in axis:
                 D = self.derivMatrix(self.basis[i], self.direction[i], self.endpoints[i])
-                D = np.expand_dims(D, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
+                D = np.expand_dims(D, tuple(np.arange(i))+tuple(np.arange(i+2, self.rank+1)))
                 coeffDeriv = np.sum(D*np.expand_dims(coeffDeriv, i), axis=i+1)
                 basis.append('Cardinal')
                 endpoints.append(True)
@@ -657,19 +657,19 @@ class Polynomial:
                 
     def __checkBasis(self, basis):
         assert isinstance(basis, tuple), 'Polynomial error: basis must be a tuple or a string.'
-        assert len(basis) == self.N, 'Polynomial error: basis must be a tuple of length N.'
+        assert len(basis) == self.rank, 'Polynomial error: basis must be a tuple of length "rank".'
         for x in basis:
             assert x in self.allowedBasis, "Polynomial error: unkown basis %s" % x
             
     def __checkDirection(self, direction):
         assert isinstance(direction, tuple), 'Polynomial error: direction must be a tuple or a string.'
-        assert len(direction) == self.N, 'Polynomial error: direction must be a tuple of length N.'
+        assert len(direction) == self.rank, 'Polynomial error: direction must be a tuple of length "rank".'
         for x in direction:
             assert x in self.allowedDirection, "Polynomial error: unkown direction %s" % x
             
     def __checkEndpoints(self, endpoints):
         assert isinstance(endpoints, tuple), 'Polynomial error: endpoints must be a tuple or a bool.'
-        assert len(endpoints) == self.N, 'Polynomial error: endpoints must be a tuple of length N.'
+        assert len(endpoints) == self.rank, 'Polynomial error: endpoints must be a tuple of length "rank".'
         for x in endpoints:
             assert isinstance(x, bool), "Polynomial error: endpoints can only contain bool."
             
@@ -687,7 +687,7 @@ class Polynomial:
         assert isinstance(axis, tuple), 'Polynomial error: axis must be a tuple or a int.'
         for x in axis:
             assert isinstance(x, int), 'Polynomial error: axis must be a tuple of int.'
-            assert 0 <= x < self.N, 'Polynomial error: axis out of range.'
+            assert 0 <= x < self.rank, 'Polynomial error: axis out of range.'
                 
     def __is_broadcastable(self, array1, array2):
         """
