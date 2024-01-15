@@ -38,7 +38,7 @@ class Polynomial:
         """
         
         self.coefficients = np.asanyarray(coefficients)
-        self.rank = len(self.coefficients.shape) #Can we use another symbol here? Easy to confuse this with Grid.N
+        self.rank = len(self.coefficients.shape)
         self.grid = grid
         
         self.allowedBasis = ['Cardinal','Chebyshev']
@@ -142,7 +142,7 @@ class Polynomial:
             endpoints tuple of the contracted polynomial.
 
         """
-        assert self.rank == poly.N, 'Polynomial error: you can only combine two Polynomial objects with the same rank.'
+        assert self.rank == poly.rank, 'Polynomial error: you can only combine two Polynomial objects with the same rank.'
         basis, endpoints, direction = [],[],[]
         for i in range(self.rank):
             assert self.coefficients.shape[i] == 1 or poly.coefficients.shape[i] == 1 or (self.basis[i] == poly.basis[i] and self.direction[i] == poly.direction[i] and self.endpoints[i] == poly.endpoints[i]), 'Polynomial error: the two Polynomial objects are not broadcastable.'
@@ -657,19 +657,19 @@ class Polynomial:
                 
     def __checkBasis(self, basis):
         assert isinstance(basis, tuple), 'Polynomial error: basis must be a tuple or a string.'
-        assert len(basis) == self.rank, 'Polynomial error: basis must be a tuple of length N.'
+        assert len(basis) == self.rank, 'Polynomial error: basis must be a tuple of length "rank".'
         for x in basis:
             assert x in self.allowedBasis, "Polynomial error: unkown basis %s" % x
             
     def __checkDirection(self, direction):
         assert isinstance(direction, tuple), 'Polynomial error: direction must be a tuple or a string.'
-        assert len(direction) == self.rank, 'Polynomial error: direction must be a tuple of length N.'
+        assert len(direction) == self.rank, 'Polynomial error: direction must be a tuple of length "rank".'
         for x in direction:
             assert x in self.allowedDirection, "Polynomial error: unkown direction %s" % x
             
     def __checkEndpoints(self, endpoints):
         assert isinstance(endpoints, tuple), 'Polynomial error: endpoints must be a tuple or a bool.'
-        assert len(endpoints) == self.rank, 'Polynomial error: endpoints must be a tuple of length N.'
+        assert len(endpoints) == self.rank, 'Polynomial error: endpoints must be a tuple of length "rank".'
         for x in endpoints:
             assert isinstance(x, bool), "Polynomial error: endpoints can only contain bool."
             
