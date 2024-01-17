@@ -179,9 +179,9 @@ class EOM:
             I also include the case where vw is outside [wallVelocityMin, wallVelocityMax] although it probably does not occur.
             """ 
             absTolerance = 1e-8
-            if np.isclose(vw, wallVelocityMin, atol=absTolerance) or vw < wallVelocityMin:
+            if np.abs(vw - wallVelocityMin) < absTolerance or vw < wallVelocityMin:
                 return pressureMin
-            elif np.isclose(vw, wallVelocityMax, atol=absTolerance) or vw > wallVelocityMax:
+            elif np.abs(vw - wallVelocityMax) < absTolerance or vw > wallVelocityMax:
                 return pressureMax
 
             # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
