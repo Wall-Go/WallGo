@@ -4,16 +4,13 @@ from typing import Tuple
 
 import scipy.optimize
 
-from scipy.optimize import minimize, minimize_scalar, brentq, root, root_scalar
-from scipy.integrate import quad_vec,quad
-from scipy.interpolate import UnivariateSpline
+from scipy.optimize import minimize, minimize_scalar, brentq, root_scalar
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .GenericModel import GenericModel
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
-from .helpers import derivative, gammaSq, GCLQuadrature # derivatives for callable functions
-from .Particle import Particle
+from .helpers import gammaSq # derivatives for callable functions
 from .Fields import Fields, FieldPoint
 from .Grid import Grid
 
@@ -159,7 +156,7 @@ class EOM:
 
         pressureMax, wallParamsMax = self.wallPressure(wallVelocityMax, wallParamsGuess, True)
         if pressureMax < 0:
-            print('Maximum pressure is negative!')
+            print('Maximum pressure on wall is negative!')
             print(f"{pressureMax=} {wallParamsMax=}")
             #return 1
             return 1, wallParamsMax
@@ -188,7 +185,6 @@ class EOM:
             return self.wallPressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
         wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
-        #_,wallParams = pressureWrapper(wallVelocity, True)
 
         # Get wall params:
         _, wallParams = self.wallPressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)

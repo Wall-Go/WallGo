@@ -39,11 +39,11 @@ BM1 = BenchmarkPoint(
     {
         "Tc" : 108.22,
         ## Phase locations at nucleation temperature
-        "phaseLocation1" : WallGo.Fields([0.0, 104.85563975]),
-        "phaseLocation2" : WallGo.Fields([195.01844099, 0.0]),
+        "phaseLocation1" : WallGo.Fields([0.0, 104.86827943]),
+        "phaseLocation2" : WallGo.Fields([195.03213609, 0.0]),
 
         ## Jouguet velocity
-        "vJ" : 0.6444,
+        "vJ" : 0.644230065637426,
         ## LTE wall velocity
         "vwLTE" : 0.6203233205259607,
 

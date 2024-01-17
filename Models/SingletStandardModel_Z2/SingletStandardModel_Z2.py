@@ -8,7 +8,6 @@ import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-from WallGo import FreeEnergy
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
@@ -30,11 +29,6 @@ class SingletSM_Z2(GenericModel):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
-
-
-        # Initialize interpolated FreeEnergy
-        self.freeEnergy1 = FreeEnergy(self.effectivePotential, Fields( [0.0], [200.0] ))
-        self.freeEnergy2 = FreeEnergy(self.effectivePotential, Fields( [246.0], [0.0] ))
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 

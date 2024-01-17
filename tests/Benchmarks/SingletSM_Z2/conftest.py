@@ -94,11 +94,10 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
     """ Then manually interpolate """
     TMin, TMax, dT = BM.config["interpolateTemperatureRange"]
-    interpolationPointCount = math.ceil((TMax - TMin) / dT)
 
-    thermo.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
-    thermo.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
-    
+    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
+    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
     yield thermo, BM
 
 

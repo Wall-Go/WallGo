@@ -1,4 +1,3 @@
-import os
 import warnings
 import numpy as np
 import h5py # read/write hdf5 structured binary data file format
@@ -9,7 +8,6 @@ from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
 from .helpers import boostVelocity
-from .WallGoUtils import getSafePathToResource
 from .Fields import Fields
 
 """LN: What's going on with the fieldProfile array here? When constructing a background in EOM.wallPressure(), 
