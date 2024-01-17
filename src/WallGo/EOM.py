@@ -171,19 +171,17 @@ class EOM:
             return 0, wallParamsMin
 
         ## This computes pressure on the wall with a given wall speed and WallParams that looks hacky
-        def pressureWrapper(vw):
+        def pressureWrapper(vw: float):
 
-            ## What are these? Doing float == float comparison is not useful nor reliable
-            """
-            if vw == wallVelocityMin:
-                return pressureMin
-            if vw == wallVelocityMax:
-                return pressureMax
+            """Small optimization here: the root finder below calls this first at the bracket endpoints,
+            for which we already computed the pressure above. So make use of those.
+            In principle a direct float == float comparison could work here, but that's illegal.
+            I also include the case where vw is outside [wallVelocityMin, wallVelocityMax] although it probably does not occur.
             """ 
-            ## LN: Someone please check what the correct behavior here should be. Or if we even need these at all
-            if vw <= wallVelocityMin:
+            absTolerance = 1e-8
+            if np.isclose(vw, wallVelocityMin, atol=absTolerance) or vw < wallVelocityMin:
                 return pressureMin
-            if vw >= wallVelocityMax:
+            elif np.isclose(vw, wallVelocityMax, atol=absTolerance) or vw > wallVelocityMax:
                 return pressureMax
 
             # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
