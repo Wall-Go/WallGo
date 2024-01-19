@@ -54,7 +54,7 @@ class EOM:
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
-    def __init__(self, boltzmannSolver: BoltzmannSolver, thermodynamics: Thermodynamics, hydro: Hydro, grid: Grid, nbrFields: int, includeOffEq: bool=False, errTol=1e-6):
+    def __init__(self, boltzmannSolver: BoltzmannSolver, thermodynamics: Thermodynamics, hydro: Hydro, grid: Grid, nbrFields: int, includeOffEq: bool=False, errTol=1e-3, maxIterations=10, pressRelErrTol=0.3679):
         """
         Initialization
 
@@ -72,7 +72,11 @@ class EOM:
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
         errTol : double, optional
-            Error tolerance. The default is 1e-6.
+            Absolute error tolerance. The default is 1e-3.
+        maxIterations : integer, optional
+            Maximum number of iterations for the convergence of pressure. The default is 10.
+        pressRelErrTol : float, optional
+            Relative tolerance in pressure when finding its root.
 
         Returns
         -------
@@ -98,6 +102,11 @@ class EOM:
 
         ## HACK. Hardcode reference to first particle in boltzmannSolver's list. Will be removed or generalized later
         self.particle = self.boltzmannSolver.offEqParticles[0]
+        
+        ## Tolerances
+        self.errTol = errTol
+        self.maxIterations = maxIterations
+        self.pressRelErrTol = pressRelErrTol
 
 
     def findWallVelocityMinimizeAction(self):
@@ -189,7 +198,7 @@ class EOM:
             # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
             return self.wallPressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
-        wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
+        wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=self.errTol).root
         #_,wallParams = pressureWrapper(wallVelocity, True)
 
         # Get wall params:
@@ -232,6 +241,8 @@ class EOM:
         
         """NB: This function is EXTREMELY slow """
 
+        print("\n\n\n\nWall velocity:", wallVelocity, "\n")
+
 
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
@@ -244,64 +255,114 @@ class EOM:
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
         vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
 
-        ## LN: What's this loop?
+        (
+            pressure,
+            wallParams,
+            offEquilDeltas,
+        ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
+        )
+
+        print("\npressure", pressure, "\n")
+        
+        pressureOld = pressure
+
+        (
+            pressure,
+            wallParams,
+            offEquilDeltas,
+        ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
+        )
+        
+        error = np.abs(pressure-pressureOld)
+        errtol = self.pressRelErrTol * np.abs(pressure)
+        pressureOld = pressure
+
+        print("\npressure", pressure, "\nerror", error, "\nerror tolerance", errtol, "\n")
+
         i = 0
-        # TODO: Implement a better condition
-        while i < 2:
-    
-            fields: Fields
-            dPhidz: Fields
-
-            ## here dPhidz are z-derivatives of the fields
-            fields, dPhidz = self.wallProfile(
-                self.grid.xiValues, vevLowT, vevHighT, wallParams
+        while error > errtol:
+            if i >= self.maxIterations-1:
+                print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
+                break
+                
+            (
+                pressure,
+                wallParams,
+                offEquilDeltas,
+            ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+                wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
             )
 
-            Tprofile, velocityProfile = self.findPlasmaProfile(
-                c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus
-            )
-
-            """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
-            Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile()
-            """
-            ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
-            if self.includeOffEq:
-                TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
-                fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
-                vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
-
-                ## Prepare a new background for Boltzmann
-                boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
-                self.boltzmannSolver.setBackground(boltzmannBackground)
-
-                offEquilDeltas = self.boltzmannSolver.getDeltas()
-
-            ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
-            ## NOT including the first offset which we keep at 0.
-            wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
+            error = np.abs(pressure-pressureOld)
+            errtol = self.pressRelErrTol * np.abs(pressure)
+            pressureOld = pressure
             
-            ## This gives WallParams back from the above array, putting 0 as the first offset
-            def __toWallParams(_wallArray: np.ndarray) -> WallParams:
-                offsets = np.concatenate( ([0], _wallArray[self.nbrFields:]) )
-                return WallParams(widths = _wallArray[:self.nbrFields], offsets = offsets)
+            print("\npressure", pressure, "\nerror", error, "\nerror tolerance", errtol, "\n")
 
-            ## LN: Where do these bounds come from!?
-            ## first width, then offset
-            lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , (self.nbrFields-1) * [-10.] ))
-            upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , (self.nbrFields-1) * [10.] ))
-            bounds = scipy.optimize.Bounds(lb = lowerBounds, ub = upperBounds)
-
-            ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
-            def actionWrapper(wallArray: np.ndarray, *args) -> float:
-                return self.action( __toWallParams(wallArray), *args )
-            
-
-            sol = minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
-
-            ## Put the resulting width, offset back in WallParams format
-            wallParams = __toWallParams(sol.x)
-            
             i += 1
+
+        #print(f"{pressure=}")
+
+        if returnOptimalWallParams:
+            return pressure,wallParams
+        else:
+            return pressure
+        
+
+    def intermediatePressureWallParamsAndOffEquilDeltas(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus):
+        fields: Fields
+        dPhidz: Fields
+
+        ## here dPhidz are z-derivatives of the fields
+        fields, dPhidz = self.wallProfile(
+            self.grid.xiValues, vevLowT, vevHighT, wallParams
+        )
+
+        Tprofile, velocityProfile = self.findPlasmaProfile(
+            c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus
+        )
+
+        """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
+        Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile()
+        """
+        ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
+        if self.includeOffEq:
+            TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
+            fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
+            vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
+
+            ## Prepare a new background for Boltzmann
+            boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
+            self.boltzmannSolver.setBackground(boltzmannBackground)
+
+            offEquilDeltas = self.boltzmannSolver.getDeltas()
+
+        ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
+        ## NOT including the first offset which we keep at 0.
+        wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
+        
+        ## This gives WallParams back from the above array, putting 0 as the first offset
+        def __toWallParams(_wallArray: np.ndarray) -> WallParams:
+            offsets = np.concatenate( ([0], _wallArray[self.nbrFields:]) )
+            return WallParams(widths = _wallArray[:self.nbrFields], offsets = offsets)
+
+        ## LN: Where do these bounds come from!?
+        ## first width, then offset
+        lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , (self.nbrFields-1) * [-10.] ))
+        upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , (self.nbrFields-1) * [10.] ))
+        bounds = scipy.optimize.Bounds(lb = lowerBounds, ub = upperBounds)
+
+        ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
+        def actionWrapper(wallArray: np.ndarray, *args) -> float:
+            return self.action( __toWallParams(wallArray), *args )
+        
+
+        sol = minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
+
+        ## Put the resulting width, offset back in WallParams format
+        wallParams = __toWallParams(sol.x)
 
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
@@ -320,12 +381,8 @@ class EOM:
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
-        print(f"{pressure=}")
+        return pressure, wallParams, offEquilDeltas
 
-        if returnOptimalWallParams:
-            return pressure, wallParams
-        else:
-            return pressure
 
 
     def action(self, wallParams: WallParams, vevLowT: Fields, vevHighT: Fields, Tprofile: np.ndarray, offEquilDelta00: np.ndarray) -> float:
