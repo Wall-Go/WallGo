@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
-import h5py # read/write hdf5 structured binary data file format
-import codecs # for decoding unicode string from hdf5 file
+import h5py  # read/write hdf5 structured binary data file format
+import codecs  # for decoding unicode string from hdf5 file
 from copy import deepcopy
 
 from .Grid import Grid
@@ -75,17 +75,16 @@ class BoltzmannSolver:
         ----------
         grid : Grid
             An object of the Grid class.
-        background : Background
-            An object of the Background class.
-        mode : Mode
-            An object of the Mode class.
+        basisM : str
+            The position polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+        basisN : str
+            The momentum polynomial basis type, either 'Cardinal' or 'Chebyshev'.
 
         Returns
         -------
         cls : BoltzmannSolver
             An object of the BoltzmannSolver class.
         """
-        ## LN: This description is definitely not up to date!
 
         self.grid = grid
 
@@ -101,20 +100,17 @@ class BoltzmannSolver:
         self.offEqParticles = []
         self.collisionArray = None
 
-
     ## LN: Use this instead of requiring the background already in constructor
     def setBackground(self, background: BoltzmannBackground) -> None:
         self.background = deepcopy(background) ## do we need a deepcopy? Does this even work generally?
         self.background.boostToPlasmaFrame()
-
 
     def updateParticleList(self, offEqParticles: list[Particle]) -> None:
 
         for p in offEqParticles:
             assert isinstance(p, Particle)
 
-        self.offEqParticles = offEqParticles
-        
+        self.offEqParticles = offEqParticles    
 
     def getDeltas(self, deltaF=None):
         """
@@ -234,7 +230,7 @@ class BoltzmannSolver:
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
-        # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
+        # adding new axes, to make everything rank 3 like deltaF, (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
         xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
