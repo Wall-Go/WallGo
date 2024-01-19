@@ -305,11 +305,7 @@ class BoltzmannSolver:
         statistics = -1 if particle.statistics == "Fermion" else 1
 
         # derivative of equilibrium distribution
-        warnings.filterwarnings("ignore", message="overflow encountered in exp")
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
-        warnings.filterwarnings(
-            "default", message="overflow encountered in exp"
-        )
 
         ##### source term #####
         source = (dfEq / T) * dchidxi * (
@@ -436,8 +432,8 @@ class BoltzmannSolver:
         if np.isclose(statistics, 1, atol=1e-14):
             # the x > 300 here is to avoid overflow in np.expm1(x)**2
             # at np.log(sys.float_info.max) / 2 ~ 300
-            return np.where(x > 300, -np.exp(-x), -np.exp(x) / np.expm1(x)**2)
+            return np.where(x > 300, -0, -np.exp(x) / np.expm1(x)**2)
         else:
             return np.where(
-                x > 100, -np.exp(-x), -1 / (np.exp(x) + 2 + np.exp(-x))
+                x > 300, -0, -1 / (np.exp(x) + 2 + np.exp(-x))
             )
