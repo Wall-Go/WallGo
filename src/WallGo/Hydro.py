@@ -187,7 +187,7 @@ class Hydro:
 
         Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
-        def match(XpXm): #Don't call this match!!!!
+        def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tpm[1]))
             if vp is None:
@@ -205,7 +205,7 @@ class Hydro:
 
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved),
         # to the interval (-inf,inf) which is used by the solver.
-        sol = root(match,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
+        sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
 
