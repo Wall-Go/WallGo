@@ -93,7 +93,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
+        hydro = WallGo.Hydro(model,1e-6,100,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()

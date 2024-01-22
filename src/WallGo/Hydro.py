@@ -177,10 +177,6 @@ class Hydro:
 
         """
 
-        vwMapping = None
-        if vp is None:
-            vwMapping = vw
-
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
         #JvdV: commented it out - as it lead to an unreasonable range
@@ -197,7 +193,7 @@ class Hydro:
         Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
         def match(XpXm): #Don't call this match!!!!
-            Tpm = self.__inverseMappingT(XpXm,vwMapping)
+            Tpm = self.__inverseMappingT(XpXm)
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tpm[1]))
             if vp is None:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
@@ -214,9 +210,9 @@ class Hydro:
 
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved),
         # to the interval (-inf,inf) which is used by the solver.
-        sol = root(match,self.__mappingT(Tpm0,vwMapping),method='hybr',options={'xtol':self.atol})
+        sol = root(match,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
-        [Tp,Tm] = self.__inverseMappingT(sol.x,vwMapping)
+        [Tp,Tm] = self.__inverseMappingT(sol.x)
 
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
@@ -442,48 +438,29 @@ class Hydro:
             sol = root_scalar(func, bracket=(vmin,vmax), xtol=self.atol, rtol=self.rtol)
             return sol.root
 
-    def __mappingT(self, TpTm, vw=None):
+    def __mappingT(self, TpTm):
         """
-        Maps the variables Tp and Tm, which are constrained by 0<Tm<Tp for deflagration/hybrid walls, and additionally
-        Tp < Tm/sqrt(1-vm**2) if entropy is conserved.
-        They are mapped to the interval (-inf,inf) to allow root finding algorithms to explore different values of (Tp,Tm),
-        without going outside of the bounds above.
+        Maps the variables Tp and Tm, which are constrained to TMinGuess < Tm,Tp < TMaxGuess to the interval (-inf,inf) to allow root finding algorithms 
+        to explore different values of (Tp,Tm), without going outside of the bounds above.
 
         Parameters
         ----------
         TpTm : array_like, shape (2,)
             List containing Tp and Tm.
-        vw : double, optional
-            Wall velocity. Must be provided only if entropy is conserved, in which case
-            0 < Tm < Tp < Tm/sqrt(1-vm**2). If None, only 0 < Tm < Tp is enforced.
-            Default is None (entropy not conserved).
         """
 
         Tp,Tm = TpTm
-        if vw is None: # Entropy is not conserved, so we only impose 0 < Tm < Tp.
-            Xm = np.tan(np.pi/2/(Tp-self.TminGuess)*(Tm-Tp))   #Maps Tm =TminGuess to -inf and Tm = Tp to 0
-            Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
-            return [Xp,Xm]
-        else: # Entropy is conserved, so we also impose Tp < Tm/sqrt(1-vm**2).
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
-            Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tm=TminGuess to -inf and Tm =TmaxGuess to +inf
-            r = Tm*1/np.sqrt(1-vmsq)
-            Xp = np.tan(np.pi/2/(r-self.TminGuess)*(Tp-r)) #Maps Tp = TminGuess to -inf and Tp=Tm/sqrt(1-vm**2) to 0  
-            return [Xp,Xm]
+        Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2))   #Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf 
+        Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
+        return [Xp,Xm]
 
-    def __inverseMappingT(self, XpXm, vw=None):
+    def __inverseMappingT(self, XpXm):
         """
         Inverse of __mappingT.
         """
 
         Xp,Xm = XpXm
-        if vw is None:
-            Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-            Tm = np.arctan(Xm)*2*(Tp-self.TminGuess)/np.pi+ Tp
-            return [Tp,Tm]
-        else:
-            Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tm))
-            r = Tm*(1/np.sqrt(1-vmsq))
-            Tp = np.arctan(Xp)*2*(r-self.TminGuess)/np.pi+ r
-            return [Tp,Tm]
+        Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
+        Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
+        return [Tp,Tm]
+        
