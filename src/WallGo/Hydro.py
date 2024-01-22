@@ -86,11 +86,6 @@ class Hydro:
         Tmax = self.TmaxGuess
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
-        while bracket1*bracket2 > 0 and Tmax < self.TmaxGuess:
-            Tmin = Tmax
-            bracket1 = bracket2
-            Tmax *= 1.5
-            bracket2 = vpDerivNum(Tmax)
 
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
@@ -289,7 +284,7 @@ class Hydro:
         while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
             Tmax = Tmin
             bracket2 = bracket1
-            Tmin /= 1.5
+            Tmin = max(Tmin/1.5, self.TminGuess)
             bracket1 = TiiShock(Tmin)
 
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
