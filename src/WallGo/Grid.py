@@ -37,7 +37,7 @@ class Grid:
         Grid of the :math:`p_\Vert` direction.
     """
 
-    def __init__(self, M, N, L_xi, T):
+    def __init__(self, M, N, L_xi, T, spacing="Spectral"):
         r"""
         Initialises Grid object.
 
@@ -82,19 +82,37 @@ class Grid:
             Length scale determining transform in :math:`\xi` direction.
         T : float
             Temperature scale determining transform in momentum directions.
+        spacing : {'Spectral', 'Uniform'}
+            Choose 'Spectral' for the Gauss-Lobatto collocation points, as
+            required for WallGo's spectral representation, or 'Uniform' for
+            a uniform grid. Default is 'Spectral'.
 
         """
         self.M = M
         self.N = N
         self.L_xi = L_xi
         self.T = T
+        assert spacing in ["Spectral", "Uniform"], \
+            f"Unknown spacing {spacing}, not 'Spectral' or 'Uniform'"
+        self.spacing = spacing
 
         # Computing the grids in the chi, rz and rp directions
-        # See equation (34) in arXiv:2204.13120.
-        # Additional signs are so that each coordinate starts from -1.
-        self.chiValues = -np.cos(np.arange(1, self.M) * np.pi / self.M)
-        self.rzValues = -np.cos(np.arange(1, self.N) * np.pi / self.N)
-        self.rpValues = -np.cos(np.arange(0, self.N - 1) * np.pi / (self.N - 1))
+        if self.spacing == "Spectral":
+            # See equation (34) in arXiv:2204.13120.
+            # Additional signs are so that each coordinate starts from -1.
+            self.chiValues = -np.cos(np.arange(1, self.M) * np.pi / self.M)
+            self.rzValues = -np.cos(np.arange(1, self.N) * np.pi / self.N)
+            self.rpValues = -np.cos(np.arange(0, self.N - 1) * np.pi / (self.N - 1))
+        elif self.spacing == "Uniform":
+            dchi = 2 / self.M
+            drz = 2 / self.N
+            self.chiValues = np.linspace(
+                -1 + dchi, 1, num=self.M - 1, endpoint=False,
+            )
+            self.rzValues = np.arange(
+                -1 + drz, 1, num=self.N - 1, endpoint=False,
+            )
+            self.rpValues = np.linspace(-1, 1, num=self.N - 1, endpoint=False)
 
         # Computing the grids in physical coordinates
         (self.xiValues, self.pzValues, self.ppValues,) = Grid.decompactify(
