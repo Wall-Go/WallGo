@@ -65,11 +65,13 @@ particle = Particle(
 """
 Boltzmann solver
 """
-boltzmannCheb = BoltzmannSolver(grid, background, particle, 'Chebyshev', 'Chebyshev')
-boltzmannCard = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
+boltzmannCheb = BoltzmannSolver(grid, background, particle, basisM='Chebyshev', basisN='Chebyshev', derivatives='Spectral')
+boltzmannCard = BoltzmannSolver(grid, background, particle, basisM='Cardinal', basisN='Cardinal', derivatives='Spectral')
+boltzmannCardFD = BoltzmannSolver(grid, background, particle, basisM='Cardinal', basisN='Cardinal', derivatives='Finite Difference')
 
 DeltasCheb = boltzmannCheb.getDeltas()
 DeltasCard = boltzmannCard.getDeltas()
+DeltasCardFD = boltzmannCardFD.getDeltas()
 
 # plotting
 chi = grid.getCompactCoordinates()[0]
@@ -79,22 +81,26 @@ chi2 = xi/np.sqrt(xi**2+grid.L_xi**2)
 fig, ax = plt.subplots(4, figsize=(6, 10), layout='constrained')
 ax[0].plot(xi, 12*DeltasCheb['00'].evaluate(chi2[None,:]))
 ax[0].plot(xi, 12*DeltasCard['00'].evaluate(chi2[None,:]))
-ax[0].legend(('Chebyshev basis','Cardinal basis'))
+ax[0].plot(xi, 12*DeltasCardFD['00'].evaluate(chi2[None,:]))
+ax[0].legend(('Spectral (Chebyshev)','Spectral (Cardinal)', 'Spectral (finite difference)'))
 ax[0].set_ylabel(r"$\Delta_{00}$")
 ax[0].set_xlim((-20*L,20*L))
 ax[0].grid()
 ax[1].plot(xi, 12*DeltasCheb['20'].evaluate(chi2[None,:]))
 ax[1].plot(xi, 12*DeltasCard['20'].evaluate(chi2[None,:]))
+ax[1].plot(xi, 12*DeltasCardFD['20'].evaluate(chi2[None,:]))
 ax[1].set_ylabel(r"$\Delta_{20}$")
 ax[1].set_xlim((-20*L,20*L))
 ax[1].grid()
 ax[2].plot(xi, 12*DeltasCheb['02'].evaluate(chi2[None,:]))
 ax[2].plot(xi, 12*DeltasCard['02'].evaluate(chi2[None,:]))
+ax[2].plot(xi, 12*DeltasCardFD['02'].evaluate(chi2[None,:]))
 ax[2].set_ylabel(r"$\Delta_{02}$")
 ax[2].set_xlim((-20*L,20*L))
 ax[2].grid()
 ax[3].plot(xi, 12*DeltasCheb['11'].evaluate(chi2[None,:]))
 ax[3].plot(xi, 12*DeltasCard['11'].evaluate(chi2[None,:]))
+ax[3].plot(xi, 12*DeltasCardFD['11'].evaluate(chi2[None,:]))
 ax[3].set_xlabel(r"$\xi$")
 ax[3].set_ylabel(r"$\Delta_{11}$")
 ax[3].set_xlim((-20*L,20*L))

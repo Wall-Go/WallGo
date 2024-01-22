@@ -1,9 +1,9 @@
-import os
 import warnings
 import numpy as np
 from copy import deepcopy
-import h5py # read/write hdf5 structured binary data file format
-import codecs # for decoding unicode string from hdf5 file
+import h5py  # read/write hdf5 structured binary data file format
+import codecs  # for decoding unicode string from hdf5 file
+import findiff  # finite difference methods
 from .Grid import Grid
 from .Polynomial2 import Polynomial
 from .model import Particle
@@ -53,6 +53,7 @@ class BoltzmannSolver:
         grid,
         background,
         particle,
+        derivatives="Spectral",
         basisM="Cardinal",
         basisN="Chebyshev",
     ):
@@ -65,8 +66,17 @@ class BoltzmannSolver:
             An object of the Grid class.
         background : Background
             An object of the Background class.
-        mode : Mode
-            An object of the Mode class.
+        particle : Particle
+            An object of the Particle class
+        derivatives : {'Spectral', 'Finite Difference'}
+            Choice of method for computing derivatives. Default is 'Spectral'
+            which is expected to be more accurate.
+        basisM :  {'Chebyshev', 'Cardinal'}
+            If `derivatives='Spectral'`, the Polynomial basis used
+            in the chi direction.
+        basisN :  {'Chebyshev', 'Cardinal'}
+             If `derivatives='Spectral'`, the Polynomial basis used
+            in the pz and pp directions.
 
         Returns
         -------
@@ -77,8 +87,13 @@ class BoltzmannSolver:
         self.background = deepcopy(background)
         self.background.boostToPlasmaFrame()
         self.particle = particle
+        BoltzmannSolver.__checkDerivatives(derivatives)
+        self.derivatives = derivatives
         BoltzmannSolver.__checkBasis(basisM)
         BoltzmannSolver.__checkBasis(basisN)
+        if derivatives == "Finite Difference":
+            assert basisM == "Cardinal" and basisN == "Cardinal", \
+                "Must use Cardinal basis for Finite Difference method"
         self.basisM = basisM
         self.basisN = basisN
 
@@ -172,8 +187,9 @@ class BoltzmannSolver:
             of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501
             doi:10.1103/PhysRevD.106.023501
         """
-        # contructing the various terms in the Boltzmann equation
         print("Starting solveBoltzmannEquations")
+
+        # contructing the various terms in the Boltzmann equation
         operator, source, liouville, collision = self.buildLinearEquations()
 
         # solving the linear system: operator.deltaF = source
@@ -186,11 +202,7 @@ class BoltzmannSolver:
         # testing result
         source = np.reshape(source, deltaFShape, order="C")
         truncationError = self.estimateTruncationError(deltaF)
-        print(f"{truncationError=}")
-        finiteDifferenceError = self.estimateFiniteDifferenceError(
-                deltaF, source, collision
-        )
-        print(f"{finiteDifferenceError=}")
+        print(f"(optimistic) estimate of truncation error = {truncationError}")
 
         return deltaF
 
@@ -237,169 +249,79 @@ class BoltzmannSolver:
             / deltaFMeanAbs
         )
 
-    def estimateFiniteDifferenceError(self, deltaF, source, collision):
-        r"""
-        Tests the validity of a solution of the Boltzmann equation.
-
-        Parameters
-        ----------
-        deltaF : array_like
-            The solution for which to estimate the discretisation error,
-            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
-
-        Returns
-        -------
-        finiteDifferenceError : float
-            Relative deviation from a finite difference estimate.
-        """
-        # the right hand side, to reproduce, with collision term removed
-        rhs = source - np.einsum(
-            "ijkabc, abc -> ijk",
-            collision,
-            deltaF,
-        )
-
-        # moving into Cardinal basis
-        basisTypes = (self.basisM, self.basisN, self.basisN)
-        basisNames = ('z', 'pz', 'pp')
-        deltaFPoly = Polynomial(
-            deltaF, self.grid, basisTypes, basisNames, False
-        )
-        deltaFPoly.changeBasis('Cardinal')
-
-        # starting computation of the left hand side, with finite differences
-        chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
-        xi, pz, pp = self.grid.getCoordinates(endpoints=False)
-        pz = pz[np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, :]
-        dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
-
-        vw = self.background.vw
-        gammaWall = 1 / np.sqrt(1 - vw**2)
-
-        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
-        msq = self.particle.msqVacuum(field)
-        E = np.sqrt(msq + pz**2 + pp**2)
-        msqpoly = Polynomial(
-            self.particle.msqVacuum(self.background.fieldProfile),
-            self.grid,
-            'Cardinal',
-            'z',
-            True,
-        )
-        PWall = gammaWall * (pz - vw * E)
-
-        # msq finite difference derivative
-        h = 1e-4
-        dMsqdChi = (
-            -1 / 12 * msqpoly.evaluate(np.array([chi + 2 * h]))
-            + 2 / 3 * msqpoly.evaluate(np.array([chi + h]))
-            - 2 / 3 * msqpoly.evaluate(np.array([chi - h]))
-            + 1 / 12 * msqpoly.evaluate(np.array([chi - 2 * h]))
-        ) / h
-
-        # d(deltaF)/d(chi) finite difference derivative
-        dFdChi = np.zeros_like(deltaF)
-        # OG: Is there a better way to write this than with the for loop?
-        for i_rz in range(self.grid.N - 1):
-            for i_rp in range(self.grid.N - 1):
-                # OG: This seems a clunky construction
-                rz_to_stack = [rz[i_rz]] * len(rz)
-                rp_to_stack = [rp[i_rp]] * len(rp)
-                # OG: Can we use derivative() from helpers.py here?
-                dFdChi[:, i_rz, i_rp] = (
-                    -1 / 12 * deltaFPoly.evaluate(np.stack((chi + 2 * h, rz_to_stack, rp_to_stack), axis=0))
-                    + 2 / 3 * deltaFPoly.evaluate(np.stack((chi + h, rz_to_stack, rp_to_stack), axis=0))
-                    - 2 / 3 * deltaFPoly.evaluate(np.stack((chi - h, rz_to_stack, rp_to_stack), axis=0))
-                    + 1 / 12 * deltaFPoly.evaluate(np.stack((chi - 2 * h, rz_to_stack, rp_to_stack), axis=0))
-                ) / h
-
-        # d(deltaF)/d(rz) finite difference derivative
-        dFdRz = np.zeros_like(deltaF)
-        for i_chi in range(self.grid.M - 1):
-            for i_rp in range(self.grid.N - 1):
-                chi_to_stack = [chi[i_chi]] * len(chi)
-                rp_to_stack = [rp[i_rp]] * len(rp)
-                dFdRz[i_chi, :, i_rp] = (
-                    -1 / 12 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz + 2 * h, rp_to_stack), axis=0))
-                    + 2 / 3 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz + h, rp_to_stack), axis=0))
-                    - 2 / 3 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz - h, rp_to_stack), axis=0))
-                    + 1 / 12 * deltaFPoly.evaluate(np.stack((chi_to_stack, rz - 2 * h, rp_to_stack), axis=0))
-                ) / h
-
-        lhs = (
-            dchidxi[:, np.newaxis, np.newaxis] * (
-                PWall * dFdChi
-                - gammaWall / 2 * (
-                    drzdpz[np.newaxis, :, np.newaxis]
-                    * dMsqdChi[:, np.newaxis, np.newaxis]
-                    * dFdRz
-                )
-            )
-        )
-
-        # quantifying discrepancy with finite difference approximation
-        return np.linalg.norm(lhs - rhs) / np.linalg.norm(rhs)
-
-
     def buildLinearEquations(self):
         """
         Constructs matrix and source for Boltzmann equation.
 
         Note, we make extensive use of numpy's broadcasting rules.
         """
-        # coordinates
-        xi, pz, pp = self.grid.getCoordinates(endpoints=False)  # non-compact
+
+        # initial coordinates
+        xi, pz, pp = self.grid.getCoordinates(endpoints=False)
+
+        # expanding to be rank 3 arrays, like deltaF
         xi = xi[:, np.newaxis, np.newaxis]
         pz = pz[np.newaxis, :, np.newaxis]
         pp = pp[np.newaxis, np.newaxis, :]
 
         # compactified coordinates
-        chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False) # compact
+        chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
 
         # background profiles
-        T = self.background.temperatureProfile[1:-1, np.newaxis, np.newaxis]
-        field = self.background.fieldProfile[:, 1:-1, np.newaxis, np.newaxis]
-        v = self.background.velocityProfile[1:-1, np.newaxis, np.newaxis]
+        TFull = self.background.temperatureProfile
+        vFull = self.background.velocityProfile
+        msqFull = self.particle.msqVacuum(self.background.fieldProfile)
         vw = self.background.vw
+
+        # expanding to be rank 3 arrays, like deltaF
+        T = TFull[1:-1, np.newaxis, np.newaxis]
+        v = vFull[1:-1, np.newaxis, np.newaxis]
+        msq = msqFull[1:-1, np.newaxis, np.newaxis]
+        E = np.sqrt(msq + pz**2 + pp**2)
 
         # fluctuation mode
         statistics = -1 if self.particle.statistics == "Fermion" else 1
-        # TODO: indices order not consistent across different functions.
-        msq = self.particle.msqVacuum(field)
-        E = np.sqrt(msq + pz**2 + pp**2)
 
-        # fit the background profiles to polynomials
-        Tpoly = Polynomial(
-            self.background.temperatureProfile,
-            self.grid,
-            'Cardinal',
-            'z',
-            True,
-        )
-        msqpoly = Polynomial(
-            self.particle.msqVacuum(self.background.fieldProfile),
-            self.grid,
-            'Cardinal',
-            'z',
-            True,
-        )
-        vpoly = Polynomial(
-            self.background.velocityProfile,
-            self.grid,
-            'Cardinal',
-            'z',
-            True,
-        )
-
-        # intertwiner matrices
-        TChiMat = Tpoly.matrix(self.basisM, "z")
-        TRzMat = Tpoly.matrix(self.basisN, "pz")
-        TRpMat = Tpoly.matrix(self.basisN, "pp")
-
-        # derivative matrices
-        derivChi = Tpoly.derivMatrix(self.basisM, "z")[1:-1]
-        derivRz = Tpoly.derivMatrix(self.basisN, "pz")[1:-1]
+        # building parts which depend on the 'derivatives' argument
+        if self.derivatives == "Spectral":
+            # fit the background profiles to polynomials
+            TPoly = Polynomial(TFull, self.grid, 'Cardinal', 'z', True)
+            vPoly = Polynomial(vFull, self.grid, 'Cardinal', 'z', True)
+            msqPoly = Polynomial(msqFull, self.grid, 'Cardinal', 'z', True)
+            # intertwiner matrices
+            TChiMat = TPoly.matrix(self.basisM, "z")
+            TRzMat = TPoly.matrix(self.basisN, "pz")
+            TRpMat = TPoly.matrix(self.basisN, "pp")
+            # derivative matrices
+            derivMatrixChi = TPoly.derivMatrix(self.basisM, "z")[1:-1]
+            derivMatrixRz = TPoly.derivMatrix(self.basisN, "pz")[1:-1]
+            # spatial derivatives of profiles
+            dTdChi = TPoly.derivative(0).coefficients[1:-1, None, None]
+            dvdChi = vPoly.derivative(0).coefficients[1:-1, None, None]
+            dMsqdChi = msqPoly.derivative(0).coefficients[1:-1, None, None]
+        elif self.derivatives == "Finite Difference":
+            # intertwiner matrices are simply unit matrices
+            # as we are in the (Cardinal, Cardinal) basis
+            TChiMat = np.identity(self.grid.M - 1)
+            TRzMat = np.identity(self.grid.N - 1)
+            TRpMat = np.identity(self.grid.N - 1)
+            # derivative matrices
+            chiFull, rzFull, rpFull = self.grid.getCompactCoordinates(
+                endpoints=True
+            )
+            derivOperatorChi = findiff.FinDiff((0, chiFull, 1), acc=2)
+            derivMatrixChi = derivOperatorChi.matrix((self.grid.M + 1,))
+            derivOperatorRz = findiff.FinDiff((0, rzFull, 1), acc=2)
+            derivMatrixRz = derivOperatorRz.matrix((self.grid.N + 1,))
+            # spatial derivatives of profiles, endpoints used for taking
+            # derivatives but then dropped as deltaF fixed at 0 at endpoints
+            dTdChi = (derivMatrixChi @ TFull)[1:-1, np.newaxis, np.newaxis]
+            dvdChi = (derivMatrixChi @ vFull)[1:-1, np.newaxis, np.newaxis]
+            dMsqdChi = (derivMatrixChi @ msqFull)[1:-1, np.newaxis, np.newaxis]
+            # restructuring derivative matrices to appropriate forms for
+            # Liouville operator
+            derivMatrixChi = np.asarray(derivMatrixChi.todense())[1:-1, 1:-1]
+            derivMatrixRz = np.asarray(derivMatrixRz.todense())[1:-1, 1:-1]
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
@@ -413,19 +335,13 @@ class BoltzmannSolver:
         # dot product of velocities
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
-        # spatial derivatives of profiles
-        dTdChi = Tpoly.derivative(0).coefficients[1:-1, None, None]
-        dvdChi = vpoly.derivative(0).coefficients[1:-1, None, None]
-        dmsqdChi = msqpoly.derivative(0).coefficients[1:-1, None, None]
-
-        # derivatives of compactified coordinates
+        # (exact) derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
         dchidxi = dchidxi[:, np.newaxis, np.newaxis]
         drzdpz = drzdpz[np.newaxis, :, np.newaxis]
 
-        # equilibrium distribution, and its derivative
+        # (exact) temperature derivative of equilibrium distribution
         warnings.filterwarnings("ignore", message="overflow encountered in exp")
-        fEq = BoltzmannSolver.__feq(EPlasma / T, statistics)
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
         warnings.filterwarnings(
             "default", message="overflow encountered in exp"
@@ -435,22 +351,22 @@ class BoltzmannSolver:
         source = (dfEq / T) * dchidxi * (
             PWall * PPlasma * gammaPlasma**2 * dvdChi
             + PWall * EPlasma * dTdChi / T
-            + 1 / 2 * dmsqdChi * uwBaruPl
+            + 1 / 2 * dMsqdChi * uwBaruPl
         )
 
         ##### liouville operator #####
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * derivChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * derivMatrixChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
                 * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
             - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * gammaWall / 2
-                * dmsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+                * dMsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
+                * derivMatrixRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
 
@@ -469,12 +385,6 @@ class BoltzmannSolver:
         source = np.reshape(source, N_new, order="C")
         operator = np.reshape(operator, (N_new, N_new), order="C")
 
-        # n = self.grid.N-1
-        # Nnew = n**2
-        # eigs = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray/PWall[-1,:,:,None,None]).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
-        # eigs2 = np.linalg.eigvals(self.background.TMid**2*((self.collisionArray).reshape((n,n,Nnew))).reshape((Nnew,Nnew)))
-        # print(np.sort(1/np.abs(np.real(eigs)))[-4:],np.sort(1/np.abs(np.real(eigs2)))[-4:])
-
         # returning results
         return operator, source, liouville, collision
 
@@ -489,6 +399,8 @@ class BoltzmannSolver:
             with h5py.File(collisionFile, "r") as file:
                 metadata = file["metadata"]
                 basisSize = metadata.attrs["Basis Size"]
+                assert basisSize == self.grid.N, \
+                    f"Collision basis size {basisSize} != {self.grid.N}"
                 basisType = codecs.decode(
                     metadata.attrs["Basis Type"], 'unicode_escape',
                 )
@@ -557,10 +469,18 @@ class BoltzmannSolver:
 
     def __checkBasis(basis):
         """
-        Check that basis is reckognised
+        Check that basis is recognised
         """
         bases = ["Cardinal", "Chebyshev"]
         assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
+
+    def __checkDerivatives(derivatives):
+        """
+        Check that derivative option is recognised
+        """
+        derivativesOptions = ["Spectral", "Finite Difference"]
+        assert derivatives in derivativesOptions, \
+            f"BoltzmannSolver error: unkown derivatives option {derivatives}"
 
     @staticmethod
     def __feq(x, statistics):
