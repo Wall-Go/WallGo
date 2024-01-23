@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 import h5py  # read/write hdf5 structured binary data file format
 import codecs  # for decoding unicode string from hdf5 file
