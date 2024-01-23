@@ -1,4 +1,4 @@
-import warnings
+import sys
 import numpy as np
 import h5py  # read/write hdf5 structured binary data file format
 import codecs  # for decoding unicode string from hdf5 file
@@ -52,7 +52,10 @@ class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
     """
+    # Static value holding of natural log of the maximum expressible float
+    MAX_EXPONENT = sys.float_info.max_exp * np.log(2)
 
+    # Member variables
     grid: Grid
     offEqParticles: list[Particle]
     background: BoltzmannBackground
@@ -454,8 +457,14 @@ class BoltzmannSolver:
         x = np.asarray(x)
 
         if np.isclose(statistics, 1, atol=1e-14):
-            # the x > 350 here is to avoid overflow in np.expm1(x)**2
-            # at np.log(sys.float_info.max) / 2 ~ 350
-            return np.where(x > 350, -0, -np.exp(x) / np.expm1(x)**2)
+            return np.where(
+                x > BoltzmannSolver.MAX_EXPONENT / 2,
+                -0,
+                -np.exp(x) / np.expm1(x)**2,
+            )
         else:
-            return np.where(x > 700, -0, -1 / (np.exp(x) + 2 + np.exp(-x)))
+            return np.where(
+                x > BoltzmannSolver.MAX_EXPONENT,
+                -0,
+                -1 / (np.exp(x) + 2 + np.exp(-x)),
+            )
