@@ -21,6 +21,7 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      const double maxIntegrationMomentum = config.getDouble("Integration", "maxIntegrationMomentum");
      const size_t calls = config.getInt("Integration", "calls");
      const double relativeErrorGoal = std::fabs( config.getDouble("Integration", "relativeErrorGoal") );
+     const double absoluteErrorGoal = std::fabs( config.getDouble("Integration", "absoluteErrorGoal") );
      const int maxTries = config.getInt("Integration", "maxTries");
      const bool bVerbose = config.getBool("Integration", "verbose");
 
@@ -56,19 +57,16 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
 
      // Lambda to check if we've reached the accuracy goal. This requires chisq / dof to be consistent with 1, 
      // otherwise the error is not reliable
-     auto hasConverged = [&gslState, &mean, &error, &relativeErrorGoal]() {
+     auto hasConverged = [&gslState, &mean, &error, &relativeErrorGoal, &absoluteErrorGoal]() {
 
           bool bConverged = false;
-
-          // @todo I don't think we want to hardcode the lower bound here, what to do?
-          const double tooSmallNumber = 1e-8; 
 
           double chisq = gsl_monte_vegas_chisq(gslState); // the return value is actually chisq / dof
           if (std::fabs(chisq - 1.0) > 0.5) {
                // Error not reliable
           }
           // Handle case where integral is very close to 0
-          else if (std::fabs(mean) < tooSmallNumber && std::fabs(error) < relativeErrorGoal) {
+          else if (std::fabs(mean) < absoluteErrorGoal) {
                
                bConverged = true;
           } 

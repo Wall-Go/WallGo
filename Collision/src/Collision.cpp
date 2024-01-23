@@ -277,6 +277,7 @@ CollElem<4> Collision::makeCollisionElement(const std::string &particleName1, co
 
     if (indices[0] != particleIndex[particleName1])
     {
+        // This should not happen
         std::cerr << "Warning: first index in matrix element does not match name [" << particleName1 << "]\n";
     }
 
