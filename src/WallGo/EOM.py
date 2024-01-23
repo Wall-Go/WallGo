@@ -4,7 +4,6 @@ from typing import Tuple
 
 import scipy.optimize
 
-from scipy.optimize import minimize, minimize_scalar, brentq, root_scalar
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
@@ -184,7 +183,7 @@ class EOM:
             # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
             return self.wallPressure(vw, wallParamsMin+(wallParamsMax-wallParamsMin)*(vw-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), False)
 
-        wallVelocity = root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
+        wallVelocity = scipy.optimize.root_scalar(pressureWrapper, method='brentq', bracket = [wallVelocityMin, wallVelocityMax], xtol=1e-3).root
 
         # Get wall params:
         _, wallParams = self.wallPressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)
@@ -290,7 +289,7 @@ class EOM:
                 return self.action( __toWallParams(wallArray), *args )
             
 
-            sol = minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
+            sol = scipy.optimize.minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
 
             ## Put the resulting width, offset back in WallParams format
             wallParams = __toWallParams(sol.x)
@@ -496,7 +495,7 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        minRes = minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
+        minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
@@ -517,7 +516,7 @@ class EOM:
             TUpperBound = TLowerBound + TStep
 
 
-        res = brentq(
+        res = scipy.optimize.brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
             TLowerBound,
             TUpperBound,
