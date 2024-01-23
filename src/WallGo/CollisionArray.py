@@ -9,7 +9,7 @@ class CollisionArray:
     Class used to load, transform, interpolate and hold the collision array 
     which is needed in Boltzmann.
     """
-    def __init__(self, collisionFilename: str, N: int, particle1: Particle, particle2: Particle):
+    def __init__(self, collisionFilename: str, N: int, basis: str, particle1: Particle, particle2: Particle):
         """
         Initialization of CollisionArray
 
@@ -20,6 +20,8 @@ class CollisionArray:
         N : int
             Desired order of the polynomial expansion. The resulting collision
             array will have a shape (N-1, N-1)
+        basis : str
+            Basis in which the Boltzmann equation is solved.
         particle1 : Particle
             Particle object describing the first out-of-equilibrium particle.
         particle2 : Particle
@@ -31,6 +33,8 @@ class CollisionArray:
 
         """
         self.N = N
+        CollisionArray.__checkBasis(basis)
+        self.basis = basis
         self.particle1 = particle1
         self.particle2= particle2
         self.loadFile(collisionFilename)
@@ -70,14 +74,31 @@ class CollisionArray:
         assert basisSize <= self.N, f"CollisionArray error: Basis size of {filename} too small to generate a collision array of size N = {self.N}."
 
         # converting between conventions
-        self.collisionArray = np.transpose(
+        collisionArray = np.transpose(
             np.flip(collisionArray, (2, 3)),
             (2, 3, 0, 1),
         )
         
-    def __checkBasis(basis):
+    def __changeBasis(self, collisionArray: np.ndarray):
+        """
+        Transforms the basis of collisionArray to 'Cardinal'.
+
+        Parameters
+        ----------
+        collisionArray : np.ndarray
+            Array containing the collision term.
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        
+        
+    def __checkBasis(basis: str):
         """
         Check that basis is reckognised
         """
         bases = ["Cardinal", "Chebyshev"]
-        assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
+        assert basis in bases, "CollisionArray error: unkown basis %s" % basis
