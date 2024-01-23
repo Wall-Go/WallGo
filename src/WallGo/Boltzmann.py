@@ -308,6 +308,8 @@ class BoltzmannSolver:
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
 
         ##### source term #####
+        # Given by S_i on the RHS of Eq. (5) in 2204.13120, with further details
+        # given in Eq. (6).
         source = (dfEq / T) * dchidxi * (
             PWall * PPlasma * gammaPlasma**2 * dvdChi
             + PWall * EPlasma * dTdChi / T
@@ -315,7 +317,8 @@ class BoltzmannSolver:
         )
 
         ##### liouville operator #####
-        ## LN: OOF! Is this really the best way? Please explain the slicings
+        # Given in the LHS of Eq. (5) in 2204.13120, with further details given
+        # by the second line of Eq. (32).
         liouville = (
             dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
                 * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
@@ -330,6 +333,27 @@ class BoltzmannSolver:
                 * derivRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
                 * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
         )
+        """
+        An alternative, but slower, implementation is given by the following:
+        liouville = (
+            np.einsum(
+                "ijk, ia, jb, kc -> ijkabc",
+                dchidxi * PWall,
+                derivChi,
+                TRzMat,
+                TRpMat,
+                optimize=True,
+            )
+            - np.einsum(
+                "ijk, ia, jb, kc -> ijkabc",
+                gammaWall / 2 * dchidxi * drzdpz * dmsqdChi,
+                TChiMat,
+                derivRz,
+                TRpMat,
+                optimize=True,
+            )
+        )
+        """
        
         # including factored-out T^2 in collision integrals
         collisionArray = (
