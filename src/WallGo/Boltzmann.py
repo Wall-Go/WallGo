@@ -430,10 +430,8 @@ class BoltzmannSolver:
         x = np.asarray(x)
 
         if np.isclose(statistics, 1, atol=1e-14):
-            # the x > 300 here is to avoid overflow in np.expm1(x)**2
-            # at np.log(sys.float_info.max) / 2 ~ 300
-            return np.where(x > 300, -0, -np.exp(x) / np.expm1(x)**2)
+            # the x > 350 here is to avoid overflow in np.expm1(x)**2
+            # at np.log(sys.float_info.max) / 2 ~ 350
+            return np.where(x > 350, -0, -np.exp(x) / np.expm1(x)**2)
         else:
-            return np.where(
-                x > 300, -0, -1 / (np.exp(x) + 2 + np.exp(-x))
-            )
+            return np.where(x > 700, -0, -1 / (np.exp(x) + 2 + np.exp(-x)))
