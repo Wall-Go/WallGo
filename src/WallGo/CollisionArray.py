@@ -3,6 +3,8 @@ from scipy.special import eval_chebyt
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from .model import Particle
+from .Polynomial2 import Polynomial
+from .Grid import Grid
 
 class CollisionArray:
     """
@@ -79,7 +81,11 @@ class CollisionArray:
             (2, 3, 0, 1),
         )
         
-    def __changeBasis(self, collisionArray: np.ndarray):
+        # If collisionArray is not in the right basis, change it.
+        if basisType != self.basis:
+            self.__changeBasis(collisionArray, self.basis)
+        
+    def __changeBasis(self, collisionArray: np.ndarray, newBasis: str):
         """
         Transforms the basis of collisionArray to 'Cardinal'.
 
@@ -87,12 +93,29 @@ class CollisionArray:
         ----------
         collisionArray : np.ndarray
             Array containing the collision term.
+        newBasis : str
+            Desired basis for collisionArray.
 
         Returns
         -------
         None.
 
         """
+        
+        CollisionArray.__checkBasis(newBasis)
+        
+        N = collisionArray.shape[0]+1
+        grid = Grid(N,N,1,1)
+        
+        # Computing the transformation matrix
+        n1 = np.arange(2,N+1)
+        n2 = np.arange(1,N)
+        M1 = np.cos(n1[:,None]*np.arccos(grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,grid.rzValues[None,:])
+        M2 = np.cos(n2[:,None]*np.arccos(grid.rpValues[None,:])) - 1
+        if newBasis == 'Cardinal':
+            M1 = np.linalg.inv(M1)
+            M2 = np.linalg.inv(M2)
+        collisionArray = np.sum(M1[None,None,:,None,:,None]*M2[None,None,None,:,None,:]*collisionArray[:,:,None,None,:,:],(-1,-2))
         
         
         
