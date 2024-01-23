@@ -79,9 +79,6 @@ jobs:
                cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
                sudo ldconfig
              fi
-             if [ "$RUNNER_OS" == "Linux" ]; then
-               
-             fi
 
       - name: Configure CMake for Collision
         run: >
