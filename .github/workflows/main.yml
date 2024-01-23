@@ -60,7 +60,7 @@ jobs:
                brew remove azure-cli 
                brew update 
                brew install qt@5 xz ccache zstd webp
-               brew install gsl hdf5
+               brew install gsl hdf5 muparser
              else
                echo "$RUNNER_OS not supported"
                exit 1
@@ -75,11 +75,12 @@ jobs:
       - name: Install muparser
       # Will install muparser without OpenMP support, our program doesn't need it here. ldconfig seems to be required for linux builds
         run: |
-             if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+             if [ "$RUNNER_OS" == "Linux" ]; then
                cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
+               sudo ldconfig
              fi
              if [ "$RUNNER_OS" == "Linux" ]; then
-               sudo ldconfig
+               
              fi
 
       - name: Configure CMake for Collision
