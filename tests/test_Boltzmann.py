@@ -4,6 +4,8 @@ import numpy as np  # arrays and maths
 from WallGo.Grid import Grid
 from WallGo.Polynomial import Polynomial
 from WallGo.Boltzmann import BoltzmannSolver
+from WallGo.CollisionArray import CollisionArray
+from WallGo.WallGoUtils import getSafePathToResource
 from .conftest import background
 
 
@@ -28,7 +30,11 @@ def test_Delta00(particle, M, N, a, b, c, d, e, f):
     bg = background(M)
     grid = Grid(M, N, 1, 100)
     poly = Polynomial(grid)
-    boltzmann = BoltzmannSolver(grid, bg, particle, 'Cardinal', 'Cardinal')
+    suffix = "hdf5"
+    fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+    collisionFile = getSafePathToResource("Data/" + fileName)
+    collisionArray = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
+    boltzmann = BoltzmannSolver(grid, bg, particle, collisionArray, 'Spectral', 'Cardinal', 'Cardinal')
 
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
@@ -66,7 +72,11 @@ def test_solution(particle, M, N):
     bg = background(M)
     grid = Grid(M, N, 1, 1)
     poly = Polynomial(grid)
-    boltzmann = BoltzmannSolver(grid, bg, particle)
+    suffix = "hdf5"
+    fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+    collisionFile = getSafePathToResource("Data/" + fileName)
+    collisionArray = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
+    boltzmann = BoltzmannSolver(grid, bg, particle, collisionArray)
 
     # solving Boltzmann equations
     deltaF = boltzmann.solveBoltzmannEquations()
