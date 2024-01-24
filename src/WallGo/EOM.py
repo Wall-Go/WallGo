@@ -1,6 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 from dataclasses import dataclass
 from typing import Tuple
+
 
 import scipy.optimize
 
@@ -255,7 +257,8 @@ class EOM:
             )
 
             """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
-            Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile()
+            Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile().
+            TODO also BoltzmannSolver seems to drop the endpoints internally anyway!!
             """
             ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
             if self.includeOffEq:
@@ -263,7 +266,10 @@ class EOM:
                 fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
                 vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
 
-                ## Prepare a new background for Boltzmann
+                ## Prepare a new background for Boltzmann.
+                """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
+                and let BoltzmannSolver create/manage the actual BoltzmannBackground object
+                """
                 boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
                 self.boltzmannSolver.setBackground(boltzmannBackground)
 
@@ -422,9 +428,9 @@ class EOM:
         velocityMid : double
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
         fields : array-like
-            Scalar field profile.
+            Scalar field profiles.
         dPhidz : array-like
-            Derivative with respect to the position of the scalar field profile.
+            Derivative with respect to the position of the scalar field profiles.
         offEquilDeltas : dictionary
             Dictionary containing the off-equilibrium Delta functions
         Tplus : double
@@ -443,11 +449,19 @@ class EOM:
         temperatureProfile = np.zeros(len(self.grid.xiValues))
         velocityProfile = np.zeros(len(self.grid.xiValues))
 
+        ## TODO can this loop be numpified?
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(index, c1, c2, velocityMid, fields.GetFieldPoint(index), dPhidz.GetFieldPoint(index), offEquilDeltas, Tplus, Tminus)
 
-            temperatureProfile[index] = T
-            velocityProfile[index] = vPlasma
+            """Ensure that we got only one one (T, vPlasma) value from the above.
+            Particularly the vPlasma tends to be in len=1 array format because our Veff is intended to work with arrays
+            """
+            T = np.asanyarray(T)
+            vPlasma = np.asanyarray(vPlasma)
+            assert (T.size == 1 and vPlasma.size == 1), "Invalid output from findPlasmaProfilePoint()! In EOM.findPlasmaProfile(), grid loop."
+            # convert to float, this is OK and works for all shapes because we checked the size above
+            temperatureProfile[index] = T.item()
+            velocityProfile[index] = vPlasma.item()
 
         return temperatureProfile, velocityProfile
     
@@ -487,7 +501,7 @@ class EOM:
 
         """
 
-        ## What's going on in this function? Please explain your logic
+        ## What's going on in this function? Please explain your logic. TODO issue #114
 
         Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
 
@@ -521,23 +535,23 @@ class EOM:
             TLowerBound,
             TUpperBound,
             xtol=1e-9,
-            rtol=1e-9, ## ???
+            rtol=1e-9, ## really???
         )
         # TODO: Can the function have multiple zeros?
 
-        T = res   #is this okay? #Maybe not? Sometimes it returns an array, sometimes a double
+        T = res
         vPlasma = self.plasmaVelocity(fields, T, s1)
         return T, vPlasma
 
-    def plasmaVelocity(self, fields, T, s1):
+    def plasmaVelocity(self, fields: Fields, T: npt.ArrayLike, s1: float) -> npt.ArrayLike:
         r"""
         Computes the plasma velocity as a function of the temperature.
 
         Parameters
         ----------
-        fields : array-like
-            Scalar field profile.
-        T : double
+        fields : Fields
+            Scalar field profiles.
+        T : npt.ArrayLike
             Temparature.
         s1 : double
             Value of :math:`T^{30}-T_{\rm out}^{30}`.
@@ -579,13 +593,14 @@ class EOM:
         ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
         w = -T * self.thermo.effectivePotential.derivT(fields, T)
 
+        ## TODO probably force axis here. But need to guarantee correct field type first, so need some refactoring
         kineticTerm = 0.5*np.sum(dPhidz**2).view(np.ndarray)
 
         ## eff potential at this field point and temperature. NEEDS the T-dep constant
         veff = self.thermo.effectivePotential.evaluate(fields, T)
 
         result = (
-            kineticTerm ## TODO probably force axis here. But need to guarantee correct field type first, so need some refactoring
+            kineticTerm
             - veff - 0.5*w + 0.5*np.sqrt(4*s1**2 + w**2) - s2
         )
 
