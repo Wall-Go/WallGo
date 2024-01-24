@@ -8,7 +8,9 @@ from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .model import Particle, FreeEnergy
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .CollisionArray import CollisionArray
 from .helpers import gammaSq 
+from .WallGoUtils import getSafePathToResource
 
 class EOM:
     """
@@ -52,6 +54,10 @@ class EOM:
         self.thermo = Thermodynamics(freeEnergy)
         self.hydro = Hydro(self.thermo)
         self.wallVelocityLTE = self.hydro.findvwLTE()
+        
+        # Load the collision file
+        collisionFile = self.__collisionFilename()
+        self.collisionArray = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
 
     def findWallVelocityLoop(self):
         """
@@ -250,7 +256,7 @@ class EOM:
                 XWithEndpoints = np.concatenate((vevLowT[:,None], X, vevHighT[:,None]), 1)
                 vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]]))
                 boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, XWithEndpoints, TWithEndpoints) 
-                boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle)
+                boltzmannSolver = BoltzmannSolver(self.grid, boltzmannBackground, self.particle, self.collisionArray, basisN=self.collisionArray.basis)
                 offEquilDeltas = boltzmannSolver.getDeltas()  #This gives an error
 
             sol = minimize(self.action, wallParams, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=self.nbrFields*[(0.1/self.Tnucl,100/self.Tnucl)]+(self.nbrFields-1)*[(-10,10)])
@@ -620,3 +626,14 @@ class EOM:
                 (3*delta02 - delta20 + self.particle.msqVacuum(X)*delta00)*ubar3*ubar3+4*delta11*u3*ubar3)/2. -(self.particle.msqVacuum(X)*delta00+ delta02-delta20)/2.
         #TODO: change 12 by some variable representing the number of d.o.f.
         return 12*T30, 12*T33
+    
+    def __collisionFilename(self):
+        """
+        A filename convention for collision integrals.
+        """
+        # LN: This will need generalization. And do we want just one gargantuan
+        # file with all out-of-eq pairs, or are individual files better?
+
+        suffix = "hdf5"
+        fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
+        return getSafePathToResource("Data/" + fileName)

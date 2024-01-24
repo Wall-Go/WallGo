@@ -53,6 +53,7 @@ class BoltzmannSolver:
         grid,
         background,
         particle,
+        collisionArray,
         derivatives="Spectral",
         basisM="Cardinal",
         basisN="Chebyshev",
@@ -68,6 +69,9 @@ class BoltzmannSolver:
             An object of the Background class.
         particle : Particle
             An object of the Particle class
+        collisionArray : CollisionArray
+            An object of the CollisionArray class containing the collision
+            integrals.
         derivatives : {'Spectral', 'Finite Difference'}
             Choice of method for computing derivatives. Default is 'Spectral'
             which is expected to be more accurate.
@@ -87,6 +91,7 @@ class BoltzmannSolver:
         self.background = deepcopy(background)
         self.background.boostToPlasmaFrame()
         self.particle = particle
+        self.collisionArray = collisionArray
         BoltzmannSolver.__checkDerivatives(derivatives)
         self.derivatives = derivatives
         BoltzmannSolver.__checkBasis(basisM)
@@ -98,8 +103,8 @@ class BoltzmannSolver:
         self.basisN = basisN
 
         ##### collision operator #####
-        collisionFile = self.__collisionFilename()
-        self.readCollision(collisionFile, self.particle)
+        # collisionFile = self.__collisionFilename()
+        # self.readCollision(collisionFile, self.particle)
 
     def getDeltas(self, deltaF=None):
         """

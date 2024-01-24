@@ -41,6 +41,9 @@ class CollisionArray:
         self.particle2= particle2
         self.loadFile(collisionFilename)
         
+    def __getitem__(self, key):
+        return self.collisionArray[key]
+        
     def loadFile(self, filename: str):
         """
         Load the collision array and transform it to be used by Boltzmann.
@@ -82,9 +85,7 @@ class CollisionArray:
         )
         
         # Make sure collisionArray is in the right basis
-        self.__changeBasis(collisionArray, basisType, self.basis)
-        
-        self.collisionArray = collisionArray
+        self.collisionArray = self.__changeBasis(collisionArray, basisType, self.basis)
         
     def __changeBasis(self, collisionArray: np.ndarray, oldBasis: str, newBasis: str):
         """
@@ -124,8 +125,7 @@ class CollisionArray:
         # Change the basis
         collisionPoly.changeBasis(("Cardinal", "Cardinal", newBasis, newBasis), inverseTranspose=True)
         
-        # Update collisionArray
-        collisionArray = collisionPoly.coeffiecients
+        return collisionPoly.coefficients
         
         
         

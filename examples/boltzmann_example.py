@@ -6,10 +6,13 @@ from pprint import pprint # pretty printing of dicts
 import matplotlib.pyplot as plt
 from scipy import integrate
 from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallGo.CollisionArray import CollisionArray
 from WallGo.Thermodynamics import Thermodynamics
 from WallGo.Polynomial2 import Polynomial
 #from WallGo.eomHydro import findWallVelocityLoop
 from WallGo import Particle, FreeEnergy, Grid, Polynomial
+from WallGo.WallGoUtils import getSafePathToResource
+
 
 """
 Grid
@@ -63,11 +66,20 @@ particle = Particle(
 )
 
 """
+Collision array
+"""
+suffix = "hdf5"
+fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+collisionFile = getSafePathToResource("Data/" + fileName)
+collisionArrayCard = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
+collisionArrayCheb = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
+
+"""
 Boltzmann solver
 """
-boltzmannCheb = BoltzmannSolver(grid, background, particle, basisM='Chebyshev', basisN='Chebyshev', derivatives='Spectral')
-boltzmannCard = BoltzmannSolver(grid, background, particle, basisM='Cardinal', basisN='Cardinal', derivatives='Spectral')
-boltzmannCardFD = BoltzmannSolver(grid, background, particle, basisM='Cardinal', basisN='Cardinal', derivatives='Finite Difference')
+boltzmannCheb = BoltzmannSolver(grid, background, particle, collisionArrayCheb, basisM='Chebyshev', basisN='Chebyshev', derivatives='Spectral')
+boltzmannCard = BoltzmannSolver(grid, background, particle, collisionArrayCard, basisM='Cardinal', basisN='Cardinal', derivatives='Spectral')
+boltzmannCardFD = BoltzmannSolver(grid, background, particle, collisionArrayCard, basisM='Cardinal', basisN='Cardinal', derivatives='Finite Difference')
 
 DeltasCheb = boltzmannCheb.getDeltas()
 DeltasCard = boltzmannCard.getDeltas()
