@@ -81,11 +81,12 @@ class CollisionArray:
             (2, 3, 0, 1),
         )
         
-        # If collisionArray is not in the right basis, change it.
-        if basisType != self.basis:
-            self.__changeBasis(collisionArray, self.basis)
+        # Make sure collisionArray is in the right basis
+        self.__changeBasis(collisionArray, basisType, self.basis)
         
-    def __changeBasis(self, collisionArray: np.ndarray, newBasis: str):
+        self.collisionArray = collisionArray
+        
+    def __changeBasis(self, collisionArray: np.ndarray, oldBasis: str, newBasis: str):
         """
         Transforms the basis of collisionArray to 'Cardinal'.
 
@@ -93,6 +94,8 @@ class CollisionArray:
         ----------
         collisionArray : np.ndarray
             Array containing the collision term.
+        oldBasis : str
+            Basis of the current collisionArray.
         newBasis : str
             Desired basis for collisionArray.
 
@@ -102,20 +105,27 @@ class CollisionArray:
 
         """
         
+        CollisionArray.__checkBasis(oldBasis)
         CollisionArray.__checkBasis(newBasis)
         
+        # Create a Grid object to be used by Polynomial
         N = collisionArray.shape[0]+1
         grid = Grid(N,N,1,1)
         
-        # Computing the transformation matrix
-        n1 = np.arange(2,N+1)
-        n2 = np.arange(1,N)
-        M1 = np.cos(n1[:,None]*np.arccos(grid.rzValues[None,:])) - np.where(n1[:,None]%2==0,1,grid.rzValues[None,:])
-        M2 = np.cos(n2[:,None]*np.arccos(grid.rpValues[None,:])) - 1
-        if newBasis == 'Cardinal':
-            M1 = np.linalg.inv(M1)
-            M2 = np.linalg.inv(M2)
-        collisionArray = np.sum(M1[None,None,:,None,:,None]*M2[None,None,None,:,None,:]*collisionArray[:,:,None,None,:,:],(-1,-2))
+        # Create the Polynomial object 
+        collisionPoly = Polynomial(
+            collisionArray,
+            grid,
+            ("Cardinal", "Cardinal", oldBasis, oldBasis),
+            ("pz", "pp", "pz", "pp"),
+            False,
+        )
+        
+        # Change the basis
+        collisionPoly.changeBasis(("Cardinal", "Cardinal", newBasis, newBasis), inverseTranspose=True)
+        
+        # Update collisionArray
+        collisionArray = collisionPoly.coeffiecients
         
         
         

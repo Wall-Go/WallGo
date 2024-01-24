@@ -158,7 +158,7 @@ class Polynomial:
                 endpoints.append(poly.endpoints[i])
         return tuple(basis),tuple(direction),tuple(endpoints)
 
-    def changeBasis(self, newBasis):
+    def changeBasis(self, newBasis, inverseTranspose=False):
         """
         Change the basis of the polynomial. Will change self.coefficients
         accordingly.
@@ -170,6 +170,10 @@ class Polynomial:
             self.coefficients is defined. Each component can either be
             'Cardinal' or 'Chebyshev'. Can also be a single string, in which
             case all the dimensions are assumed to be in that basis.
+        inverseTranspose : bool, optional
+            If True, take the inverse-transpose of the transformation matrix.
+            This is useful, for example, when changing the basis of the 
+            collision array.
 
         Returns
         -------
@@ -207,6 +211,10 @@ class Polynomial:
                 M = self.chebyshev(x[:,None], n[None,:], restriction)
                 if newBasis[i] == 'Chebyshev':
                     M = np.linalg.inv(M)
+                    
+                if inverseTranspose:
+                    M = np.transpose(np.linalg.inv(M))
+                    
                 M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.N+1)))
 
                 # Contracting M with self.coefficient
