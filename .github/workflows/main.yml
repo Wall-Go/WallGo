@@ -99,4 +99,5 @@ jobs:
         run: cd data && cp ../Collision/config.ini . && ../Collision/bin/Collision -n 3
 
       - name: Test with pytest
-        run: cd tests && pytest -v
+      # Let's have -s flag for showing prints etc, can be useful for debugging
+        run: pytest -vs

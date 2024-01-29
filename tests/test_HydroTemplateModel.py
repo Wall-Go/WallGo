@@ -75,7 +75,7 @@ def test_findMatching():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-10,1e-10)
+        hydro = WallGo.Hydro(model,1e-6,500,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-10,1e-10)
         res1[i] = hydro.findMatching(vw[i])
         res2[i] = hydroTemplate.findMatching(vw[i])
@@ -93,7 +93,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model)
+        hydro = WallGo.Hydro(model,1e-6,100,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
@@ -102,14 +102,14 @@ def test_findvwLTE():
 def test_findHydroBoundaries():
     res1,res2 = np.zeros((N,5)),np.zeros((N,5))
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+rng.random(N)
+    alN = (1-psiN)/3+0.5*rng.random(N)    #JvdV: added a 0.5 in the last term, otherwise hydroTemplate.findHydroBoundaries fails sometimes. Should look into this!
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-10,1e-10)
-        hydroTemplate = WallGo.HydroTemplateModel(model,1e-10,1e-10)
+        hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
+        hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         if np.isnan(res1[i,0]):

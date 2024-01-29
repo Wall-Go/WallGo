@@ -11,3 +11,4 @@ docs/_build
 dist/
 *.hdf5
 .vscode/
+*.code-workspace
