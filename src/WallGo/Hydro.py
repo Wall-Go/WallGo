@@ -185,7 +185,11 @@ class Hydro:
 #        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
 #            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
+        if Tptemplate != None and Tmtemplate != None:
+            Tpm0 = [Tptemplate,Tmtemplate]
+        else:
+            Tpm0 = [self.Tnucl, 0.99*self.Tnucl]
 
         def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
@@ -341,7 +345,7 @@ class Hydro:
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
 #            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
-            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tn. Have to test if it is ok!
+            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
             vpmin = 1e-5 # Minimum value of vpmin
 
             def func(vpTry):

@@ -74,7 +74,7 @@ def test_findMatching():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
     for i in range(N):
-        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1.,1.)
         hydro = WallGo.Hydro(model,1e-6,500,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-10,1e-10)
         res1[i] = hydro.findMatching(vw[i])
@@ -92,7 +92,7 @@ def test_findvwLTE():
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
-        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1.,1.)
         hydro = WallGo.Hydro(model,1e-6,100,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
@@ -102,16 +102,21 @@ def test_findvwLTE():
 def test_findHydroBoundaries():
     res1,res2 = np.zeros((N,5)),np.zeros((N,5))
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+0.5*rng.random(N)    #JvdV: added a 0.5 in the last term, otherwise hydroTemplate.findHydroBoundaries fails sometimes. Should look into this!
+    alN = (1-psiN)/3+rng.random(N)    #JvdV: added a 0.5 in the last term, otherwise hydroTemplate.findHydroBoundaries fails sometimes. Should look into this!
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
     for i in range(N):
-        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1.,1.)
+        hydro = WallGo.Hydro(model,1e-6,50,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
+#        print(f"{vw[i]=} {alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=} {hydroTemplate.max_al()=}")
+#        print(f"{hydro.findMatching(vw[i])=}")
+#        print(res1[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
+#        print(f"{hydroTemplate.findMatching(vw[i])=}")
+#        print(res2[i])
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
