@@ -82,7 +82,7 @@ def test_solution(particle, M, N):
     deltaF = boltzmann.solveBoltzmannEquations()
 
     # building Boltzmann equation terms
-    operator, source = boltzmann.buildLinearEquations()
+    operator, source, liouville, collision = boltzmann.buildLinearEquations()
 
     # checking difference
     diff = operator @ deltaF.flatten(order="C") - source
