@@ -172,6 +172,10 @@ class Hydro:
 
         """
 
+        vwMapping = None #JvdV: Why is this called vwMapping?
+        if vp is None:
+            vwMapping = vw
+
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
         #JvdV: commented it out - as it lead to an unreasonable range
@@ -201,30 +205,30 @@ class Hydro:
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
 
-        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #This is an initial guess for Tplus and Tminus. It is not optimized, but it is quick.
-        # _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
-        # if Tptemplate != None and Tmtemplate != None:
-        #     Tpm0 = [Tptemplate,Tmtemplate]
-        # else:
-        #     Tpm0 = [self.Tnucl, 0.99*self.Tnucl]
 
-        # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved),
+        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #A simple initial guess for Tplus and Tminus. It is not optimized, but it is quick. If it does not work,
+        # we make a more sophisticated choice
+
+        # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
 
         if self.success:
             [Tp,Tm] = self.__inverseMappingT(sol.x)
-        else:
-            _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw) #We try again with a more educated guess for Tplus and Tminus. This is slower.
-            if Tptemplate != None and Tmtemplate != None:
-                Tpm0 = [Tptemplate,Tmtemplate]
-            else:
-                Tpm0 = [(self.Tnucl+self.TmaxGuess)/2, 0.99*self.Tnucl] #One last desperate attempt
+        else: #We try again with an inital guess based on the template model
+            try:
+                Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+            except:
+                Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+                #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+            if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+                Tpm0[0] = 1.01*Tpm0[1]
+            if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
+                Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
             sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
             self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
             [Tp,Tm] = self.__inverseMappingT(sol.x)
-            
             
 
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
