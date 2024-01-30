@@ -200,25 +200,21 @@ class Hydro:
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-        self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
+        self.success = sol.success or np.sum(sol.fun**2) < 1e-8 #If the error is small enough, we consider that root has converged even if it returns False.
 
         if self.success:
             [Tp,Tm] = self.__inverseMappingT(sol.x)
         else: #We try again with an inital guess based on the template model
-            try:
-                Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
-            except:
+            _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
+            Tpm0 = [Tptemplate,Tmtemplate]
+            #Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+            if Tptemplate is None or Tmtemplate is None:
                 Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
                 #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
-            if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
-                Tpm0[0] = 1.01*Tpm0[1]
-            if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-                Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
             sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-            self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
+            self.success = sol.success or np.sum(sol.fun**2) < 1e-8 #If the error is small enough, we consider that root has converged even if it returns False.
             [Tp,Tm] = self.__inverseMappingT(sol.x)
             
-
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
