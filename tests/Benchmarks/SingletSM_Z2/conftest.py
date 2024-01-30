@@ -94,11 +94,10 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
     """ Then manually interpolate """
     TMin, TMax, dT = BM.config["interpolateTemperatureRange"]
-    interpolationPointCount = math.ceil((TMax - TMin) / dT)
 
-    thermo.freeEnergyHigh.newInterpolationTable(TMin, TMax, interpolationPointCount)
-    thermo.freeEnergyLow.newInterpolationTable(TMin, TMax, interpolationPointCount)
-    
+    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
+    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
     yield thermo, BM
 
 
@@ -116,13 +115,14 @@ def singletBenchmarkHydro(singletBenchmarkThermo_interpolate: Tuple[WallGo.Therm
     yield WallGo.Hydro(thermo, TminGuess=TMinGuess, TmaxGuess=TMaxGuess), BM
 
 
-## This wouldn't need to be singlet-specific tbh. But it's here for now. And it really needs to get rid of the temperature argument
+## This wouldn't need to be singlet-specific tbh. But it's here for now
 @pytest.fixture(scope="session")
 def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
     M, N = 22, 11
     
-    # magic 0.05
+    # The magic numbers here are falloff scales in position and momentum directions. 
+    # Hardcoded for main singlet benchmark point. Would need a different grid for each benchmark point tbh
     grid = WallGo.Grid(M, N, 0.05, 100)
 
     return grid

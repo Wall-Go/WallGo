@@ -116,12 +116,15 @@ class EffectivePotential(ABC):
             raise ValueError("findCriticalTemperature needs TMin < TMax")
     
 
-        ## @todo Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
+        ## TODO Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
 
-        def freeEnergyDifference(inputT):
+        ## Wrapper that computes free-energy difference between our phases. This goes into scipy so scalar in, scalar out
+        def freeEnergyDifference(inputT: np.double) -> np.double:
             _, f1 = self.findLocalMinimum(minimum1, inputT)
             _, f2 = self.findLocalMinimum(minimum2, inputT)
-            return f2.real - f1.real
+            diff = f2.real - f1.real
+            ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
+            return diff.item()
         
 
         ## start from TMin and increase temperature in small steps until the free energy difference changes sign
