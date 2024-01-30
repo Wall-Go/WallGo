@@ -185,12 +185,6 @@ class Hydro:
 #        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
 #            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
-        if Tptemplate != None and Tmtemplate != None:
-            Tpm0 = [Tptemplate,Tmtemplate]
-        else:
-            Tpm0 = [self.Tnucl, 0.99*self.Tnucl]
-
         def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
             vmsq = min(vw**2,self.thermodynamics.csqLowT(Tpm[1]))
@@ -207,11 +201,31 @@ class Hydro:
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
 
+        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #This is an initial guess for Tplus and Tminus. It is not optimized, but it is quick.
+        # _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
+        # if Tptemplate != None and Tmtemplate != None:
+        #     Tpm0 = [Tptemplate,Tmtemplate]
+        # else:
+        #     Tpm0 = [self.Tnucl, 0.99*self.Tnucl]
+
         # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved),
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
-        [Tp,Tm] = self.__inverseMappingT(sol.x)
+
+        if self.success:
+            [Tp,Tm] = self.__inverseMappingT(sol.x)
+        else:
+            _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw) #We try again with a more educated guess for Tplus and Tminus. This is slower.
+            if Tptemplate != None and Tmtemplate != None:
+                Tpm0 = [Tptemplate,Tmtemplate]
+            else:
+                Tpm0 = [(self.Tnucl+self.TmaxGuess)/2, 0.99*self.Tnucl] #One last desperate attempt
+            sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
+            self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
+            [Tp,Tm] = self.__inverseMappingT(sol.x)
+            
+            
 
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))

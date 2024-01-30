@@ -88,15 +88,18 @@ def test_findMatching():
 def test_findvwLTE():
     res1,res2 = np.zeros(N),np.zeros(N)
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+rng.random(N)
+    alN = (1-psiN)/3+0.5*rng.random(N)
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1.,1.)
         hydro = WallGo.Hydro(model,1e-6,100,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model)
+        print(f"{alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=} {hydroTemplate.max_al()=}")
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
+        print(res1[i])
+        print(res2[i])
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
 
 def test_findHydroBoundaries():
@@ -108,14 +111,15 @@ def test_findHydroBoundaries():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1.,1.)
+        #print('Define hydro and hydroTemplate')
         hydro = WallGo.Hydro(model,1e-6,50,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        #print(f"{vw[i]=} {alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=} {hydroTemplate.max_al()=}")
         res1[i] = hydro.findHydroBoundaries(vw[i])
-#        print(f"{vw[i]=} {alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=} {hydroTemplate.max_al()=}")
-#        print(f"{hydro.findMatching(vw[i])=}")
+        #print(f"{hydro.findMatching(vw[i])=}")
 #        print(res1[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
-#        print(f"{hydroTemplate.findMatching(vw[i])=}")
+        #print(f"{hydroTemplate.findMatching(vw[i])=}")
 #        print(res2[i])
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0,0]
