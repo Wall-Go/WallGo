@@ -87,6 +87,9 @@ class CollisionArray:
         # Make sure collisionArray is in the right basis
         self.collisionArray = self.__changeBasis(collisionArray, basisType, self.basis)
         
+    def interpolateArray(self):
+        pass
+        
     def __changeBasis(self, collisionArray: np.ndarray, oldBasis: str, newBasis: str):
         """
         Transforms the basis of collisionArray to 'Cardinal'.
