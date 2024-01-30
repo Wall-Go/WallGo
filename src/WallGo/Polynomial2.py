@@ -221,7 +221,7 @@ class Polynomial:
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
         self.basis = newBasis
 
-    def evaluate(self, x):
+    def evaluate(self, x, axes=None):
         """
         Evaluates the polynomial at the compact coordinates x.
 
@@ -229,7 +229,10 @@ class Polynomial:
         ----------
         x : array-like
             Compact coordinates at which to evaluate the polynomial. Must have
-            a shape (self.N,:) or (self.N,).
+            a shape (len(axes),:) or (len(axes),).
+        axes : tuple or None, optional
+            Axes along which to be evaluated. If None, evaluate the polynomial
+            along all the axes. Default is None.
 
         Returns
         -------
@@ -238,15 +241,18 @@ class Polynomial:
 
         """
         x = np.asarray(x)
-        assert x.shape[0] == self.N and 1 <= len(x.shape) <= 2,\
+        if axes is None:
+            axes = tuple(np.arange(self.N))
+            
+        assert x.shape[0] == len(axes) and 1 <= len(x.shape) <= 2,\
             f'Polynomial error: x has shape {x.shape} but must be ({self.N},:) or ({self.N},).'
         singlePoint = False
         if len(x.shape) == 1:
-            x = x.reshape((self.N, 1))
+            x = x.reshape((len(axes), 1))
             singlePoint = True
 
         polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
-        for i in range(self.N):
+        for j,i in enumerate(axes):
             # Choosing the appropriate n
             n = None
             if self.endpoints[i]:
@@ -267,7 +273,7 @@ class Polynomial:
             # Computing the polynomial basis in the i direction
             pn = None
             if self.basis[i] == 'Cardinal':
-                pn = self.cardinal(x[i,:,None], n[None,:], self.direction[i])
+                pn = self.cardinal(x[j,:,None], n[None,:], self.direction[i])
 
             elif self.basis[i] == 'Chebyshev':
                 restriction = None
@@ -279,11 +285,11 @@ class Polynomial:
                         restriction = 'full'
                     else:
                         restriction = 'partial'
-                pn = self.chebyshev(x[i,:,None], n[None,:], restriction)
+                pn = self.chebyshev(x[j,:,None], n[None,:], restriction)
 
             polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.N+1)))
 
-        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.N+1)))
+        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.array(axes)+1))
         if singlePoint:
             return result[0]
         else:

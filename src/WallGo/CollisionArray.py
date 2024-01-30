@@ -38,7 +38,7 @@ class CollisionArray:
         CollisionArray.__checkBasis(basis)
         self.basis = basis
         self.particle1 = particle1
-        self.particle2= particle2
+        self.particle2 = particle2
         
         # Load the collision file
         self.loadFile(collisionFilename)
@@ -101,8 +101,29 @@ class CollisionArray:
             False,
         ) 
         
-    def interpolateArray(self, newBasisSize):
-        assert newBasisSize <= self.collisionFilePoly.grid.N, f"CollisionArray error: Basis size too small to generate a collision array of size N = {newBasisSize}."        
+    def interpolateArray(self, newBasisSize: int):
+        """
+        Interpolate the collision file to get a collision array of a smaller 
+        size.
+
+        Parameters
+        ----------
+        newBasisSize : int
+            Basis size of the desired collision array.
+
+        Returns
+        -------
+        None.
+
+        """
+        assert newBasisSize <= self.collisionFilePoly.grid.N, "CollisionArray error: newBasisSize must be smaller than the collision file's basisType."
+        
+        # Make sure the collision file is in the Chebyshev basis which is 
+        # required for the interpolation.
+        self.collisionFilePoly.changeBasis(("Cardinal", "Cardinal", "Chebyshev", "Chebyshev"), inverseTranspose=True)  
+        
+        # Create a Grid object for the interpolated collision array
+        newGrid = Grid(newBasisSize, newBasisSize, 1, 1)
           
     def __checkBasis(basis: str):
         """
