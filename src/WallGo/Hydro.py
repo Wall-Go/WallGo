@@ -46,6 +46,7 @@ class Hydro:
 
         self.vJ = self.findJouguetVelocity()
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
+        # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
 
     def findJouguetVelocity(self):
@@ -175,19 +176,6 @@ class Hydro:
         vwMapping = None #JvdV: Why is this called vwMapping?
         if vp is None:
             vwMapping = vw
-
-        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
-        # the relevant bounds.
-        #JvdV: commented it out - as it lead to an unreasonable range
-#        try:
-#            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
-#        except:
-#            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
-#            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
-#        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
-#            Tpm0[0] = 1.01*Tpm0[1]
-#        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-#            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
         def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
@@ -436,13 +424,17 @@ class Hydro:
         def shock(vw): # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
             return vp*vw-self.thermodynamics.csqHighT(Tp)
+        
 
         self.success = True
         vmin = 0.01
         vmax = self.vJ
 
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
-            vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+            try:
+                vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+            except:
+                return 1 # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
 
         fmax = func(vmax)
         if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
