@@ -200,20 +200,28 @@ class Hydro:
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-        self.success = sol.success or np.sum(sol.fun**2) < 1e-8 #If the error is small enough, we consider that root has converged even if it returns False.
+        self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
+        [Tp,Tm] = self.__inverseMappingT(sol.x)
 
-        if self.success:
-            [Tp,Tm] = self.__inverseMappingT(sol.x)
-        else: #We try again with an inital guess based on the template model
-            _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
-            Tpm0 = [Tptemplate,Tmtemplate]
-            #Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
-            if Tptemplate is None or Tmtemplate is None:
-                Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
-                #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
-            sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-            self.success = sol.success or np.sum(sol.fun**2) < 1e-8 #If the error is small enough, we consider that root has converged even if it returns False.
-            [Tp,Tm] = self.__inverseMappingT(sol.x)
+        # if self.success or 1 is 1:
+        #     [Tp,Tm] = self.__inverseMappingT(sol.x)
+        # else: #We try again with an inital guess based on the template model
+        #     # print(np.sum(sol.fun**2))
+        #     _,_,Tptemplate,Tmtemplate = self.template.findMatching(vw)
+        #     Tpm0 = [Tptemplate,Tmtemplate]
+        #     #Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+        #     if Tptemplate is None or Tmtemplate is None:
+        #         Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+        #         #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+        #     sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
+        #     if np.sum(sol.fun**2) > 0.1:
+        #         print(f"{Tptemplate=} {Tmtemplate =}")
+        #         print(f"{vw=} {Tpm0=} {self.__inverseMappingT(sol.x)} {np.sum(sol.fun**2)=}")
+        #     else:
+        #         print('this was actually successful')
+        #         print(np.sum(sol.fun**2))
+        #     self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
+        #     [Tp,Tm] = self.__inverseMappingT(sol.x)
             
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
