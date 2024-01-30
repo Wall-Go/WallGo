@@ -43,11 +43,14 @@ class CollisionArray:
         # Load the collision file
         self.loadFile(collisionFilename)
         
+        # Interpolates the collision file
+        self.interpolateArray(N)
+        
         # Change the basis
-        self.collisionFilePoly.changeBasis(("Cardinal", "Cardinal", basis, basis), inverseTranspose=True)
+        self.interpolatedPoly.changeBasis(("Cardinal", "Cardinal", basis, basis), inverseTranspose=True)
         
         # Extract the collision array
-        self.collisionArray = self.collisionFilePoly.coefficients
+        self.collisionArray = self.interpolatedPoly.coefficients
         
     def __getitem__(self, key):
         return self.collisionArray[key]
@@ -124,6 +127,18 @@ class CollisionArray:
         
         # Create a Grid object for the interpolated collision array
         newGrid = Grid(newBasisSize, newBasisSize, 1, 1)
+        
+        # Generate a grid of points to give as input to Polynomial.evaluate.
+        gridPoints = np.array(np.meshgrid(newGrid.rzValues,newGrid.rpValues,indexing='ij')).reshape((2,(newGrid.N-1)**2))
+        
+        # Evaluate the collision file on that grid,truncate it and reshape it.
+        interpolatedArray = self.collisionFilePoly.evaluate(gridPoints, (0,1))[:,:newGrid.N-1,:newGrid.N-1].reshape(4*(newGrid.N-1,))
+        
+        # Create a new Polynomial object containing the interpolated array
+        self.interpolatedPoly = Polynomial(
+            interpolatedArray, newGrid,
+            ("Cardinal", "Cardinal", "Chebyshev", "Chebyshev"),
+            ("pz","pp","pz","pp"), False)
           
     def __checkBasis(basis: str):
         """

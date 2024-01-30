@@ -635,5 +635,5 @@ class EOM:
         # file with all out-of-eq pairs, or are individual files better?
 
         suffix = "hdf5"
-        fileName = f"collisions_top_top_N{self.grid.N}.{suffix}"
+        fileName = f"collisions_top_top_N19.{suffix}"
         return getSafePathToResource("Data/" + fileName)

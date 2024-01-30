@@ -17,7 +17,7 @@ from WallGo.WallGoUtils import getSafePathToResource
 """
 Grid
 """
-M = 19
+M = 20
 N = 19
 T = 100
 L = 5/T
@@ -69,7 +69,7 @@ particle = Particle(
 Collision array
 """
 suffix = "hdf5"
-fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+fileName = f"collisions_top_top_N19.{suffix}"
 collisionFile = getSafePathToResource("Data/" + fileName)
 collisionArrayCard = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
 collisionArrayCheb = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
