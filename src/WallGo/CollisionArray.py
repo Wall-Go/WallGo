@@ -139,6 +139,23 @@ class CollisionArray:
             interpolatedArray, newGrid,
             ("Cardinal", "Cardinal", "Chebyshev", "Chebyshev"),
             ("pz","pp","pz","pp"), False)
+        
+    def estimateLxi(self, v: float, T1: float, T2: float, msq1: float, msq2: float, grid: Grid):
+        _, pz, pp = grid.getCoordinates() 
+        pz = pz[:, np.newaxis]
+        pp = pp[np.newaxis, :]
+        E1 = np.sqrt(msq1 + pz**2 + pp**2)
+        E2 = np.sqrt(msq2 + pz**2 + pp**2)
+        
+        gamma = 1 / np.sqrt(1 - v**2)
+        PWall1 = gamma * (pz - v * E1)
+        PWall2 = gamma * (pz - v * E2)
+    
+        size = grid.N-1
+        eigvals1 = np.linalg.eigvals(T1**2*((self.collisionArray/PWall1[:,:,None,None]).reshape((size,size,size**2))).reshape((size**2,size**2)))
+        eigvals2 = np.linalg.eigvals(T2**2*((self.collisionArray/PWall2[:,:,None,None]).reshape((size,size,size**2))).reshape((size**2,size**2)))
+        
+        return np.max(-1/np.real(eigvals1)),np.max(1/np.real(eigvals2))
           
     def __checkBasis(basis: str):
         """

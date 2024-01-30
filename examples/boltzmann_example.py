@@ -5,6 +5,7 @@ import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
 import matplotlib.pyplot as plt
 from scipy import integrate
+from time import time
 from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
 from WallGo.CollisionArray import CollisionArray
 from WallGo.Thermodynamics import Thermodynamics
@@ -74,6 +75,8 @@ collisionFile = getSafePathToResource("Data/" + fileName)
 collisionArrayCard = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
 collisionArrayCheb = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
 
+L_xi1,L_xi2 = collisionArrayCard.estimateLxi(velocityMid, T[-1], T[0], particle.msqVacuum(field[:,-1]), particle.msqVacuum(field[:,0]), grid)
+
 """
 Boltzmann solver
 """
@@ -118,6 +121,7 @@ ax[3].set_ylabel(r"$\Delta_{11}$")
 ax[3].set_xlim((-20*L,20*L))
 ax[3].grid()
 plt.show()
+
 
 # now making a deltaF by hand
 # deltaF = np.zeros(deltaF.shape)
