@@ -141,6 +141,33 @@ class CollisionArray:
             ("pz","pp","pz","pp"), False)
         
     def estimateLxi(self, v: float, T1: float, T2: float, msq1: float, msq2: float, grid: Grid):
+        """
+        Estimate the decay length of the solution by computing the eigenvalues
+        of the collision array.
+
+        Parameters
+        ----------
+        v : float
+            Wall velocity in the plasma frame.
+        T1 : float
+            Temperature in the symmetric phase.
+        T2 : float
+            Temperature in the broken phase.
+        msq1 : float
+            Squared mass in the symmetric phase.
+        msq2 : float
+            Squared mass in the broken phase.
+        grid : Grid
+            Object of the class Grid.
+
+        Returns
+        -------
+        Tuple(float,float)
+            Approximate decay length in the symmetric and broken phases, 
+            respectively.
+
+        """
+        # Compute the grid of momenta
         _, pz, pp = grid.getCoordinates() 
         pz = pz[:, np.newaxis]
         pp = pp[np.newaxis, :]
@@ -151,10 +178,12 @@ class CollisionArray:
         PWall1 = gamma * (pz - v * E1)
         PWall2 = gamma * (pz - v * E2)
     
+        # Compute the eigenvalues
         size = grid.N-1
         eigvals1 = np.linalg.eigvals(T1**2*((self.collisionArray/PWall1[:,:,None,None]).reshape((size,size,size**2))).reshape((size**2,size**2)))
         eigvals2 = np.linalg.eigvals(T2**2*((self.collisionArray/PWall2[:,:,None,None]).reshape((size,size,size**2))).reshape((size**2,size**2)))
         
+        # Compute the decay length
         return np.max(-1/np.real(eigvals1)),np.max(1/np.real(eigvals2))
           
     def __checkBasis(basis: str):
