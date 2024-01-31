@@ -274,7 +274,7 @@ class HydroTemplateModel:
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
         vm = min(self.cb,vw)
-        al_max = 1./3.
+        al_max = 1/3.
         vp_max = min(self.cs2/vw,vw,vm)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
 
@@ -282,9 +282,9 @@ class HydroTemplateModel:
             sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)
 
         except Exception as e:
-            print("!!! Exception in HydroTemplateModel.findMatching():")
-            print(e)
-            print()
+#            print("!!! Exception in HydroTemplateModel.findMatching():")
+#            print(e)
+#            print()
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
         wp = self.w_from_alpha(sol.root)
