@@ -308,29 +308,28 @@ class Hydro:
 
         return Tn.root
 
-#This function is commented out because it is never called. The purpose of the function is to find the strongest possible shock solution 
-    # def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
-    #     r"""
-    #     Finds the smallest nucleation temperature for which a shock can exist.
-    #     For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
-    #     The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
+    def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
+        r"""
+        Finds the smallest nucleation temperature for which a shock can exist.
+        For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
+        The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
  
-    #     Parameters
-    #     ----------
-    #     vw : double
-    #         The wall velocity
+        Parameters
+        ----------
+        vw : double
+            The wall velocity
 
-    #     Returns
-    #     -------
-    #     Tn : double
-    #         The nucleation temperature with the strongest possible shock
+        Returns
+        -------
+        Tn : double
+            The nucleation temperature with the strongest possible shock
+        """
+        def vpnum(Tpm):
+            return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
 
-    #     """
-    #     def vpnum(Tpm):
-    #         return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
-
-    #     Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
-    #     return self.solveHydroShock(vw,0,Tp)
+        Tp,_ = np.abs(fsolve(vpnum,[(self.TmaxGuess+self.Tnucl)/2,self.Tnucl]))
+        
+        return self.solveHydroShock(vw,0,Tp)
 
     def findMatching(self, vwTry):
         r"""
@@ -353,6 +352,10 @@ class Hydro:
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
 
         else: # Hybrid or deflagration
+            if self.Tnucl <self.strongestShock(vwTry):
+                print('This wall velocity does not have a consistent solution')
+                return None, None, None, None
+
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
 #            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
             vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
