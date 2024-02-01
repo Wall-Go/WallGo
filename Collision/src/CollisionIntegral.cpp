@@ -298,17 +298,21 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
 
         Kinematics kinematics = calculateKinematics_ultrarelativistic(p1, p2, p1Vec, p2Vec, p3VecHat, p1p2Dot, p1p3HatDot, p2p3HatDot);
 
-        // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
-        const std::array<double, 4> TmTn {
-            integrandParameters.TmTn_p1,
-            polynomialBasis.TmTn(m, n, kinematics.FV2),
-            polynomialBasis.TmTn(m, n, kinematics.FV3),
-            polynomialBasis.TmTn(m, n, kinematics.FV4)
-        };
-        
-        for (CollElem<4> &collElem : collisionElements_ultrarelativistic)
+        // Account for theta(E4). Note that in the non-UR case this is built-in to the kinematics computation
+        if (kinematics.FV4.energy() >= 0)
         {
-            fullIntegrand += evaluateCollisionElement(collElem, kinematics, TmTn);
+            // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
+            const std::array<double, 4> TmTn {
+                integrandParameters.TmTn_p1,
+                polynomialBasis.TmTn(m, n, kinematics.FV2),
+                polynomialBasis.TmTn(m, n, kinematics.FV3),
+                polynomialBasis.TmTn(m, n, kinematics.FV4)
+            };
+            
+            for (CollElem<4> &collElem : collisionElements_ultrarelativistic)
+            {
+                fullIntegrand += evaluateCollisionElement(collElem, kinematics, TmTn);
+            }
         }
     }
 
@@ -317,6 +321,7 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
     {
         const std::vector<Kinematics> kinematicFactors = calculateKinematics(collElem, p1, p2, p1Vec, p2Vec, p3VecHat, p1p2Dot, p1p3HatDot, p2p3HatDot);
 
+        // kinematicFactors only contains solutions with E4 > 0 so the theta(E4) is OK.
         for (const Kinematics &kinematics : kinematicFactors)
         {
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
