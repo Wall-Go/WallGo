@@ -1,3 +1,5 @@
+#ifndef GSLWRAPPER_H
+#define GSLWRAPPER_H
 
 // Monte Carlo integration
 #include <gsl/gsl_math.h>
@@ -28,3 +30,5 @@ namespace gslWrapper {
     // pp should be of gslFunctionParams type
     double integrandWrapper(double* intVars, size_t dim, void* pp); 
 }
+
+#endif

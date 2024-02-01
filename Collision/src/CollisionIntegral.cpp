@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <assert.h>
 
 #include "CollisionIntegral.h"
 #include "CollElem.h"
@@ -191,6 +192,30 @@ std::vector<KinematicFactor> CollisionIntegral4::calculateKinematicFactor(const 
 }
 
 
+KinematicFactor CollisionIntegral4::calculateKinematicFactor_ultrarelativistic(double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot)
+{
+     // Now E_i = p_i and the momentum-conserving delta function gives p3 = (p1*p2 - p1.p2 ) / (p1 + p2 - p3hat.(p1+p2))
+     
+     const double denom = p1 + p2 - p1p3HatDot - p2p3HatDot;
+     const double p3 = (p1*p2 - p1p2Dot) / denom;
+
+     KinematicFactor newFactor;
+     newFactor.p3 = p3;
+
+     assert(newFactor.p3 >= 0);
+
+     newFactor.E1 = p1;
+     newFactor.E2 = p2;
+     newFactor.E3 = p3;
+
+     const double gDer = -2 * denom;
+
+     newFactor.prefactor = p2*p3 / std::abs(gDer);
+     
+     return newFactor;
+}
+
+
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters)
 {
@@ -227,8 +252,31 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
      const double p1p3HatDot = -1.0 * FV1dummy*FV3Hat;
      const double p2p3HatDot = -1.0 * FV2dummy*FV3Hat;
 
-     // Kinematics differs for each collision process since the masses are generally different
-     // TODO optimize so that if everything is ultrarelativistic, calculate kinematic factors only once
+     // Kinematics differs for each collision element since the masses are generally different.
+     // But for CollElems with only ultrarelativistic particles the kinematic factors will always be the same,
+     // so handle those separately first.
+
+/*
+     if (bOptimizeUltrarelativistic && collisionElements_ultrarelativistic.size() > 0)
+     {
+          const KinematicFactor kinFactor = calculateKinematicFactor_ultrarelativistic(p1, p2, p1p2Dot, p1p3HatDot, p2p3HatDot);
+
+          // Fix 4-momenta for real this time
+          FourVector FV1 = FV1dummy;
+          FV1[0] = kinFactor.E1;
+          FourVector FV2 = FV2dummy;
+          FV2[0] = kinFactor.E2;
+          FourVector FV3 = kinFactor.p3*FV3Hat;
+          FV3[0] = kinFactor.E3;
+
+          for (const CollElem<4> &collElemUR : collisionElements_ultrarelativistic)
+          {
+
+          }
+
+     }
+*/
+
      for (CollElem<4> &collElem : collisionElements) {
 
           const std::vector<KinematicFactor> kinematicFactors = calculateKinematicFactor(collElem, p1, p2, p1p2Dot, p1p3HatDot, p2p3HatDot);

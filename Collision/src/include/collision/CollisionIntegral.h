@@ -73,10 +73,9 @@ public:
         return params;
     }
 
-    /* Evaluate all 'collision elements' at input momenta, sum them 
-    and calculate the kinematic prefactor (including the integration measure)
-    Specifically, this calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
-    Includes the 1/(2N) prefactor. */
+    /* Calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
+    Includes the 1/(2N) prefactor. Kinematics is solved (from delta functions) separately for each 
+    CollElem in our collisionElements array. For ultrarelativistic CollElems we heavily optimize the kinematic part. */
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters);
 
@@ -109,6 +108,10 @@ private:
     We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector.
     Inputs: magnitudes of p1, p2, dot products p1.p2, p1.p3Hat, p2.p3Hat. Here p3Hat is unit vector in direction of p3 (the direction is known, this solves magnitude). */
     std::vector<KinematicFactor> calculateKinematicFactor(const CollElem<4> &collElem, double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+
+    /* Computes the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollElem itself. 
+    In UR limit the momentum-conserving delta function only gives one solution for p3, so this one does not return an array. Used for optimization. */
+    KinematicFactor calculateKinematicFactor_ultrarelativistic(double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
 
     // 4-particle 'collision elements' that contribute to the process
     std::vector<CollElem<4>> collisionElements;

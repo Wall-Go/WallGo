@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <array>
+#include <assert.h>
 
 // The four-vector class. Contains (p0,p1,p2,p3). The first element is the energy. Metric is diag(1, -1, -1, -1).
 class FourVector {
@@ -53,13 +54,13 @@ public:
         return *this;
     }
 
-	// TODO range check
     inline double& operator[](int index) {
+        assert(index < 4);
         return comp[index];
     }
 
-	// TODO range check
     inline const double& operator[](int index) const {
+        assert(index < 4);
         return comp[index];
     }
 
