@@ -5,6 +5,8 @@
 #include <array>
 #include <assert.h>
 
+#include "ThreeVector.h"
+
 // The four-vector class. Contains (p0,p1,p2,p3). The first element is the energy. Metric is diag(1, -1, -1, -1).
 class FourVector {
 	
@@ -37,11 +39,18 @@ public:
 		comp[3] = x3;
 	}
 
-
 	// Constructor from length-4 std::array
-	FourVector(const std::array<double, 4> arr) {
+	FourVector(const std::array<double, 4> &arr) {
 		comp = arr;
 	}
+
+    // Constructor from ThreeVector and a scalar. This gives (comp0, vec3)
+    FourVector(double comp0, const ThreeVector& vec3) {
+        comp[0] = comp0;
+        comp[1] = vec3.getX();
+        comp[2] = vec3.getY();
+        comp[3] = vec3.getZ();
+    }
 
 	//------------- Operator overloads
 

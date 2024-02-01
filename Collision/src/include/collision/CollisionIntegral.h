@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "FourVector.h"
+#include "ThreeVector.h"
 #include "CollElem.h"
 #include "Common.h"
 #include "PolynomialBasis.h"
@@ -17,15 +18,14 @@ inline void calculateAllCollisions() {}
 /* This holds data for computing the "kinematic" factor in a collision integral. The kinematic factor is: 
     p2^2/E2 * p3^2/E3 * theta(E4) * delta(g(p3))
 where the delta function enforces momentum conservation. Standard delta-trick expresses it as sum_i |1/g'(p3)| where we sum over roots of g(p3) = 0.
-This struct describes one such root, and we only allow cases with p3 > 0, E4 >= 0
+This struct describes one such root, and we only allow cases with p3 > 0, E4 >= 0.
 */ 
-struct KinematicFactor 
+struct Kinematics 
 {
-    double p3;
-    // Storing this to avoid repeatedly taking sqrt. No need to store E4
-    double E1, E2, E3;
+    FourVector FV1, FV2, FV3, FV4;
     double prefactor; // This is p2^2/E2 * p3^2/E3 * |1 / g'(p3)|
 };
+
 
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
@@ -94,6 +94,9 @@ public:
 
     void addCollisionElement(const CollElem<4>& elem);
 
+    /* Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing */
+    bool bOptimizeUltrarelativistic = true;
+
 private:
 
     // For avoiding 1/0
@@ -101,17 +104,20 @@ private:
 
     const Chebyshev polynomialBasis;
 
-    // Should be no reason to disable this outside testing
-    bool bOptimizeUltrarelativistic = true;
-
     /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
     We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector.
-    Inputs: magnitudes of p1, p2, dot products p1.p2, p1.p3Hat, p2.p3Hat. Here p3Hat is unit vector in direction of p3 (the direction is known, this solves magnitude). */
-    std::vector<KinematicFactor> calculateKinematicFactor(const CollElem<4> &collElem, double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+    This takes a bunch of vectors, their magnitudes and dot products as input, there is some redundancy but we're trying to avoid having to compute them many times. */
+    std::vector<Kinematics> calculateKinematics(const CollElem<4> &collElem, double p1, double p2, 
+        const ThreeVector& p1Vec, const ThreeVector& p2Vec, const ThreeVector& p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
 
-    /* Computes the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollElem itself. 
-    In UR limit the momentum-conserving delta function only gives one solution for p3, so this one does not return an array. Used for optimization. */
-    KinematicFactor calculateKinematicFactor_ultrarelativistic(double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+    /* Optimized computation of the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollElem itself. 
+    In UR limit the momentum-conserving delta function gives only one solution for p3, so this one does not return an array. */
+    Kinematics calculateKinematics_ultrarelativistic(double p1, double p2, 
+        const ThreeVector& p1Vec, const ThreeVector& p2Vec, const ThreeVector& p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+
+
+    /* Evaluate |M^2|/N * P[TmTn] * (kinematics.prefactor). TmTn are the polynomial factors evaluated at each momenta. TODO make this so that collElem can be const...? */
+    double evaluateCollisionElement(CollElem<4> &collElem, const Kinematics& kinematics, const std::array<double, 4>& TmTn);
 
     // 4-particle 'collision elements' that contribute to the process
     std::vector<CollElem<4>> collisionElements;
