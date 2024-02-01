@@ -98,11 +98,102 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k) {
      return std::array<double, 2>( {mean, error} );
 }
 
+void CollisionIntegral4::addCollisionElement(const CollElem<4>& elem)
+{
+     // TODO should check here that the collision element makes sense: has correct p1 particle etc
+
+     collisionElements.push_back(elem);
+     if (elem.isUltrarelativistic())
+     {
+          collisionElements_ultrarelativistic.push_back(elem);
+     }
+     else
+     {
+          collisionElements_nonUltrarelativistic.push_back(elem);
+     }
+
+}
+
+
+std::vector<KinematicFactor> CollisionIntegral4::calculateKinematicFactor(const CollElem<4>& collElem, double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot)
+{
+     // Vacuum masses squared
+     std::array<double, 4> massSquared;
+     for (int i=0; i<4; ++i) {
+          massSquared[i] = collElem.particles[i].getVacuumMassSquared();
+     }
+
+     // Energies: Since p3 is not fixed yet we only know E1, E2
+     double E1 = std::sqrt(p1*p1 + massSquared[0]);
+     double E2 = std::sqrt(p2*p2 + massSquared[1]);
+
+     // Now def. function g(p3) = FV4(p3) - msq4 and express the delta function in
+     // terms of roots of g(p3) and delta(p3 - p3root); p3 integral becomes trivial.
+     // Will need to solve a quadratic equation; some helper variables for it:
+     double Q = massSquared[0] + massSquared[1] + massSquared[2] - massSquared[3];
+     double kappa = Q + 2.0 * (E1*E2 - p1p2Dot);
+     double eps = 2.0 * (E1 + E2);
+     double delta = 2.0 * (p1p3HatDot + p2p3HatDot);
+
+     // The eq is this. Could be used for failsafe checks, but so far haven't had any issues so commented out */
+     /*
+     auto funcG = [&](double p3) {
+          double m3sq = massSquared[2];
+          return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
+     };
+     */
+
+     // Quadratic eq. A p3^2 + B p3 + C = 0, take positive root(s)
+     double A = delta*delta - eps*eps;
+     double B = 2.0 * kappa * delta;
+     double C = kappa*kappa - eps*eps*massSquared[2];
+     // Roots of g(p3):
+     double discriminant = B*B - 4.0*A*C;
+     double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
+     double root2 = 0.5 * (-B + sqrt(discriminant)) / A;
+
+     // Since p3 is supposed to be magnitude, pick only positive roots (p3 = 0 contributes nothing)
+     const std::vector<double> roots{ root1, root2 };
+
+     std::vector<KinematicFactor> factors;
+     factors.reserve(2);
+
+     for (double p3 : roots) if (p3 > 0)
+     {
+          const double E3 = std::sqrt(p3*p3 + massSquared[2]);
+
+          // E4 is fixed by 4-momentum conservation. There is a theta(E4) so we only accept E4 >= 0
+          const double E4 = E1 + E2 - E3;
+
+          if (E4 < 0) continue;
+
+          KinematicFactor newFactor;
+          newFactor.p3 = p3;
+          newFactor.E1 = E1;
+          newFactor.E2 = E2;
+          newFactor.E3 = E3;
+
+          // g'(p3). Probably safe since we required p3 > 0, so E3 > 0:
+          const double gDer = delta - eps * p3 / E3;
+
+          newFactor.prefactor = p2*p3 * (p2/(E2 + SMALL_NUMBER)) * (p3/(E3 + SMALL_NUMBER)) / std::abs(gDer);
+
+          factors.push_back(newFactor);
+     }
+
+     // TODO:
+     // 1) Check for possible singularities
+     // 2) Check that the root(s) satisfy the original eq. with square root
+     // 3) Is it even possible to have 2 positive roots??
+
+
+    return factors;
+}
 
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters)
-     {
+{
      
      double fullIntegrand = 0.0;
 
@@ -140,88 +231,22 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
      // TODO optimize so that if everything is ultrarelativistic, calculate kinematic factors only once
      for (CollElem<4> &collElem : collisionElements) {
 
-          // Vacuum masses squared
-          std::array<double, 4> massSquared;
-          for (int i=0; i<4; ++i) {
-               massSquared[i] = collElem.particles[i].getVacuumMassSquared();
-          }
-
-          // Energies: Since p3 is not fixed yet we only know E1, E2 
-          double E1 = std::sqrt(p1*p1 + massSquared[0]);
-          double E2 = std::sqrt(p2*p2 + massSquared[1]);
-
-
-          //------------------------------- TODO move this bit elsewhere?
-          
-          // Now def. function g(p3) = FV4(p3) - msq4 and express the delta function in 
-          // terms of roots of g(p3) and delta(p3 - p3root); p3 integral becomes trivial.
-          // Will need to solve a quadratic equation; some helper variables for it:
-          double Q = massSquared[0] + massSquared[1] + massSquared[2] - massSquared[3];
-          double kappa = Q + 2.0 * (E1*E2 - p1p2Dot);
-          double eps = 2.0 * (E1 + E2);
-          double delta = 2.0 * (p1p3HatDot + p2p3HatDot);
-          
-          auto funcG = [&](double p3) {
-               double m3sq = massSquared[2];
-               return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
-          };
-
-          // Quadratic eq. A p3^2 + B p3 + C = 0, take positive root(s)
-          double A = delta*delta - eps*eps;
-          double B = 2.0 * kappa * delta;
-          double C = kappa*kappa - eps*eps*massSquared[2];
-          // Roots of g(p3):
-          double discriminant = B*B - 4.0*A*C;
-          double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
-          double root2 = 0.5 * (-B + sqrt(discriminant)) / A;
-
-          // TODO:
-          // 1) Check for possible singularities
-          // 2) Check that the root(s) satisfy the original eq. with square root
-          // 3) Is it possible to have 2 positive roots??
-
-          //-------------------------------
-          std::array<double, 2> rootp3({root1, root2});
+          const std::vector<KinematicFactor> kinematicFactors = calculateKinematicFactor(collElem, p1, p2, p1p2Dot, p1p3HatDot, p2p3HatDot);
 
           // Now proceed to fix remaining 4-momenta
-          for (double p3 : rootp3) if (p3 >= 0.0) {
-
-               if (std::abs(funcG(p3)) > 1e-8) {
-                    std::cerr << "! Invalid root in CollisionIntegral4::calculateIntegrand \n";
-               }
-
-               double E3 = std::sqrt(p3*p3 + massSquared[2]);
+          for (const KinematicFactor& kinFactor : kinematicFactors)
+          {
 
                // Fix 4-momenta for real this time
                FourVector FV1 = FV1dummy;
-               FV1[0] = E1;
+               FV1[0] = kinFactor.E1;
                FourVector FV2 = FV2dummy;
-               FV2[0] = E2;
-               FourVector FV3 = p3*FV3Hat;
-               FV3[0] = E3;
+               FV2[0] = kinFactor.E2;
+               FourVector FV3 = kinFactor.p3*FV3Hat;
+               FV3[0] = kinFactor.E3;
 
                // momentum conservation fixes P4 
                const FourVector FV4 = FV1 + FV2 - FV3;
-
-               if (FV4.energy() < 0.0) {
-                    std::cerr << "! Negative energy E4: " << FV4.energy() << "\n";
-                    continue;
-               }
-
-               // Kinematic prefactor, ie. everything from integration measure
-               double kinPrefac = 1.0;
-               // Avoid spurious singularity at zero momenta, zero mass
-               if (std::abs(massSquared[1]) < massSquaredLowerBound) kinPrefac *= p2;
-               else kinPrefac *= p2*p2 / E2;
-
-               if (std::abs(massSquared[2]) < massSquaredLowerBound) kinPrefac *= p3;
-               else kinPrefac *= p3*p3 / E3;
-               // additional factor from delta(g(p3))
-               double gDer = 0.0;
-               if (std::abs(massSquared[2]) < massSquaredLowerBound) gDer = delta - eps;
-               else gDer = delta - eps * p3 / E3;
-               
-               kinPrefac /= std::abs(gDer);
 
                // Calculate deltaF's for all momenta.
                // In our spectral approach this means that we replace deltaF with 
@@ -242,11 +267,12 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
                     }
                 }
 
-               // Now evaluate |M|^2 P[f] for this CollElem
-               std::array<FourVector, 4> fourMomenta({FV1, FV2, FV3, FV4});
+               // Evaluate |M|^2 P[f] for this CollElem
+               const std::array<FourVector, 4> fourMomenta({FV1, FV2, FV3, FV4});
                double integrand = collElem.evaluate( fourMomenta, deltaF );
 
-               integrand *= kinPrefac;
+               // Multiply by p2^2 / E2 * p3^2 / E3 |1/g'(p3)|
+               integrand *= kinFactor.prefactor;
 
                fullIntegrand += integrand;
           } // end p3 : rootp3
@@ -255,6 +281,6 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
      
      // Common numerical prefactor
      constexpr double PI = constants::pi;
-     constexpr double pi2Pow5 = (2.0*PI) * (2.0*PI) * (2.0*PI) * (2.0*PI) * (2.0*PI);
-     return fullIntegrand / pi2Pow5 / 8.0;
+     constexpr double pi2Pow58 = (2.0*PI) * (2.0*PI) * (2.0*PI) * (2.0*PI) * (2.0*PI) * 8.0;
+     return fullIntegrand / pi2Pow58;
 }

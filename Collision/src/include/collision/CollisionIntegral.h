@@ -14,12 +14,27 @@
 inline void calculateAllCollisions() {}
 
 
-// 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
-// This is always assumed to be first particle in collisionElements[i].particles.
-// Momenta are denoted p1, p2 ; p3, p4.
-// Assumes a 5D integral of form:
-// int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
-// So that 9D -> 5D reduction has been done analytically and this class calculates the rest.
+/* This holds data for computing the "kinematic" factor in a collision integral. The kinematic factor is: 
+    p2^2/E2 * p3^2/E3 * theta(E4) * delta(g(p3))
+where the delta function enforces momentum conservation. Standard delta-trick expresses it as sum_i |1/g'(p3)| where we sum over roots of g(p3) = 0.
+This struct describes one such root, and we only allow cases with p3 > 0, E4 >= 0
+*/ 
+struct KinematicFactor 
+{
+    double p3;
+    // Storing this to avoid repeatedly taking sqrt. No need to store E4
+    double E1, E2, E3;
+    double prefactor; // This is p2^2/E2 * p3^2/E3 * |1 / g'(p3)|
+};
+
+/*
+2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
+This is always assumed to be first particle in collisionElements[i].particles.
+Momenta are denoted p1, p2 ; p3, p4.
+Assumes a 5D integral of form:
+    int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
+So that 9D -> 5D reduction has been done analytically and this class calculates the rest.
+*/
 class CollisionIntegral4 {
 
 public:
@@ -41,12 +56,6 @@ public:
     CollisionIntegral4(std::size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
 
     ~CollisionIntegral4() {}  
-
-    void addCollisionElement(const CollElem<4> &collElem) { 
-        collisionElements.push_back(collElem); 
-        // TODO should check here that the collision element makes sense: has correct p1 particle etc
-    }
-
 
     // 
     IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const {
@@ -83,16 +92,31 @@ public:
     std::array<double, 2> evaluate(int m, int n, int j, int k);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
-  
-    // 4-particle 'collision elements' that contribute to the process
-    std::vector<CollElem<4>> collisionElements;
+
+    void addCollisionElement(const CollElem<4>& elem);
 
 private:
 
-    // Masses smaller than this are set to 0 when computing the kinematic prefactor. This is to avoid spurious singularities at small momenta
-    const double massSquaredLowerBound = 1e-14;
+    // For avoiding 1/0
+    const double SMALL_NUMBER = 1e-50;
 
     const Chebyshev polynomialBasis;
+
+    // Should be no reason to disable this outside testing
+    bool bOptimizeUltrarelativistic = true;
+
+    /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
+    We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector.
+    Inputs: magnitudes of p1, p2, dot products p1.p2, p1.p3Hat, p2.p3Hat. Here p3Hat is unit vector in direction of p3 (the direction is known, this solves magnitude). */
+    std::vector<KinematicFactor> calculateKinematicFactor(const CollElem<4> &collElem, double p1, double p2, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+
+    // 4-particle 'collision elements' that contribute to the process
+    std::vector<CollElem<4>> collisionElements;
+
+    /* We separate the collision elements into two subsets: ones with only ultrarelativistic (UR) external particles, and all others. 
+    This allows optimizations related to the kinematic factor in UR terms. Not ideal to have both these and the full array though */
+    std::vector<CollElem<4>> collisionElements_ultrarelativistic;
+    std::vector<CollElem<4>> collisionElements_nonUltrarelativistic;
 };
 
 
