@@ -42,9 +42,7 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 
     ConfigParser& config = ConfigParser::get();
     const bool bVerbose = config.getBool("Integration", "verbose");
-    const bool bOptimizeUltrarelativistic = config.getBool("Integration", "optimizeUltrarelativistic");
 
-    collisionIntegral.bOptimizeUltrarelativistic = bOptimizeUltrarelativistic;
 
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2

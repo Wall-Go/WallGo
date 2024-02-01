@@ -29,6 +29,8 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k)
     const int maxTries = config.getInt("Integration", "maxTries");
     const bool bVerbose = config.getBool("Integration", "verbose");
 
+    bOptimizeUltrarelativistic = config.getBool("Integration", "optimizeUltrarelativistic");
+
     // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
     double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.};                                                  // Lower limits
     double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0 * constants::pi, 2.0 * constants::pi, 1., 1.}; // Upper limits
