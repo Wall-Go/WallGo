@@ -3,7 +3,7 @@ from scipy.optimize import minimize,root_scalar
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro
 from .EOM import EOM
-from .Polynomial2 import Polynomial
+from .Polynomial import Polynomial
 from .helpers import GCLQuadrature
 import matplotlib.pyplot as plt
 

@@ -22,7 +22,6 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "cosmoTransitions>=2.0.6",
     "findiff>=0.9.2",
     "h5py>=3.8.0",
     "matplotlib>=3.5.1",
@@ -42,7 +41,7 @@ include = ["WallGo"]
 
 [tool.setuptools.package-data]
 # specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
-WallGo = ["Config/*.ini", "Data/collisions_top_top_N3.hdf5"]
+WallGo = ["Config/*.ini", "Data/*"]
 
 
 [tool.setuptools_scm]
@@ -62,5 +61,5 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://wallgo.readthedocs.io/"
+"Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/Wall-Go/WallGo"

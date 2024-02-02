@@ -63,7 +63,7 @@ particle = Particle(
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=False,
-    collisionPrefactors=[1, 1, 1],
+    multiplicity=1,
 )
 
 """

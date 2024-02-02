@@ -5,99 +5,9 @@ import numpy as np # arrays, maths and stuff
 import math
 from scipy import integrate,interpolate,optimize,special,linalg,stats
 from .helpers import derivative # derivatives for callable functions
-from cosmoTransitions.finiteT import Jb_spline as Jb
-from cosmoTransitions.finiteT import Jf_spline as Jf
+from cosmoTransitions.finiteT import Jb_spline as Jb_Cosmotransitions
+from cosmoTransitions.finiteT import Jf_spline as Jf_Cosmotransitions
 
-
-class Particle:
-    """Particle configuration
-
-    A simple class holding attributes of an out-of-equilibrium particle as
-    relevant for calculations of Boltzmann equations.
-    """
-    STATISTICS_OPTIONS = ["Fermion", "Boson"]
-
-    def __init__(
-        self,
-        name,
-        msqVacuum,
-        msqThermal,
-        statistics,
-        inEquilibrium,
-        ultrarelativistic,
-        collisionPrefactors,
-    ):
-        r"""Initialisation
-
-        Parameters
-        ----------
-        name : string
-            A string naming the particle.
-        msqVacuum : function
-            Function :math:`m^2_0(\phi)`, should take a float and return one.
-        msqThermal : function
-            Function :math:`m^2_T(T)`, should take a float and return one.
-        statistics : {\"Fermion\", \"Boson\"}
-            Particle statistics.
-        inEquilibrium : bool
-            True if particle is treated as in local equilibrium.
-        ultrarelativistic : bool
-            True if particle is treated as ultrarelativistic.
-        collisionPrefactors : list
-            Coefficients of collision integrals, :math:`\sim g^4`, currently
-            must be of length 3.
-
-        Returns
-        -------
-        cls : Particle
-            An object of the Particle class.
-        """
-        Particle.__validateInput(
-            name,
-            msqVacuum,
-            msqThermal,
-            statistics,
-            inEquilibrium,
-            ultrarelativistic,
-            collisionPrefactors,
-        )
-        self.name = name
-        self.msqVacuum = msqVacuum
-        self.msqThermal = msqThermal
-        self.statistics = statistics
-        self.inEquilibrium = inEquilibrium
-        self.ultrarelativistic = ultrarelativistic
-        self.collisionPrefactors = collisionPrefactors
-
-    @staticmethod
-    def __validateInput(
-        name,
-        msqVacuum,
-        msqThermal,
-        statistics,
-        inEquilibrium,
-        ultrarelativistic,
-        collisionPrefactors,
-    ):
-        """
-        Checks input fits expectations
-        """
-        #fields = np.array([1, 1])
-        #assert isinstance(msqVacuum(fields), float), \
-        #    f"msqVacuum({fields}) must return float"
-        T = 100
-        assert isinstance(msqThermal(T), float), \
-            f"msqThermal({T}) must return float"
-        if statistics not in Particle.STATISTICS_OPTIONS:
-            raise ValueError(
-                f"{statistics=} not in {Particle.STATISTICS_OPTIONS}"
-            )
-        assert isinstance(inEquilibrium, bool), \
-            "inEquilibrium must be a bool"
-        assert isinstance(ultrarelativistic, bool), \
-            "ultrarelativistic must be a bool"
-        assert len(collisionPrefactors) == 3, \
-            "len(collisionPrefactors) must be 3"
 
 class Model:
     """
@@ -430,14 +340,14 @@ class Model:
 
         Note
         ----
-        The `Jf` and `Jb` functions used here are
+        The `Jf_Cosmotransitions` and `Jb_Cosmotransitions` functions used here are
         aliases for :func:`finiteT.Jf_spline` and :func:`finiteT.Jb_spline`,
         each of which accept mass over temperature *squared* as inputs
         (this allows for negative mass-squared values, which I take to be the
         real part of the defining integrals.
 
         .. todo::
-            Implement new versions of Jf and Jb that return zero when m=0, only
+            Implement new versions of Jf_Cosmotransitions and Jb_Cosmotransitions that return zero when m=0, only
             adding in the field-independent piece later if
             ``include_radiation == True``. This should reduce floating point
             errors when taking derivatives at very high temperature, where
@@ -456,9 +366,9 @@ class Model:
              # the 1e-100 is to avoid divide by zero errors
         T4 = T*T*T*T
         m2,nb,_ = bosons
-        V = np.sum(nb*Jb(m2/T2), axis=-1)
+        V = np.sum(nb*Jb_Cosmotransitions(m2/T2), axis=-1)
         m2,nf = fermions
-        V += np.sum(nf*Jf(m2/T2), axis=-1)
+        V += np.sum(nf*Jf_Cosmotransitions(m2/T2), axis=-1)
         return V*T4/(2*np.pi*np.pi)
 
     def Vtot(self, fields, T, include_radiation=True):
@@ -499,7 +409,7 @@ class Model:
             V += self.PressureLO(bosons, fermions, T)
         return np.real(V)
 
-class FreeEnergy:
+class FreeEnergyOld:
     def __init__(
         self,
         f,
@@ -590,7 +500,7 @@ class FreeEnergy:
             raise ValueError("No nucleation temperature defined")
         else:
             self.Tnucl = Tnucl
-        FreeEnergy.__validateInput(self.Tc, Tnucl)
+        FreeEnergyOld.__validateInput(self.Tc, Tnucl)
 
 
     @staticmethod

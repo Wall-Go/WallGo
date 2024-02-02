@@ -2,8 +2,8 @@ import numpy as np
 from scipy.special import eval_chebyt
 import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
-from .model import Particle
-from .Polynomial2 import Polynomial
+from .Particle import Particle
+from .Polynomial import Polynomial
 from .Grid import Grid
 
 class CollisionArray:

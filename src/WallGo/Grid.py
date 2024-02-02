@@ -1,5 +1,7 @@
 import numpy as np
 
+## TODO documentation about logic and limitations behind L_xi and the momentum falloff scale T
+
 
 class Grid:
     r"""
@@ -37,7 +39,7 @@ class Grid:
         Grid of the :math:`p_\Vert` direction.
     """
 
-    def __init__(self, M, N, L_xi, T, spacing="Spectral"):
+    def __init__(self, M: int, N: int, L_xi: float, momentumFalloffT: float, spacing: str="Spectral"):
         r"""
         Initialises Grid object.
 
@@ -80,8 +82,8 @@ class Grid:
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
         L_xi : float
             Length scale determining transform in :math:`\xi` direction.
-        T : float
-            Temperature scale determining transform in momentum directions.
+        momentumFalloffT : float
+            Temperature scale determining transform in momentum directions. Should be close to the plasma temperature.
         spacing : {'Spectral', 'Uniform'}
             Choose 'Spectral' for the Gauss-Lobatto collocation points, as
             required for WallGo's spectral representation, or 'Uniform' for
@@ -89,12 +91,12 @@ class Grid:
 
         """
         self.M = M
-        self.N = N
+        self.N = N #This number has to be odd
         self.L_xi = L_xi
-        self.T = T
         assert spacing in ["Spectral", "Uniform"], \
             f"Unknown spacing {spacing}, not 'Spectral' or 'Uniform'"
         self.spacing = spacing
+        self.momentumFalloffT = momentumFalloffT
 
         # Computing the grids in the chi, rz and rp directions
         if self.spacing == "Spectral":
@@ -114,10 +116,20 @@ class Grid:
             )
             self.rpValues = np.linspace(-1, 1, num=self.N - 1, endpoint=False)
 
-        # Computing the grids in physical coordinates
-        (self.xiValues, self.pzValues, self.ppValues,) = Grid.decompactify(
-            self.chiValues, self.rzValues, self.rpValues, L_xi, T
-        )
+        self._cacheCoordinates()
+
+
+    def _cacheCoordinates(self) -> None:
+        """Compute physical coordinates and store them internally.
+        """
+        (self.xiValues, self.pzValues, self.ppValues) = Grid.decompactify(self.chiValues, self.rzValues, self.rpValues, self.L_xi, self.momentumFalloffT)
+    
+
+    def changeMomentumFalloffScale(self, newScale: float) -> None:
+        """"""
+        self.momentumFalloffT = newScale
+        self._cacheCoordinates()
+
 
     def getCompactCoordinates(self, endpoints=False, direction=None):
         r"""
@@ -203,7 +215,7 @@ class Grid:
             Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
         """
         xi, pz, pp = self.getCoordinates(endpoints)
-        return Grid.compactificationDerivatives(xi, pz, pp, self.L_xi, self.T)
+        return Grid.compactificationDerivatives(xi, pz, pp, self.L_xi, self.momentumFalloffT)
 
     def compactify(z, pz, pp, L_xi, T):
         r"""

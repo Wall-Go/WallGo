@@ -1,11 +1,11 @@
 import pytest  # for tests
 import os  # for path names
 import numpy as np  # arrays and maths
+
 from WallGo.Grid import Grid
 from WallGo.Boltzmann import BoltzmannSolver
 from WallGo.CollisionArray import CollisionArray
 from WallGo.WallGoUtils import getSafePathToResource
-from .conftest import background
 
 
 real_path = os.path.realpath(__file__)
@@ -17,19 +17,23 @@ dir_path = os.path.dirname(real_path)
     [(25, 19, 1, 2, 3, 4, 5, 6),
     (5, 5, 1, 1, 2, 3, 5, 8)]
 )
-def test_Delta00(particle, M, N, a, b, c, d, e, f):
+def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     r"""
     Tests that the Delta integral gives a known analytic result for
     :math:`\delta f = E \sqrt{(1 - \rho_z^2)(1 - \rho_\Vert)}`.
     """
     # setting up objects
-    bg = background(M)
+    ## This is the fixture background constructed with input M. pytest magic that works because argument name here matches that used in fixture def 
+    bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 100)
     suffix = "hdf5"
     fileName = f"collisions_top_top_N{grid.N}.{suffix}"
     collisionFile = getSafePathToResource("Data/" + fileName)
     collisionArray = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
-    boltzmann = BoltzmannSolver(grid, bg, particle, collisionArray, 'Spectral', 'Cardinal', 'Cardinal')
+    boltzmann = BoltzmannSolver(grid, collisionArray, 'Spectral', 'Cardinal', 'Cardinal')
+
+    boltzmann.updateParticleList( [particle] )
+    boltzmann.setBackground(bg)
 
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
@@ -40,8 +44,9 @@ def test_Delta00(particle, M, N, a, b, c, d, e, f):
     pp = pp[np.newaxis, np.newaxis, :]
 
     # fluctuation mode
-    msq = particle.msqVacuum(bg.fieldProfile[:,1:-1])
-    msq = msq[:, np.newaxis, np.newaxis]
+    msq = particle.msqVacuum(bg.fieldProfile)
+    ## Drop start and end points in field space
+    msq = msq[1:-1, np.newaxis, np.newaxis]
     E = np.sqrt(msq + pz**2 + pp**2)
 
     # integrand with known result
@@ -61,15 +66,20 @@ def test_Delta00(particle, M, N, a, b, c, d, e, f):
 
 
 @pytest.mark.parametrize("M, N", [(3, 3), (5, 5)])
-def test_solution(particle, M, N):
+def test_solution(boltzmannTestBackground, particle, M, N):
+
     # setting up objects
-    bg = background(M)
+    ## This is the fixture background constructed with input M. pytest magic that works because argument name here matches that used in fixture def 
+    bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 1)
+
     suffix = "hdf5"
     fileName = f"collisions_top_top_N{grid.N}.{suffix}"
     collisionFile = getSafePathToResource("Data/" + fileName)
     collisionArray = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
-    boltzmann = BoltzmannSolver(grid, bg, particle, collisionArray)
+    boltzmann = BoltzmannSolver(grid, collisionArray)
+    boltzmann.updateParticleList( [particle] )
+    boltzmann.setBackground(bg)
 
     # solving Boltzmann equations
     deltaF = boltzmann.solveBoltzmannEquations()
