@@ -76,16 +76,15 @@ def test_findMatching():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,500,1e-6,1e-6)
-        print(f"{hydro.Tnucl=} {hydro.strongestShock(vw[i])=} {hydro.minVelocity()=}")
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
-        print(f"{alN[i]=} {vw[i]=} {hydroTemplate.minVelocity()=}")
-        res1[i] = hydro.findMatching(vw[i])
-        res2[i] = hydroTemplate.findMatching(vw[i])
-        print(f"{res2[i]=}" )
-        if np.isnan(res1[i,0]):
+        if vw[i] < hydro.minVelocity():
             res1[i] = [0,0,0,0]
-        if np.isnan(res2[i,0]):
+        else:    
+            res1[i] = hydro.findMatching(vw[i])
+        if vw[i] < hydroTemplate.minVelocity():
             res2[i] = [0,0,0,0]
+        else:
+            res2[i] = hydroTemplate.findMatching(vw[i])
     np.testing.assert_allclose(res1,res2,rtol = 10**-2,atol = 0)
 
 def test_findvwLTE():

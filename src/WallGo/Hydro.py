@@ -421,7 +421,7 @@ class Hydro:
 
         """
         if vwTry < self.vMin:
-            print('This wall velocity is too small for the corresponding nucleation temperature. findHydroBoundaries will return zero.')
+            print('This wall velocity is too small for the chosen nucleation temperature. findHydroBoundaries will return zero.')
             return (0,0,0,0,0)
 
         vp,vm,Tp,Tm = self.findMatching(vwTry)

@@ -57,7 +57,7 @@ class HydroTemplateModel:
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
-        self.minv = self.minVelocity()
+        self.vMin = self.minVelocity()
 
     def findJouguetVelocity(self, alN=None):
         r"""
@@ -340,6 +340,10 @@ class HydroTemplateModel:
         NOTE: the sign of c1 is chosen to match the convention for the fluid velocity used in EOM and
         Hydro. In those conventions, vp would be negative, and therefore c1 has to be negative as well.
         """
+        if vwTry < self.vMin:
+            print('This wall velocity is too small for the chosen nucleation temperature. findHydroBoundaries will return zero.')
+            return (0,0,0,0,0)
+
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             return (vp,vm,Tp,Tm, None)
