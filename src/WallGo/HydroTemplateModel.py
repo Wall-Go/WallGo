@@ -57,6 +57,7 @@ class HydroTemplateModel:
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
+        self.minv = self.minVelocity()
 
     def findJouguetVelocity(self, alN=None):
         r"""
@@ -80,6 +81,29 @@ class HydroTemplateModel:
         if alN is None:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
+
+    def minVelocity(self):
+        r"""
+        Finds the minimum velocity that is possible for a given nucleation temeperature. 
+        It is found by shooting with alpha_+ = 1/3 at the wall. This is the maximum value possible.
+        The wall velocity which yields alpha_+ = 1/3 for a given alpha_N is the minimum possible wall velocity.
+
+        It is possible that no solution can be found, in this case there is no minimum value of the wall velocity
+        and the function returns zero.
+
+        Parameters
+        ----------
+
+        Returns
+            vmin: double
+                The minimum value of the wall velocity for which a solution can be found
+        """
+        shootingalphamax = lambda vw: self.__shooting(vw,1/3.- 1e-4)
+
+        try:
+            return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
+        except:
+            return 0
 
     def get_vp(self,vm,al,branch=-1):
         r"""
