@@ -318,7 +318,7 @@ class EOM:
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
-        print(f"{pressure=}")
+        print(f"{wallVelocity=}, {pressure=}")
 
         if returnOptimalWallParams:
             return pressure, wallParams

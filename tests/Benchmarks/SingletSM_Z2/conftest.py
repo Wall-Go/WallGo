@@ -150,9 +150,9 @@ def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singl
     fileName = f"collisions_top_top_N19.{suffix}"
     collisionFile = WallGo.WallGoUtils.getSafePathToResource("Data/" + fileName)
     particle = singletBenchmarkModel.model.outOfEquilibriumParticles[0]
-    collisionArray = WallGo.CollisionArray.CollisionArray(collisionFile, singletBenchmarkGrid.N, 'Chebyshev', particle, particle)
-    boltzmannSolver = WallGo.BoltzmannSolver(singletBenchmarkGrid, collisionArray, basisM = "Cardinal", basisN = "Chebyshev")
+    boltzmannSolver = WallGo.BoltzmannSolver(singletBenchmarkGrid, basisM = "Cardinal", basisN = "Chebyshev")
     boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
+    boltzmannSolver.readCollision(collisionFile)
     return boltzmannSolver
 
 

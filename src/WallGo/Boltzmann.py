@@ -61,6 +61,7 @@ class BoltzmannSolver:
     grid: Grid
     offEqParticles: list[Particle]
     background: BoltzmannBackground
+    collisionArray: CollisionArray
     # collisionArray: CollisionArray
 
     """ LN: I've changed the constructor so that neither the background nor particle is required here. This way we can 
@@ -70,10 +71,9 @@ class BoltzmannSolver:
     def __init__(
         self,
         grid: Grid,
-        collisionArray: CollisionArray,
-        derivatives: str="Spectral",
         basisM: str="Cardinal",
         basisN: str="Chebyshev",
+        derivatives: str="Spectral",
     ):
         """
         Initialsation of BoltzmannSolver
@@ -100,7 +100,6 @@ class BoltzmannSolver:
         """
 
         self.grid = grid
-        self.collisionArray = collisionArray
         BoltzmannSolver.__checkDerivatives(derivatives)
         self.derivatives = derivatives
         BoltzmannSolver.__checkBasis(basisM)
@@ -116,12 +115,16 @@ class BoltzmannSolver:
 
         ## These are set, and can be updated, by our member functions (to be called externally)
         self.background = None
+        self.collisionArray = None
         self.offEqParticles = []
 
     ## LN: Use this instead of requiring the background already in constructor
     def setBackground(self, background: BoltzmannBackground) -> None:
         self.background = deepcopy(background) ## do we need a deepcopy? Does this even work generally?
         self.background.boostToPlasmaFrame()
+        
+    def setCollisionArray(self, collisionArray: CollisionArray) -> None:
+        self.collisionArray = collisionArray
 
     def updateParticleList(self, offEqParticles: list[Particle]) -> None:
         # TODO: update the collision array as well when one updates the particle list
@@ -453,6 +456,9 @@ class BoltzmannSolver:
 
         # returning results
         return operator, source, liouville, collision
+    
+    def readCollision(self, fileName: str) -> None:
+        self.collisionArray = CollisionArray(fileName, self.grid.N, self.basisN, self.offEqParticles[0],self.offEqParticles[0])
 
     def __checkBasis(basis):
         """
