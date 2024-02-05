@@ -45,6 +45,7 @@ class Hydro:
         self.rtol,self.atol = rtol,atol
 
         self.vJ = self.findJouguetVelocity()
+        self.vMin = self.minVelocity()
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
         # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
@@ -350,7 +351,7 @@ class Hydro:
         strongestshockTn = lambda vw: self.strongestShock(vw)-self.Tnucl
     
         try:
-            return root_scalar(strongestshockTn,bracket=(0.001,self.vJ),rtol=self.rtol,xtol=self.atol).root
+            return root_scalar(strongestshockTn,bracket=(1e-5,self.vJ),rtol=self.rtol,xtol=self.atol).root
         except:
             return 0
 
@@ -419,6 +420,10 @@ class Hydro:
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
+        if vwTry < self.vMin:
+            print('This wall velocity is too small for the corresponding nucleation temperature. findHydroBoundaries will return zero.')
+            return (0,0,0,0,0)
+
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             # not sure what is going on here
