@@ -76,6 +76,7 @@ def test_findMatching():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,500,1e-10,1e-10)
+        print(f"{hydro.Tnucl=} {hydro.strongestShock(vw[i])=} {hydro.minVelocity()=}")
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-10,1e-10)
         print(f"{alN[i]=} {vw[i]=} {hydroTemplate.minVelocity()=}")
         res1[i] = hydro.findMatching(vw[i])

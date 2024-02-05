@@ -98,7 +98,7 @@ class HydroTemplateModel:
             vmin: double
                 The minimum value of the wall velocity for which a solution can be found
         """
-        shootingalphamax = lambda vw: self.__shooting(vw,1/3.- 1e-4)
+        shootingalphamax = lambda vw: self.__shooting(vw,1/3.- 1e-6)
 
         try:
             return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
