@@ -129,6 +129,10 @@ class Grid:
         """"""
         self.momentumFalloffT = newScale
         self._cacheCoordinates()
+        
+    def changePositionFalloffScalle(self, newScale: float) -> None:
+        self.L_xi = newScale
+        self._cacheCoordinates()
 
 
     def getCompactCoordinates(self, endpoints=False, direction=None):

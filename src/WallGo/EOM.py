@@ -230,13 +230,19 @@ class EOM:
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
-        # TODO: Solve the Boltzmann equation to update offEquilDeltas.
-
         #print(f"{wallVelocity=}")
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
         vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
+        
+        # Estimate L_xi
+        msq1 = self.particle.msqVacuum(vevHighT)
+        msq2 = self.particle.msqVacuum(vevLowT)
+        L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2, self.grid)
+        L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
+        self.grid.changePositionFalloffScalle(L_xi)
+        self.boltzmannSolver.grid.changePositionFalloffScalle(L_xi)
 
         ## LN: What's this loop?
         i = 0
