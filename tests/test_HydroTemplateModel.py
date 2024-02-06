@@ -49,7 +49,7 @@ class TestModelTemplate(WallGo.Thermodynamics):
 
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
-N = 10
+N = 20
 rng = np.random.default_rng(1)
 
 def test_JouguetVelocity():
@@ -90,7 +90,7 @@ def test_findMatching():
 def test_findvwLTE():
     res1,res2 = np.zeros(N),np.zeros(N)
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+0.1*rng.random(N) # I put a 0.1 here - otherwise this test gets stuck. Need to fix that obviously
+    alN = (1-psiN)/3+rng.random(N) # I put a 0.1 here - otherwise this test gets stuck. Need to fix that obviously
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
@@ -112,11 +112,14 @@ def test_findHydroBoundaries():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
     for i in range(N):
+        print(f"{alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=}")
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
+        print(f"{res1[i]=}")
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
+        print(f"{res2[i]=}")
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):

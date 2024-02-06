@@ -208,7 +208,21 @@ class Hydro:
             return (eq1*c,eq2*c)
 
 
-        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #A simple initial guess for Tplus and Tminus. It is not optimized, but it is quick.
+        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
+        # the relevant bounds.
+        try:
+            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+        except:
+            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+            Tpm0[0] = 1.01*Tpm0[1]
+        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
+            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+
+        #Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+
+#        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #A simple initial guess for Tplus and Tminus. It is not optimized, but it is quick.
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
