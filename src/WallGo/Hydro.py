@@ -98,7 +98,7 @@ class Hydro:
         ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
 
         Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
-        Tmax = self.TmaxGuess
+        Tmax = min(self.TmaxGuess,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
 
