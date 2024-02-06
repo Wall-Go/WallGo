@@ -396,9 +396,17 @@ class Hydro:
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
 #            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
             vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
-            vpmin = 1e-5 # Minimum value of vpmin
+            vpmin = 1e-3 # Minimum value of vpmin
 
-            # !!!!!!!! This is really dangerous. Thermodynamics can get called outside of its interpolation range when vp is varied without constraints 
+            vpguess,_,_,_ = self.template.findMatching(vwTry)
+
+            # !!!!!!!! Something is not working well here. I suspect that the choice of vpmin = 1e-5 is too small - as we have chosen a minimum value of vwmin that
+            # is larger, but vp \lesssim vw at very small wall velocities.
+            # Another problem is that TminGuess and TmaxGuess were obtained under the assumption that the temperature of the plasma in front of the shock is 
+            # the Tnucl of the model. If we vary vp freely, we will obtain different values of Tnucl, and this can result temperatures outside of the range
+            # TminGuess and TmaxGuess.
+            # If we restrict ourselves to the range TminGuess and TmaxGuess, we simply can not find a solution for all combinations of vw and vp. 
+            
 
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
@@ -406,7 +414,7 @@ class Hydro:
 
             fmin,fmax = func(vpmin),func(vpmax)
             if fmin*fmax <= 0:
-                sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
+                sol = root_scalar(func, bracket=[vpmin,vpmax], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             else:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
