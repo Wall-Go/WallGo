@@ -176,6 +176,8 @@ class Hydro:
 
         """
 
+        printflag = False
+
         vwMapping = None #JvdV: Why is this called vwMapping?
         if vp is None:
             vwMapping = vw
@@ -214,6 +216,7 @@ class Hydro:
 
         #This is used as a correction if the guess of template model goes out of the allowed range.
         if Tpm0[0] < self.TminGuess or Tpm0[0] > self.TmaxGuess or Tpm0[1] < self.TminGuess or Tpm0[1] > self.TmaxGuess:
+            printflag = True
             print(f"{vw=} {min(vw,self.template.vJ)=} {vp=} {Tpm0=}")
             Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
@@ -223,11 +226,16 @@ class Hydro:
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
+
+          
           
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
+
+        if printflag == True:
+            print(f"{[Tp,Tm]=} {vp =}")
 
         # We check if the obtained solution was OK, if not, we use a guess from the template model
         # this is slow though, and seems only relevant for strong PTs, so we skip it if alpha<0.5
@@ -389,6 +397,8 @@ class Hydro:
 #            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
             vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
             vpmin = 1e-5 # Minimum value of vpmin
+
+            # !!!!!!!! This is really dangerous. Thermodynamics can get called outside of its interpolation range when vp is varied without constraints 
 
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
