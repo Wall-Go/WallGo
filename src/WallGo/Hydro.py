@@ -225,6 +225,7 @@ class Hydro:
 
         #This is used as a correction if the guess of template model goes out of the allowed range.
         if Tpm0[0] < self.TminGuess or Tpm0[0] > self.TmaxGuess or Tpm0[1] < self.TminGuess or Tpm0[1] > self.TmaxGuess:
+            print(f"{vw=} {min(vw,self.template.vJ)=} {vp=} {Tpm0=}")
             Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
 
