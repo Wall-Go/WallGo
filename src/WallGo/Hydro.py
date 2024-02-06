@@ -398,6 +398,20 @@ class Hydro:
             vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
             vpmin = 1e-3 # Minimum value of vpmin
 
+            Tminfromrange = 1.01*self.TminGuess
+
+            vmminsq = min(vwTry**2,self.thermodynamics.csqLowT(Tminfromrange))
+
+            def TFromMatch(tp):
+                vpvm, vpovm = self.vpvmAndvpovm(tp,Tminfromrange)
+                return vpvm/vpovm - vmminsq 
+            Tplusminfromrange = root_scalar(TFromMatch, bracket=[self.TminGuess,self.TmaxGuess], x0 = 1.1*self.TminGuess, xtol=self.atol, rtol=self.rtol).root
+            vpvm, vpovm = self.vpvmAndvpovm(Tplusminfromrange,Tminfromrange)
+            vpminfromrange = np.sqrt(vpvm*vpovm)
+            print(f"{Tminfromrange=} {np.sqrt(vmminsq) =} {Tplusminfromrange = } {vpminfromrange =}") 
+
+            vpmin = vpminfromrange
+
             vpguess,_,_,_ = self.template.findMatching(vwTry)
 
             # !!!!!!!! Something is not working well here. I suspect that the choice of vpmin = 1e-5 is too small - as we have chosen a minimum value of vwmin that
