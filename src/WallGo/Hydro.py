@@ -211,7 +211,10 @@ class Hydro:
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
         try:
-            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+            if vw > self.template.vMin:
+                Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+            else:
+                Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
             Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
@@ -220,9 +223,10 @@ class Hydro:
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        #Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        #This is used as a correction if the guess of template model goes out of the allowed range.
+        if Tpm0[0] < self.TminGuess or Tpm0[0] > self.TmaxGuess or Tpm0[1] < self.TminGuess or Tpm0[1] > self.TmaxGuess:
+            Tpm0 = [self.Tnucl,0.99*self.Tnucl]
 
-#        Tpm0 = [self.Tnucl, 0.99*self.Tnucl] #A simple initial guess for Tplus and Tminus. It is not optimized, but it is quick.
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
@@ -237,7 +241,7 @@ class Hydro:
 
         # We check if the obtained solution was OK, if not, we use a guess from the template model
         # this is slow though, and seems only relevant for strong PTs, so we skip it if alpha<0.5
-        if self.alpha > 0.1:
+        if False:
             if np.abs((self.vpvmAndvpovm(Tp, Tm)[0]- vp*vm)/(vp*vm)) > 0.1 or np.abs((self.vpvmAndvpovm(Tp, Tm)[1]- vp/vm)/(vp/vm))>0.1:
                 # if vp*vm>0.0001 and vp/vm>0.0001:
                 #     1+1
