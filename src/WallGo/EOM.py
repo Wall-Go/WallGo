@@ -234,75 +234,55 @@ class EOM:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
         """
 
-        
-        """NB: This function is EXTREMELY slow """
-
-        print("\n\n\n\nWall velocity:", wallVelocity, "\n")
-
+        print(f"\nTrying {wallVelocity=}")
 
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
-        #print(f"{wallVelocity=}")
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
         vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
 
-        (
-            pressure,
-            wallParams,
-            offEquilDeltas,
-        ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+        pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
         )
 
-        print("\npressure", pressure, "\n")
-        
         pressureOld = pressure
 
-        (
-            pressure,
-            wallParams,
-            offEquilDeltas,
-        ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+        pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
         )
+
         
         error = np.abs(pressure-pressureOld)
-        errtol = self.pressRelErrTol * np.abs(pressure)
+        errTol = self.pressRelErrTol * np.abs(pressure)
         pressureOld = pressure
 
-        print("\npressure", pressure, "\nerror", error, "\nerror tolerance", errtol, "\n")
+        print(f"{pressure=} {error=} {errTol=}")
 
         i = 0
-        while error > errtol:
+        while error > errTol:
             if i >= self.maxIterations-1:
                 print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
                 break
                 
-            (
-                pressure,
-                wallParams,
-                offEquilDeltas,
-            ) = self.intermediatePressureWallParamsAndOffEquilDeltas(
+            pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
                 wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
             )
 
             error = np.abs(pressure-pressureOld)
-            errtol = self.pressRelErrTol * np.abs(pressure)
+            errTol = self.pressRelErrTol * np.abs(pressure)
             pressureOld = pressure
             
-            print("\npressure", pressure, "\nerror", error, "\nerror tolerance", errtol, "\n")
-
+            print(f"{pressure=} {error=} {errTol=}")
             i += 1
 
-        #print(f"{pressure=}")
 
         if returnOptimalWallParams:
-            return pressure,wallParams
+            return pressure, wallParams
         else:
             return pressure
         
