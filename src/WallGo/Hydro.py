@@ -45,7 +45,7 @@ class Hydro:
         self.rtol,self.atol = rtol,atol
 
         self.vJ = self.findJouguetVelocity()
-        self.vMin = self.minVelocity()
+        self.vMin = max(1e-3,self.minVelocity())
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
         # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
@@ -481,7 +481,7 @@ class Hydro:
         
 
         self.success = True
-        vmin = 0.01
+        vmin = self.vMin
         vmax = self.vJ
 
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.

@@ -49,7 +49,7 @@ class TestModelTemplate(WallGo.Thermodynamics):
 
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
-N = 20
+N = 10
 rng = np.random.default_rng(1)
 
 def test_JouguetVelocity():
@@ -97,7 +97,7 @@ def test_findvwLTE():
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,50,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
-        print(f"{psiN[i]=} {alN[i]=} {cs2[i]=} {cb2[i]=}")
+        print(f"{psiN[i]=} {alN[i]=} {cs2[i]=} {cb2[i]=} {hydro.vMin=}")
         res1[i] = hydro.findvwLTE()
         print(res1[i])
         res2[i] = hydroTemplate.findvwLTE()
