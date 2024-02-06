@@ -394,23 +394,49 @@ class Hydro:
 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
+
+            #This will be removed
 #            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
             vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tc. Have to test if it is ok!
             vpmin = 1e-3 # Minimum value of vpmin
 
-            Tminfromrange = 1.01*self.TminGuess
+            #For a given wall velocity, if vp becomes too small, Tm will become smaller than TminGuess.
+            #We thus determine a minimum vp given by this minimum Tm
+            TmMin = 1.01*self.TminGuess #Smallest allowed value of Tm
 
-            vmminsq = min(vwTry**2,self.thermodynamics.csqLowT(Tminfromrange))
+            vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
 
-            def TFromMatch(tp):
-                vpvm, vpovm = self.vpvmAndvpovm(tp,Tminfromrange)
-                return vpvm/vpovm - vmminsq 
-            Tplusminfromrange = root_scalar(TFromMatch, bracket=[self.TminGuess,self.TmaxGuess], x0 = 1.1*self.TminGuess, xtol=self.atol, rtol=self.rtol).root
-            vpvm, vpovm = self.vpvmAndvpovm(Tplusminfromrange,Tminfromrange)
-            vpminfromrange = np.sqrt(vpvm*vpovm)
-            print(f"{Tminfromrange=} {np.sqrt(vmminsq) =} {Tplusminfromrange = } {vpminfromrange =}") 
+            def matchinOfTp(tp): # vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin
+                vpvm, vpovm = self.vpvmAndvpovm(tp,TmMin)
+                return vpvm/vpovm - vmSqAtTmMin 
+            TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+            vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
+            vpAtTmMin = np.sqrt(vpvm*vpovm) #Find the corresponding vpAtTmMin
+            print(f"{TmMin=} {np.sqrt(vmSqAtTmMin) =} {TpAtTmMin = } {vpAtTmMin =}") 
 
-            vpmin = vpminfromrange
+            vpmin = vpAtTmMin
+
+            # For a given wall velocity, if vp becomes too large, Tp will become larger than TmaxGuess.
+            # We thus determine a maximum vp given by this maximum Tp
+            # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
+            # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+            TpMax = 0.99*self.TmaxGuess
+            vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+
+            def matchinOfTm(tm):
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
+                return vpvm/vpovm - vmSqAtTpMax
+
+            try:
+                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TminGuess,TpMax], xtol=self.atol, rtol=self.rtol).root
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
+                vpAtTpMax = np.sqrt(vpvm*vpovm)
+                vpmax = vpAtTpMax
+                print(f"{TmMin=} {TpAtTmMin = } {np.sqrt(vmSqAtTmMin) =} {vpAtTmMin =} {TpMax=} {TmAtTpMax = } {np.sqrt(vmSqAtTpMax) =} {vpAtTpMax =}") 
+            except:
+                vpmax =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+
+            print(f"{vpmin=} {vpmax= }")
 
             vpguess,_,_,_ = self.template.findMatching(vwTry)
 
