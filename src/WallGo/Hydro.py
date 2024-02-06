@@ -51,17 +51,6 @@ class Hydro:
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
-#        self.Tpm0helper = self.setTpm0helper()
-
-    #Work in progress.
-    #This function should find Tp and Tm for the template model for a range of velocities
-    def setTpm0helper(self):
-        self.Tpm0helper = np.empty((50,3))
-        for i in range(50):
-            velocity = 1e-3 + i*self.vJ/50
-            print(velocity)
-            [Tp, Tm] = self.template.matchDeflagOrHybInitial(velocity, None)
-            self.Tpm0helper[i] = np.array([vel, Tp,Tm])
 
     def findJouguetVelocity(self):
         r"""
