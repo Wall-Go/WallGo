@@ -53,7 +53,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     integrand_analytic *= (d + e * rp + f * rp**2)
 
     # doing computation
-    Deltas = boltzmann.getDeltas(integrand_analytic)
+    Deltas = boltzmann.getDeltas(integrand_analytic)[0]
 
     # comparing to analytic result
     # Delta00_analytic = bg.temperatureProfile**3 * (

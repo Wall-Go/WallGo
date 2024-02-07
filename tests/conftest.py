@@ -42,14 +42,17 @@ def boltzmannTestBackground(M):
 
 @pytest.fixture
 def particle():
+    topMsqDerivative = lambda fields:  np.transpose([fields.GetField(0),0*fields.GetField(1)])
     return WallGo.Particle(
         name="top",
         msqVacuum=lambda phi: 0.5 * phi.GetField(0)**2,
+        msqDerivative = topMsqDerivative,
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
         multiplicity=1,
+        DOF = 12
     )
 
 
