@@ -95,7 +95,7 @@ class EOM:
         self.Tnucl = self.thermo.Tnucl
 
         ## HACK. Hardcode reference to first particle in boltzmannSolver's list. Will be removed or generalized later
-        self.particle = self.boltzmannSolver.offEqParticles[0]
+        self.particle = self.boltzmannSolver.offEqParticles
 
 
     def findWallVelocityMinimizeAction(self):
@@ -304,14 +304,13 @@ class EOM:
 
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
-
-        """This undocumented magic is calculating pressure on the wall ASSUMING only the first field has interactions with out-of-eq particles (top).
-        Meaning that this needs a rewrite! 
-        """
-        dVout = 12 * fields.GetField(0) * offEquilDeltas['00'].coefficients / 2
+        
+        # Out-of-equilibrium term of the EOM
+        dVout = np.sum([particle.DOF * particle.msqDerivative(fields) * offEquilDeltas[i]['00'].coefficients[:,None]
+                        for i,particle in enumerate(self.particle)], axis=0) / 2
 
         term1 = dVdX * dPhidz
-        term2 = dVout[:, np.newaxis] * dPhidz
+        term2 = dVout * dPhidz
 
         EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
 
@@ -358,8 +357,7 @@ class EOM:
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
 
-        ## LN: needs rewrite, hardcoding top quark here is no-no for general models
-        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2 # Whats this?
+        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00[i].coefficients for i,particle in enumerate(self.particle)])/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -636,10 +634,10 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = offEquilDeltas["00"].coefficients[index]
-        delta11 = offEquilDeltas["11"].coefficients[index]
-        delta02 = offEquilDeltas["02"].coefficients[index]
-        delta20 = offEquilDeltas["20"].coefficients[index]
+        delta00 = [Delta["00"].coefficients[index] for Delta in offEquilDeltas]
+        delta11 = [Delta["1"].coefficients[index] for Delta in offEquilDeltas]
+        delta02 = [Delta["02"].coefficients[index] for Delta in offEquilDeltas]
+        delta20 = [Delta["20"].coefficients[index] for Delta in offEquilDeltas]
 
         u0 = np.sqrt(gammaSq(velocityMid))
         u3 = np.sqrt(gammaSq(velocityMid))*velocityMid
@@ -648,15 +646,15 @@ class EOM:
 
         ## Where do these come from?
         ## LN: needs rewrite, what happens with many out-of-eq particles?
-        T30 = (
-            + (3*delta20 - delta02 - self.particle.msqVacuum(fields)*delta00)*u3*u0
-            + (3*delta02 - delta20 + self.particle.msqVacuum(fields)*delta00)*ubar3*ubar0
-            + 2*delta11*(u3*ubar0 + ubar3*u0))/2.
-        T33 = ((
-            + (3*delta20 - delta02 - self.particle.msqVacuum(fields)*delta00)*u3*u3
-            + (3*delta02 - delta20 + self.particle.msqVacuum(fields)*delta00)*ubar3*ubar3
-            + 4*delta11*u3*ubar3)/2. 
-            - (self.particle.msqVacuum(fields)*delta00+ delta02-delta20)/2.)
+        T30 = np.sum([particle.DOF*(
+            + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u0
+            + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar0
+            + 2*delta11[i]*(u3*ubar0 + ubar3*u0))/2. for i,particle in enumerate(self.particle)])
+        T33 = np.sum([particle.DOF*((
+            + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u3
+            + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar3
+            + 4*delta11[i]*u3*ubar3)/2. 
+            - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particle)])
 
         return T30, T33
 

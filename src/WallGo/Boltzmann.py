@@ -179,7 +179,7 @@ class BoltzmannSolver:
         Deltas['11'] = deltaFPoly.integrate((1,2), E*pz * integrand)
 
         # returning results
-        return Deltas
+        return [Deltas]
 
     def solveBoltzmannEquations(self):
         r"""
