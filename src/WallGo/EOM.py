@@ -635,7 +635,7 @@ class EOM:
 
         """
         delta00 = [Delta["00"].coefficients[index] for Delta in offEquilDeltas]
-        delta11 = [Delta["1"].coefficients[index] for Delta in offEquilDeltas]
+        delta11 = [Delta["11"].coefficients[index] for Delta in offEquilDeltas]
         delta02 = [Delta["02"].coefficients[index] for Delta in offEquilDeltas]
         delta20 = [Delta["20"].coefficients[index] for Delta in offEquilDeltas]
 
