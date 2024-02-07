@@ -229,7 +229,7 @@ class EOM:
 
 
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
-        offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
+        offEquilDeltas = [{"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}]
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
@@ -295,7 +295,7 @@ class EOM:
                 return self.action( __toWallParams(wallArray), *args )
             
 
-            sol = scipy.optimize.minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
+            sol = scipy.optimize.minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, [Delta['00'] for Delta in offEquilDeltas]), method='Nelder-Mead', bounds=bounds)
 
             ## Put the resulting width, offset back in WallParams format
             wallParams = __toWallParams(sol.x)
@@ -413,7 +413,7 @@ class EOM:
 
 
     def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
-                          offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
+                          offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
@@ -429,8 +429,8 @@ class EOM:
             Scalar field profiles.
         dPhidz : array-like
             Derivative with respect to the position of the scalar field profiles.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
         Tplus : double
             Plasma temperature in front of the wall.
         Tminus : double
@@ -465,7 +465,7 @@ class EOM:
     
 
     def findPlasmaProfilePoint(self, index: int, c1: float, c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
-                               offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[float, float]:
+                               offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[float, float]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
 
@@ -483,8 +483,8 @@ class EOM:
             Scalar field profile.
         dPhidz : Fields
             Derivative with respect to the position of the scalar field profile.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
         Tplus : double
             Plasma temperature in front of the wall.
         Tminus : double
@@ -611,7 +611,7 @@ class EOM:
             raise TypeError(f"LHS has wrong type, {result.shape=}")
 
 
-    def deltaToTmunu(self, index: int, fields: Fields, velocityMid: float, offEquilDeltas: dict[str, float]) -> Tuple[float, float]:
+    def deltaToTmunu(self, index: int, fields: Fields, velocityMid: float, offEquilDeltas: list) -> Tuple[float, float]:
         r"""
         Computes the out-of-equilibrium part of the energy-momentum tensor.
 
@@ -623,8 +623,8 @@ class EOM:
             Scalar field profile.
         velocityMid : double
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
 
         Returns
         -------
