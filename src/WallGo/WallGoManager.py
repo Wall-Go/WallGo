@@ -263,6 +263,7 @@ class WallGoManager:
         self.boltzmannSolver = BoltzmannSolver(self.grid, basisM = "Cardinal", basisN = "Chebyshev")
 
 
+
     def loadCollisionFile(self, fileName: str) -> None:
         self.boltzmannSolver.readCollision(fileName)
 

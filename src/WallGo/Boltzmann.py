@@ -62,7 +62,6 @@ class BoltzmannSolver:
     offEqParticles: list[Particle]
     background: BoltzmannBackground
     collisionArray: CollisionArray
-    # collisionArray: CollisionArray
 
     """ LN: I've changed the constructor so that neither the background nor particle is required here. This way we can 
     have a persistent BoltzmannSolver object (in WallGoManager) that does not need to re-read collision integrals all the time.
@@ -458,7 +457,8 @@ class BoltzmannSolver:
         return operator, source, liouville, collision
     
     def readCollision(self, fileName: str) -> None:
-        self.collisionArray = CollisionArray(fileName, self.grid.N, self.basisN, self.offEqParticles[0],self.offEqParticles[0])
+        ## TODO generalize for many off eq particles
+        self.collisionArray = CollisionArray.newFromFile(fileName, self.grid, self.basisN, self.offEqParticles[0], self.offEqParticles[0])
 
     def __checkBasis(basis):
         """

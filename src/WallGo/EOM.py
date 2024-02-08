@@ -239,7 +239,7 @@ class EOM:
         # Estimate L_xi
         msq1 = self.particle.msqVacuum(vevHighT)
         msq2 = self.particle.msqVacuum(vevLowT)
-        L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2, self.grid)
+        L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
         L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         self.grid.changePositionFalloffScalle(L_xi)
         self.boltzmannSolver.grid.changePositionFalloffScalle(L_xi)

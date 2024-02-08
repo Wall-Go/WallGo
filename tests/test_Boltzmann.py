@@ -33,7 +33,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
     boltzmann.readCollision(collisionFile)
-
+    
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
     rz = rz[np.newaxis, :, np.newaxis]

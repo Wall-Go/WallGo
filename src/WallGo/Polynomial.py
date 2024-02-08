@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
+from .Grid import Grid
+
 
 class Polynomial:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
@@ -34,7 +36,6 @@ class Polynomial:
         Returns
         -------
         None.
-
         """
         
         self.coefficients = np.asanyarray(coefficients)
@@ -218,7 +219,7 @@ class Polynomial:
                 # Contracting M with self.coefficient
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
         self.basis = newBasis
-        
+
     def evaluate(self, x, axes=None):
         """
         Evaluates the polynomial at the compact coordinates x.
@@ -728,7 +729,3 @@ class Polynomial:
             else:
                 return False
         return True
-        
-        
-        
-        
