@@ -19,6 +19,7 @@ from .InterpolatableFunction import InterpolatableFunction
 
 from .Integrals import Integrals
 from .Config import Config
+from .CollisionArray import CollisionArray
 
 from .WallGoUtils import getSafePathToResource
 

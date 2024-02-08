@@ -27,13 +27,13 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     grid = Grid(M, N, 1, 100)
     suffix = "hdf5"
     fileName = f"collisions_top_top_N{grid.N}.{suffix}"
-    collisionFile = getSafePathToResource("Data/" + fileName)
+    collisionFile = dir_path + "/Testdata/" + fileName
     boltzmann = BoltzmannSolver(grid, 'Cardinal', 'Cardinal', 'Spectral')
 
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
     boltzmann.readCollision(collisionFile)
-    
+
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
     rz = rz[np.newaxis, :, np.newaxis]
@@ -74,7 +74,7 @@ def test_solution(boltzmannTestBackground, particle, M, N):
 
     suffix = "hdf5"
     fileName = f"collisions_top_top_N{grid.N}.{suffix}"
-    collisionFile = getSafePathToResource("Data/" + fileName)
+    collisionFile = dir_path + "/Testdata/" + fileName
     boltzmann = BoltzmannSolver(grid)
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
