@@ -250,36 +250,25 @@ class EOM:
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
         )
 
-        pressureOld = pressure
-
-        pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
-            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
-        )
-
-        
-        error = np.abs(pressure-pressureOld)
-        errTol = self.pressRelErrTol * np.abs(pressure)
-        pressureOld = pressure
-
-        print(f"{pressure=} {error=} {errTol=}")
-
         i = 0
-        while error > errTol:
-            if i >= self.maxIterations-1:
-                print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
-                break
-                
+        while True:
+            pressureOld = pressure
+            
             pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
                 wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus
             )
 
             error = np.abs(pressure-pressureOld)
             errTol = self.pressRelErrTol * np.abs(pressure)
-            pressureOld = pressure
             
             print(f"{pressure=} {error=} {errTol=}")
             i += 1
 
+            if error < errTol:
+                break
+            elif i >= self.maxIterations-1:
+                print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
+                break
 
         if returnOptimalWallParams:
             return pressure, wallParams
