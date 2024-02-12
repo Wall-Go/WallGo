@@ -63,8 +63,8 @@ class Thermodynamics:
         ## temperature difference to use for derivatives. TODO this needs to be read from a config file or something
         self.dT = 1e-3
 
-        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.phaseHighT)
-        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.phaseLowT)
+        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.Tnucl, self.phaseHighT)
+        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.Tnucl, self.phaseLowT)
 
 
     def pHighT(self, T: float):

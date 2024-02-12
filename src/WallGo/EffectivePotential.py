@@ -69,7 +69,7 @@ class EffectivePotential(ABC):
         -------
         minimum, functionValue : tuple. 
         minimum: list[float] is the location x of the minimum in field space.
-        functionValue: float is Veff(x) evaluated at the minimum .
+        functionValue: float is Veff(x) evaluated at the minimum.
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
@@ -113,8 +113,7 @@ class EffectivePotential(ABC):
     def findCriticalTemperature(self, minimum1: Fields, minimum2: Fields, TMin: float, TMax: float) -> float:
 
         if (TMax < TMin):
-            raise ValueError("findCriticalTemperature needs TMin < TMax")
-    
+            raise ValueError("findCriticalTemperature needs TMin < TMax")    
 
         ## TODO Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
 
@@ -125,7 +124,6 @@ class EffectivePotential(ABC):
             diff = f2.real - f1.real
             ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
             return diff.item()
-        
 
         ## start from TMin and increase temperature in small steps until the free energy difference changes sign
 
@@ -152,7 +150,6 @@ class EffectivePotential(ABC):
 
         return rootResults.root
 
-
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with respect to temperature.
         """
@@ -160,13 +157,11 @@ class EffectivePotential(ABC):
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
-            dx = self.dT,
-            n = 1,
-            order = 4
+            dx=self.dT,
+            n=1,
+            order=4,
         )
         return der
-
-
 
     def derivField(self, fields: Fields, temperature: npt.ArrayLike):
         """
@@ -185,8 +180,6 @@ class EffectivePotential(ABC):
         dfdX : list[Fields]
             Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
         """
-
-        ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
         res = np.empty_like(fields, dtype=float)
@@ -194,14 +187,57 @@ class EffectivePotential(ABC):
         for idx in range(fields.NumFields()):
 
             fieldsOffset = np.zeros_like(fields, dtype=float)
-            fieldsOffset.SetField(idx, np.full( fields.NumPoints(), self.dPhi, dtype=float))
+            fieldsOffset.SetField(
+                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+            )
 
-            veff1 = self.evaluate(fields, temperature)
-            veff2 = self.evaluate(fields + fieldsOffset, temperature)
+            # O(dField^4) accurate, central finite difference scheme
+            dV = -self.evaluate(fields + 2 * fieldsOffset, temperature)
+            dV += 8 * self.evaluate(fields + fieldsOffset, temperature)
+            # dV += 0 * self.evaluate(fields, temperature)
+            dV -= 8 * self.evaluate(fields - fieldsOffset, temperature)
+            dV += self.evaluate(fields - 2 * fieldsOffset, temperature)
 
-            ## Do we need to worry about float point accuracy??
+            dVdphi = dV / (12 * self.dPhi)
 
-            dVdphi = ( veff2 - veff1 ) / self.dPhi
+            res.SetField(idx, dVdphi)
+
+        return res
+
+    def derivFieldT(self, fields: Fields, temperature: npt.ArrayLike):
+        """
+        Compute d^2Veff/(dField dT).
+
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : float
+            the temperature
+
+        Returns
+        ----------
+        d2fdFielddT : list[Fields]
+            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        """
+
+        res = np.empty_like(fields, dtype=float)
+
+        for idx in range(fields.NumFields()):
+
+            fieldsOffset = np.zeros_like(fields, dtype=float)
+            fieldsOffset.SetField(
+                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+            )
+
+            # O(dField^4) accurate, central finite difference scheme
+            dV = -self.derivT(fields + 2 * fieldsOffset, temperature)
+            dV += 8 * self.derivT(fields + fieldsOffset, temperature)
+            # dV += 0 * self.derivT(fields, temperature)
+            dV -= 8 * self.derivT(fields - fieldsOffset, temperature)
+            dV += self.derivT(fields - 2 * fieldsOffset, temperature)
+
+            dVdphi = dV / (12 * self.dPhi)
 
             res.SetField(idx, dVdphi)
 
