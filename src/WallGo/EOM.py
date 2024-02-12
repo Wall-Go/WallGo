@@ -36,7 +36,6 @@ class WallParams():
         ## does not work if other = WallParams type
         return WallParams(widths = self.widths / other, offsets = self.offsets / other )
 
-
 class EOM:
 
     model: GenericModel
@@ -97,7 +96,7 @@ class EOM:
         self.hydro = hydro
         ## LN: Dunno if we want to store this here tbh
         self.Tnucl = self.thermo.Tnucl
-
+        
         ## HACK. Hardcode reference to first particle in boltzmannSolver's list. Will be removed or generalized later
         self.particle = self.boltzmannSolver.offEqParticles[0]
         
@@ -121,6 +120,8 @@ class EOM:
             minimize the action and solve the EOM.
 
         """
+        
+        assert self.grid is self.boltzmannSolver.grid, "EOM and BoltzmannSolver must have the same instance of the Grid object."
 
         # LN: note that I've made widths and offsets be same size. Previously offsets was one element shorter
 
@@ -239,12 +240,19 @@ class EOM:
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
-        # TODO: Solve the Boltzmann equation to update offEquilDeltas.
-
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
         vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
+        
+        # Estimate L_xi
+        # msq1 = self.particle.msqVacuum(vevHighT)
+        # msq2 = self.particle.msqVacuum(vevLowT)
+        # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
+        # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
+        
+        L_xi = 2*max(wallParams.widths)
+        self.grid.changePositionFalloffScale(L_xi)
 
         pressure, wallParams, offEquilDeltas = self.intermediatePressureWallParamsAndOffEquilDeltas(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, offEquilDeltas, Tplus, Tminus

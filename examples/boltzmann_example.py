@@ -5,16 +5,20 @@ import numpy as np # arrays, maths and stuff
 from pprint import pprint # pretty printing of dicts
 import matplotlib.pyplot as plt
 from scipy import integrate
+from time import time
 from WallGo.Boltzmann import BoltzmannBackground, BoltzmannSolver
+from WallGo.CollisionArray import CollisionArray
 from WallGo.Thermodynamics import Thermodynamics
 from WallGo.Polynomial2 import Polynomial
 #from WallGo.eomHydro import findWallVelocityLoop
 from WallGo import Particle, FreeEnergy, Grid, Polynomial
+from WallGo.WallGoUtils import getSafePathToResource
+
 
 """
 Grid
 """
-M = 40
+M = 20
 N = 19
 T = 100
 L = 5/T
@@ -63,13 +67,26 @@ particle = Particle(
 )
 
 """
+Collision array
+"""
+suffix = "hdf5"
+fileName = f"collisions_top_top_N19.{suffix}"
+collisionFile = getSafePathToResource("Data/" + fileName)
+collisionArrayCard = CollisionArray(collisionFile, grid.N, 'Cardinal', particle, particle)
+collisionArrayCheb = CollisionArray(collisionFile, grid.N, 'Chebyshev', particle, particle)
+
+L_xi1,L_xi2 = collisionArrayCard.estimateLxi(velocityMid, T[-1], T[0], particle.msqVacuum(field[:,-1]), particle.msqVacuum(field[:,0]), grid)
+
+"""
 Boltzmann solver
 """
-boltzmannCheb = BoltzmannSolver(grid, background, particle, 'Chebyshev', 'Chebyshev')
-boltzmannCard = BoltzmannSolver(grid, background, particle, 'Cardinal', 'Cardinal')
+boltzmannCheb = BoltzmannSolver(grid, background, particle, collisionArrayCheb, basisM='Chebyshev', basisN='Chebyshev', derivatives='Spectral')
+boltzmannCard = BoltzmannSolver(grid, background, particle, collisionArrayCard, basisM='Cardinal', basisN='Cardinal', derivatives='Spectral')
+boltzmannCardFD = BoltzmannSolver(grid, background, particle, collisionArrayCard, basisM='Cardinal', basisN='Cardinal', derivatives='Finite Difference')
 
 DeltasCheb = boltzmannCheb.getDeltas()
 DeltasCard = boltzmannCard.getDeltas()
+DeltasCardFD = boltzmannCardFD.getDeltas()
 
 # plotting
 chi = grid.getCompactCoordinates()[0]
@@ -79,27 +96,32 @@ chi2 = xi/np.sqrt(xi**2+grid.L_xi**2)
 fig, ax = plt.subplots(4, figsize=(6, 10), layout='constrained')
 ax[0].plot(xi, 12*DeltasCheb['00'].evaluate(chi2[None,:]))
 ax[0].plot(xi, 12*DeltasCard['00'].evaluate(chi2[None,:]))
-ax[0].legend(('Chebyshev basis','Cardinal basis'))
+ax[0].plot(xi, 12*DeltasCardFD['00'].evaluate(chi2[None,:]))
+ax[0].legend(('Spectral (Chebyshev)','Spectral (Cardinal)', 'Spectral (finite difference)'))
 ax[0].set_ylabel(r"$\Delta_{00}$")
 ax[0].set_xlim((-20*L,20*L))
 ax[0].grid()
 ax[1].plot(xi, 12*DeltasCheb['20'].evaluate(chi2[None,:]))
 ax[1].plot(xi, 12*DeltasCard['20'].evaluate(chi2[None,:]))
+ax[1].plot(xi, 12*DeltasCardFD['20'].evaluate(chi2[None,:]))
 ax[1].set_ylabel(r"$\Delta_{20}$")
 ax[1].set_xlim((-20*L,20*L))
 ax[1].grid()
 ax[2].plot(xi, 12*DeltasCheb['02'].evaluate(chi2[None,:]))
 ax[2].plot(xi, 12*DeltasCard['02'].evaluate(chi2[None,:]))
+ax[2].plot(xi, 12*DeltasCardFD['02'].evaluate(chi2[None,:]))
 ax[2].set_ylabel(r"$\Delta_{02}$")
 ax[2].set_xlim((-20*L,20*L))
 ax[2].grid()
 ax[3].plot(xi, 12*DeltasCheb['11'].evaluate(chi2[None,:]))
 ax[3].plot(xi, 12*DeltasCard['11'].evaluate(chi2[None,:]))
+ax[3].plot(xi, 12*DeltasCardFD['11'].evaluate(chi2[None,:]))
 ax[3].set_xlabel(r"$\xi$")
 ax[3].set_ylabel(r"$\Delta_{11}$")
 ax[3].set_xlim((-20*L,20*L))
 ax[3].grid()
 plt.show()
+
 
 # now making a deltaF by hand
 # deltaF = np.zeros(deltaF.shape)
