@@ -118,7 +118,7 @@ class EOM:
         wallParams = WallParams(widths = (5/self.Tnucl)*np.ones(self.nbrFields), 
                                 offsets = np.zeros(self.nbrFields))
 
-        vmin = max(1e-2,self.hydro.vMin)
+        vmin = self.hydro.vMin
         vmax = self.hydro.vJ-1e-6
 
         return self.solveWall(vmin, vmax, wallParams)
@@ -232,7 +232,6 @@ class EOM:
 
         # TODO: Solve the Boltzmann equation to update offEquilDeltas.
 
-        #print(f"{wallVelocity=}")
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
