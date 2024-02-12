@@ -409,12 +409,15 @@ class Hydro:
             def matchinOfTp(tp): # vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin
                 vpvm, vpovm = self.vpvmAndvpovm(tp,TmMin)
                 return vpvm/vpovm - vmSqAtTmMin 
-            TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
-            vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
-            vpAtTmMin = np.sqrt(vpvm*vpovm) #Find the corresponding vpAtTmMin
-            print(f"{TmMin=} {np.sqrt(vmSqAtTmMin) =} {TpAtTmMin = } {vpAtTmMin =}") 
+            
+            try:
+                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+                vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
+                vpAtTmMin = np.sqrt(vpvm*vpovm) #Find the corresponding vpAtTmMin
+                print(f"{TmMin=} {np.sqrt(vmSqAtTmMin) =} {TpAtTmMin = } {vpAtTmMin =}") 
 
-            vpmin = vpAtTmMin
+                vpmin = vpAtTmMin
+            except: vpmin = 1e-3
 
             # For a given wall velocity, if vp becomes too large, Tp will become larger than TmaxGuess.
             # We thus determine a maximum vp given by this maximum Tp
