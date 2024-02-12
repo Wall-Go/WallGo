@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
+from .Grid import Grid
+
 
 class Polynomial:
     def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
@@ -34,7 +36,6 @@ class Polynomial:
         Returns
         -------
         None.
-
         """
         
         self.coefficients = np.asanyarray(coefficients)
@@ -156,7 +157,7 @@ class Polynomial:
                 endpoints.append(poly.endpoints[i])
         return tuple(basis),tuple(direction),tuple(endpoints)
         
-    def changeBasis(self, newBasis):
+    def changeBasis(self, newBasis, inverseTranspose=False):
         """
         Change the basis of the polynomial. Will change self.coefficients
         accordingly.
@@ -164,10 +165,14 @@ class Polynomial:
         Parameters
         ----------
         newBasis : string or tuple of strings, optional
-            Tuple of length N specifying in what basis each dimension of 
-            self.coefficients is defined. Each component can either be 
-            'Cardinal' or 'Chebyshev'. Can also be a single string, in which 
+            Tuple of length N specifying in what basis each dimension of
+            self.coefficients is defined. Each component can either be
+            'Cardinal' or 'Chebyshev'. Can also be a single string, in which
             case all the dimensions are assumed to be in that basis.
+        inverseTranspose : bool, optional
+            If True, take the inverse-transpose of the transformation matrix.
+            This is useful, for example, when changing the basis of the 
+            collision array.
 
         Returns
         -------
@@ -177,7 +182,7 @@ class Polynomial:
         if isinstance(newBasis, str):
             newBasis = self.rank*(newBasis,)
         self.__checkBasis(newBasis)
-        
+
         for i in range(self.rank):
             if newBasis[i] != self.basis[i]:
                 # Choosing the appropriate x, n and restriction
@@ -194,32 +199,39 @@ class Polynomial:
                     if self.direction[i] == 'z':
                         n = np.arange(2, self.grid.M+1)
                         restriction = 'full'
-                    elif self.direction[i] == 'pz': 
+                    elif self.direction[i] == 'pz':
                         n = np.arange(2, self.grid.N+1)
                         restriction = 'full'
                     else:
                         n = np.arange(1, self.grid.N)
                         restriction = 'partial'
-                        
+
                 # Computing the Tn matrix
                 M = self.chebyshev(x[:,None], n[None,:], restriction)
                 if newBasis[i] == 'Chebyshev':
                     M = np.linalg.inv(M)
+                    
+                if inverseTranspose:
+                    M = np.transpose(np.linalg.inv(M))
+                    
                 M = np.expand_dims(M, tuple(np.arange(i))+tuple(np.arange(i+2, self.rank+1)))
-                
+
                 # Contracting M with self.coefficient
                 self.coefficients = np.sum(M*np.expand_dims(self.coefficients, i), axis=i+1)
         self.basis = newBasis
-        
-    def evaluate(self, x):
+
+    def evaluate(self, x, axes=None):
         """
         Evaluates the polynomial at the compact coordinates x.
 
         Parameters
         ----------
         x : array-like
-            Compact coordinates at which to evaluate the polynomial. Must have 
-            a shape (self.rank,:) or (self.rank,).
+            Compact coordinates at which to evaluate the polynomial. Must have
+            a shape (len(axes),:) or (len(axes),).
+        axes : tuple or None, optional
+            Axes along which to be evaluated. If None, evaluate the polynomial
+            along all the axes. Default is None.
 
         Returns
         -------
@@ -228,14 +240,18 @@ class Polynomial:
 
         """
         x = np.asarray(x)
-        assert x.shape[0] == self.rank and 1 <= len(x.shape) <= 2, 'Polynomial error: x must have a shape (self.rank,:) or (self.rank,).'
+        if axes is None:
+            axes = tuple(np.arange(self.rank))
+            
+        assert x.shape[0] == len(axes) and 1 <= len(x.shape) <= 2,\
+            f'Polynomial error: x has shape {x.shape} but must be ({self.rank},:) or ({self.rank},).'
         singlePoint = False
         if len(x.shape) == 1:
-            x = x.reshape((self.rank,1))
+            x = x.reshape((len(axes), 1))
             singlePoint = True
-            
+
         polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
-        for i in range(self.rank):
+        for j,i in enumerate(axes):
             # Choosing the appropriate n
             n = None
             if self.endpoints[i]:
@@ -251,13 +267,13 @@ class Polynomial:
                 elif self.direction[i] == 'pz':
                     n = np.arange(1, self.grid.N)
                 else:
-                    n = np.arange(self.grid.N-1)  
-                    
+                    n = np.arange(self.grid.N-1)
+
             # Computing the polynomial basis in the i direction
             pn = None
             if self.basis[i] == 'Cardinal':
-                pn = self.cardinal(x[i,:,None], n[None,:], self.direction[i])
-                
+                pn = self.cardinal(x[j,:,None], n[None,:], self.direction[i])
+
             elif self.basis[i] == 'Chebyshev':
                 restriction = None
                 if not self.endpoints[i]:
@@ -268,11 +284,11 @@ class Polynomial:
                         restriction = 'full'
                     else:
                         restriction = 'partial'
-                pn = self.chebyshev(x[i,:,None], n[None,:], restriction)
-                
+                pn = self.chebyshev(x[j,:,None], n[None,:], restriction)
+
             polynomials *= np.expand_dims(pn, tuple(np.arange(1,i+1))+tuple(np.arange(i+2,self.rank+1)))
-            
-        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.arange(1,self.rank+1)))
+
+        result = np.sum(self.coefficients[None,...]*polynomials, axis=tuple(np.array(axes)+1))
         if singlePoint:
             return result[0]
         else:
@@ -713,7 +729,3 @@ class Polynomial:
             else:
                 return False
         return True
-        
-        
-        
-        

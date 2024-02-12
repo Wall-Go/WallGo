@@ -466,7 +466,7 @@ class Hydro:
         wHighT = self.thermodynamics.wHighT(Tp)
         c1 = -wHighT*gammaSq(vp)*vp
         c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
-        vMid = -boostVelocity(0.5*(vm+vp), vwTry)  # minus sign for convention change
+        vMid = -0.5*(vm+vp)  # minus sign for convention change
         return (c1, c2, Tp, Tm, vMid)
 
 
