@@ -2,10 +2,11 @@ import numpy as np
 import numpy.typing as npt
 import math
 import scipy.integrate as scipyint
+import scipy.linalg as scipylinalg
 
 from .InterpolatableFunction import InterpolatableFunction
 from .EffectivePotential import EffectivePotential
-from .Fields import Fields
+from .Fields import FieldPoint, Fields
 
 
 class FreeEnergyValueType(np.ndarray):
@@ -169,7 +170,7 @@ class FreeEnergy(InterpolatableFunction):
         if (self.interpolationRangeMin() > TMin):
             self.minPossibleTemperature = self.interpolationRangeMin()
 
-    def tracePhaseIVP(self, TMin: float, TMax: float, dT: float, rTol: float, spinodal: bool) -> None:
+    def tracePhaseIVP(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-6, spinodal: bool = True) -> None:
         """
         Finds field(T) for the range over which it exists. Sets problem
         up as an initial value problem and uses scipy.integrate.solve_ivp to
@@ -177,19 +178,21 @@ class FreeEnergy(InterpolatableFunction):
         """
         # initial values
         T0 = self.startingTemperature
-        phase0 = self.effectivePotential.findLocalMinimum(
+        phase0, V0 = self.effectivePotential.findLocalMinimum(
             self.startingPhaseLocationGuess, T0,
         )
-        ## HACK! a hard-coded tolerance
+        phase0 = FieldPoint(phase0[0])
+        ## HACK! a hard-coded absolute tolerance
         tol_absolute = rTol * 0.1 * np.sqrt(T0)
 
         def ode_function(temperature, field):
-            A = self.effectivePotential.ddV0(field, temperature)
-            b = -self.effectivePotential.ddV0dT(field, temperature)
-            return np.linalg.solve(A, b, assume_a="sym")
+            # HACK! Fix the [0] in the next two lines.
+            A = self.effectivePotential.deriv2Field2(field, temperature)
+            b = -self.effectivePotential.deriv2FieldT(field, temperature)
+            return scipylinalg.solve(A, b, assume_a="sym")
 
         # finding some sensible mass scales
-        ddV_T0 = self.effectivePotential.ddV0(phase0, temperature)
+        ddV_T0 = self.effectivePotential.deriv2Field2(phase0, T0)
         eigs_T0 = np.linalg.eigvalsh(ddV_T0)
         mass_scale_T0 = np.mean(eigs_T0)
         mass_hierarchy_T0 = min(eigs_T0) / max(eigs_T0)
@@ -199,13 +202,14 @@ class FreeEnergy(InterpolatableFunction):
             # tests for if an eigenvalue of V'' goes through zero
             # or becomes very small compared to some initial mass scale
             # or if there is a large hierarchy in the eigenvalues
-            A = self.ddV0(field, temperature)
-            eigs = np.linalg.eigvalsh(A)
+            d2V = self.effectivePotential.deriv2Field2(field, temperature)
+            eigs = scipylinalg.eigvalsh(d2V)
             test_zero = min(eigs)
             test_small = min(eigs) - eps_test * mass_scale_T0
             test_hierarchy = min(eigs) / max(eigs) - eps_test * mass_hierarchy_T0
             return min(test_zero, test_small, test_hierarchy)
 
+        print("!!! Integrating up !!!")
         ode_up = scipyint.RK45(
             ode_function,
             T0,
@@ -217,6 +221,7 @@ class FreeEnergy(InterpolatableFunction):
         )
         T_up = []
         field_up = []
+        f_up = []
         while ode_up.status == "running":
             try:
                 ode_up.step()
@@ -224,14 +229,22 @@ class FreeEnergy(InterpolatableFunction):
                 if err.args[0] != "invalid value encountered in sqrt":
                     raise
                 else:
+                    print(err.args[0] + f" at T={ode_up.t}")
+                    self.maxPossibleTemperature = ode_up.t
                     break
             if spinodal and spinodal_event(ode_up.t, ode_up.y) <= 0:
+                print(f"Spinodal decomposition at T={ode_up.t}")
+                self.maxPossibleTemperature = ode_up.t
                 break
             T_up.append(ode_up.t)
             field_up.append(ode_up.y)
+            f_up.append(self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t))
             if ode_up.step_size < 0.01 * rTol * T0:
+                print(f"Step size shrunk too small at T={ode_up.t}")
+                self.maxPossibleTemperature = ode_up.t
                 break
-        ode_down = scipyint.RK45(
+        print("!!! Integrating down !!!")
+        ode_down = scipyint.RK23(
             ode_function,
             T0,
             phase0,
@@ -242,6 +255,7 @@ class FreeEnergy(InterpolatableFunction):
         )
         T_down = []
         field_down = []
+        f_down = []
         while ode_down.status == "running":
             try:
                 ode_down.step()
@@ -249,22 +263,34 @@ class FreeEnergy(InterpolatableFunction):
                 if err.args[0] != "invalid value encountered in sqrt":
                     raise
                 else:
+                    print(err.args[0] + f" at T={ode_down.t}")
+                    self.minPossibleTemperature = ode_down.t
                     break
             if spinodal and spinodal_event(ode_up.t, ode_up.y) <= 0:
+                print(f"Spinodal decomposition at T={ode_up.t}")
+                self.minPossibleTemperature = ode_down.t
                 break
             T_down.append(ode_down.t)
             field_down.append(ode_down.y)
+            f_down.append(self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t))
             if ode_down.step_size < 0.01 * rTol * T0:
+                print(f"Step size too small at T={ode_down.t}")
+                self.minPossibleTemperature = ode_down.t
                 break
         if len(T_down) <= 2:
             T_full = np.array(T_up)
             field_full = np.array(field_up)
+            f_full = np.array(f_down)
         elif len(T_up) <= 2:
             T_full = np.flip(np.array(T_down), 0)
             field_full = np.flip(np.array(field_down), 0)
+            f_full = np.flip(np.array(f_down), 0)
         else:
             T_full = np.append(np.flip(np.array(T_down), 0), np.array(T_up), 0)
             field_full = np.append(np.flip(np.array(field_down), 0), np.array(field_up), 0)
+            f_full = np.append(np.flip(np.array(f_down), 0), np.array(f_up), 0)
 
         # Now to construct the interpolation
-        self.newInterpolationTableFromValues(T_full, field_full)
+        print(f"!!! Creating interpolation table of length={len(T_full)}!!!")
+        result = np.concatenate((field_full, f_full), axis=1)
+        self.newInterpolationTableFromValues(T_full, result)

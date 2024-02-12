@@ -23,6 +23,10 @@ class FieldPoint(np.ndarray):
     def GetField(self, i: int):
         return self[i]
 
+    def SetField(self, i: int, value: float) -> 'FieldPoint':
+        self[i] = value
+        return self
+
 
 ## TODO should not have SetField(), GetField() because numpy already has setfield(), getfield() ... lol
 

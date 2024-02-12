@@ -1,6 +1,8 @@
 import numpy as np
 from dataclasses import dataclass
 from typing import Tuple
+import copy
+import time
 
 ## WallGo imports
 from .Particle import Particle
@@ -208,8 +210,37 @@ class WallGoManager:
         ## ---- Interpolate phases and check that they remain stable in this range 
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
+        start_time = time.time()
         fHighT.tracePhase(TMin, TMax, dT)
         fLowT.tracePhase(TMin, TMax, dT)
+        time_previous_method = time.time() - start_time
+        start_time = time.time()
+        ####### QUICK LOOK AT NEW FUNCTIONS
+        print("---------- starting testing tracePhaseIVP new code ----------")
+        fHighTIVP = copy.deepcopy(fHighT)
+        fHighTIVP.tracePhaseIVP(TMin, TMax, dT)
+        n_test = 10
+        diff_phase = 0
+        diff_Veff = 0
+        for i in range(10):
+            T = TMin + i / (10 - 1) * (min(TMax, fHighT.maxPossibleTemperature) - TMin)
+            old = fHighT(T)
+            new = fHighTIVP(T)
+            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
+            diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
+        fLowTIVP = copy.deepcopy(fLowT)
+        fLowTIVP.tracePhaseIVP(TMin, TMax, dT)
+        for i in range(10):
+            T = TMin + i / (10 - 1) * (min(TMax, fLowTIVP.maxPossibleTemperature) - TMin)
+            old = fLowT(T)
+            new = fLowTIVP(T)
+            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
+            diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
+        time_IVP_method = time.time() - start_time
+        print(f"{diff_phase=}, {diff_Veff=}")
+        print(f"{time_previous_method=}s, {time_IVP_method=}s")
+        print("---------- finished testing tracePhaseIVP code ----------")
+        exit()
 
         ## If a phase became unstable we need to reduce our T range
         if (fLowT.minPossibleTemperature > TMin):
@@ -219,8 +250,6 @@ class WallGoManager:
             TMax = fHighT.maxPossibleTemperature
 
         self.TMin, self.TMax = TMin, TMax
-
-
 
 
 

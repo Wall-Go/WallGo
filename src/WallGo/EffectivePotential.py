@@ -151,9 +151,23 @@ class EffectivePotential(ABC):
         return rootResults.root
 
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
-        """Calculate derivative of (real part of) the effective potential with respect to temperature.
-        """
+        """Calculate derivative of (real part of) the effective potential with
+        respect to temperature.
 
+         Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : array_like
+            The temperature
+
+        Returns
+        ----------
+        dVdT : array_like
+            Temperature derivative of the potential, evaluated at each
+            point of the input temperature array.
+
+        """
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
@@ -164,49 +178,103 @@ class EffectivePotential(ABC):
         return der
 
     def derivField(self, fields: Fields, temperature: npt.ArrayLike):
-        """
-        Compute field-derivative of the effective potential with respect to all background fields,
-        at given temperature.
+        """ Compute field-derivative of the effective potential with respect to
+        all background fields, at given temperature.
 
         Parameters
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : float
-            the temperature
+        temperature : array_like
+            The temperature
 
         Returns
         ----------
-        dfdX : list[Fields]
-            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        dVdField : list[Fields]
+            Field derivatives of the potential, one Fields object for each
+            temperature. They are of Fields type since the shapes match nicely.
         """
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
         res = np.empty_like(fields, dtype=float)
+        fieldsOffset = np.zeros_like(fields, dtype=float)
 
         for idx in range(fields.NumFields()):
-
-            fieldsOffset = np.zeros_like(fields, dtype=float)
             fieldsOffset.SetField(
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
 
-            # O(dField^4) accurate, central finite difference scheme
-            dV = -self.evaluate(fields + 2 * fieldsOffset, temperature)
-            dV += 8 * self.evaluate(fields + fieldsOffset, temperature)
-            # dV += 0 * self.evaluate(fields, temperature)
-            dV -= 8 * self.evaluate(fields - fieldsOffset, temperature)
-            dV += self.evaluate(fields - 2 * fieldsOffset, temperature)
-
-            dVdphi = dV / (12 * self.dPhi)
+            # O(dPhi^2) accurate, central finite difference scheme
+            dV = (
+                self.evaluate(fields + fieldsOffset, temperature)
+                - self.evaluate(fields - fieldsOffset, temperature)
+            )
+            dVdphi = dV / (2 * self.dPhi)
+            """# O(dPhi^4) accurate, central finite difference scheme
+            dV = (
+                -self.evaluate(fields + 2 * fieldsOffset, temperature)
+                + 8 * self.evaluate(fields + fieldsOffset, temperature)
+                - 8 * self.evaluate(fields - fieldsOffset, temperature)
+                + self.evaluate(fields - 2 * fieldsOffset, temperature)
+            )
+            dVdphi = dV / (12 * self.dPhi)"""
 
             res.SetField(idx, dVdphi)
 
         return res
 
-    def derivFieldT(self, fields: Fields, temperature: npt.ArrayLike):
+    def deriv2FieldT(self, fields: Fields, temperature: npt.ArrayLike):
+        r""" Computes :math:`d^2V/(d\text{Field} dT)`.
+
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : array_like
+            The temperature
+
+        Returns
+        ----------
+        d2fdFielddT : list[Fields]
+            Field derivatives of the potential, one Fields object for each
+            temperature. They are of Fields type since the shapes match nicely.
         """
-        Compute d^2Veff/(dField dT).
+        if len(fields.shape) == 1:
+            # HACK! Not sure how best to deal with this edge case, which
+            # arises due to how scipyint.RK45 is initialised
+            fields = Fields((fields))
+        res = np.empty_like(fields, dtype=float)
+        fieldsOffset = np.zeros_like(fields, dtype=float)
+
+        for idx in range(fields.NumFields()):
+            fieldsOffset.SetField(
+                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+            )
+
+            # O(dPhi^2) accurate, central finite difference scheme
+            dV = (
+                self.derivT(fields + fieldsOffset, temperature)
+                - self.derivT(fields - fieldsOffset, temperature)
+            )
+            d2VdphidT = dV / (2 * self.dPhi)
+            """# O(dPhi^4) accurate, central finite difference scheme
+            dV = (
+                -self.derivT(fields + 2 * fieldsOffset, temperature)
+                + 8 * self.derivT(fields + fieldsOffset, temperature)
+                - 8 * self.derivT(fields - fieldsOffset, temperature)
+                + self.derivT(fields - 2 * fieldsOffset, temperature)
+            )
+            d2VdphidT = dV / (12 * self.dPhi)"""
+
+            res.SetField(idx, d2VdphidT)
+
+        if len(res.shape) == 2 and res.shape[0] == 1:
+            # HACK! SHOULD DO THIS MORE TIDILY
+            return res[0]
+        return res
+
+    def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):
+        r""" Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
 
         Parameters
         ----------
@@ -217,28 +285,85 @@ class EffectivePotential(ABC):
 
         Returns
         ----------
-        d2fdFielddT : list[Fields]
-            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        d2VdField2 : list[Fields]
+            Field Hessian of the potential. For each temperature, this is
+            a matrix of the same size as Fields.
         """
+        if len(fields.shape) == 1:
+            # HACK! Not sure how best to deal with this edge case, which
+            # arises due to how scipyint.RK45 is initialised
+            fields = Fields((fields))
+        shapeRes = (fields.NumPoints(), fields.NumFields(), fields.NumFields())
+        res = np.empty(shapeRes, dtype=float)
 
-        res = np.empty_like(fields, dtype=float)
+        fieldsOffsetX = np.zeros_like(fields, dtype=float)
+        fieldsOffsetY = np.zeros_like(fields, dtype=float)
+
+        # OG: This is all a bit of a mess, and should probably be rewritten
+        # more algorithmically.
 
         for idx in range(fields.NumFields()):
-
-            fieldsOffset = np.zeros_like(fields, dtype=float)
-            fieldsOffset.SetField(
+            fieldsOffsetX.SetField(
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
+            for idy in range(idx, fields.NumFields()):
+                if idy == idx:
+                    # O(dPhi^2) accurate, central finite difference scheme
+                    dV = (
+                        self.evaluate(fields + fieldsOffsetX, temperature)
+                        - 2 * self.evaluate(fields, temperature)
+                        + self.evaluate(fields - fieldsOffsetX, temperature)
+                    )
+                    res[..., idx, idy] = dV / self.dPhi ** 2
+                    """# O(dPhi^4) accurate, central finite difference scheme
+                    dV = (
+                        -self.evaluate(fields + 2 * fieldsOffsetX, temperature)
+                        + 16 * self.evaluate(fields + fieldsOffsetX, temperature)
+                        - 30 * self.evaluate(fields, temperature)
+                        + 16 * self.evaluate(fields - fieldsOffsetX, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX, temperature)
+                    )
+                    res[..., idx, idy] = dV / (12 * self.dPhi ** 2)"""
+                else:
+                    fieldsOffsetY.SetField(
+                        idy, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+                    )
+                    # O(dPhi^2) accurate, central finite difference scheme
+                    dV = (
+                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
+                    )
+                    res[..., idx, idy] = dV / (4 * self.dPhi ** 2)
+                    res[..., idy, idx] = res[..., idx, idy]
+                    # O(dPhi^4) accurate, central finite difference scheme
+                    """dV = (
+                        self.evaluate(fields + 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields + 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields - 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                    )
+                    dV += 8 * (
+                        -self.evaluate(fields + 2 * fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields - 2 * fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields + 2 * fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields + fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                    )
+                    dV += 64 * (
+                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
+                    )
+                    res[..., idx, idy] = dV / (144 * self.dPhi ** 2)
+                    res[..., idy, idx] = res[..., idx, idy]"""
 
-            # O(dField^4) accurate, central finite difference scheme
-            dV = -self.derivT(fields + 2 * fieldsOffset, temperature)
-            dV += 8 * self.derivT(fields + fieldsOffset, temperature)
-            # dV += 0 * self.derivT(fields, temperature)
-            dV -= 8 * self.derivT(fields - fieldsOffset, temperature)
-            dV += self.derivT(fields - 2 * fieldsOffset, temperature)
-
-            dVdphi = dV / (12 * self.dPhi)
-
-            res.SetField(idx, dVdphi)
-
+        if len(res.shape) == 3 and res.shape[0] == 1:
+            # HACK! SHOULD DO THIS MORE TIDILY
+            return res[0]
         return res
