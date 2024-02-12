@@ -111,6 +111,8 @@ class EOM:
             minimize the action and solve the EOM.
 
         """
+        
+        assert self.grid is self.boltzmannSolver.grid, "EOM and BoltzmannSolver must have the same instance of the Grid object."
 
         # LN: note that I've made widths and offsets be same size. Previously offsets was one element shorter
 
@@ -244,7 +246,6 @@ class EOM:
         
         L_xi = 2*max(wallParams.widths)
         self.grid.changePositionFalloffScale(L_xi)
-        self.boltzmannSolver.grid.changePositionFalloffScale(L_xi)
 
         ## LN: What's this loop?
         i = 0
