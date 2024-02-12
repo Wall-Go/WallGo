@@ -406,10 +406,11 @@ class Hydro:
             try:
                 TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TminGuess,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
                 vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
-                vpAtTpMax = np.sqrt(vpvm*vpovm) 
-                vpmax = vpAtTpMax
-                #If I remove this print statement, test_HydroTemplateModel fails... I don't understand why!
-                print(f"{TmMin=} {TpAtTmMin = } {np.sqrt(vmSqAtTmMin) =} {vpAtTmMin =} {TpMax=} {TmAtTpMax = } {np.sqrt(vmSqAtTpMax) =} {vpAtTpMax =}")             
+                vpAtTpMax = np.sqrt(vpvm*vpovm)
+                if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpmax = vpAtTpMax
+                else:
+                    vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
 
             except:             
             # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
