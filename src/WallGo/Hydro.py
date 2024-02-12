@@ -176,8 +176,6 @@ class Hydro:
 
         """
 
-        printflag = False
-
         vwMapping = None #JvdV: Why is this called vwMapping?
         if vp is None:
             vwMapping = vw
@@ -214,11 +212,11 @@ class Hydro:
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        #This is used as a correction if the guess of template model goes out of the allowed range.
-        if Tpm0[0] < self.TminGuess or Tpm0[0] > self.TmaxGuess or Tpm0[1] < self.TminGuess or Tpm0[1] > self.TmaxGuess:
-            printflag = True
-            print(f"{vw=} {min(vw,self.template.vJ)=} {vp=} {Tpm0=}")
-            Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        if Tpm0[0] > self.TmaxGuess: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            Tpm0 = [0.98*self.TmaxGuess,0.95*self.TmaxGuess]
+        
+        if Tpm0[1] < self.TminGuess: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            Tpm0 = [1.05*self.TminGuess,1.01*self.TminGuess]
 
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
@@ -228,31 +226,10 @@ class Hydro:
         [Tp,Tm] = self.__inverseMappingT(sol.x)
 
           
-          
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
-
-        if printflag == True:
-            print(f"{[Tp,Tm]=} {vp =}")
-
-        # We check if the obtained solution was OK, if not, we use a guess from the template model
-        # this is slow though, and seems only relevant for strong PTs, so we skip it if alpha<0.5
-        if False:
-            if np.abs((self.vpvmAndvpovm(Tp, Tm)[0]- vp*vm)/(vp*vm)) > 0.1 or np.abs((self.vpvmAndvpovm(Tp, Tm)[1]- vp/vm)/(vp/vm))>0.1:
-                # if vp*vm>0.0001 and vp/vm>0.0001:
-                #     1+1
-                #      #print(vp, self.vpvmAndvpovm(Tp, Tm)[0], vp*vm, self.vpvmAndvpovm(Tp, Tm)[1], vp/vm)
-                Tpm0 = self.template.matchDeflagOrHybInitial(vw,vp)
-                sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-                self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
-                [Tp,Tm] = self.__inverseMappingT(sol.x)
-            
-                vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
-                vm = np.sqrt(max(vmsq, 0))
-                if vp is None:
-                    vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
 
         return vp, vm, Tp, Tm
 
@@ -398,7 +375,7 @@ class Hydro:
 
             #For a given vwTry, if vp becomes too small, Tm will become smaller than TminGuess.
             #We thus determine a minimum vp given by this minimum Tm
-            TmMin = 1.01*self.TminGuess #Smallest allowed value of Tm
+            TmMin = 1.05*self.TminGuess #Smallest allowed value of Tm
 
             vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
@@ -412,14 +389,14 @@ class Hydro:
                 TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
                 vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
                 vpAtTmMin = np.sqrt(vpvm*vpovm)
-                vpmin = vpAtTmMin
+                vpmin = vpAtTmMin 
 
             #If TminGuess is very small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
             except: vpmin = 1e-3
 
             # For a given vwTry, if vp becomes too large, Tp will become larger than TmaxGuess.
             # We thus determine a maximum vp given by this maximum Tp
-            TpMax = 0.99*self.TmaxGuess
+            TpMax = 0.95*self.TmaxGuess
             vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
 
             def matchinOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
