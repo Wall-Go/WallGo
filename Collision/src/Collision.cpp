@@ -12,6 +12,52 @@
     #include <omp.h>
 #endif
 
+
+
+// Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
+void interpretMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression)
+{
+    // First split the string by "->""
+    std::vector<std::string> tokens(2);
+    
+    std::string delimiter = "->";
+    std::string lhs = inputString.substr(0, inputString.find(delimiter));
+
+    // RHS
+    mathExpression = inputString.substr(lhs.length() + delimiter.length());
+
+    // remove whitespaces from lhs to avoid weirdness
+    lhs.erase(std::remove_if(lhs.begin(), lhs.end(), isspace), lhs.end());
+
+    // ---- Extract the abcd indices from M[a,b,c,d]
+    std::size_t start = lhs.find('[');
+    std::size_t end = lhs.find(']');
+
+    // Ensure '[' and ']' are found and the start position is before the end position
+    if (start != std::string::npos && end != std::string::npos && start < end) 
+    {
+        std::string values = lhs.substr(start + 1, end - start - 1);
+
+        // Use stringstream to tokenize and extract integers
+        std::istringstream ss(values);
+        indices.clear();
+        indices.reserve(4);
+        int num;
+
+        while (ss >> num) 
+        {
+            indices.push_back(num);
+
+            // Check for the ',' separator and ignore it
+            if (ss.peek() == ',')
+            {
+                ss.ignore();
+            }
+        }
+    }
+}
+
+
 Collision::Collision(uint basisSize) : basisSizeN(basisSize)
 {
 }
@@ -227,14 +273,14 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
     if (particleIndex.count(particleName1) < 1 || particleIndex.count(particleName2) < 1 ) 
     {
         std::cerr << "Error: particles missing from list! Was looking for out-of-eq particles " << pairName << "\n";
-        return std::vector<CollElem<4>>();
+        exit(9);
     }
 
-
     // file paths are of form MatrixElements/matrixElements_top_gluon etc
-    std::string fileName = matrixElementDirectory + "/" + matrixElementFileNameBase + "_" + particleName1 + "_" + particleName2;
+    const std::string fileName = ConfigParser::get().getString("MatrixElements", "fileName");
+    const bool bVerbose = ConfigParser::get().getBool("MatrixElements", "verbose");
 
-    std::cout << "\nAttempting to parse matrix elements for out-of-equilibrium pair " << pairName << "\n";
+    if (bVerbose) std::cout << "\n" <<"Parsing matrix elements for off-equilibrium pair " << pairName << "\n";
     
     std::ifstream matrixElementFile(fileName);
 
@@ -249,24 +295,37 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
         std::cerr << "!!! Error: Failed to open matrix element file " << fileName << std::endl;
         exit(10);
     }
-    else 
-    {
-        // Now use regex to read all lines of form M[...] -> ...
-        std::string line;
-        while (std::getline(matrixElementFile, line)) {
-            if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
-                
-                // Found matrix element, so create a CollElem from it by parsing the read line into usable form
-                CollElem<4> elem = makeCollisionElement(particleName1, particleName2, line);
-                collisionElements.push_back(elem);
 
-                std::cout << "Found matrix element:\n";
+    /* Now use regex to read all lines of form M[...] -> expr
+    For each line we check if the first particle index matches that of particleName1
+    and require that at least one other index matches that of particleName2.
+    This is not optimal because we end up reading the full file for each off-eq pair.
+    */
+    std::string line;
+    std::string expr;
+    std::vector<uint> indices;
+    indices.resize(4);
+    
+    while (std::getline(matrixElementFile, line)) {
+        if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
+
+            interpretMatrixElement(line, indices, expr);
+            
+            if (indices[0] != particleIndex[particleName1]) continue;
+            if ( std::find(indices.begin(), indices.end(), particleIndex[particleName2]) == indices.end() ) continue;
+            
+            CollElem<4> newElem = makeCollisionElement(particleName2, indices, expr);
+            collisionElements.push_back(newElem);
+
+            if (bVerbose)
+            {
+                std::cout << "Loaded matrix element:\n";
                 std::cout << line << "\n";
             }
         }
-
-        matrixElementFile.close();
     }
+
+    matrixElementFile.close();
 
     std::cout << "\n";
     bMatrixElementsDone = true;
@@ -274,20 +333,9 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
     return collisionElements;
 }
 
-CollElem<4> Collision::makeCollisionElement(const std::string &particleName1, const std::string &particleName2, const std::string &readMatrixElement)
+CollElem<4> Collision::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr)
 {
-    // Assume the read matrix element is of form "M[a,b,c,d] -> some funct"
-    // Split this so that we get the indices, and the RHS goes to rhsString
-    std::vector<uint> indices(4);
-    std::string rhsString;
-
-    extractSymbolicMatrixElement(readMatrixElement, indices, rhsString);
-
-    if (indices[0] != particleIndex[particleName1])
-    {
-        // This should not happen
-        std::cerr << "Warning: first index in matrix element does not match name [" << particleName1 << "]\n";
-    }
+    assert(indices.size() == 4);
 
     const ParticleSpecies p1 = particles[indices[0]];
     const ParticleSpecies p2 = particles[indices[1]];
@@ -298,7 +346,7 @@ CollElem<4> Collision::makeCollisionElement(const std::string &particleName1, co
 
     collisionElement.matrixElement.initParser(couplings, massSquares);
     // Parses the RHS math expression so that we can evaluate it as a function of the symbols
-    collisionElement.matrixElement.setExpression(rhsString);
+    collisionElement.matrixElement.setExpression(expr);
     // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
     for (uint i = 0; i < collisionElement.bDeltaF.size(); ++i) 
     {
@@ -368,46 +416,3 @@ void Collision::findOutOfEquilibriumParticles()
         }
     }
 }
-
-// Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-void Collision::extractSymbolicMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression)
-{   
-    // First split the string by "->""
-    std::vector<std::string> tokens(2);
-    
-    std::string delimiter = "->";
-    std::string lhs = inputString.substr(0, inputString.find(delimiter));
-
-    // RHS
-    mathExpression = inputString.substr(lhs.length() + delimiter.length());
-
-    // remove whitespaces from lhs to avoid weirdness
-    lhs.erase(std::remove_if(lhs.begin(), lhs.end(), isspace), lhs.end());
-
-    // Do annoying stuff to extract the abcd indices
-    std::size_t start = lhs.find('[');
-    std::size_t end = lhs.find(']');
-
-    // Ensure '[' and ']' are found and the start position is before the end position
-    if (start != std::string::npos && end != std::string::npos && start < end) {
-        std::string values = lhs.substr(start + 1, end - start - 1);
-
-        // Use stringstream to tokenize and extract integers
-        std::istringstream ss(values);
-        indices.clear();
-        indices.reserve(4);
-        int num;
-
-        while (ss >> num) {
-            indices.push_back(num);
-
-            // Check for the ',' separator and ignore it
-            if (ss.peek() == ',')
-            {
-                ss.ignore();
-            }
-        }
-    }
-
-}
-

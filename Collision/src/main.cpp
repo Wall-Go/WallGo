@@ -57,7 +57,7 @@ void collisionsQCD(uint N) {
 
 	// For now take just the top to be out-of-eq
     ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2, bUltraRelativistic);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, true, msqVacuum, mg2, bUltraRelativistic);
+    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Main control object
