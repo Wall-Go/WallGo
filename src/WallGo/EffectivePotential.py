@@ -48,7 +48,7 @@ class EffectivePotential(ABC):
 
 
     @abstractmethod
-    def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def evaluate(self, fields: Fields, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
         at the input field configuration and temperature. 
         
@@ -103,6 +103,9 @@ class EffectivePotential(ABC):
 
             resLocation[i] = res.x
             resValue[i] = res.fun
+
+            # Check for presenece of imaginary parts at minimum
+            self.evaluate(Fields((res.x)), T[i], checkForImaginary=True)
 
         ## Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
