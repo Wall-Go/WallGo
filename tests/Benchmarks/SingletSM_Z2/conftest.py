@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-import math
 from typing import Tuple
 
 import WallGo
@@ -127,28 +126,30 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
     return grid
 
-"""
-## TODO sensible masses
-@pytest.fixture(scope="session")
-def singletBenchmarkParticle() -> WallGo.Particle:
-    return WallGo.Particle(
-        name="top",
-        msqVacuum=lambda phi: 0.5 * phi.GetField(0)**2,
-        msqThermal=lambda T: 0.1 * T**2,
-        statistics="Fermion",
-        inEquilibrium=False,
-        ultrarelativistic=False,
-        multiplicity=1,
-    )
-"""
-
-
 
 @pytest.fixture(scope="session")
-def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid):
+def singletBenchmarkCollisionArray(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid) -> WallGo.CollisionArray:
 
+    particle = singletBenchmarkModel.model.outOfEquilibriumParticles[0]
+    ## TODO better file path
+    import pathlib
+    fileDir = pathlib.Path(__file__).parent.resolve()
+
+    fname = fileDir / "../../../Models/SingletStandardModel_Z2/Collisions/collisions_top_top_N11.hdf5"
+    return WallGo.CollisionArray.newFromFile(fname, singletBenchmarkGrid, "Chebyshev", 
+                                      particle, particle, bInterpolate=False)
+
+
+
+
+@pytest.fixture(scope="session")
+def singletBenchmarkBoltzmannSolver(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid,
+                                    singletBenchmarkCollisionArray: WallGo.CollisionArray) -> WallGo.BoltzmannSolver:
+    
+    particle = singletBenchmarkModel.model.outOfEquilibriumParticles[0]
     boltzmannSolver = WallGo.BoltzmannSolver(singletBenchmarkGrid, basisM = "Cardinal", basisN = "Chebyshev")
     boltzmannSolver.updateParticleList( singletBenchmarkModel.model.outOfEquilibriumParticles )
+    boltzmannSolver.setCollisionArray(singletBenchmarkCollisionArray)
     return boltzmannSolver
 
 
