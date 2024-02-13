@@ -199,17 +199,20 @@ class FreeEnergy(InterpolatableFunction):
         eps_test = rTol * 1e2
         
         def spinodal_event(temperature, field):
-            # tests for if an eigenvalue of V'' goes through zero
-            # or becomes very small compared to some initial mass scale
-            # or if there is a large hierarchy in the eigenvalues
-            d2V = self.effectivePotential.deriv2Field2(field, temperature)
-            eigs = scipylinalg.eigvalsh(d2V)
-            test_zero = min(eigs)
-            test_small = min(eigs) - eps_test * mass_scale_T0
-            test_hierarchy = min(eigs) / max(eigs) - eps_test * mass_hierarchy_T0
-            return min(test_zero, test_small, test_hierarchy)
+            if not spinodal:
+                return 1  # don't bother testing
+            else:
+                # tests for if an eigenvalue of V'' goes through zero
+                # or becomes very small compared to some initial mass scale
+                # or if there is a large hierarchy in the eigenvalues
+                d2V = self.effectivePotential.deriv2Field2(field, temperature)
+                eigs = scipylinalg.eigvalsh(d2V)
+                test_zero = min(eigs)
+                test_small = min(eigs) - eps_test * mass_scale_T0
+                test_hierarchy = min(eigs) / max(eigs) - eps_test * mass_hierarchy_T0
+                return min(test_zero, test_small, test_hierarchy)
 
-        print("!!! Integrating up !!!")
+        print("--- Integrating up ---")
         ode_up = scipyint.RK45(
             ode_function,
             T0,
@@ -232,7 +235,7 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode_up.t}")
                     self.maxPossibleTemperature = ode_up.t
                     break
-            if spinodal and spinodal_event(ode_up.t, ode_up.y) <= 0:
+            if spinodal_event(ode_up.t, ode_up.y) <= 0:
                 print(f"Spinodal decomposition at T={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
@@ -243,7 +246,7 @@ class FreeEnergy(InterpolatableFunction):
                 print(f"Step size shrunk too small at T={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
-        print("!!! Integrating down !!!")
+        print("--- Integrating down ---")
         ode_down = scipyint.RK23(
             ode_function,
             T0,
@@ -266,7 +269,7 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode_down.t}")
                     self.minPossibleTemperature = ode_down.t
                     break
-            if spinodal and spinodal_event(ode_up.t, ode_up.y) <= 0:
+            if spinodal_event(ode_up.t, ode_up.y) <= 0:
                 print(f"Spinodal decomposition at T={ode_up.t}")
                 self.minPossibleTemperature = ode_down.t
                 break
@@ -291,6 +294,6 @@ class FreeEnergy(InterpolatableFunction):
             f_full = np.append(np.flip(np.array(f_down), 0), np.array(f_up), 0)
 
         # Now to construct the interpolation
-        print(f"!!! Creating interpolation table of length={len(T_full)}!!!")
+        print(f"--- Creating interpolation table of length={len(T_full)}---")
         result = np.concatenate((field_full, f_full), axis=1)
         self.newInterpolationTableFromValues(T_full, result)
