@@ -7,7 +7,7 @@
 
 #include "CollisionIntegral.h"
 #include "ParticleSpecies.h"
-#include "Collision.h"
+#include "CollisionManager.h"
 #include "gslWrapper.h"
 #include "ConfigParser.h"
 
@@ -55,15 +55,15 @@ namespace pythonModule
 But seems hard to dictate when/how this should be called in Python context.
 */
 
-/* We bind a subclass of the Collision "control" class. 
+/* We bind a subclass of the CollisionManager "control" class. 
 This way we can override some functions with python-specific functionality.
 Marking this as final prevents some non-virtual destructor warnings from clang. */
-class CollisionPython final : public Collision
+class CollisionPython final : public CollisionManager
 {
 
 public: 
     // Just call parent constructor
-    CollisionPython(uint basisSize) : Collision(basisSize) 
+    CollisionPython(uint basisSize) : CollisionManager(basisSize) 
     {
         if (!pythonModule::bInitialized)
         {
@@ -137,8 +137,8 @@ PYBIND11_MODULE(CollisionModule, m)
     //*********** Bind functions of the main control class
 
     // READMEs for the functions
-    std::string usage_Collision = 
-        "Constructor for Collision class. \n\n"
+    std::string usage_CollisionManager = 
+        "Constructor for CollisionManager class. \n\n"
         "Args:\n"
         "    polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n";
 
@@ -159,8 +159,8 @@ PYBIND11_MODULE(CollisionModule, m)
         "Call only after specifying all particles and couplings with addParticle, addCoupling\n\n";
 
 
-    py::class_<CollisionPython>(m, "Collision")
-        .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_Collision.c_str())
+    py::class_<CollisionPython>(m, "CollisionManager")
+        .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());

@@ -17,10 +17,10 @@ using Array6D = Vec<6, double>;
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms 
 */
-class Collision {
+class CollisionManager {
 
 public: 
-    Collision(uint basisSize);
+    CollisionManager(uint basisSize);
 
     // how many basis polynomials
     const uint basisSizeN;
@@ -47,7 +47,9 @@ public:
     // Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays 
     void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D& results, Array4D& errors);
 
+    void setMatrixElementFile(const std::string &fileName) { matrixElementFile = fileName; }
 
+    void clear();
 
 protected:
 
@@ -82,6 +84,8 @@ protected:
     std::vector<ParticleSpecies> outOfEqParticles;
 
 private:
+
+    std::string matrixElementFile = "";
 
     // Progress tracking 
     int computedIntegralCount = 0;
