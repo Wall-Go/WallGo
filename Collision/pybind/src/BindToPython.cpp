@@ -42,15 +42,13 @@ namespace pythonModule
             config.printContents();
             std::cout << std::endl;
         } else {
+            std::cerr << "no collision config...\n";
             exit(100);
         }
 
         pythonModule::bInitialized = true;
     }
 }
-
-
-
 
 
 /* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
@@ -79,7 +77,7 @@ protected:
 
     // NB: if called inside OpenMP block this does lead to core dumped on CTRL-C
     // So @todo make a clean exit
-    virtual inline bool shouldContinueEvaluation() override 
+    virtual inline bool shouldContinueEvaluation() final override 
     {
         // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
         if (PyErr_CheckSignals() != 0)

@@ -35,7 +35,10 @@ public:
     @todo The matrix elements are read from file. */
     std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2);
 
-    CollElem<4> makeCollisionElement(const std::string &particleName1, const std::string &particleName2, const std::string &readMatrixElement);
+    /* Turns a symbolic string expression into usable CollElem<4>. 
+    Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
+    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]) */  
+    CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr);
 
     
     // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
@@ -60,9 +63,6 @@ protected:
     // Checks which particles in our current 'particles' array are out-of-eq, then stores those in outOfEqParticles
     void findOutOfEquilibriumParticles();
 
-    // Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-    void extractSymbolicMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression);
-
     // List of all particles that contribute to collisions
     std::vector<ParticleSpecies> particles;
 
@@ -80,14 +80,6 @@ protected:
 
     // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
     std::vector<ParticleSpecies> outOfEqParticles;
-
-    // @todo config file for file paths 
-    
-    // Directory where we search for matrix elements
-    std::string matrixElementDirectory = "MatrixElements";
-
-    // Base file name for matrix element files. We append particle names to this like "_top_top"
-    std::string matrixElementFileNameBase = "matrixElements";
 
 private:
 

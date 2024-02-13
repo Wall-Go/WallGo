@@ -302,6 +302,8 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
         if (kinematics.FV4.energy() >= 0)
         {
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
+            // We're doing off-eq pair (a, l) so the rhoZ, rhoPar momenta here are always momenta of the l-particle.
+            // This is automatically handled by bDeltaF flags in CollElem (although the logic is not very transparent)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
                 polynomialBasis.TmTn(m, n, kinematics.FV2),

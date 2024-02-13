@@ -12,7 +12,7 @@
 
 /** Singleton class for reading config.ini and storing values. 
  * Usage: 
- *      Get reference from anywhere: ConfigParser& config = ConfigParser::Get();
+ *      Get reference from anywhere: ConfigParser& config = ConfigParser::get();
  *      Access a value [Section] key = ... : double value = GetDouble(sectionName, key, defaultValue = 0.)
 */
 class COLLISION_API ConfigParser {
@@ -80,7 +80,7 @@ public:
                 ss >> std::scientific >> defaultValue;
                 return defaultValue;
             } catch (const std::invalid_argument& e) {
-                // Handle conversion error
+                // Handle conversion error TODO
             }
         }
         return defaultValue;
