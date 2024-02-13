@@ -45,10 +45,10 @@ class Hydro:
         self.rtol,self.atol = rtol,atol
 
         self.vJ = self.findJouguetVelocity()
-        self.vMin = max(1e-3,self.minVelocity())
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
         # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
+        self.vMin = max(1e-3,self.minVelocity())
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
 
@@ -331,13 +331,57 @@ class Hydro:
         """
 
         # The answer does not depend on the value of Tm, so we just set it to self.TminGuess+self.Tnucl)/2
-        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp)-self.thermodynamics.pLowT((self.TminGuess+self.Tnucl)/2)
+#        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp)-self.thermodynamics.pLowT((self.TminGuess+self.Tnucl)/2)
 
+#        def matchingStrongest():
+
+###
+        def matchingStrongest(XpXm): #Matching relations at the wall interface
+            Tpm = self.__inverseMappingT(XpXm)
+
+            eq1 = self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1])
+            eq2 = self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0])
+
+            # We multiply the equations by c to make sure the solver
+            # do not explore arbitrarly small or large values of Tm and Tp.
+            c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
+            return (eq1*c,eq2*c)
+
+
+        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
+        # the relevant bounds.
+        Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), 0.001)
+        
+        try:
+            if vw > self.template.vMin:
+                Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), 0.001)
+            else:
+                Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        except:
+            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+
+        if Tpm0[0] > self.TmaxGuess: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            Tpm0 = [0.98*self.TmaxGuess,0.95*self.TmaxGuess]
+        
+        if Tpm0[1] < self.TminGuess: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            Tpm0 = [1.05*self.TminGuess,1.01*self.TminGuess]
+
+        # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
+        # to the interval (-inf,inf) which is used by the solver.
         try: 
-            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TminGuess, self.TmaxGuess), rtol=self.rtol,xtol=self.atol).root
-            return self.solveHydroShock(vw,0,Tpstrongest)
+            sol = root(matchingStrongest,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
+            self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
+            [Tp,Tm] = self.__inverseMappingT(sol.x)
+
+
+            return self.solveHydroShock(vw,0,Tp)
+        
         except:
             return 0
+
+###
+
 
     def minVelocity(self):
         

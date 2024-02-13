@@ -97,11 +97,8 @@ def test_findvwLTE():
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,10,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
-        print(f"{psiN[i]=} {alN[i]=} {cs2[i]=} {cb2[i]=} {hydro.vMin=}")
         res1[i] = hydro.findvwLTE()
-        print(res1[i])
         res2[i] = hydroTemplate.findvwLTE()
-        print(res2[i])
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
 
 def test_findHydroBoundaries():
@@ -112,14 +109,11 @@ def test_findHydroBoundaries():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
     for i in range(N):
-        print(f"{alN[i]=} {psiN[i]=} {cb2[i]=} {cs2[i]=}")
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
-        print(f"{res1[i]=}")
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
-        print(f"{res2[i]=}")
         if np.isnan(res1[i,0]):
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
