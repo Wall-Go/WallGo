@@ -2,7 +2,7 @@
 set(BINARY ${CMAKE_PROJECT_NAME})
 
 # source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp Collision.cpp)
+set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp)
 
 
 add_compile_options(-fPIC)

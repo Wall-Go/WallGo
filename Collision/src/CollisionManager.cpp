@@ -1,4 +1,4 @@
-#include "Collision.h"
+#include "CollisionManager.h"
 
 #include <array>
 #include <fstream>
@@ -11,8 +11,6 @@
 #if WITH_OMP
     #include <omp.h>
 #endif
-
-
 
 // Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
 void interpretMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression)
@@ -58,11 +56,11 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 }
 
 
-Collision::Collision(uint basisSize) : basisSizeN(basisSize)
+CollisionManager::CollisionManager(uint basisSize) : basisSizeN(basisSize)
 {
 }
 
-void Collision::addParticle(const ParticleSpecies &particle)
+void CollisionManager::addParticle(const ParticleSpecies &particle)
 {
     particles.push_back(particle);
 
@@ -74,13 +72,13 @@ void Collision::addParticle(const ParticleSpecies &particle)
     }
 }
 
-void Collision::addCoupling(double coupling) 
+void CollisionManager::addCoupling(double coupling) 
 {
     couplings.push_back(coupling);
 }
 
 
-void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors)
+void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors)
 {
     const uint N = basisSizeN;
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
@@ -200,7 +198,7 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
 }
 
 
-void Collision::calculateCollisionIntegrals()
+void CollisionManager::calculateCollisionIntegrals()
 {
     // Particle list is assumed to be fixed from now on!
     findOutOfEquilibriumParticles();
@@ -264,7 +262,7 @@ void Collision::calculateCollisionIntegrals()
     
 }
 
-std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &particleName1, const std::string &particleName2)
+std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2)
 {
     // Just for logging 
     std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
@@ -333,7 +331,7 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
     return collisionElements;
 }
 
-CollElem<4> Collision::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr)
+CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr)
 {
     assert(indices.size() == 4);
 
@@ -357,7 +355,7 @@ CollElem<4> Collision::makeCollisionElement(const std::string &particleName2, co
 }
 
 
-long Collision::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
+long CollisionManager::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 {
     const uint N = basisSize;
     // How many independent integrals in each CollisionIntegral4
@@ -376,7 +374,7 @@ long Collision::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 }
 
 
-void Collision::reportProgress()
+void CollisionManager::reportProgress()
 {
     if (totalIntegralCount > 0)
     {
@@ -392,7 +390,7 @@ void Collision::reportProgress()
 }
 
 
-void Collision::makeParticleIndexMap()
+void CollisionManager::makeParticleIndexMap()
 {
     particleIndex.clear();
     
@@ -404,7 +402,7 @@ void Collision::makeParticleIndexMap()
     }
 }
 
-void Collision::findOutOfEquilibriumParticles()
+void CollisionManager::findOutOfEquilibriumParticles()
 {
     outOfEqParticles.clear();
 

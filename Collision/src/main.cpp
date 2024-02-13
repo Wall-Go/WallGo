@@ -8,7 +8,7 @@
 #include <getopt.h> // command line arguments
 
 #include "Common.h"
-#include "Collision.h"
+#include "CollisionManager.h"
 #include "CollElem.h"
 #include "CollisionIntegral.h"
 #include "hdf5Interface.h"
@@ -61,14 +61,14 @@ void collisionsQCD(uint N) {
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Main control object
-	Collision collision(N);
-	collision.addParticle(topQuark);
-	collision.addParticle(gluon);
-	collision.addParticle(lightQuark);
+	CollisionManager collisionManager(N);
+	collisionManager.addParticle(topQuark);
+	collisionManager.addParticle(gluon);
+	collisionManager.addParticle(lightQuark);
 
-	collision.addCoupling(gs);
+	collisionManager.addCoupling(gs);
 
-	collision.calculateCollisionIntegrals();
+	collisionManager.calculateCollisionIntegrals();
 
 }
 
