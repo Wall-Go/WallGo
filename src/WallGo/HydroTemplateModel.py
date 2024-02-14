@@ -57,6 +57,7 @@ class HydroTemplateModel:
         self.nu = 1+1/self.cb2
         self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
+        self.vMin = self.minVelocity()
 
     def findJouguetVelocity(self, alN=None):
         r"""
@@ -80,6 +81,29 @@ class HydroTemplateModel:
         if alN is None:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
+
+    def minVelocity(self):
+        r"""
+        Finds the minimum velocity that is possible for a given nucleation temeperature. 
+        It is found by shooting with alpha_+ = 1/3 at the wall. This is the maximum value possible.
+        The wall velocity which yields alpha_+ = 1/3 for a given alpha_N is the minimum possible wall velocity.
+
+        It is possible that no solution can be found, in this case there is no minimum value of the wall velocity
+        and the function returns zero.
+
+        Parameters
+        ----------
+
+        Returns
+            vmin: double
+                The minimum value of the wall velocity for which a solution can be found
+        """
+        shootingalphamax = lambda vw: self.__shooting(vw,1/3.)
+
+        try:
+            return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
+        except:
+            return 0
 
     def get_vp(self,vm,al,branch=-1):
         r"""
@@ -274,7 +298,7 @@ class HydroTemplateModel:
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
         vm = min(self.cb,vw)
-        al_max = 1./3.
+        al_max = 1/3.
         vp_max = min(self.cs2/vw,vw,vm)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
 
@@ -282,9 +306,9 @@ class HydroTemplateModel:
             sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)
 
         except Exception as e:
-            print("!!! Exception in HydroTemplateModel.findMatching():")
-            print(e)
-            print()
+#            print("!!! Exception in HydroTemplateModel.findMatching():")
+#            print(e)
+#            print()
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
         wp = self.w_from_alpha(sol.root)
@@ -316,6 +340,10 @@ class HydroTemplateModel:
         NOTE: the sign of c1 is chosen to match the convention for the fluid velocity used in EOM and
         Hydro. In those conventions, vp would be negative, and therefore c1 has to be negative as well.
         """
+        if vwTry < self.vMin:
+            print('This wall velocity is too small for the chosen nucleation temperature. findHydroBoundaries will return zero.')
+            return (0,0,0,0,0)
+
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             return (vp,vm,Tp,Tm, None)

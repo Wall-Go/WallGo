@@ -179,8 +179,10 @@ class WallGoManager:
 
         ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
+
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
+        
         _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
 
 
@@ -200,8 +202,7 @@ class WallGoManager:
         """Allow some leeway since the template model is just a rough estimate. 
         NB: In generaly situations, TMax (TMin) cannot be arbitrarily large (small) because both phases need to remain (meta)stable over the range.
         """
-        TMin, TMax = 0.8*TMinTemplate, 1.1*TMaxTemplate   #JvdV: need to investigate this bound further - choosing the prefactor of TMaxTemplate too large affects the result
-        #TMax = clamp(TMax, TMin, self.thermodynamics.Tc)
+        TMin, TMax = 0.8*TMinTemplate, 1.2*TMaxTemplate   #If TMax, TMin are too close to TmaxTemplate, TMinTemplate, the program will slow down significantly.
 
         dT = self.config.getfloat("EffectivePotential", "dT")
 
@@ -212,10 +213,10 @@ class WallGoManager:
         fLowT.tracePhase(TMin, TMax, dT)
 
         ## If a phase became unstable we need to reduce our T range
-        if (fLowT.minPossibleTemperature > TMin):
+        if (fLowT.minPossibleTemperature > TMin): #Does this already work?
             TMin = fLowT.minPossibleTemperature
 
-        if (fHighT.maxPossibleTemperature < TMax):
+        if (fHighT.maxPossibleTemperature < TMax): #Does this already work?
             TMax = fHighT.maxPossibleTemperature
 
         self.TMin, self.TMax = TMin, TMax

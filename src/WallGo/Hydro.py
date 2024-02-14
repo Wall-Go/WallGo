@@ -46,7 +46,11 @@ class Hydro:
 
         self.vJ = self.findJouguetVelocity()
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
+        # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
+        self.vMin = max(1e-3,self.minVelocity())
+        self.alpha = self.thermodynamics.alpha(self.Tnucl)
+
 
     def findJouguetVelocity(self):
         r"""
@@ -83,7 +87,7 @@ class Hydro:
         ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
 
         Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
-        Tmax = self.TmaxGuess
+        Tmax = min(self.TmaxGuess,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
 
@@ -95,7 +99,7 @@ class Hydro:
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
         return(vp)
-
+    
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
         Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`, from the matching conditions.
@@ -172,20 +176,9 @@ class Hydro:
 
         """
 
-        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
-        # the relevant bounds.
-        #JvdV: commented it out - as it lead to an unreasonable range
-#        try:
-#            Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
-#        except:
-#            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
-#            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
-#        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
-#            Tpm0[0] = 1.01*Tpm0[1]
-#        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-#            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
-
-        Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        vwMapping = None #JvdV: Why is this called vwMapping?
+        if vp is None:
+            vwMapping = vw
 
         def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
@@ -203,16 +196,41 @@ class Hydro:
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
 
-        # We map Tm and Tp, which satisfy 0<Tm<Tp (and Tp < Tm/sqrt(1-vm**2) if entropy is conserved),
+
+        # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
+        # the relevant bounds.
+        try:
+            if vw > self.template.vMin:
+                Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
+            else:
+                Tpm0 = [self.Tnucl,0.99*self.Tnucl]
+        except:
+            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
+        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+            Tpm0[0] = 1.01*Tpm0[1]
+        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
+            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+
+        if Tpm0[0] > self.TmaxGuess: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            Tpm0 = [0.98*self.TmaxGuess,0.95*self.TmaxGuess]
+        
+        if Tpm0[1] < self.TminGuess: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            Tpm0 = [1.05*self.TminGuess,1.01*self.TminGuess]
+
+
+        # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-        self.success = sol.success or np.sum(sol.fun**2) < 1e-10 #If the error is small enough, we consider that root has converged even if it returns False.
+        self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
 
+          
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
+
         return vp, vm, Tp, Tm
 
 
@@ -294,29 +312,25 @@ class Hydro:
 
         return Tn.root
 
-#This function is commented out because it is never called. The purpose of the function is to find the strongest possible shock solution 
-    # def strongestShock(self, vw): #This function would not respect the maximum and minimum temperature. But it is also never called, so maybe that's not a problem
-    #     r"""
-    #     Finds the smallest nucleation temperature for which a shock can exist.
-    #     For the strongest shock, the fluid is at rest in front of the bubble (in the wall frame), :math:`v_+=0`, which yields :math:`T_+,T_-`.
-    #     The nucleation temperature corresponding to these matching conditions is obtained by solving the hydrodynamic equations in the shock.
- 
-    #     Parameters
-    #     ----------
-    #     vw : double
-    #         The wall velocity
+    def strongestShock(self, vw):
+        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) -self.thermodynamics.pLowT(self.TminGuess)
+    
+        try: 
+            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TminGuess, self.TmaxGuess), rtol=self.rtol,xtol=self.atol).root
+            return self.solveHydroShock(vw,0,Tpstrongest)
+    
+        except:
+            return 0
 
-    #     Returns
-    #     -------
-    #     Tn : double
-    #         The nucleation temperature with the strongest possible shock
+    def minVelocity(self):
+        
+        strongestshockTn = lambda vw: self.strongestShock(vw)-self.Tnucl
+    
+        try:
+            return root_scalar(strongestshockTn,bracket=(1e-5,self.vJ),rtol=self.rtol,xtol=self.atol).root
+        except:
+            return 0
 
-    #     """
-    #     def vpnum(Tpm):
-    #         return (self.thermodynamics.eLowT(Tpm[1])+self.thermodynamics.pHighT(Tpm[0]),self.thermodynamics.pHighT(Tpm[0])-self.thermodynamics.pLowT(Tpm[1]))
-
-    #     Tp,Tm = np.abs(fsolve(vpnum,[0.2,0.2]))
-    #     return self.solveHydroShock(vw,0,Tp)
 
     def findMatching(self, vwTry):
         r"""
@@ -340,9 +354,53 @@ class Hydro:
 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-#            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tc)/vwTry)   #Note: this is the original implementation
-            vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)   #Note: this is an approximation because we don't want to use Tn. Have to test if it is ok!
-            vpmin = 1e-5 # Minimum value of vpmin
+            # First we determine if TminGuess and TmaxGuess impose a minimum of maximum value of v+ 
+
+            #For a given vwTry, if vp becomes too small, Tm will become smaller than TminGuess.
+            #We thus determine a minimum vp given by this minimum Tm
+            TmMin = 1.05*self.TminGuess #Smallest allowed value of Tm
+
+            vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
+            # First option is for deflagration, second for hybrid
+
+            def matchinOfTp(tp): # (vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin ) - vmSqAtTmMin
+                vpvm, vpovm = self.vpvmAndvpovm(tp,TmMin)
+                return vpvm/vpovm - vmSqAtTmMin 
+            
+            #Try to find Tp for which the matching equations are solved. This gives the minimum value of vp
+            try:
+                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+                vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
+                vpAtTmMin = np.sqrt(vpvm*vpovm)
+                vpmin = vpAtTmMin 
+
+            #If TminGuess is very small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
+            except: vpmin = 1e-3
+
+            # For a given vwTry, if vp becomes too large, Tp will become larger than TmaxGuess.
+            # We thus determine a maximum vp given by this maximum Tp
+            TpMax = 0.95*self.TmaxGuess
+            vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+
+            def matchinOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
+                return vpvm/vpovm - vmSqAtTpMax
+
+            try:
+                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TminGuess,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
+                vpAtTpMax = np.sqrt(vpvm*vpovm)
+                if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpmax = vpAtTpMax
+                else:
+                    vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+
+            except:             
+            # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
+            # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+                vpmax =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+
+            vpguess,_,_,_ = self.template.findMatching(vwTry)
 
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
@@ -350,13 +408,16 @@ class Hydro:
 
             fmin,fmax = func(vpmin),func(vpmax)
             if fmin*fmax <= 0:
-                sol = root_scalar(func, bracket=[vpmin,vpmax], xtol=self.atol, rtol=self.rtol)
+                sol = root_scalar(func, bracket=[vpmin,vpmax], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             else:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
                     return self.template.findMatching(vwTry)
                 sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
+
+#            if self.vpvmAndvpovm(Tp,Tm)[0] < 0:
+#                return None, None, None, None
 
         return (vp,vm,Tp,Tm)
 
@@ -379,6 +440,10 @@ class Hydro:
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
+        if vwTry < self.vMin:
+            print('This wall velocity is too small for the chosen nucleation temperature. findHydroBoundaries will return zero.')
+            return (0,0,0,0,0)
+
         vp,vm,Tp,Tm = self.findMatching(vwTry)
         if vp is None:
             # not sure what is going on here
@@ -414,13 +479,17 @@ class Hydro:
         def shock(vw): # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
             return vp*vw-self.thermodynamics.csqHighT(Tp)
+        
 
         self.success = True
-        vmin = 0.01
+        vmin = self.vMin
         vmax = self.vJ
 
         if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
-            vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+            try:
+                vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+            except:
+                return 1 # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
 
         fmax = func(vmax)
         if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
@@ -458,4 +527,4 @@ class Hydro:
         Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
         Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
         return [Tp,Tm]
-        
+    
