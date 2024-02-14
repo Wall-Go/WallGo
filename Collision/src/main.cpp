@@ -61,7 +61,8 @@ void collisionsQCD(uint N) {
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Main control object
-	CollisionManager collisionManager(N);
+	CollisionManager collisionManager;
+	collisionManager.setBasisSize(N);
 	collisionManager.addParticle(topQuark);
 	collisionManager.addParticle(gluon);
 	collisionManager.addParticle(lightQuark);

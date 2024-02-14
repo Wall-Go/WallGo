@@ -56,9 +56,10 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 }
 
 
-CollisionManager::CollisionManager(uint basisSize) : basisSizeN(basisSize)
+CollisionManager::CollisionManager()
 {
 }
+
 
 void CollisionManager::addParticle(const ParticleSpecies &particle)
 {
@@ -78,9 +79,23 @@ void CollisionManager::addCoupling(double coupling)
 }
 
 
+CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecies &particle1, const ParticleSpecies &particle2, const std::string &matrixElementFile, uint basisSize)
+{
+    CollisionIntegral4 collisionIntegral(basisSize);
+    std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), matrixElementFile);
+    
+    for (const CollElem<4> &elem : collisionElements)
+    {
+        collisionIntegral.addCollisionElement(elem);
+    }
+
+    return collisionIntegral;
+}
+
+
 void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors)
 {
-    const uint N = basisSizeN;
+    const uint N = collisionIntegral.getPolynomialBasisSize();
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
     errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
 
@@ -194,18 +209,18 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 
     // How many we calculated in this function. 
     // Just recalculate this here instead of trying to combine counts from many threads and manually count j > N/2 cases etc
-    computedIntegralCount += countIndependentIntegrals(basisSizeN, 1);        
+    computedIntegralCount += countIndependentIntegrals(N, 1);        
 }
 
 
-void CollisionManager::calculateCollisionIntegrals()
+void CollisionManager::calculateCollisionIntegrals(uint basisSize)
 {
     // Particle list is assumed to be fixed from now on!
     findOutOfEquilibriumParticles();
     makeParticleIndexMap();
 
     // Initialize progress tracking 
-    totalIntegralCount = countIndependentIntegrals(basisSizeN, outOfEqParticles.size());
+    totalIntegralCount = countIndependentIntegrals(basisSize, outOfEqParticles.size());
     computedIntegralCount = 0;
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
@@ -222,7 +237,7 @@ void CollisionManager::calculateCollisionIntegrals()
             Array4D results;
             Array4D errors;
             
-            CollisionIntegral4 collisionIntegral(basisSizeN);
+            CollisionIntegral4 collisionIntegral(basisSize);
             std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName());
             
             for (const CollElem<4> &elem : collisionElements)
@@ -233,11 +248,11 @@ void CollisionManager::calculateCollisionIntegrals()
             evaluateCollisionTensor(collisionIntegral, results, errors);
 
             // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
-            std::string filename = "collisions_" + particle1.getName() + "_" + particle2.getName() + "_N" + std::to_string(basisSizeN) + ".hdf5";
+            std::string filename = "collisions_" + particle1.getName() + "_" + particle2.getName() + "_N" + std::to_string(basisSize) + ".hdf5";
             H5::H5File h5File(filename, H5F_ACC_TRUNC);
 
             H5Metadata metadata;
-            metadata.basisSize = basisSizeN;
+            metadata.basisSize = basisSize;
             metadata.basisName = "Chebyshev";
             metadata.integrator = "Vegas Monte Carlo (GSL)";
 
@@ -262,10 +277,11 @@ void CollisionManager::calculateCollisionIntegrals()
     
 }
 
-std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2)
+std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2, 
+    const std::string &matrixElementFile, bool bVerbose = false)
 {
     // Just for logging 
-    std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
+    const std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
 
     // @todo should actually check if these are in outOfEquilibriumParticles vector
     if (particleIndex.count(particleName1) < 1 || particleIndex.count(particleName2) < 1 ) 
@@ -274,13 +290,9 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
         exit(9);
     }
 
-    // file paths are of form MatrixElements/matrixElements_top_gluon etc
-    const std::string fileName = ConfigParser::get().getString("MatrixElements", "fileName");
-    const bool bVerbose = ConfigParser::get().getBool("MatrixElements", "verbose");
-
     if (bVerbose) std::cout << "\n" <<"Parsing matrix elements for off-equilibrium pair " << pairName << "\n";
     
-    std::ifstream matrixElementFile(fileName);
+    std::ifstream matrixElementFile(matrixElementFile);
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
     // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
@@ -290,7 +302,7 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
     std::vector<CollElem<4>> collisionElements;
 
     if (!matrixElementFile.is_open()) {
-        std::cerr << "!!! Error: Failed to open matrix element file " << fileName << std::endl;
+        std::cerr << "!!! Error: Failed to open matrix element file " << matrixElementFile << std::endl;
         exit(10);
     }
 
@@ -353,7 +365,6 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
     
     return collisionElement;
 }
-
 
 long CollisionManager::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 {
