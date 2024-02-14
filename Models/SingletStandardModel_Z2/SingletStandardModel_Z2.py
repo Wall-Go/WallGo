@@ -424,7 +424,7 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_top_top_N11.hdf5" 
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/collisions_top_top_N11.hdf5"
     manager.loadCollisionFile(collisionFileName)
 
 

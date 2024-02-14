@@ -263,6 +263,7 @@ class WallGoManager:
         self.boltzmannSolver = BoltzmannSolver(self.grid, basisM = "Cardinal", basisN = "Chebyshev")
 
 
+
     def loadCollisionFile(self, fileName: str) -> None:
         self.boltzmannSolver.readCollision(fileName)
 
@@ -281,7 +282,21 @@ class WallGoManager:
 
         numberOfFields = self.model.fieldCount
 
-        eom = EOM(self.boltzmannSolver, self.thermodynamics, self.hydro, self.grid, numberOfFields, includeOffEq=bIncludeOffEq)
+        errTol = self.config.getfloat("EOM", "errTol")
+        maxIterations = self.config.getint("EOM", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+
+        eom = EOM(
+            self.boltzmannSolver,
+            self.thermodynamics,
+            self.hydro,
+            self.grid,
+            numberOfFields,
+            includeOffEq=bIncludeOffEq,
+            errTol=errTol,
+            maxIterations=maxIterations,
+            pressRelErrTol=pressRelErrTol,
+        )
 
         wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
         return wallVelocity, wallParams
