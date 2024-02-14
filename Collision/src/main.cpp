@@ -62,14 +62,13 @@ void collisionsQCD(uint N) {
 
 	// Main control object
 	CollisionManager collisionManager;
-	collisionManager.setBasisSize(N);
 	collisionManager.addParticle(topQuark);
 	collisionManager.addParticle(gluon);
 	collisionManager.addParticle(lightQuark);
 
 	collisionManager.addCoupling(gs);
 
-	collisionManager.calculateCollisionIntegrals();
+	collisionManager.calculateCollisionIntegrals(N);
 
 }
 
