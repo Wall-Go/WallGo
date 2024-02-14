@@ -225,6 +225,9 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
 
+    const std::string matrixElementFile = ConfigParser::get().getString("MatrixElements", "fileName");
+    const bool bVerbose = ConfigParser::get().getBool("MatrixElements", "verbose");
+
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
     for (const ParticleSpecies& particle1 : outOfEqParticles) 
     {
@@ -238,7 +241,8 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
             Array4D errors;
             
             CollisionIntegral4 collisionIntegral(basisSize);
-            std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName());
+            std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), 
+                matrixElementFile, bVerbose);
             
             for (const CollElem<4> &elem : collisionElements)
             {
@@ -278,7 +282,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
 }
 
 std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2, 
-    const std::string &matrixElementFile, bool bVerbose = false)
+    const std::string &matrixElementFile, bool bVerbose)
 {
     // Just for logging 
     const std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
@@ -292,7 +296,7 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
 
     if (bVerbose) std::cout << "\n" <<"Parsing matrix elements for off-equilibrium pair " << pairName << "\n";
     
-    std::ifstream matrixElementFile(matrixElementFile);
+    std::ifstream file(matrixElementFile);
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
     // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
@@ -301,7 +305,7 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
 
     std::vector<CollElem<4>> collisionElements;
 
-    if (!matrixElementFile.is_open()) {
+    if (!file.is_open()) {
         std::cerr << "!!! Error: Failed to open matrix element file " << matrixElementFile << std::endl;
         exit(10);
     }
@@ -316,7 +320,7 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
     std::vector<uint> indices;
     indices.resize(4);
     
-    while (std::getline(matrixElementFile, line)) {
+    while (std::getline(file, line)) {
         if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
 
             interpretMatrixElement(line, indices, expr);
@@ -335,7 +339,7 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
         }
     }
 
-    matrixElementFile.close();
+    file.close();
 
     std::cout << "\n";
     bMatrixElementsDone = true;
