@@ -5,7 +5,10 @@ set(BINARY ${CMAKE_PROJECT_NAME})
 set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp)
 
 
-add_compile_options(-fPIC)
+if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(-fPIC)
+endif()
+
 add_library(${BINARY}_lib STATIC ${SOURCES})
 
 
