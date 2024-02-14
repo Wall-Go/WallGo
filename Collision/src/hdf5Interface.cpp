@@ -94,38 +94,3 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 	}
 
 }
-
-void testHDF5() {
-
-	// Produce dummy test data that resembles realistic collision tensor: same size etc  
-	const int gridSizeN = 4;
-	std::string filename = "testDummy.hdf5";
-
-	Array4D dummyData(gridSizeN - 1, gridSizeN - 1, gridSizeN - 1 , gridSizeN - 1, 0.0);
-
-	// Test RNG
-	long seed = 13424213;
-	srand48(seed);
-
-	// m,n = Polynomial indices. 
-	for (int m = 2; m <= gridSizeN; ++m) for (int n = 1; n <= gridSizeN-1; ++n) {
-		// j,k = grid momentum indices 
-		for (int j = 1; j <= gridSizeN-1; ++j) for (int k = 1; k <= gridSizeN-1; ++k) {
-			dummyData[m-2][n-1][j-1][k-1] = drand48();
-		}
-	}
-
-	// Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
-	H5::H5File h5File(filename, H5F_ACC_TRUNC);
-	H5Metadata metadata;
-	metadata.basisSize = gridSizeN;
-	metadata.basisName = "Chebyshev";
-	metadata.integrator = "Vegas Monte Carlo (GSL)";
-	writeMetadata(h5File, metadata);
-
-	writeDataSet(h5File, dummyData, "top");
-	writeDataSet(h5File, dummyData, "W");
-
-	h5File.close();
-}
-

@@ -24,6 +24,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
+MESSAGE(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 ## Do compile with profiler support? This is off by default
@@ -97,10 +99,10 @@ endif()
 ## Release build specific build options
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        add_compile_options(/O2 /DNDEBUG)
-    else()
-        add_compile_options(-O3 -DNDEBUG)
+    add_compile_definitions(NDEBUG)
+
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(-O3)
     endif()
 
 endif()
