@@ -63,7 +63,7 @@ class CollisionPython final : public CollisionManager
 
 public: 
     // Just call parent constructor
-    CollisionPython(uint basisSize) : CollisionManager(basisSize) 
+    CollisionPython() : CollisionManager() 
     {
         if (!pythonModule::bInitialized)
         {
@@ -160,7 +160,7 @@ PYBIND11_MODULE(CollisionModule, m)
 
 
     py::class_<CollisionPython>(m, "CollisionManager")
-        .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_CollisionManager.c_str())
+        .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());

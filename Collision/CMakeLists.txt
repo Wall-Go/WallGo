@@ -24,6 +24,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
+MESSAGE(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 ## Do compile with profiler support? This is off by default
@@ -61,8 +63,7 @@ else()
 endif()
 
 
-
-# Compiler-specific settings
+# Compiler-specific settings. We don't currently support debug flags etc for MSVC
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
     add_compile_options(-Wall -Wextra)
@@ -85,14 +86,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Treat all warnings as errors?
         #add_compile_options(-Werror)
         # Allow compiler to become annoying
-        add_compile_options(-Wpedantic)
-        
-    endif()
-    
-    
-    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    	# Optimization always for non-debug builds and define NDEBUG flag to disable various runtime asserts
-    	add_compile_options(-O3 -DNDEBUG)
+        add_compile_options(-Wpedantic)        
     endif()
 
     if (NOT USE_OMP)
@@ -100,18 +94,18 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         add_compile_options(-Wno-unknown-pragmas)
     endif()
 
-    ## Release build specific build options
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        # add_compile_options(-Wno-dev) ## I don't think this works, at least not on clang++
-    endif()
-
-
-## Visual Studio compiler stuff
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # Enable warnings and treat them as errors
-    #add_compile_options(/W4 /WX)
 endif()
 
+## Release build specific build options
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+
+    add_compile_definitions(NDEBUG)
+
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(-O3)
+    endif()
+
+endif()
 
 
 # Will build a 'core' library from code in ./src, apart from main.cpp.

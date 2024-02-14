@@ -12,8 +12,6 @@
 #include "hdf5Interface.h"
 
 
-using Array6D = Vec<6, double>;
-
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms 
 */
@@ -43,11 +41,10 @@ public:
     
     // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
     static long countIndependentIntegrals(uint basisSize, uint outOfEqCount);
+using Array6D = Vec<6, double>;
 
     // Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays 
     void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D& results, Array4D& errors);
-
-    void setMatrixElementFile(const std::string &fileName) { matrixElementFile = fileName; }
 
 protected:
 
@@ -66,6 +63,9 @@ protected:
     // List of all particles that contribute to collisions
     std::vector<ParticleSpecies> particles;
 
+    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
+    std::vector<ParticleSpecies> outOfEqParticles;
+
     // Masses of the above particles in a vector form. Same ordering. This is vacuum + thermal
     std::vector<double> massSquares;
 
@@ -78,12 +78,7 @@ protected:
     // Failsafe flag so that we don't do anything stupid (hopefully)
     bool bMatrixElementsDone = false;
 
-    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
-    std::vector<ParticleSpecies> outOfEqParticles;
-
 private:
-
-    std::string matrixElementFile = "";
 
     // Progress tracking 
     int computedIntegralCount = 0;

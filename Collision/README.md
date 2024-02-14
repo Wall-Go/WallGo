@@ -15,8 +15,23 @@
 - OpenMP
 
 
-## Installing dependencies
+## Installation
 
+CMake is used as the build system, but dependencies need to be installed first. 
+
+# Using Conan
+
+Easiest way of handling the dependencies is with Conan (version > 2.0):
+```
+conan install . --output-folder=build --build=missing
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+cmake --build build
+cmake --install build
+```
+This will build and install all dependencies, a standalone C++ executable and a separate Python module that exposes the C++ code to rest of WallGo. If you're compiling on Windows with the MSVC compiler, add ```--config Release``` in the ```cmake --build``` step.
+
+
+# Manually installing dependencies
 
 Linux:
 ```
@@ -34,27 +49,24 @@ pip install "pybind11[global]"
 ```
 This installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda, or build it directly from source.
 
-
 For Linux systems, muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/. **Note:** muparser can safely be installed without OpenMP support (```-DENABLE_OPENMP=OFF```) without affecting WallGo/Collision.
 
 
-## Compiling the Collision module
-
-Stardard CMake build. Go to WallGo/Collision (where the CMakeLists.txt file is) and run:
-
+Then proceed with standard CMake build:
 ```
-cmake -B build -S .
+cmake -B build
 cmake --build build
 cmake --install build
 ```
 
-This will produce a standalone C++ executable in build/bin and a separate python module in build/lib. The installation step copies these to their default locations at ./bin and ./pybind/lib
-To only build the C++ program without Python bindings, use the ```-DBUILD_PYTHON_MODULE=Off``` cmake flag.
+# Optional build options
 
-If CMake reports errors out due to missing external libraries, please make sure you have installed them as instructed above.
+Following options are available in the CMake configure step:
+- ```-DBUILD_PYTHON_MODULE=Off```: Build only a standalone binary without Python bindings. pybind11 is not required with this option.
+- ```-DUSE_OMP=Off```: Disables OpenMP support.
 
 
-## Debugging & Profiling
+## Debugging & Profiling [for developers!]
 
 The CMakeLists.txt file defines basic debugging options to use with GCC or Clang compiler. To configure CMake for a debug build, use ```-DCMAKE_BUILD_TYPE=Debug``` when invoking cmake. This will apply compiler flags ```-gp``` and disable optimization flags. Note that the debug version runs much slower than a "Release" build with compiler optimizations enabled.
 
