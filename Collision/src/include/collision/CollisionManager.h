@@ -20,26 +20,26 @@ using Array6D = Vec<6, double>;
 class CollisionManager {
 
 public: 
-    CollisionManager(uint basisSize);
-
-    // how many basis polynomials
-    const uint basisSizeN;
+    CollisionManager();
 
     void addParticle(const ParticleSpecies& particle);
     void addCoupling(double coupling);
 
-    // Calculates all integrals. Call only after settings particles and couplings
-    void calculateCollisionIntegrals();
+    // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
+    CollisionIntegral4 setupCollisionIntegral(const ParticleSpecies& particle1, const ParticleSpecies& particle2, 
+        const std::string &matrixElementFile, uint basisSize);
 
-    /* Creates all collision elements that mix two out-of-eq particles (can be the same particle) 
-    @todo The matrix elements are read from file. */
-    std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2);
+    // Calculates all integrals. Call only after settings particles and couplings
+    void calculateCollisionIntegrals(uint basisSize);
+
+    // Creates all collision elements that mix two out-of-eq particles (can be the same particle).
+    std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2,
+        const std::string &matrixElementFile, bool bVerbose = false);
 
     /* Turns a symbolic string expression into usable CollElem<4>. 
     Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
     This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]) */  
     CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr);
-
     
     // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
     static long countIndependentIntegrals(uint basisSize, uint outOfEqCount);
@@ -48,8 +48,6 @@ public:
     void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D& results, Array4D& errors);
 
     void setMatrixElementFile(const std::string &fileName) { matrixElementFile = fileName; }
-
-    void clear();
 
 protected:
 
