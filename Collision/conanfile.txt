@@ -1,0 +1,9 @@
+[requires]
+gsl/2.7
+hdf5/1.14.3
+pybind11/2.11.1
+muparser/2.3.4
+
+[generators]
+CMakeDeps
+CMakeToolchain
