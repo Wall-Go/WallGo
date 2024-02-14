@@ -31,8 +31,6 @@ void printUsage(FILE *fp, const char *path) {
 				"Set grid size (number of basis polynomials).");
 	fprintf (fp, "	-c [string]\t\t"
 				"Specify config file to use.");
-	fprintf (fp, "  -w\t\t"
-				"Test the hdf5 output routines by writing dummy data and exit.\n");
 	fprintf (fp, "  -t\t\t"
 				"Do a short test run and exit. Useful for profiling\n");
 }
@@ -121,10 +119,6 @@ int main(int argc, char *argv[]) {
 				// NB: atoi is not the best option as it will happily interpret eg. "20dog" as 20
 				basisSizeN = std::atoi(optarg);
 				break;
-			case 'w':
-				std::cout << "== Running HDF5 output test ==\n";
-				testHDF5();
-				return 0;
 			case 't':
 				std::cout << "== Running short test run ==\n";
 				bDoTestRun = true;
