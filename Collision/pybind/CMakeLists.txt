@@ -1,5 +1,5 @@
 # What to call the python module
-set(MODULE CollisionModule)
+set(MODULE WallGoCollisionPy)
 # NB: this needs to match the name in PYBIND11_MODULE(name, m) in .cpp
 
 # Installation path for the python module
@@ -18,12 +18,12 @@ target_sources(${MODULE} PRIVATE
 ## Link to the main lib. This inherits linkages to its PUBLIC dependencies
 
 target_link_libraries(${MODULE} PRIVATE
-	${CMAKE_PROJECT_NAME}_lib
+	WallGoCollision
 )	
 
 target_include_directories(${MODULE} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/include
-	${CMAKE_PROJECT_NAME}_lib 
+	WallGoCollision
 )
 
 install(TARGETS ${MODULE} DESTINATION ${MODULE_INSTALL_DIR})

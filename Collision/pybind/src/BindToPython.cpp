@@ -5,11 +5,11 @@
 #include <iostream>
 #include <string>
 
-#include "CollisionIntegral.h"
-#include "ParticleSpecies.h"
-#include "CollisionManager.h"
-#include "gslWrapper.h"
-#include "ConfigParser.h"
+#include "WallGoCollision/CollisionIntegral.h"
+#include "WallGoCollision/ParticleSpecies.h"
+#include "WallGoCollision/CollisionManager.h"
+#include "WallGoCollision/gslWrapper.h"
+#include "WallGoCollision/ConfigParser.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
