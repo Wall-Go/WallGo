@@ -155,7 +155,6 @@ class BoltzmannSolver:
             deltaF = self.solveBoltzmannEquations()
 
         particles = self.offEqParticles
-        deltaF = deltaF.reshape((1,)+deltaF.shape)
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
@@ -278,8 +277,8 @@ class BoltzmannSolver:
         deltaFPoly.changeBasis(('Array',)+3*('Chebyshev',))
 
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(2,3))
-        truncationErrorPz = np.mean(np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1,3))
+        truncationErrorChi = np.mean(np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1,2))
+        truncationErrorPz = np.mean(np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1,2))
         truncationErrorPp = np.mean(np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1,2))
 
         # estimating the total truncation error as the maximum of these three
@@ -454,7 +453,7 @@ class BoltzmannSolver:
     
     def readCollision(self, fileName: str) -> None:
         ## TODO generalize for many off eq particles
-        self.collisionArray = CollisionArray.newFromFile(fileName, self.grid, self.basisN, self.offEqParticles[0], self.offEqParticles[0])
+        self.collisionArray = CollisionArray.newFromFile(fileName, self.grid, self.basisN, self.offEqParticles)
 
     def __checkBasis(basis):
         """
