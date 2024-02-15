@@ -54,7 +54,7 @@ class YukawaModel(GenericModel):
         self.addParticle(psi)
 
         ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuarkMsqThermal = lambda T: self.modelParameters["y"]**2 * T**2 / 6.0
 
         lightQuark = Particle("lightQuark", 
                             msqVacuum = 0.0,
@@ -67,7 +67,7 @@ class YukawaModel(GenericModel):
         self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+        gluonMsqThermal = lambda T: self.modelParameters["y"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
                             msqVacuum = 0.0,
