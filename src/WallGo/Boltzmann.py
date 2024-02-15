@@ -267,28 +267,29 @@ class BoltzmannSolver:
             Estimate of the relative trucation error.
         """
         # constructing Polynomial
-        basisTypes = (self.basisM, self.basisN, self.basisN)
-        basisNames = ('z', 'pz', 'pp')
+        basisTypes = ('Array', self.basisM, self.basisN, self.basisN)
+        basisNames = ('z', 'z', 'pz', 'pp')
         deltaFPoly = Polynomial(
             deltaF, self.grid, basisTypes, basisNames, False
         )
 
         # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis('Cardinal')
-        deltaFMeanAbs = np.mean(abs(deltaFPoly.coefficients[:, :, :]))
+        deltaFPoly.changeBasis(('Array',)+ 3*('Cardinal',))
+        deltaFMeanAbs = np.mean(np.abs(deltaFPoly.coefficients), axis=(1,2,3))
 
         # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis('Chebyshev')
+        deltaFPoly.changeBasis(('Array',)+3*('Chebyshev',))
 
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(abs(deltaFPoly.coefficients[-1, :, :]))
-        truncationErrorPz = np.mean(abs(deltaFPoly.coefficients[:, -1, :]))
-        truncationErrorPp = np.mean(abs(deltaFPoly.coefficients[:, :, -1]))
+        truncationErrorChi = np.mean(np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(2,3))
+        truncationErrorPz = np.mean(np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1,3))
+        truncationErrorPp = np.mean(np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1,2))
 
         # estimating the total truncation error as the maximum of these three
         return (
-            max((truncationErrorChi, truncationErrorPz, truncationErrorPp))
-            / deltaFMeanAbs
+            max((np.max(truncationErrorChi / deltaFMeanAbs), 
+                 np.max(truncationErrorPz / deltaFMeanAbs), 
+                 np.max(truncationErrorPp / deltaFMeanAbs)))
         )
 
     def buildLinearEquations(self):
@@ -400,19 +401,19 @@ class BoltzmannSolver:
         ##### liouville operator #####
         # Given in the LHS of Eq. (5) in 2204.13120, with further details given
         # by the second line of Eq. (32).
-        liouville = (
-            dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * PWall[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * derivMatrixChi[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * TRzMat[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
-            - dchidxi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * drzdpz[:, :, :, np.newaxis, np.newaxis, np.newaxis]
+        liouville = np.identity(len(particles))[:, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis]*(
+            dchidxi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+                * PWall[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+                * derivMatrixChi[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * TRzMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis]
+                * TRpMat[np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :]
+            - dchidxi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+                * drzdpz[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
                 * gammaWall / 2
-                * dMsqdChi[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-                * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * derivMatrixRz[np.newaxis, :, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, :]
+                * dMsqdChi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+                * TChiMat[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+                * derivMatrixRz[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis]
+                * TRpMat[np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :]
         )
         """
         An alternative, but slower, implementation is given by the following:
@@ -438,16 +439,16 @@ class BoltzmannSolver:
        
         # including factored-out T^2 in collision integrals
         collision = (
-            (T ** 2)[:, :, :, np.newaxis, np.newaxis, np.newaxis]
-            * TChiMat[:, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-            * self.collisionArray[np.newaxis, :, :, np.newaxis, :, :]
+            (T ** 2)[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+            * TChiMat[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+            * self.collisionArray[:, np.newaxis, :, :, :, np.newaxis, :, :]
         )
 
         ##### total operator #####
         operator = liouville + collision
 
         # reshaping indices
-        N_new = (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
+        N_new = len(particles) * (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
         source = np.reshape(source, N_new, order="C")
         operator = np.reshape(operator, (N_new, N_new), order="C")
 
