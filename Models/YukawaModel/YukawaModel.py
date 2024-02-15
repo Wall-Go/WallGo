@@ -407,8 +407,8 @@ def main():
         """
         Tn = 11. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
-                                        phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
+                                        phaseLocation1 = WallGo.Fields( [2.5] ), 
+                                        phaseLocation2 = WallGo.Fields( [26.2] ))
         
 
         """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
