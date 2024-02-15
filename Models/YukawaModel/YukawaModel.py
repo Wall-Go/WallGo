@@ -403,7 +403,7 @@ def main():
         "y" : 0.23
     }
 
-    model = SingletSM_Z2(inputParameters)
+    model = YukawaModel(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
