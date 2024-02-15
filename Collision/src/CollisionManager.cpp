@@ -99,8 +99,16 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
     errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
 
-    ConfigParser& config = ConfigParser::get();
-    const bool bVerbose = config.getBool("Integration", "verbose");
+    const ConfigParser& config = ConfigParser::get();
+
+    IntegrationOptions options;
+    options.maxIntegrationMomentum = config.getDouble("Integration", "maxIntegrationMomentum");
+    options.calls = config.getInt("Integration", "calls");
+    options.relativeErrorGoal = std::fabs(config.getDouble("Integration", "relativeErrorGoal"));
+    options.absoluteErrorGoal = std::fabs(config.getDouble("Integration", "absoluteErrorGoal"));
+    options.maxTries = config.getInt("Integration", "maxTries");
+    options.bVerbose = config.getBool("Integration", "verbose");
+    options.bOptimizeUltrarelativistic = config.getBool("Integration", "optimizeUltrarelativistic");
 
 
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
@@ -147,7 +155,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
                 }
                 else
                 {
-                    resultMC = collisionIntegral.evaluate(m, n, j, k);
+                    resultMC = collisionIntegral.integrate(m, n, j, k, options);
                 }
 
                 results[m-2][n-1][j-1][k-1] = resultMC[0];
@@ -155,7 +163,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 
                 localIntegralCount++;
 
-                if (bVerbose)
+                if (options.bVerbose)
                 {
                     printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
                 }

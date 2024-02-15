@@ -21,6 +21,17 @@ struct Kinematics
     double prefactor; // This is p2^2/E2 * p3^2/E3 * |1 / g'(p3)|
 };
 
+struct IntegrationOptions
+{
+    double maxIntegrationMomentum;
+    // How many Monte Carlo calls between convergence checks 
+    size_t calls;
+    double relativeErrorGoal;
+    double absoluteErrorGoal;
+    double maxTries;
+    bool bVerbose;
+    bool bOptimizeUltrarelativistic;
+};
 
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
@@ -83,7 +94,7 @@ public:
 
     // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
     // Returns { result, error }
-    std::array<double, 2> evaluate(int m, int n, int j, int k);
+    std::array<double, 2> integrate(int m, int n, int j, int k, const IntegrationOptions& options);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
