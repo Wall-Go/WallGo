@@ -154,9 +154,7 @@ class BoltzmannSolver:
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
-        
-        ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
-        particle = self.offEqParticles[0]
+        particles = self.offEqParticles
         deltaF = deltaF.reshape((1,)+deltaF.shape)
 
         # dict to store results
@@ -173,20 +171,20 @@ class BoltzmannSolver:
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
-        pz = self.grid.pzValues[np.newaxis, :, np.newaxis]
-        pp = self.grid.ppValues[np.newaxis, np.newaxis, :]
-        msq = particle.msqVacuum(field)[:, np.newaxis, np.newaxis]
+        pz = self.grid.pzValues[np.newaxis, np.newaxis, :, np.newaxis]
+        pp = self.grid.ppValues[np.newaxis, np.newaxis, np.newaxis, :]
+        msq = np.array([particle.msqVacuum(field) for particle in particles])[:, :, np.newaxis, np.newaxis]
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # temperature here is the T-scale of grid
         dpzdrz = (
             2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[np.newaxis, :, np.newaxis]
+            / (1 - self.grid.rzValues**2)[np.newaxis, np.newaxis, :, np.newaxis]
         )
         dppdrp = (
             self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[np.newaxis, np.newaxis, :]
+            / (1 - self.grid.rpValues)[np.newaxis, np.newaxis, np.newaxis, :]
         )
 
         # base integrand, for '00'
@@ -238,11 +236,10 @@ class BoltzmannSolver:
         deltaF = np.linalg.solve(operator, source)
 
         # returning result
-        deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
+        deltaFShape = (len(self.offEqParticles), self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
         deltaF = np.reshape(deltaF, deltaFShape, order="C")
 
         # testing result
-        source = np.reshape(source, deltaFShape, order="C")
         truncationError = self.estimateTruncationError(deltaF)
         print(f"(optimistic) estimate of truncation error = {truncationError}")
 
