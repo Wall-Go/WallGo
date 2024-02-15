@@ -5,7 +5,7 @@
 #include <chrono>
 
 #include <cstring>
-#include <getopt.h> // command line arguments
+#include <tclap/CmdLine.h> // command line arguments
 
 #include "Common.h"
 #include "CollisionManager.h"
@@ -15,28 +15,6 @@
 #include "gslWrapper.h"
 #include "MatrixElement.h"
 #include "ConfigParser.h"
-
-// Print a description of all supported options
-void printUsage(FILE *fp, const char *path) {
-
-	// Take only the last portion of the path
-	const char *basename = std::strrchr(path, '/');
-	basename = basename ? basename + 1 : path;
-
-	fprintf (fp, "usage: %s [OPTIONS]\n", basename);
-	fprintf (fp, "Available options:\n");
-	fprintf (fp, "  -h\t\t"
-				"Print this help and exit.\n");
-	fprintf (fp, "	-n [integer]\t\t"
-				"Set grid size (number of basis polynomials).");
-	fprintf (fp, "	-c [string]\t\t"
-				"Specify config file to use.");
-	fprintf (fp, "  -t\t\t"
-				"Do a short test run and exit. Useful for profiling\n");
-}
-
-//***************
-
 
 /* Test/example routine, calculates all collision integrals with QCD interactions. 
 The structure here illustrates how the same could be done from Python with arbitrary inputs */ 
@@ -71,7 +49,7 @@ void collisionsQCD(uint N) {
 }
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, char** argv) {
 
 	//--------------- How this works
 
@@ -100,39 +78,32 @@ int main(int argc, char *argv[]) {
 
 	// basis size, default value
 	int basisSizeN = 20;
-    bool bDoTestRun = false;
     // config file, default name
     std::string configFileName = "CollisionDefaults.ini";
 
-	// Parse command line arguments
-	int opt;
-	while ((opt = getopt(argc, argv, "tc:hn:w")) != -1) {
-		switch (opt) {
-			case 'c':
-                configFileName = optarg;
-                break;
-            case 'h':
-				// Print usage and exit
-				printUsage(stderr, argv[0]);
-				return 0;
-			case 'n':
-				// NB: atoi is not the best option as it will happily interpret eg. "20dog" as 20
-				basisSizeN = std::atoi(optarg);
-				break;
-			case 't':
-				std::cout << "== Running short test run ==\n";
-				bDoTestRun = true;
-				break;
-			case '?':
-				if (isprint(opt))
-						fprintf(stderr, "Unknown option `-%c'.\n", opt);
-				else
-						fprintf(stderr, "Unknown option character `\\x%x'.\n", opt);
-				return 1;
-			default:
-				return 1;
-		}
+
+	// ---- Setup and parse command line args
+	try 
+	{
+		TCLAP::CmdLine cmd("WallGo Collision program (standalone)", ' ', /*version*/"1.0");
+
+		TCLAP::ValueArg<int> basisSizeArg("n", "basisSize", "Polynomial basis size", /*required*/false, /*default*/11, "Positive integer");
+		cmd.add(basisSizeArg);
+
+		TCLAP::ValueArg<std::string> configFileArg("c", "configFile", "Path to config file", false, "CollisionDefaults.ini", "String");
+		cmd.add(configFileArg);
+
+		cmd.parse(argc, argv);
+
+		basisSizeN = basisSizeArg.getValue();
+		configFileName = configFileArg.getValue();
 	}
+	catch (TCLAP::ArgException &e)
+	{
+		std::cerr << "Error: " << e.error() << " for argument " << e.argId() << std::endl;
+		exit(1);
+ 	}
+
 
 	if (basisSizeN < 1) {
 		std::cerr << "Invalid basis size N = " << basisSizeN << "\n";
@@ -155,14 +126,7 @@ int main(int argc, char *argv[]) {
 
 	gslWrapper::initializeRNG();
 
-	if (bDoTestRun) 
-	{
-		collisionsQCD(5);
-	}
-	else 
-	{
-		collisionsQCD(basisSizeN);
-	}
+	collisionsQCD(basisSizeN);
 
 
 /*

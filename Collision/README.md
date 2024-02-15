@@ -1,19 +1,3 @@
-## Dependencies for the C++ collision module
-
-# Required:
-
-- GSL
-
-- Official HDF5 C++ API (version >= 1.10.1) 
-
-- pybind11 (https://github.com/pybind/pybind11)
-
-- Muparser (https://github.com/beltoforion/muparser/)
-
-# Optional: 
-
-- OpenMP
-
 
 ## Installation
 
@@ -30,6 +14,7 @@ cmake --install build
 ```
 This will build and install all dependencies, a standalone C++ executable and a separate Python module that exposes the C++ code to rest of WallGo. If you're compiling on Windows with the MSVC compiler, add ```--config Release``` in the ```cmake --build``` step.
 
+We compile with OpenMP support by default. Use the ```-DUSE_OMP=Off``` flag to compile without OpenMP.
 
 # Manually installing dependencies
 
