@@ -154,15 +154,17 @@ class BoltzmannSolver:
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
+        
         ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
         particle = self.offEqParticles[0]
+        deltaF = deltaF.reshape((1,)+deltaF.shape)
 
         # dict to store results
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
         # constructing Polynomial class from deltaF array
-        deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM, self.basisN, self.basisN), ('z', 'pz', 'pp'), False)
-        deltaFPoly.changeBasis('Cardinal')
+        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
+        deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
         field = self.background.fieldProfile.TakeSlice(
@@ -190,13 +192,13 @@ class BoltzmannSolver:
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
         
-        Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
-        Deltas['20'] = deltaFPoly.integrate((1,2), E**2 * integrand)
-        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2 * integrand)
-        Deltas['11'] = deltaFPoly.integrate((1,2), E*pz * integrand)
+        Deltas['00'] = deltaFPoly.integrate((2,3), integrand)
+        Deltas['20'] = deltaFPoly.integrate((2,3), E**2 * integrand)
+        Deltas['02'] = deltaFPoly.integrate((2,3), pz**2 * integrand)
+        Deltas['11'] = deltaFPoly.integrate((2,3), E*pz * integrand)
 
         # returning results
-        return [Deltas]
+        return Deltas
 
     def solveBoltzmannEquations(self):
         r"""

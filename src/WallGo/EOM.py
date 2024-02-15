@@ -235,8 +235,8 @@ class EOM:
 
         print(f"\nTrying {wallVelocity=}")
 
-        zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
-        offEquilDeltas = [{"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}]
+        zeroPoly = Polynomial(np.zeros((len(self.particle), self.grid.M-1)), self.grid, basis=('Array','Cardinal'))
+        offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
 
@@ -333,7 +333,7 @@ class EOM:
         def actionWrapper(wallArray: np.ndarray, *args) -> float:
             return self.action( __toWallParams(wallArray), *args )
         
-        sol = scipy.optimize.minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, [Delta['00'] for Delta in offEquilDeltas]), method='Nelder-Mead', bounds=bounds)
+        sol = scipy.optimize.minimize(actionWrapper, wallArray, args=(vevLowT, vevHighT, Tprofile, offEquilDeltas['00']), method='Nelder-Mead', bounds=bounds)
 
         ## Put the resulting width, offset back in WallParams format
         wallParams = __toWallParams(sol.x)
@@ -342,7 +342,7 @@ class EOM:
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
         
         # Out-of-equilibrium term of the EOM
-        dVout = np.sum([particle.DOF * particle.msqDerivative(fields) * offEquilDeltas[i]['00'].coefficients[:,None]
+        dVout = np.sum([particle.DOF * particle.msqDerivative(fields) * offEquilDeltas['00'].coefficients[i,:,None]
                         for i,particle in enumerate(self.particle)], axis=0) / 2
 
         term1 = dVdX * dPhidz
@@ -389,7 +389,7 @@ class EOM:
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
 
-        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00[i].coefficients for i,particle in enumerate(self.particle)])/2
+        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particle)])/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -534,7 +534,6 @@ class EOM:
         ## What's going on in this function? Please explain your logic. TODO issue #114
 
         Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
-
         s1 = c1 - Tout30
         s2 = c2 - Tout33
 
@@ -666,10 +665,10 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = [Delta["00"].coefficients[index] for Delta in offEquilDeltas]
-        delta11 = [Delta["11"].coefficients[index] for Delta in offEquilDeltas]
-        delta02 = [Delta["02"].coefficients[index] for Delta in offEquilDeltas]
-        delta20 = [Delta["20"].coefficients[index] for Delta in offEquilDeltas]
+        delta00 = offEquilDeltas['00'].coefficients[:,index]
+        delta11 = offEquilDeltas['11'].coefficients[:,index]
+        delta02 = offEquilDeltas['02'].coefficients[:,index]
+        delta20 = offEquilDeltas['20'].coefficients[:,index]
 
         u0 = np.sqrt(gammaSq(velocityMid))
         u3 = np.sqrt(gammaSq(velocityMid))*velocityMid
