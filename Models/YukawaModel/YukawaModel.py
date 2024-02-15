@@ -40,12 +40,12 @@ class YukawaModel(GenericModel):
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        psiMsqVacuum = lambda fields: self.modelParameters["y"]**2 * fields.GetField(0)**2
+        psiMsqThermal = lambda T: 0     #TODO: What is this? 
 
         topQuark = Particle("top", 
-                            msqVacuum = topMsqVacuum,
-                            msqThermal = topMsqThermal,
+                            msqVacuum = psiMsqVacuum,
+                            msqThermal = psiMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
