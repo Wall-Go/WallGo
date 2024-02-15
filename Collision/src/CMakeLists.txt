@@ -1,9 +1,10 @@
 
 set(BINARY ${CMAKE_PROJECT_NAME})
 
+add_subdirectory(thirdparty)
+
 # source files for core lib (don't include the main function)
 set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp)
-
 
 if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(-fPIC)
@@ -33,6 +34,8 @@ target_link_libraries(${BINARY}_lib PUBLIC
     HDF5::HDF5
     GSL::gsl
     muparser::muparser
+    # libraries directly from our thirdparty directory
+    tclap
 )
 
 if (USE_OMP)
@@ -56,5 +59,4 @@ target_include_directories(${BINARY}_lib PUBLIC
 
 target_link_libraries(${BINARY} PRIVATE ${BINARY}_lib)
 
-# 'make install'
 install(TARGETS ${BINARY} DESTINATION ${INSTALL_DIR})
