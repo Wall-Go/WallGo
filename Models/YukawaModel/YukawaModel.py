@@ -88,36 +88,10 @@ class YukawaModel(GenericModel):
     
         modelParameters = {}
 
-        v0 = inputParameters["v0"]
-        # Scalar eigenvalues
-        mh1 = inputParameters["mh1"] # 125 GeV
-        mh2 = inputParameters["mh2"]
-
-        ## these are direct inputs:
-        modelParameters["RGScale"] = inputParameters["RGScale"]
-        modelParameters["a2"] = inputParameters["a2"]
-        modelParameters["b4"] = inputParameters["b4"]
-        
-
-        modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
-        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
-        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
-        modelParameters["b2"] = mh2**2 - 0.5 * v0**2 * inputParameters["a2"]
-
-        ## Then the gauge/Yukawa sector
-        
-        Mt = inputParameters["Mt"] 
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
-
-        # helper
-        g0 = 2.*MW / v0
-        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
-        modelParameters["g2"] = g0
-        # Just take QCD coupling as input
-        modelParameters["g3"] = inputParameters["g3"]
-
-        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+        modelParameters["m_b"] = inputParameters["m_b"]
+        modelParameters["g"] = inputParameters["g"]
+        modelParameters["lambda"] = inputParameters["lambda"]
+        modelParameters["y"] = inputParameters["y"]
 
         return modelParameters
 
