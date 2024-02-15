@@ -22,7 +22,7 @@ class YukawaModel(GenericModel):
     modelParameters = {}
 
     ## Specifying this is REQUIRED
-    fieldCount = 2
+    fieldCount = 1
 
 
     def __init__(self, initialInputParameters: dict[str, float]):
