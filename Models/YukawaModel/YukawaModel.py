@@ -395,67 +395,62 @@ def main():
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mh2 = [ 120.0 ]
-    for mh2 in values_mh2:
+    modelParameters = model.calculateModelParameters(inputParameters)
 
-        inputParameters["mh2"] = mh2
+    """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
+    Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+    """
+    Tn = 11. ## nucleation temperature
+    phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
+                                    phaseLocation1 = WallGo.Fields( [2.5] ), 
+                                    phaseLocation2 = WallGo.Fields( [26.2] ))
+    
 
-        modelParameters = model.calculateModelParameters(inputParameters)
+    """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+        1) WallGo needs the PhaseInfo 
+        2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+    """ 
+    manager.setParameters(modelParameters, phaseInfo)
 
-        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
-        """
-        Tn = 11. ## nucleation temperature
-        phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [2.5] ), 
-                                        phaseLocation2 = WallGo.Fields( [26.2] ))
-        
+    ## TODO initialize collisions. Either do it here or already in registerModel(). 
+    ## But for now it's just hardcoded in Boltzmann.py and __init__.py
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
-            1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
-        """ 
-        manager.setParameters(modelParameters, phaseInfo)
+    """WallGo can now be used to compute wall stuff!"""
 
-        ## TODO initialize collisions. Either do it here or already in registerModel(). 
-        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
+    ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-        """WallGo can now be used to compute wall stuff!"""
+    vwLTE = manager.wallSpeedLTE()
 
-        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+    print(f"LTE wall speed: {vwLTE}")
 
-        vwLTE = manager.wallSpeedLTE()
+    ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
-        print(f"LTE wall speed: {vwLTE}")
+    ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+    wallParams: WallGo.WallParams
 
-        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+    bIncludeOffEq = True
+    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-        wallParams: WallGo.WallParams
+    startTime = process_time()
+    wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+    endTime = process_time()
+    print("Time to complete: ", endTime-startTime)
 
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    print(f"{wallVelocity=}")
+    print(f"{wallParams.widths=}")
+    print(f"{wallParams.offsets=}")
 
-        startTime = process_time()
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
-        endTime = process_time()
-        print("Time to complete: ", endTime-startTime)
+    exit()
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+    ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+    bIncludeOffEq = True
+    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        exit()
+    wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
 
-        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
-
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+    print(f"{wallVelocity=}")
+    print(f"{wallParams.widths=}")
+    print(f"{wallParams.offsets=}")
 
 
     # end parameter-space loop
