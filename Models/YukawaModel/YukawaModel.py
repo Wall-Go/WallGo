@@ -372,9 +372,9 @@ def main():
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         "m_b" : 1,
-        "g" : -0.89,
-        "lambda" : 0.056,
-        "y" : 0.23
+        "g" : -0.79,
+        "lambda" : 0.069,
+        "y" : 0.24
     }
 
     model = YukawaModel(inputParameters)
@@ -405,7 +405,7 @@ def main():
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
-        Tn = 100. ## nucleation temperature
+        Tn = 11. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
                                         phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
