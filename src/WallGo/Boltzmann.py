@@ -298,16 +298,15 @@ class BoltzmannSolver:
         Note, we make extensive use of numpy's broadcasting rules.
         """
 
-        ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
-        particle = self.offEqParticles[0]
+        particles = self.offEqParticles
 
         # coordinates
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         # adding new axes, to make everything rank 3 like deltaF, (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
-        xi = xi[:, np.newaxis, np.newaxis]
-        pz = pz[np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, :]
+        xi = xi[np.newaxis, :, np.newaxis, np.newaxis]
+        pz = pz[np.newaxis, np.newaxis, :, np.newaxis]
+        pp = pp[np.newaxis, np.newaxis, np.newaxis, :]
 
         # compactified coordinates
         chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
@@ -315,24 +314,24 @@ class BoltzmannSolver:
         # background profiles
         TFull = self.background.temperatureProfile
         vFull = self.background.velocityProfile
-        msqFull = particle.msqVacuum(self.background.fieldProfile)
+        msqFull = np.array([particle.msqVacuum(self.background.fieldProfile) for particle in particles])
         vw = self.background.vw
 
         # expanding to be rank 3 arrays, like deltaF
-        T = TFull[1:-1, np.newaxis, np.newaxis]
-        v = vFull[1:-1, np.newaxis, np.newaxis]
-        msq = msqFull[1:-1, np.newaxis, np.newaxis]
+        T = TFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
+        v = vFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
+        msq = msqFull[:, 1:-1, np.newaxis, np.newaxis]
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fluctuation mode
-        statistics = -1 if particle.statistics == "Fermion" else 1
+        statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
 
         # building parts which depend on the 'derivatives' argument
         if self.derivatives == "Spectral":
             # fit the background profiles to polynomials
             TPoly = Polynomial(TFull, self.grid, 'Cardinal', 'z', True)
             vPoly = Polynomial(vFull, self.grid, 'Cardinal', 'z', True)
-            msqPoly = Polynomial(msqFull, self.grid, 'Cardinal', 'z', True)
+            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), 'z', True)
             # intertwiner matrices
             TChiMat = TPoly.matrix(self.basisM, "z")
             TRzMat = TPoly.matrix(self.basisN, "pz")
@@ -341,9 +340,9 @@ class BoltzmannSolver:
             derivMatrixChi = TPoly.derivMatrix(self.basisM, "z")[1:-1]
             derivMatrixRz = TPoly.derivMatrix(self.basisN, "pz")[1:-1]
             # spatial derivatives of profiles
-            dTdChi = TPoly.derivative(0).coefficients[1:-1, None, None]
-            dvdChi = vPoly.derivative(0).coefficients[1:-1, None, None]
-            dMsqdChi = msqPoly.derivative(0).coefficients[1:-1, None, None]
+            dTdChi = TPoly.derivative(0).coefficients[None, 1:-1, None, None]
+            dvdChi = vPoly.derivative(0).coefficients[None, 1:-1, None, None]
+            dMsqdChi = msqPoly.derivative(1).coefficients[:, 1:-1, None, None]
         elif self.derivatives == "Finite Difference":
             # intertwiner matrices are simply unit matrices
             # as we are in the (Cardinal, Cardinal) basis
@@ -360,9 +359,9 @@ class BoltzmannSolver:
             derivMatrixRz = derivOperatorRz.matrix((self.grid.N + 1,))
             # spatial derivatives of profiles, endpoints used for taking
             # derivatives but then dropped as deltaF fixed at 0 at endpoints
-            dTdChi = (derivMatrixChi @ TFull)[1:-1, np.newaxis, np.newaxis]
-            dvdChi = (derivMatrixChi @ vFull)[1:-1, np.newaxis, np.newaxis]
-            dMsqdChi = (derivMatrixChi @ msqFull)[1:-1, np.newaxis, np.newaxis]
+            dTdChi = (derivMatrixChi @ TFull)[np.newaxis, 1:-1, np.newaxis, np.newaxis]
+            dvdChi = (derivMatrixChi @ vFull)[np.newaxis, 1:-1, np.newaxis, np.newaxis]
+            dMsqdChi = np.sum(derivMatrixChi[None,:,:] * msqFull[:,None,:],axis=-1)[:, 1:-1, np.newaxis, np.newaxis]
             # restructuring derivative matrices to appropriate forms for
             # Liouville operator
             derivMatrixChi = np.asarray(derivMatrixChi.todense())[1:-1, 1:-1]
@@ -383,11 +382,8 @@ class BoltzmannSolver:
 
         # (exact) derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
-        dchidxi = dchidxi[:, np.newaxis, np.newaxis]
-        drzdpz = drzdpz[np.newaxis, :, np.newaxis]
-
-        # statistics of particle
-        statistics = -1 if particle.statistics == "Fermion" else 1
+        dchidxi = dchidxi[np.newaxis, :, np.newaxis, np.newaxis]
+        drzdpz = drzdpz[np.newaxis, np.newaxis, :, np.newaxis]
 
         # derivative of equilibrium distribution
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
@@ -495,16 +491,8 @@ class BoltzmannSolver:
         Temperature derivative of thermal distribution functions
         """
         x = np.asarray(x)
-
-        if np.isclose(statistics, 1, atol=1e-14):
-            return np.where(
-                x > BoltzmannSolver.MAX_EXPONENT / 2,
-                -0,
-                -np.exp(x) / np.expm1(x)**2,
-            )
-        else:
-            return np.where(
-                x > BoltzmannSolver.MAX_EXPONENT,
-                -0,
-                -1 / (np.exp(x) + 2 + np.exp(-x)),
-            )
+        return np.where(
+            x > BoltzmannSolver.MAX_EXPONENT,
+            -0,
+            -1 / (np.exp(x) - 2*statistics + np.exp(-x)),
+        )
