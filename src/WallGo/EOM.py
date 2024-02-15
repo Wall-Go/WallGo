@@ -127,8 +127,7 @@ class EOM:
         wallParams = WallParams(widths = (5/self.Tnucl)*np.ones(self.nbrFields), 
                                 offsets = np.zeros(self.nbrFields))
 
-        alpha = self.thermo.alpha(self.Tnucl)
-        vmin = max(1-(3*alpha)**(-10./13.),0.01) #based on eq (103) of 1004.4187
+        vmin = self.hydro.vMin
         vmax = self.hydro.vJ-1e-6
 
         return self.solveWall(vmin, vmax, wallParams)
