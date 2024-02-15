@@ -11,11 +11,11 @@ from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotential_NoResum
+from WallGo import EffectivePotential
 from WallGo import Fields
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-class SingletSM_Z2(GenericModel):
+class YukawaModel(GenericModel):
 
     particles = []
     outOfEquilibriumParticles = []
@@ -30,7 +30,7 @@ class SingletSM_Z2(GenericModel):
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
+        self.effectivePotential = EffectivePotential_Yukawa(self.modelParameters, self.fieldCount)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -125,7 +125,7 @@ class SingletSM_Z2(GenericModel):
 
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
-class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
+class EffectivePotential_Yukawa(EffectivePotential):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
