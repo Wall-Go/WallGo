@@ -34,7 +34,7 @@ option(PROFILER "Compile with profiler flags" OFF)
 
 ## Use OpenMP by default
 option(USE_OMP "Build with OpenMP support" ON)
-
+option(BUILD_EXAMPLES "Build WallGo/Collision C++ examples" ON)
 
 ## For MacOS, may need to manually setup OpenMP
 if(APPLE AND USE_OMP)
@@ -108,22 +108,17 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 
-# Will build a 'core' library from code in ./src, apart from main.cpp.
-# Using the core lib we then build the 'main' program, a separate unit test module (if in Debug mode) and a separate pybind11 module 
-
-## Main program target
-set(MAIN_EXEC collision)
-
-# Code for the core lib + main program
 add_subdirectory(src)
-
-
-# Unit tests
-if(BUILD_UNIT_TESTS)
-    add_subdirectory(tests)
-endif()
 
 
 if (BUILD_PYTHON_MODULE)
 	add_subdirectory(pybind)
+endif()
+
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if(BUILD_UNIT_TESTS)
+    add_subdirectory(tests)
 endif()

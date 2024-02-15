@@ -18,35 +18,7 @@
 
 /* Test/example routine, calculates all collision integrals with QCD interactions. 
 The structure here illustrates how the same could be done from Python with arbitrary inputs */ 
-void collisionsQCD(uint N) {
 
-	const double gs = 1.2279920495357861;
-
-    //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
-	// Thermal
-	const double mq2 = 0.251327; // quark
-	const double mg2 = 3.01593; // SU(3) gluon
-	// Vacuum, @TODO if needed
-	const double msqVacuum = 0.0;
-
-	const bool bUltraRelativistic = true;
-
-	// For now take just the top to be out-of-eq
-    ParticleSpecies topQuark("top", EParticleType::FERMION, false, msqVacuum, mq2, bUltraRelativistic);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
-
-	// Main control object
-	CollisionManager collisionManager;
-	collisionManager.addParticle(topQuark);
-	collisionManager.addParticle(gluon);
-	collisionManager.addParticle(lightQuark);
-
-	collisionManager.addCoupling(gs);
-
-	collisionManager.calculateCollisionIntegrals(N);
-
-}
 
 
 int main(int argc, char** argv) {
