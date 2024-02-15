@@ -43,7 +43,7 @@ class YukawaModel(GenericModel):
         psiMsqVacuum = lambda fields: self.modelParameters["y"]**2 * fields.GetField(0)**2
         psiMsqThermal = lambda T: 0     #TODO: What is this? 
 
-        topQuark = Particle("top", 
+        psi = Particle("top", 
                             msqVacuum = psiMsqVacuum,
                             msqThermal = psiMsqThermal,
                             statistics = "Fermion",
@@ -51,7 +51,7 @@ class YukawaModel(GenericModel):
                             ultrarelativistic = True,
                             multiplicity = 1
         )
-        self.addParticle(topQuark)
+        self.addParticle(psi)
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
