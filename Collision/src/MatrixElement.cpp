@@ -1,12 +1,13 @@
 #include <iostream>
 #include <functional>
+#include <array>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
 #include "ParticleSpecies.h"
 #include "CollElem.h"
 #include "CollisionIntegral.h"
-#include <array>
+
 
 MatrixElement::MatrixElement() {
 
