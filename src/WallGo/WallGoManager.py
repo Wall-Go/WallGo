@@ -287,7 +287,7 @@ class WallGoManager:
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
 
-        eom = EOM(
+        self.eom = EOM(
             self.boltzmannSolver,
             self.thermodynamics,
             self.hydro,
@@ -299,7 +299,7 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
+        wallVelocity, wallParams = self.eom.findWallVelocityMinimizeAction()
         return wallVelocity, wallParams
 
 

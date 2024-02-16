@@ -439,7 +439,6 @@ class BoltzmannSolver:
             * TChiMat[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
             * self.collisionArray[:, np.newaxis, :, :, :, np.newaxis, :, :]
         )
-
         ##### total operator #####
         operator = liouville + collision
 

@@ -313,6 +313,7 @@ class EOM:
             self.boltzmannSolver.setBackground(boltzmannBackground)
 
             offEquilDeltas = self.boltzmannSolver.getDeltas()
+            self.lastDeltas = offEquilDeltas
 
         ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
         ## NOT including the first offset which we keep at 0.
