@@ -12,8 +12,6 @@
 
 #include "WallGoCollision/WallGoCollision.h"
 
-#include <tclap/CmdLine.h> // command line arguments
-
 void setupQCD(CollisionManager& manager) {
 
 	const double gs = 1.2279920495357861;
@@ -43,42 +41,13 @@ void setupQCD(CollisionManager& manager) {
 }
 
 
-int main(int argc, char** argv) 
+int main() 
 {
     
-	// basis size, default value
-	int basisSizeN = 11;
+	// basis size
+	const int basisSizeN = 5;
     // config file, default name
     std::string configFileName = "CollisionDefaults.ini";
-
-
-	// ---- Setup and parse command line args
-	try 
-	{
-		TCLAP::CmdLine cmd("WallGo Collision program (standalone)", ' ', /*version*/"1.0");
-
-		TCLAP::ValueArg<int> basisSizeArg("n", "basisSize", "Polynomial basis size", /*required*/false, /*default*/11, "Positive integer");
-		cmd.add(basisSizeArg);
-
-		TCLAP::ValueArg<std::string> configFileArg("c", "configFile", "Path to config file", false, "CollisionDefaults.ini", "String");
-		cmd.add(configFileArg);
-
-		cmd.parse(argc, argv);
-
-		basisSizeN = basisSizeArg.getValue();
-		configFileName = configFileArg.getValue();
-	}
-	catch (TCLAP::ArgException &e)
-	{
-		std::cerr << "Error: " << e.error() << " for argument " << e.argId() << std::endl;
-		exit(1);
- 	}
-
-
-	if (basisSizeN < 1) {
-		std::cerr << "Invalid basis size N = " << basisSizeN << "\n";
-		return 2;
-	}
 
 	// Load config
 	ConfigParser& config = ConfigParser::get();

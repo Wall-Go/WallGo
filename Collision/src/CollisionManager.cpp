@@ -5,6 +5,7 @@
 #include <regex> // Reading matrix elements from file
 #include <algorithm> // std::remove_if
 #include <chrono>
+#include <filesystem>
 
 #include "ConfigParser.h"
 
@@ -58,6 +59,16 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 
 CollisionManager::CollisionManager()
 {
+    // Set default options
+    outputDirectory = ""; // default to current working dir
+
+    integrationOptions.bVerbose = false;
+    integrationOptions.calls = 50000;
+    integrationOptions.maxIntegrationMomentum = 20;
+    integrationOptions.maxTries = 50;
+    integrationOptions.relativeErrorGoal = 1e-1;
+    integrationOptions.absoluteErrorGoal = 1e-8;
+    integrationOptions.bOptimizeUltrarelativistic = true;
 }
 
 
@@ -79,10 +90,11 @@ void CollisionManager::addCoupling(double coupling)
 }
 
 
-CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecies &particle1, const ParticleSpecies &particle2, const std::string &matrixElementFile, uint basisSize)
+CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecies &particle1, const ParticleSpecies &particle2, 
+    const std::string &matrixElementFile, uint basisSize, bool bVerbose)
 {
     CollisionIntegral4 collisionIntegral(basisSize);
-    std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), matrixElementFile);
+    std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), matrixElementFile, bVerbose);
     
     for (const CollElem<4> &elem : collisionElements)
     {
@@ -92,24 +104,11 @@ CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecie
     return collisionIntegral;
 }
 
-
-void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors)
+void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors, bool bVerbose)
 {
     const uint N = collisionIntegral.getPolynomialBasisSize();
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
     errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
-
-    const ConfigParser& config = ConfigParser::get();
-
-    IntegrationOptions options;
-    options.maxIntegrationMomentum = config.getDouble("Integration", "maxIntegrationMomentum");
-    options.calls = config.getInt("Integration", "calls");
-    options.relativeErrorGoal = std::fabs(config.getDouble("Integration", "relativeErrorGoal"));
-    options.absoluteErrorGoal = std::fabs(config.getDouble("Integration", "absoluteErrorGoal"));
-    options.maxTries = config.getInt("Integration", "maxTries");
-    options.bVerbose = config.getBool("Integration", "verbose");
-    options.bOptimizeUltrarelativistic = config.getBool("Integration", "optimizeUltrarelativistic");
-
 
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
@@ -155,7 +154,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
                 }
                 else
                 {
-                    resultMC = collisionIntegral.integrate(m, n, j, k, options);
+                    resultMC = collisionIntegral.integrate(m, n, j, k, integrationOptions);
                 }
 
                 results[m-2][n-1][j-1][k-1] = resultMC[0];
@@ -163,7 +162,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 
                 localIntegralCount++;
 
-                if (options.bVerbose)
+                if (bVerbose)
                 {
                     printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
                 }
@@ -221,7 +220,35 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 }
 
 
-void CollisionManager::calculateCollisionIntegrals(uint basisSize)
+void CollisionManager::configureIntegration(const IntegrationOptions &options)
+{
+    integrationOptions = options;
+}
+
+void CollisionManager::setOutputDirectory(const std::string &directoryName)
+{
+    namespace fs = std::filesystem;
+
+    fs::path dir(directoryName);
+    if (!fs::exists(dir))
+    {
+        try
+        {
+            fs::create_directory(dir);
+        }
+        catch (const fs::filesystem_error& e)
+        {
+            std::cerr << "Failed to create collision output dir:" << directoryName 
+                << ". Error was: " << e.what() << std::endl;
+            return;
+        }
+    }
+
+    outputDirectory = directoryName;
+}
+
+
+void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose)
 {
     // Particle list is assumed to be fixed from now on!
     findOutOfEquilibriumParticles();
@@ -233,8 +260,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
 
-    const std::string matrixElementFile = ConfigParser::get().getString("MatrixElements", "fileName");
-    const bool bVerbose = ConfigParser::get().getBool("MatrixElements", "verbose");
+    const std::string matrixElementFile = "MatrixElements.txt";
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
     for (const ParticleSpecies& particle1 : outOfEqParticles) 
@@ -260,8 +286,12 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
             evaluateCollisionTensor(collisionIntegral, results, errors);
 
             // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
-            std::string filename = "collisions_" + particle1.getName() + "_" + particle2.getName() + "_N" + std::to_string(basisSize) + ".hdf5";
-            H5::H5File h5File(filename, H5F_ACC_TRUNC);
+            const std::string fileNameBase = "collisions_" + particle1.getName() + "_" + particle2.getName() + ".hdf5";
+            std::filesystem::path outputPath(outputDirectory);
+            
+            outputPath = outputPath / fileNameBase;
+
+            H5::H5File h5File(outputPath, H5F_ACC_TRUNC);
 
             H5Metadata metadata;
             metadata.basisSize = basisSize;
@@ -286,8 +316,8 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize)
 
         }
     }
-    
 }
+
 
 std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2, 
     const std::string &matrixElementFile, bool bVerbose)
