@@ -43,7 +43,11 @@ public:
 
     void configureIntegration(const IntegrationOptions& options);
 
+    // Specify where to store output files, relative or absolute path. Defaults to current work directory.
     void setOutputDirectory(const std::string& directoryName);
+
+    // Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt".
+    void setMatrixElementFile(const std::string& filePath);
 
 protected:
 
@@ -101,6 +105,7 @@ private:
 
     IntegrationOptions integrationOptions;
     std::string outputDirectory;
+    std::string matrixElementFile;
 };
 
 

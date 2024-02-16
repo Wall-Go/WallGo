@@ -58,7 +58,8 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 CollisionManager::CollisionManager()
 {
     // Set default options
-    outputDirectory = ""; // default to current working dir
+    setOutputDirectory(""); // current work dir
+    setMatrixElementFile("MatrixElements.txt");
 
     integrationOptions.bVerbose = false;
     integrationOptions.calls = 50000;
@@ -121,12 +122,12 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
         threadID = omp_get_thread_num();
     #endif 
 
-        // Progress tracking
+        // ---- Progress tracking
 
         // How many we've calculated inside this function only (so for this out-of-eq pair) 
         int localIntegralCount = 0;
         // Report when thread0 has computed this many integrals. NB: totalIntegralCount is the full count including all out-of-eq pairs
-        int standardProgressInterval = totalIntegralCount / 10 / numThreads; // every 10%
+        int standardProgressInterval = totalIntegralCount / 20 / numThreads; // every 20%
         standardProgressInterval = globalFuncts::clamp<int>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
 
         int progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
@@ -226,6 +227,7 @@ void CollisionManager::setOutputDirectory(const std::string &directoryName)
 {
     namespace fs = std::filesystem;
 
+    // Create the directory if it doesn't exist
     fs::path dir(directoryName);
     if (!fs::exists(dir))
     {
@@ -244,6 +246,18 @@ void CollisionManager::setOutputDirectory(const std::string &directoryName)
     outputDirectory = directoryName;
 }
 
+void CollisionManager::setMatrixElementFile(const std::string &filePath)
+{
+    matrixElementFile = filePath;
+    // Check that the file exists. Failure here is non-fatal but not good either
+    std::filesystem::path file(filePath);
+
+    if (!std::filesystem::exists(file))
+    {
+        std::cerr << "Can't find matrix element file " << filePath << "! Trying to proceed anyway." << std::endl;
+    }
+    
+}
 
 void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose)
 {
@@ -256,8 +270,6 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
     computedIntegralCount = 0;
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
-
-    const std::string matrixElementFile = "MatrixElements.txt";
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
     for (const ParticleSpecies& particle1 : outOfEqParticles) 

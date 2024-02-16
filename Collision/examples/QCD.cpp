@@ -38,6 +38,9 @@ void setupQCD(CollisionManager& manager) {
 	manager.addParticle(lightQuark);
 
 	manager.addCoupling(gs);
+
+	// Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir
+	manager.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt");
 }
 
 
