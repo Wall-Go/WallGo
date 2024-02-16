@@ -25,7 +25,7 @@ sudo apt-get install libgsl-dev libhdf5-dev
 
 MacOS: 
 ```
-brew install gsl hdf5
+brew install gsl hdf5 muparser
 ```
 
 For both systems, pybind11 can be installed using pip:
@@ -35,7 +35,7 @@ pip install "pybind11[global]"
 This installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda, or build it directly from source.
 
 
-Muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/. **Note:** muparser can safely be installed without OpenMP support (-DENABLE_OPENMP=OFF) without affecting WallGo/Collision.
+For Linux systems, muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/. **Note:** muparser can safely be installed without OpenMP support (```-DENABLE_OPENMP=OFF```) without affecting WallGo/Collision.
 
 
 ## Compiling the Collision module
@@ -43,26 +43,15 @@ Muparser needs to be manually installed from source. Please follow the installat
 Stardard CMake build. Go to WallGo/Collision (where the CMakeLists.txt file is) and run:
 
 ```
-mkdir build
-cd build
-cmake ..
-make
-make install	
+cmake -B build -S .
+cmake --build build
+cmake --install build
 ```
 
-This will produce a standalone C++ executable in build/bin and a separate python module in build/lib. The 'make install' step will copy these to their default locations at ./bin and ./pybind/lib
-
-To only build the C++ program, use the following cmake flag:
-
-```
-cmake -DBUILD_PYTHON_MODULE=Off ..
-```
+This will produce a standalone C++ executable in build/bin and a separate python module in build/lib. The installation step copies these to their default locations at ./bin and ./pybind/lib
+To only build the C++ program without Python bindings, use the ```-DBUILD_PYTHON_MODULE=Off``` cmake flag.
 
 If CMake reports errors out due to missing external libraries, please make sure you have installed them as instructed above.
-
-## TODO 
-
-- Figure out how to cancel execution of a long C++ function from Python side. CTRL-C doesn't seem to work; need to kill the process or close the terminal
 
 
 ## Debugging & Profiling
