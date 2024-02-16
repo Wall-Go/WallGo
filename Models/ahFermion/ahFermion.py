@@ -13,14 +13,14 @@ from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-class SingletSM_Z2(GenericModel):
+class ahFermion(GenericModel):
 
     particles = []
     outOfEquilibriumParticles = []
     modelParameters = {}
 
     ## Specifying this is REQUIRED
-    fieldCount = 2
+    fieldCount = 1
 
 
     def __init__(self, initialInputParameters: dict[str, float]):
@@ -28,7 +28,7 @@ class SingletSM_Z2(GenericModel):
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
+        self.effectivePotential = EffectivePotentialAHFermion(self.modelParameters, self.fieldCount)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -38,8 +38,8 @@ class SingletSM_Z2(GenericModel):
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        topMsqVacuum = lambda fields: self.modelParameters["mXsq"]**2
+        topMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
                             msqVacuum = topMsqVacuum,
@@ -51,31 +51,18 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        ## === U(1) dark photon ===
+        photonMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 * 2./3.
 
-        lightQuark = Particle("lightQuark", 
+        photon = Particle("photon", 
                             msqVacuum = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            multiplicity = 5
-        )
-        self.addParticle(lightQuark)
-
-        ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
-
-        gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqThermal = gluonMsqThermal,
+                            msqThermal = photonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
                             multiplicity = 1
         )
-        self.addParticle(gluon)
+        self.addParticle(photon)
 
 
 
@@ -89,33 +76,20 @@ class SingletSM_Z2(GenericModel):
         v0 = inputParameters["v0"]
         # Scalar eigenvalues
         mh1 = inputParameters["mh1"] # 125 GeV
-        mh2 = inputParameters["mh2"]
 
         ## these are direct inputs:
-        modelParameters["RGScale"] = inputParameters["RGScale"]
-        modelParameters["a2"] = inputParameters["a2"]
-        modelParameters["b4"] = inputParameters["b4"]
-        
+        modelParameters["RGScale"] = inputParameters["RGScale"] 
 
         modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
-        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
-        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
-        modelParameters["b2"] = mh2**2 - 0.5 * v0**2 * inputParameters["a2"]
+        modelParameters["mssq"] = -mh1**2 / 2. # should be same as the following:
+        # modelParameters["mssq"] = -modelParameters["lambda"] * v0**2
 
-        ## Then the gauge/Yukawa sector
-        
-        Mt = inputParameters["Mt"] 
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
+        ## Then the gauge sector
 
         # helper
-        g0 = 2.*MW / v0
-        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
-        modelParameters["g2"] = g0
-        # Just take QCD coupling as input
-        modelParameters["g3"] = inputParameters["g3"]
-
-        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+        modelParameters["lambda"] = inputParameters["lambda"]
+        modelParameters["g1"] = inputParameters["g1"]
+        modelParameters["mXsq"] = inputParameters["mXsq"]
 
         return modelParameters
 
@@ -123,15 +97,15 @@ class SingletSM_Z2(GenericModel):
 
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
-class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
+class EffectivePotentialAHFermion(EffectivePotential_NoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 29 #1 + 1 + 3 + 2*8 + 2*3 + 2*1 
-        self.num_fermion_dof = 90 
+        self.num_boson_dof = 3 # 1 + 2*1 
+        self.num_fermion_dof = 4 # 2*2*1
 
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
@@ -170,19 +144,15 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     ## ---------- EffectivePotential overrides. 
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
-
     def evaluate(self, fields: Fields, temperature: float) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
-        v, x = fields.GetField(0), fields.GetField(1)
+        v = fields.GetField(0)
 
-        msq = self.modelParameters["msq"]
-        b2 = self.modelParameters["b2"]
+        mssq = self.modelParameters["mssq"]
         lam = self.modelParameters["lambda"]
-        b4 = self.modelParameters["b4"]
-        a2 = self.modelParameters["a2"]
 
         RGScale = self.modelParameters["RGScale"]
 
@@ -194,7 +164,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         """
 
         # tree level potential
-        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
+        V0 = 0.5 * mssq * v**2 + 0.25 * lam * v**4
 
         # From Philipp. @todo should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
@@ -209,7 +179,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         )
 
         return VTotal
-    
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -220,146 +189,109 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 14
-        dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
+        # dofsBoson = self.num_boson_dof
+        # dofsFermion = self.num_fermion_dof ## we only did top quark loops
+        dofsBoson = self.num_boson_dof - 3
+        dofsFermion = self.num_fermion_dof - 4 ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
 
 
-    ## High-T stuff commented out for now
-    """
     ## Evaluate the potential in high-T approx (but keep 4D units)
     def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
 
-        v = fields[0] # phi ~ 1/sqrt(2) (0, v)
-        x = fields[1] # just S -> S + x 
+        # S -> S + x
+        v = fields.GetField(0)
         T = temperature
 
         # 4D units
         thermalParameters = self.getThermalParameters(temperature)
         
-        msq = thermalParameters["msq"]
+        mssq = thermalParameters["mssq"]
         lam = thermalParameters["lambda"]
-        b2 = thermalParameters["b2"]
-        b4 = thermalParameters["b4"]
-        a2 = thermalParameters["a2"]
-        
 
         # tree level potential
-        V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 * x**2
+        V0 = 0.5 * mssq * v**2 + 0.25 * lam * v**4
 
         ## @todo should have something like a static class just for defining loop integrals. NB: m^2 can be negative for scalars so make it complex
         J3 = lambda msq : -(msq + 0j)**(3/2) / (12.*np.pi) * T # keep 4D units
 
         ## Cheating a bit here and just hardcoding gauge/"goldstone" masses
-        mWsq = thermalParameters["g2"]**2 * v**2 / 4.
-        mZsq = (thermalParameters["g1"]**2 + thermalParameters["g2"]**2) * v**2 / 4.
-        mGsq = msq + lam*v**2 + 0.5*a2*x**2
+        mVsq = thermalParameters["g1"]**2 * v**2
+        mGsq = mssq + lam*v**2
+        mSsq = mssq + 3.*lam*v**2
 
 
-        ## Scalar mass matrix needs diagonalization, just doing it manually here
+        ## Scalar mass matrix is already diagonal
         # matrix ( a, b // b, c)
-
-        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-        
     
         # NLO 1-loop correction in Landau gauge. So g^3, Debyes are integrated out by getThermalParameters
-        V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + 3.*J3(mGsq) + J3(msqEig1) + J3(msqEig2)
+        V1 = 1.*(3-1) * J3(mVsq) + 1.*J3(mGsq) + J3(mSsq)
 
-        VTotal = V0 + V1
+        VTotal = (
+            V0 
+            + self.constantTerms(temperature)
+            + V1
+        )
         return VTotal
     
 
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:
         T = temperature
-        msq = self.modelParameters["msq"]
+        msq = self.modelParameters["mssq"]
         lam = self.modelParameters["lambda"]
-        yt = self.modelParameters["yt"]
         g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-        
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
 
         ## LO matching: only masses get corrected
         thermalParameters = self.modelParameters.copy()
 
-        thermalParameters["msq"] = msq + T**2 / 16. * (3. * g2**2 + g1**2 + 4.*yt**2 + 8.*lam) + T**2 * a2 / 24.
+        thermalParameters["mssq"] = msq + T**2 / 12. * (3. * g1**2 + 4.*lam)
 
-        thermalParameters["b2"] = b2 + T**2 * (1./6. *a2 + 1./4. *b4)
+        # fermion generations
+        nG = 1
 
-        # how many Higgs doublets / fermion generations
-        Nd = 1
-        Nf = 3
-
-        ## Debye masses squared (U1, SU2) 
-        mDsq1 = g1**2 * T**2 * (Nd/6. + 5.*Nf/9.)
-        mDsq2 = g2**2 * T**2 * ( (4. + Nd) / 6. + Nf/3.)
+        ## Debye masses squared (U1) 
+        mDsq1 = g1**2 * T**2 * (1/3. + nG/3.)
         mD1 = np.sqrt(mDsq1)
-        mD2 = np.sqrt(mDsq2)
 
-        ## Let's also integrate out A0/B0
-        h3 = g2**2 / 4.
-        h3p = g2**2 / 4.
-        h3pp = g2*g1 / 2.
+        ## Let's also integrate out B0
+        h3 = 2.*g1**2
 
-        thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
-        thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
+        thermalParameters["mssq"] += -1/(4.*np.pi) * T * (+ h3 * mD1/2.)
+        thermalParameters["lambda"] += -1/(4.*np.pi) * T**2 * (+ h3**2 / (8.*mD1))
 
         # skipping corrections to gauge couplings because those are not needed at O(g^3)
 
         # But adding these as Benoit benchmark needs them explicitly...?
         thermalParameters["mDsq1"] = mDsq1
-        thermalParameters["mDsq2"] = mDsq2
 
         return thermalParameters
-    """
+
 
     def boson_massSq(self, fields: Fields, temperature):
 
-        v, x = fields.GetField(0), fields.GetField(1)
+        v = fields.GetField(0)
 
         # TODO: numerical determination of scalar masses from V0
 
-        msq = self.modelParameters["msq"]
+        mssq = self.modelParameters["mssq"]
         lam = self.modelParameters["lambda"]
         g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
         
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
-        
-        # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-
-        mWsq = g2**2 * v**2 / 4.
-        mZsq = (g1**2 + g2**2) * v**2 / 4.
+        # Scalar masses are already diagonal
+        mVsq = g1**2 * v**2
         # "Goldstones"
-        mGsq = msq + lam*v**2 + 0.5*a2*x**2
+        mGsq = mssq + lam*v**2
+        mSsq = mssq + 3.*lam*v**2
 
         # this feels error prone:
 
-        # h, s, chi, W, Z
-        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom = np.array([1,1,3,6,3]) 
-        c = np.array([3/2,3/2,3/2,5/6,5/6])
+        # h, chi, V
+        massSq = np.column_stack( (mSsq, mGsq, mVsq) )
+        degreesOfFreedom = np.array([1,1,3]) 
+        c = np.array([3/2,3/2,5/6])
 
         return massSq, degreesOfFreedom, c
     
@@ -369,13 +301,12 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         v = fields.GetField(0)
 
         # Just top quark, others are taken massless
-        yt = self.modelParameters["yt"]
-        mtsq = yt**2 * v**2 / 2
+        mXsq = self.modelParameters["mXsq"]
     
         # @todo include spins for each particle
 
-        massSq = np.stack((mtsq,), axis=-1)
-        degreesOfFreedom = np.array([12])
+        massSq = np.stack((mXsq,), axis=-1)
+        degreesOfFreedom = np.array([4])
         
         return massSq, degreesOfFreedom
 
@@ -396,20 +327,15 @@ def main():
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         #"RGScale" : 91.1876,
-        "RGScale" : 125., # <- Benoit benchmark
-        "v0" : 246.0,
-        "MW" : 80.379,
-        "MZ" : 91.1876,
-        "Mt" : 173.0,
-        "g3" : 1.2279920495357861,
-        # scalar specific, choose Benoit benchmark values
-        "mh1" : 125.0,
-        "mh2" : 120.0,
-        "a2" : 0.9,
-        "b4" : 1.0
+        "RGScale" : 10.0,
+        "v0" : 10.0,
+        "g1" : 0.1,
+        "mh1" : 10.0,
+        "lambda" : 1.0,
+        "mXsq" : 1.0
     }
 
-    model = SingletSM_Z2(inputParameters)
+    model = ahFermion(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
@@ -427,20 +353,20 @@ def main():
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mh2 = [ 120.0 ]
-    for mh2 in values_mh2:
+    values_mh1 = [17.0 ]
+    for mh1 in values_mh1:
 
-        inputParameters["mh2"] = mh2
+        inputParameters["mh1"] = mh1
 
         modelParameters = model.calculateModelParameters(inputParameters)
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
-        Tn = 100. ## nucleation temperature
+        Tn = 12. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
-                                        phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
+                                        phaseLocation1 = WallGo.Fields( [0.0] ), 
+                                        phaseLocation2 = WallGo.Fields( [16.0] ))
         
 
         """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
