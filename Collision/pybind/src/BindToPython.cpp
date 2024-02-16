@@ -9,7 +9,6 @@
 #include "WallGoCollision/ParticleSpecies.h"
 #include "WallGoCollision/CollisionManager.h"
 #include "WallGoCollision/gslWrapper.h"
-#include "WallGoCollision/ConfigParser.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -34,17 +33,6 @@ namespace pythonModule
         }
 
         gslWrapper::initializeRNG();
-
-        ConfigParser& config = ConfigParser::get();
-
-        if (config.load(configFileName)) {
-            std::cout << "=== Collision config ===\n\n";
-            config.printContents();
-            std::cout << std::endl;
-        } else {
-            std::cerr << "no collision config...\n";
-            exit(100);
-        }
 
         pythonModule::bInitialized = true;
     }
@@ -166,4 +154,3 @@ PYBIND11_MODULE(CollisionModule, m)
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
 
 }
-
