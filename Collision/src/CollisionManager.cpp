@@ -7,8 +7,6 @@
 #include <chrono>
 #include <filesystem>
 
-#include "ConfigParser.h"
-
 #if WITH_OMP
     #include <omp.h>
 #endif
@@ -143,28 +141,27 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
             for (uint k = 1; k <= N-1; ++k)
             {
             
-                // Monte Carlo result for the integral + its error
-                std::array<double, 2> resultMC;
+                IntegrationResult result;
 
                 // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
                 if (2*j == N && m % 2 != 0)
                 {
-                    resultMC[0] = 0.0;
-                    resultMC[1] = 0.0;
+                    result.result = 0.0;
+                    result.error = 0.0;
                 }
                 else
                 {
-                    resultMC = collisionIntegral.integrate(m, n, j, k, integrationOptions);
+                    result = collisionIntegral.integrate(m, n, j, k, integrationOptions);
                 }
 
-                results[m-2][n-1][j-1][k-1] = resultMC[0];
-                errors[m-2][n-1][j-1][k-1] = resultMC[1];
+                results[m-2][n-1][j-1][k-1] = result.result;
+                errors[m-2][n-1][j-1][k-1] = result.error;
 
                 localIntegralCount++;
 
                 if (bVerbose)
                 {
-                    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, resultMC[0], resultMC[1]);
+                    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, result.result, result.error);
                 }
 
                 if (threadID == 0 && (localIntegralCount % progressReportInterval == 0)) 
@@ -283,7 +280,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
                 collisionIntegral.addCollisionElement(elem);
             }
 
-            evaluateCollisionTensor(collisionIntegral, results, errors);
+            evaluateCollisionTensor(collisionIntegral, results, errors, bVerbose);
 
             // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
             const std::string fileNameBase = "collisions_" + particle1.getName() + "_" + particle2.getName() + ".hdf5";

@@ -16,7 +16,6 @@
 #include "hdf5Interface.h"
 
 // TEMP
-#include "ConfigParser.h"
 #include "gslWrapper.h"
 
 #endif

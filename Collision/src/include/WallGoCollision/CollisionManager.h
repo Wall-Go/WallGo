@@ -26,21 +26,20 @@ public:
     CollisionIntegral4 setupCollisionIntegral(const ParticleSpecies& particle1, const ParticleSpecies& particle2, 
         const std::string &matrixElementFile, uint basisSize, bool bVerbose = false);
 
-    /* Calculates all integrals. Call only after setting particles and couplings.
-    Options for the integration can be changed by with CollisionManager::configureIntegration().
-    */
-    void calculateCollisionIntegrals(uint basisSize, bool bVerbose = false);
+    
 
-    // Creates all collision elements that mix two out-of-eq particles (can be the same particle).
-    std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2,
-        const std::string &matrixElementFile, bool bVerbose = false);
+    /* Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays. 
+    Integration options are read from out internal integrationOptions struct. */ 
+    void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, 
+        Array4D& results, Array4D& errors, bool bVerbose = false);
+
+    /* Calculates all integrals. Call only after setting particles and couplings.
+    Options for the integration can be changed by with CollisionManager::configureIntegration(). */
+    void calculateCollisionIntegrals(uint basisSize, bool bVerbose = false);
 
     // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
     static long countIndependentIntegrals(uint basisSize, uint outOfEqCount);
 
-    /* Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays. 
-    Integration options are read from out internal integrationOptions struct. */ 
-    void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D& results, Array4D& errors, bool bVerbose = false);
 
     void configureIntegration(const IntegrationOptions& options);
 
@@ -60,6 +59,16 @@ protected:
     // Checks which particles in our current 'particles' array are out-of-eq, then stores those in outOfEqParticles
     void findOutOfEquilibriumParticles();
 
+    /* Turns a symbolic string expression into usable CollElem<4>. 
+    Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
+    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]) */  
+    CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr);
+    
+
+    // Creates all collision elements that mix two out-of-eq particles (can be the same particle).
+    std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2,
+        const std::string &matrixElementFile, bool bVerbose = false);
+
     // List of all particles that contribute to collisions
     std::vector<ParticleSpecies> particles;
 
@@ -78,11 +87,7 @@ protected:
     // Failsafe flag so that we don't do anything stupid (hopefully)
     bool bMatrixElementsDone = false;
 
-    /* Turns a symbolic string expression into usable CollElem<4>. 
-    Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
-    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]) */  
-    CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr);
-    
+
 private:
 
     // Progress tracking 

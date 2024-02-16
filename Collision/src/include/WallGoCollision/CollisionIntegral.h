@@ -31,6 +31,26 @@ struct IntegrationOptions
     double maxTries;
     bool bVerbose;
     bool bOptimizeUltrarelativistic;
+
+    // Set sensible defaults
+    IntegrationOptions()
+    {
+        maxIntegrationMomentum = 20;
+        calls = 50000;
+        relativeErrorGoal = 1e-1;
+        absoluteErrorGoal = 1e-8;
+        maxTries = 50;
+        bOptimizeUltrarelativistic = true;
+        bVerbose = false;
+    }
+};
+
+struct IntegrationResult
+{
+    double result;
+    double error;
+    // TODO add some error flags etc here
+    //bool bConverged; // Did the integration converge to goal accuracy
 };
 
 /*
@@ -85,16 +105,8 @@ public:
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters);
 
-    // Overload of the above (for testing)
-    inline double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
-        int m, int n, int j, int k) {
-            
-        return calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, initializeIntegrandParameters(m, n, j, k));
-    }
-
     // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
-    // Returns { result, error }
-    std::array<double, 2> integrate(int m, int n, int j, int k, const IntegrationOptions& options);
+    IntegrationResult integrate(int m, int n, int j, int k, const IntegrationOptions& options);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 

@@ -8,10 +8,9 @@
 #include "ThreeVector.h"
 
 #include "gslWrapper.h"
-#include "ConfigParser.h"
 
 // This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
-std::array<double, 2> CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
+IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
 {
 
     IntegrandParameters integrandParameters = initializeIntegrandParameters(m, n, j, k);
@@ -101,7 +100,11 @@ std::array<double, 2> CollisionIntegral4::integrate(int m, int n, int j, int k, 
 
     gsl_monte_vegas_free(gslState);
 
-    return std::array<double, 2>({mean, error});
+    IntegrationResult result;
+    result.result = mean;
+    result.error = error;
+
+    return result;
 }
 
 void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)

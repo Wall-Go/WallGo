@@ -29,7 +29,7 @@ void setupQCD(CollisionManager& manager) {
 	const bool bUltraRelativistic = true;
 
 	// Take top and gluon to be out-of-equilibrium
-    ParticleSpecies topQuark("top", EParticleType::FERMION, /*in-eq*/false, msqVacuum, mq2, bUltraRelativistic);
+    ParticleSpecies topQuark("top", EParticleType::FERMION, /*inEquilibrium*/false, msqVacuum, mq2, bUltraRelativistic);
     ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
 	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
@@ -43,30 +43,33 @@ void setupQCD(CollisionManager& manager) {
 
 int main() 
 {
-    
-	// basis size
-	const int basisSizeN = 5;
-    // config file, default name
-    std::string configFileName = "CollisionDefaults.ini";
-
-	// Load config
-	ConfigParser& config = ConfigParser::get();
-
-	if (config.load(configFileName)) {
-		std::cout << "Read config:\n";
-		config.printContents();
-		std::cout << std::endl;
-	} else {
-		return 3;
-	}
 
     gslWrapper::initializeRNG();
 
     CollisionManager manager;
 
+	// Specify output directory (relative or absolute path). Defaults to current directory
+	manager.setOutputDirectory("output");
+
     setupQCD(manager);
 
-    manager.calculateCollisionIntegrals(basisSizeN);
+	// Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
+	// Here we set everything manually to show how it's done
+	IntegrationOptions options;
+	options.calls = 50000;
+	options.maxTries = 50;
+	options.maxIntegrationMomentum = 20;
+	options.absoluteErrorGoal = 1e-8;
+	options.relativeErrorGoal = 1e-1;
+	options.bOptimizeUltrarelativistic = true;
+	options.bVerbose = true;
+	
+	manager.configureIntegration(options);
+
+	// Polynomial basis size
+	const int basisSizeN = 5;
+
+    manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/true);
 
     gslWrapper::clearRNG();
     
