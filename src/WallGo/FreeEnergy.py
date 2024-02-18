@@ -182,8 +182,9 @@ class FreeEnergy(InterpolatableFunction):
             self.startingPhaseLocationGuess, T0,
         )
         phase0 = FieldPoint(phase0[0])
+
         ## HACK! a hard-coded absolute tolerance
-        tol_absolute = rTol * 0.1 * np.sqrt(T0)
+        tol_absolute = 0.01 * rTol * T0 ** 4
 
         def ode_function(temperature, field):
             # HACK! Fix the [0] in the next two lines.
@@ -195,9 +196,14 @@ class FreeEnergy(InterpolatableFunction):
         ddV_T0 = self.effectivePotential.deriv2Field2(phase0, T0)
         eigs_T0 = np.linalg.eigvalsh(ddV_T0)
         mass_scale_T0 = np.mean(eigs_T0)
+        min_mass_scale = rTol * mass_scale_T0
         mass_hierarchy_T0 = min(eigs_T0) / max(eigs_T0)
-        eps_test = rTol * 1e2
-        
+        min_hierarchy = rTol * mass_hierarchy_T0
+
+        # checking stable phase at initial temperature
+        assert min(eigs_T0) * max(eigs_T0) > 0, \
+            "tracePhaseIVP error: unstable at starting temperature"
+
         def spinodal_event(temperature, field):
             if not spinodal:
                 return 1  # don't bother testing
@@ -208,8 +214,8 @@ class FreeEnergy(InterpolatableFunction):
                 d2V = self.effectivePotential.deriv2Field2(field, temperature)
                 eigs = scipylinalg.eigvalsh(d2V)
                 test_zero = min(eigs)
-                test_small = min(eigs) - eps_test * mass_scale_T0
-                test_hierarchy = min(eigs) / max(eigs) - eps_test * mass_hierarchy_T0
+                test_small = min(abs(eigs)) - min_mass_scale
+                test_hierarchy = min(abs(eigs)) / max(abs(eigs)) - min_hierarchy
                 return min(test_zero, test_small, test_hierarchy)
 
         print("--- Integrating up ---")
@@ -241,13 +247,14 @@ class FreeEnergy(InterpolatableFunction):
                 break
             T_up.append(ode_up.t)
             field_up.append(ode_up.y)
-            f_up.append(self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t))
+            f_t = self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t)
+            f_up.append(f_t)
             if ode_up.step_size < 0.01 * rTol * T0:
                 print(f"Step size shrunk too small at T={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
         print("--- Integrating down ---")
-        ode_down = scipyint.RK23(
+        ode_down = scipyint.RK45(
             ode_function,
             T0,
             phase0,
@@ -275,7 +282,8 @@ class FreeEnergy(InterpolatableFunction):
                 break
             T_down.append(ode_down.t)
             field_down.append(ode_down.y)
-            f_down.append(self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t))
+            f_t = self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t)
+            f_down.append(f_t)
             if ode_down.step_size < 0.01 * rTol * T0:
                 print(f"Step size too small at T={ode_down.t}")
                 self.minPossibleTemperature = ode_down.t
@@ -283,7 +291,7 @@ class FreeEnergy(InterpolatableFunction):
         if len(T_down) <= 2:
             T_full = np.array(T_up)
             field_full = np.array(field_up)
-            f_full = np.array(f_down)
+            f_full = np.array(f_up)
         elif len(T_up) <= 2:
             T_full = np.flip(np.array(T_down), 0)
             field_full = np.flip(np.array(field_down), 0)
