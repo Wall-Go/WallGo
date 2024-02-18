@@ -43,6 +43,7 @@ void Collision::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, A
     ConfigParser& config = ConfigParser::get();
     const bool bVerbose = config.getBool("Integration", "verbose");
 
+
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
 
@@ -178,7 +179,12 @@ void Collision::calculateCollisionIntegrals()
             Array4D errors;
             
             CollisionIntegral4 collisionIntegral(basisSizeN);
-            collisionIntegral.collisionElements = makeCollisionElements(particle1.getName(), particle2.getName());
+            std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName());
+            
+            for (const CollElem<4> &elem : collisionElements)
+            {
+                collisionIntegral.addCollisionElement(elem);
+            }
 
             evaluateCollisionTensor(collisionIntegral, results, errors);
 
@@ -251,7 +257,9 @@ std::vector<CollElem<4>> Collision::makeCollisionElements(const std::string &par
             if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
                 
                 // Found matrix element, so create a CollElem from it by parsing the read line into usable form
-                collisionElements.push_back( makeCollisionElement(particleName1, particleName2, line) );
+                CollElem<4> elem = makeCollisionElement(particleName1, particleName2, line);
+                collisionElements.push_back(elem);
+
                 std::cout << "Found matrix element:\n";
                 std::cout << line << "\n";
             }
@@ -277,6 +285,7 @@ CollElem<4> Collision::makeCollisionElement(const std::string &particleName1, co
 
     if (indices[0] != particleIndex[particleName1])
     {
+        // This should not happen
         std::cerr << "Warning: first index in matrix element does not match name [" << particleName1 << "]\n";
     }
 

@@ -91,8 +91,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     
     
     if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    	# Optimization always for non-debug builds
-    	add_compile_options(-O3)
+    	# Optimization always for non-debug builds and define NDEBUG flag to disable various runtime asserts
+    	add_compile_options(-O3 -DNDEBUG)
     endif()
 
     if (NOT USE_OMP)

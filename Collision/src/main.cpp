@@ -29,6 +29,8 @@ void printUsage(FILE *fp, const char *path) {
 				"Print this help and exit.\n");
 	fprintf (fp, "	-n [integer]\t\t"
 				"Set grid size (number of basis polynomials).");
+	fprintf (fp, "	-c [string]\t\t"
+				"Specify config file to use.");
 	fprintf (fp, "  -w\t\t"
 				"Test the hdf5 output routines by writing dummy data and exit.\n");
 	fprintf (fp, "  -t\t\t"
@@ -102,7 +104,7 @@ int main(int argc, char *argv[]) {
 	int basisSizeN = 20;
     bool bDoTestRun = false;
     // config file, default name
-    std::string configFileName = "config.ini";
+    std::string configFileName = "CollisionDefaults.ini";
 
 	// Parse command line arguments
 	int opt;
@@ -110,7 +112,6 @@ int main(int argc, char *argv[]) {
 		switch (opt) {
 			case 'c':
                 configFileName = optarg;
-                std::cout << "Using config file " << configFileName << "\n";
                 break;
             case 'h':
 				// Print usage and exit
