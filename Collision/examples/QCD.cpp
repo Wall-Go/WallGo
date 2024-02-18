@@ -10,6 +10,8 @@
  *  
 ****************************************************************************/
 
+#include <filesystem>
+
 #include "WallGoCollision/WallGoCollision.h"
 
 void setupQCD(wallgo::CollisionManager& manager) {
@@ -70,9 +72,9 @@ int main()
 	manager.configureIntegration(options);
 
 	// Polynomial basis size
-	const int basisSizeN = 5;
+	const int basisSizeN = 3;
 
-    manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/true);
+    manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/false);
 
     wallgo::gslWrapper::clearRNG();
     

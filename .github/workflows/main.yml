@@ -93,9 +93,9 @@ jobs:
           cmake --build ${{ steps.strings.outputs.collision-build-dir }} --config ${{ matrix.build_type }}
           cmake --install ${{ steps.strings.outputs.collision-build-dir }}
           
-      - name: Run Collision
-        run: cd ${{ steps.strings.outputs.collision-root-dir }}/testrun && ${{ steps.strings.outputs.collision-root-dir }}/bin/Collision -n 3 -c ${{ github.workspace }}/src/WallGo/Config/CollisionDefaults.ini
+      - name: Run Collision QCD examples
+        run: cd ${{ steps.strings.outputs.collision-root-dir }}/examples && ./bin/QCD && cd ../..
 
       - name: Test with pytest
       # Let's have -s flag for showing prints etc, can be useful for debugging
-        run: pytest -vs
+        run: cd pytest -vs
