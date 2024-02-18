@@ -21,9 +21,10 @@ from .Integrals import Integrals
 from .Config import Config
 from .CollisionArray import CollisionArray
 
+from .Collision import loadCollisionModule
+
 from .WallGoUtils import getSafePathToResource
 
-from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 
 defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
@@ -35,10 +36,6 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
 #print("Read WallGo config:")
 #print(config)
-
-## Load the collision module, gets stored in CollisionModule global var
-loadCollisionModule()
-
 
 _bInitialized = False
 config = Config()
@@ -54,7 +51,8 @@ defaultIntegrals.Jf.disableAdaptiveInterpolation()
 ## This is good for preventing heavy startup operations from running if the user just wants a one part of WallGo and not the full framework, eg. ``import WallGo.Integrals``.
 ## Downside is that programs need to manually call this, preferably as early as possible.
 def initialize() -> None:
-    """WallGo initializer. This should be called as early as possible in your program."""
+    """WallGo initializer. This should be called as early as possible in your program.
+    """
 
     global _bInitialized
     global config 
@@ -84,6 +82,3 @@ def _initalizeIntegralInterpolations() -> None:
     defaultIntegrals.Jf.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
         )
-
-
-

@@ -18,7 +18,8 @@ namespace wallgo
 
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms */
-class CollisionManager {
+class CollisionManager 
+{
 
 public: 
     CollisionManager();
@@ -31,7 +32,6 @@ public:
         const std::string &matrixElementFile, uint basisSize, bool bVerbose = false);
 
     
-
     /* Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays. 
     Integration options are read from out internal integrationOptions struct. */ 
     void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, 

@@ -1,7 +1,7 @@
+import pathlib
 
-from WallGo.CollisionModuleLoader import CollisionModule, collisionModuleLoaded
+import WallGo
 from WallGo import Particle
-
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
 ## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
@@ -37,13 +37,9 @@ def constructPybindParticle(p: Particle, T: float):
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
 
 
+WallGo.initialize()
 
-if (not collisionModuleLoaded):
-    raise RuntimeError("Can't run collision_example.py if the collision module is not loaded!")
-
-## Module needs to be initialized before using. We probably want to call this in some common startup routine.
-CollisionModule.initModule()
-
+CollisionModule = WallGo.loadCollisionModule()
 
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.CollisionManager()
@@ -102,8 +98,24 @@ collisionManager.addParticle( constructPybindParticle(topQuark, temperatureHack)
 collisionManager.addParticle( constructPybindParticle(gluon, temperatureHack) )
 collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHack) )
 
+## Set input/output paths
+scriptLocation = pathlib.Path(__file__).parent.resolve()
+
+collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
+collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements_QCD.txt"))
+
+## Configure integration. Can skip this step if you're happy with the defaults
+integrationOptions = CollisionModule.IntegrationOptions()
+integrationOptions.bVerbose = True
+integrationOptions.maxTries = 50
+integrationOptions.calls = 50000
+integrationOptions.relativeErrorGoal = 1e-1
+integrationOptions.absoluteErrorGoal = 1e-8
+
+collisionManager.configureIntegration(integrationOptions)
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
 basisSize = 5
 
-collisionManager.calculateCollisionIntegrals(basisSize, bVerbose=True)
+## Computes collisions for all out-of-eq particles specified above
+collisionManager.calculateCollisionIntegrals(basisSize, True)

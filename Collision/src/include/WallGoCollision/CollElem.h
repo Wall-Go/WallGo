@@ -360,7 +360,7 @@ private:
 
 */
 
-}
+} // namespace
 
 
 #endif // header guard
