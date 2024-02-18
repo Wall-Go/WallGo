@@ -303,5 +303,6 @@ class FreeEnergy(InterpolatableFunction):
 
         # Now to construct the interpolation
         print(f"--- Creating interpolation table of length={len(T_full)}---")
-        result = np.concatenate((field_full, f_full), axis=1)
+        result = np.hstack((field_full, f_full))
+        print(f"{T_full.shape=}, {field_full.shape=}, {f_full.shape=}, {result.shape=}")
         self.newInterpolationTableFromValues(T_full, result)

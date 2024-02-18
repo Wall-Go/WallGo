@@ -220,6 +220,8 @@ class WallGoManager:
         print("---------- starting testing tracePhaseIVP new code ----------")
         fHighTIVP = copy.deepcopy(fHighT)
         fHighTIVP.tracePhaseIVP(TMin, TMax, dT)
+        fLowTIVP = copy.deepcopy(fLowT)
+        fLowTIVP.tracePhaseIVP(TMin, TMax, dT)
         n_test = 10
         diff_phase = 0
         diff_Veff = 0
@@ -227,14 +229,14 @@ class WallGoManager:
             T = TMin + i / (10 - 1) * (min(TMax, fHighT.maxPossibleTemperature) - TMin)
             old = fHighT(T)
             new = fHighTIVP(T)
+            print(f"{T=}, {old.shape=}, {new.shape=}")
             diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
             diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
-        fLowTIVP = copy.deepcopy(fLowT)
-        fLowTIVP.tracePhaseIVP(TMin, TMax, dT)
         for i in range(10):
             T = TMin + i / (10 - 1) * (min(TMax, fLowTIVP.maxPossibleTemperature) - TMin)
             old = fLowT(T)
             new = fLowTIVP(T)
+            print(f"{T=}, {old.shape=}, {new.shape=}")
             diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
             diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
         time_IVP_method = time.time() - start_time
