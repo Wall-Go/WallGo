@@ -107,41 +107,9 @@ class EffectivePotential_Yukawa(EffectivePotential):
 
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
         self.num_boson_dof = 29 
-        self.num_fermion_dof = 90 
+        self.num_fermion_dof = 90
 
 
-        """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
-        In real applications we recommend using the WallGo default implementations.
-        """
-        self._configureBenchmarkIntegrals()
-
-
-    def _configureBenchmarkIntegrals(self):
-        
-        ## Load custom interpolation tables for Jb/Jf. 
-        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
-        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
-        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
-        
-        self.integrals.Jb.disableAdaptiveInterpolation()
-        self.integrals.Jf.disableAdaptiveInterpolation()
-
-        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
-        => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
-        at the upper limit.
-        """
-
-        from WallGo.InterpolatableFunction import EExtrapolationType
-        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
-        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
-    
 
     ## ---------- EffectivePotential overrides. 
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
