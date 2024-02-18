@@ -94,8 +94,8 @@ jobs:
           cmake --install ${{ steps.strings.outputs.collision-build-dir }}
           
       - name: Run Collision QCD examples
-        run: cd ${{ steps.strings.outputs.collision-root-dir }}/examples && ./bin/QCD && cd ../..
+        run: cd ${{ steps.strings.outputs.collision-root-dir }}/examples && ./bin/QCD
 
       - name: Test with pytest
       # Let's have -s flag for showing prints etc, can be useful for debugging
-        run: cd pytest -vs
+        run: cd ${{ github.workspace }} && pytest -vs
