@@ -15,29 +15,8 @@
 #include <pybind11/stl.h>
 
 
-namespace pythonModule 
+namespace wallgo
 {
-    bool bInitialized = false;
-
-    /* Initialization function. This should be called from Python before doing anything else with the module.
-    * Do things like initial allocs here.
-    */
-    void initModule() 
-    {
-
-        // Already initialized?
-        if (pythonModule::bInitialized) 
-        {
-            std::cout << "! Module already initialized, doing nothing\n";
-            return;
-        }
-
-        gslWrapper::initializeRNG();
-
-        pythonModule::bInitialized = true;
-    }
-}
-
 
 /* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
 But seems hard to dictate when/how this should be called in Python context.
@@ -51,15 +30,7 @@ class CollisionPython final : public CollisionManager
 
 public: 
 
-    CollisionPython() : CollisionManager() 
-    {
-        if (!pythonModule::bInitialized)
-        {
-            std::cerr << "Error: Collision constructor called, but the module has not been initialized. Please call initModule().\n";
-            std::cerr << "This error is unrecoverable!" << std::endl;
-            exit(111);
-        }
-    }
+    CollisionPython() : CollisionManager() {}
 
 protected:
 
@@ -79,20 +50,13 @@ protected:
 };
 
 
-
 // Module definition. This block gets executed when the module is imported.
 PYBIND11_MODULE(WallGoCollisionPy, m) 
 {
 
     namespace py = pybind11;
 
-    // Bind variable
-    m.attr("bInitialized") = pythonModule::bInitialized;
-
-    // Bind initialization function
-    m.def("initModule", &pythonModule::initModule,
-        "Initialize the module. This needs to be called before using the module for anything."); 
-
+    gslWrapper::initializeRNG();
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
@@ -120,6 +84,16 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
     );
 
+    // Bind IntegrationOptions struct
+    py::class_<IntegrationOptions>(m, "IntegrationOptions")
+        .def(py::init<>())
+        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum)
+        .def_readwrite("calls", &IntegrationOptions::calls)
+        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
+        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
+        .def_readwrite("maxTries", &IntegrationOptions::maxTries)
+        .def_readwrite("bVerbose", &IntegrationOptions::bVerbose)
+        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic);
 
     //*********** Bind functions of the main control class
 
@@ -146,11 +120,30 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "   basisSize (unsigned int): Polynomial basis size.\n"
         "   verbose = false (bool): Floods stdout with intermediate results. For debugging only.\n\n";
 
+    std::string usage_setOutputDirectory =
+        "Set output directory for collision integral results.\n"
+        "Args:\n"
+        "   path (string)";
+
+    std::string usage_setMatrixElementFile =
+        "Specify file path where matrix elements are read from.\n"
+        "Args:\n"
+        "   path (string)";
+
+    std::string usage_configureIntegration =
+        "Specify options for the integration routine.\n"
+        "Args:\n"
+        "   options (IntegrationOptions)";
 
     py::class_<CollisionPython>(m, "CollisionManager")
         .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
-        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
+        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str())
+        .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
+        .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
+        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
 
 }
+
+} // namespace
