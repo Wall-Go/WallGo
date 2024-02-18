@@ -58,8 +58,8 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 CollisionManager::CollisionManager()
 {
     // Set default options
-    setOutputDirectory(""); // current work dir
-    setMatrixElementFile("MatrixElements.txt");
+    outputDirectory = std::filesystem::current_path();
+    matrixElementFile = std::filesystem::path("MatrixElements.txt");
 
     integrationOptions.bVerbose = false;
     integrationOptions.calls = 50000;
@@ -237,24 +237,23 @@ void CollisionManager::setOutputDirectory(const std::string &directoryName)
         }
         catch (const fs::filesystem_error& e)
         {
-            std::cerr << "Failed to create collision output dir:" << directoryName 
+            std::cerr << "Failed to create collision output dir: " << dir.string() 
                 << ". Error was: " << e.what() << std::endl;
             return;
         }
     }
 
-    outputDirectory = directoryName;
+    outputDirectory = dir;
 }
 
 void CollisionManager::setMatrixElementFile(const std::string &filePath)
 {
-    matrixElementFile = filePath;
+    matrixElementFile = std::filesystem::path(filePath);;
     // Check that the file exists. Failure here is non-fatal but not good either
-    std::filesystem::path file(filePath);
-
-    if (!std::filesystem::exists(file))
+    if (!std::filesystem::exists(matrixElementFile))
     {
-        std::cerr << "Can't find matrix element file " << filePath << "! Trying to proceed anyway." << std::endl;
+        std::cerr << "Can't find matrix element file " << matrixElementFile.string() 
+            << "! Trying to proceed anyway." << std::endl;
     }
     
 }
@@ -285,7 +284,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
             
             CollisionIntegral4 collisionIntegral(basisSize);
             std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), 
-                matrixElementFile, bVerbose);
+                matrixElementFile.string(), bVerbose);
             
             for (const CollElem<4> &elem : collisionElements)
             {
@@ -300,7 +299,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
             
             outputPath = outputPath / fileNameBase;
 
-            H5::H5File h5File(outputPath, H5F_ACC_TRUNC);
+            H5::H5File h5File(outputPath.string(), H5F_ACC_TRUNC);
 
             H5Metadata metadata;
             metadata.basisSize = basisSize;

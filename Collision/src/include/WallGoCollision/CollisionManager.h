@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <chrono>
+#include <filesystem>
 
 #include "CollElem.h"
 #include "ParticleSpecies.h"
@@ -104,8 +105,8 @@ private:
     std::chrono::duration<double> elapsedTime;
 
     IntegrationOptions integrationOptions;
-    std::string outputDirectory;
-    std::string matrixElementFile;
+    std::filesystem::path outputDirectory;
+    std::filesystem::path matrixElementFile;
 };
 
 
