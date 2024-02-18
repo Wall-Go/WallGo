@@ -88,7 +88,7 @@ class YukawaModel(GenericModel):
     
         modelParameters = {}
 
-        modelParameters["m_b"] = inputParameters["m_b"]
+        modelParameters["msq"] = inputParameters["msq"]
         modelParameters["g"] = inputParameters["g"]
         modelParameters["lambda"] = inputParameters["lambda"]
         modelParameters["y"] = inputParameters["y"]
@@ -120,39 +120,20 @@ class EffectivePotential_Yukawa(EffectivePotential):
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
-        v, x = fields.GetField(0), fields.GetField(1)
+        v = fields.GetField(0)
 
         msq = self.modelParameters["msq"]
-        b2 = self.modelParameters["b2"]
+        g = self.modelParameters["g"]
         lam = self.modelParameters["lambda"]
-        b4 = self.modelParameters["b4"]
-        a2 = self.modelParameters["a2"]
+        y = self.modelParameters["y"]
 
-        RGScale = self.modelParameters["RGScale"]
+        sRes = g * temperature**2 / 24
+        msqRes = msq + (lam + 4 * y**2) * temperature**2 / 24
 
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
+        # resummed potential
+        VRes = sRes*v + 0.5*msqRes*v**2 + g*v**3 / 6 + 0.25*lam*v**4
 
-        # tree level potential
-        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
-
-        # From Philipp. @todo should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
-
-
-        VTotal = (
-            V0 
-            + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale) 
-            + self.V1T(bosonStuff, fermionStuff, temperature)
-        )
-
-        return VTotal
+        return VRes
     
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
@@ -171,160 +152,6 @@ class EffectivePotential_Yukawa(EffectivePotential):
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
 
 
-    ## High-T stuff commented out for now
-    """
-    ## Evaluate the potential in high-T approx (but keep 4D units)
-    def evaluateHighT(self, fields: np.ndarray[float], temperature: float) -> complex:
-
-        v = fields[0] # phi ~ 1/sqrt(2) (0, v)
-        x = fields[1] # just S -> S + x 
-        T = temperature
-
-        # 4D units
-        thermalParameters = self.getThermalParameters(temperature)
-        
-        msq = thermalParameters["msq"]
-        lam = thermalParameters["lambda"]
-        b2 = thermalParameters["b2"]
-        b4 = thermalParameters["b4"]
-        a2 = thermalParameters["a2"]
-        
-
-        # tree level potential
-        V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 * x**2
-
-        ## @todo should have something like a static class just for defining loop integrals. NB: m^2 can be negative for scalars so make it complex
-        J3 = lambda msq : -(msq + 0j)**(3/2) / (12.*np.pi) * T # keep 4D units
-
-        ## Cheating a bit here and just hardcoding gauge/"goldstone" masses
-        mWsq = thermalParameters["g2"]**2 * v**2 / 4.
-        mZsq = (thermalParameters["g1"]**2 + thermalParameters["g2"]**2) * v**2 / 4.
-        mGsq = msq + lam*v**2 + 0.5*a2*x**2
-
-
-        ## Scalar mass matrix needs diagonalization, just doing it manually here
-        # matrix ( a, b // b, c)
-
-        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-        
-    
-        # NLO 1-loop correction in Landau gauge. So g^3, Debyes are integrated out by getThermalParameters
-        V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + 3.*J3(mGsq) + J3(msqEig1) + J3(msqEig2)
-
-        VTotal = V0 + V1
-        return VTotal
-    
-
-    ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
-    def getThermalParameters(self, temperature: float) -> dict[str, float]:
-        T = temperature
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        yt = self.modelParameters["yt"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-        
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
-        ## LO matching: only masses get corrected
-        thermalParameters = self.modelParameters.copy()
-
-        thermalParameters["msq"] = msq + T**2 / 16. * (3. * g2**2 + g1**2 + 4.*yt**2 + 8.*lam) + T**2 * a2 / 24.
-
-        thermalParameters["b2"] = b2 + T**2 * (1./6. *a2 + 1./4. *b4)
-
-        # how many Higgs doublets / fermion generations
-        Nd = 1
-        Nf = 3
-
-        ## Debye masses squared (U1, SU2) 
-        mDsq1 = g1**2 * T**2 * (Nd/6. + 5.*Nf/9.)
-        mDsq2 = g2**2 * T**2 * ( (4. + Nd) / 6. + Nf/3.)
-        mD1 = np.sqrt(mDsq1)
-        mD2 = np.sqrt(mDsq2)
-
-        ## Let's also integrate out A0/B0
-        h3 = g2**2 / 4.
-        h3p = g2**2 / 4.
-        h3pp = g2*g1 / 2.
-
-        thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
-        thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
-
-        # skipping corrections to gauge couplings because those are not needed at O(g^3)
-
-        # But adding these as Benoit benchmark needs them explicitly...?
-        thermalParameters["mDsq1"] = mDsq1
-        thermalParameters["mDsq2"] = mDsq2
-
-        return thermalParameters
-    """
-
-    def boson_massSq(self, fields: Fields, temperature):
-
-        v, x = fields.GetField(0), fields.GetField(1)
-
-        # TODO: numerical determination of scalar masses from V0
-
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-        
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
-        
-        # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-
-        mWsq = g2**2 * v**2 / 4.
-        mZsq = (g1**2 + g2**2) * v**2 / 4.
-        # "Goldstones"
-        mGsq = msq + lam*v**2 + 0.5*a2*x**2
-
-        # this feels error prone:
-
-        # h, s, chi, W, Z
-        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom = np.array([1,1,3,6,3]) 
-        c = np.array([3/2,3/2,3/2,5/6,5/6])
-
-        return massSq, degreesOfFreedom, c
-    
-
-    def fermion_massSq(self, fields: Fields, temperature):
-
-        v = fields.GetField(0)
-
-        # Just top quark, others are taken massless
-        yt = self.modelParameters["yt"]
-        mtsq = yt**2 * v**2 / 2
-    
-        # @todo include spins for each particle
-
-        massSq = np.stack((mtsq,), axis=-1)
-        degreesOfFreedom = np.array([12])
-        
-        return massSq, degreesOfFreedom
-
-
-
 def main():
 
     WallGo.initialize()
@@ -339,7 +166,7 @@ def main():
 
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
-        "m_b" : 1,
+        "msq" : 1,
         "g" : -0.79,
         "lambda" : 0.069,
         "y" : 0.24
