@@ -28,7 +28,7 @@ def loadCollisionModule():
 
             sys.path.append(collisionModulePath)
 
-            moduleName = "CollisionModule"
+            moduleName = "WallGoCollisionPy"
             
             CollisionModule = importlib.import_module(moduleName)
             print("Loaded module [%s]" % moduleName)

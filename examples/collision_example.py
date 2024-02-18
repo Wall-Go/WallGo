@@ -1,7 +1,6 @@
 
 from WallGo.CollisionModuleLoader import CollisionModule, collisionModuleLoaded
 from WallGo import Particle
-from WallGo import getSafePathToResource
 
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
@@ -43,18 +42,11 @@ if (not collisionModuleLoaded):
     raise RuntimeError("Can't run collision_example.py if the collision module is not loaded!")
 
 ## Module needs to be initialized before using. We probably want to call this in some common startup routine.
-# Argument is the config file name, we'll eventually want to read this from user input.
-collisionDefaultConfig = getSafePathToResource("Config/CollisionDefaults.ini")
-CollisionModule.initModule(collisionDefaultConfig)
+CollisionModule.initModule()
 
-
-## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 11
 
 ## Construct a "control" object for collision integrations
-collisionManager = CollisionModule.Collision(polynomialBasisSize)
-
-
+collisionManager = CollisionModule.CollisionManager()
 
 """
 Define couplings (Lagrangian parameters)
@@ -111,6 +103,7 @@ collisionManager.addParticle( constructPybindParticle(gluon, temperatureHack) )
 collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHack) )
 
 
-## TODO specify file name/path where the matrix elements will be read from? Or better, make a config file for it. Right now it's just hardcoded in
+## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+basisSize = 5
 
-collisionManager.calculateCollisionIntegrals()
+collisionManager.calculateCollisionIntegrals(basisSize, bVerbose=True)

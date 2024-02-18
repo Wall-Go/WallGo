@@ -22,7 +22,7 @@ namespace pythonModule
     /* Initialization function. This should be called from Python before doing anything else with the module.
     * Do things like initial allocs here.
     */
-    void initModule(const std::string& configFileName) 
+    void initModule() 
     {
 
         // Already initialized?
@@ -50,7 +50,7 @@ class CollisionPython final : public CollisionManager
 {
 
 public: 
-    // Just call parent constructor
+
     CollisionPython() : CollisionManager() 
     {
         if (!pythonModule::bInitialized)
@@ -81,7 +81,7 @@ protected:
 
 
 // Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(CollisionModule, m) 
+PYBIND11_MODULE(WallGoCollisionPy, m) 
 {
 
     namespace py = pybind11;
@@ -90,15 +90,14 @@ PYBIND11_MODULE(CollisionModule, m)
     m.attr("bInitialized") = pythonModule::bInitialized;
 
     // Bind initialization function
-    m.def("initModule", &pythonModule::initModule, py::arg("configFileName") = "./config.ini",
-        "Initialize the module. This needs to be called before using the module for anything. Takes path/name of the config file as argument (default: config.ini)"); 
+    m.def("initModule", &pythonModule::initModule,
+        "Initialize the module. This needs to be called before using the module for anything."); 
 
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
         .value("BOSON", EParticleType::BOSON)
         .value("FERMION", EParticleType::FERMION)
-        // Add more enum values here if needed
         .export_values();
     
 
@@ -126,9 +125,7 @@ PYBIND11_MODULE(CollisionModule, m)
 
     // READMEs for the functions
     std::string usage_CollisionManager = 
-        "Constructor for CollisionManager class. \n\n"
-        "Args:\n"
-        "    polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n";
+        "Constructor for CollisionManager class.\n";
 
     std::string usage_addParticle =
         "Add a new particle species \n\n"
@@ -144,7 +141,10 @@ PYBIND11_MODULE(CollisionModule, m)
     std::string usage_calculateCollisionIntegrals =
         "Calculates all collision integrals with the currently defined particle content and stores in .hdf5 file."
         "This is the main computation routine and will typically run for a while."
-        "Call only after specifying all particles and couplings with addParticle, addCoupling\n\n";
+        "Call only after specifying all particles and couplings with addParticle, addCoupling.\n\n"
+        "Args:\n"
+        "   basisSize (unsigned int): Polynomial basis size.\n"
+        "   verbose = false (bool): Floods stdout with intermediate results. For debugging only.\n\n";
 
 
     py::class_<CollisionPython>(m, "CollisionManager")
