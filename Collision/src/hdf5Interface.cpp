@@ -5,6 +5,8 @@
 
 #include "hdf5Interface.h"
 
+namespace wallgo
+{
 
 void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata) {
 
@@ -94,3 +96,5 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 	}
 
 }
+
+} // namespace

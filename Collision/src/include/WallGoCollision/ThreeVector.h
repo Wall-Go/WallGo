@@ -4,6 +4,9 @@
 #include <assert.h>
 #include <cmath>
 
+namespace wallgo
+{
+
 // Class for describing 3-vectors. Consider using an established library for maximum performance
 class ThreeVector
 {
@@ -59,8 +62,8 @@ public:
         return x*other.x + y*other.y + z*other.z;
     }
 
-
-
 };
+
+} // namespace
 
 #endif

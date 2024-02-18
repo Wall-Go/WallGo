@@ -11,6 +11,9 @@
     #include <omp.h>
 #endif
 
+namespace wallgo
+{
+
 // Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
 void interpretMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression)
 {
@@ -128,7 +131,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
         int localIntegralCount = 0;
         // Report when thread0 has computed this many integrals. NB: totalIntegralCount is the full count including all out-of-eq pairs
         int standardProgressInterval = totalIntegralCount / 20 / numThreads; // every 20%
-        standardProgressInterval = globalFuncts::clamp<int>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
+        standardProgressInterval = wallgo::clamp<int>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
 
         int progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
 
@@ -175,7 +178,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
                     // Correct count is calculated at the end of this function
                     const int backupCount = computedIntegralCount;
                     computedIntegralCount += localIntegralCount * numThreads;
-                    computedIntegralCount = globalFuncts::clamp<int>(computedIntegralCount, localIntegralCount, totalIntegralCount);
+                    computedIntegralCount = wallgo::clamp<int>(computedIntegralCount, localIntegralCount, totalIntegralCount);
 
                     reportProgress();
                     computedIntegralCount = backupCount;
@@ -475,3 +478,5 @@ void CollisionManager::findOutOfEquilibriumParticles()
         }
     }
 }
+
+} // namespace

@@ -9,6 +9,9 @@
 
 #include "gslWrapper.h"
 
+namespace wallgo
+{
+
 // This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
 IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
 {
@@ -344,3 +347,5 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
     constexpr double pi2Pow58 = (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * 8.0;
     return fullIntegrand / pi2Pow58;
 }
+
+} // namespace

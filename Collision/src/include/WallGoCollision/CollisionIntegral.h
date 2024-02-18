@@ -10,6 +10,10 @@
 #include "Common.h"
 #include "PolynomialBasis.h"
 
+
+namespace wallgo
+{
+
 /* This holds data for computing the "kinematic" factor in a collision integral. The kinematic factor is: 
     p2^2/E2 * p3^2/E3 * theta(E4) * delta(g(p3))
 where the delta function enforces momentum conservation. Standard delta-trick expresses it as sum_i |1/g'(p3)| where we sum over roots of g(p3) = 0.
@@ -146,6 +150,8 @@ private:
     std::vector<CollElem<4>> collisionElements_nonUltrarelativistic;
 };
 
+
+}
 
 
 #endif // header guard

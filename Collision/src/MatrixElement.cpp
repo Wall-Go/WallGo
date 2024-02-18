@@ -8,6 +8,8 @@
 #include "CollElem.h"
 #include "CollisionIntegral.h"
 
+namespace wallgo
+{
 
 MatrixElement::MatrixElement() {
 
@@ -109,3 +111,5 @@ void MatrixElement::testExpression() {
         std::cerr << expression << "\n";
     }
 }
+
+} // namespace

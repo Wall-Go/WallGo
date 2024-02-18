@@ -12,7 +12,7 @@
 
 #include "WallGoCollision/WallGoCollision.h"
 
-void setupQCD(CollisionManager& manager) {
+void setupQCD(wallgo::CollisionManager& manager) {
 
 	const double gs = 1.2279920495357861;
 
@@ -29,9 +29,9 @@ void setupQCD(CollisionManager& manager) {
 	const bool bUltraRelativistic = true;
 
 	// Take top and gluon to be out-of-equilibrium
-    ParticleSpecies topQuark("top", EParticleType::FERMION, /*inEquilibrium*/false, msqVacuum, mq2, bUltraRelativistic);
-    ParticleSpecies gluon("gluon", EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
-	ParticleSpecies lightQuark("quark", EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
+    wallgo::ParticleSpecies topQuark("top", wallgo::EParticleType::FERMION, /*inEquilibrium*/false, msqVacuum, mq2, bUltraRelativistic);
+    wallgo::ParticleSpecies gluon("gluon", wallgo::EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
+	wallgo::ParticleSpecies lightQuark("quark", wallgo::EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	manager.addParticle(topQuark);
 	manager.addParticle(gluon);
@@ -47,9 +47,9 @@ void setupQCD(CollisionManager& manager) {
 int main() 
 {
 
-    gslWrapper::initializeRNG();
+    wallgo::gslWrapper::initializeRNG();
 
-    CollisionManager manager;
+    wallgo::CollisionManager manager;
 
 	// Specify output directory (relative or absolute path). Defaults to current directory
 	manager.setOutputDirectory("output");
@@ -58,7 +58,7 @@ int main()
 
 	// Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
 	// Here we set everything manually to show how it's done
-	IntegrationOptions options;
+	wallgo::IntegrationOptions options;
 	options.calls = 50000;
 	options.maxTries = 50;
 	options.maxIntegrationMomentum = 20;
@@ -74,7 +74,7 @@ int main()
 
     manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/true);
 
-    gslWrapper::clearRNG();
+    wallgo::gslWrapper::clearRNG();
     
     return 0;
 }

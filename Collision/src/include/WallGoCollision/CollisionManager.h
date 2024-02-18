@@ -13,6 +13,9 @@
 #include "hdf5Interface.h"
 
 
+namespace wallgo
+{
+
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms */
 class CollisionManager {
@@ -108,6 +111,8 @@ private:
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 };
+
+} // namespace
 
 
 #endif // header guard

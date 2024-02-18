@@ -17,6 +17,9 @@
 * at least for now. Instead, just def. class for Chebyshev polynomials only 
 */
 
+namespace wallgo 
+{
+
 class Chebyshev {
 
 private:
@@ -64,5 +67,7 @@ public:
     inline std::size_t getBasisSize() const { return N; }
 
 };
+
+} // namespace
 
 #endif // header guard

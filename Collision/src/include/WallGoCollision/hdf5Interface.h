@@ -7,7 +7,8 @@
 
 #include "Common.h"
 
-
+namespace wallgo
+{
 
 // Struct for holding metadata about collision tensor. Default values are set to prevent exceptions in HDF5 routines
 struct H5Metadata {
@@ -26,5 +27,7 @@ void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetNa
 
 // Write metadata struct to open H5 file. This is done using HDF5 attributes
 void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata);
+
+} // namespace
 
 #endif // header guard

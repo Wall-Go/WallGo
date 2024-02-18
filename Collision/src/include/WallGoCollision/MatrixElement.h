@@ -7,6 +7,8 @@
 
 #include "muParser.h" // math expression parser
 
+namespace wallgo
+{
 
 class MatrixElement {
 
@@ -48,5 +50,7 @@ private:
     // Tests that our expression is valid and can be evaluated by the parser
     void testExpression();
 };
+
+} // namespace
 
 #endif // header guard

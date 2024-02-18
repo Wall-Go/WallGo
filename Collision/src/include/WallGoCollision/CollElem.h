@@ -11,6 +11,9 @@
 #include "ParticleSpecies.h"
 #include "MatrixElement.h"
 
+namespace wallgo
+{
+
 struct Mandelstam
 {
 	double s, t, u;
@@ -357,6 +360,7 @@ private:
 
 */
 
+}
 
 
 #endif // header guard
