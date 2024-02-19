@@ -6,6 +6,7 @@ from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM
 from .EOM import WallParams
+from .WallGoExceptions import *
 
 from .Particle import Particle
 from .Fields import Fields

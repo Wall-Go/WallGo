@@ -7,7 +7,7 @@ from .Particle import Particle
 from .EffectivePotential import EffectivePotential
 from .GenericModel import GenericModel
 from .Thermodynamics import Thermodynamics
-from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
+from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .EOM import EOM
 from .Grid import Grid

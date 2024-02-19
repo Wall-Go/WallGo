@@ -3,6 +3,7 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
 from .helpers import gammaSq
 
+from .WallGoExceptions import WallGoError
 
 class HydroTemplateModel:
     """
@@ -44,8 +45,16 @@ class HydroTemplateModel:
         pHighT,pLowT = thermodynamics.pHighT(thermodynamics.Tnucl),thermodynamics.pLowT(thermodynamics.Tnucl)
         wHighT,wLowT = thermodynamics.wHighT(thermodynamics.Tnucl),thermodynamics.wLowT(thermodynamics.Tnucl)
         eHighT,eLowT = wHighT-pHighT,wLowT-pLowT
+
+        ## Calculate sound speed squared in both phases, needs to be > 0
         self.cb2 = thermodynamics.csqLowT(thermodynamics.Tnucl)
         self.cs2 = thermodynamics.csqHighT(thermodynamics.Tnucl)
+
+        if (self.cb2 < 0 or self.cs2 < 0):
+            raise WallGoError("Invalid sound speed at nucleation temperature",
+                              data = {"csqLowT" : self.cb2, "csqHighT" : self.cs2})
+
+
         self.alN = (eHighT-eLowT-(pHighT-pLowT)/self.cb2)/(3*wHighT)
         self.psiN = wLowT/wHighT
         self.cb = np.sqrt(self.cb2)
