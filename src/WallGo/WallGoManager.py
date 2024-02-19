@@ -212,10 +212,11 @@ class WallGoManager:
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
         start_time = time.time()
-        fHighT.tracePhase(TMin, TMax, dT)
-        fLowT.tracePhase(TMin, TMax, dT)
-        time_previous_method = time.time() - start_time
+        fHighT.tracePhaseIVP(TMin, TMax, dT)
+        fLowT.tracePhaseIVP(TMin, TMax, dT)
+        #time_previous_method = time.time() - start_time
         start_time = time.time()
+        """
         ####### QUICK LOOK AT NEW FUNCTIONS
         print("---------- starting testing tracePhaseIVP new code ----------")
         fHighTIVP = copy.deepcopy(self.thermodynamics.freeEnergyHigh)
@@ -243,14 +244,13 @@ class WallGoManager:
         print(f"{diff_phase=}, {diff_Veff=}")
         print(f"{time_previous_method=}s, {time_IVP_method=}s")
         print("---------- finished testing tracePhaseIVP code ----------")
-        #exit()
+        """
 
         ## If a phase became unstable we need to reduce our T range
-        if (fLowT.minPossibleTemperature > TMin): #Does this already work?
-            TMin = fLowT.minPossibleTemperature
+        TMin = max(fLowT.minPossibleTemperature, fHighT.minPossibleTemperature, TMin)
+        TMax = min(fLowT.maxPossibleTemperature, fHighT.maxPossibleTemperature, TMax)
 
-        if (fHighT.maxPossibleTemperature < TMax): #Does this already work?
-            TMax = fHighT.maxPossibleTemperature
+        print(f"Temperature range from tracePhaseIVP: ({TMin}, {TMax})")
 
         self.TMin, self.TMax = TMin, TMax
 
