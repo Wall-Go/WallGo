@@ -187,7 +187,7 @@ class FreeEnergy(InterpolatableFunction):
         tol_absolute = rTol * (0.01 * T0 ** 4)
 
         def ode_function(temperature, field):
-            # HACK! Fix the [0] in the next two lines.
+            # ode at each temp is a linear matrix equation A*x=b
             A = self.effectivePotential.deriv2Field2(field, temperature)
             b = -self.effectivePotential.deriv2FieldT(field, temperature)
             return scipylinalg.solve(A, b, assume_a="sym")
@@ -218,11 +218,14 @@ class FreeEnergy(InterpolatableFunction):
                 test_hierarchy = min(abs(eigs)) / max(abs(eigs)) - min_hierarchy
                 return min(test_zero, test_small, test_hierarchy)
 
-        endpoints = [TMin, TMax]
+        # arrays to store results
+        TList = np.full(1, T0)
+        fieldList = np.full((1, phase0.NumFields()), Fields((phase0)))
+        VeffList = np.full((1, 1), [V0])
+
+        # iterating over up and down integration directions
+        endpoints = [TMax, TMin]
         for direction in [0, 1]:
-            TList = np.empty(0, dtype=float)
-            fieldList = np.empty((0, phase0.NumFields()), dtype=float)
-            VeffList = np.empty((0, 1), dtype=float)
             TEnd = endpoints[direction]
             print(f"--- Integrating from {T0=} to {TEnd=} ---")
             ode = scipyint.RK45(
@@ -239,14 +242,9 @@ class FreeEnergy(InterpolatableFunction):
                     ode.step()
                 except RuntimeWarning as err:
                     print(err.args[0] + f" at T={ode.t}")
-                    if direction == 0:
-                        self.minPossibleTemperature = ode.t
-                    else:
-                        self.maxPossibleTemperature = ode.t
                     break
                 if spinodal_event(ode.t, ode.y) <= 0:
                     print(f"Phase ends at T={ode.t}")
-                    self.maxPossibleTemperature = ode.t
                     break
                 # compute Veff
                 Veff_t = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
@@ -257,28 +255,29 @@ class FreeEnergy(InterpolatableFunction):
                 # check if step size is still okay to continue
                 if ode.step_size < 0.01 * rTol * T0:
                     print(f"Step size shrunk too small at T={ode.t}")
-                    if direction == 0:
-                        self.minPossibleTemperature = ode.t
-                    else:
-                        self.maxPossibleTemperature = ode.t
                     break
             if direction == 0:
-                if len(TList) > 2:
-                    TFullList = np.flip(TList, 0)
-                    fieldFullList = np.flip(fieldList, 0)
-                    VeffFullList = np.flip(VeffList, 0)
-                else:
-                    TList = np.empty(0, dtype=float)
-                    fieldList = np.empty((0, phase0.NumFields()), dtype=float)
-                    VeffList = np.empty(0, dtype=float)
+                # populating results array
+                TFullList = TList
+                fieldFullList = fieldList
+                VeffFullList = VeffList
+                # making new empty array for downwards integration
+                TList = np.empty(0, dtype=float)
+                fieldList = np.empty((0, phase0.NumFields()), dtype=float)
+                VeffList = np.empty((0, 1), dtype=float)
             else:
-                if len(TList) > 2:
-                    TFullList = np.append(TFullList, TList, axis=0)
-                    fieldFullList = np.append(fieldFullList, fieldList, axis=0)
-                    VeffFullList = np.append(VeffFullList, VeffList, axis=0)
-                elif len(TFullList) <= 2:
+                if len(TList) > 1:
+                    # combining up and down integrations
+                    TFullList = np.append(np.flip(TList, 0), TFullList, axis=0)
+                    fieldFullList = np.append(np.flip(fieldList, axis=0), fieldFullList, axis=0)
+                    VeffFullList = np.append(np.flip(VeffList, axis=0), VeffFullList, axis=0)
+                elif len(TFullList) <= 1:
                     # Both up and down lists are too short
                     raise RuntimeError("Failed to trace phase")
+
+        # overwriting temperature range
+        self.minPossibleTemperature = min(TFullList)
+        self.maxPossibleTemperature = max(TFullList)
 
         # Now to construct the interpolation
         print(f"--- Creating interpolation table of length={len(TFullList)}---")
