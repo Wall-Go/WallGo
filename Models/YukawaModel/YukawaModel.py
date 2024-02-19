@@ -41,7 +41,7 @@ class YukawaModel(GenericModel):
         
         ## === Top quark ===
         psiMsqVacuum = lambda fields: self.modelParameters["y"]**2 * fields.GetField(0)**2
-        psiMsqThermal = lambda T: 0     #TODO: What is this? 
+        psiMsqThermal = lambda T: 0.     #TODO: What is this? 
 
         psi = Particle("top", 
                             msqVacuum = psiMsqVacuum,
@@ -131,9 +131,9 @@ class EffectivePotential_Yukawa(EffectivePotential):
         msqRes = msq + (lam + 4 * y**2) * temperature**2 / 24
 
         # resummed potential
-        VRes = sRes*v + 0.5*msqRes*v**2 + g*v**3 / 6 + 0.25*lam*v**4
+        VRes = sRes*v + 0.5*msqRes*v**2 + g*v**3 / 6 + lam*v**4 / 24
 
-        return VRes
+        return VRes + self.constantTerms(temperature)
     
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
@@ -195,10 +195,10 @@ def main():
     """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
     Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
     """
-    Tn = 11. ## nucleation temperature
+    Tn = 14.4 ## nucleation temperature
     phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                    phaseLocation1 = WallGo.Fields( [2.5] ), 
-                                    phaseLocation2 = WallGo.Fields( [26.2] ))
+                                    phaseLocation1 = WallGo.Fields( [2.569808654373484] ), 
+                                    phaseLocation2 = WallGo.Fields( [22.922206426405857] ))
     
 
     """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
@@ -223,7 +223,7 @@ def main():
     ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
     wallParams: WallGo.WallParams
 
-    bIncludeOffEq = True
+    bIncludeOffEq = False
     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
     startTime = process_time()
