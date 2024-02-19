@@ -9,10 +9,11 @@ Easiest way of handling the dependencies is with Conan (version > 2.0):
 ```
 conan install . --output-folder=build --build=missing
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
-cmake --build build
-cmake --install build --config Release
+cmake --build build --config Release
+cmake --install build
 ```
 This will build and install all dependencies, a standalone C++ executable and a separate Python module that exposes the C++ code to rest of WallGo.
+Hint: We recommend installing Conan with pip. 
 
 We compile with OpenMP support by default. Use the ```-DUSE_OMP=Off``` flag if you must compile without OpenMP.
 
