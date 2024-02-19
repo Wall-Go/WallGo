@@ -312,4 +312,5 @@ class FreeEnergy(InterpolatableFunction):
             print(f"{T_full.shape=}, {Fields((field_full)).shape=}, {Veff_full.shape=}")
             raise
         print(f"{T_full.shape=}, {field_full.shape=}, {Veff_full.shape=}, {result.shape=}")
+        print(f"{result=}")
         self.newInterpolationTableFromValues(T_full, result)
