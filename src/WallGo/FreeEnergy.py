@@ -218,99 +218,74 @@ class FreeEnergy(InterpolatableFunction):
                 test_hierarchy = min(abs(eigs)) / max(abs(eigs)) - min_hierarchy
                 return min(test_zero, test_small, test_hierarchy)
 
-        print("--- Integrating up ---")
-        print(f"--- From {T0=} to {TMax=} ---")
-        ode_up = scipyint.RK23(
-            ode_function,
-            T0,
-            phase0,
-            TMax,
-            rtol=rTol,
-            atol=tol_absolute,
-            max_step=dT,
-        )
-        T_up = []
-        field_up = []
-        Veff_up = []
-        while ode_up.status == "running":
-            try:
-                ode_up.step()
-            except RuntimeWarning as err:
-                if err.args[0] != "invalid value encountered in sqrt":
-                    raise
-                else:
-                    print(err.args[0] + f" at T={ode_up.t}")
-                    self.maxPossibleTemperature = ode_up.t
+        endpoints = [TMin, TMax]
+        for direction in [0, 1]:
+            TList = np.empty(0, dtype=float)
+            fieldList = np.empty((0, phase0.NumFields()), dtype=float)
+            VeffList = np.empty((0, 1), dtype=float)
+            TEnd = endpoints[direction]
+            print(f"--- Integrating from {T0=} to {TEnd=} ---")
+            ode = scipyint.RK45(
+                ode_function,
+                T0,
+                phase0,
+                TEnd,
+                rtol=rTol,
+                atol=tol_absolute,
+                max_step=dT,
+            )
+            while ode.status == "running":
+                try:
+                    ode.step()
+                except RuntimeWarning as err:
+                    print(err.args[0] + f" at T={ode.t}")
+                    if direction == 0:
+                        self.minPossibleTemperature = ode.t
+                    else:
+                        self.maxPossibleTemperature = ode.t
                     break
-            if spinodal_event(ode_up.t, ode_up.y) <= 0:
-                print(f"Phase ends at T>={ode_up.t}")
-                self.maxPossibleTemperature = ode_up.t
-                break
-            T_up.append(ode_up.t)
-            field_up.append(ode_up.y)
-            Veff_up.append(self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t))
-            if ode_up.step_size < 0.01 * rTol * T0:
-                print(f"Step size shrunk too small at T={ode_up.t}")
-                self.maxPossibleTemperature = ode_up.t
-                break
-        print("--- Integrating down ---")
-        print(f"--- From {T0=} to {TMin=} ---")
-        ode_down = scipyint.RK23(
-            ode_function,
-            T0,
-            phase0,
-            TMin,
-            rtol=rTol,
-            atol=tol_absolute,
-            max_step=dT,
-        )
-        T_down = []
-        field_down = []
-        Veff_down = []
-        while ode_down.status == "running":
-            try:
-                ode_down.step()
-            except RuntimeWarning as err:
-                if err.args[0] != "invalid value encountered in sqrt":
-                    raise
-                else:
-                    print(err.args[0] + f" at T={ode_down.t}")
-                    self.minPossibleTemperature = ode_down.t
+                if spinodal_event(ode.t, ode.y) <= 0:
+                    print(f"Phase ends at T={ode.t}")
+                    self.maxPossibleTemperature = ode.t
                     break
-            if spinodal_event(ode_down.t, ode_down.y) <= 0:
-                print(f"Phase ends at T<={ode_down.t}")
-                self.minPossibleTemperature = ode_down.t
-                break
-            T_down.append(ode_down.t)
-            field_down.append(ode_down.y)
-            Veff_down.append(self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t))
-            if ode_down.step_size < 0.01 * rTol * T0:
-                print(f"Step size too small at T={ode_down.t}")
-                self.minPossibleTemperature = ode_down.t
-                break
-        if len(T_down) <= 2 and len(T_up) <= 2:
-            raise RuntimeError("Failed to trace phase")
-        elif len(T_down) <= 2:
-            T_full = np.array(T_up)
-            field_full = np.array(field_up)
-            Veff_full = np.array(Veff_up)
-        elif len(T_up) <= 2:
-            T_full = np.flip(np.array(T_down), 0)
-            field_full = np.flip(np.array(field_down), 0)
-            Veff_full = np.flip(np.array(Veff_down), 0)
-        else:
-            T_full = np.append(np.flip(np.array(T_down), 0), np.array(T_up), 0)
-            field_full = np.append(np.flip(np.array(field_down), 0), np.array(field_up), 0)
-            Veff_full = np.append(np.flip(np.array(Veff_down), 0), np.array(Veff_up), 0)
+                # compute Veff
+                Veff_t = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
+                # append results to lists
+                TList = np.append(TList, [ode.t], axis=0)
+                fieldList = np.append(fieldList, [ode.y], axis=0)
+                VeffList = np.append(VeffList, [Veff_t], axis=0)
+                # check if step size is still okay to continue
+                if ode.step_size < 0.01 * rTol * T0:
+                    print(f"Step size shrunk too small at T={ode.t}")
+                    if direction == 0:
+                        self.minPossibleTemperature = ode.t
+                    else:
+                        self.maxPossibleTemperature = ode.t
+                    break
+            if direction == 0:
+                if len(TList) > 2:
+                    TFullList = np.flip(TList, 0)
+                    fieldFullList = np.flip(fieldList, 0)
+                    VeffFullList = np.flip(VeffList, 0)
+                else:
+                    TList = np.empty(0, dtype=float)
+                    fieldList = np.empty((0, phase0.NumFields()), dtype=float)
+                    VeffList = np.empty(0, dtype=float)
+            else:
+                if len(TList) > 2:
+                    TFullList = np.append(TFullList, TList, axis=0)
+                    fieldFullList = np.append(fieldFullList, fieldList, axis=0)
+                    VeffFullList = np.append(VeffFullList, VeffList, axis=0)
+                elif len(TFullList) <= 2:
+                    # Both up and down lists are too short
+                    raise RuntimeError("Failed to trace phase")
 
         # Now to construct the interpolation
-        print(f"--- Creating interpolation table of length={len(T_full)}---")
-        field_full = Fields(field_full)
+        print(f"--- Creating interpolation table of length={len(TFullList)}---")
         try:
-            result = np.concatenate((field_full, Veff_full), axis=1)
+            result = np.concatenate((fieldFullList, VeffFullList), axis=1)
         except:
-            print(f"{T_full.shape=}, {Fields((field_full)).shape=}, {Veff_full.shape=}")
+            print(f"{TFullList.shape=}, {Fields((fieldFullList)).shape=}, {VeffFullList.shape=}")
             raise
-        print(f"{T_full.shape=}, {field_full.shape=}, {Veff_full.shape=}, {result.shape=}")
-        print(f"{result=}")
-        self.newInterpolationTableFromValues(T_full, result)
+        print(f"{TFullList.shape=}, {fieldFullList.shape=}, {VeffFullList.shape=}, {result.shape=}")
+        self.newInterpolationTableFromValues(TFullList, result)

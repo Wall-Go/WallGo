@@ -151,6 +151,7 @@ class InterpolatableFunction(ABC):
         xValues = np.linspace(xMin, xMax, numberOfPoints)
 
         fx = self._functionImplementation(xValues)
+        print(f"{xValues.shape=}, {fx.shape=}")
 
         self.__interpolate(xValues, fx)
 
