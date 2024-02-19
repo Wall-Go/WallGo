@@ -194,10 +194,11 @@ class WallGoManager:
 
         print(f"{hydrotemplate.alN = } {hydrotemplate.cb = } {hydrotemplate.cs = }")
 
-        _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
-
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         
+        print(hydrotemplate.vJ)
+        print(hydrotemplate.maxVelocity())
+
         _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
 
 
