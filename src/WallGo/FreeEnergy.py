@@ -184,7 +184,7 @@ class FreeEnergy(InterpolatableFunction):
         phase0 = FieldPoint(phase0[0])
 
         ## HACK! a hard-coded absolute tolerance
-        tol_absolute = 0.01 * rTol * T0 ** 4
+        tol_absolute = rTol * (0.01 * T0 ** 4)
 
         def ode_function(temperature, field):
             # HACK! Fix the [0] in the next two lines.
@@ -219,6 +219,7 @@ class FreeEnergy(InterpolatableFunction):
                 return min(test_zero, test_small, test_hierarchy)
 
         print("--- Integrating up ---")
+        print(f"--- From {T0=} to {TMax=} ---")
         ode_up = scipyint.RK45(
             ode_function,
             T0,
@@ -230,7 +231,7 @@ class FreeEnergy(InterpolatableFunction):
         )
         T_up = []
         field_up = []
-        f_up = []
+        Veff_up = []
         while ode_up.status == "running":
             try:
                 ode_up.step()
@@ -242,18 +243,19 @@ class FreeEnergy(InterpolatableFunction):
                     self.maxPossibleTemperature = ode_up.t
                     break
             if spinodal_event(ode_up.t, ode_up.y) <= 0:
-                print(f"Spinodal decomposition at T={ode_up.t}")
+                print(f"Phase ends at T>={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
             T_up.append(ode_up.t)
             field_up.append(ode_up.y)
-            f_t = self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t)
-            f_up.append(f_t)
+            Veff_t = self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t)
+            Veff_up.append(Veff_t)
             if ode_up.step_size < 0.01 * rTol * T0:
                 print(f"Step size shrunk too small at T={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
         print("--- Integrating down ---")
+        print(f"--- From {T0=} to {TMin=} ---")
         ode_down = scipyint.RK45(
             ode_function,
             T0,
@@ -276,22 +278,24 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode_down.t}")
                     self.minPossibleTemperature = ode_down.t
                     break
-            if spinodal_event(ode_up.t, ode_up.y) <= 0:
-                print(f"Spinodal decomposition at T={ode_up.t}")
+            if spinodal_event(ode_down.t, ode_down.y) <= 0:
+                print(f"Phase ends at T<={ode_down.t}")
                 self.minPossibleTemperature = ode_down.t
                 break
             T_down.append(ode_down.t)
             field_down.append(ode_down.y)
-            f_t = self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t)
-            f_down.append(f_t)
+            Veff_t = self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t)
+            f_down.append(Veff_t)
             if ode_down.step_size < 0.01 * rTol * T0:
                 print(f"Step size too small at T={ode_down.t}")
                 self.minPossibleTemperature = ode_down.t
                 break
-        if len(T_down) <= 2:
+        if len(T_down) <= 2 and len(T_up) <= 2:
+            raise RuntimeError("Failed to trace phase")
+        elif len(T_down) <= 2:
             T_full = np.array(T_up)
             field_full = np.array(field_up)
-            f_full = np.array(f_up)
+            f_full = np.array(Veff_up)
         elif len(T_up) <= 2:
             T_full = np.flip(np.array(T_down), 0)
             field_full = np.flip(np.array(field_down), 0)
@@ -299,10 +303,15 @@ class FreeEnergy(InterpolatableFunction):
         else:
             T_full = np.append(np.flip(np.array(T_down), 0), np.array(T_up), 0)
             field_full = np.append(np.flip(np.array(field_down), 0), np.array(field_up), 0)
-            f_full = np.append(np.flip(np.array(f_down), 0), np.array(f_up), 0)
+            f_full = np.append(np.flip(np.array(f_down), 0), np.array(Veff_up), 0)
 
         # Now to construct the interpolation
         print(f"--- Creating interpolation table of length={len(T_full)}---")
-        result = np.hstack((field_full, f_full))
+        field_full = Fields(field_full)
+        try:
+            result = np.concatenate((field_full, f_full), axis=1)
+        except:
+            print(f"{T_full.shape=}, {Fields((field_full)).shape=}, {f_full.shape=}")
+            raise
         print(f"{T_full.shape=}, {field_full.shape=}, {f_full.shape=}, {result.shape=}")
         self.newInterpolationTableFromValues(T_full, result)
