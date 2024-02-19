@@ -180,6 +180,8 @@ class WallGoManager:
         ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
 
+        print(f"{hydrotemplate.alN = } {hydrotemplate.cb = } {hydrotemplate.cs = }")
+
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         

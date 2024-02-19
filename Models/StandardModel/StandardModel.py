@@ -254,7 +254,7 @@ def main():
     }
 
 
-    model = StandardModel(inputParameters) #this gives an error
+    model = StandardModel(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
@@ -282,7 +282,7 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
 
-        Tn = 200. ## nucleation temperature
+        Tn = 63.1 ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
                                         phaseLocation2 = WallGo.Fields( [246.0] ))
