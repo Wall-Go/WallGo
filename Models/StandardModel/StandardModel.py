@@ -28,7 +28,6 @@ class StandardModel(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
-        print(self.modelParameters["g1"])
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
@@ -176,6 +175,7 @@ class EffectivePotentialSM(EffectivePotential):
         V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + J3(mHsq) + 3.*J3(mGsq)
 
         VTotal = V0 + V1
+
         return VTotal
 
 
@@ -198,6 +198,7 @@ class EffectivePotentialSM(EffectivePotential):
     ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:
         T = temperature
+
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
         yt = self.modelParameters["yt"]
@@ -250,7 +251,7 @@ def main():
         "MZ" : 91.1876,
         "Mt" : 173.0,
         "g3" : 1.2279920495357861,
-        "mH" : 60.0,
+        "mH" : 50.0,
     }
 
 
@@ -283,6 +284,7 @@ def main():
         """
 
         Tn = 63.1 ## nucleation temperature
+
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
                                         phaseLocation2 = WallGo.Fields( [246.0] ))
