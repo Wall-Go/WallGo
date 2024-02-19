@@ -225,7 +225,7 @@ class WallGoManager:
         n_test = 10
         diff_phase = 0
         diff_Veff = 0
-        TList = np.linspace(max(TMin, fHighTIVP.minPossibleTemperature), min(TMax, fHighT.maxPossibleTemperature), num=n_test)
+        TList = np.linspace(max(TMin, fHighTIVP.minPossibleTemperature), min(TMax, fHighTIVP.maxPossibleTemperature), num=n_test)
         for i in range(n_test):
             T = TList[i]
             old = fHighT(T)
@@ -234,7 +234,7 @@ class WallGoManager:
             diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
             diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
         print("Done first loop")
-        TList = np.linspace(max(TMin, fLowTIVP.minPossibleTemperature), min(TMax, fLowT.maxPossibleTemperature), num=n_test)
+        TList = np.linspace(max(TMin, fLowTIVP.minPossibleTemperature), min(TMax, fLowTIVP.maxPossibleTemperature), num=n_test)
         for i in range(n_test):
             T = TList[i]
             old = fLowT(T)

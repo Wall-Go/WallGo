@@ -218,14 +218,16 @@ class InterpolatableFunction(ABC):
 
         bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
 
-        if (not self.__interpolatedFunction or bNoExtrapolation):
+        if bNoExtrapolation:
+            ## OG: I've added this for cases such as where the extrumum doesn't exist outside some range
+            raise ValueError("Out of bounds and no extrapolation method")
+        elif not self.__interpolatedFunction:
             res = self.__evaluateDirectly(x)
-        
         else:
             ## Now we have something to extrapolate
 
-            xLower = (x < self.__rangeMin)
-            xUpper = (x > self.__rangeMax)
+            xLower = (x <= self.__rangeMin)
+            xUpper = (x >= self.__rangeMax)
             res = np.empty_like(x)
 
             ## Lower range
@@ -261,7 +263,6 @@ class InterpolatableFunction(ABC):
         if (np.isscalar(x) or np.ndim(x) == 0):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
 
-            print(f"HI: {x=}, {canInterpolateCondition=}, {self.__rangeMax=}, {self.__rangeMin=}")
             if (canInterpolateCondition):
                 return self.evaluateInterpolation(x)
             else:

@@ -280,11 +280,5 @@ class FreeEnergy(InterpolatableFunction):
         self.maxPossibleTemperature = max(TFullList)
 
         # Now to construct the interpolation
-        print(f"--- Creating interpolation table of length={len(TFullList)}---")
-        try:
-            result = np.concatenate((fieldFullList, VeffFullList), axis=1)
-        except:
-            print(f"{TFullList.shape=}, {Fields((fieldFullList)).shape=}, {VeffFullList.shape=}")
-            raise
-        print(f"{TFullList.shape=}, {fieldFullList.shape=}, {VeffFullList.shape=}, {result.shape=}")
+        result = np.concatenate((fieldFullList, VeffFullList), axis=1)
         self.newInterpolationTableFromValues(TFullList, result)
