@@ -155,7 +155,6 @@ class FreeEnergy(InterpolatableFunction):
         numPoints = math.ceil((TMax-TMin) / dT)
         if not self.hasInterpolation():
             self.newInterpolationTable(TMin, TMax, numPoints)
-
         else:
             currentPoints = self.numPoints()
             self.extendInterpolationTable(TMin, TMax, math.ceil(numPoints / 2), math.ceil(currentPoints / 2))
@@ -225,6 +224,10 @@ class FreeEnergy(InterpolatableFunction):
         TList = np.full(1, T0)
         fieldList = np.full((1, phase0.NumFields()), Fields((phase0)))
         VeffList = np.full((1, 1), [V0])
+
+        # maximum temperature range
+        TMin = max(self.minPossibleTemperature, TMin)
+        TMax = min(self.maxPossibleTemperature, TMax)
 
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
