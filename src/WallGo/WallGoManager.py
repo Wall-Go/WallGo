@@ -141,6 +141,9 @@ class WallGoManager:
         ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
         if (VeffValue1 < VeffValue2):
             raise RuntimeWarning(f"!!! Phase 1 has lower free energy than Phase 2, this will not work")
+        
+        if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
+            raise RuntimeWarning(f"!!! It looks like both phases are the same, this will not work") 
 
         foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
@@ -177,12 +180,22 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
+        # Check if the thermodynamics at the nucleation temperature is well-behaved
+        if self.thermodynamics.csqHighT(Tn) < 0:
+            raise RuntimeError(f"The sound speed of the high-temperature phase is not real at the nucleation temeprature, this will not work")
+        
+        if self.thermodynamics.csqLowT(Tn) < 0:
+            raise RuntimeError(f"The sound speed of the low-temperature phase is not real at the nucleation temeprature, this will not work")
+
         ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
+
+        _,_,_, TMinTemplate = hydrotemplate.findMatching(max(0.01,hydrotemplate.vMin)) # Minimum temperature is obtained by Tm of the slowest possible wall
 
         print(f"{hydrotemplate.alN = } {hydrotemplate.cb = } {hydrotemplate.cs = }")
 
         _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
+
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         
         _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
