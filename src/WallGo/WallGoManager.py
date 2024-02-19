@@ -218,9 +218,9 @@ class WallGoManager:
         start_time = time.time()
         ####### QUICK LOOK AT NEW FUNCTIONS
         print("---------- starting testing tracePhaseIVP new code ----------")
-        fHighTIVP = copy.deepcopy(fHighT)
+        fHighTIVP = copy.deepcopy(self.thermodynamics.freeEnergyHigh)
         fHighTIVP.tracePhaseIVP(TMin, TMax, dT)
-        fLowTIVP = copy.deepcopy(fLowT)
+        fLowTIVP = copy.deepcopy(self.thermodynamics.freeEnergyLow)
         fLowTIVP.tracePhaseIVP(TMin, TMax, dT)
         n_test = 10
         diff_phase = 0

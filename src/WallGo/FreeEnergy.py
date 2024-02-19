@@ -220,7 +220,7 @@ class FreeEnergy(InterpolatableFunction):
 
         print("--- Integrating up ---")
         print(f"--- From {T0=} to {TMax=} ---")
-        ode_up = scipyint.RK45(
+        ode_up = scipyint.RK23(
             ode_function,
             T0,
             phase0,
@@ -248,15 +248,14 @@ class FreeEnergy(InterpolatableFunction):
                 break
             T_up.append(ode_up.t)
             field_up.append(ode_up.y)
-            Veff_t = self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t)
-            Veff_up.append(Veff_t)
+            Veff_up.append(self.effectivePotential.evaluate(Fields((ode_up.y)), ode_up.t))
             if ode_up.step_size < 0.01 * rTol * T0:
                 print(f"Step size shrunk too small at T={ode_up.t}")
                 self.maxPossibleTemperature = ode_up.t
                 break
         print("--- Integrating down ---")
         print(f"--- From {T0=} to {TMin=} ---")
-        ode_down = scipyint.RK45(
+        ode_down = scipyint.RK23(
             ode_function,
             T0,
             phase0,
@@ -267,7 +266,7 @@ class FreeEnergy(InterpolatableFunction):
         )
         T_down = []
         field_down = []
-        f_down = []
+        Veff_down = []
         while ode_down.status == "running":
             try:
                 ode_down.step()
@@ -284,8 +283,7 @@ class FreeEnergy(InterpolatableFunction):
                 break
             T_down.append(ode_down.t)
             field_down.append(ode_down.y)
-            Veff_t = self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t)
-            f_down.append(Veff_t)
+            Veff_down.append(self.effectivePotential.evaluate(Fields((ode_down.y)), ode_down.t))
             if ode_down.step_size < 0.01 * rTol * T0:
                 print(f"Step size too small at T={ode_down.t}")
                 self.minPossibleTemperature = ode_down.t
@@ -295,23 +293,23 @@ class FreeEnergy(InterpolatableFunction):
         elif len(T_down) <= 2:
             T_full = np.array(T_up)
             field_full = np.array(field_up)
-            f_full = np.array(Veff_up)
+            Veff_full = np.array(Veff_up)
         elif len(T_up) <= 2:
             T_full = np.flip(np.array(T_down), 0)
             field_full = np.flip(np.array(field_down), 0)
-            f_full = np.flip(np.array(f_down), 0)
+            Veff_full = np.flip(np.array(Veff_down), 0)
         else:
             T_full = np.append(np.flip(np.array(T_down), 0), np.array(T_up), 0)
             field_full = np.append(np.flip(np.array(field_down), 0), np.array(field_up), 0)
-            f_full = np.append(np.flip(np.array(f_down), 0), np.array(Veff_up), 0)
+            Veff_full = np.append(np.flip(np.array(Veff_down), 0), np.array(Veff_up), 0)
 
         # Now to construct the interpolation
         print(f"--- Creating interpolation table of length={len(T_full)}---")
         field_full = Fields(field_full)
         try:
-            result = np.concatenate((field_full, f_full), axis=1)
+            result = np.concatenate((field_full, Veff_full), axis=1)
         except:
-            print(f"{T_full.shape=}, {Fields((field_full)).shape=}, {f_full.shape=}")
+            print(f"{T_full.shape=}, {Fields((field_full)).shape=}, {Veff_full.shape=}")
             raise
-        print(f"{T_full.shape=}, {field_full.shape=}, {f_full.shape=}, {result.shape=}")
+        print(f"{T_full.shape=}, {field_full.shape=}, {Veff_full.shape=}, {result.shape=}")
         self.newInterpolationTableFromValues(T_full, result)
