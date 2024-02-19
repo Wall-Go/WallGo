@@ -141,6 +141,9 @@ class WallGoManager:
         ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
         if (VeffValue1 < VeffValue2):
             raise RuntimeWarning(f"!!! Phase 1 has lower free energy than Phase 2, this will not work")
+        
+        if abs((phaseLocation1-phaseLocation2)/phaseLocation2) < 1e-3:
+            raise RuntimeWarning(f"!!! It looks like both phases are the same, this will not work") 
 
         foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
