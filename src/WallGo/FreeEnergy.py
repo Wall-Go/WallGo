@@ -227,7 +227,7 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            ode = scipyint.RK45(
+            ode = scipyint.LSODA(
                 ode_function,
                 T0,
                 phase0,

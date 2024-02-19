@@ -1,15 +1,11 @@
 import numpy as np
 from dataclasses import dataclass
 from typing import Tuple
-import copy
-import time
 
 ## WallGo imports
-from .Particle import Particle
-from .EffectivePotential import EffectivePotential
 from .GenericModel import GenericModel
 from .Thermodynamics import Thermodynamics
-from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
+from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .EOM import EOM
 from .Grid import Grid
@@ -211,40 +207,8 @@ class WallGoManager:
         ## ---- Interpolate phases and check that they remain stable in this range 
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
-        start_time = time.time()
         fHighT.tracePhaseIVP(TMin, TMax, dT)
         fLowT.tracePhaseIVP(TMin, TMax, dT)
-        #time_previous_method = time.time() - start_time
-        start_time = time.time()
-        """
-        ####### QUICK LOOK AT NEW FUNCTIONS
-        print("---------- starting testing tracePhaseIVP new code ----------")
-        fHighTIVP = copy.deepcopy(self.thermodynamics.freeEnergyHigh)
-        fHighTIVP.tracePhaseIVP(TMin, TMax, dT)
-        fLowTIVP = copy.deepcopy(self.thermodynamics.freeEnergyLow)
-        fLowTIVP.tracePhaseIVP(TMin, TMax, dT)
-        n_test = 10
-        diff_phase = 0
-        diff_Veff = 0
-        TList = np.linspace(max(TMin, fHighTIVP.minPossibleTemperature), min(TMax, fHighTIVP.maxPossibleTemperature), num=n_test)
-        for i in range(n_test):
-            T = TList[i]
-            old = fHighT(T)
-            new = fHighTIVP(T)
-            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
-            diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
-        TList = np.linspace(max(TMin, fLowTIVP.minPossibleTemperature), min(TMax, fLowTIVP.maxPossibleTemperature), num=n_test)
-        for i in range(n_test):
-            T = TList[i]
-            old = fLowT(T)
-            new = fLowTIVP(T)
-            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
-            diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
-        time_IVP_method = time.time() - start_time
-        print(f"{diff_phase=}, {diff_Veff=}")
-        print(f"{time_previous_method=}s, {time_IVP_method=}s")
-        print("---------- finished testing tracePhaseIVP code ----------")
-        """
 
         ## If a phase became unstable we need to reduce our T range
         TMin = max(fLowT.minPossibleTemperature, fHighT.minPossibleTemperature, TMin)
