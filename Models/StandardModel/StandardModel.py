@@ -174,7 +174,7 @@ class EffectivePotentialSM(EffectivePotential):
         # NLO 1-loop correction in Landau gauge, so g^3. Debyes are integrated out by getThermalParameters
         V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + J3(mHsq) + 3.*J3(mGsq)
 
-        VTotal = V0 + V1
+        VTotal = V0 + V1 + self.constantTerms(T)
 
         return VTotal
 
