@@ -151,14 +151,12 @@ class InterpolatableFunction(ABC):
         xValues = np.linspace(xMin, xMax, numberOfPoints)
 
         fx = self._functionImplementation(xValues)
-        print(f"newInterpolationTable: {xValues.shape=}, {fx.shape=}\n")
 
         self.__interpolate(xValues, fx)
 
     def newInterpolationTableFromValues(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
         """Like initializeInterpolationTable but takes in precomputed function values 'fx'
         """
-        print(f"newInterpolationTableFromValues: {x.shape=}, {fx.shape=}\n")
         self.__interpolate(x, fx)
 
     ## Add x, f(x) pairs to our pending interpolation table update 

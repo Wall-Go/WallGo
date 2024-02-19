@@ -230,24 +230,20 @@ class WallGoManager:
             T = TList[i]
             old = fHighT(T)
             new = fHighTIVP(T)
-            print(f"{T=}, {old.shape=}, {new.shape=}")
             diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
             diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
-        print("Done first loop")
         TList = np.linspace(max(TMin, fLowTIVP.minPossibleTemperature), min(TMax, fLowTIVP.maxPossibleTemperature), num=n_test)
         for i in range(n_test):
             T = TList[i]
             old = fLowT(T)
             new = fLowTIVP(T)
-            print(f"{T=}, {old.shape=}, {new.shape=}")
             diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
             diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
-        print("Done second loop")
         time_IVP_method = time.time() - start_time
         print(f"{diff_phase=}, {diff_Veff=}")
         print(f"{time_previous_method=}s, {time_IVP_method=}s")
         print("---------- finished testing tracePhaseIVP code ----------")
-        exit()
+        #exit()
 
         ## If a phase became unstable we need to reduce our T range
         if (fLowT.minPossibleTemperature > TMin): #Does this already work?

@@ -227,7 +227,6 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            print(f"--- Integrating from {T0=} to {TEnd=} ---")
             ode = scipyint.RK45(
                 ode_function,
                 T0,
