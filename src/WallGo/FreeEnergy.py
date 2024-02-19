@@ -204,7 +204,7 @@ class FreeEnergy(InterpolatableFunction):
         assert min(eigs_T0) * max(eigs_T0) > 0, \
             "tracePhaseIVP error: unstable at starting temperature"
 
-        def spinodal_event(temperature, field):
+        def spinodal_event(temperature, field, strict=False):
             if not spinodal:
                 return 1  # don't bother testing
             else:
@@ -216,7 +216,10 @@ class FreeEnergy(InterpolatableFunction):
                 test_zero = min(eigs)
                 test_small = min(abs(eigs)) - min_mass_scale
                 test_hierarchy = min(abs(eigs)) / max(abs(eigs)) - min_hierarchy
-                return min(test_zero, test_small, test_hierarchy)
+                if strict:
+                    return test_zero
+                else:
+                    return min(test_zero, test_small, test_hierarchy)
 
         # arrays to store results
         TList = np.full(1, T0)
@@ -243,7 +246,7 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode.t}")
                     break
                 if spinodal_event(ode.t, ode.y) <= 0:
-                    print(f"Phase ends at T={ode.t}")
+                    print(f"Phase ends at T={ode.t}, min(eigs)={spinodal_event(ode.t, ode.y)}")
                     break
                 # compute Veff
                 Veff_t = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
