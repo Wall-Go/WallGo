@@ -180,6 +180,13 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
+        # Check if the thermodynamics at the nucleation temperature is well-behaved
+        if self.thermodynamics.csqHighT(Tn) < 0:
+            raise RuntimeError(f"The sound speed of the high-temperature phase is not real at the nucleation temeprature, this will not work")
+        
+        if self.thermodynamics.csqLowT(Tn) < 0:
+            raise RuntimeError(f"The sound speed of the low-temperature phase is not real at the nucleation temeprature, this will not work")
+
         ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
         hydrotemplate = HydroTemplateModel(self.thermodynamics)
 
