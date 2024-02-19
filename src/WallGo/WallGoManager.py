@@ -240,8 +240,8 @@ class WallGoManager:
             old = fLowT(T)
             new = fLowTIVP(T)
             print(f"{T=}, {old.shape=}, {new.shape=}")
-            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[0][:-1]) / np.linalg.norm(old[:-1])
-            diff_Veff += 0.5 / n_test * abs(old[-1] - new[0][-1]) / abs(old[-1])
+            diff_phase += 0.5 / n_test * np.linalg.norm(old[:-1] - new[:-1]) / np.linalg.norm(old[:-1])
+            diff_Veff += 0.5 / n_test * abs(old[-1] - new[-1]) / abs(old[-1])
         print("Done second loop")
         time_IVP_method = time.time() - start_time
         print(f"{diff_phase=}, {diff_Veff=}")
