@@ -192,13 +192,9 @@ class WallGoManager:
 
         _,_,_, TMinTemplate = hydrotemplate.findMatching(max(0.01,hydrotemplate.vMin)) # Minimum temperature is obtained by Tm of the slowest possible wall
 
-        print(f"{hydrotemplate.alN = } {hydrotemplate.cb = } {hydrotemplate.cs = }")
-
-        _,_,_, TMinTemplate = hydrotemplate.findMatching(0.01) # Minimum temperature is obtained by Tm of a really slow wall
-
         # Estimate max temperature by Tp of the fastest possible wall (Jouguet velocity). Do NOT compute exactly at vJ though
         
-        _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*hydrotemplate.vJ)
+        _,_, TMaxTemplate, _ = hydrotemplate.findMatching(0.99*min(hydrotemplate.vJ,hydrotemplate.vMax))
 
 
         """ LN: OK so the test benchmark point in SM + singlet originally used interpolation T range [0, 1.2*Tc],
@@ -243,7 +239,6 @@ class WallGoManager:
     def _initHydro(self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float) -> None:
         """"""
         self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
-
 
 
     def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
