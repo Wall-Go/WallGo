@@ -30,10 +30,18 @@ def test_effectivePotential_singletSimple(
     msq0 = vacuumParameters["msq"]
     b20 = vacuumParameters["b2"]
 
+    # checking T is appropriate
+    vsq = 2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam)
+    xsq = 2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam)
+    assert vsq >= 0 and xsq >= 0, f"Saddlepoint doesn't exist at {T=}"
+
+    # fields
+    v = np.sqrt(vsq)
+    x = np.sqrt(xsq)
+    fields = WallGo.Fields(([v, x]))
+
     # exact results
     f0 = -107.75 * np.pi**2 / 90 * T**4
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
     VExact = (b4 * msq**2 - a2 * msq * b2 + lam * b2**2) / (a2**2 - 4 * b4 * lam)
     dVdFieldExact = np.array([0, 0])
     dVdTExact = (
@@ -56,11 +64,10 @@ def test_effectivePotential_singletSimple(
         ]
     )
 
-    # fields
-    fields = WallGo.Fields((([v, x])))
-
     # tolerance
     rTol = 1e-6
+    Veff.dT = rTol * T
+    Veff.dPhi = rTol * max(v, x)
 
     # results from Veff
     V = Veff.evaluate(fields, T)
@@ -71,5 +78,6 @@ def test_effectivePotential_singletSimple(
     assert dVdTExact == pytest.approx(dVdT[0], rel=rTol)
     d2VdField2 = Veff.deriv2Field2(fields, T)
     assert d2VdField2 == pytest.approx(d2VdField2, rel=rTol)
+    print(f"{T=}, {fields=}")
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
     assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=rTol)

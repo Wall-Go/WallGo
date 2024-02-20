@@ -135,7 +135,7 @@ def singletSimpleBenchmarkFreeEnergy(singletSimpleBenchmarkModel: BenchmarkModel
     # interpolation range
     TMin = 50
     TMax = 150
-    dT = 1
+    dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
     freeEnergy1.tracePhase(TMin, TMax, dT)

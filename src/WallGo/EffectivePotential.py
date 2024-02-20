@@ -207,12 +207,6 @@ class EffectivePotential(ABC):
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
 
-            """# O(dPhi^2) accurate, central finite difference scheme
-            dV = (
-                self.evaluate(fields + fieldsOffset, temperature)
-                - self.evaluate(fields - fieldsOffset, temperature)
-            )
-            dVdphi = dV / (2 * self.dPhi)"""
             # O(dPhi^4) accurate, central finite difference scheme
             dV = (
                 -self.evaluate(fields + 2 * fieldsOffset, temperature)
@@ -246,30 +240,14 @@ class EffectivePotential(ABC):
             # HACK! Not sure how best to deal with this edge case, which
             # arises due to how scipyint.RK45 is initialised
             fields = Fields((fields))
-        res = np.empty_like(fields, dtype=float)
-        fieldsOffset = np.zeros_like(fields, dtype=float)
 
-        for idx in range(fields.NumFields()):
-            fieldsOffset.SetField(
-                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
-            )
-
-            """# O(dPhi^2) accurate, central finite difference scheme
-            dV = (
-                self.derivT(fields + fieldsOffset, temperature)
-                - self.derivT(fields - fieldsOffset, temperature)
-            )
-            d2VdphidT = dV / (2 * self.dPhi)"""
-            # O(dPhi^4) accurate, central finite difference scheme
-            dV = (
-                -self.derivT(fields + 2 * fieldsOffset, temperature)
-                + 8 * self.derivT(fields + fieldsOffset, temperature)
-                - 8 * self.derivT(fields - fieldsOffset, temperature)
-                + self.derivT(fields - 2 * fieldsOffset, temperature)
-            )
-            d2VdphidT = dV / (12 * self.dPhi)
-
-            res.SetField(idx, d2VdphidT)
+        # O(dPhi^4) accurate, central finite difference scheme
+        res = (
+            - self.derivField(fields, temperature + 2 * self.dT)
+            + 8 * self.derivField(fields, temperature + self.dT)
+            - 8 * self.derivField(fields, temperature - self.dT)
+            + self.derivField(fields, temperature - 2 * self.dT)
+        ) / (12 * self.dT)
 
         if len(res.shape) == 2 and res.shape[0] == 1:
             # HACK! SHOULD DO THIS MORE TIDILY
