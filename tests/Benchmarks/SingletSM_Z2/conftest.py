@@ -11,6 +11,7 @@ from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 from .Benchmarks_singlet import BM1
 
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
+from Models.SingletStandardModel_Z2.SingletStandardModel_Z2_Simple import SingletSM_Z2_Simple # just O(g^2T^4) bits
 
 
 """ NOTE: We run all singlet-specific tests using interpolated Jb/Jf integrals and interpolated FreeEnergy objects. 
@@ -43,6 +44,13 @@ def singletBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkMod
 
     yield BenchmarkModel(model, singletBenchmarkPoint)
 
+@pytest.fixture(scope="session")
+def singletSimpleBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkModel:
+    inputs = singletBenchmarkPoint.inputParams
+    model = SingletSM_Z2_Simple(inputs)
+
+    yield BenchmarkModel(model, singletBenchmarkPoint)
+
 """----- Fixtures for more complicated things that depend on the model/Veff. 
 I'm making these return also the original benchmark point so that it's easier to validate results, 
 eg. read from BenchmarkPoint.expectedResults"""
@@ -66,7 +74,6 @@ def singletBenchmarkThermo(singletBenchmarkModel: BenchmarkModel) -> Tuple[WallG
 
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
-
 
     yield thermo, BM
 
@@ -99,6 +106,42 @@ def singletBenchmarkThermo_interpolate(singletBenchmarkModel: BenchmarkModel) ->
 
     yield thermo, BM
 
+
+## Test for derivatives of potential
+@pytest.fixture(scope="session")
+def singletSimpleBenchmarkEffectivePotential(singletSimpleBenchmarkModel: BenchmarkModel) -> Tuple[WallGo.EffectivePotential, BenchmarkPoint]:
+
+    # shorthand
+    BM = singletSimpleBenchmarkModel.benchmarkPoint
+    Veff = singletSimpleBenchmarkModel.model.effectivePotential
+
+    yield Veff, BM
+
+
+## Test for following minimum
+@pytest.fixture(scope="session")
+def singletSimpleBenchmarkFreeEnergy(singletSimpleBenchmarkModel: BenchmarkModel) -> Tuple[WallGo.FreeEnergy, WallGo.FreeEnergy, BenchmarkPoint]:
+    
+    BM = singletSimpleBenchmarkModel.benchmarkPoint
+
+    Tn = BM.phaseInfo["Tn"]
+    phase1 = BM.expectedResults["phaseLocation1"]
+    phase2 = BM.expectedResults["phaseLocation2"]
+
+    # free energies for both phases
+    freeEnergy1 = WallGo.FreeEnergy(singletSimpleBenchmarkModel.model.effectivePotential, Tn, phase1)
+    freeEnergy2 = WallGo.FreeEnergy(singletSimpleBenchmarkModel.model.effectivePotential, Tn, phase2)
+
+    # interpolation range
+    TMin = 50
+    TMax = 150
+    dT = 1
+    BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
+
+    freeEnergy1.tracePhase(TMin, TMax, dT)
+    freeEnergy2.tracePhase(TMin, TMax, dT)
+
+    yield freeEnergy1, freeEnergy2, BM
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
 @pytest.fixture(scope="session")
@@ -138,8 +181,6 @@ def singletBenchmarkCollisionArray(singletBenchmarkModel: BenchmarkModel, single
     fname = fileDir / "../../../Models/SingletStandardModel_Z2/Collisions/collisions_top_top_N11.hdf5"
     return WallGo.CollisionArray.newFromFile(fname, singletBenchmarkGrid, "Chebyshev", 
                                       particle, particle, bInterpolate=False)
-
-
 
 
 @pytest.fixture(scope="session")

@@ -183,7 +183,7 @@ class FreeEnergy(InterpolatableFunction):
         phase0 = FieldPoint(phase0[0])
 
         ## HACK! a hard-coded absolute tolerance
-        tol_absolute = rTol * (0.01 * T0 ** 4)
+        tol_absolute = rTol * T0
 
         def ode_function(temperature, field):
             # ode at each temp is a linear matrix equation A*x=b
@@ -233,7 +233,7 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            ode = scipyint.LSODA(
+            ode = scipyint.Radau(
                 ode_function,
                 T0,
                 phase0,
@@ -249,17 +249,25 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode.t}")
                     break
                 if spinodal_event(ode.t, ode.y) <= 0:
-                    print(f"Phase ends at T={ode.t}, min(eigs)={spinodal_event(ode.t, ode.y)}")
+                    print(f"Phase ends at T={ode.t}, vev={ode.y}, min(eigs)={spinodal_event(ode.t, ode.y)}")
                     break
+                # check if extremum is still accurate
+                dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
+                err = np.linalg.norm(dVt) / T0 ** 3
+                if err > 10 * rTol:
+                    print(f"Resolving minimum: {err=} at T={ode.t}")
+                    phaset, Vt = self.effectivePotential.findLocalMinimum(Fields((ode.y)), ode.t)
+                    #print(f"INACCURATE PHASE: {ode.t=}, {phaset=}, {ode.y=}, {(ode.y-phaset[0])/np.linalg.norm(ode.y)}")
+                    ode.y = phaset[0]
                 # compute Veff
-                Veff_t = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
+                VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
                 # append results to lists
                 TList = np.append(TList, [ode.t], axis=0)
                 fieldList = np.append(fieldList, [ode.y], axis=0)
-                VeffList = np.append(VeffList, [Veff_t], axis=0)
+                VeffList = np.append(VeffList, [VeffT], axis=0)
                 # check if step size is still okay to continue
-                if ode.step_size < 0.01 * rTol * T0:
-                    print(f"Step size shrunk too small at T={ode.t}")
+                if ode.step_size < 1e-4 * rTol * T0:
+                    print(f"Step size shrunk too small at T={ode.t}, vev={ode.y}")
                     break
             if direction == 0:
                 # populating results array

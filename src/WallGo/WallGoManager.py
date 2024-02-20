@@ -15,7 +15,7 @@ from .Fields import Fields
 from .Boltzmann import BoltzmannSolver
 
 from .EOM import WallParams
-from .WallGoUtils import getSafePathToResource, clamp
+from .WallGoUtils import getSafePathToResource
 
 @dataclass
 class PhaseInfo:

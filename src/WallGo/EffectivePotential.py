@@ -207,20 +207,20 @@ class EffectivePotential(ABC):
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
 
-            # O(dPhi^2) accurate, central finite difference scheme
+            """# O(dPhi^2) accurate, central finite difference scheme
             dV = (
                 self.evaluate(fields + fieldsOffset, temperature)
                 - self.evaluate(fields - fieldsOffset, temperature)
             )
-            dVdphi = dV / (2 * self.dPhi)
-            """# O(dPhi^4) accurate, central finite difference scheme
+            dVdphi = dV / (2 * self.dPhi)"""
+            # O(dPhi^4) accurate, central finite difference scheme
             dV = (
                 -self.evaluate(fields + 2 * fieldsOffset, temperature)
                 + 8 * self.evaluate(fields + fieldsOffset, temperature)
                 - 8 * self.evaluate(fields - fieldsOffset, temperature)
                 + self.evaluate(fields - 2 * fieldsOffset, temperature)
             )
-            dVdphi = dV / (12 * self.dPhi)"""
+            dVdphi = dV / (12 * self.dPhi)
 
             res.SetField(idx, dVdphi)
 
@@ -254,20 +254,20 @@ class EffectivePotential(ABC):
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
 
-            # O(dPhi^2) accurate, central finite difference scheme
+            """# O(dPhi^2) accurate, central finite difference scheme
             dV = (
                 self.derivT(fields + fieldsOffset, temperature)
                 - self.derivT(fields - fieldsOffset, temperature)
             )
-            d2VdphidT = dV / (2 * self.dPhi)
-            """# O(dPhi^4) accurate, central finite difference scheme
+            d2VdphidT = dV / (2 * self.dPhi)"""
+            # O(dPhi^4) accurate, central finite difference scheme
             dV = (
                 -self.derivT(fields + 2 * fieldsOffset, temperature)
                 + 8 * self.derivT(fields + fieldsOffset, temperature)
                 - 8 * self.derivT(fields - fieldsOffset, temperature)
                 + self.derivT(fields - 2 * fieldsOffset, temperature)
             )
-            d2VdphidT = dV / (12 * self.dPhi)"""
+            d2VdphidT = dV / (12 * self.dPhi)
 
             res.SetField(idx, d2VdphidT)
 
@@ -311,14 +311,14 @@ class EffectivePotential(ABC):
             )
             for idy in range(idx, fields.NumFields()):
                 if idy == idx:
-                    # O(dPhi^2) accurate, central finite difference scheme
+                    """# O(dPhi^2) accurate, central finite difference scheme
                     dV = (
                         self.evaluate(fields + fieldsOffsetX, temperature)
                         - 2 * self.evaluate(fields, temperature)
                         + self.evaluate(fields - fieldsOffsetX, temperature)
                     )
-                    res[..., idx, idy] = dV / self.dPhi ** 2
-                    """# O(dPhi^4) accurate, central finite difference scheme
+                    res[..., idx, idy] = dV / self.dPhi ** 2"""
+                    # O(dPhi^4) accurate, central finite difference scheme
                     dV = (
                         -self.evaluate(fields + 2 * fieldsOffsetX, temperature)
                         + 16 * self.evaluate(fields + fieldsOffsetX, temperature)
@@ -326,12 +326,12 @@ class EffectivePotential(ABC):
                         + 16 * self.evaluate(fields - fieldsOffsetX, temperature)
                         - self.evaluate(fields - 2 * fieldsOffsetX, temperature)
                     )
-                    res[..., idx, idy] = dV / (12 * self.dPhi ** 2)"""
+                    res[..., idx, idy] = dV / (12 * self.dPhi ** 2)
                 else:
                     fieldsOffsetY.SetField(
                         idy, np.full(fields.NumPoints(), self.dPhi, dtype=float)
                     )
-                    # O(dPhi^2) accurate, central finite difference scheme
+                    """# O(dPhi^2) accurate, central finite difference scheme
                     dV = (
                         self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
                         - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
@@ -339,9 +339,9 @@ class EffectivePotential(ABC):
                         + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
                     )
                     res[..., idx, idy] = dV / (4 * self.dPhi ** 2)
-                    res[..., idy, idx] = res[..., idx, idy]
+                    res[..., idy, idx] = res[..., idx, idy]"""
                     # O(dPhi^4) accurate, central finite difference scheme
-                    """dV = (
+                    dV = (
                         self.evaluate(fields + 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
                         - self.evaluate(fields - 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
                         - self.evaluate(fields + 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
@@ -364,7 +364,7 @@ class EffectivePotential(ABC):
                         + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
                     )
                     res[..., idx, idy] = dV / (144 * self.dPhi ** 2)
-                    res[..., idy, idx] = res[..., idx, idy]"""
+                    res[..., idy, idx] = res[..., idx, idy]
 
         if len(res.shape) == 3 and res.shape[0] == 1:
             # HACK! SHOULD DO THIS MORE TIDILY
