@@ -132,13 +132,17 @@ class WallGoManager:
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
 
-        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
-        if (VeffValue1 < VeffValue2):
-            raise RuntimeWarning(f"!!! Phase 1 has lower free energy than Phase 2, this will not work")
-        
         if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
-            raise RuntimeWarning(f"!!! It looks like both phases are the same, this will not work") 
+            raise WallGoPhaseValidationError("It looks like both phases are the same, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
 
+        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
+        if (np.real(VeffValue1) < np.real(VeffValue2)):
+            raise WallGoPhaseValidationError("Phase 1 has lower free energy than Phase 2, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
+        
         foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
         self.phasesAtTn = foundPhaseInfo
