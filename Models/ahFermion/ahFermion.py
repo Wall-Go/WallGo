@@ -104,7 +104,7 @@ class EffectivePotentialAHFermion(EffectivePotential_NoResum):
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 3 # 1 + 2*1 
+        self.num_boson_dof = 4 # 1 + 1 + 2*1 
         self.num_fermion_dof = 4 # 2*2*1
 
 
@@ -191,7 +191,7 @@ class EffectivePotentialAHFermion(EffectivePotential_NoResum):
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
         # dofsBoson = self.num_boson_dof
         # dofsFermion = self.num_fermion_dof ## we only did top quark loops
-        dofsBoson = self.num_boson_dof - 3
+        dofsBoson = self.num_boson_dof - 4
         dofsFermion = self.num_fermion_dof - 4 ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
