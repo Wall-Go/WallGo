@@ -25,7 +25,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     ## This is the fixture background constructed with input M. pytest magic that works because argument name here matches that used in fixture def 
     bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 100)
-    collisionFile = dir_path + "/Testdata/N=19" 
+    collisionFile = dir_path + "/Testdata/N19" 
     boltzmann = BoltzmannSolver(grid, 'Cardinal', 'Cardinal', 'Spectral')
 
     boltzmann.updateParticleList( [particle] )
@@ -70,7 +70,7 @@ def test_solution(boltzmannTestBackground, particle, M, N):
     bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 1)
 
-    collisionFile = dir_path + "/Testdata/N=11" 
+    collisionFile = dir_path + "/Testdata/N11" 
     boltzmann = BoltzmannSolver(grid)
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
