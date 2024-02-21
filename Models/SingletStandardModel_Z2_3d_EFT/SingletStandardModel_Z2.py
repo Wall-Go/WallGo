@@ -427,41 +427,10 @@ def main():
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    #values_mh2 = [ 120.0 ]
-    #for mh2 in values_mh2:
-    #values_a2 = [ 0.9 ]
+    values_mh2 = [ 120.0 ]
+    for mh2 in values_mh2:
 
-    # Open the file in append mode
-    f = open("./ripper.dat", "w") # use write mode here to create new file
-    # Write the numbers as strings, separated by commas
-    #f.write(str(a) + "\t" + str(b) + "\t" + str(c) + "\t" + str(d) + "\n" )
-    # Close the file
-    f.close()
-
-#    amin = 0.9
-#    amax = 1.1 
-#    da = 0.1
-
-#    amin = 0.7 # runsd into hydro error?
-#    amax = 0.9 
-#    da = 0.1
-
-    amin = 0.9
-    amax = 0.92 
-    da = 0.01
-
-    values_a2 = list(np.arange(amin, amax, da))
-    for a2 in values_a2:
-
-        #inputParameters["mh2"] = mh2
-        inputParameters["a2"] = a2
-
-        model = SingletSM_Z2(inputParameters)
-
-        """ Register the model with WallGo. This needs to be done only once. 
-        If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-        """
-        manager.registerModel(model)
+        inputParameters["mh2"] = mh2
 
         modelParameters = model.calculateModelParameters(inputParameters)
 
@@ -496,14 +465,14 @@ def main():
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
 
-#        bIncludeOffEq = False
-#        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-#        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
 
-#        print(f"{wallVelocity=}")
-#        print(f"{wallParams.widths=}")
-#        print(f"{wallParams.offsets=}")
+        print(f"{wallVelocity=}")
+        print(f"{wallParams.widths=}")
+        print(f"{wallParams.offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
@@ -514,20 +483,6 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{wallParams.widths=}")
         print(f"{wallParams.offsets=}")
-
-        # Tuomas:
-        # Define the numbers
-        a = inputParameters["mh2"] 
-        b = inputParameters["a2"]
-        c = vwLTE
-        d = wallVelocity
-
-        # Open the file in append mode
-        f = open("./ripper.dat", "a")
-        # Write the numbers as strings, separated by commas
-        f.write(str(a) + "\t" + str(b) + "\t" + str(c) + "\t" + str(d) + "\n" )
-        # Close the file
-        f.close()
 
 
     # end parameter-space loop
