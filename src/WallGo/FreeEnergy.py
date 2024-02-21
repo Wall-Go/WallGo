@@ -183,7 +183,7 @@ class FreeEnergy(InterpolatableFunction):
         phase0 = FieldPoint(phase0[0])
 
         ## HACK! a hard-coded absolute tolerance
-        tol_absolute = rTol * T0
+        tol_absolute = rTol * max(*abs(phase0), T0)
 
         def ode_function(temperature, field):
             # ode at each temp is a linear matrix equation A*x=b
@@ -203,22 +203,14 @@ class FreeEnergy(InterpolatableFunction):
         assert min(eigs_T0) * max(eigs_T0) > 0, \
             "tracePhaseIVP error: unstable at starting temperature"
 
-        def spinodal_event(temperature, field, strict=False):
+        def spinodal_event(temperature, field):
             if not spinodal:
                 return 1  # don't bother testing
             else:
                 # tests for if an eigenvalue of V'' goes through zero
-                # or becomes very small compared to some initial mass scale
-                # or if there is a large hierarchy in the eigenvalues
                 d2V = self.effectivePotential.deriv2Field2(field, temperature)
                 eigs = scipylinalg.eigvalsh(d2V)
-                test_zero = min(eigs)
-                test_small = min(abs(eigs)) - min_mass_scale
-                test_hierarchy = min(abs(eigs)) / max(abs(eigs)) - min_hierarchy
-                if strict:
-                    return test_zero
-                else:
-                    return min(test_zero, test_small, test_hierarchy)
+                return min(eigs)
 
         # arrays to store results
         TList = np.full(1, T0)
@@ -249,17 +241,17 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode.t}")
                     break
                 if spinodal_event(ode.t, ode.y) <= 0:
-                    print(f"Phase ends at T={ode.t}, vev={ode.y}, min(eigs)={spinodal_event(ode.t, ode.y)}")
+                    print(f"Phase ends at T={ode.t}, vev={ode.y}")
                     break
                 # check if extremum is still accurate
                 dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                 err = np.linalg.norm(dVt) / T0 ** 3
                 if err > rTol:
-                    print(f"Resolving minimum: {err=} at T={ode.t}")
+                    #print(f"Resolving minimum: {err=} at T={ode.t}")
                     phaset, Vt = self.effectivePotential.findLocalMinimum(Fields((ode.y)), ode.t)
                     ode.y = phaset[0]
                 else:
-                    print(f"Not resolving minimum: {err=} at T={ode.t}")
+                    #print(f"Not resolving minimum: {err=} at T={ode.t}")
                     pass
                 # compute Veff
                 VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
@@ -268,7 +260,7 @@ class FreeEnergy(InterpolatableFunction):
                 fieldList = np.append(fieldList, [ode.y], axis=0)
                 VeffList = np.append(VeffList, [VeffT], axis=0)
                 # check if step size is still okay to continue
-                if ode.step_size < 1e-4 * rTol * T0:
+                if ode.step_size < rTol * dT:
                     print(f"Step size shrunk too small at T={ode.t}, vev={ode.y}")
                     break
             if direction == 0:
