@@ -170,7 +170,7 @@ class FreeEnergy(InterpolatableFunction):
         if (self.interpolationRangeMin() > TMin):
             self.minPossibleTemperature = self.interpolationRangeMin()
 
-    def tracePhaseIVP(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-6, spinodal: bool = True) -> None:
+    def tracePhaseIVP(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-5, spinodal: bool = True) -> None:
         """
         Finds field(T) for the range over which it exists. Sets problem
         up as an initial value problem and uses scipy.integrate.solve_ivp to
@@ -276,8 +276,8 @@ class FreeEnergy(InterpolatableFunction):
                 fieldList = np.append(fieldList, [ode.y], axis=0)
                 VeffList = np.append(VeffList, [VeffT], axis=0)
                 # check if step size is still okay to continue
-                if ode.step_size < rTol * dT:
-                    print(f"Step size shrunk too small at T={ode.t}, vev={ode.y}")
+                if ode.step_size < 1e-16 * T0:
+                    print(f"Step size {ode.step_size} shrunk too small at T={ode.t}, vev={ode.y}")
                     break
             if direction == 0:
                 # populating results array
@@ -299,8 +299,11 @@ class FreeEnergy(InterpolatableFunction):
                     raise RuntimeError("Failed to trace phase")
 
         # overwriting temperature range
-        self.minPossibleTemperature = min(TFullList)
-        self.maxPossibleTemperature = max(TFullList)
+        ## HACK! Hard-coded 2*dT, see issue #145
+        self.minPossibleTemperature = min(TFullList) + 2 * dT
+        self.maxPossibleTemperature = max(TFullList) - 2 * dT
+        assert self.maxPossibleTemperature > self.minPossibleTemperature, \
+            f"Temperature range negative: decrease dT from {dT}"
 
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, VeffFullList), axis=1)
