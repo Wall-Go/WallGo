@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
-import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
