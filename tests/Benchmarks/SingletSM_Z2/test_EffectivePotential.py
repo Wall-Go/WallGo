@@ -65,18 +65,17 @@ def test_effectivePotential_singletSimple(
     )
 
     # tolerance
-    rTol = 1e-9
-    Veff.dT = rTol * T
-    Veff.dPhi = rTol * max(v, x)
+    Veff.dT = 1e-4 * T
+    Veff.dPhi = 1e-4 * max(abs(v), abs(x))
 
     # results from Veff
-    V = Veff.evaluate(fields, T)
-    assert f0 + VExact == pytest.approx(V, rel=rTol)
+    V = Veff.evaluate(fields, T)[0]
+    assert f0 + VExact == pytest.approx(V, rel=1e-13)
     dVdField = Veff.derivField(fields, T)
-    assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * rTol))
+    assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * 1e-12))
     dVdT = Veff.derivT(fields, T)
-    assert dVdTExact == pytest.approx(dVdT[0], rel=rTol)
+    assert dVdTExact == pytest.approx(dVdT[0], rel=1e-12)
     d2VdField2 = Veff.deriv2Field2(fields, T)
-    assert d2VdField2 == pytest.approx(d2VdField2, rel=rTol)
+    assert d2VdField2 == pytest.approx(d2VdField2, rel=1e-12)
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
-    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=rTol)
+    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-7)

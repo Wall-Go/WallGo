@@ -200,9 +200,9 @@ class EffectivePotential(ABC):
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
         res = np.empty_like(fields, dtype=float)
-        fieldsOffset = np.zeros_like(fields, dtype=float)
 
         for idx in range(fields.NumFields()):
+            fieldsOffset = np.zeros_like(fields, dtype=float)
             fieldsOffset.SetField(
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
@@ -277,17 +277,16 @@ class EffectivePotential(ABC):
         shapeRes = (fields.NumPoints(), fields.NumFields(), fields.NumFields())
         res = np.empty(shapeRes, dtype=float)
 
-        fieldsOffsetX = np.zeros_like(fields, dtype=float)
-        fieldsOffsetY = np.zeros_like(fields, dtype=float)
-
         # OG: This is all a bit of a mess, and should probably be rewritten
         # more algorithmically.
 
         for idx in range(fields.NumFields()):
+            fieldsOffsetX = np.zeros_like(fields, dtype=float)
             fieldsOffsetX.SetField(
                 idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
             )
             for idy in range(idx, fields.NumFields()):
+                fieldsOffsetY = np.zeros_like(fields, dtype=float)
                 if idy == idx:
                     """# O(dPhi^2) accurate, central finite difference scheme
                     dV = (
