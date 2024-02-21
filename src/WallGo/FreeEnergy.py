@@ -128,7 +128,7 @@ class FreeEnergy(InterpolatableFunction):
         bFieldWentToZero = (np.abs(self.startingPhaseLocationGuess) > 5.0) & (np.abs(phaseLocation) < 1e-1)
 
         # Check that we apply row-wise
-        bEvaluationFailed = bFieldWentToZero # & ... add other checks ...
+        bEvaluationFailed = bFieldWentToZero  # & ... add other checks ...
 
         # Make our failure check a boolean mask that numpy understands
         invalidRowMask = np.any(bEvaluationFailed, axis=1)
