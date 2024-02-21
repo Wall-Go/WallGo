@@ -446,8 +446,12 @@ def main():
 #    amax = 0.9 
 #    da = 0.1
 
-    amin = 0.9
-    amax = 0.92 
+#    amin = 0.9 # these work :)
+#    amax = 0.92 
+#    da = 0.01
+
+    amin = 0.7
+    amax = 0.72 
     da = 0.01
 
     values_a2 = list(np.arange(amin, amax, da))
