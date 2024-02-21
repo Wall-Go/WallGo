@@ -78,4 +78,4 @@ def test_effectivePotential_singletSimple(
     d2VdField2 = Veff.deriv2Field2(fields, T)
     assert d2VdField2 == pytest.approx(d2VdField2, rel=1e-12)
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
-    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-7)
+    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-7)  # HACK! This should be more accurate
