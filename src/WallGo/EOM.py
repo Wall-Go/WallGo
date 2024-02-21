@@ -97,7 +97,7 @@ class EOM:
         ## LN: Dunno if we want to store this here tbh
         self.Tnucl = self.thermo.Tnucl
         
-        self.particle = self.boltzmannSolver.offEqParticles
+        self.particles = self.boltzmannSolver.offEqParticles
         
         ## Tolerances
         self.errTol = errTol
@@ -235,7 +235,7 @@ class EOM:
 
         print(f"\nTrying {wallVelocity=}")
 
-        zeroPoly = Polynomial(np.zeros((len(self.particle), self.grid.M-1)), self.grid, basis=('Array','Cardinal'))
+        zeroPoly = Polynomial(np.zeros((len(self.particles), self.grid.M-1)), self.grid, basis=('Array','Cardinal'))
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
@@ -344,7 +344,7 @@ class EOM:
         
         # Out-of-equilibrium term of the EOM
         dVout = np.sum([particle.DOF * particle.msqDerivative(fields) * offEquilDeltas['00'].coefficients[i,:,None]
-                        for i,particle in enumerate(self.particle)], axis=0) / 2
+                        for i,particle in enumerate(self.particles)], axis=0) / 2
 
         term1 = dVdX * dPhidz
         term2 = dVout * dPhidz
@@ -390,7 +390,7 @@ class EOM:
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
 
-        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particle)])/2
+        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particles)])/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -681,12 +681,12 @@ class EOM:
         T30 = np.sum([particle.DOF*(
             + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u0
             + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar0
-            + 2*delta11[i]*(u3*ubar0 + ubar3*u0))/2. for i,particle in enumerate(self.particle)])
+            + 2*delta11[i]*(u3*ubar0 + ubar3*u0))/2. for i,particle in enumerate(self.particles)])
         T33 = np.sum([particle.DOF*((
             + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u3
             + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar3
             + 4*delta11[i]*u3*ubar3)/2. 
-            - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particle)])
+            - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particles)])
 
         return T30, T33
 
