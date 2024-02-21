@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
-import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -494,15 +493,7 @@ def main():
         print(f"{wallParams.widths=}")
         print(f"{wallParams.offsets=}")
         
-        particles = model.outOfEquilibriumParticles
         
-        for i,particle in enumerate(particles):
-            plt.plot(manager.grid.xiValues, manager.eom.lastDeltas['00'].coefficients[i])
-            plt.grid()
-            plt.xlabel(r'$\xi$')
-            plt.ylabel(r'$\Delta_{00}$')
-            plt.title(particle.name)
-            plt.show()
 
 
     # end parameter-space loop
