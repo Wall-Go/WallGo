@@ -160,7 +160,7 @@ class BoltzmannSolver:
         Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
         # constructing Polynomial class from deltaF array
-        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
+        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('Array', 'z', 'pz', 'pp'), False)
         deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
@@ -264,7 +264,7 @@ class BoltzmannSolver:
         """
         # constructing Polynomial
         basisTypes = ('Array', self.basisM, self.basisN, self.basisN)
-        basisNames = ('z', 'z', 'pz', 'pp')
+        basisNames = ('Array', 'z', 'pz', 'pp')
         deltaFPoly = Polynomial(
             deltaF, self.grid, basisTypes, basisNames, False
         )
@@ -328,7 +328,7 @@ class BoltzmannSolver:
             # fit the background profiles to polynomials
             TPoly = Polynomial(TFull, self.grid, 'Cardinal', 'z', True)
             vPoly = Polynomial(vFull, self.grid, 'Cardinal', 'z', True)
-            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), 'z', True)
+            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), ('Array','z'), True)
             # intertwiner matrices
             TChiMat = TPoly.matrix(self.basisM, "z")
             TRzMat = TPoly.matrix(self.basisN, "pz")
