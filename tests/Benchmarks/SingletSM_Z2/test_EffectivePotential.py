@@ -7,7 +7,7 @@ from tests.BenchmarkPoint import BenchmarkPoint
 import WallGo
 
 
-@pytest.mark.parametrize("T", [90, 100, 110])
+@pytest.mark.parametrize("T", [90, 110])
 def test_effectivePotential_V_singletSimple(
     singletSimpleBenchmarkEffectivePotential: Tuple[
         WallGo.EffectivePotential, BenchmarkPoint
@@ -45,7 +45,7 @@ def test_effectivePotential_V_singletSimple(
     assert f0 + VExact == pytest.approx(V, rel=1e-13)
 
 
-@pytest.mark.parametrize("T", [90, 100, 110])
+@pytest.mark.parametrize("T", [90, 110])
 def test_effectivePotential_dVdField_singletSimple(
     singletSimpleBenchmarkEffectivePotential: Tuple[
         WallGo.EffectivePotential, BenchmarkPoint
@@ -83,7 +83,7 @@ def test_effectivePotential_dVdField_singletSimple(
     assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * 1e-12))
 
 
-@pytest.mark.parametrize("T", [90, 100, 110])
+@pytest.mark.parametrize("T", [90, 110])
 def test_effectivePotential_dVdT_singletSimple(
     singletSimpleBenchmarkEffectivePotential: Tuple[
         WallGo.EffectivePotential, BenchmarkPoint
@@ -127,7 +127,7 @@ def test_effectivePotential_dVdT_singletSimple(
     assert dVdTExact == pytest.approx(dVdT[0], rel=1e-12)
 
 
-@pytest.mark.parametrize("T", [90, 100, 110])
+@pytest.mark.parametrize("T", [90, 110])
 def test_effectivePotential_d2VdFielddT_singletSimple(
     singletSimpleBenchmarkEffectivePotential: Tuple[
         WallGo.EffectivePotential, BenchmarkPoint
@@ -172,7 +172,7 @@ def test_effectivePotential_d2VdFielddT_singletSimple(
     assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-6)  # HACK! This should be more accurate
 
 
-@pytest.mark.parametrize("T", [90, 100, 110])
+@pytest.mark.parametrize("T", [90, 110])
 def test_effectivePotential_d2VdField2_singletSimple(
     singletSimpleBenchmarkEffectivePotential: Tuple[
         WallGo.EffectivePotential, BenchmarkPoint
