@@ -342,7 +342,7 @@ class EOM:
         dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
         
         # Out-of-equilibrium term of the EOM
-        dVout = np.sum([particle.DOF * particle.msqDerivative(fields) * offEquilDeltas['00'].coefficients[i,:,None]
+        dVout = np.sum([particle.totalDOFs * particle.msqDerivative(fields) * offEquilDeltas['00'].coefficients[i,:,None]
                         for i,particle in enumerate(self.particles)], axis=0) / 2
 
         term1 = dVdX * dPhidz
@@ -389,7 +389,7 @@ class EOM:
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
 
-        VOut = sum([particle.DOF*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particles)])/2
+        VOut = sum([particle.totalDOFs*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particles)])/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -677,11 +677,11 @@ class EOM:
 
         ## Where do these come from?
         ## LN: needs rewrite, what happens with many out-of-eq particles?
-        T30 = np.sum([particle.DOF*(
+        T30 = np.sum([particle.totalDOFs*(
             + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u0
             + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar0
             + 2*delta11[i]*(u3*ubar0 + ubar3*u0))/2. for i,particle in enumerate(self.particles)])
-        T33 = np.sum([particle.DOF*((
+        T33 = np.sum([particle.totalDOFs*((
             + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u3
             + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar3
             + 4*delta11[i]*u3*ubar3)/2. 

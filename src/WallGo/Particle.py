@@ -18,7 +18,7 @@ class Particle:
         inEquilibrium,
         ultrarelativistic,
         multiplicity,
-        DOF
+        totalDOFs
     ):
         r"""Initialisation
 
@@ -43,7 +43,7 @@ class Particle:
         multiplicity : int
             How many identical copies of this particle the theory has. 
             Use eg. for light quarks that for our purposes are identical. 
-        DOF : int
+        totalDOFs : int
             Total number of degrees of freedom (should include the multiplicity 
             factor).
         
@@ -62,7 +62,7 @@ class Particle:
             inEquilibrium,
             ultrarelativistic,
             multiplicity,
-            DOF
+            totalDOFs
         )
         self.name = name
         self.msqVacuum = msqVacuum
@@ -72,7 +72,7 @@ class Particle:
         self.inEquilibrium = inEquilibrium
         self.ultrarelativistic = ultrarelativistic
         self.multiplicity = multiplicity
-        self.DOF = DOF
+        self.totalDOFs = totalDOFs
 
     @staticmethod
     def __validateInput(
@@ -84,7 +84,7 @@ class Particle:
         inEquilibrium,
         ultrarelativistic,
         multiplicity,
-        DOF
+        totalDOFs
     ):
         """
         Checks that the input fits expectations
@@ -105,5 +105,5 @@ class Particle:
             "ultrarelativistic must be a bool"
         assert isinstance(multiplicity, int) , \
             "multiplicity must be an integer"
-        assert isinstance(DOF, int) , \
-            "DOF must be an integer"
+        assert isinstance(totalDOFs, int) , \
+            "totalDOFs must be an integer"

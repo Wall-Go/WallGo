@@ -52,7 +52,7 @@ def particle():
         inEquilibrium=False,
         ultrarelativistic=False,
         multiplicity=1,
-        DOF = 12
+        totalDOFs = 12
     )
 
 
