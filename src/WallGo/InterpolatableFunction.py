@@ -8,6 +8,9 @@ from typing import Callable
 
 ## Enums for extrapolation. Default is NONE, no extrapolation at all. 
 class EExtrapolationType(Enum):
+    ## Throw and error
+    ERROR = auto()
+    ## Re-evaluate
     NONE = auto()
     ## Use the boundary value
     CONSTANT = auto()
@@ -214,11 +217,11 @@ class InterpolatableFunction(ABC):
         So let's not enforce the assert."""
         #assert np.all( (x > self.__rangeMax) | (x < self.__rangeMin))
 
-        bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
+        bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.ERROR and self.extrapolationTypeUpper == EExtrapolationType.ERROR
 
         if bNoExtrapolation:
             ## OG: I've added this for cases such as where the extrumum doesn't exist outside some range
-            raise ValueError("Out of bounds and no extrapolation method")
+            raise ValueError(f"Out of bounds: {x} outside [{self.__rangeMin}, {self.__rangeMax}]")
         elif not self.__interpolatedFunction:
             res = self.__evaluateDirectly(x)
         else:
@@ -230,6 +233,8 @@ class InterpolatableFunction(ABC):
 
             ## Lower range
             match self.extrapolationTypeLower:
+                case EExtrapolationType.ERROR:
+                    raise ValueError(f"Out of bounds: {x} < {self.__rangeMin}")
                 case EExtrapolationType.NONE:
                     res[xLower] = self.__evaluateDirectly(x[xLower])
                 case EExtrapolationType.CONSTANT:
@@ -239,6 +244,8 @@ class InterpolatableFunction(ABC):
 
             ## Upper range
             match self.extrapolationTypeUpper:
+                case EExtrapolationType.ERROR:
+                    raise ValueError(f"Out of bounds: {x} > {self.__rangeMax}")
                 case EExtrapolationType.NONE:
                     res[xUpper] = self.__evaluateDirectly(x[xUpper])
                 case EExtrapolationType.CONSTANT:

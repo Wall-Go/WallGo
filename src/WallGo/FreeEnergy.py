@@ -4,7 +4,7 @@ import math
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
 
-from .InterpolatableFunction import InterpolatableFunction
+from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
 from .EffectivePotential import EffectivePotential
 from .Fields import FieldPoint, Fields
 
@@ -72,7 +72,8 @@ class FreeEnergy(InterpolatableFunction):
             returnValueCount=returnValueCount,
             initialInterpolationPointCount=initialInterpolationPointCount,
         )
-
+        self.setExtrapolationType(EExtrapolationType.ERROR, EExtrapolationType.ERROR)
+        
         self.effectivePotential = effectivePotential 
         self.startingTemperature = startingTemperature
         self.startingPhaseLocationGuess = startingPhaseLocationGuess
@@ -225,7 +226,7 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            ode = scipyint.RK45(
+            ode = scipyint.Radau(
                 ode_function,
                 T0,
                 phase0,
@@ -247,11 +248,11 @@ class FreeEnergy(InterpolatableFunction):
                 dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                 err = np.linalg.norm(dVt) / T0 ** 3
                 if err > rTol:
-                    #print(f"Resolving minimum: {err=} at T={ode.t}")
+                    print(f"Resolving minimum: {err=} at T={ode.t}")
                     phaset, Vt = self.effectivePotential.findLocalMinimum(Fields((ode.y)), ode.t)
                     ode.y = phaset[0]
                 else:
-                    #print(f"Not resolving minimum: {err=} at T={ode.t}")
+                    print(f"Not resolving minimum: {err=} at T={ode.t}")
                     pass
                 # compute Veff
                 VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
