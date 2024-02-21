@@ -233,7 +233,7 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            ode = scipyint.Radau(
+            ode = scipyint.RK45(
                 ode_function,
                 T0,
                 phase0,
@@ -254,11 +254,13 @@ class FreeEnergy(InterpolatableFunction):
                 # check if extremum is still accurate
                 dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                 err = np.linalg.norm(dVt) / T0 ** 3
-                if err > 10 * rTol:
+                if err > rTol:
                     print(f"Resolving minimum: {err=} at T={ode.t}")
                     phaset, Vt = self.effectivePotential.findLocalMinimum(Fields((ode.y)), ode.t)
-                    #print(f"INACCURATE PHASE: {ode.t=}, {phaset=}, {ode.y=}, {(ode.y-phaset[0])/np.linalg.norm(ode.y)}")
                     ode.y = phaset[0]
+                else:
+                    print(f"Not resolving minimum: {err=} at T={ode.t}")
+                    pass
                 # compute Veff
                 VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
                 # append results to lists

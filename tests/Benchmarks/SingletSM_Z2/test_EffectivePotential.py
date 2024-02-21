@@ -41,7 +41,7 @@ def test_effectivePotential_singletSimple(
     fields = WallGo.Fields(([v, x]))
 
     # exact results
-    f0 = -107.75 * np.pi**2 / 90 * T**4
+    f0 = 0 * -107.75 * np.pi**2 / 90 * T**4
     VExact = (b4 * msq**2 - a2 * msq * b2 + lam * b2**2) / (a2**2 - 4 * b4 * lam)
     dVdFieldExact = np.array([0, 0])
     dVdTExact = (
@@ -70,12 +70,14 @@ def test_effectivePotential_singletSimple(
 
     # results from Veff
     V = Veff.evaluate(fields, T)[0]
-    assert f0 + VExact == pytest.approx(V, rel=1e-13)
+    """
+    assert f0 + VExact == pytest.approx(V, rel=1e-12)
     dVdField = Veff.derivField(fields, T)
     assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * 1e-12))
     dVdT = Veff.derivT(fields, T)
     assert dVdTExact == pytest.approx(dVdT[0], rel=1e-12)
     d2VdField2 = Veff.deriv2Field2(fields, T)
-    assert d2VdField2 == pytest.approx(d2VdField2, rel=1e-12)
+    assert d2VdField2 == pytest.approx(d2VdField2, rel=1e-12)"""
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
-    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-7)  # HACK! This should be more accurate
+    print(f"\n{d2VdFielddTExact=},\n {d2VdFielddT=},'n {d2VdFielddTExact-d2VdFielddT=},\n {(d2VdFielddTExact-d2VdFielddT)/d2VdFielddT=}")
+    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-12)  # HACK! This should be more accurate

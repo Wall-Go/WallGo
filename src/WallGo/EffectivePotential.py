@@ -43,8 +43,8 @@ class EffectivePotential(ABC):
         self.fieldCount = fieldCount
 
         ## Used for derivatives. TODO read from config file probably
-        self.dT = 1e-3
-        self.dPhi = 1e-3 ## field difference
+        self.dT = 0.1  ## HACK! These defaults are bad, as the quantities have dimensions
+        self.dPhi = 0.1  ## field difference
 
 
     @abstractmethod
