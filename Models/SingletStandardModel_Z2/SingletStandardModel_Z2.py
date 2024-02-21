@@ -432,6 +432,17 @@ def main():
 
         inputParameters["mh2"] = mh2
 
+        ##################
+        # note, when values of mh2 change in a for loop, one needs to define model and register model again
+        # Tuomas: I simply recall lines above for new values of mh2, but maybe this solution is not the best? Note that current exampåle runs because values_mh2 has only one value, but should it have more, the code does not actually change the input parameters properly.
+        model = SingletSM_Z2(inputParameters)
+
+        """ Register the model with WallGo. This needs to be done only once. 
+        If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+        """
+        manager.registerModel(model)
+        ##################
+
         modelParameters = model.calculateModelParameters(inputParameters)
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
