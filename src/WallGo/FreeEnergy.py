@@ -176,10 +176,14 @@ class FreeEnergy(InterpolatableFunction):
         up as an initial value problem and uses scipy.integrate.solve_ivp to
         solve. Stops if we get sqrt(negative) or something like that.
         """
-        # initial values
+        ## HACK! This hopefully won't be needed in the final thing
+        paranoid = False
+        extraTol = 0.01 * rTol
+
+        # initial values, should be nice and accurate
         T0 = self.startingTemperature
         phase0, V0 = self.effectivePotential.findLocalMinimum(
-            self.startingPhaseLocationGuess, T0,
+            self.startingPhaseLocationGuess, T0, tol=extraTol,
         )
         phase0 = FieldPoint(phase0[0])
 
@@ -195,10 +199,10 @@ class FreeEnergy(InterpolatableFunction):
         # finding some sensible mass scales
         ddV_T0 = self.effectivePotential.deriv2Field2(phase0, T0)
         eigs_T0 = np.linalg.eigvalsh(ddV_T0)
-        mass_scale_T0 = np.mean(eigs_T0)
-        min_mass_scale = rTol * mass_scale_T0
-        mass_hierarchy_T0 = min(eigs_T0) / max(eigs_T0)
-        min_hierarchy = rTol * mass_hierarchy_T0
+        #mass_scale_T0 = np.mean(eigs_T0)
+        #min_mass_scale = rTol * mass_scale_T0
+        #mass_hierarchy_T0 = min(eigs_T0) / max(eigs_T0)
+        #min_hierarchy = rTol * mass_hierarchy_T0
 
         # checking stable phase at initial temperature
         assert min(eigs_T0) * max(eigs_T0) > 0, \
@@ -226,7 +230,7 @@ class FreeEnergy(InterpolatableFunction):
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
             TEnd = endpoints[direction]
-            ode = scipyint.Radau(
+            ode = scipyint.RK45(
                 ode_function,
                 T0,
                 phase0,
@@ -243,16 +247,27 @@ class FreeEnergy(InterpolatableFunction):
                     break
                 if spinodal_event(ode.t, ode.y) <= 0:
                     print(f"Phase ends at T={ode.t}, vev={ode.y}")
-                    break
+                    if paranoid:
+                        print(f"Re-solving minimum: {err=} at T={ode.t}")
+                        phaset, Vt = self.effectivePotential.findLocalMinimum(
+                            Fields((ode.y)), ode.t, tol=extraTol,
+                        )
+                        if spinodal_event(ode.t, ode.y) <= 0:
+                            print(f"Still spinodal at T={ode.t}, vev={ode.y}")
+                            break
+                    else:
+                        break
                 # check if extremum is still accurate
                 dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                 err = np.linalg.norm(dVt) / T0 ** 3
-                if err > rTol:
-                    print(f"Resolving minimum: {err=} at T={ode.t}")
-                    phaset, Vt = self.effectivePotential.findLocalMinimum(Fields((ode.y)), ode.t)
+                if err > rTol and paranoid:
+                    print(f"Re-solving minimum: {err=} at T={ode.t}")
+                    phaset, Vt = self.effectivePotential.findLocalMinimum(
+                        Fields((ode.y)), ode.t, tol=extraTol,
+                    )
                     ode.y = phaset[0]
                 else:
-                    print(f"Not resolving minimum: {err=} at T={ode.t}")
+                    #print(f"Not resolving minimum: {err=} at T={ode.t}")
                     pass
                 # compute Veff
                 VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
