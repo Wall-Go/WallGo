@@ -38,6 +38,8 @@ option(BUILD_EXAMPLES "Build WallGo/Collision C++ examples" ON)
 
 ## For MacOS, may need to manually setup OpenMP
 if(APPLE AND USE_OMP)
+
+    ## not good! TODO
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 
@@ -53,6 +55,7 @@ if(APPLE AND USE_OMP)
         set(OpenMP_omp_LIBRARY omp)
     endif()
 endif()
+
 # Build the Python module unless the user disabled this
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 
