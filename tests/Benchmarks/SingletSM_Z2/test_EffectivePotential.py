@@ -65,7 +65,7 @@ def test_effectivePotential_singletSimple(
     )
 
     # tolerance
-    rTol = 1e-6
+    rTol = 1e-9
     Veff.dT = rTol * T
     Veff.dPhi = rTol * max(v, x)
 
@@ -78,6 +78,5 @@ def test_effectivePotential_singletSimple(
     assert dVdTExact == pytest.approx(dVdT[0], rel=rTol)
     d2VdField2 = Veff.deriv2Field2(fields, T)
     assert d2VdField2 == pytest.approx(d2VdField2, rel=rTol)
-    print(f"{T=}, {fields=}")
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
     assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=rTol)
