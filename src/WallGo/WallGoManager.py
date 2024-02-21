@@ -3,11 +3,9 @@ from dataclasses import dataclass
 from typing import Tuple
 
 ## WallGo imports
-from .Particle import Particle
-from .EffectivePotential import EffectivePotential
 from .GenericModel import GenericModel
 from .Thermodynamics import Thermodynamics
-from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
+from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .EOM import EOM
 from .Grid import Grid
@@ -17,16 +15,11 @@ from .Fields import Fields
 from .Boltzmann import BoltzmannSolver
 
 from .EOM import WallParams
-from .WallGoUtils import getSafePathToResource, clamp
+from .WallGoUtils import getSafePathToResource
 
-@dataclass
-class PhaseInfo:
-    # Field values at the two phases at T (we go from 1 to 2)
-    phaseLocation1: Fields
-    phaseLocation2: Fields
-    temperature: float
+from .WallGoTypes import PhaseInfo
+from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 
-    
 
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
@@ -115,10 +108,11 @@ class WallGoManager:
         print(f"TMin = {self.TMin}, TMax = {self.TMax}")
         
 
-        # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
-        # I propose hydro routines be changed so that we have easy control over what temperatures are used
-
         self._initHydro(self.thermodynamics, self.TMin, self.TMax)
+
+        if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
+            raise WallGoError("Failed to solve Jouguet velocity at input temperature!", 
+                              data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
 
         print(f"Jouguet: {self.hydro.vJ}")
 
@@ -138,13 +132,17 @@ class WallGoManager:
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
 
-        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
-        if (VeffValue1 < VeffValue2):
-            raise RuntimeWarning(f"!!! Phase 1 has lower free energy than Phase 2, this will not work")
-        
         if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
-            raise RuntimeWarning(f"!!! It looks like both phases are the same, this will not work") 
+            raise WallGoPhaseValidationError("It looks like both phases are the same, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
 
+        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
+        if (np.real(VeffValue1) < np.real(VeffValue2)):
+            raise WallGoPhaseValidationError("Phase 1 has lower free energy than Phase 2, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
+        
         foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
         self.phasesAtTn = foundPhaseInfo
@@ -165,12 +163,13 @@ class WallGoManager:
         self.Tc = self.model.effectivePotential.findCriticalTemperature(self.phasesAtTn.phaseLocation1, self.phasesAtTn.phaseLocation2, 
                                                                         TMin = Tn, TMax = 10. * Tn)
 
+
+        if (self.Tc < self.phasesAtTn.temperature):
+            raise WallGoPhaseValidationError(f"Got Tc < Tn, should not happen!", self.phasesAtTn, {"Tc" : self.Tc})
+    
         print(f"Found Tc = {self.Tc} GeV.")
         # @todo should check that this Tc is really for the transition between the correct phases. 
         # At the very least print the field values for the user
-
-        if (self.Tc < self.phasesAtTn.temperature):
-            raise RuntimeError(f"Got Tc < Tn, should not happen! Tn = {self.phasesAtTn.temperature}, Tc = {self.Tc}")
 
         ## TODO: should really not require Thermodynamics to take Tc, I guess
         self.thermodynamics = Thermodynamics(self.model.effectivePotential, self.Tc, Tn, 
@@ -180,15 +179,14 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
-        # Check if the thermodynamics at the nucleation temperature is well-behaved
-        if self.thermodynamics.csqHighT(Tn) < 0:
-            raise RuntimeError(f"The sound speed of the high-temperature phase is not real at the nucleation temeprature, this will not work")
-        
-        if self.thermodynamics.csqLowT(Tn) < 0:
-            raise RuntimeError(f"The sound speed of the low-temperature phase is not real at the nucleation temeprature, this will not work")
+        try:
+            ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
+            hydrotemplate = HydroTemplateModel(self.thermodynamics)
 
-        ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
-        hydrotemplate = HydroTemplateModel(self.thermodynamics)
+        except WallGoError as error:
+            # Throw new error with more info
+            raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
+            
 
         _,_,_, TMinTemplate = hydrotemplate.findMatching(max(0.01,hydrotemplate.vMin)) # Minimum temperature is obtained by Tm of the slowest possible wall
 
