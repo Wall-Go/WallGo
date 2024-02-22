@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 project(Collision VERSION 0.2.0 LANGUAGES CXX)
 # NB: project name is used across other CMake files for target names (${CMAKE_PROJECT_NAME})
 

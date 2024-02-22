@@ -5,8 +5,16 @@ set(MODULE WallGoCollisionPy)
 # Installation path for the python module
 set(MODULE_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
-# Explicitly require Python package, otherwise pybind11 throwed errors on some platforms
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
+# Find Python. The library produced by pybind11 is version dependent, so we need 
+# to allow the user to specify their preferred Python version. 
+# Also, Development.Module should be safer than Development. https://pybind11.readthedocs.io/en/stable/compiling.html#findpython-mode
+
+if (DEFINED USER_PYTHON_VERSION)
+	find_package(Python3 ${USER_PYTHON_VERSION} EXACT REQUIRED COMPONENTS Interpreter Development.Module)
+else()
+	find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+endif()
+
 find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(${MODULE})
@@ -14,8 +22,6 @@ pybind11_add_module(${MODULE})
 target_sources(${MODULE} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/BindToPython.cpp
 )
-
-## Link to the main lib. This inherits linkages to its PUBLIC dependencies
 
 target_link_libraries(${MODULE} PRIVATE
 	WallGoCollision
