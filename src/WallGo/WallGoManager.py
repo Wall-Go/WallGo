@@ -3,22 +3,18 @@ from dataclasses import dataclass
 from typing import Tuple
 
 ## WallGo imports
-from .GenericModel import GenericModel
-from .Thermodynamics import Thermodynamics
-from .Hydro import Hydro
-from .HydroTemplateModel import HydroTemplateModel
-from .EOM import EOM
-from .Grid import Grid
-from .Config import Config
-from .Integrals import Integrals
-from .Fields import Fields
 from .Boltzmann import BoltzmannSolver
-
-from .EOM import WallParams
+from .Config import Config
+from .EOM import EOM
+from .Fields import Fields
+from .GenericModel import GenericModel
+from .Grid import Grid
+from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
+from .HydroTemplateModel import HydroTemplateModel
+from .Integrals import Integrals
+from .Thermodynamics import Thermodynamics
+from .WallGoTypes import PhaseInfo, WallGoResults
 from .WallGoUtils import getSafePathToResource
-
-from .WallGoTypes import PhaseInfo
-from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 
 
 """ Defines a 'control' class for managing the program flow.
@@ -37,7 +33,7 @@ class WallGoManager:
 
     ### WallGo objects
     config: Config
-    integrals: Integrals ## use a dedicated Integrals object to make management of interpolations easier
+    integrals: Integrals  ## use a dedicated Integrals object to make management of interpolations easier
     model: GenericModel
     thermodynamics: Thermodynamics
     hydro: Hydro
@@ -60,9 +56,10 @@ class WallGoManager:
         ## -- Order of initialization matters here
 
         ## Grid
-        self._initGrid( self.config.getint("PolynomialGrid", "spatialGridSize"), 
-                        self.config.getint("PolynomialGrid", "momentumGridSize"),
-                        self.config.getfloat("PolynomialGrid", "L_xi")
+        self._initGrid(
+            self.config.getint("PolynomialGrid", "spatialGridSize"), 
+            self.config.getint("PolynomialGrid", "momentumGridSize"),
+            self.config.getfloat("PolynomialGrid", "L_xi"),
         )
 
         ## These are set properly in initTemperatureRange()
@@ -206,7 +203,7 @@ class WallGoManager:
 
         ## temp temp!
         #TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
-        
+
 
         """Allow some leeway since the template model is just a rough estimate. 
         NB: In generaly situations, TMax (TMin) cannot be arbitrarily large (small) because both phases need to remain (meta)stable over the range.
@@ -257,7 +254,6 @@ class WallGoManager:
         ## To initialize Grid we need to specify a "temperature" scale that has analogous role as L_xi, but for the momenta.
         ## In practice this scale needs to be close to temperature near the wall, but we don't know that yet, so just initialize with some value here 
         ## and update once the nucleation temperature is obtained.
-        
         initialMomentumFalloffScale = 50.
 
         N, M = int(N), int(M)
@@ -280,12 +276,11 @@ class WallGoManager:
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation.
         """
-
         return self.hydro.findvwLTE()
 
 
     # Call after initGrid. I guess this would be the main workload function
-    def solveWall(self, bIncludeOffEq: bool) -> Tuple[float, WallParams]:
+    def solveWall(self, bIncludeOffEq: bool) -> WallGoResults:
         """Returns wall speed and wall parameters (widths and offsets).
         """
 
@@ -307,8 +302,8 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
-        return wallVelocity, wallParams
+        # returning results
+        return eom.findWallVelocityMinimizeAction()
 
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
