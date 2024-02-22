@@ -201,8 +201,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 #        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
 #        # From Philipp. @todo should probably use the list of defined particles here?
-#        bosonStuff = self.boson_massSq(fields, temperature)
-#        fermionStuff = self.fermion_massSq(fields, temperature)
+        bosonStuff = self.boson_massSq(fields, temperature)
+        fermionStuff = self.fermion_massSq(fields, temperature)
 
 
 #        VTotal = (
@@ -217,7 +217,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         T = temperature
 
-        b23 = b2 + 1.0/12.0*T**2*(2*a2 + 3*b4)
+        b23 = b2 + 1.0/12.0*T**2*(2*a2 + 3*b4) + 0j # 0j makes this thing complex number, python is nasty
         b43 = T*b4
         a23 = T*a2
 
@@ -228,6 +228,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         # tree level potential
         V0 = 0.5*msq3*v**2 + 0.25*lam3/T*v**4 + 0.5*b23*x**2 + 0.25*b43/T*x**4 + 0.25*a23/T*v**2 *x**2
+        #V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2 # debugger
 
         VTotal = (
            V0 
@@ -252,7 +253,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
-        return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
+        #return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
+        return -(107.75) * np.pi**2 * temperature**4 / 90.
 
 
     ## High-T stuff commented out for now
@@ -485,7 +487,10 @@ def main():
 #    da = 0.01
 
     #aa2 = 1.0
-    aa2 = 2.48
+    aa2 = 2.48 # BM by Tuomas
+
+    aa2 = 2.0 # debugger
+
     amin = aa2
     amax = aa2+0.01 
     da = 0.01
@@ -494,7 +499,20 @@ def main():
     for a2 in values_a2:
 
         #inputParameters["mh2"] = mh2
-        inputParameters["a2"] = a2
+        #inputParameters["a2"] = a2
+
+        #inputParameters["a2"] = 0.9
+        #inputParameters["mh2"] = 120
+        #inputParameters["b4"] = 1.0
+
+        #inputParameters["a2"] = 2.7
+        #inputParameters["a2"] = 2.48
+        #inputParameters["a2"] = 2.2
+
+
+        inputParameters["a2"] = 2.48
+        inputParameters["mh2"] = 260
+        inputParameters["b4"] = 1.1
 
         model = SingletSM_Z2(inputParameters)
 
@@ -509,7 +527,8 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
         Tn = 100. ## nucleation temperature
-        Tn = 128.       
+        #Tn = 128. 
+        #Tn = 130.       
  
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         #phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
@@ -521,7 +540,9 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
+        print(f"kissa1")
         manager.setParameters(modelParameters, phaseInfo)
+        print(f"kissa2") 
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
