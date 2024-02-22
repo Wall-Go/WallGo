@@ -15,6 +15,8 @@ from .helpers import gammaSq # derivatives for callable functions
 from .Fields import Fields, FieldPoint
 from .Grid import Grid
 
+import matplotlib.pyplot as plt
+
 
 @dataclass
 class WallParams():
@@ -203,7 +205,138 @@ class EOM:
 
         # Get wall params:
         _, wallParams = self.wallPressure(wallVelocity, wallParamsMin+(wallParamsMax-wallParamsMin)*(wallVelocity-wallVelocityMin)/(wallVelocityMax-wallVelocityMin), True)
+
+        self.testFieldEOM(wallVelocity, wallParams)
+
         return wallVelocity, wallParams
+
+
+
+
+    def testFieldEOM(self, wallVelocity: float, wallParams: WallParams):
+        """
+        Computes the total pressure on the wall by finding the tanh profile
+        that minimizes the action.
+
+        Parameters
+        ----------
+        wallVelocity : double
+            Wall velocity at which the pressure is computed.
+        wallParams : WallParams
+            Contains a guess of the wall thicknesses and wall offsets.
+        returnOptimalWallParams : bool, optional
+            If False, only the pressure is returned. If True, both the pressure
+            and optimal wall parameters are returned. The default is False.
+
+        Returns
+        -------
+        pressure : double
+            Total pressure on the wall.
+        wallParams : array-like
+            Array containing the wall thicknesses and wall offsets that
+            minimize the action and solve the EOM. Only returned if
+            returnOptimalWallParams is True.
+
+        """
+        
+        # Let's not allow this:
+        """ 
+        if wallParams is None:
+            wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
+        """
+
+        zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
+        offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
+
+        # TODO: Solve the Boltzmann equation to update offEquilDeltas.
+
+        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+
+        vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
+        vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
+
+
+        fields: Fields
+        dPhidz: Fields
+        ddPhidzdz: Fields
+
+        ## here dPhidz are z-derivatives of the fields
+        fields, dPhidz = self.wallProfile(
+            self.grid.xiValues, vevLowT, vevHighT, wallParams
+        )
+
+        dField = np.diff(dPhidz, axis=0)
+        dXi = np.diff(self.grid.xiValues)
+        dFielddXi = dField/dXi[:,None]
+
+        xiMid = self.grid.xiValues[:-1] + dXi/2
+
+        z_L = self.grid.xiValues[:,None] / wallParams.widths[None,:]
+        ddPhidzdz = -(vevHighT-vevLowT) * np.tanh(z_L + wallParams.offsets) / ( wallParams.widths**2 * np.cosh(z_L + wallParams.offsets)**2 )
+
+        plt.plot(self.grid.xiValues, fields)
+        plt.plot(self.grid.xiValues, dPhidz)
+        plt.plot(self.grid.xiValues, ddPhidzdz)
+        plt.plot(xiMid, dFielddXi)
+        plt.show()
+
+        Tprofile, velocityProfile = self.findPlasmaProfile(
+            c1, c2, velocityMid, fields, dPhidz, offEquilDeltas, Tplus, Tminus
+        )
+
+        """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
+        Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile().
+        TODO also BoltzmannSolver seems to drop the endpoints internally anyway!!
+        """
+        ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
+        if self.includeOffEq:
+            TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
+            fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
+            vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
+
+            ## Prepare a new background for Boltzmann
+            """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
+                and let BoltzmannSolver create/manage the actual BoltzmannBackground object
+                """
+            boltzmannBackground = BoltzmannBackground(velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints) 
+            self.boltzmannSolver.setBackground(boltzmannBackground)
+
+            offEquilDeltas = self.boltzmannSolver.getDeltas()
+        
+
+        dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
+
+        #TODO: improve to match Benoit's general code
+        dVout = 12 * fields.GetField(0) * offEquilDeltas['00'].coefficients / 2
+
+        #zeros = np.zeros((len(dVout), 2))
+        #zeros[:,0] = dVout
+
+        EOM = -ddPhidzdz + dVdX + dVout
+
+        plt.plot(self.grid.xiValues, EOM)
+        plt.plot(self.grid.xiValues, -ddPhidzdz)
+        plt.plot(self.grid.xiValues, dVdX)
+        plt.plot(self.grid.xiValues, dVout)
+        plt.show()
+
+        
+
+        plt.plot(self.grid.xiValues, EOM[:,0])
+        plt.plot(self.grid.xiValues, -ddPhidzdz[:,0])
+        plt.plot(self.grid.xiValues, dVdX[:,0])
+        plt.plot(self.grid.xiValues, zeros[:,0])
+        plt.show()
+
+        
+
+        plt.plot(self.grid.xiValues, EOM[:,1])
+        plt.plot(self.grid.xiValues, -ddPhidzdz[:,1])
+        plt.plot(self.grid.xiValues, dVdX[:,1])
+        plt.plot(self.grid.xiValues, zeros[:,1])
+        plt.show()
+        
+
 
 
     def wallPressure(self, wallVelocity: float, wallParams: WallParams, returnOptimalWallParams: bool=False):
@@ -273,6 +406,8 @@ class EOM:
             elif i >= self.maxIterations-1:
                 print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
                 break
+        
+        print(f"\nWall width {wallParams.widths}")
 
         if returnOptimalWallParams:
             return pressure, wallParams
