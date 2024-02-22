@@ -1,3 +1,9 @@
+"""Import types here. We do this so that eg. the EOM class can be accessed as 
+WallGo.EOM. If this wasn't done, WallGo.EOM would actually refer to the MODULE EOM.py which we don't want,
+and would cause hard-to-diagnoze crashes.
+TODO Is there a better way of doing all this?! 
+"""
+
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .Grid import Grid
 from .Hydro import Hydro
@@ -6,6 +12,9 @@ from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM, WallGoResults
 from .EOM import WallParams
+from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
+from .WallGoTypes import PhaseInfo
+
 
 from .Particle import Particle
 from .Fields import Fields
@@ -17,10 +26,10 @@ from .WallGoManager import WallGoManager
 from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
-from .Integrals import Integrals
-from .Config import Config
 from .CollisionArray import CollisionArray
 
+from .Integrals import Integrals
+from .Config import Config
 from .WallGoUtils import getSafePathToResource
 
 from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded

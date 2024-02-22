@@ -236,7 +236,7 @@ class EOM:
             Data class containing results.
 
         """
-
+        self.pressAbsErrTol = 1e-8
         ## HACK! LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
         pressureMax, wallParamsMax, _, _, _ = self.wallPressure(
             wallVelocityMax, wallParamsGuess, True
@@ -252,6 +252,8 @@ class EOM:
             ## If this is a bad outcome then we should warn about it. TODO
             #return 0
             return 0, wallParamsMin
+        
+        self.pressAbsErrTol = 0.01 * self.errTol * (1 - self.pressRelErrTol) * np.minimum(np.abs(pressureMin), np.abs(pressureMax)) / 4
 
         ## This computes pressure on the wall with a given wall speed and WallParams that looks hacky
         def pressureWrapper(vw: float):
@@ -398,7 +400,7 @@ class EOM:
             )
 
             error = np.abs(pressure-pressureOld)
-            errTol = self.pressRelErrTol * np.abs(pressure)
+            errTol = np.maximum(self.pressRelErrTol * np.abs(pressure), self.pressAbsErrTol)
             
             print(f"{pressure=} {error=} {errTol=}")
             i += 1
