@@ -4,27 +4,7 @@ from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
 from .helpers import gammaSq, boostVelocity
-
-
-@dataclass
-class HydroResults():
-    """
-    Holds results to be returned by Hydro
-    """
-    # hydrodynamic results
-    temperaturePlus: float
-    temperatureMinus: float
-    velocityJouget: float
-
-    def __init__(
-        self,
-        temperaturePlus: float,
-        temperatureMinus: float,
-        velocityJouget: float,
-    ):
-        self.temperaturePlus = temperaturePlus
-        self.temperatureMinus = temperatureMinus
-        self.velocityJouget = velocityJouget
+from .WallGoTypes import HydroResults
 
 
 class Hydro:
@@ -141,7 +121,7 @@ class Hydro:
         eHighT, eLowT = self.thermodynamics.eHighT(Tp), self.thermodynamics.eLowT(Tm)
         vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
-        return vpvm,vpovm
+        return vpvm, vpovm
 
 
     def matchDeton(self, vw, branch=1):

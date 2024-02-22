@@ -4,7 +4,6 @@ import numpy as np  # arrays and maths
 
 from WallGo.Grid import Grid
 from WallGo.Boltzmann import BoltzmannSolver
-from WallGo.WallGoUtils import getSafePathToResource
 
 
 real_path = os.path.realpath(__file__)

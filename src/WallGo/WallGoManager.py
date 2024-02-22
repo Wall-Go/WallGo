@@ -5,26 +5,17 @@ from typing import Tuple
 ## WallGo imports
 from .Boltzmann import BoltzmannSolver
 from .Config import Config
-from .EffectivePotential import EffectivePotential
-from .EOM import EOM, WallParams, WallGoResults
+from .EOM import EOM
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .Grid import Grid
-from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
+from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
-from .Particle import Particle
 from .Thermodynamics import Thermodynamics
-from .WallGoUtils import getSafePathToResource, clamp
+from .WallGoTypes import PhaseInfo, WallGoResults
+from .WallGoUtils import getSafePathToResource
 
-@dataclass
-class PhaseInfo:
-    # Field values at the two phases at T (we go from 1 to 2)
-    phaseLocation1: Fields
-    phaseLocation2: Fields
-    temperature: float
-
-    
 
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
@@ -42,7 +33,7 @@ class WallGoManager:
 
     ### WallGo objects
     config: Config
-    integrals: Integrals ## use a dedicated Integrals object to make management of interpolations easier
+    integrals: Integrals  ## use a dedicated Integrals object to make management of interpolations easier
     model: GenericModel
     thermodynamics: Thermodynamics
     hydro: Hydro

@@ -7,100 +7,16 @@ from typing import Tuple
 import scipy.optimize
 
 from .Boltzmann import (
-    BoltzmannBackground, BoltzmannDeltas, BoltzmannResults, BoltzmannSolver
+    BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
 )
 from .Fields import Fields, FieldPoint
 from .GenericModel import GenericModel
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
-from .Hydro import Hydro, HydroResults
+from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-
-
-@dataclass
-class WallParams():
-    ## Holds wall widths and wall offsets for all fields
-    widths: np.ndarray ## 1D array
-    offsets: np.ndarray ## 1D array
-
-    def __add__(self, other):
-        return WallParams(widths = (self.widths + other.widths), offsets = (self.offsets + other.offsets))
-
-    def __sub__(self, other):
-        return WallParams(widths = (self.widths - other.widths), offsets = (self.offsets - other.offsets))
-
-    def __mul__(self, other):
-        ## does not work if other = WallParams type
-        return WallParams(widths = self.widths * other, offsets = self.offsets * other)
-
-    def __truediv__(self, other):
-        ## does not work if other = WallParams type
-        return WallParams(widths = self.widths / other, offsets = self.offsets / other)
-
-
-@dataclass
-class WallGoResults:
-    # HACK! This should probably go in its own file, Results.py,
-    # but I was getting circular import errors, so hacked it here.
-    # bubble wall speed, and error
-    wallVelocity: float
-    wallVelocityError: float
-    # local thermal equilibrium result
-    wallVelocityLTE: float
-    # hydrodynamic results
-    temperaturePlus: float
-    temperatureMinus: float
-    velocityJouget: float
-    # quantities from WallParams
-    wallWidths: np.ndarray
-    wallOffsets: np.ndarray
-    # quantities from BoltzmannBackground
-    velocityProfile: np.ndarray
-    fieldProfiles: Fields
-    temperatureProfile: np.ndarray
-    # quantities from BoltzmannResults
-    deltaF: np.ndarray
-    Deltas: BoltzmannDeltas
-    truncationError: float
-    # finite difference results
-    #deltaFFiniteDifference: np.ndarray
-    #DeltasFiniteDifference: dict
-    # measures of nonlinearity
-    #nonlinearitys: np.ndarray
-
-    def __init__(
-        self,
-        wallVelocity: float,
-        wallVelocityError: float,
-        wallVelocityLTE: float,
-        hydroResults: HydroResults,
-        wallParams: WallParams,
-        boltzmannBackground: BoltzmannBackground,
-        boltzmannResults: BoltzmannResults
-    ):
-        # main results
-        self.wallVelocity = wallVelocity
-        self.wallVelocityError = wallVelocityError
-        # hydrodynamics results
-        self.wallVelocityLTE = wallVelocityLTE
-        self.temperaturePlus = hydroResults.temperaturePlus
-        self.temperatureMinus = hydroResults.temperatureMinus
-        self.velocityJouget = hydroResults.velocityJouget
-        # quantities from WallParams
-        self.wallWidths = wallParams.widths
-        self.wallOffsets = wallParams.offsets
-        # quantities from BoltzmannBackground
-        self.velocityProfile = boltzmannBackground.velocityProfile
-        self.fieldProfiles = boltzmannBackground.fieldProfiles
-        self.temperatureProfile = boltzmannBackground.temperatureProfile
-        # quantities from BoltzmannResults
-        self.deltaF = boltzmannResults.deltaF
-        self.Deltas = boltzmannResults.Deltas
-        self.truncationError = boltzmannResults.truncationError
-        #self.deltaFFiniteDifference = ...
-        #self.DeltasFiniteDifference = ...
-        #self.nonlinearities = ...
+from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams
 
 
 class EOM:
@@ -234,10 +150,12 @@ class EOM:
 
         Returns
         -------
-        eomResults : EOMResults
+        results : WallGoResults
             Data class containing results.
 
         """
+        results = WallGoResults()
+
         self.pressAbsErrTol = 1e-8
         ## HACK! LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
         pressureMax, wallParamsMax, _, _, _ = self.wallPressure(
@@ -290,6 +208,11 @@ class EOM:
         wallVelocityError = self.errTol * optimizeResult.root
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
+        results.setWallVelocities(
+            wallVelocity=wallVelocity,
+            wallVelocityError=wallVelocityError,
+            wallVelocityLTE=wallVelocityLTE,
+        )
 
         # Get wall params:
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
@@ -299,15 +222,11 @@ class EOM:
         _, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(
             wallVelocity, newWallParams, returnExtras=True,
         )
-        return WallGoResults(
-            wallVelocity=wallVelocity,
-            wallVelocityError=wallVelocityError,
-            wallVelocityLTE=wallVelocityLTE,
-            hydroResults=hydroResults,
-            wallParams=wallParams,
-            boltzmannResults=boltzmannResults,
-            boltzmannBackground=boltzmannBackground,
-        )
+        results.setHydroResults(hydroResults)
+        results.setWallParams(wallParams)
+        results.setBoltzmannBackground(boltzmannBackground)
+        results.setBoltzmannResults(boltzmannResults)
+        return results
 
 
     def wallPressure(

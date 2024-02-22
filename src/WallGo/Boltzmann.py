@@ -1,73 +1,16 @@
 import sys
-from dataclasses import dataclass
 from copy import deepcopy
 import numpy as np
 import findiff  # finite difference methods
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
-from .helpers import boostVelocity
-from .Fields import Fields
 from .CollisionArray import CollisionArray
-
-"""LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
-it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
-that just removes the endspoints.
-"""
-
-class BoltzmannBackground:
-    def __init__(
-        self,
-        velocityMid: np.ndarray,
-        velocityProfile: np.ndarray,
-        fieldProfiles: Fields,
-        temperatureProfile: np.ndarray,
-        polynomialBasis: str = "Cardinal",
-    ):
-        # assumes input is in the wall frame
-        self.vw = 0
-        self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfiles = fieldProfiles.view(Fields) ## NEEDS to be Fields object
-        self.temperatureProfile = np.asarray(temperatureProfile)
-        self.polynomialBasis = polynomialBasis
-        self.vMid = velocityMid
-        self.TMid = 0.5 * (temperatureProfile[0] + temperatureProfile[-1])
-
-    def boostToPlasmaFrame(self) -> None:
-        """
-        Boosts background to the plasma frame
-        """
-        self.velocityProfile = boostVelocity(self.velocityProfile, self.vMid)
-        self.vw = boostVelocity(self.vw, self.vMid)
-
-    def boostToWallFrame(self) -> None:
-        """
-        Boosts background to the wall frame
-        """
-        self.velocityProfile = boostVelocity(self.velocityProfile, self.vw)
-        self.vw = 0
-
-
-@dataclass
-class BoltzmannDeltas:
-    """
-    Integrals of the out-of-equilibrium particle densities,
-    defined in equation (15) of arXiv:2204.13120.
-    """
-    Delta00: np.ndarray
-    Delta02: np.ndarray
-    Delta20: np.ndarray
-    Delta11: np.ndarray
-
-
-@dataclass
-class BoltzmannResults:
-    """
-    Holds results to be returned by BoltzmannSolver
-    """
-    deltaF: np.ndarray
-    Deltas: BoltzmannDeltas
-    truncationError: float
+from .WallGoTypes import (
+    BoltzmannBackground,
+    BoltzmannDeltas,
+    BoltzmannResults,
+)
 
 
 class BoltzmannSolver:
