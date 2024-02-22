@@ -456,9 +456,9 @@ def main():
 
         ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-        #vwLTE = manager.wallSpeedLTE()
+        vwLTE = manager.wallSpeedLTE()
 
-        #print(f"LTE wall speed: {vwLTE}")
+        print(f"LTE wall speed: {vwLTE}")
 
         ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 

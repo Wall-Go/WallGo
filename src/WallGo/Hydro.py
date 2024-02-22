@@ -199,41 +199,31 @@ class Hydro:
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
 
-        #print(f"{self.template.vMin=}")
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
         try:
             if vw > self.template.vMin:
-                #print('try - if')
                 Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
             else:
-                #print('try - else')
                 Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
-            #print('except')
             Tpm0 = [np.min([self.TMaxHighT,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
-            #print('1')
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-            #print('2')
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
         if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
-            #print('3')
             Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
         
         if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
-            #print('4')
             Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
 
-        #print(f"{Tpm0=}")
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
-        #print(f"{sol=}")
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
 
@@ -303,7 +293,6 @@ class Hydro:
             xi_sh = self.thermodynamics.csqHighT(Tp)**0.5
             Tm_sh = Tp
         else:
-            print(f"{vw=} {vp=} {Tp=}")
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
             vm_sh = solshock.t[-1]
             xi_sh,Tm_sh = solshock.y[:,-1]
@@ -318,7 +307,6 @@ class Hydro:
             Tmin = max(Tmin/1.5, self.TMinHighT)
             bracket1 = TiiShock(Tmin)
 
-        print(f"{Tmin =} {Tmax =} {Tm_sh = }")
 
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
             #Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
@@ -443,28 +431,30 @@ class Hydro:
 
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
-                print(f"{Tp=}")
                 return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
 
             # Even though the temperatures at the wall are restricted to be in the allowed range, for vp restricted by vpmin and vpmax
             # the temperature in the shock could still go below TMinHighT. Since this requires solving the fluid equations
             # in the shock, we can not a priori know if we violate the bound, so we use try-except to determine the real value of vpmin.
 
-            vpminlow = vpmin #lower bound on vp in the binary search
-            vpminup = vpmax #upper bound on vp in the binary search
-            vpminmid = (vpminlow + vpminup)/2.
-            while abs(vpminmid - vpminup) > 1e-4:
-                try:
-                    func(vpminmid)
-                    print(f"succes with {vpminmid=}")
-                    vpminup = vpminmid
-                except:
-                    print(f"failure with {vpminmid=}")
-                    vpminlow = vpminmid
-                vpminmid  = (vpminlow + vpminup)/2.
+            try:
+                fmin,fmax = func(vpmin),func(vpmax)
 
-            # HACK (1.01 is arbitrary)
-            vpmin = 1.01*vpminmid
+            except:
+                vpminlow = vpmin #lower bound on vp in the binary search
+                vpminup = vpmax #upper bound on vp in the binary search
+                vpminmid = (vpminlow + vpminup)/2.
+                while abs(vpminmid - vpminup) > 1e-4:
+                    try:
+                        func(vpminmid)
+                        vpminup = vpminmid
+                    except:
+                        vpminlow = vpminmid
+                    vpminmid  = (vpminlow + vpminup)/2.
+
+                # HACK (1.01 is arbitrary)
+                vpmin = 1.01*vpminmid
+                fmin,fmax = func(vpmin),func(vpmax)
 
 
             #TO DO: use try-excepts to make a list of vps for which the below can work
@@ -482,7 +472,7 @@ class Hydro:
 
             vpguess,_,_,_ = self.template.findMatching(vwTry)
 
-            fmin,fmax = func(vpmin),func(vpmax)
+
             if fmin*fmax <= 0:
                 sol = root_scalar(func, bracket=[vpmin,vpmax], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             else:
