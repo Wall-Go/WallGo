@@ -11,16 +11,21 @@ from .Thermodynamics import Thermodynamics
 @dataclass
 class WallGoResults:
     # bubble wall speed, and error
-    vw: float
-    vwErr: float
+    wallVelocity: float
+    wallVelocityError: float
+    # local thermal equilibrium result
+    wallVelocityLTE: float
     # thermodynamics
     thermodynamics: Thermodynamics
     # hydrodynamic results
-    vp: float
-    vm: float
-    vJ: float
-    # background quantities
+    velocityPlus: float
+    velocityMinus: float
+    velocityJouget: float
+    # scalar fields
+    fieldWidths: np.ndarray
+    fieldOffsets: np.ndarray
     fieldProfile: Fields
+    # background quantities
     temperatureProfile: np.ndarray
     velocityProfile: np.ndarray
     # deviations from equilibrium
@@ -30,4 +35,3 @@ class WallGoResults:
     DeltasFiniteDifference: list[dict]
     # measures of nonlinearity
     nonlinearitys: np.ndarray
-

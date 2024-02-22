@@ -3,20 +3,19 @@ from dataclasses import dataclass
 from typing import Tuple
 
 ## WallGo imports
-from .Particle import Particle
+from .Boltzmann import BoltzmannSolver
+from .Config import Config
 from .EffectivePotential import EffectivePotential
+from .EOM import EOM, WallParams
+from .Fields import Fields
 from .GenericModel import GenericModel
-from .Thermodynamics import Thermodynamics
+from .Grid import Grid
 from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
-from .EOM import EOM
-from .Grid import Grid
-from .Config import Config
 from .Integrals import Integrals
-from .Fields import Fields
-from .Boltzmann import BoltzmannSolver
-
-from .EOM import WallParams
+from .Particle import Particle
+from .Results import WallGoResults
+from .Thermodynamics import Thermodynamics
 from .WallGoUtils import getSafePathToResource, clamp
 
 @dataclass
@@ -51,6 +50,7 @@ class WallGoManager:
     grid: Grid
     eom: EOM
     boltzmannSolver: BoltzmannSolver
+    results: WallGoResults
 
 
     def __init__(self):
@@ -272,8 +272,8 @@ class WallGoManager:
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation.
         """
-
-        return self.hydro.findvwLTE()
+        self.results.wallVelocityLTE = self.hydro.findvwLTE()
+        return self.results.wallVelocityLTE
 
 
     # Call after initGrid. I guess this would be the main workload function
@@ -299,8 +299,10 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
-        return wallVelocity, wallParams
+        self.results.wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
+        self.results.fieldWidths = wallParams.widths
+        self.results.fieldOffsets = wallParams.offsets
+        return self.results.wallVelocity, wallParams
 
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
