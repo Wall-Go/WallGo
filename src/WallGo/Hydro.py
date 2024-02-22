@@ -43,8 +43,6 @@ class Hydro:
         self.TMaxLowT = self.thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = self.thermodynamics.freeEnergyLow.minPossibleTemperature
         
-        self.TminGuess = 80
-        self.TmaxGuess = 120
         self.rtol,self.atol = rtol,atol
 
         self.vJ = self.findJouguetVelocity()
@@ -85,11 +83,7 @@ class Hydro:
         # We increase Tmax until we find a value that brackets our root.
 
         # LN: I guess we need to ensure that Tmax does not start from a too large value though
-        #Tmin,Tmax = self.Tnucl,(self.TmaxGuess+self.Tnucl)/2
-
-        ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
-
-        Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
+        Tmin = self.Tnucl 
         Tmax = min(self.TMaxLowT,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
@@ -216,17 +210,22 @@ class Hydro:
 
         if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
             Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
+
+        elif Tpm0[0] < self.TMinHighT:
+            Tpm0 = [1.01*self.TMinHightT, Tpm0[1]]
         
         if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
             Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
+        
+        elif Tpm0[1] > self.TMaxLowT:
+            Tpm0 = [Tpm0[0], 0.98* self.TMaxLowT]
 
 
-        # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
+        # We map Tm and Tp, which lie between TMinLowT and TMaxLowT and TMinHighT and TMaxHighT,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
-
           
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
@@ -455,20 +454,6 @@ class Hydro:
                 # HACK (1.01 is arbitrary)
                 vpmin = 1.01*vpminmid
                 fmin,fmax = func(vpmin),func(vpmax)
-
-
-            #TO DO: use try-excepts to make a list of vps for which the below can work
-            print(f"{vpmax=} {vpmin=}")                
-
-
-            
-            # for i in range(50):
-            #     vpi = vpmin + i*(vpmax-vpmin)/20
-            #     try:
-            #         func(vpi)
-            #         print(f"{vpi = }")
-            #     except:
-            #         print(f"{vpi = }" "did not work")
 
             vpguess,_,_,_ = self.template.findMatching(vwTry)
 
