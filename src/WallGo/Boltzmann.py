@@ -1,9 +1,7 @@
-import warnings
 import sys
-import numpy as np
-import h5py  # read/write hdf5 structured binary data file format
-import codecs  # for decoding unicode string from hdf5 file
+from dataclasses import dataclass
 from copy import deepcopy
+import numpy as np
 import findiff  # finite difference methods
 from .Grid import Grid
 from .Polynomial import Polynomial
@@ -48,6 +46,16 @@ class BoltzmannBackground:
         """
         self.velocityProfile = boostVelocity(self.velocityProfile, self.vw)
         self.vw = 0
+
+
+@dataclass
+class BoltzmannResults:
+    """
+    Holds results to be returned by BoltzmannSolver
+    """
+    deltaF: np.ndarray
+    Deltas: dict
+    truncationError: float
 
 
 class BoltzmannSolver:
@@ -132,7 +140,7 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles    
 
-    def getDeltas(self, deltaF=None):
+    def getDeltas(self, deltaF: np.ndarray = None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -153,6 +161,9 @@ class BoltzmannSolver:
         # checking if result pre-computed
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
+
+        # getting (optimistic) estimate of truncation error
+        truncationError = self.estimateTruncationError(deltaF)
 
         ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
         particle = self.offEqParticles[0]
@@ -196,7 +207,9 @@ class BoltzmannSolver:
         Deltas['11'] = deltaFPoly.integrate((1,2), E*pz * integrand)
 
         # returning results
-        return Deltas
+        return BoltzmannResults(
+            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError,
+        )
 
     def solveBoltzmannEquations(self):
         r"""
@@ -238,11 +251,6 @@ class BoltzmannSolver:
         # returning result
         deltaFShape = (self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
         deltaF = np.reshape(deltaF, deltaFShape, order="C")
-
-        # testing result
-        source = np.reshape(source, deltaFShape, order="C")
-        truncationError = self.estimateTruncationError(deltaF)
-        print(f"(optimistic) estimate of truncation error = {truncationError}")
 
         return deltaF
 

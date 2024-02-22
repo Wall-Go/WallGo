@@ -2,10 +2,10 @@ import numpy as np
 from dataclasses import dataclass
 
 # WallGo imports
+from .Boltzmann import BoltzmannBackground, BoltzmannResults
+from .EOM import WallParams
 from .Fields import Fields
-from .FreeEnergy import FreeEnergy
-from .Polynomial import Polynomial
-from .Thermodynamics import Thermodynamics
+from .Hydro import HydroResults
 
 
 @dataclass
@@ -16,40 +16,55 @@ class WallGoResults:
     # local thermal equilibrium result
     wallVelocityLTE: float
     # hydrodynamic results
-    velocityPlus: float
-    velocityMinus: float
+    temperaturePlus: float
+    temperatureMinus: float
     velocityJouget: float
-    # scalar fields
-    fieldWidths: np.ndarray
-    fieldOffsets: np.ndarray
-    fieldProfile: Fields
-    # background quantities
-    temperatureProfile: np.ndarray
+    # quantities from WallParams
+    wallWidths: np.ndarray
+    wallOffsets: np.ndarray
+    # quantities from BoltzmannBackground
     velocityProfile: np.ndarray
-    # deviations from equilibrium
-    deltaFs: list[Polynomial]
-    Deltas: list[dict]
+    fieldProfile: Fields
+    temperatureProfile: np.ndarray
+    # quantities from BoltzmannResults
+    deltaF: np.ndarray
+    Deltas: dict
+    truncationError: float
     # finite difference results
-    DeltasFiniteDifference: list[dict]
+    #deltaFFiniteDifference: np.ndarray
+    #DeltasFiniteDifference: dict
     # measures of nonlinearity
-    nonlinearitys: np.ndarray
+    #nonlinearitys: np.ndarray
 
-    def __init__(self):
-        # HACK! This seems crazy - anyone have a better idea of how to
-        # initialise and assign results?
-        self.wallVelocity = None
-        self.wallVelocityError = None
-        self.wallVelocityLTE = None
-        self.velocityPlus = None
-        self.velocityMinus = None
-        self.velocityJouget = None
-        self.fieldWidths = None
-        self.fieldOffsets = None
-        self.fieldProfile = None
-        self.temperatureProfile = None
-        self.velocityProfile = None
-        self.deltaFs = None
-        self.Deltas = None
-        self.DeltasFiniteDifference = None
-        self.nonlinearities = None
-
+    def __init__(
+        self,
+        wallVelocity: float,
+        wallVelocityError: float,
+        wallVelocityLTE: float,
+        hydroResults: HydroResults,
+        wallParams: WallParams,
+        boltzmannBackground: BoltzmannBackground,
+        boltzmannResults: BoltzmannResults
+    ):
+        # main results
+        self.wallVelocity = wallVelocity
+        self.wallVelocityError = wallVelocityError
+        # hydrodynamics results
+        self.wallVelocityLTE = wallVelocityLTE
+        self.temperaturePlus = hydroResults.temperaturePlus
+        self.temperatureMinus = hydroResults.temperatureMinus
+        self.velocityJouget = hydroResults.velocityJouget
+        # quantities from WallParams
+        self.wallWidths = wallParams.widths
+        self.wallOffsets = wallParams.offsets
+        # quantities from BoltzmannBackground
+        self.velocityProfile = boltzmannBackground.velocityProfile
+        self.fieldProfile = boltzmannBackground.fieldProfile
+        self.temperatureProfile = boltzmannBackground.temperatureProfile
+        # quantities from BoltzmannResults
+        self.deltaF = boltzmannResults.deltaF
+        self.Deltas = boltzmannResults.Deltas
+        self.truncationError = boltzmannResults.truncationError
+        #self.deltaFFiniteDifference = ...
+        #self.DeltasFiniteDifference = ...
+        #self.nonlinearities = ...

@@ -4,7 +4,7 @@ from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .EOM import EOM
+from .EOM import EOM, WallGoResults
 from .EOM import WallParams
 
 from .Particle import Particle
@@ -12,8 +12,7 @@ from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
-from .FreeEnergy import FreeEnergy 
-from .Results import WallGoResults
+from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction

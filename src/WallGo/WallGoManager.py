@@ -6,7 +6,7 @@ from typing import Tuple
 from .Boltzmann import BoltzmannSolver
 from .Config import Config
 from .EffectivePotential import EffectivePotential
-from .EOM import EOM, WallParams
+from .EOM import EOM, WallParams, WallGoResults
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .Grid import Grid
@@ -14,7 +14,6 @@ from .Hydro import Hydro # why is this not Hydrodynamics? compare with Thermodyn
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Particle import Particle
-from .Results import WallGoResults
 from .Thermodynamics import Thermodynamics
 from .WallGoUtils import getSafePathToResource, clamp
 
@@ -50,7 +49,6 @@ class WallGoManager:
     grid: Grid
     eom: EOM
     boltzmannSolver: BoltzmannSolver
-    results: WallGoResults
 
 
     def __init__(self):
@@ -67,9 +65,10 @@ class WallGoManager:
         ## -- Order of initialization matters here
 
         ## Grid
-        self._initGrid( self.config.getint("PolynomialGrid", "spatialGridSize"), 
-                        self.config.getint("PolynomialGrid", "momentumGridSize"),
-                        self.config.getfloat("PolynomialGrid", "L_xi")
+        self._initGrid(
+            self.config.getint("PolynomialGrid", "spatialGridSize"), 
+            self.config.getint("PolynomialGrid", "momentumGridSize"),
+            self.config.getfloat("PolynomialGrid", "L_xi"),
         )
 
         ## These are set properly in initTemperatureRange()
@@ -119,7 +118,6 @@ class WallGoManager:
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
 
         self._initHydro(self.thermodynamics, self.TMin, self.TMax)
-        self.results.velocityJouget = self.hydro.vJ
 
         print(f"Jouguet: {self.hydro.vJ}")
 
@@ -250,7 +248,6 @@ class WallGoManager:
         ## To initialize Grid we need to specify a "temperature" scale that has analogous role as L_xi, but for the momenta.
         ## In practice this scale needs to be close to temperature near the wall, but we don't know that yet, so just initialize with some value here 
         ## and update once the nucleation temperature is obtained.
-        
         initialMomentumFalloffScale = 50.
 
         N, M = int(N), int(M)
@@ -273,12 +270,11 @@ class WallGoManager:
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation.
         """
-        self.results.wallVelocityLTE = self.hydro.findvwLTE()
-        return self.results.wallVelocityLTE
+        return self.hydro.findvwLTE()
 
 
     # Call after initGrid. I guess this would be the main workload function
-    def solveWall(self, bIncludeOffEq: bool) -> Tuple[float, WallParams]:
+    def solveWall(self, bIncludeOffEq: bool) -> WallGoResults:
         """Returns wall speed and wall parameters (widths and offsets).
         """
 
@@ -300,10 +296,8 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        self.results.wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
-        self.results.fieldWidths = wallParams.widths
-        self.results.fieldOffsets = wallParams.offsets
-        return self.results.wallVelocity, wallParams
+        # returning results
+        return eom.findWallVelocityMinimizeAction()
 
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
