@@ -218,10 +218,10 @@ class WallGoManager:
         fLowT.tracePhaseIVP(TMinLowT, TMaxLowT, dT)
 
     def _initHydro(
-        self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float
+        self, thermodynamics: Thermodynamics
     ) -> None:
         """"""
-        self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
+        self.hydro = Hydro(thermodynamics)
 
     def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
         r"""

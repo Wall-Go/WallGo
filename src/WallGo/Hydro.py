@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-6, atol=1e-6):
+    def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters
@@ -37,11 +37,14 @@ class Hydro:
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
-        self.TminGuess = TminGuess
-
-        # LN: can't have this since TmaxGuess is supposed to be an input
-        #self.TmaxGuess = 5.*self.Tnucl
-        self.TmaxGuess = TmaxGuess
+        
+        self.TMaxHighT = self.thermodynamics.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT = self.thermodynamics.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT = self.thermodynamics.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT = self.thermodynamics.freeEnergyLow.minPossibleTemperature
+        
+        self.TminGuess = 80
+        self.TmaxGuess = 120
         self.rtol,self.atol = rtol,atol
 
         self.vJ = self.findJouguetVelocity()
@@ -86,8 +89,8 @@ class Hydro:
 
         ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
 
-        Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
-        Tmax = min(self.TmaxGuess,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
+        Tmin = self.TMinLowT # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
+        Tmax = min(self.TMaxLowT,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
 
@@ -275,7 +278,6 @@ class Hydro:
             Nucleation temperature
 
         """
-
         def shock(v, xiAndT):
             xi, T = xiAndT
             return boostVelocity(xi,v)*xi - self.thermodynamics.csqHighT(T)
@@ -297,26 +299,26 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = (self.TminGuess+self.Tnucl)/2,Tm_sh 
+        Tmin,Tmax = (self.TMinHighT+self.Tnucl)/2,Tm_sh 
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
-        while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
+        while bracket1*bracket2 > 0 and Tmin > self.TMinHighT:
             Tmax = Tmin
             bracket2 = bracket1
-            Tmin = max(Tmin/1.5, self.TminGuess)
+            Tmin = max(Tmin/1.5, self.TMinHighT)
             bracket1 = TiiShock(Tmin)
 
-        if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol)
+        if 1==1 or bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+            Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
         else: #If we cannot bracket the root, use the 'secant' method instead.
             Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh, xtol=self.atol, rtol=self.rtol)
 
         return Tn.root
 
     def strongestShock(self, vw):
-        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) -self.thermodynamics.pLowT(self.TminGuess)
+        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) -self.thermodynamics.pLowT(self.TMinLowT)
     
         try: 
-            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TminGuess, self.TmaxGuess), rtol=self.rtol,xtol=self.atol).root
+            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TMinHighT, self.TMaxHighT), rtol=self.rtol,xtol=self.atol).root
             return self.solveHydroShock(vw,0,Tpstrongest)
     
         except:
