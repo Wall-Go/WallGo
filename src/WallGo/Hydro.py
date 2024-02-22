@@ -89,14 +89,14 @@ class Hydro:
 
         ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
 
-        Tmin = self.TMinLowT # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
+        Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
         Tmax = min(self.TMaxLowT,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
 
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
-            tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
+            tmSol = root_scalar(vpDerivNum,bracket =[self.Tnucl, self.TMaxLowT], method='brentq', xtol=self.atol, rtol=self.rtol).root
         else: # If we cannot bracket the root, use the 'secant' method instead. This will call thermodynamics outside of its interpolation range?
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=Tmax, xtol=self.atol, rtol=self.rtol).root
 
@@ -154,7 +154,7 @@ class Hydro:
             eLowT = wLowT - pLowT
             return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
 
-        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TmaxGuess],method='Bounded').x
+        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TMaxLowT],method='Bounded').x
         Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
         vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
@@ -208,18 +208,18 @@ class Hydro:
             else:
                 Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
-            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            Tpm0 = [np.min([self.TMaxHighT,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        if Tpm0[0] > self.TmaxGuess: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
-            Tpm0 = [0.98*self.TmaxGuess,0.95*self.TmaxGuess]
+        if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
         
-        if Tpm0[1] < self.TminGuess: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
-            Tpm0 = [1.05*self.TminGuess,1.01*self.TminGuess]
+        if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
 
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
@@ -278,6 +278,7 @@ class Hydro:
             Nucleation temperature
 
         """
+
         def shock(v, xiAndT):
             xi, T = xiAndT
             return boostVelocity(xi,v)*xi - self.thermodynamics.csqHighT(T)
@@ -307,7 +308,7 @@ class Hydro:
             Tmin = max(Tmin/1.5, self.TMinHighT)
             bracket1 = TiiShock(Tmin)
 
-        if 1==1 or bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
+        if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
             Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
         else: #If we cannot bracket the root, use the 'secant' method instead.
             Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh, xtol=self.atol, rtol=self.rtol)
@@ -360,7 +361,7 @@ class Hydro:
 
             #For a given vwTry, if vp becomes too small, Tm will become smaller than TminGuess.
             #We thus determine a minimum vp given by this minimum Tm
-            TmMin = 1.05*self.TminGuess #Smallest allowed value of Tm
+            TmMin = 1.05*self.TMinLowT #Smallest allowed value of Tm
 
             vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
@@ -371,7 +372,7 @@ class Hydro:
             
             #Try to find Tp for which the matching equations are solved. This gives the minimum value of vp
             try:
-                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TMaxHighT], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
                 vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
                 vpAtTmMin = np.sqrt(vpvm*vpovm)
                 vpmin = vpAtTmMin 
@@ -381,7 +382,7 @@ class Hydro:
 
             # For a given vwTry, if vp becomes too large, Tp will become larger than TmaxGuess.
             # We thus determine a maximum vp given by this maximum Tp
-            TpMax = 0.95*self.TmaxGuess
+            TpMax = 0.95*self.TMaxHighT
             vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
 
             def matchinOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
@@ -389,10 +390,10 @@ class Hydro:
                 return vpvm/vpovm - vmSqAtTpMax
 
             try:
-                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TminGuess,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TMinLowT,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
                 vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
-                vpAtTpMax = np.sqrt(vpvm*vpovm)
                 if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpAtTpMax = np.sqrt(vpvm*vpovm)
                     vpmax = vpAtTpMax
                 else:
                     vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
@@ -516,8 +517,8 @@ class Hydro:
         """
 
         Tp,Tm = TpTm
-        Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2))   #Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf 
-        Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
+        Xm = np.tan(np.pi/(self.TMaxLowT-self.TMinLowT)*(Tm-(self.TMaxLowT+self.TMinLowT)/2))   #Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf 
+        Xp = np.tan(np.pi/(self.TMaxHighT-self.TMinHighT)*(Tp-(self.TMaxHighT+self.TMinHighT)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
         return [Xp,Xm]
 
     def __inverseMappingT(self, XpXm):
@@ -526,7 +527,7 @@ class Hydro:
         """
 
         Xp,Xm = XpXm
-        Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-        Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
+        Tp = np.arctan(Xp)*(self.TMaxHighT-self.TMinHighT)/np.pi+ (self.TMaxHighT+ self.TMinHighT)/2
+        Tm = np.arctan(Xm)*(self.TMaxLowT-self.TMinLowT)/np.pi+ (self.TMaxLowT+ self.TMinLowT)/2
         return [Tp,Tm]
     

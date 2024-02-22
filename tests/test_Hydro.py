@@ -1,10 +1,17 @@
 import pytest
+from dataclasses import dataclass
 import numpy as np
 from scipy.integrate import odeint
 import WallGo
 
 # defines the toy xSM model, used in 2004.06995 and 2010.09744
 # critical temperature is at T=1
+
+@dataclass
+class FreeEnergyHack:
+    minPossibleTemperature: float
+    maxPossibleTemperature: float 
+
 
 class TestModel2Step(WallGo.Thermodynamics):
     __test__ = False
@@ -18,6 +25,9 @@ class TestModel2Step(WallGo.Thermodynamics):
         self.musq = musqq
         self.Tnucl = Tn
         self.Tc = 1
+
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
 
     #Pressure in high T phase
     def pHighT(self, T):
@@ -57,6 +67,9 @@ class TestModelBag(WallGo.Thermodynamics):
         self.eps = 1. - psi #this is the bag constant times 3 and divided by (the number of degrees of freedom of the high T phase times Tc^4)
         self.Tnucl = Tn
         self.Tc = 1
+
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=500.)
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=500.)
 
     #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pHighT(self, T):
