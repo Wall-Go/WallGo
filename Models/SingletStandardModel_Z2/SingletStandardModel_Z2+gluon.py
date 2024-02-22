@@ -68,14 +68,16 @@ class SingletSM_Z2(GenericModel):
         self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
+        gluonMsqVacuum = lambda fields: 0 * 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
+        gluonMsqDerivative = lambda fields: 0 * self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = True,
+                            inEquilibrium = False,
                             ultrarelativistic = True,
                             totalDOFs = 16
         )
@@ -469,14 +471,14 @@ def main():
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
 
-        bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        # bIncludeOffEq = False
+        # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        # wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        # print(f"{wallVelocity=}")
+        # print(f"{wallParams.widths=}")
+        # print(f"{wallParams.offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
@@ -487,6 +489,8 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{wallParams.widths=}")
         print(f"{wallParams.offsets=}")
+        
+        
 
 
     # end parameter-space loop
