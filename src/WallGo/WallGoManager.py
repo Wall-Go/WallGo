@@ -119,6 +119,7 @@ class WallGoManager:
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
 
         self._initHydro(self.thermodynamics, self.TMin, self.TMax)
+        self.results.velocityJouget = self.hydro.vJ
 
         print(f"Jouguet: {self.hydro.vJ}")
 
@@ -197,7 +198,7 @@ class WallGoManager:
 
         ## temp temp!
         #TMin, TMax= 0.0, 1.0*self.thermodynamics.Tc
-        
+
 
         """Allow some leeway since the template model is just a rough estimate. 
         NB: In generaly situations, TMax (TMin) cannot be arbitrarily large (small) because both phases need to remain (meta)stable over the range.

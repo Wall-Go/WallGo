@@ -15,8 +15,6 @@ class WallGoResults:
     wallVelocityError: float
     # local thermal equilibrium result
     wallVelocityLTE: float
-    # thermodynamics
-    thermodynamics: Thermodynamics
     # hydrodynamic results
     velocityPlus: float
     velocityMinus: float
@@ -35,3 +33,23 @@ class WallGoResults:
     DeltasFiniteDifference: list[dict]
     # measures of nonlinearity
     nonlinearitys: np.ndarray
+
+    def __init__(self):
+        # HACK! This seems crazy - anyone have a better idea of how to
+        # initialise and assign results?
+        self.wallVelocity = None
+        self.wallVelocityError = None
+        self.wallVelocityLTE = None
+        self.velocityPlus = None
+        self.velocityMinus = None
+        self.velocityJouget = None
+        self.fieldWidths = None
+        self.fieldOffsets = None
+        self.fieldProfile = None
+        self.temperatureProfile = None
+        self.velocityProfile = None
+        self.deltaFs = None
+        self.Deltas = None
+        self.DeltasFiniteDifference = None
+        self.nonlinearities = None
+

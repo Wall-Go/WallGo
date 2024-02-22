@@ -13,6 +13,7 @@ from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy 
+from .Results import WallGoResults
 from .WallGoManager import WallGoManager
 from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
