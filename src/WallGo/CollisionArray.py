@@ -19,9 +19,9 @@ class CollisionArray:
     """
 
     """Hardcode axis types and their meaning in correct ordering. 
-    Our order is ijkl with momentum indices first, polynomial indices last.
+    Our order is ijklmn, as given in AXIS_LABELS.
     """
-    AXIS_TYPES = ("z", "pz", "pp", "z", "pz", "pp")
+    AXIS_TYPES = ("Array", "pz", "pp", "Array", "pz", "pp")
     AXIS_LABELS = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
 
     def __init__(self, grid: Grid, basisType: str, particles: list):
