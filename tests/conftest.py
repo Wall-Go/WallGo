@@ -51,7 +51,6 @@ def particle():
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
-        multiplicity=1,
         totalDOFs = 12
     )
 

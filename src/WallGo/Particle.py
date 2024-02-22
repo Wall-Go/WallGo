@@ -17,7 +17,6 @@ class Particle:
         statistics,
         inEquilibrium,
         ultrarelativistic,
-        multiplicity,
         totalDOFs
     ):
         r"""Initialisation
@@ -40,9 +39,6 @@ class Particle:
             True if particle is treated as in local equilibrium.
         ultrarelativistic : bool
             True if particle is treated as ultrarelativistic.
-        multiplicity : int
-            How many identical copies of this particle the theory has. 
-            Use eg. for light quarks that for our purposes are identical. 
         totalDOFs : int
             Total number of degrees of freedom (should include the multiplicity 
             factor).
@@ -61,7 +57,6 @@ class Particle:
             statistics,
             inEquilibrium,
             ultrarelativistic,
-            multiplicity,
             totalDOFs
         )
         self.name = name
@@ -71,7 +66,6 @@ class Particle:
         self.statistics = statistics
         self.inEquilibrium = inEquilibrium
         self.ultrarelativistic = ultrarelativistic
-        self.multiplicity = multiplicity
         self.totalDOFs = totalDOFs
 
     @staticmethod
@@ -83,7 +77,6 @@ class Particle:
         statistics,
         inEquilibrium,
         ultrarelativistic,
-        multiplicity,
         totalDOFs
     ):
         """
@@ -103,7 +96,5 @@ class Particle:
             "inEquilibrium must be a bool"
         assert isinstance(ultrarelativistic, bool), \
             "ultrarelativistic must be a bool"
-        assert isinstance(multiplicity, int) , \
-            "multiplicity must be an integer"
         assert isinstance(totalDOFs, int) , \
             "totalDOFs must be an integer"

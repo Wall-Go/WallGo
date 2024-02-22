@@ -49,7 +49,6 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            multiplicity = 1,
                             totalDOFs = 12
         )
         self.addParticle(topQuark)
@@ -64,7 +63,6 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 5,
                             totalDOFs = 60
         )
         self.addParticle(lightQuark)
@@ -79,7 +77,6 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 1,
                             totalDOFs = 16
         )
         self.addParticle(gluon)
