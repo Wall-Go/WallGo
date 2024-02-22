@@ -43,7 +43,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     pp = pp[np.newaxis, np.newaxis, :]
 
     # fluctuation mode
-    msq = particle.msqVacuum(bg.fieldProfile)
+    msq = particle.msqVacuum(bg.fieldProfiles)
     ## Drop start and end points in field space
     msq = msq[1:-1, np.newaxis, np.newaxis]
     E = np.sqrt(msq + pz**2 + pp**2)

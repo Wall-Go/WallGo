@@ -55,7 +55,7 @@ class WallGoResults:
     wallOffsets: np.ndarray
     # quantities from BoltzmannBackground
     velocityProfile: np.ndarray
-    fieldProfile: Fields
+    fieldProfiles: Fields
     temperatureProfile: np.ndarray
     # quantities from BoltzmannResults
     deltaF: np.ndarray
@@ -90,7 +90,7 @@ class WallGoResults:
         self.wallOffsets = wallParams.offsets
         # quantities from BoltzmannBackground
         self.velocityProfile = boltzmannBackground.velocityProfile
-        self.fieldProfile = boltzmannBackground.fieldProfile
+        self.fieldProfiles = boltzmannBackground.fieldProfiles
         self.temperatureProfile = boltzmannBackground.temperatureProfile
         # quantities from BoltzmannResults
         self.deltaF = boltzmannResults.deltaF

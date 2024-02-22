@@ -10,8 +10,8 @@ from .helpers import boostVelocity
 from .Fields import Fields
 from .CollisionArray import CollisionArray
 
-"""LN: What's going on with the fieldProfile array here? When constructing a background in EOM.wallPressure(), 
-it explicitly reshapes the input fieldProfile to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
+"""LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
+it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
 that just removes the endspoints.
 """
 
@@ -20,14 +20,14 @@ class BoltzmannBackground:
         self,
         velocityMid: np.ndarray,
         velocityProfile: np.ndarray,
-        fieldProfile: Fields,
+        fieldProfiles: Fields,
         temperatureProfile: np.ndarray,
         polynomialBasis: str = "Cardinal",
     ):
         # assumes input is in the wall frame
         self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfile = fieldProfile.view(Fields) ## NEEDS to be Fields object
+        self.fieldProfiles = fieldProfiles.view(Fields) ## NEEDS to be Fields object
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
         self.vMid = velocityMid
@@ -176,8 +176,8 @@ class BoltzmannSolver:
         deltaFPoly.changeBasis('Cardinal')
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
-        field = self.background.fieldProfile.TakeSlice(
-            1, -1, axis=self.background.fieldProfile.overFieldPoints
+        field = self.background.fieldProfiles.TakeSlice(
+            1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
@@ -321,7 +321,7 @@ class BoltzmannSolver:
         # background profiles
         TFull = self.background.temperatureProfile
         vFull = self.background.velocityProfile
-        msqFull = particle.msqVacuum(self.background.fieldProfile)
+        msqFull = particle.msqVacuum(self.background.fieldProfiles)
         vw = self.background.vw
 
         # expanding to be rank 3 arrays, like deltaF
