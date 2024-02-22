@@ -62,7 +62,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     Delta00_analytic = (4 * a + c) * (4 * d + f) * bg.temperatureProfile**3 / 64
 
     # asserting result
-    np.testing.assert_allclose(Deltas["00"].coefficients, Delta00_analytic[1:-1], rtol=1e-14, atol=0)
+    np.testing.assert_allclose(Deltas.Delta00.coefficients, Delta00_analytic[1:-1], rtol=1e-14, atol=0)
 
 
 @pytest.mark.parametrize("M, N", [(3, 3), (5, 5)])
