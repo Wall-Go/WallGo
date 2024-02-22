@@ -6,11 +6,13 @@ from typing import Tuple
 
 import scipy.optimize
 
-from .Boltzmann import BoltzmannBackground, BoltzmannResults, BoltzmannSolver
+from .Boltzmann import (
+    BoltzmannBackground, BoltzmannDeltas, BoltzmannResults, BoltzmannSolver
+)
 from .Fields import Fields, FieldPoint
 from .GenericModel import GenericModel
 from .Grid import Grid
-from .helpers import gammaSq # derivatives for callable functions
+from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro, HydroResults
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
@@ -59,7 +61,7 @@ class WallGoResults:
     temperatureProfile: np.ndarray
     # quantities from BoltzmannResults
     deltaF: np.ndarray
-    Deltas: dict
+    Deltas: BoltzmannDeltas
     truncationError: float
     # finite difference results
     #deltaFFiniteDifference: np.ndarray
@@ -354,7 +356,12 @@ class EOM:
             direction="z",
             basis="Cardinal",
         )
-        offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
+        offEquilDeltas = BoltzmannDeltas(
+            Delta00=zeroPoly,
+            Delta02=zeroPoly,
+            Delta20=zeroPoly,
+            Delta11=zeroPoly,
+        )
         deltaF = Polynomial(
             np.zeros(((self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1))),
             self.grid,
@@ -472,8 +479,7 @@ class EOM:
         def actionWrapper(wallArray: np.ndarray, *args) -> float:
             return self.action( __toWallParams(wallArray), *args )
         
-
-        Delta00 = boltzmannResults.Deltas["00"]
+        Delta00 = boltzmannResults.Deltas.Delta00
         sol = scipy.optimize.minimize(
             actionWrapper,
             wallArray,
@@ -825,10 +831,10 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = offEquilDeltas["00"].coefficients[index]
-        delta11 = offEquilDeltas["11"].coefficients[index]
-        delta02 = offEquilDeltas["02"].coefficients[index]
-        delta20 = offEquilDeltas["20"].coefficients[index]
+        delta00 = offEquilDeltas.Delta00.coefficients[index]
+        delta02 = offEquilDeltas.Delta02.coefficients[index]
+        delta20 = offEquilDeltas.Delta20.coefficients[index]
+        delta11 = offEquilDeltas.Delta11.coefficients[index]
 
         u0 = np.sqrt(gammaSq(velocityMid))
         u3 = np.sqrt(gammaSq(velocityMid))*velocityMid

@@ -49,12 +49,24 @@ class BoltzmannBackground:
 
 
 @dataclass
+class BoltzmannDeltas:
+    """
+    Integrals of the out-of-equilibrium particle densities,
+    defined in equation (15) of arXiv:2204.13120.
+    """
+    Delta00: np.ndarray
+    Delta02: np.ndarray
+    Delta20: np.ndarray
+    Delta11: np.ndarray
+
+
+@dataclass
 class BoltzmannResults:
     """
     Holds results to be returned by BoltzmannSolver
     """
     deltaF: np.ndarray
-    Deltas: dict
+    Deltas: BoltzmannDeltas
     truncationError: float
 
 
@@ -154,9 +166,9 @@ class BoltzmannSolver:
 
         Returns
         -------
-        Deltas : array_like
-            Defined in equation (15) of [LC22]_. A list of 4 arrays, each of
-            which is of size :py:data:`len(z)`.
+        Deltas : BoltzmannDeltas
+            Defined in equation (15) of [LC22]_. A collection of 4 arrays,
+            each of which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
         if deltaF is None:
@@ -167,9 +179,6 @@ class BoltzmannSolver:
 
         ## HACK. hardcode so that this works only for first particle in our list. TODO remove after generalizing to many particles
         particle = self.offEqParticles[0]
-
-        # dict to store results
-        Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
 
         # constructing Polynomial class from deltaF array
         deltaFPoly = Polynomial(deltaF, self.grid, (self.basisM, self.basisN, self.basisN), ('z', 'pz', 'pp'), False)
@@ -201,10 +210,13 @@ class BoltzmannSolver:
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
         
-        Deltas['00'] = deltaFPoly.integrate((1,2), integrand)
-        Deltas['20'] = deltaFPoly.integrate((1,2), E**2 * integrand)
-        Deltas['02'] = deltaFPoly.integrate((1,2), pz**2 * integrand)
-        Deltas['11'] = deltaFPoly.integrate((1,2), E*pz * integrand)
+        Delta00 = deltaFPoly.integrate((1,2), integrand)
+        Delta02 = deltaFPoly.integrate((1,2), pz**2 * integrand)
+        Delta20 = deltaFPoly.integrate((1,2), E**2 * integrand)
+        Delta11 = deltaFPoly.integrate((1,2), E*pz * integrand)
+        Deltas = BoltzmannDeltas(
+            Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
+        )
 
         # returning results
         return BoltzmannResults(
