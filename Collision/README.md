@@ -1,21 +1,30 @@
 
 ## Installation
 
-CMake is used as the build system, but dependencies need to be installed first. 
+CMake is used as the build system, but dependencies need to be installed first (see below). Once you have installed the dependencies you can compile as:
+```
+cmake -B build
+cmake --build build
+cmake --install build
+```
+This builds and installs a standalone C++ executable to ./bin, example programs to examples/bin and a separate Python module for exposing the C++ code to rest of WallGo.
 
-# Using Conan
+We compile with OpenMP support by default. Use the ```-DUSE_OMP=Off``` flag to disable OpenMP. You may use ```-DBUILD_PYTHON_MODULE=Off``` to build only a standalone C++ binary without Python bindings.
 
-Easiest way of handling the dependencies is with Conan (version > 2.0):
+**Important:** The Python bindings are version dependent and guaranteed to work only with the same version of Python that was used during compilation (we default to the version returned by CMake's FindPython3). If you have multiple Python installations on your system, you can specify the correct version with ```-DUSER_PYTHON_VERSION=3.XX```. If you still have issues, you can try ```-DPython3_ROOT_DIR="path/to/python"``` to specify the location of your preferred Python installation with.
+
+
+# Installing dependenciens with Conan
+
+Easiest way of handling the dependencies is with the Conan package manager. Requires Conan version > 2.0. The build proceeds as:
 ```
 conan install . --output-folder=build --build=missing
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
 cmake --build build --config Release
 cmake --install build
 ```
-This will build and install all dependencies, a standalone C++ executable and a separate Python module that exposes the C++ code to rest of WallGo.
-Hint: We recommend installing Conan with pip. 
+**Hint:** Conan can be installed with pip. 
 
-We compile with OpenMP support by default. Use the ```-DUSE_OMP=Off``` flag if you must compile without OpenMP.
 
 # Manually installing dependencies
 
@@ -36,20 +45,6 @@ pip install "pybind11[global]"
 This installation needs to be global, otherwise pip doesn't install the required CMake files. Alternatively you could install pybind11 through conda, or build it directly from source.
 
 For Linux systems, muparser needs to be manually installed from source. Please follow the installation instructions at https://github.com/beltoforion/muparser/. **Note:** muparser can safely be installed without OpenMP support (```-DENABLE_OPENMP=OFF```) without affecting WallGo/Collision.
-
-
-Then proceed with standard CMake build:
-```
-cmake -B build
-cmake --build build
-cmake --install build
-```
-
-# Optional build options
-
-Following options are available in the CMake configure step:
-- ```-DBUILD_PYTHON_MODULE=Off```: Build only a standalone binary without Python bindings. pybind11 is not required with this option.
-- ```-DUSE_OMP=Off```: Disables OpenMP support.
 
 
 ## Debugging & Profiling [for developers!]

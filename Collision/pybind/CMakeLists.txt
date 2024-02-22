@@ -17,6 +17,8 @@ endif()
 
 find_package(pybind11 CONFIG REQUIRED)
 
+message(STATUS "=== Configured Python bindings for Python ${Python3_VERSION}")
+
 pybind11_add_module(${MODULE})
 
 target_sources(${MODULE} PRIVATE
