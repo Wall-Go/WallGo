@@ -16,11 +16,12 @@ def test_equilibriumEOM_singlet(singletBenchmarkEOM_equilibrium: Tuple[WallGo.EO
 
     eom, BM = singletBenchmarkEOM_equilibrium
 
-    vwEOM, _ = eom.findWallVelocityMinimizeAction()
+    results = eom.findWallVelocityMinimizeAction()
+    vwEOM = results.wallVelocity
     vwLTE = BM.expectedResults["vwLTE"]
 
     ## Currently the wall velocity solver in EOM has hardcoded absolute tolerance of 1e-3. So no point testing for more precision than that
 
     print(f"{vwEOM=}")
 
-    assert(vwEOM == pytest.approx(vwLTE, abs = 1e-3))
+    assert vwEOM == pytest.approx(vwLTE, abs=1e-3)
