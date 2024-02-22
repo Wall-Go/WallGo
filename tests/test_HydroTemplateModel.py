@@ -27,8 +27,8 @@ class TestModelTemplate(WallGo.Thermodynamics):
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
         self.eps = 0
         self.eps = (self.pHighT(Tn)-self.pLowT(Tn)-cb2*(self.eHighT(Tn)-self.eLowT(Tn)-3*wn*alN))/(1+cb2)
-        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
-        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
 
     #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pHighT(self, T):
@@ -119,6 +119,8 @@ def test_findHydroBoundaries():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-10,1e-10)
+        print(f"{hydro.vMin=}")
+        print(f"{alN[i]=} {vw[i]=} {hydro.vJ=}")
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
@@ -126,4 +128,6 @@ def test_findHydroBoundaries():
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0,0]
+        print(f"{res1[i]=}")
+        print(f"{res2[i]=}")
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)

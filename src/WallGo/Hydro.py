@@ -199,32 +199,41 @@ class Hydro:
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
             return (eq1*c,eq2*c)
 
-
+        #print(f"{self.template.vMin=}")
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
         try:
             if vw > self.template.vMin:
+                #print('try - if')
                 Tpm0 = self.template.matchDeflagOrHybInitial(min(vw,self.template.vJ), vp)
             else:
+                #print('try - else')
                 Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
+            #print('except')
             Tpm0 = [np.min([self.TMaxHighT,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+            #print('1')
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
+            #print('2')
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
         if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            #print('3')
             Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
         
         if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            #print('4')
             Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
 
+        #print(f"{Tpm0=}")
 
         # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
+        #print(f"{sol=}")
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
 
@@ -294,6 +303,7 @@ class Hydro:
             xi_sh = self.thermodynamics.csqHighT(Tp)**0.5
             Tm_sh = Tp
         else:
+            print(f"{vw=} {vp=} {Tp=}")
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
             vm_sh = solshock.t[-1]
             xi_sh,Tm_sh = solshock.y[:,-1]
@@ -308,8 +318,11 @@ class Hydro:
             Tmin = max(Tmin/1.5, self.TMinHighT)
             bracket1 = TiiShock(Tmin)
 
+        print(f"{Tmin =} {Tmax =} {Tm_sh = }")
+
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
+            #Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
+            Tn = root_scalar(TiiShock, bracket=[Tmin,Tmax], method='brentq', xtol=self.atol, rtol=self.rtol)
         else: #If we cannot bracket the root, use the 'secant' method instead.
             Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh, xtol=self.atol, rtol=self.rtol)
 
@@ -357,40 +370,65 @@ class Hydro:
 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            # First we determine if TminGuess and TmaxGuess impose a minimum of maximum value of v+ 
+            # First we determine if TMinLowT and TMaxHighT impose a minimum of maximum value of v+ 
 
-            #For a given vwTry, if vp becomes too small, Tm will become smaller than TminGuess.
+            # For a given vwTry, if vp becomes too small, Tm could become smaller than TMinLowT.
             #We thus determine a minimum vp given by this minimum Tm
             TmMin = 1.05*self.TMinLowT #Smallest allowed value of Tm
 
             vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
 
-            def matchinOfTp(tp): # (vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin ) - vmSqAtTmMin
+            def matchingOfTp(tp): # (vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin ) - vmSqAtTmMin
                 vpvm, vpovm = self.vpvmAndvpovm(tp,TmMin)
                 return vpvm/vpovm - vmSqAtTmMin 
             
             #Try to find Tp for which the matching equations are solved. This gives the minimum value of vp
             try:
-                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TMaxHighT], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+                TpAtTmMin = root_scalar(matchingOfTp, bracket=[TmMin,self.TMaxHighT], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
                 vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
                 vpAtTmMin = np.sqrt(vpvm*vpovm)
-                vpmin = vpAtTmMin 
+                vpmin1 = vpAtTmMin 
 
-            #If TminGuess is very small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
-            except: vpmin = 1e-3
+            #If TminGuess is sufficiently small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
+            except: vpmin1 = 1e-3
 
-            # For a given vwTry, if vp becomes too large, Tp will become larger than TmaxGuess.
+            # a small vp can also result in Tp below TMinHighT, we determine another vpmin from that.
+            # TODO: can we even replace this lower bound by Tnucl?
+            TpMin = self.TMinHighT #smallest allowed value of Tp
+            vmSqAtTpMin = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+
+            def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMin ) - vmSqAtTpMin
+                vpvm, vpovm = self.vpvmAndvpovm(TpMin, tm)
+                return vpvm/vpovm - vmSqAtTpMin
+
+            try:
+                TmAtTpMin = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMin], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMin,TmAtTpMin)
+                if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpAtTpMin = np.sqrt(vpvm*vpovm)
+                    vpmin2 = vpAtTpMin
+                else:
+                    vpmin2 = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+
+            except:             
+            # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
+            # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+                vpmin2 =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+
+            vpmin = max(vpmin1, vpmin2)
+
+            # For a given vwTry, if vp becomes too large, Tp will become larger than TMaxHighT.
             # We thus determine a maximum vp given by this maximum Tp
             TpMax = 0.95*self.TMaxHighT
             vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
 
-            def matchinOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
+            def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
                 vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
                 return vpvm/vpovm - vmSqAtTpMax
 
             try:
-                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TMinLowT,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                TmAtTpMax = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
                 vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
                 if vpvm*vpovm > 0 and vpvm*vpovm<1: 
                     vpAtTpMax = np.sqrt(vpvm*vpovm)
@@ -403,11 +441,46 @@ class Hydro:
             # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
                 vpmax =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
 
-            vpguess,_,_,_ = self.template.findMatching(vwTry)
-
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
+                print(f"{Tp=}")
                 return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
+
+            # Even though the temperatures at the wall are restricted to be in the allowed range, for vp restricted by vpmin and vpmax
+            # the temperature in the shock could still go below TMinHighT. Since this requires solving the fluid equations
+            # in the shock, we can not a priori know if we violate the bound, so we use try-except to determine the real value of vpmin.
+
+            vpminlow = vpmin #lower bound on vp in the binary search
+            vpminup = vpmax #upper bound on vp in the binary search
+            vpminmid = (vpminlow + vpminup)/2.
+            while abs(vpminmid - vpminup) > 1e-4:
+                try:
+                    func(vpminmid)
+                    print(f"succes with {vpminmid=}")
+                    vpminup = vpminmid
+                except:
+                    print(f"failure with {vpminmid=}")
+                    vpminlow = vpminmid
+                vpminmid  = (vpminlow + vpminup)/2.
+
+            # HACK (1.01 is arbitrary)
+            vpmin = 1.01*vpminmid
+
+
+            #TO DO: use try-excepts to make a list of vps for which the below can work
+            print(f"{vpmax=} {vpmin=}")                
+
+
+            
+            # for i in range(50):
+            #     vpi = vpmin + i*(vpmax-vpmin)/20
+            #     try:
+            #         func(vpi)
+            #         print(f"{vpi = }")
+            #     except:
+            #         print(f"{vpi = }" "did not work")
+
+            vpguess,_,_,_ = self.template.findMatching(vwTry)
 
             fmin,fmax = func(vpmin),func(vpmax)
             if fmin*fmax <= 0:
