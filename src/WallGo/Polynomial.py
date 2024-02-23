@@ -64,11 +64,11 @@ class Polynomial:
         self.__checkCoefficients(coefficients)
         
     def __getitem__(self, key):
-        basis, endpoints, direction = [],[],[]
-        if not isinstance(key,tuple):
+        basis, endpoints, direction = [], [], []
+        if not isinstance(key, tuple):
             key = (key,)
         n = 0
-        for i,k in enumerate(key):
+        for i, k in enumerate(key):
             if isinstance(k, int):
                 n += 1
             elif isinstance(k, slice):
@@ -80,7 +80,7 @@ class Polynomial:
                 basis.append('Cardinal')
                 direction.append('z')
                 endpoints.append(False)
-            else: 
+            else:
                 raise ValueError('Polynomial error: invalid key.')
         basis = tuple(basis) + self.basis[n:]
         direction = tuple(direction) + self.direction[n:]
@@ -295,7 +295,7 @@ class Polynomial:
             return result
         
                         
-    def cardinal(self,x,n,direction):
+    def cardinal(self, x, n, direction):
         r"""
         Computes the cardinal polynomials :math:`C_n(x)` defined by grid.
 

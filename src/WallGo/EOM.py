@@ -159,7 +159,7 @@ class EOM:
         self.pressAbsErrTol = 1e-8
         ## HACK! LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
         pressureMax, wallParamsMax, _, _, _ = self.wallPressure(
-            wallVelocityMax, wallParamsGuess, True
+            wallVelocityMax, wallParamsGuess
         )
         if pressureMax < 0:
             print('Maximum pressure on wall is negative!')
@@ -167,7 +167,7 @@ class EOM:
             #return 1
             return 1, wallParamsMax
     
-        pressureMin, wallParamsMin, _, _, _ = self.wallPressure(wallVelocityMin, wallParamsGuess, True)
+        pressureMin, wallParamsMin, _, _, _ = self.wallPressure(wallVelocityMin, wallParamsGuess)
         if pressureMin > 0:
             ## If this is a bad outcome then we should warn about it. TODO
             #return 0
@@ -189,13 +189,13 @@ class EOM:
             elif np.abs(vw - wallVelocityMax) < absTolerance or vw > wallVelocityMax:
                 return pressureMax
 
-            # Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
-            # HACK! This newWallParams thing needs explaining.
+            # HACK! Don't return wall params. But this seems pretty evil: wallPressure() modifies the wallParams it gets as input!
+            # OG: This newWallParams thing needs explaining.
             fractionVw = (vw - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
             newWallParams = (
                 wallParamsMin + (wallParamsMax - wallParamsMin) * fractionVw
             )
-            return self.wallPressure(vw, newWallParams, False)
+            return self.wallPressure(vw, newWallParams)[0]
 
         optimizeResult = scipy.optimize.root_scalar(
             pressureWrapper,
@@ -220,7 +220,7 @@ class EOM:
             wallParamsMin + (wallParamsMax - wallParamsMin) * fractionWallVelocity
         )
         _, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(
-            wallVelocity, newWallParams, returnExtras=True,
+            wallVelocity, newWallParams,
         )
         results.setHydroResults(hydroResults)
         results.setWallParams(wallParams)
@@ -233,7 +233,6 @@ class EOM:
         self,
         wallVelocity: float,
         wallParams: WallParams,
-        returnExtras: bool = False,
     ):
         """
         Computes the total pressure on the wall by finding the tanh profile
@@ -245,19 +244,18 @@ class EOM:
             Wall velocity at which the pressure is computed.
         wallParams : WallParams
             Contains a guess of the wall thicknesses and wall offsets.
-        returnExtras : bool, optional
-            If False, only the pressure is returned. If True, the pressure,
-            and WallParams, BoltzmannResults and HydroResults, objects are
-            returned. The default is False.
 
         Returns
         -------
         pressure : double
             Total pressure on the wall.
-        wallParams : array-like
-            Array containing the wall thicknesses and wall offsets that
-            minimize the action and solve the EOM. Only returned if
-            returnOptimalWallParams is True.
+        wallParams : WallParams
+            Object containing the wall thicknesses and wall offsets that
+            minimize the action and solve the EOM.
+        boltzmannResults : BoltzmannResults
+            Object containing results from BoltzmannSolver.
+        hydroResults : HydroResults
+            Object containing results from Hydro.
 
         """
         
@@ -341,10 +339,7 @@ class EOM:
                 )
                 break
 
-        if returnExtras:
-            return pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults
-        else:
-            return pressure
+        return pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults
         
 
     def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus):

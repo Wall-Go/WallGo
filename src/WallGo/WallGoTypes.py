@@ -117,8 +117,6 @@ class WallParams():
 
 @dataclass
 class WallGoResults:
-    # HACK! This should probably go in its own file, Results.py,
-    # but I was getting circular import errors, so hacked it here.
     # bubble wall speed, and error
     wallVelocity: float
     wallVelocityError: float
