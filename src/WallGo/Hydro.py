@@ -18,7 +18,7 @@ class Hydro:
     The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, TminGuess: float=1e-6, TmaxGuess: float=500., rtol=1e-6, atol=1e-6):
+    def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
         """Initialisation
 
         Parameters
@@ -37,12 +37,13 @@ class Hydro:
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
         self.Tc = thermodynamics.Tc
-        self.TminGuess = TminGuess
-
-        # LN: can't have this since TmaxGuess is supposed to be an input
-        #self.TmaxGuess = 5.*self.Tnucl
-        self.TmaxGuess = TmaxGuess
-        self.rtol,self.atol = rtol,atol
+        
+        self.TMaxHighT = self.thermodynamics.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT = self.thermodynamics.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT = self.thermodynamics.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT = self.thermodynamics.freeEnergyLow.minPossibleTemperature
+        
+        self.rtol, self.atol = rtol, atol
 
         self.vJ = self.findJouguetVelocity()
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
@@ -65,40 +66,41 @@ class Hydro:
         """
         pHighT = self.thermodynamics.pHighT(self.Tnucl)
         eHighT = self.thermodynamics.eHighT(self.Tnucl)
-        def vpDerivNum(tm): # The numerator of the derivative of v+^2
+        def vpDerivNum(tm):  # The numerator of the derivative of v+^2
             pLowT = self.thermodynamics.pLowT(tm)
             eLowT = self.thermodynamics.eLowT(tm)
-            num1 = pHighT - pLowT # First factor in the numerator of v+^2
+            num1 = pHighT - pLowT  # First factor in the numerator of v+^2
             num2 = pHighT + eLowT
-            den1 = eHighT - eLowT # First factor in the denominator of v+^2
+            den1 = eHighT - eLowT  # First factor in the denominator of v+^2
             den2 = eHighT + pLowT
             dnum1 = - self.thermodynamics.dpLowT(tm) # T-derivative of first factor wrt tm
             dnum2 = self.thermodynamics.deLowT(tm)
-            dden1 = - dnum2 # T-derivative of second factor wrt tm
+            dden1 = - dnum2  # T-derivative of second factor wrt tm
             dden2 = - dnum1
-            return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
+            return (
+                dnum1*num2*den1*den2
+                + num1*dnum2*den1*den2
+                - num1*num2*dden1*den2
+                - num1*num2*den1*dden2
+            )
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
 
         # LN: I guess we need to ensure that Tmax does not start from a too large value though
-        #Tmin,Tmax = self.Tnucl,(self.TmaxGuess+self.Tnucl)/2
+        Tmin = self.Tnucl
+        Tmax = min(self.TMaxLowT, 2 * self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
-        ## TODO The following has a big problem if Tmax becomes so large that the low-T phase disappears!!
-
-        Tmin = self.Tnucl # NOT self.TminGuess since we know this needs to be <= Tn. But the names are confusing
-        Tmax = min(self.TmaxGuess,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
-
-        bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
+        bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
-            tmSol = root_scalar(vpDerivNum,bracket =[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
+            tmSol = root_scalar(vpDerivNum,bracket =[self.Tnucl, self.TMaxLowT], method='brentq', xtol=self.atol, rtol=self.rtol).root
         else: # If we cannot bracket the root, use the 'secant' method instead. This will call thermodynamics outside of its interpolation range?
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=Tmax, xtol=self.atol, rtol=self.rtol).root
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
-        return(vp)
+        return vp
     
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
@@ -117,11 +119,11 @@ class Hydro:
             `v_+v_-` and :math:`v_+/v_-`
         """
 
-        pHighT,pLowT = self.thermodynamics.pHighT(Tp),self.thermodynamics.pLowT(Tm)
-        eHighT,eLowT = self.thermodynamics.eHighT(Tp),self.thermodynamics.eLowT(Tm)
+        pHighT, pLowT = self.thermodynamics.pHighT(Tp), self.thermodynamics.pLowT(Tm)
+        eHighT, eLowT = self.thermodynamics.eHighT(Tp), self.thermodynamics.eLowT(Tm)
         vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
-        return vpvm,vpovm
+        return vpvm, vpovm
 
 
     def matchDeton(self, vw, branch=1):
@@ -151,7 +153,7 @@ class Hydro:
             eLowT = wLowT - pLowT
             return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
 
-        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TmaxGuess],method='Bounded').x
+        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TMaxLowT],method='Bounded').x
         Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
         vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
@@ -187,15 +189,14 @@ class Hydro:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
             else:
                 vpsq = vp**2
-            vpvm,vpovm = self.vpvmAndvpovm(Tpm[0],Tpm[1])
+            vpvm, vpovm = self.vpvmAndvpovm(Tpm[0],Tpm[1])
             eq1 = vpvm*vpovm-vpsq
             eq2 = vpvm/vpovm-vmsq
 
             # We multiply the equations by c to make sure the solver
             # do not explore arbitrarly small or large values of Tm and Tp.
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
-            return (eq1*c,eq2*c)
-
+            return (eq1*c, eq2*c)
 
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
@@ -205,26 +206,31 @@ class Hydro:
             else:
                 Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
-            Tpm0 = [np.min([self.TmaxGuess,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            Tpm0 = [np.min([self.TMaxHighT, 1.1*self.Tnucl]), self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
         if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
             Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
 
-        if Tpm0[0] > self.TmaxGuess: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
-            Tpm0 = [0.98*self.TmaxGuess,0.95*self.TmaxGuess]
+        if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
+            Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
+
+        elif Tpm0[0] < self.TMinHighT:
+            Tpm0 = [1.01*self.TMinHighT, Tpm0[1]]
         
-        if Tpm0[1] < self.TminGuess: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
-            Tpm0 = [1.05*self.TminGuess,1.01*self.TminGuess]
+        if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
+            Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
+        
+        elif Tpm0[1] > self.TMaxLowT:
+            Tpm0 = [Tpm0[0], 0.98* self.TMaxLowT]
 
 
-        # We map Tm and Tp, which lie between TminGuess and TmaxGuess,
+        # We map Tm and Tp, which lie between TMinLowT and TMaxLowT and TMinHighT and TMaxHighT,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(matching,self.__mappingT(Tpm0),method='hybr',options={'xtol':self.atol})
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp,Tm] = self.__inverseMappingT(sol.x)
-
           
         vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
@@ -297,26 +303,28 @@ class Hydro:
 
         def TiiShock(tn): #continuity of Tii
             return self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2) - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh,vm_sh)*gammaSq(boostVelocity(xi_sh,vm_sh))
-        Tmin,Tmax = (self.TminGuess+self.Tnucl)/2,Tm_sh 
+        Tmin,Tmax = (self.TMinHighT+self.Tnucl)/2,Tm_sh 
         bracket1,bracket2 = TiiShock(Tmin),TiiShock(Tmax)
-        while bracket1*bracket2 > 0 and Tmin > self.TminGuess:
+        while bracket1*bracket2 > 0 and Tmin > self.TMinHighT:
             Tmax = Tmin
             bracket2 = bracket1
-            Tmin = max(Tmin/1.5, self.TminGuess)
+            Tmin = max(Tmin/1.5, self.TMinHighT)
             bracket1 = TiiShock(Tmin)
 
+
         if bracket1*bracket2 <= 0: #If Tmin and Tmax bracket our root, use the 'brentq' method.
-            Tn = root_scalar(TiiShock, bracket=[Tmin, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol)
+            #Tn = root_scalar(TiiShock, bracket=[self.TMinHighT, self.TMaxHighT], method='brentq', xtol=self.atol, rtol=self.rtol)
+            Tn = root_scalar(TiiShock, bracket=[Tmin,Tmax], method='brentq', xtol=self.atol, rtol=self.rtol)
         else: #If we cannot bracket the root, use the 'secant' method instead.
             Tn = root_scalar(TiiShock, method='secant', x0=self.Tnucl, x1=Tm_sh, xtol=self.atol, rtol=self.rtol)
 
         return Tn.root
 
     def strongestShock(self, vw):
-        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) -self.thermodynamics.pLowT(self.TminGuess)
+        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) -self.thermodynamics.pLowT(self.TMinLowT)
     
         try: 
-            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TminGuess, self.TmaxGuess), rtol=self.rtol,xtol=self.atol).root
+            Tpstrongest = root_scalar(matchingStrongest, bracket= (self.TMinHighT, self.TMaxHighT), rtol=self.rtol,xtol=self.atol).root
             return self.solveHydroShock(vw,0,Tpstrongest)
     
         except:
@@ -349,48 +357,76 @@ class Hydro:
             The value of the fluid velocities in the wall frame and the temperature right in front of the wall and right behind the wall.
 
         """
+
         if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
 
         else: # Hybrid or deflagration
             # Loop over v+ until the temperature in front of the shock matches the nucleation temperature
-            # First we determine if TminGuess and TmaxGuess impose a minimum of maximum value of v+ 
+            # First we determine if TMinLowT and TMaxHighT impose a minimum of maximum value of v+ 
 
-            #For a given vwTry, if vp becomes too small, Tm will become smaller than TminGuess.
+            # For a given vwTry, if vp becomes too small, Tm could become smaller than TMinLowT.
             #We thus determine a minimum vp given by this minimum Tm
-            TmMin = 1.05*self.TminGuess #Smallest allowed value of Tm
+            TmMin = self.TMinLowT #Smallest allowed value of Tm
 
             vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
 
-            def matchinOfTp(tp): # (vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin ) - vmSqAtTmMin
+            def matchingOfTp(tp): # (vm**2 from the matching relations, as a function of Tp, evaluated at Tm = TmMin ) - vmSqAtTmMin
                 vpvm, vpovm = self.vpvmAndvpovm(tp,TmMin)
                 return vpvm/vpovm - vmSqAtTmMin 
             
             #Try to find Tp for which the matching equations are solved. This gives the minimum value of vp
             try:
-                TpAtTmMin = root_scalar(matchinOfTp, bracket=[TmMin,self.TmaxGuess], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
+                TpAtTmMin = root_scalar(matchingOfTp, bracket=[TmMin,self.TMaxHighT], x0 = 1.1*TmMin, xtol=self.atol, rtol=self.rtol).root #Find the value of Tp corresponding to TmMin
                 vpvm, vpovm = self.vpvmAndvpovm(TpAtTmMin,TmMin)
                 vpAtTmMin = np.sqrt(vpvm*vpovm)
-                vpmin = vpAtTmMin 
+                vpmin1 = vpAtTmMin 
 
-            #If TminGuess is very small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
-            except: vpmin = 1e-3
+            #If TminGuess is sufficiently small, is is possible that the matching relation is never satisfied. This implies there is no a priori minimum value of vp
+            except: vpmin1 = 1e-3
 
-            # For a given vwTry, if vp becomes too large, Tp will become larger than TmaxGuess.
-            # We thus determine a maximum vp given by this maximum Tp
-            TpMax = 0.95*self.TmaxGuess
-            vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+            # a small vp can also result in Tp below TMinHighT, we determine another vpmin from that.
+            # TODO: can we even replace this lower bound by Tnucl?
+            TpMin = self.TMinHighT #smallest allowed value of Tp
+            def vmSqAtTpMin(tm): 
+                return min(vwTry**2,self.thermodynamics.csqLowT(tm))
 
-            def matchinOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
-                vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
-                return vpvm/vpovm - vmSqAtTpMax
+            def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMin ) - vmSqAtTpMin
+                vpvm, vpovm = self.vpvmAndvpovm(TpMin, tm)
+                return vpvm/vpovm - vmSqAtTpMin(tm)
 
             try:
-                TmAtTpMax = root_scalar(matchinOfTm, bracket=[self.TminGuess,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
-                vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
-                vpAtTpMax = np.sqrt(vpvm*vpovm)
+                TmAtTpMin = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMin], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMin,TmAtTpMin)
                 if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpAtTpMin = np.sqrt(vpvm*vpovm)
+                    vpmin2 = vpAtTpMin
+                else:
+                    vpmin2 = 1e-3
+
+            except:             
+            # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
+            # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+                vpmin2 = 1e-3
+
+            vpmin = max(vpmin1, vpmin2)
+
+            # For a given vwTry, if vp becomes too large, Tp will become larger than TMaxHighT.
+            # We thus determine a maximum vp given by this maximum Tp
+            TpMax = self.TMaxHighT 
+            def vmSqAtTpMax(tm):
+                min(vwTry**2,self.thermodynamics.csqLowT(tm)) 
+
+            def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
+                return vpvm/vpovm - vmSqAtTpMax(tm)
+
+            try:
+                TmAtTpMax = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
+                vpvm, vpovm = self.vpvmAndvpovm(TpMax,TmAtTpMax)
+                if vpvm*vpovm > 0 and vpvm*vpovm<1: 
+                    vpAtTpMax = np.sqrt(vpvm*vpovm)
                     vpmax = vpAtTpMax
                 else:
                     vpmax = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
@@ -400,20 +436,42 @@ class Hydro:
             # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
                 vpmax =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
 
-            vpguess,_,_,_ = self.template.findMatching(vwTry)
-
             def func(vpTry):
                 _,_,Tp,_ = self.matchDeflagOrHyb(vwTry,vpTry)
                 return self.solveHydroShock(vwTry,vpTry,Tp)-self.Tnucl
 
-            fmin,fmax = func(vpmin),func(vpmax)
+            # Even though the temperatures at the wall are restricted to be in the allowed range, for vp restricted by vpmin and vpmax
+            # the temperature in the shock could still go below TMinHighT. Since this requires solving the fluid equations
+            # in the shock, we can not a priori know if we violate the bound, so we use try-except to determine the real value of vpmin.
+
+            try:
+                fmin,fmax = func(vpmin),func(vpmax)
+
+            except:
+                vpminlow = vpmin #lower bound on vp in the binary search
+                vpminup = vpmax #upper bound on vp in the binary search
+                vpminmid = (vpminlow + vpminup)/2.
+                while abs(vpminmid - vpminup) > 1e-4:
+                    try:
+                        func(vpminmid)
+                        vpminup = vpminmid
+                    except:
+                        vpminlow = vpminmid
+                    vpminmid  = (vpminlow + vpminup)/2.
+
+                vpmin = vpminup #Take the upper bound on vpminup just to be conservative
+                fmin,fmax = func(vpmin),func(vpmax)
+
+            vpguess,_,_,_ = self.template.findMatching(vwTry)
+
+
             if fmin*fmax <= 0:
                 sol = root_scalar(func, bracket=[vpmin,vpmax], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             else:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
                     return self.template.findMatching(vwTry)
-                sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
+                sol = root_scalar(func, bracket=[vpmin,extremum.x], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
 
 #            if self.vpvmAndvpovm(Tp,Tm)[0] < 0:
@@ -514,8 +572,8 @@ class Hydro:
         """
 
         Tp,Tm = TpTm
-        Xm = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tm-(self.TmaxGuess+self.TminGuess)/2))   #Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf 
-        Xp = np.tan(np.pi/(self.TmaxGuess-self.TminGuess)*(Tp-(self.TmaxGuess+self.TminGuess)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
+        Xm = np.tan(np.pi/(self.TMaxLowT-self.TMinLowT)*(Tm-(self.TMaxLowT+self.TMinLowT)/2))   #Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf 
+        Xp = np.tan(np.pi/(self.TMaxHighT-self.TMinHighT)*(Tp-(self.TMaxHighT+self.TMinHighT)/2)) #Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
         return [Xp,Xm]
 
     def __inverseMappingT(self, XpXm):
@@ -524,7 +582,7 @@ class Hydro:
         """
 
         Xp,Xm = XpXm
-        Tp = np.arctan(Xp)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
-        Tm = np.arctan(Xm)*(self.TmaxGuess-self.TminGuess)/np.pi+ (self.TmaxGuess+ self.TminGuess)/2
+        Tp = np.arctan(Xp)*(self.TMaxHighT-self.TMinHighT)/np.pi+ (self.TMaxHighT+ self.TMinHighT)/2
+        Tm = np.arctan(Xm)*(self.TMaxLowT-self.TMinLowT)/np.pi+ (self.TMaxLowT+ self.TMinLowT)/2
         return [Tp,Tm]
     

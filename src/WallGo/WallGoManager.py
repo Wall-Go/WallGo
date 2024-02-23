@@ -208,20 +208,20 @@ class WallGoManager:
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor and -2 * dT, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
-        TMinHighT, TMaxHighT = Tn - 2 * dT, fudgeFactor * THighTMaxTemplate
+        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate   ## Jorinde: it does not work if TMinHightT is set to Tn - 2*dT. It does if it is set to 0
         TMinLowT, TMaxLowT = 0, fudgeFactor * TLowTTMaxTemplate
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
-        fHighT.tracePhaseIVP(TMinHighT, TMaxHighT, dT)
-        fLowT.tracePhaseIVP(TMinLowT, TMaxLowT, dT)
+        fHighT.tracePhase(TMinHighT, TMaxHighT, dT)
+        fLowT.tracePhase(TMinLowT, TMaxLowT, dT)
 
     def _initHydro(
-        self, thermodynamics: Thermodynamics, TMinGuess: float, TMaxGuess: float
+        self, thermodynamics: Thermodynamics
     ) -> None:
         """"""
-        self.hydro = Hydro(thermodynamics, TminGuess=TMinGuess, TmaxGuess=TMaxGuess)
+        self.hydro = Hydro(thermodynamics)
 
     def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
         r"""
