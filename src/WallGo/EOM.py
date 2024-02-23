@@ -319,22 +319,6 @@ class EOM:
         plt.plot(self.grid.xiValues, dVdX)
         plt.plot(self.grid.xiValues, dVout)
         plt.show()
-
-        
-
-        plt.plot(self.grid.xiValues, EOM[:,0])
-        plt.plot(self.grid.xiValues, -ddPhidzdz[:,0])
-        plt.plot(self.grid.xiValues, dVdX[:,0])
-        plt.plot(self.grid.xiValues, zeros[:,0])
-        plt.show()
-
-        
-
-        plt.plot(self.grid.xiValues, EOM[:,1])
-        plt.plot(self.grid.xiValues, -ddPhidzdz[:,1])
-        plt.plot(self.grid.xiValues, dVdX[:,1])
-        plt.plot(self.grid.xiValues, zeros[:,1])
-        plt.show()
         
 
 
