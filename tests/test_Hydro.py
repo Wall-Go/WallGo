@@ -26,8 +26,8 @@ class TestModel2Step(WallGo.Thermodynamics):
         self.Tnucl = Tn
         self.Tc = 1
 
-        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
-        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=10.)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=5.)
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=5.)
 
     #Pressure in high T phase
     def pHighT(self, T):

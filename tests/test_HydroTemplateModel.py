@@ -119,8 +119,6 @@ def test_findHydroBoundaries():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydro = WallGo.Hydro(model,1e-10,1e-10)
-        print(f"{hydro.vMin=}")
-        print(f"{alN[i]=} {vw[i]=} {hydro.vJ=}")
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
@@ -128,6 +126,4 @@ def test_findHydroBoundaries():
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0,0]
-        print(f"{res1[i]=}")
-        print(f"{res2[i]=}")
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)

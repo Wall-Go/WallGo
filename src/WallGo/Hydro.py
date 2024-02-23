@@ -212,7 +212,7 @@ class Hydro:
             Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
 
         elif Tpm0[0] < self.TMinHighT:
-            Tpm0 = [1.01*self.TMinHightT, Tpm0[1]]
+            Tpm0 = [1.01*self.TMinHighT, Tpm0[1]]
         
         if Tpm0[1] < self.TMinLowT: #If the obtained values are below T in the allowed range, we take an initial guess close to TminGuess
             Tpm0 = [Tpm0[0],1.01*self.TMinLowT]
@@ -396,12 +396,12 @@ class Hydro:
                     vpAtTpMin = np.sqrt(vpvm*vpovm)
                     vpmin2 = vpAtTpMin
                 else:
-                    vpmin2 = min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+                    vpmin2 = 1e-3
 
             except:             
             # Note that for some values of the wall velocity, Tp never exceeds TmaxGuess. In that case, vp is just set to 
             # min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
-                vpmin2 =min(vwTry,self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
+                vpmin2 = 1e-3
 
             vpmin = max(vpmin1, vpmin2)
 
