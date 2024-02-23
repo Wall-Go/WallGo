@@ -177,7 +177,7 @@ class FreeEnergy(InterpolatableFunction):
         solve. Stops if we get sqrt(negative) or something like that.
         """
         ## HACK! This hopefully won't be needed in the final thing
-        paranoid = False
+        paranoid = True
         extraTol = 0.01 * rTol
 
         # initial values, should be nice and accurate
@@ -245,30 +245,23 @@ class FreeEnergy(InterpolatableFunction):
                 except RuntimeWarning as err:
                     print(err.args[0] + f" at T={ode.t}")
                     break
-                if spinodal_event(ode.t, ode.y) <= 0:
-                    print(f"Phase ends at T={ode.t}, vev={ode.y}")
-                    if paranoid:
-                        print(f"Re-solving minimum: {err=} at T={ode.t}")
-                        phaset, Vt = self.effectivePotential.findLocalMinimum(
-                            Fields((ode.y)), ode.t, tol=extraTol,
-                        )
-                        if spinodal_event(ode.t, ode.y) <= 0:
-                            print(f"Still spinodal at T={ode.t}, vev={ode.y}")
-                            break
-                    else:
-                        break
-                # check if extremum is still accurate
-                dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
-                err = np.linalg.norm(dVt) / T0 ** 3
-                if err > rTol and paranoid:
-                    print(f"Re-solving minimum: {err=} at T={ode.t}")
+                if paranoid:
                     phaset, Vt = self.effectivePotential.findLocalMinimum(
                         Fields((ode.y)), ode.t, tol=extraTol,
                     )
                     ode.y = phaset[0]
-                else:
-                    #print(f"Not resolving minimum: {err=} at T={ode.t}")
-                    pass
+                if spinodal_event(ode.t, ode.y) <= 0:
+                    print(f"Phase ends at T={ode.t}, vev={ode.y}")
+                    break
+                # check if extremum is still accurate
+                dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
+                err = np.linalg.norm(dVt) / T0 ** 3
+                if err > rTol:
+                    #print(f"Re-solving minimum: {err=} at T={ode.t}")
+                    phaset, Vt = self.effectivePotential.findLocalMinimum(
+                        Fields((ode.y)), ode.t, tol=extraTol,
+                    )
+                    ode.y = phaset[0]
                 # compute Veff
                 VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
                 # append results to lists
