@@ -48,8 +48,10 @@ collisionManager = CollisionModule.CollisionManager()
 Define couplings (Lagrangian parameters)
 """
 gs = 1.2279920495357861
-g2 = 0.6534878048780488
-g1 = 0.3501031219017684
+# g2 = 0.6534878048780488
+# g1 = 0.3501031219017684
+g2 = 0.0
+g1 = 0.0
 
 collisionManager.addCoupling(gs)
 collisionManager.addCoupling(g2)
@@ -90,7 +92,7 @@ gluon = Particle(
     msqDerivative = 0.0,
     msqThermal=lambda T: 3.01593 * T**2,
     statistics="Boson",
-    inEquilibrium=False,
+    inEquilibrium=True,
     ultrarelativistic=True,
     totalDOFs = 16
 )
