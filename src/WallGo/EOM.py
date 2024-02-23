@@ -204,8 +204,13 @@ class EOM:
             xtol=self.errTol,
         )
         wallVelocity = optimizeResult.root
-        # HACK! Should come up with a better error estimate
-        wallVelocityError = self.errTol * optimizeResult.root
+        if optimizeResult.converged:
+            # HACK! Should come up with a better error estimate
+            wallVelocityError = self.errTol * optimizeResult.root
+        else:
+            print(optimizeResult.flag)
+            print("Estimating error by vw range")
+            wallVelocityError = (wallVelocityMax - wallVelocityMin) / 2
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
         results.setWallVelocities(
@@ -308,7 +313,7 @@ class EOM:
         # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
         # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 2*max(wallParams.widths)
+        L_xi = 2 * max(wallParams.widths)
         self.grid.changePositionFalloffScale(L_xi)
 
         pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
@@ -387,7 +392,7 @@ class EOM:
         ## first width, then offset
         lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , (self.nbrFields-1) * [-10.] ))
         upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , (self.nbrFields-1) * [10.] ))
-        bounds = scipy.optimize.Bounds(lb = lowerBounds, ub = upperBounds)
+        bounds = scipy.optimize.Bounds(lb=lowerBounds, ub=upperBounds)
 
         ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
         def actionWrapper(wallArray: np.ndarray, *args) -> float:
@@ -401,7 +406,8 @@ class EOM:
             method='Nelder-Mead',
             bounds=bounds,
         )
-
+        if not sol.success:
+            print(sol.message)
         ## Put the resulting width, offset back in WallParams format
         wallParams = __toWallParams(sol.x)
 
@@ -618,7 +624,13 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
+        minRes = scipy.optimize.minimize_scalar(
+            lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
+            method='Bounded',
+            bounds=[0,self.thermo.Tc],
+        )
+        if not minRes.success:
+            print(minRes.message)
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
@@ -626,7 +638,6 @@ class EOM:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
             return T, vPlasma
-
 
         TLowerBound = minRes.x
         TStep = np.abs(Tplus - TLowerBound)
@@ -638,17 +649,18 @@ class EOM:
             TStep *= 2
             TUpperBound = TLowerBound + TStep
 
-
-        res = scipy.optimize.brentq(
+        res = scipy.optimize.root_scalar(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            TLowerBound,
-            TUpperBound,
+            bracket=(TLowerBound, TUpperBound),
+            method="brentq",
             xtol=1e-9,
-            rtol=1e-9, ## really???
+            rtol=1e-9,  # really???
         )
+        if not res.converged:
+            print(res.flag)
         # TODO: Can the function have multiple zeros?
 
-        T = res
+        T = res.root
         vPlasma = self.plasmaVelocity(fields, T, s1)
         return T, vPlasma
 
