@@ -357,6 +357,7 @@ class Hydro:
             The value of the fluid velocities in the wall frame and the temperature right in front of the wall and right behind the wall.
 
         """
+
         if vwTry > self.vJ: # Detonation
             vp,vm,Tp,Tm = self.matchDeton(vwTry)
 
@@ -413,11 +414,12 @@ class Hydro:
             # For a given vwTry, if vp becomes too large, Tp will become larger than TMaxHighT.
             # We thus determine a maximum vp given by this maximum Tp
             TpMax = 0.95*self.TMaxHighT
-            vmSqAtTpMax = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+            def vmSqAtTpMax(tm):
+                min(vwTry**2,self.thermodynamics.csqLowT(tm)) 
 
             def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMax ) - vmSqAtTpMax
                 vpvm, vpovm = self.vpvmAndvpovm(TpMax, tm)
-                return vpvm/vpovm - vmSqAtTpMax
+                return vpvm/vpovm - vmSqAtTpMax(tm)
 
             try:
                 TmAtTpMax = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMax], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
