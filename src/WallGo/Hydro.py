@@ -389,11 +389,12 @@ class Hydro:
             # a small vp can also result in Tp below TMinHighT, we determine another vpmin from that.
             # TODO: can we even replace this lower bound by Tnucl?
             TpMin = self.TMinHighT #smallest allowed value of Tp
-            vmSqAtTpMin = min(vwTry**2,self.thermodynamics.csqLowT(self.Tnucl)) #This isn't totally correct. It should be T-, but we don't have that.
+            def vmSqAtTpMin(tm): 
+                return min(vwTry**2,self.thermodynamics.csqLowT(tm))
 
             def matchingOfTm(tm): # (vm**2 from the matching relations, as a function of Tm, evaluated at Tp = TpMin ) - vmSqAtTpMin
                 vpvm, vpovm = self.vpvmAndvpovm(TpMin, tm)
-                return vpvm/vpovm - vmSqAtTpMin
+                return vpvm/vpovm - vmSqAtTpMin(tm)
 
             try:
                 TmAtTpMin = root_scalar(matchingOfTm, bracket=[self.TMinLowT,TpMin], xtol=self.atol, rtol=self.rtol).root #Find the value of Tm corresponding to TpMax
@@ -413,7 +414,7 @@ class Hydro:
 
             # For a given vwTry, if vp becomes too large, Tp will become larger than TMaxHighT.
             # We thus determine a maximum vp given by this maximum Tp
-            TpMax = 0.95*self.TMaxHighT
+            TpMax = self.TMaxHighT 
             def vmSqAtTpMax(tm):
                 min(vwTry**2,self.thermodynamics.csqLowT(tm)) 
 
@@ -471,7 +472,7 @@ class Hydro:
                 extremum = minimize_scalar(lambda x: np.sign(fmax)*func(x), bounds=[vpmin,vpmax], method='Bounded')
                 if extremum.fun > 0:
                     return self.template.findMatching(vwTry)
-                sol = root_scalar(func, bracket=[vpmin,extremum.x], xtol=self.atol, rtol=self.rtol)
+                sol = root_scalar(func, bracket=[vpmin,extremum.x], x0 = vpguess, xtol=self.atol, rtol=self.rtol)
             vp,vm,Tp,Tm = self.matchDeflagOrHyb(vwTry,sol.root)
 
 #            if self.vpvmAndvpovm(Tp,Tm)[0] < 0:
