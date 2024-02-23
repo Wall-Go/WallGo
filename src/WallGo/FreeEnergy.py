@@ -146,7 +146,7 @@ class FreeEnergy(InterpolatableFunction):
         # This is now a 2D array where rows are [f1, f2, ..., Veff]
         return result
 
-    def tracePhase(self, TMin: float, TMax: float, dT: float) -> None:
+    def tracePhaseOld(self, TMin: float, TMax: float, dT: float) -> None:
         """For now this will always update the interpolation table.
         """
 
@@ -170,7 +170,7 @@ class FreeEnergy(InterpolatableFunction):
         if (self.interpolationRangeMin() > TMin):
             self.minPossibleTemperature = self.interpolationRangeMin()
 
-    def tracePhaseIVP(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-5, spinodal: bool = True) -> None:
+    def tracePhase(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-5, spinodal: bool = True) -> None:
         """
         Finds field(T) for the range over which it exists. Sets problem
         up as an initial value problem and uses scipy.integrate.solve_ivp to
@@ -206,7 +206,7 @@ class FreeEnergy(InterpolatableFunction):
 
         # checking stable phase at initial temperature
         assert min(eigs_T0) * max(eigs_T0) > 0, \
-            "tracePhaseIVP error: unstable at starting temperature"
+            "tracePhase error: unstable at starting temperature"
 
         def spinodal_event(temperature, field):
             if not spinodal:

@@ -214,8 +214,8 @@ class WallGoManager:
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
-        fHighT.tracePhaseIVP(TMinHighT, TMaxHighT, dT)
-        fLowT.tracePhaseIVP(TMinLowT, TMaxLowT, dT)
+        fHighT.tracePhase(TMinHighT, TMaxHighT, dT)
+        fLowT.tracePhase(TMinLowT, TMaxLowT, dT)
 
     def _initHydro(
         self, thermodynamics: Thermodynamics

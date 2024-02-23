@@ -43,7 +43,7 @@ class Hydro:
         self.TMaxLowT = self.thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = self.thermodynamics.freeEnergyLow.minPossibleTemperature
         
-        self.rtol,self.atol = rtol,atol
+        self.rtol, self.atol = rtol, atol
 
         self.vJ = self.findJouguetVelocity()
         # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
@@ -66,27 +66,32 @@ class Hydro:
         """
         pHighT = self.thermodynamics.pHighT(self.Tnucl)
         eHighT = self.thermodynamics.eHighT(self.Tnucl)
-        def vpDerivNum(tm): # The numerator of the derivative of v+^2
+        def vpDerivNum(tm):  # The numerator of the derivative of v+^2
             pLowT = self.thermodynamics.pLowT(tm)
             eLowT = self.thermodynamics.eLowT(tm)
-            num1 = pHighT - pLowT # First factor in the numerator of v+^2
+            num1 = pHighT - pLowT  # First factor in the numerator of v+^2
             num2 = pHighT + eLowT
-            den1 = eHighT - eLowT # First factor in the denominator of v+^2
+            den1 = eHighT - eLowT  # First factor in the denominator of v+^2
             den2 = eHighT + pLowT
             dnum1 = - self.thermodynamics.dpLowT(tm) # T-derivative of first factor wrt tm
             dnum2 = self.thermodynamics.deLowT(tm)
-            dden1 = - dnum2 # T-derivative of second factor wrt tm
+            dden1 = - dnum2  # T-derivative of second factor wrt tm
             dden2 = - dnum1
-            return(dnum1*num2*den1*den2 + num1*dnum2*den1*den2 - num1*num2*dden1*den2 - num1*num2*den1*dden2)
+            return (
+                dnum1*num2*den1*den2
+                + num1*dnum2*den1*den2
+                - num1*num2*dden1*den2
+                - num1*num2*den1*dden2
+            )
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
         # We increase Tmax until we find a value that brackets our root.
 
         # LN: I guess we need to ensure that Tmax does not start from a too large value though
-        Tmin = self.Tnucl 
-        Tmax = min(self.TMaxLowT,2*self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
+        Tmin = self.Tnucl
+        Tmax = min(self.TMaxLowT, 2 * self.Tnucl) # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
-        bracket1,bracket2 = vpDerivNum(Tmin),vpDerivNum(Tmax)
+        bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
         tmSol = None
         if bracket1*bracket2 <= 0: # If Tmin and Tmax bracket our root, use the 'brentq' method.
@@ -95,7 +100,7 @@ class Hydro:
             tmSol = root_scalar(vpDerivNum, method='secant', x0=self.Tnucl, x1=Tmax, xtol=self.atol, rtol=self.rtol).root
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
-        return(vp)
+        return vp
     
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
@@ -114,11 +119,11 @@ class Hydro:
             `v_+v_-` and :math:`v_+/v_-`
         """
 
-        pHighT,pLowT = self.thermodynamics.pHighT(Tp),self.thermodynamics.pLowT(Tm)
-        eHighT,eLowT = self.thermodynamics.eHighT(Tp),self.thermodynamics.eLowT(Tm)
+        pHighT, pLowT = self.thermodynamics.pHighT(Tp), self.thermodynamics.pLowT(Tm)
+        eHighT, eLowT = self.thermodynamics.eHighT(Tp), self.thermodynamics.eLowT(Tm)
         vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
-        return vpvm,vpovm
+        return vpvm, vpovm
 
 
     def matchDeton(self, vw, branch=1):
@@ -184,14 +189,14 @@ class Hydro:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
             else:
                 vpsq = vp**2
-            vpvm,vpovm = self.vpvmAndvpovm(Tpm[0],Tpm[1])
+            vpvm, vpovm = self.vpvmAndvpovm(Tpm[0],Tpm[1])
             eq1 = vpvm*vpovm-vpsq
             eq2 = vpvm/vpovm-vmsq
 
             # We multiply the equations by c to make sure the solver
             # do not explore arbitrarly small or large values of Tm and Tp.
             c = (2**2+(Tpm[0]/Tpm0[0])**2+(Tpm[1]/Tpm0[1])**2)*(2**2+(Tpm0[0]/Tpm[0])**2+(Tpm0[1]/Tpm[1])**2)
-            return (eq1*c,eq2*c)
+            return (eq1*c, eq2*c)
 
         # Finds an initial guess for Tp and Tm using the template model and make sure it satisfies all
         # the relevant bounds.
@@ -201,7 +206,7 @@ class Hydro:
             else:
                 Tpm0 = [self.Tnucl,0.99*self.Tnucl]
         except:
-            Tpm0 = [np.min([self.TMaxHighT,1.1*self.Tnucl]),self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
+            Tpm0 = [np.min([self.TMaxHighT, 1.1*self.Tnucl]), self.Tnucl] #The temperature in front of the wall Tp will be above Tnucl, 
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
