@@ -1,16 +1,18 @@
 
-set(BINARY ${CMAKE_PROJECT_NAME})
+set(BINARY WallGoCollision)
 
 # source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp Collision.cpp)
+set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp)
 
+if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(-fPIC)
+endif()
 
-add_compile_options(-fPIC)
-add_library(${BINARY}_lib STATIC ${SOURCES})
+add_library(${BINARY} STATIC ${SOURCES})
 
 
 # main executable. Don't rebuild sources here
-add_executable(${BINARY} main.cpp)
+#add_executable(${BINARY} main.cpp)
 
 
 ## External packages
@@ -26,7 +28,7 @@ endif()
 
 
 #---- Link to external libraries
-target_link_libraries(${BINARY}_lib PUBLIC
+target_link_libraries(${BINARY} PUBLIC
     HDF5::HDF5
     GSL::gsl
     muparser::muparser
@@ -34,7 +36,7 @@ target_link_libraries(${BINARY}_lib PUBLIC
 
 if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
-		target_link_libraries(${BINARY}_lib PUBLIC OpenMP::OpenMP_CXX)
+		target_link_libraries(${BINARY} PUBLIC OpenMP::OpenMP_CXX)
 		add_compile_definitions(WITH_OMP=1)
 	else()
 		message(WARNING "OpenMP installation not found, multithreading will be DISABLED. ")
@@ -43,15 +45,18 @@ endif()
 
 
 #---- Header includes
-target_include_directories(${BINARY}_lib PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/collision
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/thirdparty
+
+# Public headers: user can #include "WallGoCollisions/someheader.h"
+target_include_directories(${BINARY} PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# Internally, include directly from include/WallGoCollision because lazy
+target_include_directories(${BINARY} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/WallGoCollision
     HDF5::HDF5
     GSL::gsl
     muparser::muparser
 )
 
-target_link_libraries(${BINARY} PRIVATE ${BINARY}_lib)
-
-# 'make install'
 install(TARGETS ${BINARY} DESTINATION ${INSTALL_DIR})

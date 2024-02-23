@@ -8,28 +8,32 @@
 #include "ThreeVector.h"
 
 #include "gslWrapper.h"
-#include "ConfigParser.h"
+
+namespace wallgo
+{
 
 // This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
-std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k)
+IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
 {
 
     IntegrandParameters integrandParameters = initializeIntegrandParameters(m, n, j, k);
 
-    // Integral dimensions (do NOT change this)
+    // Integral dimensions
     constexpr size_t dim = 5;
 
-    // Read integration options from config
-    ConfigParser &config = ConfigParser::get();
+    // Options for Vegas Monte Carlo integration. https://www.gnu.org/software/gsl/doc/html/montecarlo.html#vegas
+    // By default each call to gsl_monte_vegas_integrate will perform 5 iterations of the algorithm.
+    // This could be changed with a new gsl_monte_vegas_params struct and passing that to gsl_monte_vegas_params_set().
+    // Here we use default params struct and just set the number of calls
 
-    const double maxIntegrationMomentum = config.getDouble("Integration", "maxIntegrationMomentum");
-    const size_t calls = config.getInt("Integration", "calls");
-    const double relativeErrorGoal = std::fabs(config.getDouble("Integration", "relativeErrorGoal"));
-    const double absoluteErrorGoal = std::fabs(config.getDouble("Integration", "absoluteErrorGoal"));
-    const int maxTries = config.getInt("Integration", "maxTries");
-    const bool bVerbose = config.getBool("Integration", "verbose");
+    const double maxIntegrationMomentum = options.maxIntegrationMomentum;
+    const size_t calls = options.calls;
+    const double relativeErrorGoal = options.relativeErrorGoal;
+    const double absoluteErrorGoal = options.absoluteErrorGoal;
+    const int maxTries = options.maxTries;
+    const bool bVerbose = options.bVerbose;
 
-    bOptimizeUltrarelativistic = config.getBool("Integration", "optimizeUltrarelativistic");
+    bOptimizeUltrarelativistic = options.bOptimizeUltrarelativistic;
 
     // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
     double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.};                                                  // Lower limits
@@ -44,11 +48,6 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k)
     G.f = &gslWrapper::integrandWrapper;
     G.dim = dim;
     G.params = &gslWrapper;
-
-    // Options for Vegas Monte Carlo integration. https://www.gnu.org/software/gsl/doc/html/montecarlo.html#vegas
-    // By default each call to gsl_monte_vegas_integrate will perform 5 iterations of the algorithm.
-    // This could be changed with a new gsl_monte_vegas_params struct and passing that to gsl_monte_vegas_params_set().
-    // Here we use default params struct and just set the number of calls
 
     double mean = 0.0;
     double error = 0.0;
@@ -104,7 +103,11 @@ std::array<double, 2> CollisionIntegral4::evaluate(int m, int n, int j, int k)
 
     gsl_monte_vegas_free(gslState);
 
-    return std::array<double, 2>({mean, error});
+    IntegrationResult result;
+    result.result = mean;
+    result.error = error;
+
+    return result;
 }
 
 void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
@@ -302,6 +305,8 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
         if (kinematics.FV4.energy() >= 0)
         {
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
+            // We're doing off-eq pair (a, l) so the rhoZ, rhoPar momenta here are always momenta of the l-particle.
+            // This is automatically handled by bDeltaF flags in CollElem (although the logic is not very transparent)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
                 polynomialBasis.TmTn(m, n, kinematics.FV2),
@@ -342,3 +347,5 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
     constexpr double pi2Pow58 = (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * 8.0;
     return fullIntegrand / pi2Pow58;
 }
+
+} // namespace
