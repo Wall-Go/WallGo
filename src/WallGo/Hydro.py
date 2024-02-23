@@ -367,7 +367,7 @@ class Hydro:
 
             # For a given vwTry, if vp becomes too small, Tm could become smaller than TMinLowT.
             #We thus determine a minimum vp given by this minimum Tm
-            TmMin = 1.05*self.TMinLowT #Smallest allowed value of Tm
+            TmMin = self.TMinLowT #Smallest allowed value of Tm
 
             vmSqAtTmMin = min(vwTry**2,self.thermodynamics.csqLowT(TmMin)) #Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
@@ -459,8 +459,7 @@ class Hydro:
                         vpminlow = vpminmid
                     vpminmid  = (vpminlow + vpminup)/2.
 
-                # HACK (1.01 is arbitrary)
-                vpmin = 1.01*vpminmid
+                vpmin = vpminup #Take the upper bound on vpminup just to be conservative
                 fmin,fmax = func(vpmin),func(vpmax)
 
             vpguess,_,_,_ = self.template.findMatching(vwTry)
