@@ -7,16 +7,17 @@ from .GenericModel import GenericModel
 from .Thermodynamics import Thermodynamics
 from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
-from .EOM import EOM
-from .Grid import Grid
 from .Config import Config
+from .EOM import EOM
+from .Fields import Fields
+from .Grid import Grid
 from .Integrals import Integrals
 from .Fields import Fields
 from .Boltzmann import BoltzmannSolver
-
 from .EOM import WallParams
 from .WallGoUtils import getSafePathToResource
-
+from .Thermodynamics import Thermodynamics
+from .WallGoTypes import PhaseInfo, WallGoResults
 
 @dataclass
 class PhaseInfo:
@@ -24,6 +25,7 @@ class PhaseInfo:
     phaseLocation1: Fields
     phaseLocation2: Fields
     temperature: float
+
 
 
 """ Defines a 'control' class for managing the program flow.
@@ -116,6 +118,11 @@ class WallGoManager:
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydro(self.thermodynamics)
 
+
+        if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
+            raise WallGoError("Failed to solve Jouguet velocity at input temperature!", 
+                              data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
+
         print(f"Jouguet: {self.hydro.vJ}")
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
@@ -137,16 +144,18 @@ class WallGoManager:
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
 
-        # Currently we assume transition phase1 -> phase2. This assumption
-        # shows up at least when initializing FreeEnergy objects
-        if VeffValue1 < VeffValue2:
-            raise RuntimeWarning(
-                f"!!! Phase 1 has lower free energy than Phase 2, this will not work"
-            )
+        if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
+            raise WallGoPhaseValidationError("It looks like both phases are the same, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
 
-        foundPhaseInfo = PhaseInfo(
-            temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2
-        )
+        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
+        if (np.real(VeffValue1) < np.real(VeffValue2)):
+            raise WallGoPhaseValidationError("Phase 1 has lower free energy than Phase 2, this will not work",
+                                             phaseInput, {"phaseLocation1" : phaseLocation1, "Veff(phi1)" : VeffValue1, 
+                                                          "phaseLocation2" : phaseLocation2, "Veff(phi2)" : VeffValue2}) 
+        
+        foundPhaseInfo = PhaseInfo(temperature=T, phaseLocation1=phaseLocation1, phaseLocation2=phaseLocation2)
 
         self.phasesAtTn = foundPhaseInfo
 
@@ -170,6 +179,10 @@ class WallGoManager:
             TMax=10.0 * Tn,
         )
 
+
+        if (self.Tc < self.phasesAtTn.temperature):
+            raise WallGoPhaseValidationError(f"Got Tc < Tn, should not happen!", self.phasesAtTn, {"Tc" : self.Tc})
+    
         print(f"Found Tc = {self.Tc} GeV.")
         # @todo should check that this Tc is really for the transition between
         # the correct phases. At the very least return the field values for
@@ -195,12 +208,19 @@ class WallGoManager:
 
         # Use the template model to find an estimate of the minimum and
         # maximum required temperatures
-        hydrotemplate = HydroTemplateModel(self.thermodynamics)
+        
+        try:
+            ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
+            hydrotemplate = HydroTemplateModel(self.thermodynamics)
+
+        except WallGoError as error:
+            # Throw new error with more info
+            raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
 
         _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrotemplate.findMatching(
             0.99 * hydrotemplate.vJ
         )
-
+        
         dT = self.config.getfloat("EffectivePotential", "dT")
 
         """If TMax, TMin are too close to real temperature boundaries
@@ -221,6 +241,7 @@ class WallGoManager:
         self, thermodynamics: Thermodynamics
     ) -> None:
         """"""
+        
         self.hydro = Hydro(thermodynamics)
 
     def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
@@ -264,13 +285,16 @@ class WallGoManager:
         self.boltzmannSolver.readCollision(fileName)
 
     def wallSpeedLTE(self) -> float:
+      
         """Solves wall speed in the Local Thermal Equilibrium approximation."""
 
         return self.hydro.findvwLTE()
 
     # Call after initGrid. I guess this would be the main workload function
-    def solveWall(self, bIncludeOffEq: bool) -> Tuple[float, WallParams]:
-        """Returns wall speed and wall parameters (widths and offsets)."""
+
+    def solveWall(self, bIncludeOffEq: bool) -> WallGoResults:
+        """Returns wall speed and wall parameters (widths and offsets).
+        """
 
         numberOfFields = self.model.fieldCount
 
@@ -290,8 +314,8 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        wallVelocity, wallParams = eom.findWallVelocityMinimizeAction()
-        return wallVelocity, wallParams
+        # returning results
+        return eom.findWallVelocityMinimizeAction()
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 

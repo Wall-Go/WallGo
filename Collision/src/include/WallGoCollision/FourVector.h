@@ -7,6 +7,9 @@
 
 #include "ThreeVector.h"
 
+namespace wallgo
+{
+
 // The four-vector class. Contains (p0,p1,p2,p3). The first element is the energy. Metric is diag(1, -1, -1, -1).
 class FourVector {
 	
@@ -188,6 +191,8 @@ public:
 	}
 
 };
+
+} // namespace
 
 #endif // header guard
 

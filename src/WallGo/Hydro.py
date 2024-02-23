@@ -1,10 +1,10 @@
+from dataclasses import dataclass
 import numpy as np
-from scipy.optimize import fsolve
-from scipy.optimize import root_scalar,root, minimize_scalar
+from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
-from .Thermodynamics import Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .helpers import gammaSq, boostVelocity
+from .WallGoTypes import HydroResults
 
 
 class Hydro:
@@ -145,17 +145,27 @@ class Hydro:
         """
         vp = vw
         Tp = self.Tnucl
-        pHighT,wHighT = self.thermodynamics.pHighT(Tp),self.thermodynamics.wHighT(Tp)
+        pHighT, wHighT = self.thermodynamics.pHighT(Tp), self.thermodynamics.wHighT(Tp)
         eHighT = wHighT - pHighT
 
         def tmFromvpsq(tm):
-            pLowT,wLowT = self.thermodynamics.pLowT(tm),self.thermodynamics.wLowT(tm)
+            pLowT, wLowT = self.thermodynamics.pLowT(tm), self.thermodynamics.wLowT(tm)
             eLowT = wLowT - pLowT
             return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
 
-        Tmax = minimize_scalar(tmFromvpsq,bounds=[self.Tnucl,self.TMaxLowT],method='Bounded').x
-        Tm = root_scalar(tmFromvpsq,bracket =[self.Tnucl, Tmax], method='brentq', xtol=self.atol, rtol=self.rtol).root
-        vpvm,vpovm = self.vpvmAndvpovm(Tp, Tm)
+        Tmax = minimize_scalar(
+            tmFromvpsq,
+            bounds=[self.Tnucl, self.TMaxLowT],
+            method='Bounded'
+        ).x
+        Tm = root_scalar(
+            tmFromvpsq,
+            bracket =[self.Tnucl, Tmax],
+            method='brentq',
+            xtol=self.atol,
+            rtol=self.rtol
+        ).root
+        vpvm, vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm/vpovm)
         return (vp, vm, Tp, Tm)
 

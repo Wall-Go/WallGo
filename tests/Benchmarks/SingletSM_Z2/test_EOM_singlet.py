@@ -17,7 +17,8 @@ def test_equilibriumEOM_singlet(
 
     eom, BM = singletBenchmarkEOM_equilibrium
 
-    vwEOM, _ = eom.findWallVelocityMinimizeAction()
+    results = eom.findWallVelocityMinimizeAction()
+    vwEOM = results.wallVelocity
     vwLTE = BM.expectedResults["vwLTE"]
 
     # Currently the wall velocity solver in EOM has hardcoded absolute
