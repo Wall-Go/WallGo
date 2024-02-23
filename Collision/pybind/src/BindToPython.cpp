@@ -56,6 +56,8 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
 
     namespace py = pybind11;
 
+    m.doc() = "WallGo collision module";
+
     gslWrapper::initializeRNG();
 
     // Bind particle type enums
@@ -130,19 +132,27 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "Args:\n"
         "   path (string)";
 
+    std::string usage_setMatrixElementVerbosity =
+        "Enable or disable verbose printing of symbolic matrix elements as they get parsed.\n"
+        "Args:\n"
+        "   bool";
+
     std::string usage_configureIntegration =
         "Specify options for the integration routine.\n"
         "Args:\n"
         "   options (IntegrationOptions)";
 
+    // For functions with default args we need to explicity define the arguments
     py::class_<CollisionPython>(m, "CollisionManager")
         .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
-        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str())
+        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, 
+            usage_calculateCollisionIntegrals.c_str(), py::arg("basisSize"), py::arg("bVerbose")=false)
         .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
         .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
-        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
+        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str())
+        .def("setMatrixElementVerbosity", &CollisionPython::setMatrixElementVerbosity, usage_setMatrixElementVerbosity.c_str());
 
 }
 

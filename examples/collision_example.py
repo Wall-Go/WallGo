@@ -44,6 +44,8 @@ CollisionModule = WallGo.loadCollisionModule()
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.CollisionManager()
 
+# Use help(collisionManager) for info about what functionality is available
+
 """
 Define couplings (Lagrangian parameters)
 """
@@ -90,7 +92,6 @@ lightQuark = Particle(
     multiplicity=5,
 )
 
-
 # hack
 temperatureHack = 1.0
 
@@ -114,8 +115,11 @@ integrationOptions.absoluteErrorGoal = 1e-8
 
 collisionManager.configureIntegration(integrationOptions)
 
+## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+collisionManager.setMatrixElementVerbosity(True)
+
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
 basisSize = 5
 
-## Computes collisions for all out-of-eq particles specified above
-collisionManager.calculateCollisionIntegrals(basisSize, True)
+## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
+collisionManager.calculateCollisionIntegrals(basisSize, bVerbose = False)

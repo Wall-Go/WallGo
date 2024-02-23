@@ -14,7 +14,8 @@
 
 #include "WallGoCollision/WallGoCollision.h"
 
-void setupQCD(wallgo::CollisionManager& manager) {
+// Configures QCD-like particle content
+bool setupQCD(wallgo::CollisionManager& manager) {
 
 	const double gs = 1.2279920495357861;
 
@@ -41,8 +42,19 @@ void setupQCD(wallgo::CollisionManager& manager) {
 
 	manager.addCoupling(gs);
 
-	// Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir
-	manager.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt");
+	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
+	This function returns false if the file is not found, in which case we abort here. */
+	if (!manager.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt"))
+	{
+		std::cerr << "It looks like you may be running this example program from a nonstandard location.\n"
+			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
+			"Please run the example program inside the 'examples' directory.\n"
+			"In your own applications you can use wallgo::CollisionManager::setMatrixElementFile() to specify the file location as you prefer."
+			<< std::endl;
+		return false;
+	}
+
+	return true;
 }
 
 
@@ -56,7 +68,15 @@ int main()
 	// Specify output directory (relative or absolute path). Defaults to current directory
 	manager.setOutputDirectory("output");
 
-    setupQCD(manager);
+	// Setup the particle content and specify matrix element file. If the setup fails we just abort
+    if (!setupQCD(manager))
+	{
+		return 1;
+	}
+
+	// Tell the manager that it should print the symbolic matrix elements as they get parsed. 
+	// This can be useful for debugging. By default this printing is disabled
+	manager.setMatrixElementVerbosity(true);
 
 	// Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
 	// Here we set everything manually to show how it's done
@@ -71,10 +91,10 @@ int main()
 	
 	manager.configureIntegration(options);
 
-	// Polynomial basis size
+	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
 
-    manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/false);
+	manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/false);
 
     wallgo::gslWrapper::clearRNG();
     

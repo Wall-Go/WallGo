@@ -3,15 +3,18 @@
 
 CMake is used as the build system, but dependencies need to be installed first (see below). Once you have installed the dependencies you can compile as:
 ```
-cmake -B build
+cmake -B build [FLAGS]
 cmake --build build
 cmake --install build
 ```
 This builds and installs a standalone C++ executable to ./bin, example programs to examples/bin and a separate Python module for exposing the C++ code to rest of WallGo.
 
-We compile with OpenMP support by default. Use the ```-DUSE_OMP=Off``` flag to disable OpenMP. You may use ```-DBUILD_PYTHON_MODULE=Off``` to build only a standalone C++ binary without Python bindings.
+We compile with OpenMP support by default. Add ```-DUSE_OMP=Off``` in the ```-B``` step to disable OpenMP. You may use ```-DBUILD_PYTHON_MODULE=Off``` to build only a standalone C++ binary without Python bindings.
 
-**Important:** The Python bindings are version dependent and guaranteed to work only with the same version of Python that was used during compilation (we default to the version returned by CMake's FindPython3). If you have multiple Python installations on your system, you can specify the correct version with ```-DUSER_PYTHON_VERSION=3.XX```. If you still have issues, you can try ```-DPython3_ROOT_DIR="path/to/python"``` to specify the location of your preferred Python installation with.
+**Important:** The Python bindings are version dependent and guaranteed to work only with the same version of Python that was used during compilation (we default to the version returned by CMake's FindPython3). If you have multiple Python installations on your system, you can specify the correct version with ```-DUSER_PYTHON_VERSION=3.XX``` in the ```-B``` step. If you still have issues, you can try ```-DPython3_ROOT_DIR="path/to/python"``` to specify the location of your preferred Python installation with.
+
+**Note:** On Windows systems you may have to specify the build configuration explicitly:
+```cmake --build build --config Release```
 
 
 # Installing dependenciens with Conan
@@ -20,7 +23,7 @@ Easiest way of handling the dependencies is with the Conan package manager. Requ
 ```
 conan install . --output-folder=build --build=missing
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
-cmake --build build --config Release
+cmake --build build
 cmake --install build
 ```
 **Hint:** Conan can be installed with pip. 

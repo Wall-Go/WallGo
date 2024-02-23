@@ -61,6 +61,8 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
 CollisionManager::CollisionManager()
 {
     // Set default options
+    bVerboseMatrixElements = false;
+
     outputDirectory = std::filesystem::current_path();
     matrixElementFile = std::filesystem::path("MatrixElements.txt");
 
@@ -249,16 +251,21 @@ void CollisionManager::setOutputDirectory(const std::string &directoryName)
     outputDirectory = dir;
 }
 
-void CollisionManager::setMatrixElementFile(const std::string &filePath)
+bool CollisionManager::setMatrixElementFile(const std::string &filePath)
 {
-    matrixElementFile = std::filesystem::path(filePath);;
-    // Check that the file exists. Failure here is non-fatal but not good either
+    matrixElementFile = std::filesystem::path(filePath);
+    // Check that the file exists
     if (!std::filesystem::exists(matrixElementFile))
     {
-        std::cerr << "Can't find matrix element file " << matrixElementFile.string() 
-            << "! Trying to proceed anyway." << std::endl;
+        std::cerr << "Error: Can't find matrix element file " << matrixElementFile.string() << std::endl;
+        return false;
     }
-    
+    return true;
+}
+
+void CollisionManager::setMatrixElementVerbosity(bool bVerbose)
+{
+    bVerboseMatrixElements = bVerbose;
 }
 
 void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose)
@@ -287,7 +294,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
             
             CollisionIntegral4 collisionIntegral(basisSize);
             std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), 
-                matrixElementFile.string(), bVerbose);
+                matrixElementFile.string(), bVerboseMatrixElements);
             
             for (const CollElem<4> &elem : collisionElements)
             {

@@ -50,8 +50,11 @@ public:
     // Specify where to store output files, relative or absolute path. Defaults to current work directory.
     void setOutputDirectory(const std::string& directoryName);
 
-    // Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt".
-    void setMatrixElementFile(const std::string& filePath);
+    /* Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt". 
+    Return value is false if the file was not found, true otherwise. */
+    bool setMatrixElementFile(const std::string& filePath);
+
+    void setMatrixElementVerbosity(bool bVerbose);
 
 protected:
 
@@ -110,6 +113,9 @@ private:
     IntegrationOptions integrationOptions;
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
+
+    // Print matrix elements as they get parsed?
+    bool bVerboseMatrixElements;
 };
 
 } // namespace
