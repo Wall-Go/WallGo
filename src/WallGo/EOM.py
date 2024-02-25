@@ -238,7 +238,7 @@ class EOM:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
         """
 
-        print(f"\nTrying {wallVelocity=}")
+        #print(f"\nTrying {wallVelocity=}")
 
         zeroPoly = Polynomial(np.zeros(self.grid.M-1), self.grid)
         offEquilDeltas = {"00": zeroPoly, "02": zeroPoly, "20": zeroPoly, "11": zeroPoly}
@@ -272,13 +272,13 @@ class EOM:
             error = np.abs(pressure-pressureOld)
             errTol = np.maximum(self.pressRelErrTol * np.abs(pressure), self.pressAbsErrTol)
             
-            print(f"{pressure=} {error=} {errTol=}")
+            #print(f"{pressure=} {error=} {errTol=}")
             i += 1
 
             if error < errTol:
                 break
             elif i >= self.maxIterations-1:
-                print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
+                #print("Pressure for a wall velocity has not converged to sufficient accuracy with the given maximum number for iterations.")
                 break
 
         if returnOptimalWallParams:

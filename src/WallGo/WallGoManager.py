@@ -103,6 +103,9 @@ class WallGoManager:
 
         self.model.modelParameters = modelParameters
 
+	#print(f"Peek: {self.model.modelParameters}") # tuomas debugging
+        print(f"\nPeek from manager: {modelParameters}\n") # tuomas debugging
+
         ## Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
 

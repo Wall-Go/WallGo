@@ -383,9 +383,11 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
 def main():
 
+    print(f"\nKek init\n") # tuomas debugging
     WallGo.initialize()
 
     ## Create WallGo control object
+    print(f"\nKek manager\n") # tuomas debugging
     manager = WallGoManager()
 
 
@@ -427,10 +429,18 @@ def main():
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mh2 = [ 120.0, 121.0 ]
-    for mh2 in values_mh2:
+#    values_mh2 = [ 120.0, 121.0 ]
+#    for mh2 in values_mh2:
+    values_a2 = [ 0.8, 0.9, 1.0 ]
+    for a2 in values_a2:
 
-        inputParameters["mh2"] = mh2
+
+#        inputParameters["mh2"] = mh2
+#        print(f"\n{mh2=}\n")
+
+#        inputParameters["a2"] = mh2-119
+
+        inputParameters["a2"] = a2
 
         ##################
         # note, when values of mh2 change in a for loop, one needs to define model and register model again
@@ -443,7 +453,9 @@ def main():
         #manager.registerModel(model)
         ##################
 
+        #print(f"\nPeek1: {modelParameters}\n") # tuomas debugging
         modelParameters = model.calculateModelParameters(inputParameters)
+        print(f"\nPeek2: {modelParameters}\n") # tuomas debugging
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
@@ -486,14 +498,14 @@ def main():
         print(f"{wallParams.offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+#        bIncludeOffEq = True
+#        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+#        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+#        print(f"{wallVelocity=}")
+#        print(f"{wallParams.widths=}")
+#        print(f"{wallParams.offsets=}")
 
 
     # end parameter-space loop
