@@ -34,8 +34,10 @@ SECOND_DERIV_POS = {'2': np.array([[-1,0,1],
                                   [-4,-3,-2,-1,0],
                                   [-3,-2,-1,0,1]],dtype=float)}
 
-def derivative(f, x, dx, n=1, order=4, bounds=None, args=None):
-    r"""Computes numerical derivatives of a callable function.
+def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=None, args=None):
+    r"""Computes numerical derivatives of a callable function. Use the epsilon
+    and scale parameters to estimate the optimal value of dx, if the latter is
+    not provided. 
     
 
     Parameters
@@ -46,8 +48,6 @@ def derivative(f, x, dx, n=1, order=4, bounds=None, args=None):
         shape as the input, but the first axis must match).
     x : float or array-like
         The position at which to evaluate the derivative.
-    dx : float, optional
-        The magnitude of finite differences.
     n : int, optional
         The number of derivatives to take. Can be 0, 1, 2. The default is 1.
     order : int, optional
@@ -57,6 +57,14 @@ def derivative(f, x, dx, n=1, order=4, bounds=None, args=None):
     bounds : tuple or None, optional
         Interval in which f can be called. If None, can be evaluated anywhere.
         The default is None.
+    epsilon : float, optional
+        Fractional accuracy at which f can be evaluated. If f is a simple 
+        function, should be close to the machine precision. Default is 1e-16.
+    scale : float, optional 
+        Typical scale at which f(x) change by order 1. Default is 1.
+    dx : float or None, optional
+        The magnitude of finite differences. If None, use epsilon and scale to
+        estimate the optimal dx. Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
 
@@ -80,6 +88,13 @@ def derivative(f, x, dx, n=1, order=4, bounds=None, args=None):
     
     if n == 0:
         return f(x, *args)
+    
+    # If dx is not provided, we estimate it from scale and epsilon by minimizing 
+    # the total error ~ epsilon/dx**n + dx**order.
+    if dx is None:
+        assert isinstance(epsilon, float), "Derivative error: epsilon must be a float."
+        assert isinstance(scale, float), "Derivative error: scale must be a float."
+        dx = scale * epsilon**(1/(n+order))
     
     # This step increases greatly the accuracy because it makes sure (x + dx) - x
     # is exactly equal to dx (no precision error).
