@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-import os
 import pathlib
 
 ## WallGo imports
@@ -294,42 +293,48 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
 
-        ## TODO initialize collisions. Either do it here or already in registerModel(). 
-        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
 
-        """WallGo can now be used to compute wall stuff!"""
+        ## Wrap everything in a try-except block to check for WallGo specific errors
+        try:
+            manager.setParameters(modelParameters, phaseInfo)
 
-        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+            """WallGo can now be used to compute wall stuff!"""
 
-        vwLTE = manager.wallSpeedLTE()
+            ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-        print(f"LTE wall speed: {vwLTE}")
+            vwLTE = manager.wallSpeedLTE()
 
-        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+            print(f"LTE wall speed: {vwLTE}")
 
-        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-        wallParams: WallGo.WallParams
+            ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
-        bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+            ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+            wallParams: WallGo.WallParams
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+            bIncludeOffEq = False
+            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
 
-        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+            print(f"{wallVelocity=}")
+            print(f"{wallParams.widths=}")
+            print(f"{wallParams.offsets=}")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+            ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+            bIncludeOffEq = True
+            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+
+            print(f"{wallVelocity=}")
+            print(f"{wallParams.widths=}")
+            print(f"{wallParams.offsets=}")
+
+        except WallGo.WallGoError as error:
+            ## something went wrong!
+            print(error)
+            continue
 
 
     # end parameter-space loop

@@ -10,7 +10,7 @@ from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
-from WallGo import Fields
+from WallGo import Fields, WallGoResults
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -171,7 +171,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
+    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
@@ -204,8 +204,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale) 
-            + self.V1T(bosonStuff, fermionStuff, temperature)
+            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
+            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
         return VTotal
@@ -468,21 +468,27 @@ def main():
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
 
     # end parameter-space loop

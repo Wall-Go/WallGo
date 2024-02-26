@@ -1,5 +1,8 @@
 #include "gslWrapper.h"
 
+namespace wallgo
+{
+
 namespace gslWrapper {
 
     gsl_rng* rng = nullptr;
@@ -37,3 +40,5 @@ double gslWrapper::integrandWrapper(double *intVars, size_t dim, void *pp) {
     double cosTheta3 = intVars[4];
     return params->pointerToObject->calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, params->integrandParameters);
 }
+
+} // namespace

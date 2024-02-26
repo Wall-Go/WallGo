@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.18)
 project(Collision VERSION 0.2.0 LANGUAGES CXX)
 # NB: project name is used across other CMake files for target names (${CMAKE_PROJECT_NAME})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -24,6 +24,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
+MESSAGE(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 ## Do compile with profiler support? This is off by default
@@ -32,10 +34,12 @@ option(PROFILER "Compile with profiler flags" OFF)
 
 ## Use OpenMP by default
 option(USE_OMP "Build with OpenMP support" ON)
-
+option(BUILD_EXAMPLES "Build WallGo/Collision C++ examples" ON)
 
 ## For MacOS, may need to manually setup OpenMP
 if(APPLE AND USE_OMP)
+
+    ## not good! TODO
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
 
@@ -51,6 +55,7 @@ if(APPLE AND USE_OMP)
         set(OpenMP_omp_LIBRARY omp)
     endif()
 endif()
+
 # Build the Python module unless the user disabled this
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 
@@ -61,8 +66,7 @@ else()
 endif()
 
 
-
-# Compiler-specific settings
+# Compiler-specific settings. We don't currently support debug flags etc for MSVC
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     # Enable warnings
     add_compile_options(-Wall -Wextra)
@@ -85,14 +89,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Treat all warnings as errors?
         #add_compile_options(-Werror)
         # Allow compiler to become annoying
-        add_compile_options(-Wpedantic)
-        
-    endif()
-    
-    
-    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    	# Optimization always for non-debug builds and define NDEBUG flag to disable various runtime asserts
-    	add_compile_options(-O3 -DNDEBUG)
+        add_compile_options(-Wpedantic)        
     endif()
 
     if (NOT USE_OMP)
@@ -100,36 +97,31 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         add_compile_options(-Wno-unknown-pragmas)
     endif()
 
-    ## Release build specific build options
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        # add_compile_options(-Wno-dev) ## I don't think this works, at least not on clang++
+endif()
+
+## Release build specific build options
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+
+    add_compile_definitions(NDEBUG)
+
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        add_compile_options(-O3)
     endif()
 
-
-## Visual Studio compiler stuff
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # Enable warnings and treat them as errors
-    #add_compile_options(/W4 /WX)
 endif()
 
 
-
-# Will build a 'core' library from code in ./src, apart from main.cpp.
-# Using the core lib we then build the 'main' program, a separate unit test module (if in Debug mode) and a separate pybind11 module 
-
-## Main program target
-set(MAIN_EXEC collision)
-
-# Code for the core lib + main program
 add_subdirectory(src)
-
-
-# Unit tests
-if(BUILD_UNIT_TESTS)
-    add_subdirectory(tests)
-endif()
 
 
 if (BUILD_PYTHON_MODULE)
 	add_subdirectory(pybind)
+endif()
+
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if(BUILD_UNIT_TESTS)
+    add_subdirectory(tests)
 endif()

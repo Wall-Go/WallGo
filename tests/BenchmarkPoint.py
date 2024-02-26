@@ -1,8 +1,9 @@
 import WallGo.GenericModel
 
+
 ## Collect input params + other benchmark-specific data for various things in one place.
 class BenchmarkPoint:
-    
+
     ## This is model-specific input like particle masses
     inputParams: dict[str, float]
     ## This is required input for WallGo to find the transition (Tn and approx phase locations)
@@ -14,10 +15,13 @@ class BenchmarkPoint:
     ## Expected results for the benchmark point
     expectedResults: dict[str, float]
 
-
-    def __init__(self, inputParams: dict[str, float], phaseInfo: dict[str, float] = {}, 
-                    config: dict[str, float] = {}, expectedResults: dict[str, float] = {}):
-        
+    def __init__(
+        self,
+        inputParams: dict[str, float],
+        phaseInfo: dict[str, float] = {},
+        config: dict[str, float] = {},
+        expectedResults: dict[str, float] = {},
+    ):
         self.inputParams = inputParams
         self.phaseInfo = phaseInfo
         self.config = config
@@ -25,16 +29,11 @@ class BenchmarkPoint:
 
 
 class BenchmarkModel:
-    """This just holds a model instance + BenchmarkPoint.
-    """
+    """This just holds a model instance + BenchmarkPoint."""
 
     model: WallGo.GenericModel
     benchmarkPoint: BenchmarkPoint
 
     def __init__(self, model: WallGo.GenericModel, benchmarkPoint: BenchmarkPoint):
-
         self.model = model
         self.benchmarkPoint = benchmarkPoint
-
-
-

@@ -1,29 +1,39 @@
+"""Import types here. We do this so that eg. the EOM class can be accessed as 
+WallGo.EOM. If this wasn't done, WallGo.EOM would actually refer to the MODULE EOM.py which we don't want,
+and would cause hard-to-diagnoze crashes.
+TODO Is there a better way of doing all this?! 
+"""
+
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .EOM import EOM
+from .EOM import EOM, WallGoResults
 from .EOM import WallParams
+from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
+from .WallGoTypes import PhaseInfo
+
 
 from .Particle import Particle
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
-from .FreeEnergy import FreeEnergy 
+from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
-from .Integrals import Integrals
-from .Config import Config
 from .CollisionArray import CollisionArray
 
+from .Integrals import Integrals
+from .Config import Config
+
+from .Collision import loadCollisionModule
 from .WallGoUtils import getSafePathToResource
 
-from .CollisionModuleLoader import loadCollisionModule, CollisionModule, collisionModuleLoaded
 
 defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
@@ -35,10 +45,6 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
 #print("Read WallGo config:")
 #print(config)
-
-## Load the collision module, gets stored in CollisionModule global var
-loadCollisionModule()
-
 
 _bInitialized = False
 config = Config()
@@ -54,7 +60,8 @@ defaultIntegrals.Jf.disableAdaptiveInterpolation()
 ## This is good for preventing heavy startup operations from running if the user just wants a one part of WallGo and not the full framework, eg. ``import WallGo.Integrals``.
 ## Downside is that programs need to manually call this, preferably as early as possible.
 def initialize() -> None:
-    """WallGo initializer. This should be called as early as possible in your program."""
+    """WallGo initializer. This should be called as early as possible in your program.
+    """
 
     global _bInitialized
     global config 
@@ -84,6 +91,3 @@ def _initalizeIntegralInterpolations() -> None:
     defaultIntegrals.Jf.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
         )
-
-
-

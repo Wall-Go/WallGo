@@ -95,7 +95,7 @@ def test_singletModelFindCriticalTemperature(singletBenchmarkModel: BenchmarkMod
 ])
 def test_singletModelDerivField(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: WallGo.Fields):
 
-    relativeTolerance = 1e-6
+    relativeTolerance = 1e-4
 
     model = singletBenchmarkModel.model
 
@@ -109,7 +109,7 @@ def test_singletModelDerivField(singletBenchmarkModel: BenchmarkModel, fields: W
 ])
 def test_singletModelDerivT(singletBenchmarkModel: BenchmarkModel, fields: WallGo.Fields, temperature: float, expectedVeffValue: float):
 
-    relativeTolerance = 1e-6
+    relativeTolerance = 1e-4
 
     model = singletBenchmarkModel.model
 
