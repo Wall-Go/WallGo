@@ -146,7 +146,7 @@ class EffectivePotentialSM(EffectivePotential):
         self.num_boson_dof = 28 #check if correct 
         self.num_fermion_dof = 90 
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
+    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
         # phi ~ 1/sqrt(2) (0, v)
         v = fields.GetField(0) 
 
