@@ -272,7 +272,7 @@ class EOM:
             np.zeros((len(self.particles), self.grid.M - 1)),
             self.grid,
             direction=("Array", "z"),
-            basis="Cardinal",
+            basis=("Array", "Cardinal"),
         )
         offEquilDeltas = BoltzmannDeltas(
             Delta00=zeroPoly,
@@ -281,7 +281,7 @@ class EOM:
             Delta11=zeroPoly,
         )
         deltaF = Polynomial(
-            np.zeros((len(self.particles, (self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1))),
+            np.zeros((len(self.particles), (self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1))),
             self.grid,
             basis=("Array", "Cardinal", "Chebyshev", "Chebyshev"),
             direction=("Array", "z", "pz", "pp"),

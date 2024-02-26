@@ -275,7 +275,7 @@ class BoltzmannSolver:
         # background profiles
         TFull = self.background.temperatureProfile
         vFull = self.background.velocityProfile
-        msqFull = np.array([particle.msqVacuum(self.background.fieldProfile) for particle in particles])
+        msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
         vw = self.background.vw
 
         # expanding to be rank 3 arrays, like deltaF
