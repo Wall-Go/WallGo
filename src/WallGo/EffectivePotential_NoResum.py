@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from .EffectivePotential import EffectivePotential
 from .Integrals import Integrals
+from .WallGoTypes import ActionParameters
 
 class EffectivePotential_NoResum(EffectivePotential, ABC):
     """Class EffectivePotential_NoResum -- Specialization of the abstract EffectivePotential class
@@ -12,11 +13,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
     In some literature this would be the ``4D effective potential''. 
 
     """
-
-    integrals: Integrals
-
-
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int, integrals: Integrals = None):
+    def __init__(self, modelParameters: ActionParameters, fieldCount: int, integrals: Integrals = None):
         ##
         super().__init__(modelParameters, fieldCount)
         

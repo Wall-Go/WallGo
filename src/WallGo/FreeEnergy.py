@@ -43,12 +43,6 @@ class FreeEnergy(InterpolatableFunction):
     By definition: free energy density of a phase == value of Veff in its local minimum.
     """
 
-    effectivePotential: EffectivePotential
-    ## Approx field values where the phase lies (TODO should we include T-dependence?)
-    phaseLocationGuess: Fields
-
-    minPossibleTemperature: float ## Lowest possible temperature so that the phase is still (meta)stable 
-    maxPossibleTemperature: float ## Highest possible temperature so that the phase is still (meta)stable
 
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: Fields, initialInterpolationPointCount: int=1000):
 
@@ -58,10 +52,11 @@ class FreeEnergy(InterpolatableFunction):
         super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount, initialInterpolationPointCount=initialInterpolationPointCount)
 
         self.effectivePotential = effectivePotential 
+        ## Approx field values where the phase lies. TODO should we include T-dependence?
         self.phaseLocationGuess = phaseLocationGuess
 
-        self.minPossibleTemperature = 0.
-        self.maxPossibleTemperature = np.Inf
+        self.minPossibleTemperature = 0. ## Lowest possible temperature so that the phase is still (meta)stable
+        self.maxPossibleTemperature = np.Inf ## Highest possible temperature so that the phase is still (meta)stable
 
 
 

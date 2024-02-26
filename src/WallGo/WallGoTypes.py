@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
 import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
@@ -13,6 +14,8 @@ class PhaseInfo:
     temperature: float
 
 
+class ActionParameters(ABC):
+    pass
 
 """LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
 it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
@@ -74,7 +77,7 @@ class BoltzmannResults:
 
 
 @dataclass
-class HydroResults():
+class HydroResults:
     """
     Holds results to be returned by Hydro
     """
@@ -95,7 +98,7 @@ class HydroResults():
 
 
 @dataclass
-class WallParams():
+class WallParams:
     ## Holds wall widths and wall offsets for all fields
     widths: np.ndarray ## 1D array
     offsets: np.ndarray ## 1D array

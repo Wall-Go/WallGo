@@ -10,11 +10,9 @@ from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .EOM import EOM, WallGoResults
-from .EOM import WallParams
+from .EOM import EOM
 from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo
-
+from .WallGoTypes import PhaseInfo, WallParams, WallGoResults, ActionParameters
 
 from .Particle import Particle
 from .Fields import Fields
@@ -23,7 +21,6 @@ from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
-from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionArray import CollisionArray

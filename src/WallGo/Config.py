@@ -7,8 +7,6 @@ class Config:
     config.get("Section", "someKey")
     """
 
-    configParser: configparser.ConfigParser
-
     def __init__(self):
 
         self.config = configparser.ConfigParser()

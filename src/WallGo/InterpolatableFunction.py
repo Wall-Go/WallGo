@@ -44,18 +44,6 @@ class InterpolatableFunction(ABC):
      - Does NOT support piecewise functions as interpolations would break for those.
     """
 
-    ### Variables for adaptive interpolation
-    # This can safely be changed at runtime and adjusted for different functions
-    _evaluationsUntilAdaptiveUpdate: int = 500
-    __directEvaluateCount: int = 0
-    __bUseAdaptiveInterpolation: bool 
-    __directlyEvaluatedAt: list ## keep list of values where the function had to be evaluated without interpolation, allows smart updating of ranges
-
-    __interpolatedFunction: Callable
-
-    ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
-    extrapolationTypeLower: EExtrapolationType; extrapolationTypeUpper: EExtrapolationType
-
     def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1):
         """ Optional argument returnValueCount should be set by the user if using list-valued functions.
         """
@@ -66,7 +54,14 @@ class InterpolatableFunction(ABC):
         self.extrapolationTypeLower = EExtrapolationType.NONE
         self.extrapolationTypeUpper = EExtrapolationType.NONE
 
-        if (bUseAdaptiveInterpolation): 
+        ## Options for adaptive interpolation
+        # This can safely be changed at runtime and adjusted for different functions
+        self._evaluationsUntilAdaptiveUpdate = 500
+        self.__directEvaluateCount = 0
+        self.__directlyEvaluatedAt: list[float] = []
+
+
+        if (bUseAdaptiveInterpolation):
             self.enableAdaptiveInterpolation()
         else:
             self.disableAdaptiveInterpolation()

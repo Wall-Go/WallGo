@@ -9,6 +9,7 @@ import scipy.interpolate
 from .helpers import derivative
 
 from .Fields import Fields
+from .WallGoTypes import ActionParameters
 
 
 class EffectivePotential(ABC):
@@ -31,20 +32,19 @@ class EffectivePotential(ABC):
     """
 
 
-    ## How many background fields. This is explicitly required so that we can have better control over array shapes 
-    fieldCount: int
-
-    ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
-    fieldLowerBound: float = 1e-8
-
     ## In practice we'll get the model params from a GenericModel subclass 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+    def __init__(self, modelParameters: ActionParameters, fieldCount: int):
         self.modelParameters = modelParameters
+
+        ## How many background fields. This is explicitly required so that we can have better control over array shapes 
         self.fieldCount = fieldCount
 
         ## Used for derivatives. TODO read from config file probably
         self.dT = 1e-3
         self.dPhi = 1e-3 ## field difference
+
+        ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
+        self.fieldLowerBound: float = 1e-8
 
 
     @abstractmethod

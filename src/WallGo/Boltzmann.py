@@ -20,12 +20,6 @@ class BoltzmannSolver:
     # Static value holding of natural log of the maximum expressible float
     MAX_EXPONENT = sys.float_info.max_exp * np.log(2)
 
-    # Member variables
-    grid: Grid
-    offEqParticles: list[Particle]
-    background: BoltzmannBackground
-    collisionArray: CollisionArray
-
     """ LN: I've changed the constructor so that neither the background nor particle is required here. This way we can 
     have a persistent BoltzmannSolver object (in WallGoManager) that does not need to re-read collision integrals all the time.
     Particles can also be stored in a persistent list. 
@@ -76,9 +70,9 @@ class BoltzmannSolver:
         self.basisN = basisN
 
         ## These are set, and can be updated, by our member functions (to be called externally)
-        self.background = None
-        self.collisionArray = None
-        self.offEqParticles = []
+        self.background: BoltzmannBackground = None
+        self.collisionArray: CollisionArray = None
+        self.offEqParticles: list[Particle] = []
 
     ## LN: Use this instead of requiring the background already in constructor
     def setBackground(self, background: BoltzmannBackground) -> None:

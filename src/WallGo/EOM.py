@@ -21,11 +21,6 @@ from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallPara
 
 class EOM:
 
-    model: GenericModel
-    hydro: Hydro
-    thermo: Thermodynamics ## thermo here is used pretty messily but is useful: gives access to both FreeEnergy objects and Veff
-    boltzmannSolver: BoltzmannSolver
-
     # LN: Changed this so that the constructor takes a BoltzmannSolver instance instead of a Particle. 
     # This is better: can access all out-of-eq particles through BoltzmannSolver if needed. 
     # Currently the particle-specific things in this class are hardcoded so that they only make sense for top quark only, and are completely model specific. 
