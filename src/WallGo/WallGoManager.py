@@ -111,6 +111,17 @@ class WallGoManager:
 
         self.initTemperatureRange()
 
+
+        print(f"{self.model.modelParameters}")
+
+        #print(f"{self.model.modelParameters["M"]}")
+
+        print(f"{self.model.modelParameters['M']} \t {self.Tc}")
+
+
+
+
+
         print("Suggested T range:")
         print(f"TMin = {self.TMin}, TMax = {self.TMax}")
         
