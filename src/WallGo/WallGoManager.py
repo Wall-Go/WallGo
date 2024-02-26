@@ -220,6 +220,9 @@ class WallGoManager:
         _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrotemplate.findMatching(
             0.99 * hydrotemplate.vJ
         )
+
+        print(f"{hydrotemplate.vJ=} {hydrotemplate.alN = } {hydrotemplate.alNmin=} {hydrotemplate.cb=}")
+        print(f"{THighTMaxTemplate=} {TLowTTMaxTemplate=}")
         
         dT = self.config.getfloat("EffectivePotential", "dT")
 

@@ -69,6 +69,8 @@ class HydroTemplateModel:
         self.vMin = self.minVelocity()
         self.vMax = self.maxVelocity()
 
+        self.alNmin = max((1-self.psiN)/3.,(self.mu-self.nu)/3/self.mu)
+
     def findJouguetVelocity(self, alN=None):
         r"""
         Finds the Jouguet velocity, corresponding to the phase transition strength :math:`\alpha_n`,

@@ -250,7 +250,8 @@ def main():
         "MZ" : 91.1876,
         "Mt" : 173.0,
         "g3" : 1.2279920495357861,
-        "mH" : 50.0,
+       #"mH" : 50.0,  this PT was so weak, let's revisit this later
+        "mH" : 35.0
     }
 
 
@@ -270,7 +271,7 @@ def main():
     """ Example mass loop that just does one value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mH = [ 50.0 ]
+    values_mH = [ 35.0 ]
 
     for mH in values_mH:
 
@@ -282,7 +283,8 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
 
-        Tn = 63.1 ## nucleation temperature
+#        Tn = 63.1 ## nucleation temperature for mH = 50 -- revisit later
+        Tn = 45.5
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
