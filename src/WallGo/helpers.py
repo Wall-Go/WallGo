@@ -81,6 +81,11 @@ def derivative(f, x, dx, n=1, order=4, bounds=None, args=None):
     if n == 0:
         return f(x, *args)
     
+    # This step increases greatly the accuracy because it makes sure (x + dx) - x
+    # is exactly equal to dx (no precision error).
+    temp = x + dx
+    dx = temp - x
+    
     offset = np.zeros_like(x,dtype=int)
     offset -= x + dx > bounds[1]
     offset += x - dx < bounds[0]
