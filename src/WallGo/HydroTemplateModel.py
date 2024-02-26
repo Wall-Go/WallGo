@@ -308,6 +308,8 @@ class HydroTemplateModel:
             vp_sw = sol.y[0,-1]
             vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
             wm_sw = sol.y[1,-1]
+        print(f"{al=}")
+        print(vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw))
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
 
     def findvwLTE(self):
@@ -339,6 +341,8 @@ class HydroTemplateModel:
         al_max = 1/3.
         vp_max = min(self.cs2/vw,vw,vm)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+
+        print(f"{vw=} {al_max=} {al_min=}")
 
         try:
             sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)

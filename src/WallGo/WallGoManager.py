@@ -221,8 +221,10 @@ class WallGoManager:
             0.99 * hydrotemplate.vJ
         )
 
-        print(f"{hydrotemplate.vJ=} {hydrotemplate.alN = } {hydrotemplate.alNmin=} {hydrotemplate.cb=}")
+        print(f"{hydrotemplate.vJ=} {hydrotemplate.alN = } {hydrotemplate.alNmin=} {hydrotemplate.cb2=} {hydrotemplate.cs2=} {hydrotemplate.vMax =} {(1-hydrotemplate.psiN)/3=}")
         print(f"{THighTMaxTemplate=} {TLowTTMaxTemplate=}")
+        #There seems to be a maximum velocity, 
+        print(f"{hydrotemplate.findMatching(0.3)=} {hydrotemplate.findMatching(0.4)=} {hydrotemplate.findMatching(0.45)=}")
         
         dT = self.config.getfloat("EffectivePotential", "dT")
 
