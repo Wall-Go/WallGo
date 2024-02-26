@@ -1,9 +1,14 @@
+#ifndef GSLWRAPPER_H
+#define GSLWRAPPER_H
 
 // Monte Carlo integration
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_monte_vegas.h>
 
 #include "CollisionIntegral.h"
+
+namespace wallgo
+{
 
 // Helpers for GSL integration routines.
 namespace gslWrapper {
@@ -28,3 +33,7 @@ namespace gslWrapper {
     // pp should be of gslFunctionParams type
     double integrandWrapper(double* intVars, size_t dim, void* pp); 
 }
+
+} // namespace
+
+#endif

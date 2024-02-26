@@ -5,6 +5,9 @@
 #include <cmath>
 #include <iostream>
 
+namespace wallgo
+{
+
 // Boson or fermion?
 enum class EParticleType {
 	BOSON, FERMION
@@ -61,5 +64,7 @@ private:
 	// Set this in the constructor
 	const EParticleType type;
 };
+
+} // namespace
 
 #endif

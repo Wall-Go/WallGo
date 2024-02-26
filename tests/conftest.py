@@ -34,7 +34,7 @@ def boltzmannTestBackground(M):
     return WallGo.BoltzmannBackground(
         velocityMid=velocityMid,
         velocityProfile=v,
-        fieldProfile=field,
+        fieldProfiles=field,
         temperatureProfile=T,
         polynomialBasis="Cardinal",
     )

@@ -1,6 +1,0 @@
-## The indexing needs to be match order at which the C++ code gets particle input. Same for couplings.
-## Here 0 = top, 1 = gluon, 2 = light quark. 
-
-M[0,0,1,1] -> -64/9 * couplings[0]^4 * s*t / (t - msq[2])^2
-M[0,1,0,1] -> -64/9 * couplings[0]^4 * s*u/(u - msq[2])^2 + 16 * couplings[0]^4 * (s^2 + u^2) / (t - msq[1])^2
-M[0,2,0,2] -> 5 * 16/3 * couplings[0]^4 * (s^2 + u^2) / (t - msq[1])^2

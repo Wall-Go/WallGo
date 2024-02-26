@@ -20,6 +20,8 @@
     #define COLLISION_API
 #endif
 
+namespace wallgo
+{
 
 // Namespace for numerical constants 
 namespace constants {
@@ -27,15 +29,15 @@ namespace constants {
 
 }
 
-// Global functions etc
-namespace globalFuncts {
-    // Clamp number between [min, max]
-    template <typename T>
-    inline T clamp(T value, T lower, T upper) 
-    {
-        return std::max(lower, std::min(value, upper));
-    }
+// ---- Global functions etc
+
+// Clamp number between [min, max]
+template <typename T>
+inline T clamp(T value, T lower, T upper) 
+{
+    return std::max(lower, std::min(value, upper));
 }
+
 
 
 /* Recursive boilerplate for nested D-dimensional std::vectors. 
@@ -57,6 +59,8 @@ struct Vec<1, T> : public std::vector<T> {
 
 
 using Array4D = Vec<4, double>;
+
+} // namespace
 
 
 

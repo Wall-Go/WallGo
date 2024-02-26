@@ -1,8 +1,7 @@
+import pathlib
 
-from WallGo.CollisionModuleLoader import CollisionModule, collisionModuleLoaded
+import WallGo
 from WallGo import Particle
-from WallGo import getSafePathToResource
-
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
 ## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
@@ -38,23 +37,14 @@ def constructPybindParticle(p: Particle, T: float):
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
 
 
+WallGo.initialize()
 
-if (not collisionModuleLoaded):
-    raise RuntimeError("Can't run collision_example.py if the collision module is not loaded!")
-
-## Module needs to be initialized before using. We probably want to call this in some common startup routine.
-# Argument is the config file name, we'll eventually want to read this from user input.
-collisionDefaultConfig = getSafePathToResource("Config/CollisionDefaults.ini")
-CollisionModule.initModule(collisionDefaultConfig)
-
-
-## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-polynomialBasisSize = 11
+CollisionModule = WallGo.loadCollisionModule()
 
 ## Construct a "control" object for collision integrations
-collisionManager = CollisionModule.Collision(polynomialBasisSize)
+collisionManager = CollisionModule.CollisionManager()
 
-
+# Use help(collisionManager) for info about what functionality is available
 
 """
 Define couplings (Lagrangian parameters)
@@ -103,7 +93,6 @@ lightQuark = Particle(
     totalDOFs = 60
 )
 
-
 # hack
 temperatureHack = 1.0
 
@@ -111,7 +100,27 @@ collisionManager.addParticle( constructPybindParticle(topQuark, temperatureHack)
 collisionManager.addParticle( constructPybindParticle(gluon, temperatureHack) )
 collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHack) )
 
+## Set input/output paths
+scriptLocation = pathlib.Path(__file__).parent.resolve()
 
-## TODO specify file name/path where the matrix elements will be read from? Or better, make a config file for it. Right now it's just hardcoded in
+collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
+collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements_QCD.txt"))
 
-collisionManager.calculateCollisionIntegrals()
+## Configure integration. Can skip this step if you're happy with the defaults
+integrationOptions = CollisionModule.IntegrationOptions()
+integrationOptions.bVerbose = True
+integrationOptions.maxTries = 50
+integrationOptions.calls = 50000
+integrationOptions.relativeErrorGoal = 1e-1
+integrationOptions.absoluteErrorGoal = 1e-8
+
+collisionManager.configureIntegration(integrationOptions)
+
+## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+collisionManager.setMatrixElementVerbosity(True)
+
+## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+basisSize = 5
+
+## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
+collisionManager.calculateCollisionIntegrals(basisSize, bVerbose = False)

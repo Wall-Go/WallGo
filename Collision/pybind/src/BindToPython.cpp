@@ -5,81 +5,38 @@
 #include <iostream>
 #include <string>
 
-#include "CollisionIntegral.h"
-#include "ParticleSpecies.h"
-#include "Collision.h"
-#include "gslWrapper.h"
-#include "ConfigParser.h"
+#include "WallGoCollision/CollisionIntegral.h"
+#include "WallGoCollision/ParticleSpecies.h"
+#include "WallGoCollision/CollisionManager.h"
+#include "WallGoCollision/gslWrapper.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 
-namespace pythonModule 
+namespace wallgo
 {
-    bool bInitialized = false;
-
-    /* Initialization function. This should be called from Python before doing anything else with the module.
-    * Do things like initial allocs here.
-    */
-    void initModule(const std::string& configFileName) 
-    {
-
-        // Already initialized?
-        if (pythonModule::bInitialized) 
-        {
-            std::cout << "! Module already initialized, doing nothing\n";
-            return;
-        }
-
-        gslWrapper::initializeRNG();
-
-        ConfigParser& config = ConfigParser::get();
-
-        if (config.load(configFileName)) {
-            std::cout << "=== Collision config ===\n\n";
-            config.printContents();
-            std::cout << std::endl;
-        } else {
-            exit(100);
-        }
-
-        pythonModule::bInitialized = true;
-    }
-}
-
-
-
-
 
 /* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
 But seems hard to dictate when/how this should be called in Python context.
 */
 
-/* We bind a subclass of the Collision "control" class. 
+/* We bind a subclass of the CollisionManager "control" class. 
 This way we can override some functions with python-specific functionality.
 Marking this as final prevents some non-virtual destructor warnings from clang. */
-class CollisionPython final : public Collision
+class CollisionPython final : public CollisionManager
 {
 
 public: 
-    // Just call parent constructor
-    CollisionPython(uint basisSize) : Collision(basisSize) 
-    {
-        if (!pythonModule::bInitialized)
-        {
-            std::cerr << "Error: Collision constructor called, but the module has not been initialized. Please call initModule().\n";
-            std::cerr << "This error is unrecoverable!" << std::endl;
-            exit(111);
-        }
-    }
+
+    CollisionPython() : CollisionManager() {}
 
 protected:
 
     // NB: if called inside OpenMP block this does lead to core dumped on CTRL-C
     // So @todo make a clean exit
-    virtual inline bool shouldContinueEvaluation() override 
+    virtual inline bool shouldContinueEvaluation() final override 
     {
         // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
         if (PyErr_CheckSignals() != 0)
@@ -93,26 +50,20 @@ protected:
 };
 
 
-
 // Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(CollisionModule, m) 
+PYBIND11_MODULE(WallGoCollisionPy, m) 
 {
 
     namespace py = pybind11;
 
-    // Bind variable
-    m.attr("bInitialized") = pythonModule::bInitialized;
+    m.doc() = "WallGo collision module";
 
-    // Bind initialization function
-    m.def("initModule", &pythonModule::initModule, py::arg("configFileName") = "./config.ini",
-        "Initialize the module. This needs to be called before using the module for anything. Takes path/name of the config file as argument (default: config.ini)"); 
-
+    gslWrapper::initializeRNG();
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
         .value("BOSON", EParticleType::BOSON)
         .value("FERMION", EParticleType::FERMION)
-        // Add more enum values here if needed
         .export_values();
     
 
@@ -135,14 +86,22 @@ PYBIND11_MODULE(CollisionModule, m)
         "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
     );
 
+    // Bind IntegrationOptions struct
+    py::class_<IntegrationOptions>(m, "IntegrationOptions")
+        .def(py::init<>())
+        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum)
+        .def_readwrite("calls", &IntegrationOptions::calls)
+        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
+        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
+        .def_readwrite("maxTries", &IntegrationOptions::maxTries)
+        .def_readwrite("bVerbose", &IntegrationOptions::bVerbose)
+        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic);
 
     //*********** Bind functions of the main control class
 
     // READMEs for the functions
-    std::string usage_Collision = 
-        "Constructor for Collision class. \n\n"
-        "Args:\n"
-        "    polynomialBasisSize (unsigned int): Defines size of the polynomial grid\n";
+    std::string usage_CollisionManager = 
+        "Constructor for CollisionManager class.\n";
 
     std::string usage_addParticle =
         "Add a new particle species \n\n"
@@ -158,14 +117,43 @@ PYBIND11_MODULE(CollisionModule, m)
     std::string usage_calculateCollisionIntegrals =
         "Calculates all collision integrals with the currently defined particle content and stores in .hdf5 file."
         "This is the main computation routine and will typically run for a while."
-        "Call only after specifying all particles and couplings with addParticle, addCoupling\n\n";
+        "Call only after specifying all particles and couplings with addParticle, addCoupling.\n\n"
+        "Args:\n"
+        "   basisSize (unsigned int): Polynomial basis size.\n"
+        "   verbose = false (bool): Floods stdout with intermediate results. For debugging only.\n\n";
 
+    std::string usage_setOutputDirectory =
+        "Set output directory for collision integral results.\n"
+        "Args:\n"
+        "   path (string)";
 
-    py::class_<CollisionPython>(m, "Collision")
-        .def(py::init<uint>(), py::arg("polynomialBasisSize"), usage_Collision.c_str())
+    std::string usage_setMatrixElementFile =
+        "Specify file path where matrix elements are read from.\n"
+        "Args:\n"
+        "   path (string)";
+
+    std::string usage_setMatrixElementVerbosity =
+        "Enable or disable verbose printing of symbolic matrix elements as they get parsed.\n"
+        "Args:\n"
+        "   bool";
+
+    std::string usage_configureIntegration =
+        "Specify options for the integration routine.\n"
+        "Args:\n"
+        "   options (IntegrationOptions)";
+
+    // For functions with default args we need to explicity define the arguments
+    py::class_<CollisionPython>(m, "CollisionManager")
+        .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
-        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, usage_calculateCollisionIntegrals.c_str());
+        .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, 
+            usage_calculateCollisionIntegrals.c_str(), py::arg("basisSize"), py::arg("bVerbose")=false)
+        .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
+        .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
+        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str())
+        .def("setMatrixElementVerbosity", &CollisionPython::setMatrixElementVerbosity, usage_setMatrixElementVerbosity.c_str());
 
 }
 
+} // namespace

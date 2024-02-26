@@ -4,7 +4,6 @@ import numpy as np  # arrays and maths
 
 from WallGo.Grid import Grid
 from WallGo.Boltzmann import BoltzmannSolver
-from WallGo.WallGoUtils import getSafePathToResource
 
 
 real_path = os.path.realpath(__file__)
@@ -41,7 +40,7 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     pp = pp[np.newaxis, np.newaxis, :]
 
     # fluctuation mode
-    msq = particle.msqVacuum(bg.fieldProfile)
+    msq = particle.msqVacuum(bg.fieldProfiles)
     ## Drop start and end points in field space
     msq = msq[1:-1, np.newaxis, np.newaxis]
     E = np.sqrt(msq + pz**2 + pp**2)
@@ -53,13 +52,14 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     integrand_analytic *= (d + e * rp + f * rp**2)
 
     # doing computation
-    Deltas = boltzmann.getDeltas(integrand_analytic[None,...])
+    boltzmannResults = boltzmann.getDeltas(integrand_analytic[None,...])
+    Deltas = boltzmannResults.Deltas
 
     # comparing to analytic result
     Delta00_analytic = (4 * a + c) * (4 * d + f) * bg.temperatureProfile**3 / 64
 
     # asserting result
-    np.testing.assert_allclose(Deltas["00"].coefficients[0], Delta00_analytic[1:-1], rtol=1e-14, atol=0)
+    np.testing.assert_allclose(Deltas.Delta00.coefficients[0], Delta00_analytic[1:-1], rtol=1e-14, atol=0)
 
 
 @pytest.mark.parametrize("M, N", [(3, 3), (5, 5)])
