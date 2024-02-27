@@ -18,16 +18,14 @@ class Polynomial:
             An object of the Grid class defining the polynomial.
         basis : string or tuple of strings, optional
             Tuple of length N specifying in what basis each dimension of 
-            coefficients is defined. Each component can either be 'Cardinal',
-            'Chebyshev' or 'Array'. The latter is to be used if the axis does
-            not corresponds to a polynomial series. Can also be a single 
-            string, in which case all the dimensions are assumed to be in that 
-            basis. The default is 'Cardinal'.
+            coefficients is defined. Each component can either be 'Cardinal' or
+            'Chebyshev'. Can also be a single string, in which case all the 
+            dimensions are assumed to be in that basis. The default is 
+            'Cardinal'.
         direction : string or tuple of strings, optional
             Tuple of length N specifying what direction each dimension of 
-            coefficients represents. Each component can either be 'z', 'pz',
-            'pp' or 'Array'. The latter can only be used if basis is 'Array' 
-            for that axis. Can also be a single string, in which case all the 
+            coefficients represents. Each component can either be 'z', 'pz' or
+            'pp'. Can also be a single string, in which case all the 
             dimensions are assumed to be in that direction. The default is 'z'.
         endpoints : bool or tuple of bool, optional
             Tuple of length N specifying wheither each dimension includes the 
@@ -44,13 +42,12 @@ class Polynomial:
         self.rank = len(self.coefficients.shape)
         self.grid = grid
         
-        self.allowedBasis = ['Cardinal','Chebyshev','Array']
-        self.allowedDirection = ['z','pz','pp','Array']
+        self.allowedBasis = ['Cardinal','Chebyshev']
+        self.allowedDirection = ['z','pz','pp']
         
         if isinstance(basis, str):
             basis = self.rank*(basis,)
         self.__checkBasis(basis)
-        self.basis = basis
             
         if isinstance(direction, str):
             direction = self.rank*(direction,)
@@ -60,6 +57,7 @@ class Polynomial:
             endpoints = self.rank*(endpoints,)
         self.__checkEndpoints(endpoints)
             
+        self.basis = basis
         self.direction = direction
         self.endpoints = endpoints
         
@@ -79,7 +77,7 @@ class Polynomial:
                 endpoints.append(self.endpoints[i])
                 n += 1
             elif k is None:
-                basis.append('Array')
+                basis.append('Cardinal')
                 direction.append('z')
                 endpoints.append(False)
             else: 
@@ -186,7 +184,7 @@ class Polynomial:
         self.__checkBasis(newBasis)
 
         for i in range(self.rank):
-            if newBasis[i] != self.basis[i] and newBasis[i] != 'Array' and self.basis[i] != 'Array':
+            if newBasis[i] != self.basis[i]:
                 # Choosing the appropriate x, n and restriction
                 x = self.grid.getCompactCoordinates(self.endpoints[i], self.direction[i])
                 n,restriction = None,None
@@ -254,7 +252,6 @@ class Polynomial:
 
         polynomials = np.ones((x.shape[1],)+self.coefficients.shape)
         for j,i in enumerate(axes):
-            assert self.basis[i] != 'Array', "Polynomial error: cannot evaluate along an 'Array' axis."
             # Choosing the appropriate n
             n = None
             if self.endpoints[i]:
@@ -416,7 +413,6 @@ class Polynomial:
         basis = []
         for i in range(self.rank):
             if i in axis:
-                assert self.basis[i] != 'Array', "Polynomial error: cannot integrate along an 'Array' axis."
                 basis.append('Cardinal')
             else:
                 basis.append(self.basis[i])
@@ -488,7 +484,6 @@ class Polynomial:
         
         for i in range(self.rank):
             if i in axis:
-                assert self.basis[i] != 'Array', "Polynomial error: cannot differentiate along an 'Array' axis."
                 D = self.derivMatrix(self.basis[i], self.direction[i], self.endpoints[i])
                 D = np.expand_dims(D, tuple(np.arange(i))+tuple(np.arange(i+2, self.rank+1)))
                 coeffDeriv = np.sum(D*np.expand_dims(coeffDeriv, i), axis=i+1)
@@ -685,10 +680,8 @@ class Polynomial:
     def __checkDirection(self, direction):
         assert isinstance(direction, tuple), 'Polynomial error: direction must be a tuple or a string.'
         assert len(direction) == self.rank, 'Polynomial error: direction must be a tuple of length "rank".'
-        for i,x in enumerate(direction):
+        for x in direction:
             assert x in self.allowedDirection, "Polynomial error: unkown direction %s" % x
-            if x == 'Array':
-                assert self.basis[i] == 'Array', "Polynomial error: if the direction is 'Array', the basis must be 'Array' too."
             
     def __checkEndpoints(self, endpoints):
         assert isinstance(endpoints, tuple), 'Polynomial error: endpoints must be a tuple or a bool.'
@@ -698,7 +691,7 @@ class Polynomial:
             
     def __checkCoefficients(self, coefficients):
         for i,size in enumerate(self.coefficients.shape):
-            if self.basis[i] != 'Array':
+            if size > 1:
                 if self.direction[i] == 'z':
                     assert size + 2*(1-self.endpoints[i]) == self.grid.M + 1, f"Polynomial error: coefficients with invalid size in dimension {i}."
                 elif self.direction[i] == 'pz':

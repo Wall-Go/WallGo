@@ -24,7 +24,9 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     ## This is the fixture background constructed with input M. pytest magic that works because argument name here matches that used in fixture def 
     bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 100)
-    collisionFile = dir_path + "/Testdata/N19" 
+    suffix = "hdf5"
+    fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+    collisionFile = dir_path + "/Testdata/" + fileName
     boltzmann = BoltzmannSolver(grid, 'Cardinal', 'Cardinal', 'Spectral')
 
     boltzmann.updateParticleList( [particle] )
@@ -52,14 +54,14 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
     integrand_analytic *= (d + e * rp + f * rp**2)
 
     # doing computation
-    boltzmannResults = boltzmann.getDeltas(integrand_analytic[None,...])
+    boltzmannResults = boltzmann.getDeltas(integrand_analytic)
     Deltas = boltzmannResults.Deltas
 
     # comparing to analytic result
     Delta00_analytic = (4 * a + c) * (4 * d + f) * bg.temperatureProfile**3 / 64
 
     # asserting result
-    np.testing.assert_allclose(Deltas.Delta00.coefficients[0], Delta00_analytic[1:-1], rtol=1e-14, atol=0)
+    np.testing.assert_allclose(Deltas.Delta00.coefficients, Delta00_analytic[1:-1], rtol=1e-14, atol=0)
 
 
 @pytest.mark.parametrize("M, N", [(3, 3), (5, 5)])
@@ -70,7 +72,9 @@ def test_solution(boltzmannTestBackground, particle, M, N):
     bg = boltzmannTestBackground
     grid = Grid(M, N, 1, 1)
 
-    collisionFile = dir_path + "/Testdata/N11" 
+    suffix = "hdf5"
+    fileName = f"collisions_top_top_N{grid.N}.{suffix}"
+    collisionFile = dir_path + "/Testdata/" + fileName
     boltzmann = BoltzmannSolver(grid)
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
