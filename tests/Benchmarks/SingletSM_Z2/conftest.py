@@ -130,14 +130,14 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 @pytest.fixture(scope="session")
 def singletBenchmarkCollisionArray(singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid) -> WallGo.CollisionArray:
 
-    particles = singletBenchmarkModel.model.outOfEquilibriumParticles
+    particle = singletBenchmarkModel.model.outOfEquilibriumParticles[0]
     ## TODO better file path
     import pathlib
     fileDir = pathlib.Path(__file__).parent.resolve()
 
-    fname = fileDir / "../../Testdata/N11/"
+    fname = fileDir / "../../../Models/SingletStandardModel_Z2/Collisions/collisions_top_top_N11.hdf5"
     return WallGo.CollisionArray.newFromFile(fname, singletBenchmarkGrid, "Chebyshev", 
-                                      particles, bInterpolate=False)
+                                      particle, particle, bInterpolate=False)
 
 
 

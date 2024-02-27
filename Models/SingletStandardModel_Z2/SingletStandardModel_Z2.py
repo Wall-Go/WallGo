@@ -39,17 +39,15 @@ class SingletSM_Z2(GenericModel):
         
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
                             msqVacuum = topMsqVacuum,
-                            msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 12
+                            multiplicity = 1
         )
         self.addParticle(topQuark)
 
@@ -58,12 +56,11 @@ class SingletSM_Z2(GenericModel):
 
         lightQuark = Particle("lightQuark", 
                             msqVacuum = 0.0,
-                            msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            totalDOFs = 60
+                            multiplicity = 5
         )
         self.addParticle(lightQuark)
 
@@ -72,12 +69,11 @@ class SingletSM_Z2(GenericModel):
 
         gluon = Particle("gluon", 
                             msqVacuum = 0.0,
-                            msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            totalDOFs = 16
+                            multiplicity = 1
         )
         self.addParticle(gluon)
 
@@ -421,7 +417,7 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/collisions_top_top_N11.hdf5"
     manager.loadCollisionFile(collisionFileName)
 
 
