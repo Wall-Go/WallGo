@@ -63,34 +63,33 @@ a temperature. So hacking this by setting T = 1. Also, for this example the vacu
 topQuark = Particle(
     name="top",
     msqVacuum=0.0,
-    msqDerivative = 0.0,
     msqThermal=lambda T: 0.251327 * T**2,
     statistics="Fermion",
     inEquilibrium=False,
     ultrarelativistic=True,
-    totalDOFs = 12
+    multiplicity=1,
 )
 
 gluon = Particle(
     name="gluon",
     msqVacuum=0.0,
-    msqDerivative = 0.0,
     msqThermal=lambda T: 3.01593 * T**2,
     statistics="Boson",
     inEquilibrium=True,
     ultrarelativistic=True,
-    totalDOFs = 16
+    multiplicity=1,
 )
+
+
 
 lightQuark = Particle(
     name="quark",
     msqVacuum=0.0,
-    msqDerivative = 0.0,
     msqThermal=lambda T: 0.251327 * T**2,
     statistics="Fermion",
     inEquilibrium=True,
     ultrarelativistic=True,
-    totalDOFs = 60
+    multiplicity=5,
 )
 
 # hack
