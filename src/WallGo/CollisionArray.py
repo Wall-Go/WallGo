@@ -4,6 +4,7 @@ import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from typing import Tuple
 import copy ## for deepcopy
+from pathlib import Path
 
 from .Particle import Particle
 from .Polynomial import Polynomial
@@ -94,15 +95,15 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromFile(directoryname: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(directoryname: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
         Create a new CollisionArray object from 
 
         Parameters
         ----------
         directoryname : str
-            Path of the directory containing the collision files. Must end with
-            '/'. The collision files must have name with the form 
+            Path of the directory containing the collision files. 
+            The contained collision files must have name with the form 
             "collisions_particle1_particle2.hdf5".
 
         bInterpolate : bool = True
@@ -117,11 +118,14 @@ class CollisionArray:
         basisSizeFile = None
         basisTypeFile = None
         
-        for i,particle1 in enumerate(particles):
-            for j,particle2 in enumerate(particles):
-                filename = f"{directoryname}/collisions_{particle1.name}_{particle2.name}.hdf5"
+        for i, particle1 in enumerate(particles):
+            for j, particle2 in enumerate(particles):
+
+                # file names are hardcoded
+                filename = Path(directoryname) / f"collisions_{particle1.name}_{particle2.name}.hdf5"
                 try:
-                    with h5py.File(filename, "r") as file:
+                    with h5py.File(str(filename), "r") as file:
+
                         metadata = file["metadata"]
                         size = metadata.attrs["Basis Size"]
                         btype = codecs.decode(
@@ -129,16 +133,18 @@ class CollisionArray:
                         )
                         CollisionArray.__checkBasis(btype)
         
-                        # LN: currently the dataset names are of form
-                        # "particle1, particle2". Here it's just "top, top" for now.
+                        # Dataset names are hardcoded, eg. "top, top"
                         datasetName = particle1.name + ", " + particle2.name
                         collision = np.array(file[datasetName][:])
+
+                        ## TODO error handling, what happens if the dataset is not found?
                         
                         if collisionFileArray is None:
                             collisionFileArray = np.zeros((len(particles),size-1,size-1,len(particles),size-1,size-1))
                             basisSizeFile = size
                             basisTypeFile = btype
                         else:
+                            ## TODO throw WallGo error?
                             assert size == basisSizeFile, "CollisionArray error: All the collision files must have the same basis size."
                             assert btype == basisTypeFile, "CollisionArray error: All the collision files must have the same basis type."
                         
