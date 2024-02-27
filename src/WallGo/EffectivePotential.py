@@ -81,9 +81,12 @@ class EffectivePotential(ABC):
         ## Reshape for broadcasting
         guesses = initialGuess.Resize(numPoints, initialGuess.NumFields())
         T = np.resize(T, (numPoints))
+        #print(f"Kek1: {T}")
 
         resValue = np.empty_like(T)
         resLocation = np.empty_like(guesses)
+
+        #print(f"Kek1: {numPoints}")
 
         for i in range(0, numPoints):
 
@@ -95,6 +98,7 @@ class EffectivePotential(ABC):
 
             def evaluateWrapper(fieldArray: np.ndarray):
                 fields = Fields.CastFromNumpy(fieldArray)
+                #print(f"Kek1: {T[i]}\t{fields}")
                 return self.evaluate(fields, T[i]).real
 
             guess = guesses.GetFieldPoint(i)
@@ -103,6 +107,38 @@ class EffectivePotential(ABC):
 
             resLocation[i] = res.x
             resValue[i] = res.fun
+
+            #print(f"Kek1: {resValue}")
+        
+            ##########################
+            # debugger: 
+
+            #print(f"Kek1: {T[i]}")
+
+            # Import matplotlib library
+#            import matplotlib.pyplot as plt
+
+            # Create a range of x-values
+#            x = np.linspace(-10, 10, 100) # adjust the range and number of points as needed
+            # Create an array of fields from x-values
+#            fields = np.array([Fields.CastFromNumpy(x_i) for x_i in x])
+
+            # Plot the function evaluateWrapper
+#            y = evaluateWrapper(fields) # assuming evaluateWrapper and T[i] are defined
+#            plt.plot(x, y, label="evaluateWrapper")
+
+#            # Add labels and title
+#            plt.xlabel("Field array")
+#            plt.ylabel("Function value")
+#            plt.title("Plot of evaluateWrapper function")
+
+#            # Add legend
+#            plt.legend()
+
+#            # Show the plot
+#            plt.show()
+
+            ##########################
 
         ## Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
@@ -114,6 +150,8 @@ class EffectivePotential(ABC):
 
         if (TMax < TMin):
             raise ValueError("findCriticalTemperature needs TMin < TMax")
+
+        #print(f"{T}\t{minimum1}")
     
 
         ## TODO Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
@@ -125,6 +163,18 @@ class EffectivePotential(ABC):
             diff = f2.real - f1.real
             ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
             return diff.item()
+
+        ############
+        # debugger:
+        def hackfreeEnergyDifference(inputT: np.double) -> np.double:
+            _, f1 = self.findLocalMinimum(minimum1, inputT) # this is symmetric phase!
+            f3, f2 = self.findLocalMinimum(minimum2, inputT) # this is broken phase
+            diff = f2.real - 0*f1.real
+            ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
+            #return diff.item()
+            return f3[0][0] # this here is broken phase minimum field values
+
+        ############
         
 
         ## start from TMin and increase temperature in small steps until the free energy difference changes sign
@@ -136,6 +186,9 @@ class EffectivePotential(ABC):
 
         while (T < TMax):
             T += dT
+            #print(f"Kek1: {T} free energy difference {freeEnergyDifference(T)}")
+            #print(f"{T}\t{freeEnergyDifference(T)}")
+            #print(f"{T}\t{hackfreeEnergyDifference(T)}") # prints out minima
             if (np.sign(freeEnergyDifference(T)) != signAtStart):
                 bConverged = True
                 break

@@ -113,6 +113,10 @@ class WallGoManager:
 
         print("Suggested T range:")
         print(f"TMin = {self.TMin}, TMax = {self.TMax}")
+
+        print(f"{self.model.modelParameters}")
+
+        print(f"{self.model.modelParameters['M']} \t {self.Tc}")
         
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important. 
@@ -135,6 +139,7 @@ class WallGoManager:
         phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation1, T)
         phaseLocation2, VeffValue2 = self.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation2, T)
 
+        
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
 
