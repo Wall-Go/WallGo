@@ -414,9 +414,8 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
     
-    def readCollision(self, fileName: str) -> None:
-        ## TODO generalize for many off eq particles
-        self.collisionArray = CollisionArray.newFromFile(fileName, self.grid, self.basisN, self.offEqParticles)
+    def readCollisions(self, directoryName: str) -> None:
+        self.collisionArray = CollisionArray.newFromDirectory(directoryName, self.grid, self.basisN, self.offEqParticles)
 
     def __checkBasis(basis):
         """

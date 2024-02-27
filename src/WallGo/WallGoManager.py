@@ -269,8 +269,13 @@ class WallGoManager:
 
 
 
-    def loadCollisionFile(self, fileName: str) -> None:
-        self.boltzmannSolver.readCollision(fileName)
+    def loadCollisionFiles(self, directoryName: str) -> None:
+        """Loads collision files from the specified directory.
+        The directory is assumed to contain .hdf5 files with the naming convention
+        filename = "collisions_particle1_particle2.hdf5", one such file for each off-eq particle pair.
+        We read from dataset "particle1, particle2".
+        """
+        self.boltzmannSolver.readCollisions(directoryName)
 
 
     def wallSpeedLTE(self) -> float:

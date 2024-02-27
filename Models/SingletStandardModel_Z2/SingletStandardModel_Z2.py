@@ -420,9 +420,9 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
-    manager.loadCollisionFile(collisionFileName)
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    manager.loadCollisionFiles(collisionDirectory)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
