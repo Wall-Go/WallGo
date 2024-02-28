@@ -423,8 +423,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
-    manager.loadCollisionFile(collisionFileName)
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_N5/"
+    manager.loadCollisionFiles(collisionFileName)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -471,24 +471,19 @@ def main():
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
 
-        # bIncludeOffEq = False
-        # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
-        # wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
-
-        # print(f"{wallVelocity=}")
-        # print(f"{wallParams.widths=}")
-        # print(f"{wallParams.offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
         
         
 
