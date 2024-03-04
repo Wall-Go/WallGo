@@ -1,11 +1,12 @@
 import numpy as np
+import scipy.optimize
 
 from .EffectivePotential import EffectivePotential
+from .Fields import Fields
 from .FreeEnergy import FreeEnergy
-
+from .WallGoExceptions import WallGoError
 import WallGo.helpers
 
-from .Fields import Fields
 
 """ LN: As far as I understand, this class is intended to work as an intermediator between the Veff and other parts of the code 
 that require T-dependent quantities (like Hydro).  
@@ -35,19 +36,31 @@ class Thermodynamics:
 
     def __init__(
         self,
-        effectivePotential,
-        criticalTemperature: float,
-        nucleationTemperature: float, 
+        effectivePotential: EffectivePotential,
+        nucleationTemperature: float,
         phaseLowT: Fields,
-        phaseHighT: Fields
+        phaseHighT: Fields,
+        criticalTemperature: float = None,
     ):
         """Initialisation
 
         Parameters
         ----------
-        effectivePotential : class
+        effectivePotential : EffectivePotential
+            An object of the EffectivePotential class.
         nucleationTemperature : float
-        criticalTemperature : float
+            The nucleation temperature.
+        phaseLowT : Fields
+            The location of the low temperature phase at the nucleation
+            temperature. Does not need to be exact, as resolved internally
+            with input as starting point.
+        phaseHighT: Fields
+            The location of the high temperature phase at the nucleation
+            temperature. Does not need to be exact, as resolved internally
+            with input as starting point.
+        criticalTemperature: float = None
+            Optional input critical temperature. If not given, will be
+            solved for numerically.
 
         Returns
         -------
@@ -60,12 +73,107 @@ class Thermodynamics:
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
 
-        ## temperature difference to use for derivatives. TODO this needs to be read from a config file or something
-        self.dT = 1e-3
+        # Small temperature difference to use for derivatives.
+        # TODO this needs to be read from a config file or solved
+        # for, based on some desired tolerance.
+        self.dT = 1e-2
 
-        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.Tnucl, self.phaseHighT)
-        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.Tnucl, self.phaseLowT)
+        self.freeEnergyHigh = FreeEnergy(
+            self.effectivePotential, self.Tnucl, self.phaseHighT,
+        )
+        self.freeEnergyLow = FreeEnergy(
+            self.effectivePotential, self.Tnucl, self.phaseLowT,
+        )
 
+    def getCoexistenceRange(self):
+        """
+        Ensures that there is phase coexistence, by comparing the temperature ranges
+        """
+        TMin = max(
+            self.freeEnergyHigh.minPossibleTemperature,
+            self.freeEnergyLow.minPossibleTemperature,
+        )
+        TMax = min(
+            self.freeEnergyHigh.maxPossibleTemperature,
+            self.freeEnergyLow.maxPossibleTemperature,
+        )
+        return (TMin, TMax)
+
+    def findCriticalTemperature(
+        self, dT: float, rTol: float = 1e-6, paranoid: bool = True
+    ) -> float:
+        """
+        Computes the critical temperature
+        """
+        # getting range over which both phases naively exist
+        # (if we haven't traced the phases yet)
+        TMin, TMax = self.getCoexistenceRange()
+        if TMin > TMax:
+            raise WallGoError(
+                "findCriticalTemperature needs TMin < TMax",
+                {"TMax": TMax, "TMin": TMin},
+            )
+
+        # tracing phases and ensuring they are stable
+        if not self.freeEnergyHigh.hasInterpolation():
+            print(f"Hi: tracing high-T phase: {TMin=}, {TMax=}, {dT=}, {rTol=}")
+            self.freeEnergyHigh.tracePhase(
+                TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
+            )
+        if not self.freeEnergyLow.hasInterpolation():
+            print("Hi: tracing low-T phase")
+            self.freeEnergyLow.tracePhase(
+                TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
+            )
+
+        # getting range over which both phases are stable
+        TMin, TMax = self.getCoexistenceRange()
+
+        # Wrapper that computes free-energy difference between our phases.
+        # This goes into scipy so scalar in, scalar out
+        def freeEnergyDifference(inputT: np.double) -> np.double:
+            _, f1 = self.freeEnergyHigh.evaluate(inputT)
+            _, f2 = self.freeEnergyLow.evaluate(inputT)
+            diff = f2 - f1
+            # Force into scalar type. This errors out if the size is not 1;
+            # no failsafes to avoid overhead
+            return diff.item()
+
+        # start from TMax and decrease temperature in small steps until
+        # the free energy difference changes sign
+        T = TMax
+        TStep = (TMax - TMin) / 10
+        signAtStart = np.sign(freeEnergyDifference(T))
+        bConverged = False
+
+        while (T > TMin):
+            print("Looking for range for brentq")
+            T -= TStep
+            if (np.sign(freeEnergyDifference(T)) != signAtStart):
+                bConverged = True
+                break
+
+        if (not bConverged):
+            raise WallGoError("Could not find critical temperature")
+
+        # Improve Tc estimate by solving DeltaF = 0 in narrow range near T
+        # NB: bracket will break if the function has same sign on both ends.
+        # The rough loop above should prevent this.
+        rootResults = scipy.optimize.root_scalar(
+            freeEnergyDifference,
+            bracket=(T, T + TStep),
+            method="brentq",
+            rtol=rTol,
+            xtol=min(rTol * T, 0.5 * dT),
+        )
+
+        if not rootResults.converged:
+            raise WallGoError(
+                "Error finding critical temperature",
+                rootResults,
+            )
+
+        return rootResults.root
 
     def pHighT(self, T: float):
         """

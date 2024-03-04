@@ -82,7 +82,7 @@ class FreeEnergy(InterpolatableFunction):
         self.maxPossibleTemperature = np.Inf
 
     def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> FreeEnergyValueType:
-        return FreeEnergyValueType( super().__call__(x, useInterpolatedValues) )
+        return FreeEnergyValueType(super().__call__(x, useInterpolatedValues))
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -91,51 +91,13 @@ class FreeEnergy(InterpolatableFunction):
         temperature: float or numpy array of floats.
         """
 
-        phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(self.startingPhaseLocationGuess, temperature)
-
-        """We now need to make sure the field-independent but T-dependent contribution to free energy is included. 
-        In principle this means we just call effectivePotential::evaluate().
-        But here's a problem: currently if calling Veff with N field points and N temperatures, then numpy decideds to 
-        produce a NxN array as a result. This means we end up doing unnecessary computations, and the resulting Veff values 
-        are in wrong format!
-
-        No solution currently, probably need to enforce correct broadcasting directly in Veff. As a hacky fix for the formatting I take the diagonal here.
-        """
-        # Actually the above seems to be fixed now, V1T was just implemented very badly. But leaving the comments here just in case
-
-        potentialAtMinimum = np.real( self.effectivePotential.evaluate(phaseLocation, temperature) )
-
-        """
-        if (potentialAtMinimum.ndim > 1):
-            potentialAtMinimum = np.diagonal(potentialAtMinimum).copy() # need to take a hard copy since np.diagonal gives just a read-only view
-        """
-            
-        # Important: Minimization may not always work as intended, 
-        # for example the minimum we're looking for may not even exist at the input temperature.
-        # This will break interpolations unless we validate the result here. 
-        # InterpolatableFunction is constructed to ignore inputs where the function evaluated to np.nan, 
-        # so we avoid issues by returning np.nan here if the minimization failed.
-
-        # How to do the validation? Perhaps the safest way would be to call this in a T-loop and storing the phaseLocation
-        # at the previous T. If phaseLocation is wildly different at the next T, this may suggest that we ended up in a different minimum.
-        # Issue with this approach is that it doesn't vectorize. Might not be a big loss however since findLocalMinimum itself is 
-        # not effectively vectorized due to reliance on scipy routines.
+        # Minimising potential. N.B. should already be real for this.
+        phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(
+            self.startingPhaseLocationGuess, temperature
+        )
 
         """TODO make the following work independently of how the Field array is organized.
         Too much hardcoded slicing right now."""
-
-        # Here is a check that should catch "symmetry-breaking" type transitions where a field is 0 in one phase and nonzero in another
-        bFieldWentToZero = (np.abs(self.startingPhaseLocationGuess) > 5.0) & (np.abs(phaseLocation) < 1e-1)
-
-        # Check that we apply row-wise
-        bEvaluationFailed = bFieldWentToZero  # & ... add other checks ...
-
-        # Make our failure check a boolean mask that numpy understands
-        invalidRowMask = np.any(bEvaluationFailed, axis=1)
-
-        # Replace all elements with np.nan on rows that failed the check
-        phaseLocation[invalidRowMask, :] = np.nan
-        potentialAtMinimum[invalidRowMask] = np.nan
 
         # reshape so that potentialAtMinimum is a column vector
         potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
@@ -170,14 +132,21 @@ class FreeEnergy(InterpolatableFunction):
         if (self.interpolationRangeMin() > TMin):
             self.minPossibleTemperature = self.interpolationRangeMin()
 
-    def tracePhase(self, TMin: float, TMax: float, dT: float, rTol: float = 1e-5, spinodal: bool = True) -> None:
+    def tracePhase(
+        self,
+        TMin: float,
+        TMax: float,
+        dT: float,
+        rTol: float = 1e-6,
+        spinodal: bool = True,  # Stop tracing if a mass squared turns negative
+        paranoid: bool = True,  # Re-solve minimum after every step
+    ) -> None:
         """
         Finds field(T) for the range over which it exists. Sets problem
         up as an initial value problem and uses scipy.integrate.solve_ivp to
         solve. Stops if we get sqrt(negative) or something like that.
         """
-        ## HACK! This hopefully won't be needed in the final thing
-        paranoid = True
+        # make sure the initial conditions are extra accurate
         extraTol = 0.01 * rTol
 
         # initial values, should be nice and accurate
@@ -247,9 +216,8 @@ class FreeEnergy(InterpolatableFunction):
                     break
                 if paranoid:
                     phaset, Vt = self.effectivePotential.findLocalMinimum(
-                        Fields((ode.y)), ode.t, tol=extraTol,
+                        Fields((ode.y)), ode.t, tol=rTol,
                     )
-                    ode.y = phaset[0]
                 if spinodal_event(ode.t, ode.y) <= 0:
                     print(f"Phase ends at T={ode.t}, vev={ode.y}")
                     break

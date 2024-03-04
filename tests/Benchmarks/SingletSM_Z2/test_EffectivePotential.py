@@ -2,9 +2,8 @@ import pytest
 import numpy as np
 from typing import Tuple
 
-from tests.BenchmarkPoint import BenchmarkPoint
-
 import WallGo
+from tests.BenchmarkPoint import BenchmarkPoint
 
 
 @pytest.mark.parametrize("T", [90, 110])

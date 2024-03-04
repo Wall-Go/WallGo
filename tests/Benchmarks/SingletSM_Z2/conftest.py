@@ -73,7 +73,6 @@ def singletBenchmarkThermo(
 
     BM = singletBenchmarkModel.benchmarkPoint
 
-    Tc = BM.expectedResults["Tc"]
     Tn = BM.phaseInfo["Tn"]
     phase1 = BM.expectedResults["phaseLocation1"]
     phase2 = BM.expectedResults["phaseLocation2"]
@@ -81,7 +80,7 @@ def singletBenchmarkThermo(
     ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
     ## so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1
+        singletBenchmarkModel.model.effectivePotential, Tn, phase2, phase1,
     )
 
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
@@ -161,8 +160,8 @@ def singletSimpleBenchmarkFreeEnergy(
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
-    freeEnergy1.tracePhase(TMin, TMax, dT)
-    freeEnergy2.tracePhase(TMin, TMax, dT)
+    freeEnergy1.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
+    freeEnergy2.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
 
     yield freeEnergy1, freeEnergy2, BM
 

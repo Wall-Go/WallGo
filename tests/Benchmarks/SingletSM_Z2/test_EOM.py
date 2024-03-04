@@ -1,9 +1,8 @@
 import pytest
 from typing import Tuple
 
-from tests.BenchmarkPoint import BenchmarkPoint
-
 import WallGo
+from tests.BenchmarkPoint import BenchmarkPoint
 
 
 @pytest.mark.slow
