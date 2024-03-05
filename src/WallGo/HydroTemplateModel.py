@@ -308,8 +308,6 @@ class HydroTemplateModel:
             vp_sw = sol.y[0,-1]
             vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
             wm_sw = sol.y[1,-1]
-        print(f"{al=}")
-        print(vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw))
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
 
     def findvwLTE(self):

@@ -31,6 +31,8 @@ class StandardModel(GenericModel):
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
 
+        print(f"{self.effectivePotential.constantTerms(1)*90/np.pi**2=}")
+
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
         
@@ -187,8 +189,8 @@ class EffectivePotentialSM(EffectivePotential):
         ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 13 # 13 =  6 + 3 + 4 (W + Z + Higgs)
-        dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
+        dofsBoson = self.num_boson_dof 
+        dofsFermion = self.num_fermion_dof 
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
@@ -284,7 +286,7 @@ def main():
         """
 
 #        Tn = 63.1 ## nucleation temperature for mH = 50 -- revisit later
-        Tn = 45.5
+        Tn = 45.2
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
