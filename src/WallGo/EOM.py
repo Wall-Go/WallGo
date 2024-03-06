@@ -418,8 +418,8 @@ class EOM:
         """
         dVout = 12 * fields.GetField(0) * Delta00.coefficients / 2
 
-        term1 = dVdX * dPhidz
-        term2 = dVout[:, np.newaxis] * dPhidz
+        term1 = Fields(dVdX * dPhidz)
+        term2 = Fields(dVout[:, np.newaxis] * dPhidz)
 
         EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
 
