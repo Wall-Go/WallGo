@@ -215,23 +215,25 @@ class FreeEnergy(InterpolatableFunction):
                     print(err.args[0] + f" at T={ode.t}")
                     break
                 if paranoid:
-                    phaset, Vt = self.effectivePotential.findLocalMinimum(
+                    phaset, VeffT = self.effectivePotential.findLocalMinimum(
                         Fields((ode.y)), ode.t, tol=rTol,
                     )
+                    ode.y = phaset[0]
                 if spinodal_event(ode.t, ode.y) <= 0:
                     print(f"Phase ends at T={ode.t}, vev={ode.y}")
                     break
-                # check if extremum is still accurate
-                dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
-                err = np.linalg.norm(dVt) / T0 ** 3
-                if err > rTol:
-                    #print(f"Re-solving minimum: {err=} at T={ode.t}")
-                    phaset, Vt = self.effectivePotential.findLocalMinimum(
-                        Fields((ode.y)), ode.t, tol=extraTol,
-                    )
-                    ode.y = phaset[0]
-                # compute Veff
-                VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
+                if not paranoid:
+                    # check if extremum is still accurate
+                    dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
+                    err = np.linalg.norm(dVt) / T0 ** 3
+                    if err > rTol:
+                        phaset, VeffT = self.effectivePotential.findLocalMinimum(
+                            Fields((ode.y)), ode.t, tol=extraTol,
+                        )
+                        ode.y = phaset[0]
+                    else:
+                        # compute Veff
+                        VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
                 # append results to lists
                 TList = np.append(TList, [ode.t], axis=0)
                 fieldList = np.append(fieldList, [ode.y], axis=0)

@@ -132,8 +132,8 @@ class Thermodynamics:
         # Wrapper that computes free-energy difference between our phases.
         # This goes into scipy so scalar in, scalar out
         def freeEnergyDifference(inputT: np.double) -> np.double:
-            _, f1 = self.freeEnergyHigh.evaluate(inputT)
-            _, f2 = self.freeEnergyLow.evaluate(inputT)
+            f1 = self.freeEnergyHigh(inputT).getVeffValue()
+            f2 = self.freeEnergyLow(inputT).getVeffValue()
             diff = f2 - f1
             # Force into scalar type. This errors out if the size is not 1;
             # no failsafes to avoid overhead
@@ -147,7 +147,6 @@ class Thermodynamics:
         bConverged = False
 
         while (T > TMin):
-            print("Looking for range for brentq")
             T -= TStep
             if (np.sign(freeEnergyDifference(T)) != signAtStart):
                 bConverged = True

@@ -16,7 +16,7 @@ def test_singletThermodynamicsFindCriticalTemperature(
     thermodynamics, BM = singletBenchmarkThermo
 
     Tc = thermodynamics.findCriticalTemperature(
-        dT=0.01, rTol=1e-6, paranoid=True,
+        dT=0.1, rTol=1e-6, paranoid=True,
     )
 
     assert Tc == pytest.approx(expectedTc, rel=1e-3)

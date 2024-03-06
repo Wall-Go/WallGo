@@ -86,6 +86,11 @@ def singletBenchmarkThermo(
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
 
+    thermo.freeEnergyHigh.minPossibleTemperature = 50
+    thermo.freeEnergyHigh.maxPossibleTemperature = 200
+    thermo.freeEnergyLow.minPossibleTemperature = 50
+    thermo.freeEnergyLow.maxPossibleTemperature = 200
+
     yield thermo, BM
 
 
