@@ -16,42 +16,27 @@ from .Thermodynamics import Thermodynamics
 from .WallGoTypes import PhaseInfo, WallGoResults
 from .WallGoUtils import getSafePathToResource
 
+import WallGo
+
 
 """ Defines a 'control' class for managing the program flow.
 This should be better than writing the same stuff in every example main function, 
 and is good for hiding some of our internal implementation details from the user """
 class WallGoManager:
 
-    ## Critical temperature
-    Tc: float
-
-    ## Locations of the two phases in field space, at nucleation temperature.
-    phasesAtTn: PhaseInfo
-
-    ## Temperature range used when solving hydrodynamical equations
-    TMin: float; TMax: float
-
-    ### WallGo objects
-    config: Config
-    integrals: Integrals  ## use a dedicated Integrals object to make management of interpolations easier
-    model: GenericModel
-    thermodynamics: Thermodynamics
-    hydro: Hydro
-    grid: Grid
-    eom: EOM
-    boltzmannSolver: BoltzmannSolver
-
-
     def __init__(self):
         """do common model-independent setup here
         """
 
-        self.config = Config()
-        self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
+        # TODO cleanup, should not read the config here if we have a global WallGo config object
+        #self.config = Config()
+        #self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
 
-        self.integrals = Integrals()
+        self.config = WallGo.config
 
-        self._initalizeIntegralInterpolations(self.integrals)
+        #self.integrals = Integrals()
+
+        #self._initalizeIntegralInterpolations(self.integrals)
 
         ## -- Order of initialization matters here
 

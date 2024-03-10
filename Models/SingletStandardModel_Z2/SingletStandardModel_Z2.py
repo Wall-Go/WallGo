@@ -29,10 +29,11 @@ class SingletSM_Z2(GenericModel):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
-
-        ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
-        ## so @todo define these in a separate file? 
         
+        self.defineParticles()
+
+
+    def defineParticles(self) -> None:
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
@@ -81,7 +82,7 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
-
+        
 
 
     ## Go from whatever input params --> action params
@@ -388,6 +389,10 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 def main():
 
     WallGo.initialize()
+
+    # Print WallGo config. This was read by WallGo.initialize()
+    print("=== WallGo configuration options ===")
+    print(WallGo.config)
 
     ## Create WallGo control object
     manager = WallGoManager()
