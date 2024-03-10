@@ -13,29 +13,40 @@ from WallGo import WallGoManager
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields, WallGoResults
 
+
+"""Define a model-specific dataclass for holding parameters required to evaluate the effective potential etc.
+This should inherit from WallGo.ActionParameters which is the common interface for WallGo model parameters.
+Here the init=False decorator means no __init__ function is generated for the dataclass, and slots=True
+tells Python to use __slots__ so that new variables are not allowed at runtime.
+"""
+@dataclass(init=False, slots=True)
+class SingletParameters(WallGo.ActionParameters):
+    RGScale: float # Renormalization scale (in MS-bar scheme for this example)
+    yt: float # top Yukawa
+    g1: float # U(1) gauge coupling
+    g2: float # SU(2) gauge coupling
+    g3: float # SU(3) gauge coupling
+    msq: float # phi^2
+    b2: float # S^2
+    lam: float # phi^4 ("lambda", but that keyword is reserved by Python)
+    a2: float # phi^2 S^2
+    b4: float # S^4
+
+
+@dataclass(init=False, slots=True)
+class SingletThermalParameters(SingletParameters):
+    """Same as above but with extra mD
+    """
+    mD1sq: float
+    mD2sq: float
+    mD3sq: float
+
+
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-class SingletSM_Z2(GenericModel):
+class SingletSM_Z2_HighT(GenericModel):
 
     ## Specifying this is REQUIRED
     fieldCount = 2
-
-    """Define a model-specific dataclass for holding parameters required to evaluate the effective potential etc.
-    This should inherit from WallGo.ActionParameters which is the common interface for WallGo model parameters.
-    (The init=False means no __init__ function is generated for the dataclass.)
-    """
-    @dataclass(init=False)
-    class SingletParameters(WallGo.ActionParameters):
-        RGScale: float # Renormalization scale (in MS-bar scheme for this example)
-        yt: float # top Yukawa
-        g1: float # U(1) gauge coupling
-        g2: float # SU(2) gauge coupling
-        g3: float # SU(3) gauge coupling
-        msq: float # phi^2
-        b2: float # S^2
-        lam: float # phi^4 ("lambda", but that keyword is reserved by Python)
-        a2: float # phi^2 S^2
-        b4: float # S^4
-
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
@@ -96,7 +107,7 @@ class SingletSM_Z2(GenericModel):
         """Converts "physical" input parameters to field-theory parameters (ie. those appearing in the action).
         """
 
-        modelParameters = SingletSM_Z2.SingletParameters()
+        modelParameters = SingletParameters()
 
         v0 = inputParameters["v0"]
         # Scalar eigenvalues
@@ -130,75 +141,108 @@ class SingletSM_Z2(GenericModel):
 
         return modelParameters
 
+
+    def computeThermalParameters(self, temperature: npt.ArrayLike, params: SingletParameters) -> SingletParameters:
+        """Override of GenericModel.computeThermalParameters.
+        """
+
+        # shorthands
+        T = temperature
+        p = params
+
+        thermalParams = SingletThermalParameters()
+
+        ## LO matching: only masses get corrected
+        thermalParams.RGScale = p.RGScale
+        thermalParams.yt = p.yt ## do we need this?!?!
+        thermalParams.g1 = p.g1
+        thermalParams.g2 = p.g2
+        thermalParams.g3 = p.g3
+
+        thermalParams.lam = p.lam
+        thermalParams.a2 = p.a2
+        thermalParams.b4 = p.b4
+
+        thermalParams.msq = p.msq + T**2 / 16. * (3. * p.g2**2 + p.g1**2 + 4.*p.yt**2 + 8.*p.lam) + T**2 * p.a2 / 24.
+        thermalParams.b2 = p.b2 + T**2 * (1./6. *p.a2 + 1./4. *p.b4)
+
+        # how many Higgs doublets / fermion generations
+        Nd = 1
+        Nf = 3
+
+        ## Debye masses squared (U1, SU2, SU3) 
+        thermalParams.mD1sq = p.g1**2 * T**2 * (Nd/6. + 5.*Nf/9.)
+        thermalParams.mD2sq = p.g2**2 * T**2 * ( (4. + Nd) / 6. + Nf/3.)
+        thermalParams.mD3sq = p.g3**2 * T**2 * (1. + Nf/3.)
+
+        return thermalParams
+
+
 # end model
 
 
-## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
-class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
+class EffectivePotentialxSM_Z2_HighT(WallGo.EffectivePotential):
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        super().__init__(modelParameters, fieldCount)
-        ## ... do singlet+SM specific initialization here. The super call already gave us the model params
-
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 29 
-        self.num_fermion_dof = 90 
-
-
-        """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
-        In real applications we recommend using the WallGo default implementations.
-        """
-        self._configureBenchmarkIntegrals()
-
-
-    def _configureBenchmarkIntegrals(self):
+    ## Store model reference as we need it to get thermal params etc
+    def __init__(self, model: SingletSM_Z2_HighT, fieldCount: int):
         
-        ## Load custom interpolation tables for Jb/Jf. 
-        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
-        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
-        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
-        
-        self.integrals.Jb.disableAdaptiveInterpolation()
-        self.integrals.Jf.disableAdaptiveInterpolation()
+        self.fieldCount = fieldCount
+        self.model = model
 
-        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
-        => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
-        at the upper limit.
-        """
-
-        from WallGo.InterpolatableFunction import EExtrapolationType
-        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
-        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
-    
 
     ## ---------- EffectivePotential overrides. 
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
-
-        # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
+    def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         v, x = fields.GetField(0), fields.GetField(1)
 
-        # shorthand reference
-        p = self.modelParameters
+        """For this example we compute this to next-to-leading (NLO) order in the high-T approximation m ~gT,
+        where g is a small parameter. NLO means g^3 accuracy, which requires thermal masses at 1-loop
+        and 1-loop integration over Matsubara zero modes. The T=0 Coleman-Weinberg loops are not included
+        as they are ~ m^4 log(m) ~ (gT)^4 log(g).
+        """
+
+        # Get resummed masses etc
+        p: SingletThermalParameters = self.model.computeThermalParameters(temperature, self.model.modelParameters)
 
         # tree level potential
         V0 = 0.5*p.msq*v**2 + 0.25*p.lam*v**4 + 0.5*p.b2*x**2 + 0.25*p.b4*x**4 + 0.25*p.a2*v**2 *x**2
 
-        # From Philipp. @todo should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
+        ## Add loops over Matsubara zero modes. The masses here are resummed thermal masses.
+        # 3D loop integral, but keep 4D units:
+        J3 = lambda msq : -(msq + 0j)**(3/2) / (12.*np.pi) * temperature
 
+        ## Cheating a bit here and just hardcoding gauge/"goldstone" masses
+        mWsq = thermalParameters["g2"]**2 * v**2 / 4.
+        mZsq = (thermalParameters["g1"]**2 + thermalParameters["g2"]**2) * v**2 / 4.
+        mGsq = msq + lam*v**2 + 0.5*a2*x**2
+
+
+        ## Scalar mass matrix needs diagonalization, just doing it manually here
+        # matrix ( a, b // b, c)
+
+        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
+        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
+        C = a2 *v*x 
+        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
+
+        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
+        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
+        
+    
+        # NLO 1-loop correction in Landau gauge. So g^3, Debyes are integrated out by getThermalParameters
+        V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + 3.*J3(mGsq) + J3(msqEig1) + J3(msqEig2)
+
+
+        VTotal = (
+            -self.pressureLO(temperature) # Free energy is -pressure
+            + V0
+            +
+
+        )
 
         VTotal = (
             V0 
@@ -210,65 +254,13 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return VTotal
     
 
-    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """Need to explicitly compute field-independent but T-dependent parts
-        that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
-        (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
+    def pressureLO(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        """Ideal gas pressure. This contributes a temperature-dependent but field-independent
+        term in the effective potential. Obtained from DRalgo, although this could easily be computed
+        by just counting degrees of freedom and doing a high-T expansion on loop integrals.
         """
-
-        ## See Eq. (39) in hep-ph/0510375 for general LO formula
-
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 14
-        dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
-
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
-        return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
-
-
-    def boson_massSq(self, fields: Fields, temperature):
-
-        v, x = fields.GetField(0), fields.GetField(1)
-
-        # shorthand reference
-        p = self.modelParameters
-
-        # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = p.msq + 0.5*p.a2*x**2 + 3.*v**2*p.lam
-        B = p.b2 + 0.5*p.a2*v**2 + 3.*p.b4*x**2
-        C = p.a2 *v*x
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-
-        mWsq = p.g2**2 * v**2 / 4.
-        mZsq = (p.g1**2 + p.g2**2) * v**2 / 4.
-        # "Goldstones"
-        mGsq = p.msq + p.lam*v**2 + 0.5*p.a2*x**2
-
-        # h, s, chi, W, Z
-        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom = np.array([1,1,3,6,3]) 
-        c = np.array([3/2,3/2,3/2,5/6,5/6])
-
-        return massSq, degreesOfFreedom, c
-    
-
-    def fermion_massSq(self, fields: Fields, temperature):
-
-        v = fields.GetField(0)
-
-        # Just top quark, others are taken massless
-        yt = self.modelParameters.yt
-        mtsq = yt**2 * v**2 / 2
-    
-        # @todo include spins for each particle
-
-        massSq = np.stack((mtsq,), axis=-1)
-        degreesOfFreedom = np.array([12])
-        
-        return massSq, degreesOfFreedom
+        ## the 3 is from 3 fermion generations
+        return (29./90. + 7./24 * 3) * np.pi**2 * temperature**4
 
 
 
@@ -300,7 +292,14 @@ def main():
         "b4" : 1.0
     }
 
-    model = SingletSM_Z2(inputParameters)
+    model = SingletSM_Z2_HighT(inputParameters)
+
+    params = model.calculateModelParameters(inputParameters)
+
+    thermalParams = model.computeThermalParameters(np.array([123.0, 32]), params)
+
+    print(f"{thermalParams=}")
+    input()
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 

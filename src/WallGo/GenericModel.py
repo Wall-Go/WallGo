@@ -23,6 +23,16 @@ class GenericModel(ABC):
         pass
 
 
+    def computeThermalParameters(self, temperature: npt.ArrayLike, params: ActionParameters) -> ActionParameters:
+        """Computes temperature-dependent parameters for use in the effective potential.
+        By default this is a simple pass-through function, ie. just returns the input params.
+        Users who need T-dependent parameters are supposed to override this with their own implementation.
+        Example: If you wish to implement RG running and use temperature-dependent RG scale,
+        implement the running here.
+        """
+        return params
+
+
     def addParticle(self, particleToAdd: Particle) -> None:
         ## Common routine for defining a new particle. Usually should not be overriden
 
