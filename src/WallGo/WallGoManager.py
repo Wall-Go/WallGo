@@ -224,13 +224,13 @@ class WallGoManager:
         #print(f"{hydrotemplate.vJ=} {hydrotemplate.alN = } {hydrotemplate.alNmin=} {hydrotemplate.cb2=} {hydrotemplate.cs2=} {hydrotemplate.vMax =} {(1-hydrotemplate.psiN)/3=}")
         
         print(f"{self.thermodynamics.csqHighT(45.2)=} {self.thermodynamics.csqHighT(45.3)=} {self.thermodynamics.csqHighT(45.4)=} {self.thermodynamics.csqHighT(45.5)=} {self.thermodynamics.csqHighT(45.6)=} ")
-        print(f"{self.thermodynamics.pHighT(45.2)=} {self.thermodynamics.pHighT(45.3)=} {self.thermodynamics.pHighT(45.4)=} {self.thermodynamics.pHighT(45.5)=} {self.thermodynamics.pHighT(45.6)=} ")
         print(f"{self.thermodynamics.csqLowT(45.2)=} {self.thermodynamics.csqLowT(45.3)=} {self.thermodynamics.csqLowT(45.4)=} {self.thermodynamics.csqLowT(45.5)=} {self.thermodynamics.csqLowT(45.6)=} ")
-        print(f"{self.thermodynamics.csqLowT(45.2)=} {self.thermodynamics.pLowT(45.3)=} {self.thermodynamics.pLowT(45.4)=} {self.thermodynamics.pLowT(45.5)=} {self.thermodynamics.pLowT(45.6)=} ")
+        print(f"{self.thermodynamics.pHighT(45.2)=} {self.thermodynamics.pHighT(45.3)=} {self.thermodynamics.pHighT(45.4)=} {self.thermodynamics.pHighT(45.5)=} {self.thermodynamics.pHighT(45.6)=} ")
+        print(f"{self.thermodynamics.pLowT(45.2)=} {self.thermodynamics.pLowT(45.3)=} {self.thermodynamics.pLowT(45.4)=} {self.thermodynamics.pLowT(45.5)=} {self.thermodynamics.pLowT(45.6)=} ")
         print(f"{THighTMaxTemplate=} {TLowTTMaxTemplate=}")
         #There seems to be a maximum velocity, 
         
-        dT = 0.05 #self.config.getfloat("EffectivePotential", "dT") ## !!! changed for debugging purposes
+        dT = self.config.getfloat("EffectivePotential", "dT") ## !!! changed for debugging purposes
 
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large
