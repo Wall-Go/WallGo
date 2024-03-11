@@ -23,6 +23,4 @@ def test_equilibriumEOM_singlet(
     # Currently the wall velocity solver in EOM has hardcoded absolute
     # tolerance of 1e-3. So no point testing for more precision than that
 
-    print(f"{vwEOM=}")
-
     assert vwEOM == pytest.approx(vwLTE, abs=1e-3)
