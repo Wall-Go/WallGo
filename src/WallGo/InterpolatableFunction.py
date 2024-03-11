@@ -277,16 +277,24 @@ class InterpolatableFunction(ABC):
 
             ## Now input array of many x values. Use interpolated values whenever possible, so split the x array into two parts.
             ## However, be careful to preserve the array shape
-        
+            
             canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
             
             needsEvaluationCondition = ~canInterpolateCondition 
 
             xInterpolateRegion = x[ canInterpolateCondition ] 
             xEvaluateRegion = x[ needsEvaluationCondition ]
-
-            results = np.empty_like(x)
-            results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion)
+            yInterpolateRegion = self.evaluateInterpolation(xInterpolateRegion)
+            shape = list(yInterpolateRegion.shape)
+            # Make the shape of the results array match
+            if len(shape) > len(x.shape):
+                for i,s in enumerate(x.shape):
+                    shape[i] = s
+            else:
+                shape = x.shape
+            
+            results = np.empty(shape)
+            results[canInterpolateCondition] = yInterpolateRegion
 
             if (xEvaluateRegion.size > 0):
                 results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion)
