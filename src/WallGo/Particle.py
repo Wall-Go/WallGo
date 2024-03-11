@@ -27,10 +27,10 @@ class Particle:
             A string naming the particle.
         msqVacuum : function
             Function :math:`m^2_0(\phi)`, should take a Fields object and 
-            return a float or array.
+            return an array of length Fields.NumPoints().
         msqDerivative : function
             Function :math:`d(m_0^2)/d(\phi)`, should take a Fields object and 
-            return an array.
+            return an array of shape Fields.shape.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}

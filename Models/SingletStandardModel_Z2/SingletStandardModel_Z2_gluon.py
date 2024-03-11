@@ -74,11 +74,11 @@ class SingletSM_Z2(GenericModel):
         self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
-        gluonMsqVacuum = lambda fields: 0 * 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        gluonMsqDerivative = lambda fields: 0 * self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
+        # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
-
-        ## Very messy! Something in Boltzmann crashes if the vacuum mass and derivative are not in this form. 
 
         gluon = Particle("gluon", 
                             msqVacuum = gluonMsqVacuum,
