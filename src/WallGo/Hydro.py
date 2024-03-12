@@ -478,7 +478,7 @@ class Hydro:
             # a small vp can also result in Tp below TMinHighT, we determine
             # another vpmin from that.
             # TODO: can we even replace this lower bound by Tnucl?
-            TpMin = self.TMaxLowT  # smallest allowed value of Tp
+            TpMin = self.TMinHighT  # smallest allowed value of Tp
 
             def vmSqAtTpMin(tm):
                 return min(vwTry**2, self.thermodynamics.csqLowT(tm))
