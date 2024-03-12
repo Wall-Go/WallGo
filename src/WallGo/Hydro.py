@@ -661,34 +661,46 @@ class Hydro:
         vwLTE
             The value of the wall velocity for this model in local thermal equilibrium.
         """
-        def func(vw): # Function given to the root finder. # LN: yea but please use descriptive names
-            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
-            Tntry = self.solveHydroShock(vw,vp,Tp)
+
+        def func(vw):  # Function given to the root finder. # LN: yea but please use descriptive names
+            vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
+            Tntry = self.solveHydroShock(vw, vp, Tp)
             return Tntry - self.Tnucl
-        def shock(vw): # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
-            vp,vm,Tp,Tm = self.matchDeflagOrHyb(vw)
+
+        def shock(vw):  # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
+            vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
             return vp*vw-self.thermodynamics.csqHighT(Tp)
-        
 
         self.success = True
         vmin = self.vMin
         vmax = self.vJ
 
-        if shock(vmax) > 0: # Finds the maximum vw such that the shock front is ahead of the wall.
+        if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
-                vmax = root_scalar(shock,bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5,self.vJ], xtol=self.atol, rtol=self.rtol).root-1e-6
+                vmax = root_scalar(
+                    shock,
+                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, self.vJ],
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                ).root
+                vmax = vmax - 1e-6  # HACK! why?
             except:
-                return 1 # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
+                return 1  # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
 
         fmax = func(vmax)
-        if fmax > 0 or not self.success: # There is no deflagration or hybrid solution, we return 1.
+        if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
             return 1
 
         fmin = func(vmin)
-        if fmin < 0: # vw is smaller than vmin, we return 0.
+        if fmin < 0:  # vw is smaller than vmin, we return 0.
             return 0
         else:
-            sol = root_scalar(func, bracket=(vmin,vmax), xtol=self.atol, rtol=self.rtol)
+            sol = root_scalar(
+                func,
+                bracket=(vmin, vmax),
+                xtol=self.atol,
+                rtol=self.rtol,
+            )
             return sol.root
 
     def __mappingT(self, TpTm):
