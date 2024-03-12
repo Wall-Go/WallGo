@@ -558,6 +558,7 @@ class Hydro:
 
             try:
                 fmin, fmax = func(vpmin), func(vpmax)
+                print(f"try, {vpmin=} {vpmax =}")
             except:
                 vpminlow = vpmin  # lower bound on vp in the binary search
                 vpminup = vpmax  # upper bound on vp in the binary search
@@ -574,6 +575,7 @@ class Hydro:
                 # OG: But what if this is too conservative, and
                 # vpmin > vp or > vpmax?
                 fmin, fmax = func(vpmin), func(vpmax)
+                print(f"Except {vpmin = } {vpmax =} {fmin = } {fmax = }")
 
             vpguess, _, _, _ = self.template.findMatching(vwTry)
 
