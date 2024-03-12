@@ -1,7 +1,8 @@
 # helper functions for BubbleDet
 import findiff
 import numpy as np
-
+from collections.abc import Callable
+from .Fields import Fields
 
 def GCLQuadrature(fGrid):
     r"""

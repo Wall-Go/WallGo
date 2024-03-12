@@ -21,16 +21,6 @@ from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallPara
 
 class EOM:
 
-    model: GenericModel
-    hydro: Hydro
-    thermo: Thermodynamics ## thermo here is used pretty messily but is useful: gives access to both FreeEnergy objects and Veff
-    boltzmannSolver: BoltzmannSolver
-
-    # LN: Changed this so that the constructor takes a BoltzmannSolver instance instead of a Particle. 
-    # This is better: can access all out-of-eq particles through BoltzmannSolver if needed. 
-    # Currently the particle-specific things in this class are hardcoded so that they only make sense for top quark only, and are completely model specific. 
-    # So big TODO: generalize this. As a temporary hack, the particle is set in __init__() as the first particle in boltzmannSolver's particle list.
-
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
@@ -90,10 +80,9 @@ class EOM:
         self.hydro = hydro
         ## LN: Dunno if we want to store this here tbh
         self.Tnucl = self.thermo.Tnucl
-
-        ## HACK. Hardcode reference to first particle in boltzmannSolver's list. Will be removed or generalized later
-        self.particle = self.boltzmannSolver.offEqParticles[0]
-
+        
+        self.particles = self.boltzmannSolver.offEqParticles
+        
         ## Tolerances
         self.errTol = errTol
         self.maxIterations = maxIterations
@@ -270,10 +259,10 @@ class EOM:
         print(f"\nTrying {wallVelocity=}")
 
         zeroPoly = Polynomial(
-            np.zeros(self.grid.M - 1),
+            np.zeros((len(self.particles), self.grid.M - 1)),
             self.grid,
-            direction="z",
-            basis="Cardinal",
+            direction=("Array", "z"),
+            basis=("Array", "Cardinal"),
         )
         offEquilDeltas = BoltzmannDeltas(
             Delta00=zeroPoly,
@@ -282,10 +271,10 @@ class EOM:
             Delta11=zeroPoly,
         )
         deltaF = Polynomial(
-            np.zeros(((self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1))),
+            np.zeros((len(self.particles), (self.grid.M - 1), (self.grid.N - 1), (self.grid.N - 1))),
             self.grid,
-            basis=("Cardinal", "Chebyshev", "Chebyshev"),
-            direction=("z", "pz", "pp"),
+            basis=("Array", "Cardinal", "Chebyshev", "Chebyshev"),
+            direction=("Array", "z", "pz", "pp"),
             endpoints=False,
         )
         boltzmannResults = BoltzmannResults(
@@ -348,8 +337,6 @@ class EOM:
         
 
     def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus):
-        fields: Fields
-        dPhidz: Fields
 
         ## here dPhidz are z-derivatives of the fields
         fields, dPhidz = self.wallProfile(
@@ -411,17 +398,28 @@ class EOM:
         wallParams = __toWallParams(sol.x)
 
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
-        dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
+        dVdPhi = self.thermo.effectivePotential.derivField(fields, Tprofile)
+        
+        # Out-of-equilibrium term of the EOM
+        dVout = np.sum([particle.totalDOFs * particle.msqDerivative(fields) * Delta00.coefficients[i,:,None]
+                        for i,particle in enumerate(self.particles)], axis=0) / 2
+        
+        ## EOM for field i is d^2 phi_i + dVfull == 0, the latter term is dVdPhi + dVout
+        dVfull: Fields = dVdPhi + dVout
 
-        """This undocumented magic is calculating pressure on the wall ASSUMING only the first field has interactions with out-of-eq particles (top).
-        Meaning that this needs a rewrite! 
+        # Now contract with dPhi/dz and integrate
+        #dVdz = (dVfull * dPhidz).view(np.ndarray)
+
         """
-        dVout = 12 * fields.GetField(0) * Delta00.coefficients / 2
+        In principle, the following should be sumed over all the particles, but it turns 
+        out that only the first particle has a nonzero contribution. This is 
+        because the other particles have a wall offset over which the action is
+        minimized. This sets their pressure to 0. The first field doesn't have 
+        an offset, so its pressure is nonzero.
+        """
+        dVdz = (dVfull * dPhidz).GetField(0)
 
-        term1 = dVdX * dPhidz
-        term2 = dVout[:, np.newaxis] * dPhidz
-
-        EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
+        EOMPoly = Polynomial(dVdz, self.grid)
 
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
@@ -462,8 +460,7 @@ class EOM:
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
 
 
-        ## LN: needs rewrite, hardcoding top quark here is no-no for general models
-        VOut = 12*self.particle.msqVacuum(fields)*offEquilDelta00.coefficients/2 # Whats this?
+        VOut = sum([particle.totalDOFs*particle.msqVacuum(fields)*offEquilDelta00.coefficients[i] for i,particle in enumerate(self.particles)])/2
 
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT,Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT,Tprofile[-1])
@@ -515,11 +512,11 @@ class EOM:
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
         dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
 
-        return fields, dPhidz
+        return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
 
 
     def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
-                          offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
+                          offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
@@ -535,8 +532,8 @@ class EOM:
             Scalar field profiles.
         dPhidz : array-like
             Derivative with respect to the position of the scalar field profiles.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
         Tplus : double
             Plasma temperature in front of the wall.
         Tminus : double
@@ -581,7 +578,7 @@ class EOM:
     
 
     def findPlasmaProfilePoint(self, index: int, c1: float, c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
-                               offEquilDeltas: dict[str, float], Tplus: float, Tminus: float) -> Tuple[float, float]:
+                               offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[float, float]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, the minimum of LHS.
 
@@ -599,8 +596,8 @@ class EOM:
             Scalar field profile.
         dPhidz : Fields
             Derivative with respect to the position of the scalar field profile.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
         Tplus : double
             Plasma temperature in front of the wall.
         Tminus : double
@@ -618,7 +615,6 @@ class EOM:
         ## What's going on in this function? Please explain your logic. TODO issue #114
 
         Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
-
         s1 = c1 - Tout30
         s2 = c2 - Tout33
 
@@ -727,7 +723,7 @@ class EOM:
             raise TypeError(f"LHS has wrong type, {result.shape=}")
 
 
-    def deltaToTmunu(self, index: int, fields: Fields, velocityMid: float, offEquilDeltas: dict[str, float]) -> Tuple[float, float]:
+    def deltaToTmunu(self, index: int, fields: Fields, velocityMid: float, offEquilDeltas: list) -> Tuple[float, float]:
         r"""
         Computes the out-of-equilibrium part of the energy-momentum tensor.
 
@@ -739,8 +735,8 @@ class EOM:
             Scalar field profile.
         velocityMid : double
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
-        offEquilDeltas : dictionary
-            Dictionary containing the off-equilibrium Delta functions
+        offEquilDeltas : list
+            List of dictionaries containing the off-equilibrium Delta functions
 
         Returns
         -------
@@ -750,10 +746,10 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = offEquilDeltas.Delta00.coefficients[index]
-        delta02 = offEquilDeltas.Delta02.coefficients[index]
-        delta20 = offEquilDeltas.Delta20.coefficients[index]
-        delta11 = offEquilDeltas.Delta11.coefficients[index]
+        delta00 = offEquilDeltas.Delta00.coefficients[:,index]
+        delta02 = offEquilDeltas.Delta02.coefficients[:,index]
+        delta20 = offEquilDeltas.Delta20.coefficients[:,index]
+        delta11 = offEquilDeltas.Delta11.coefficients[:,index]
 
         u0 = np.sqrt(gammaSq(velocityMid))
         u3 = np.sqrt(gammaSq(velocityMid))*velocityMid
@@ -762,15 +758,15 @@ class EOM:
 
         ## Where do these come from?
         ## LN: needs rewrite, what happens with many out-of-eq particles?
-        T30 = (
-            + (3*delta20 - delta02 - self.particle.msqVacuum(fields)*delta00)*u3*u0
-            + (3*delta02 - delta20 + self.particle.msqVacuum(fields)*delta00)*ubar3*ubar0
-            + 2*delta11*(u3*ubar0 + ubar3*u0))/2.
-        T33 = ((
-            + (3*delta20 - delta02 - self.particle.msqVacuum(fields)*delta00)*u3*u3
-            + (3*delta02 - delta20 + self.particle.msqVacuum(fields)*delta00)*ubar3*ubar3
-            + 4*delta11*u3*ubar3)/2. 
-            - (self.particle.msqVacuum(fields)*delta00+ delta02-delta20)/2.)
+        T30 = np.sum([particle.totalDOFs*(
+            + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u0
+            + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar0
+            + 2*delta11[i]*(u3*ubar0 + ubar3*u0))/2. for i,particle in enumerate(self.particles)])
+        T33 = np.sum([particle.totalDOFs*((
+            + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u3
+            + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar3
+            + 4*delta11[i]*u3*ubar3)/2. 
+            - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particles)])
 
         return T30, T33
 
