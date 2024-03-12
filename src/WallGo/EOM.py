@@ -408,10 +408,10 @@ class EOM:
         dVfull: Fields = dVdPhi + dVout
 
         # Now contract with dPhi/dz and integrate
-        dVdz = (dVfull * dPhidz).view(np.ndarray)
+        #dVdz = (dVfull * dPhidz).view(np.ndarray)
 
         # somehow this works but the above does not. TODO figure out
-        #dVdz = (dVfull * dPhidz).GetField(0)
+        dVdz = (dVfull * dPhidz).GetField(0)
 
         EOMPoly = Polynomial(dVdz, self.grid)
 
