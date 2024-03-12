@@ -21,16 +21,6 @@ from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallPara
 
 class EOM:
 
-    model: GenericModel
-    hydro: Hydro
-    thermo: Thermodynamics ## thermo here is used pretty messily but is useful: gives access to both FreeEnergy objects and Veff
-    boltzmannSolver: BoltzmannSolver
-
-    # LN: Changed this so that the constructor takes a BoltzmannSolver instance instead of a Particle. 
-    # This is better: can access all out-of-eq particles through BoltzmannSolver if needed. 
-    # Currently the particle-specific things in this class are hardcoded so that they only make sense for top quark only, and are completely model specific. 
-    # So big TODO: generalize this. As a temporary hack, the particle is set in __init__() as the first particle in boltzmannSolver's particle list.
-
     """
     Class that solves the energy-momentum conservation equations and the scalar EOMs to determine the wall velocity.
     """
@@ -347,8 +337,6 @@ class EOM:
         
 
     def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus):
-        fields: Fields
-        dPhidz: Fields
 
         ## here dPhidz are z-derivatives of the fields
         fields, dPhidz = self.wallProfile(
@@ -410,16 +398,22 @@ class EOM:
         wallParams = __toWallParams(sol.x)
 
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
-        dVdX = self.thermo.effectivePotential.derivField(fields, Tprofile)
+        dVdPhi = self.thermo.effectivePotential.derivField(fields, Tprofile)
         
         # Out-of-equilibrium term of the EOM
         dVout = np.sum([particle.totalDOFs * particle.msqDerivative(fields) * Delta00.coefficients[i,:,None]
                         for i,particle in enumerate(self.particles)], axis=0) / 2
+        
+        ## EOM for field i is d^2 phi_i + dVfull == 0, the latter term is dVdPhi + dVout
+        dVfull: Fields = dVdPhi + dVout
 
-        term1 = dVdX * dPhidz
-        term2 = dVout * dPhidz
+        # Now contract with dPhi/dz and integrate
+        dVdz = (dVfull * dPhidz).view(np.ndarray)
 
-        EOMPoly = Polynomial(term1.GetField(0) + term2.GetField(0), self.grid)
+        # somehow this works but the above does not. TODO figure out
+        #dVdz = (dVfull * dPhidz).GetField(0)
+
+        EOMPoly = Polynomial(dVdz, self.grid)
 
         pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
 
@@ -512,7 +506,7 @@ class EOM:
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
         dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
 
-        return fields, dPhidz
+        return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
 
 
     def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
