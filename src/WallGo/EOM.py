@@ -627,6 +627,7 @@ class EOM:
         Tc = self.thermo.findCriticalTemperature(
             dT=0.1, rTol=1e-6, paranoid=True,
         )
+        #(TMin, TMax) = self.thermo.getCoexistenceRange()
         minRes = scipy.optimize.minimize_scalar(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
             method='Bounded',
