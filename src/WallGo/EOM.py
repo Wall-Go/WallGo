@@ -410,7 +410,13 @@ class EOM:
         # Now contract with dPhi/dz and integrate
         #dVdz = (dVfull * dPhidz).view(np.ndarray)
 
-        # somehow this works but the above does not. TODO figure out
+        """
+        In principle, the following should be sumed over all the particles, but it turns 
+        out that only the first particle has a nonzero contribution. This is 
+        because the other particles have a wall offset over which the action is
+        minimized. This sets their pressure to 0. The first field doesn't have 
+        an offset, so its pressure is nonzero.
+        """
         dVdz = (dVfull * dPhidz).GetField(0)
 
         EOMPoly = Polynomial(dVdz, self.grid)
