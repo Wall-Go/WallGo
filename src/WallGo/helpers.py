@@ -1,50 +1,71 @@
-# helper functions for BubbleDet
-import findiff
 import numpy as np
-from collections.abc import Callable
-from .Fields import Fields
 
-def GCLQuadrature(fGrid):
-    r"""
-    Computes the integral :math:`\int_{-1}^1 dx\frac{f(x)}{\sqrt{1-x^2}}` using Gauss-Chebyshev-Lobatto quadrature.
+FIRST_DERIV_COEFF = {'2': np.array([[-0.5,0.5],
+                                    [-1,1],
+                                    [-1,1]],dtype=float),
+                     '4': np.array([[1,-8,8,-1],
+                                    [-4,-6,12,-2],
+                                    [-22,36,-18,4],
+                                    [-4,18,-36,22],
+                                    [2,-12,6,4]],dtype=float)/12}
+SECOND_DERIV_COEFF = {'2': np.array([[1,-2,1],
+                                     [1,-2,1],
+                                     [1,-2,1]],dtype=float),
+                      '4': np.array([[-1,16,-30,16,-1],
+                                     [11,-20,6,4,-1],
+                                     [35,-104,114,-56,11],
+                                     [11,-56,114,-104,35],
+                                     [-1,4,6,-20,11]],dtype=float)/12}
 
-    Parameters
-    ----------
-    fGrid : array-like
-        Value of the function f(x) to integrate on the grid :math:`x_n=-\cos\left(\frac{n\pi}{N+1}\right),\quad n=0,\cdots,N+1.`
+FIRST_DERIV_POS = {'2': np.array([[-1,1],
+                                  [0,1],
+                                  [-1,0]],dtype=float),
+                   '4': np.array([[-2,-1,1,2],
+                                  [-1,0,1,2],
+                                  [0,1,2,3],
+                                  [-3,-2,-1,0],
+                                  [-2,-1,0,1]],dtype=float)}
+SECOND_DERIV_POS = {'2': np.array([[-1,0,1],
+                                  [0,1,2],
+                                  [-2,-1,0]],dtype=float),
+                   '4': np.array([[-2,-1,0,1,2],
+                                  [-1,0,1,2,3],
+                                  [0,1,2,3,4],
+                                  [-4,-3,-2,-1,0],
+                                  [-3,-2,-1,0,1]],dtype=float)}
 
-    Returns
-    -------
-    Value of the integral.
-
-    """
-    N = len(fGrid)-2
-    return (np.pi/(N+1))*np.sum(fGrid[1:-1])+(0.5*np.pi/(N+1))*(fGrid[0]+fGrid[-1])
+def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=None, args=None):
+    r"""Computes numerical derivatives of a callable function. Use the epsilon
+    and scale parameters to estimate the optimal value of dx, if the latter is
+    not provided. 
     
-
-def derivative(f, x, dx=1.0, n=1, order=4, scheme="center", args=None):
-    r"""Computes numerical derivatives of a callable function.
-
-    To replace scipy.misc.derivative which is to be deprecated.
-
-    Based on the findiff package.
 
     Parameters
     ----------
     f : function
-        The function to take derivatives of. It should take a float as its
-        argument and return a float, potentially with other fixed arguments.
-    x : float
+        Function to differentiate. Should take a float or an array as argument 
+        and return a float or array (the returned array can have a different 
+        shape as the input, but the first axis must match).
+    x : float or array-like
         The position at which to evaluate the derivative.
-    dx : float, optional
-        The magnitude of finite differences.
     n : int, optional
-        The number of derivatives to take, i.e. :math:`{\rm d}^nf/{\rm d}x^n`.
-    order: int, optional
+        The number of derivatives to take. Can be 0, 1, 2. The default is 1.
+    order : int, optional
         The accuracy order of the scheme. Errors are of order
-        :math:`\mathcal{O}({\rm d}x^{\text{order}+1})`.
-    scheme: {\"center\", \"forward\", \"backward\"}, optional
-        Type of finite difference scheme.
+        :math:`\mathcal{O}({\rm d}x^{\text{order}+1})`. Can be 2 or 4. Note that 
+        the order at the endpoints is reduced by 1 as it would require 
+        more function evaluations to keep the same order. The default is 4.
+    bounds : tuple or None, optional
+        Interval in which f can be called. If None, can be evaluated anywhere.
+        The default is None.
+    epsilon : float, optional
+        Fractional accuracy at which f can be evaluated. If f is a simple 
+        function, should be close to the machine precision. Default is 1e-16.
+    scale : float, optional 
+        Typical scale at which f(x) change by order 1. Default is 1.
+    dx : float or None, optional
+        The magnitude of finite differences. If None, use epsilon and scale to
+        estimate the optimal dx. Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
 
@@ -53,29 +74,60 @@ def derivative(f, x, dx=1.0, n=1, order=4, scheme="center", args=None):
     res : float
         The value of the derivative of :py:data:`f` evaluated at :py:data:`x`.
 
-    Examples
-    --------
-    >>> from BubbleDet.helpers import derivative
-    >>> def f(x):
-    >>>     return x ** 4
-    >>> derivative(f, 1, dx=0.01)
-    4.000000000000011
-
     """
+    x = np.asarray(x)
+    
+    if bounds is None:
+        bounds = (-np.inf,np.inf)
     if args is None:
-        fA = f
-    else:
-        fA = lambda xx: f(xx, *args)
-    coeffs = findiff.coefficients(deriv=n, acc=order)[scheme]
-    n_coeffs = len(coeffs["coefficients"])
-    res = 0
-    for i in range(n_coeffs):
-        coeff = coeffs["coefficients"][i]
-        offset = coeffs["offsets"][i]
-        c_i = coeff / dx ** n
-        x_i = x + offset * dx
-        res += c_i * fA(x_i)
-    return res
+        args = []
+    
+    assert isinstance(bounds, tuple) and len(bounds) == 2 and bounds[1] > bounds[0], "Derivative error: bounds must be a tuple of 2 elements or None."
+    assert n == 0 or n == 1 or n == 2, "Derivative error: n must be 0, 1 or 2."
+    assert order == 2 or order == 4, "Derivative error: order must be 2 or 4."
+    assert np.all(x <= bounds[1]) and np.all(x >= bounds[0]), "Derivative error: x must be inside bounds."
+    
+    if n == 0:
+        return f(x, *args)
+    
+    # If dx is not provided, we estimate it from scale and epsilon by minimizing 
+    # the total error ~ epsilon/dx**n + dx**order.
+    if dx is None:
+        assert isinstance(epsilon, float), "Derivative error: epsilon must be a float."
+        assert isinstance(scale, float), "Derivative error: scale must be a float."
+        dx = scale * epsilon**(1/(n+order))
+    
+    # This step increases greatly the accuracy because it makes sure (x + dx) - x
+    # is exactly equal to dx (no precision error).
+    temp = x + dx
+    dx = temp - x
+    
+    offset = np.zeros_like(x,dtype=int)
+    offset -= x + dx > bounds[1]
+    offset += x - dx < bounds[0]
+    if order == 4:
+        offset -= x + 2*dx > bounds[1]
+        offset += x - 2*dx < bounds[0]
+        
+    if n == 1 and order == 2:
+        pos = x[None,...] + FIRST_DERIV_POS['2'].T[:,offset.tolist()]*dx
+        coeff = FIRST_DERIV_COEFF['2'].T[:,offset.tolist()]/dx
+    elif n == 1 and order == 4:
+        pos = x[None,...] + FIRST_DERIV_POS['4'].T[:,offset.tolist()]*dx
+        coeff = FIRST_DERIV_COEFF['4'].T[:,offset.tolist()]/dx
+    elif n == 2 and order == 2:
+        pos = x[None,...] + SECOND_DERIV_POS['2'].T[:,offset.tolist()]*dx
+        coeff = SECOND_DERIV_COEFF['2'].T[:,offset.tolist()]/dx**2
+    elif n == 2 and order == 4:
+        pos = x[None,...] + SECOND_DERIV_POS['4'].T[:,offset.tolist()]*dx
+        coeff = SECOND_DERIV_COEFF['4'].T[:,offset.tolist()]/dx**2
+    
+    return np.sum(coeff * f(pos, *args), axis=0)
+        
+    
+    
+    
+
 
 def gammaSq(v):
     r"""
