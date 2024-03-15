@@ -14,6 +14,7 @@ dist/
 *.code-workspace
 Collision/bin/
 Collision/pybind/lib/
+Collision/examples/bin/
 Collision/run/
 Collision/testrun/
 data/
