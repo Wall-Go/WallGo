@@ -222,12 +222,13 @@ class InterpolatableFunction(ABC):
         So let's not enforce the assert."""
         #assert np.all( (x > self.__rangeMax) | (x < self.__rangeMin))
 
-        bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.ERROR and self.extrapolationTypeUpper == EExtrapolationType.ERROR
+        bErrorExtrapolation = self.extrapolationTypeLower == EExtrapolationType.ERROR and self.extrapolationTypeUpper == EExtrapolationType.ERROR
+        bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
 
-        if bNoExtrapolation:
+        if bErrorExtrapolation:
             ## OG: I've added this for cases such as where the extrumum doesn't exist outside some range
             raise ValueError(f"Out of bounds: {x} outside [{self.__rangeMin}, {self.__rangeMax}]")
-        elif not self.__interpolatedFunction:
+        elif not self.__interpolatedFunction or bNoExtrapolation:
             res = self.__evaluateDirectly(x)
         else:
             ## Now we have something to extrapolate
