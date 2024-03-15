@@ -40,15 +40,18 @@ class StandardModel(GenericModel):
         
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields[0]**2
+        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
                             msqVacuum = topMsqVacuum,
+                            msqDerivative = topMsqDerivative
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            multiplicity = 1
+                            multiplicity = 1,
+                            DOF = 12
         )
         self.addParticle(topQuark)
 
@@ -57,11 +60,13 @@ class StandardModel(GenericModel):
 
         lightQuark = Particle("lightQuark", 
                             msqVacuum = 0.0,
+                            msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 5
+                            multiplicity = 5,
+                            DOF = 60
         )
         self.addParticle(lightQuark)
 
@@ -70,11 +75,13 @@ class StandardModel(GenericModel):
 
         gluon = Particle("gluon", 
                             msqVacuum = 0.0,
+                            msqDerivative 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 1
+                            multiplicity = 1,
+                            DOF = 16
         )
         self.addParticle(gluon)
 

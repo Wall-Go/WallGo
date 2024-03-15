@@ -71,7 +71,7 @@ def initialize() -> None:
         ## read default config
         config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
         
-        print(config)
+        #print(config)
 
         ## Initialize interpolations for our default integrals
         _initalizeIntegralInterpolations()

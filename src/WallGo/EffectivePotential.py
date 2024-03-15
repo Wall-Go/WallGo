@@ -137,105 +137,33 @@ class EffectivePotential(ABC):
         )
         return der
 
-    def derivField(self, fields: Fields, temperature: npt.ArrayLike):
-        """ Compute field-derivative of the effective potential with respect to
-        all background fields, at given temperature.
+
+    ## TODO better derivatives, these are messy. sometimes the temperature is an array, sometimes not etc
+
+    def derivField(self, fields: Fields, temperature: npt.ArrayLike) -> Fields:
+        """
+        Compute field-derivative of the effective potential with respect to all background fields,
+        at given temperature.
 
         Parameters
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : array_like
-            The temperature
+        temperature : npt.ArrayLike
+            Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
 
         Returns
         ----------
-        dVdField : list[Fields]
-            Field derivatives of the potential, one Fields object for each
-            temperature. They are of Fields type since the shapes match nicely.
+        dVdX : Fields
+            Field derivatives of the potential. They are of Fields type since the shapes match nicely.
         """
+
+        ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
+        ## TODO should assert that field and temperature shapes are compatible
+
         res = np.empty_like(fields, dtype=float)
-
-        for idx in range(fields.NumFields()):
-            fieldsOffset = np.zeros_like(fields, dtype=float)
-            fieldsOffset.SetField(
-                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
-            )
-
-            # O(dPhi^4) accurate, central finite difference scheme
-            dV = (
-                -self.evaluate(fields + 2 * fieldsOffset, temperature)
-                + 8 * self.evaluate(fields + fieldsOffset, temperature)
-                - 8 * self.evaluate(fields - fieldsOffset, temperature)
-                + self.evaluate(fields - 2 * fieldsOffset, temperature)
-            )
-            dVdphi = dV / (12 * self.dPhi)
-
-            res.SetField(idx, dVdphi)
-
-        return res
-
-    def deriv2FieldT(self, fields: Fields, temperature: npt.ArrayLike):
-        r""" Computes :math:`d^2V/(d\text{Field} dT)`.
-
-        Parameters
-        ----------
-        fields : Fields
-            The background field values (e.g.: Higgs, singlet)
-        temperature : array_like
-            The temperature
-
-        Returns
-        ----------
-        d2fdFielddT : list[Fields]
-            Field derivatives of the potential, one Fields object for each
-            temperature. They are of Fields type since the shapes match nicely.
-        """
-        if len(fields.shape) == 1:
-            # HACK! Not sure how best to deal with this edge case, which
-            # arises due to how scipyint.RK45 is initialised
-            fields = Fields((fields))
-
-        # O(dPhi^4) accurate, central finite difference scheme
-        res = (
-            - self.derivField(fields, temperature + 2 * self.dT)
-            + 8 * self.derivField(fields, temperature + self.dT)
-            - 8 * self.derivField(fields, temperature - self.dT)
-            + self.derivField(fields, temperature - 2 * self.dT)
-        ) / (12 * self.dT)
-
-        if len(res.shape) == 2 and res.shape[0] == 1:
-            # HACK! SHOULD DO THIS MORE TIDILY
-            return res[0]
-        return res
-
-    def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):
-        r""" Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
-
-        Parameters
-        ----------
-        fields : Fields
-            The background field values (e.g.: Higgs, singlet)
-        temperature : float
-            the temperature
-
-        Returns
-        ----------
-        d2VdField2 : list[Fields]
-            Field Hessian of the potential. For each temperature, this is
-            a matrix of the same size as Fields.
-        """
-        if len(fields.shape) == 1:
-            # HACK! Not sure how best to deal with this edge case, which
-            # arises due to how scipyint.RK45 is initialised
-            fields = Fields((fields))
-        shapeRes = (fields.NumPoints(), fields.NumFields(), fields.NumFields())
-        res = np.empty(shapeRes, dtype=float)
-
-        # OG: This is all a bit of a mess, and should probably be rewritten
-        # more algorithmically.
 
         for idx in range(fields.NumFields()):
             fieldsOffsetX = np.zeros_like(fields, dtype=float)

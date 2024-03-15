@@ -14,6 +14,8 @@ from .WallGoExceptions import WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo, WallGoResults
 from .WallGoUtils import getSafePathToResource
 
+import WallGo
+
 
 class WallGoManager:
     """ Defines a 'control' class for managing the program flow.
@@ -41,12 +43,15 @@ class WallGoManager:
     def __init__(self):
         """do common model-independent setup here"""
 
-        self.config = Config()
-        self.config.readINI(getSafePathToResource("Config/WallGoDefaults.ini"))
+        # TODO cleanup, should not read the config here if we have a global WallGo config object
+        #self.config = Config()
+        #self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
 
-        self.integrals = Integrals()
+        self.config = WallGo.config
 
-        self._initalizeIntegralInterpolations(self.integrals)
+        #self.integrals = Integrals()
+
+        #self._initalizeIntegralInterpolations(self.integrals)
 
         # -- Order of initialization matters here
 
