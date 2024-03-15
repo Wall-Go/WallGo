@@ -14,7 +14,7 @@ def test_effectivePotential_V_singletSimple(
     T: float,
 ):
     """
-    Testing numerics of FreeEnergy
+    Testing numerics of EffectivePotential
     """
     Veff, BM = singletSimpleBenchmarkEffectivePotential
 
@@ -52,7 +52,7 @@ def test_effectivePotential_dVdField_singletSimple(
     T: float,
 ):
     """
-    Testing numerics of FreeEnergy
+    Testing numerics of EffectivePotential field derivative
     """
     Veff, BM = singletSimpleBenchmarkEffectivePotential
 
@@ -90,7 +90,7 @@ def test_effectivePotential_dVdT_singletSimple(
     T: float,
 ):
     """
-    Testing numerics of FreeEnergy
+    Testing numerics of EffectivePotential T derivative
     """
     Veff, BM = singletSimpleBenchmarkEffectivePotential
 
@@ -123,7 +123,7 @@ def test_effectivePotential_dVdT_singletSimple(
 
     # results from Veff
     dVdT = Veff.derivT(fields, T)
-    assert dVdTExact == pytest.approx(dVdT[0], rel=1e-12)
+    assert dVdTExact == pytest.approx(dVdT, rel=1e-12)
 
 
 @pytest.mark.parametrize("T", [90, 110])
@@ -134,7 +134,7 @@ def test_effectivePotential_d2VdFielddT_singletSimple(
     T: float,
 ):
     """
-    Testing numerics of FreeEnergy
+    Testing numerics of FreeEnergy Field and T derivative
     """
     Veff, BM = singletSimpleBenchmarkEffectivePotential
 
@@ -179,7 +179,7 @@ def test_effectivePotential_d2VdField2_singletSimple(
     T: float,
 ):
     """
-    Testing numerics of FreeEnergy
+    Testing numerics of EffectivePotential Hessian
     """
     Veff, BM = singletSimpleBenchmarkEffectivePotential
 
