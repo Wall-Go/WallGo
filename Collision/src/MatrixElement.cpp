@@ -1,13 +1,15 @@
 #include <iostream>
 #include <functional>
+#include <array>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
-#include "hdf5Interface.h"
 #include "ParticleSpecies.h"
 #include "CollElem.h"
 #include "CollisionIntegral.h"
-#include <array>
+
+namespace wallgo
+{
 
 MatrixElement::MatrixElement() {
 
@@ -52,12 +54,13 @@ void MatrixElement::initParser(const std::vector<double> &couplings, const std::
 
     setConstants(couplings, massSquares);
 
+    // Couplings are c[i], mass-squares are msq[i].
     // To allow variable names like msq[2] we need to add [] to parser's character list
     parser->DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
 
     try {
         for (uint i = 0; i < couplings_internal.size(); ++i) {
-            std::string coupling_str = "couplings[" + std::to_string(i) + "]";
+            std::string coupling_str = "c[" + std::to_string(i) + "]";
             parser->DefineVar(coupling_str, &couplings_internal[i]);
         }
 
@@ -67,8 +70,8 @@ void MatrixElement::initParser(const std::vector<double> &couplings, const std::
         }
 
     } catch (mu::Parser::exception_type &parserException) {
-        std::cout << "=== Error when initializing symbols. Parser threw error: \n"; 
-        std::cout << parserException.GetMsg() << std::endl;
+        std::cerr << "=== Error when initializing symbols. Parser threw error: \n"; 
+        std::cerr << parserException.GetMsg() << std::endl;
     }
 }
 
@@ -102,9 +105,11 @@ void MatrixElement::testExpression() {
     try {
         evaluate(-4.2, 2.9, 0);
     } catch (mu::Parser::exception_type &parserException) {
-        std::cout << "=== Error when evaluating matrix element. Parser threw error: \n"; 
-        std::cout << parserException.GetMsg() << std::endl;
-        std::cout << "The expression was: \n";
-        std::cout << expression << "\n";
+        std::cerr << "=== Error when evaluating matrix element. Parser threw error: \n"; 
+        std::cerr << parserException.GetMsg() << std::endl;
+        std::cerr << "The expression was: \n";
+        std::cerr << expression << "\n";
     }
 }
+
+} // namespace

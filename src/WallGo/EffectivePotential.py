@@ -167,8 +167,9 @@ class EffectivePotential(ABC):
         return der
 
 
+    ## TODO better derivatives, these are messy. sometimes the temperature is an array, sometimes not etc
 
-    def derivField(self, fields: Fields, temperature: npt.ArrayLike):
+    def derivField(self, fields: Fields, temperature: npt.ArrayLike) -> Fields:
         """
         Compute field-derivative of the effective potential with respect to all background fields,
         at given temperature.
@@ -177,17 +178,19 @@ class EffectivePotential(ABC):
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : float
-            the temperature
+        temperature : npt.ArrayLike
+            Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
 
         Returns
         ----------
-        dfdX : list[Fields]
-            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        dVdX : Fields
+            Field derivatives of the potential. They are of Fields type since the shapes match nicely.
         """
 
         ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
+
+        ## TODO should assert that field and temperature shapes are compatible
 
         res = np.empty_like(fields, dtype=float)
 
