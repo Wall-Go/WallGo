@@ -52,8 +52,8 @@ def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=Non
         The number of derivatives to take. Can be 0, 1, 2. The default is 1.
     order : int, optional
         The accuracy order of the scheme. Errors are of order
-        :math:`\mathcal{O}({\rm d}x^{\text{order}+1})`. Can be 2 or 4. Note 
-        the order at the endpoints is automatically reduced as it would require 
+        :math:`\mathcal{O}({\rm d}x^{\text{order}+1})`. Can be 2 or 4. Note that 
+        the order at the endpoints is reduced by 1 as it would require 
         more function evaluations to keep the same order. The default is 4.
     bounds : tuple or None, optional
         Interval in which f can be called. If None, can be evaluated anywhere.
