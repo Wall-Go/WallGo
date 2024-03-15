@@ -407,9 +407,6 @@ class EOM:
         ## EOM for field i is d^2 phi_i + dVfull == 0, the latter term is dVdPhi + dVout
         dVfull: Fields = dVdPhi + dVout
 
-        # Now contract with dPhi/dz and integrate
-        #dVdz = (dVfull * dPhidz).view(np.ndarray)
-
         """
         In principle, the following should be sumed over all the particles, but it turns 
         out that only the first particle has a nonzero contribution. This is 
