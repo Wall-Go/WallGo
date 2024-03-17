@@ -310,5 +310,5 @@ e
             Phase transition strength.
         """
         # LN: Please add reference to a paper and eq number
-        return (self.eHighT(T)-self.pHighT(T)/self.csqHighT(T)-self.eLowT(T)+self.pLowT(T)/self.csqLowT(T))/3/self.wHighT(T)
+        return (self.eHighT(T)-self.eLowT(T)-(self.pHighT(T)-self.pLowT(T))/self.csqLowT(T))/3/self.wHighT(T)
 
