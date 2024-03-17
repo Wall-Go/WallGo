@@ -307,6 +307,33 @@ class HydroTemplateModel:
             vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
             wm_sw = sol.y[1,-1]
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
+    
+    def __shootingInvp(self,vw,vp):
+        """
+        Integrates through the shock wave and returns the residual of the matching equation at the shock front.
+        """
+        vm = min(self.cb,vw)
+        al = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3.
+        wp = self.w_from_alpha(al)
+        if abs(vp*vw-self.cs2) < 1e-12:
+            # If the wall is already very close to the shock front, we do not integrate through the shock wave
+            # to avoid any error due to rounding error.
+            vp_sw = vw
+            vm_sw = vp
+            wm_sw = wp
+        elif vw == vp:
+            # If the plasma is at rest in front of the wall, there is no variation of plasma velocity and temperature in the shock wave
+            vp_sw = self.cs
+            vm_sw = self.cs
+            wm_sw = wp
+        else:
+            self.temp = [vw,vp,(vw-vp)/(1-vw*vp),wp]
+            sol = self.integrate_plasma((vw-vp)/(1-vw*vp), vw, wp)
+            vp_sw = sol.y[0,-1]
+            vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
+            wm_sw = sol.y[1,-1]
+        return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
+
 
     def findvwLTE(self):
         """
@@ -329,17 +356,18 @@ class HydroTemplateModel:
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
 
-        shockIntegrator = lambda al: self.__shooting(vw,al)
+        shockIntegrator = lambda vp: self.__shootingInvp(vw,vp)
 
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
         vm = min(self.cb,vw)
+        print(f"{vm=}")
         al_max = 1/3.
-        vp_max = min(self.cs2/vw,vw,vm)
+        vp_max = min(self.cs2/vw,vw)
         al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
 
         try:
-            sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)
+            sol = root_scalar(shockIntegrator, bracket=(0,vp_max), rtol=self.rtol, xtol=self.atol)
 
         except Exception as e:
 #            print("!!! Exception in HydroTemplateModel.findMatching():")
@@ -347,11 +375,13 @@ class HydroTemplateModel:
 #            print()
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
-        wp = self.w_from_alpha(sol.root)
-        vp = self.get_vp(vm, sol.root)
+        vp = sol.root
+        alp = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3.
+        wp = self.w_from_alpha(alp)
         Tp = self.Tnucl*wp**(1/self.mu)
         Tm = self.__find_Tm(vm, vp, Tp)
         return vp,vm,Tp,Tm
+
 
     def matchDeflagOrHybInitial(self,vw,vp):
         r"""
