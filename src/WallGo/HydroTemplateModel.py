@@ -285,32 +285,6 @@ class HydroTemplateModel:
         event.terminal = True
         sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
-
-    def __shooting(self,vw,al):
-        """
-        Integrates through the shock wave and returns the residual of the matching equation at the shock front.
-        """
-        vm = min(self.cb,vw)
-        vp = self.get_vp(vm, al)
-        wp = self.w_from_alpha(al)
-        if abs(vp*vw-self.cs2) < 1e-12:
-            # If the wall is already very close to the shock front, we do not integrate through the shock wave
-            # to avoid any error due to rounding error.
-            vp_sw = vw
-            vm_sw = vp
-            wm_sw = wp
-        elif vw == vp:
-            # If the plasma is at rest in front of the wall, there is no variation of plasma velocity and temperature in the shock wave
-            vp_sw = self.cs
-            vm_sw = self.cs
-            wm_sw = wp
-        else:
-            self.temp = [vw,vp,(vw-vp)/(1-vw*vp),wp]
-            sol = self.integrate_plasma((vw-vp)/(1-vw*vp), vw, wp)
-            vp_sw = sol.y[0,-1]
-            vm_sw = (vp_sw-sol.t[-1])/(1-vp_sw*sol.t[-1])
-            wm_sw = sol.y[1,-1]
-        return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
     
     def __shootingInvp(self,vw,vp):
         """
@@ -343,14 +317,20 @@ class HydroTemplateModel:
         """
         Computes the wall velocity for a deflagration or hybrid solution.
         """
-        func = lambda vw: self.__shooting(vw,self.solve_alpha(vw))
+
+        def shootingInLTE(vw):
+            vm = min(self.cb,vw)
+            al = self.solve_alpha(vw)
+            vp = self.get_vp(vm, al)
+            return self.__shootingInvp(vw, vp)
+
         if self.alN < (1-self.psiN)/3 or self.alN <= (self.mu-self.nu)/(3*self.mu):
             # print('alN too small')
             return 0
-        if self.alN > self.max_al(100) or func(self.vJ) < 0:
+        if self.alN > self.max_al(100) or shootingInLTE(self.vJ) < 0:
             # print('alN too large')
             return 1
-        sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
+        sol = root_scalar(shootingInLTE,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
         return sol.root
 
     def findMatching(self,vw):
