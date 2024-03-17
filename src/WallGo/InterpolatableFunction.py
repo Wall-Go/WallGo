@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import scipy.interpolate
 from enum import Enum, auto
 from typing import Callable
+from .helpers import derivative
 
 ## Enums for extrapolation. Default is NONE, no extrapolation at all. 
 class EExtrapolationType(Enum):
@@ -47,7 +48,7 @@ class InterpolatableFunction(ABC):
     """
 
 
-    def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1):
+    def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1, functionError: float=1e-15):
         """ Optional argument returnValueCount should be set by the user if using list-valued functions.
         """
         ## Vector-like functions can return many values from one input, user needs to specify this when constructing the object
@@ -55,6 +56,8 @@ class InterpolatableFunction(ABC):
         self.__RETURN_VALUE_COUNT = returnValueCount  # TODO figure out how to do internal logic without requiring this as input
         
         self.__interpolatedFunction: Callable = None
+        
+        self.functionError = functionError
 
         ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
         self.extrapolationTypeLower = EExtrapolationType.NONE
@@ -212,13 +215,18 @@ class InterpolatableFunction(ABC):
 
 
 
-    def evaluateInterpolation(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def evaluateInterpolation(self, x: npt.ArrayLike, derivOrder: int=0) -> npt.ArrayLike:
         """Evaluates our interpolated function at input x
         """
-        return self.__interpolatedFunction(x)
+        if derivOrder == 0:
+            return self.__interpolatedFunction(x)
+        elif derivOrder in [1,2]:
+            return self.__interpolatedDerivatives[derivOrder-1](x)
+        else:
+            raise "InterpolatableFunction error: only the 1st and 2nd derivatives are stored as cubic splines."
 
 
-    def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def __evaluateOutOfBounds(self, x: npt.ArrayLike, derivOrder: int=0) -> npt.ArrayLike:
         """This gets called when the function is called outside the range of its interpolation table.
         We either extrapolate (different extrapolations are possible) or evaluate the function directly based on _functionImplementation() 
         """
@@ -231,8 +239,8 @@ class InterpolatableFunction(ABC):
 
         bNoExtrapolation = self.extrapolationTypeLower == EExtrapolationType.NONE and self.extrapolationTypeUpper == EExtrapolationType.NONE
 
-        if (not self.__interpolatedFunction or bNoExtrapolation):
-            res = self.__evaluateDirectly(x)
+        if (not self.__interpolatedFunction or bNoExtrapolation or derivOrder >= 3):
+            res = self.__evaluateDirectly(x, derivOrder)
         
         else:
             ## Now we have something to extrapolate
@@ -244,41 +252,45 @@ class InterpolatableFunction(ABC):
             ## Lower range
             match self.extrapolationTypeLower:
                 case EExtrapolationType.NONE:
-                    res[xLower] = self.__evaluateDirectly(x[xLower])
+                    res[xLower] = self.__evaluateDirectly(x[xLower], derivOrder)
                 case EExtrapolationType.CONSTANT:
-                    res[xLower] = self.evaluateInterpolation(self.__rangeMin)
+                    res[xLower] = self.evaluateInterpolation(self.__rangeMin, derivOrder)
                 case EExtrapolationType.FUNCTION:
-                    res[xLower] = self.evaluateInterpolation(x[xLower])
+                    res[xLower] = self.evaluateInterpolation(x[xLower], derivOrder)
 
             ## Upper range
             match self.extrapolationTypeUpper:
                 case EExtrapolationType.NONE:
-                    res[xUpper] = self.__evaluateDirectly(x[xUpper])
+                    res[xUpper] = self.__evaluateDirectly(x[xUpper], derivOrder)
                 case EExtrapolationType.CONSTANT:
-                    res[xUpper] = self.evaluateInterpolation(self.__rangeMax)
+                    res[xUpper] = self.evaluateInterpolation(self.__rangeMax, derivOrder)
                 case EExtrapolationType.FUNCTION:
-                    res[xUpper] = self.evaluateInterpolation(x[xUpper])
+                    res[xUpper] = self.evaluateInterpolation(x[xUpper], derivOrder)
 
         return res
     
 
-    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
+    def __call__(self, x: npt.ArrayLike, derivOrder: int=0, useInterpolatedValues=True) -> npt.ArrayLike:
         
         x = np.asanyarray(x)
 
         if (not useInterpolatedValues):
-            return self.__evaluateDirectly(x)
+            return self.__evaluateDirectly(x, derivOrder)
         elif (self.__interpolatedFunction == None):
-            return self.__evaluateDirectly(x)
+            return self.__evaluateDirectly(x, derivOrder)
+        
+        ## We do not store derivatives of order 3 or higher, so they have to be evaluated directly
+        if derivOrder >= 3:
+            return self.__evaluateDirectly(x, derivOrder)
 
 
         if (np.ndim(x) == 0):
             canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
 
             if (canInterpolateCondition):
-                return self.evaluateInterpolation(x)
+                return self.evaluateInterpolation(x, derivOrder)
             else:
-                return self.__evaluateOutOfBounds(x)
+                return self.__evaluateOutOfBounds(x, derivOrder)
 
         else: 
 
@@ -303,19 +315,25 @@ class InterpolatableFunction(ABC):
                 fxShape = x.shape
 
             results = np.empty(fxShape)
-            results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion)
+            results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion, derivOrder)
 
             if (xEvaluateRegion.size > 0):
-                results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion)
+                results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion, derivOrder)
                 
             return results
+        
+    def derivative(self, x: npt.ArrayLike, derivOrder: int=1, useInterpolatedValues=True) -> npt.ArrayLike:
+        return self.__call__(x, derivOrder, useInterpolatedValues)
 
 
-    def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike: 
+    def __evaluateDirectly(self, x: npt.ArrayLike, derivOrder: int=0, bScheduleForInterpolation=True) -> npt.ArrayLike: 
         """Evaluate the function directly based on _functionImplementation, instead of using interpolations.
         This also accumulates data for the adaptive interpolation functionality which is best kept separate from 
         the abstract _functionImplementation method.
         """
+        if derivOrder >= 1:
+            return derivative(self._functionImplementation, x, derivOrder, epsilon=self.functionError, scale=self.__rangeMax-self.__rangeMin)
+        
         fx = self._functionImplementation(x)
 
         if (self.__bUseAdaptiveInterpolation and bScheduleForInterpolation):
@@ -343,6 +361,12 @@ class InterpolatableFunction(ABC):
         
         ## This works even if f(x) is vector valued
         self.__interpolatedFunction = scipy.interpolate.CubicSpline(xFiltered, fxFiltered, extrapolate=bShouldExtrapolate, axis=0)
+        
+        ## Store a cubic spline for the 1st and 2nd derivatives into a list.
+        ## We do not attempt to spline the higher derivatives as they are not 
+        ## guaranteed to be continuous.
+        self.__interpolatedDerivatives = [self.__interpolatedFunction.derivative(1),
+                                          self.__interpolatedFunction.derivative(2)]
 
         self.__rangeMin = np.min(xFiltered)
         self.__rangeMax = np.max(xFiltered)

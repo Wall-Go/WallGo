@@ -50,12 +50,12 @@ class FreeEnergy(InterpolatableFunction):
     minPossibleTemperature: float ## Lowest possible temperature so that the phase is still (meta)stable 
     maxPossibleTemperature: float ## Highest possible temperature so that the phase is still (meta)stable
 
-    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: Fields, initialInterpolationPointCount: int=1000):
+    def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: Fields, initialInterpolationPointCount: int=1000, effectivePotentialError: float=1e-10):
 
         adaptiveInterpolation = True
         ## Set return value count. Currently the InterpolatableFunction requires this to be set manually:
         returnValueCount = phaseLocationGuess.NumFields() + 1
-        super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount, initialInterpolationPointCount=initialInterpolationPointCount)
+        super().__init__(bUseAdaptiveInterpolation=adaptiveInterpolation, returnValueCount=returnValueCount, initialInterpolationPointCount=initialInterpolationPointCount, functionError=effectivePotentialError)
 
         self.effectivePotential = effectivePotential 
         self.phaseLocationGuess = phaseLocationGuess
@@ -65,8 +65,8 @@ class FreeEnergy(InterpolatableFunction):
 
 
 
-    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> FreeEnergyValueType:
-        return FreeEnergyValueType( super().__call__(x, useInterpolatedValues) )
+    def __call__(self, x: npt.ArrayLike, derivOrder: int=0, useInterpolatedValues=True) -> FreeEnergyValueType:
+        return FreeEnergyValueType( super().__call__(x, derivOrder, useInterpolatedValues) )
 
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
