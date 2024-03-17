@@ -369,16 +369,22 @@ class HydroTemplateModel:
         """
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
+        
+        vm = min(self.cb,vw)
+
+        if vw > self.vMax:
+            # alN too small for shock 
+            return (None,None,None,None)
+        
+        if vw < self.vMin:
+            # alN too large for shock
+            return (None,None,None,None)
 
         shockIntegrator = lambda vp: self.__shooting(vw,vp)
 
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
-        vm = min(self.cb,vw)
-        print(f"{vm=}")
-        al_max = 1/3.
-        vp_max = min(self.cs2/vw,vw)
-        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+        vp_max = min(self.cs2/vw,vw) #Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187
 
         try:
             sol = root_scalar(shockIntegrator, bracket=(0,vp_max), rtol=self.rtol, xtol=self.atol)
@@ -390,9 +396,9 @@ class HydroTemplateModel:
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
         vp = sol.root
-        alp = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3.
+        alp = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3. #This is equation 20a of arXiv:2303.10171 solved for alpha_+
         wp = self.w_from_alpha(alp)
-        Tp = self.Tnucl*wp**(1/self.mu)
+        Tp = self.Tnucl*wp**(1/self.mu) #This follows from equation 22 and 23 of arXiv:2303.10171, and setting wn = 1
         Tm = self.__find_Tm(vm, vp, Tp)
         return vp,vm,Tp,Tm
 
