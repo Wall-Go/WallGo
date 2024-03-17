@@ -60,11 +60,8 @@ class Thermodynamics:
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
 
-        ## temperature difference to use for derivatives. TODO this needs to be read from a config file or something
-        self.dT = 1e-3
-
-        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.phaseHighT)
-        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.phaseLowT)
+        self.freeEnergyHigh = FreeEnergy(self.effectivePotential, self.phaseHighT, temperatureScale=self.Tc-self.Tnucl)
+        self.freeEnergyLow = FreeEnergy(self.effectivePotential, self.phaseLowT, temperatureScale=self.Tc-self.Tnucl)
 
 
     def pHighT(self, T: float):
@@ -99,13 +96,7 @@ class Thermodynamics:
         dpHighT : double
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pHighT,
-            T,
-            dx=self.dT,
-            n=1,
-            order=4,
-        )
+        return -self.freeEnergyHigh(T, derivOrder=1).getVeffValue()
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, T):
@@ -122,13 +113,7 @@ class Thermodynamics:
         ddpHighT : double
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pHighT,
-            T,
-            dx=self.dT,
-            n=2,
-            order=4,
-        )
+        return -self.freeEnergyHigh(T, derivOrder=2).getVeffValue()
 
     def eHighT(self, T):
         r"""
@@ -176,7 +161,7 @@ class Thermodynamics:
         wHighT : double
             Enthalpy density in the high-temperature phase.
         """
-        return self.pHighT(T)+self.eHighT(T)
+        return T*self.dpHighT(T)
 
     def csqHighT(self,T):
         r"""
@@ -227,13 +212,7 @@ class Thermodynamics:
         dpLowT : double
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pLowT,
-            T,
-            dx=self.dT,
-            n=1,
-            order=4,
-        )
+        return -self.freeEnergyLow(T, derivOrder=1).getVeffValue()
 
     def ddpLowT(self, T):
         """
@@ -249,13 +228,7 @@ class Thermodynamics:
         ddpLowT : double
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pLowT,
-            T,
-            dx=self.dT,
-            n=2,
-            order=4,
-        )
+        return -self.freeEnergyLow(T, derivOrder=2).getVeffValue()
 
     def eLowT(self, T):
         r"""
@@ -303,7 +276,7 @@ class Thermodynamics:
         wLowT : double
             Enthalpy density in the low-temperature phase.
         """
-        return self.pLowT(T)+self.eLowT(T)
+        return T*self.dpLowT(T)
 
     def csqLowT(self,T):
         r"""

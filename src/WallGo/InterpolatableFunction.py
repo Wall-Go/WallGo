@@ -48,7 +48,7 @@ class InterpolatableFunction(ABC):
     """
 
 
-    def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1, functionError: float=1e-15):
+    def __init__(self, bUseAdaptiveInterpolation: bool=True, initialInterpolationPointCount: int=1000, returnValueCount=1, functionError: float=1e-15, xScale: float=1.0):
         """ Optional argument returnValueCount should be set by the user if using list-valued functions.
         """
         ## Vector-like functions can return many values from one input, user needs to specify this when constructing the object
@@ -58,6 +58,7 @@ class InterpolatableFunction(ABC):
         self.__interpolatedFunction: Callable = None
         
         self.functionError = functionError
+        self.xScale = xScale
 
         ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
         self.extrapolationTypeLower = EExtrapolationType.NONE
@@ -332,7 +333,7 @@ class InterpolatableFunction(ABC):
         the abstract _functionImplementation method.
         """
         if derivOrder >= 1:
-            return derivative(self._functionImplementation, x, derivOrder, epsilon=self.functionError, scale=self.__rangeMax-self.__rangeMin)
+            return derivative(self._functionImplementation, x, derivOrder, epsilon=self.functionError, scale=self.xScale)
         
         fx = self._functionImplementation(x)
 
