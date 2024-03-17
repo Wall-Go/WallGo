@@ -13,6 +13,10 @@ class HydroTemplateModel:
 
     References
     ----------
+    Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
+    Model-independent energy budget for LISA
+    arXiv:2010.09744 (2020)
+
     Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
     Model-independent bubble wall velocities in local thermal equilibrium.
     arXiv:2303.10171 (2023).
@@ -96,8 +100,8 @@ class HydroTemplateModel:
     def minVelocity(self):
         r"""
         Finds the minimum velocity that is possible for a given nucleation temeperature. 
-        It is found by shooting in vp with alpha_+ = 1/3 at the wall. This is the maximum value of alpha_+ possible.
-        The wall velocity which yields alpha_+ = 1/3 for a given alpha_N is the minimum possible wall velocity.
+        It is found by shooting in vp with :math:`\alpha_+ = 1/3` at the wall. This is the maximum value of :math:`\alpha_+` possible.
+        The wall velocity which yields :math:`\alpha_+ = 1/3` for a given :math:`\alpha_N` is the minimum possible wall velocity.
 
         It is possible that no solution can be found, in this case there is no minimum value of the wall velocity
         and the function returns zero.
@@ -112,7 +116,7 @@ class HydroTemplateModel:
         def shootingalphamax(vw):
             vm = min(self.cb,vw)
             vp = self.get_vp(vm, 1/3.)
-            return self.__shootingInvp(vw,vp)
+            return self.__shooting(vw,vp)
 
         try:
             return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
@@ -286,7 +290,7 @@ class HydroTemplateModel:
         sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
     
-    def __shootingInvp(self,vw,vp):
+    def __shooting(self,vw,vp):
         """
         Integrates through the shock wave and returns the residual of the matching equation at the shock front.
         """
@@ -316,13 +320,22 @@ class HydroTemplateModel:
     def findvwLTE(self):
         """
         Computes the wall velocity for a deflagration or hybrid solution.
+        TODO: Explain the logic
+
+        Parameters
+        ----------
+        
+
+        Returns
+        -------
+            vwLTE : double
         """
 
         def shootingInLTE(vw):
             vm = min(self.cb,vw)
             al = self.solve_alpha(vw)
             vp = self.get_vp(vm, al)
-            return self.__shootingInvp(vw, vp)
+            return self.__shooting(vw, vp)
 
         if self.alN < (1-self.psiN)/3 or self.alN <= (self.mu-self.nu)/(3*self.mu):
             # print('alN too small')
@@ -336,11 +349,28 @@ class HydroTemplateModel:
     def findMatching(self,vw):
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution when the wall velocity is vw.
+        
+        Parameters
+        ----------
+        vw : double
+            Wall velocity at which to solve the matching equation.
+
+        Returns
+        -------
+        vp : double
+            Value of :math:`v_+` that solves the matching equation.
+        vm : double
+            Value of :math:`v_-` that solves the matching equation.
+        Tp : double
+            Value of :math:`T_+` that solves the matching equation.
+        Tm : double
+            Value of :math:`T_-` that solves the matching equation.
+
         """
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
 
-        shockIntegrator = lambda vp: self.__shootingInvp(vw,vp)
+        shockIntegrator = lambda vp: self.__shooting(vw,vp)
 
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
@@ -412,7 +442,13 @@ class HydroTemplateModel:
         ----------
         upper_limit : double, optional
             Largest value of :math:`\alpha_n` at which the solver will look. If the true value is above upper_limit,
-            returns upper_limit. The default is 100.
+        
+                
+        Returns
+        -------
+        upper_limit : double
+            Upper limit for :math:`\alpha_n`. The default is 100.
+
 
         """
         vm = self.cb
