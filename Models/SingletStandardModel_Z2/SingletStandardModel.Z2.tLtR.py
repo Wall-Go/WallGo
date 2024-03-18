@@ -431,7 +431,11 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
+    # collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
+    # collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5QCD/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5QCD.xsm/t/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5QCD.xsm/tg/"
+    # collisionFileName = pathlib.Path(__file__).parent.resolve() / "../../examples/CollisionOutput/"
     manager.loadCollisionFile(collisionFileName)
 
 

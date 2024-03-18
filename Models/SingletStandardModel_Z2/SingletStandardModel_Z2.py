@@ -75,7 +75,7 @@ class SingletSM_Z2(GenericModel):
                             msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = True,
+                            inEquilibrium = False,
                             ultrarelativistic = True,
                             totalDOFs = 16
         )
@@ -421,7 +421,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5/"
+    # collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5.tttt/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N5.qcd/tg/"
     manager.loadCollisionFile(collisionFileName)
 
 

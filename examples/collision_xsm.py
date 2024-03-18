@@ -92,7 +92,7 @@ gluon = Particle(
     msqDerivative = 0.0,
     msqThermal=lambda T: 3.01593 * T**2,
     statistics="Boson",
-    inEquilibrium=True,
+    inEquilibrium=False,
     ultrarelativistic=True,
     totalDOFs = 16
 )
@@ -120,6 +120,8 @@ collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHac
 ## Set input/output paths
 scriptLocation = pathlib.Path(__file__).parent.resolve()
 
+# collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput.tttt"))
+# collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.xsm.tttt.txt"))
 collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
 # collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements_QCD.txt"))
 collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.xsm.txt"))

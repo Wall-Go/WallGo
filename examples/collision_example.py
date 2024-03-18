@@ -102,8 +102,10 @@ collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHac
 ## Set input/output paths
 scriptLocation = pathlib.Path(__file__).parent.resolve()
 
+# collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput.tttt"))
+# collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/matrixElements.QCD.tttt.txt"))
 collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
-collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements_QCD.txt"))
+collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/matrixElements.qcd.txt"))
 
 ## Configure integration. Can skip this step if you're happy with the defaults
 integrationOptions = CollisionModule.IntegrationOptions()
