@@ -1,39 +1,28 @@
 import numpy as np
-from dataclasses import dataclass
-from typing import Tuple
 
 # WallGo imports
-from .GenericModel import GenericModel
-from .Thermodynamics import Thermodynamics
-from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
-from .HydroTemplateModel import HydroTemplateModel
+from .Boltzmann import BoltzmannSolver
 from .Config import Config
 from .EOM import EOM
-from .Fields import Fields
+from .GenericModel import GenericModel
 from .Grid import Grid
+from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
+from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
-from .Fields import Fields
-from .Boltzmann import BoltzmannSolver
-from .EOM import WallParams
-from .WallGoUtils import getSafePathToResource
 from .Thermodynamics import Thermodynamics
+from .WallGoExceptions import WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo, WallGoResults
+from .WallGoUtils import getSafePathToResource
 
-@dataclass
-class PhaseInfo:
-    # Field values at the two phases at T (we go from 1 to 2)
-    phaseLocation1: Fields
-    phaseLocation2: Fields
-    temperature: float
-
-
-
-""" Defines a 'control' class for managing the program flow.
-This should be better than writing the same stuff in every example main function, 
-and is good for hiding some of our internal implementation details from the user """
+import WallGo
 
 
 class WallGoManager:
+    """ Defines a 'control' class for managing the program flow.
+    This should be better than writing the same stuff in every example main
+    function, and is good for hiding some of our internal implementation
+    details from the user.
+    """
 
     # Critical temperature
     Tc: float
@@ -41,7 +30,7 @@ class WallGoManager:
     # Locations of the two phases in field space, at nucleation temperature.
     phasesAtTn: PhaseInfo
 
-    ## WallGo objects
+    # WallGo objects
     config: Config
     integrals: Integrals  # use a dedicated Integrals object to make management of interpolations easier
     model: GenericModel
@@ -54,12 +43,15 @@ class WallGoManager:
     def __init__(self):
         """do common model-independent setup here"""
 
-        self.config = Config()
-        self.config.readINI(getSafePathToResource("Config/WallGoDefaults.ini"))
+        # TODO cleanup, should not read the config here if we have a global WallGo config object
+        #self.config = Config()
+        #self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
 
-        self.integrals = Integrals()
+        self.config = WallGo.config
 
-        self._initalizeIntegralInterpolations(self.integrals)
+        #self.integrals = Integrals()
+
+        #self._initalizeIntegralInterpolations(self.integrals)
 
         # -- Order of initialization matters here
 
@@ -169,34 +161,8 @@ class WallGoManager:
 
         Tn = self.phasesAtTn.temperature
 
-        """ Find critical temperature. Do we even need to do this though?? """
-
-        # TODO!! upper temperature here
-        self.Tc = self.model.effectivePotential.findCriticalTemperature(
-            self.phasesAtTn.phaseLocation1,
-            self.phasesAtTn.phaseLocation2,
-            TMin=Tn,
-            TMax=10.0 * Tn,
-        )
-
-
-        if (self.Tc < self.phasesAtTn.temperature):
-            raise WallGoPhaseValidationError(f"Got Tc < Tn, should not happen!", self.phasesAtTn, {"Tc" : self.Tc})
-    
-        print(f"Found Tc = {self.Tc} GeV.")
-        # @todo should check that this Tc is really for the transition between
-        # the correct phases. At the very least return the field values for
-        # the user.
-
-        if self.Tc < self.phasesAtTn.temperature:
-            raise RuntimeError(
-                f"Got Tc < Tn, should not happen! Tn = {Tn}, Tc = {self.Tc}"
-            )
-
-        # TODO: should really not require Thermodynamics to take Tc, I guess
         self.thermodynamics = Thermodynamics(
             self.model.effectivePotential,
-            self.Tc,
             Tn,
             self.phasesAtTn.phaseLocation2,
             self.phasesAtTn.phaseLocation1,
@@ -245,6 +211,19 @@ class WallGoManager:
         fLowT = self.thermodynamics.freeEnergyLow
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT)
+
+        # Find critical temperature for dT
+        self.Tc = self.thermodynamics.findCriticalTemperature(
+            dT=dT, rTol=1e-6,
+        )
+
+        if (self.Tc < Tn):
+            raise WallGoPhaseValidationError(
+                f"Got Tc < Tn, should not happen!",
+                Tn,
+                {"Tc" : self.Tc},
+            )
+        print(f"Found Tc = {self.Tc} GeV.")
 
     def _initHydro(
         self, thermodynamics: Thermodynamics

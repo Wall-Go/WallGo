@@ -4,6 +4,7 @@ import h5py # read/write hdf5 structured binary data file format
 import codecs # for decoding unicode string from hdf5 file
 from typing import Tuple
 import copy ## for deepcopy
+from pathlib import Path
 
 from .Particle import Particle
 from .Polynomial import Polynomial
@@ -19,12 +20,12 @@ class CollisionArray:
     """
 
     """Hardcode axis types and their meaning in correct ordering. 
-    Our order is ijkl with momentum indices first, polynomial indices last.
+    Our order is ijklmn, as given in AXIS_LABELS.
     """
-    AXIS_TYPES = ("pz", "pp", "pz", "pp")
-    AXIS_LABELS = ("pz", "pp", "polynomial1", "polynomial2")
+    AXIS_TYPES = ("Array", "pz", "pp", "Array", "pz", "pp")
+    AXIS_LABELS = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
 
-    def __init__(self, grid: Grid, basisType: str, particle1: Particle, particle2: Particle):
+    def __init__(self, grid: Grid, basisType: str, particles: list):
         """
         Initializes a CollisionArray for given grid and basis. Collision data will be set to zero.
 
@@ -36,9 +37,8 @@ class CollisionArray:
             Basis to use for the polynomials. Note that unlike in the Polynomial class, our basis is just a string.
             We always use "Cardinal" basis on momentum axes and basisType on polynomial axes. 
             We do NOT support different basis types for the two polynomials.
-        particle1: Particle
-        particle2: Particle
-            The two out-of-equilibrium particles this collision array describes.
+        particles: list
+            List of the Particle objects this collision array describes.
 
         Returns
         -------
@@ -52,14 +52,13 @@ class CollisionArray:
 
         self.grid = grid
         self.basisType = basisType
-        self.particle1 = particle1
-        self.particle2 = particle2
+        self.particles = particles
         
         ## Setup the actual collision data. We will use "Cardinal" basis on momentum axes and default to "Chebyshev" for polynomial axes.
-        bases = ("Cardinal", "Cardinal", basisType, basisType)
+        bases = ("Array", "Cardinal", "Cardinal", "Array", basisType, basisType)
 
         ## Default to zero but correct size
-        data = np.empty( (self.size, self.size, self.size, self.size))
+        data = np.empty( (len(particles), self.size, self.size, len(particles), self.size, self.size))
         self.polynomialData = Polynomial(data, grid, bases, CollisionArray.AXIS_TYPES, endpoints=False)
 
 
@@ -74,20 +73,21 @@ class CollisionArray:
         return self.basisType
     
     @staticmethod
-    def newFromPolynomial(inputPolynomial: Polynomial, particle1: Particle, particle2: Particle) -> 'CollisionArray':
+    def newFromPolynomial(inputPolynomial: Polynomial, particles: list) -> 'CollisionArray':
         """Creates a new CollisionArray object from polynomial data (which contains a grid reference).
         This only makes sense if the polynomial is already in correct shape.
         """
 
         bases = inputPolynomial.basis
 
-        assert inputPolynomial.rank == 4
-        assert bases[0] == "Cardinal" and bases[1] == "Cardinal"
-        assert bases[2] == bases[3] ## polynomial axes need to be in same basis   
+        assert inputPolynomial.rank == 6
+        assert bases[1] == "Cardinal" and bases[2] == "Cardinal"
+        assert bases[0] == "Array" and bases[3] == "Array"
+        assert bases[4] == bases[5] ## polynomial axes need to be in same basis   
         
-        basisType = bases[2]
+        basisType = bases[4]
 
-        newCollision = CollisionArray(inputPolynomial.grid, basisType, particle1, particle2)
+        newCollision = CollisionArray(inputPolynomial.grid, basisType, particles)
         newCollision.polynomialData = inputPolynomial
         return newCollision
 
@@ -95,14 +95,16 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromFile(filename: str, grid: Grid, basisType: str, particle1: Particle, particle2: Particle, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(directoryname: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
         Create a new CollisionArray object from 
 
         Parameters
         ----------
-        filename : str
-            Path of the file containing the collision array.
+        directoryname : str
+            Path of the directory containing the collision files. 
+            The contained collision files must have name with the form 
+            "collisions_particle1_particle2.hdf5".
 
         bInterpolate : bool = True
             Interpolate the data to match our grid size? Extrapolation is not possible.    
@@ -112,28 +114,51 @@ class CollisionArray:
         CollisionArray
 
         """
-        try:
-            with h5py.File(filename, "r") as file:
-                metadata = file["metadata"]
-                basisSizeFile = metadata.attrs["Basis Size"]
-                basisTypeFile = codecs.decode(
-                    metadata.attrs["Basis Type"], 'unicode_escape',
-                )
-                CollisionArray.__checkBasis(basisTypeFile)
+        collisionFileArray = None
+        basisSizeFile = None
+        basisTypeFile = None
+        
+        for i, particle1 in enumerate(particles):
+            for j, particle2 in enumerate(particles):
 
-                # LN: currently the dataset names are of form
-                # "particle1, particle2". Here it's just "top, top" for now.
-                datasetName = particle1.name + ", " + particle2.name
-                collisionFileArray = np.array(file[datasetName][:])
-        except FileNotFoundError:
-            print("CollisionArray error: %s not found" % filename)
-            raise
+                # file names are hardcoded
+                filename = Path(directoryname) / f"collisions_{particle1.name}_{particle2.name}.hdf5"
+                try:
+                    with h5py.File(str(filename), "r") as file:
 
-        # HACK. converting between conventions because collision file was computed with different index ordering
-        collisionFileArray = np.transpose(
-            np.flip(collisionFileArray, (2, 3)),
-            (2, 3, 0, 1),
-        )
+                        metadata = file["metadata"]
+                        size = metadata.attrs["Basis Size"]
+                        btype = codecs.decode(
+                            metadata.attrs["Basis Type"], 'unicode_escape',
+                        )
+                        CollisionArray.__checkBasis(btype)
+        
+                        # Dataset names are hardcoded, eg. "top, top"
+                        datasetName = particle1.name + ", " + particle2.name
+                        collision = np.array(file[datasetName][:])
+
+                        ## TODO error handling, what happens if the dataset is not found?
+                        
+                        if collisionFileArray is None:
+                            collisionFileArray = np.zeros((len(particles),size-1,size-1,len(particles),size-1,size-1))
+                            basisSizeFile = size
+                            basisTypeFile = btype
+                        else:
+                            ## TODO throw WallGo error?
+                            assert size == basisSizeFile, "CollisionArray error: All the collision files must have the same basis size."
+                            assert btype == basisTypeFile, "CollisionArray error: All the collision files must have the same basis type."
+                        
+                        # HACK. converting between conventions because collision file was computed with different index ordering
+                        collisionFileArray[i,:,:,j,:,:] = np.transpose(
+                            np.flip(collision, (2, 3)),
+                            (2, 3, 0, 1),
+                        )
+                except FileNotFoundError:
+                    print("CollisionArray error: %s not found" % filename)
+                    raise
+        
+        collisionFileArray = collisionFileArray.reshape((len(particles), basisSizeFile-1,
+                                                         basisSizeFile-1,len(particles),basisSizeFile-1,basisSizeFile-1))
 
         """We want to compute Polynomial object from the loaded data and put it on the input grid.
         This is straightforward if the grid size matches that of the data, if not we either abort
@@ -142,21 +167,21 @@ class CollisionArray:
         """
 
         if (basisSizeFile == grid.N):
-            polynomialData = Polynomial(collisionFileArray, grid, ("Cardinal", "Cardinal", basisTypeFile, basisTypeFile),
+            polynomialData = Polynomial(collisionFileArray, grid, ("Array", "Cardinal", "Cardinal", "Array", basisTypeFile, basisTypeFile),
                                         CollisionArray.AXIS_TYPES, endpoints=False)
-            newCollision = CollisionArray.newFromPolynomial(polynomialData, particle1, particle2)
+            newCollision = CollisionArray.newFromPolynomial(polynomialData, particles)
             
         else:   
             ## Grid sizes don't match, attempt interpolation
             if (not bInterpolate):
-                raise RuntimeError("Grid size mismatch when loading collision file: ", filename, \
+                raise RuntimeError("Grid size mismatch when loading collision directory: ", directoryname, \
                                    "Consider using bInterpolate=True in CollisionArray.loadFromFile()." )
             
             dummyGrid = Grid(grid.M, basisSizeFile, grid.L_xi, grid.momentumFalloffT, grid.spacing)
-            dummyPolynomial = Polynomial(collisionFileArray, dummyGrid, ("Cardinal", "Cardinal", basisTypeFile, basisTypeFile),
+            dummyPolynomial = Polynomial(collisionFileArray, dummyGrid, ("Array", "Cardinal", "Cardinal", "Array", basisTypeFile, basisTypeFile),
                                          CollisionArray.AXIS_TYPES, endpoints=False)
             
-            dummyCollision = CollisionArray.newFromPolynomial(dummyPolynomial, particle1, particle2)
+            dummyCollision = CollisionArray.newFromPolynomial(dummyPolynomial, particles)
             newCollision = CollisionArray.interpolateCollisionArray(dummyCollision, grid)
 
         ## Change to the requested basis
@@ -174,7 +199,7 @@ class CollisionArray:
         CollisionArray.__checkBasis(newBasisType)
 
         ## NEEDS to take inverse transpose because of magic
-        self.polynomialData.changeBasis( ("Cardinal", "Cardinal", newBasisType, newBasisType), inverseTranspose=True)
+        self.polynomialData.changeBasis( ("Array", "Cardinal", "Cardinal", "Array", newBasisType, newBasisType), inverseTranspose=True)
         self.basisType = newBasisType
         return self
 
@@ -207,13 +232,14 @@ class CollisionArray:
         gridPoints = np.array(np.meshgrid(targetGrid.rzValues, targetGrid.rpValues,indexing='ij')).reshape((2,(targetGrid.N-1)**2))
         
         # Evaluate the original collisions on the interpolated grid, create a new polynomial from the result and finally a new CollisionArray from the polynomial data
-        interpolatedData = source.polynomialData.evaluate(gridPoints, (0,1))[:,:targetGrid.N-1,:targetGrid.N-1].reshape(4*(targetGrid.N-1,))
+        newShape = 2*(len(source.particles),targetGrid.N-1,targetGrid.N-1,)
+        interpolatedData = source.polynomialData.evaluate(gridPoints, (1,2))[...,:targetGrid.N-1,:targetGrid.N-1].reshape(newShape)
 
         interpolatedPolynomial = Polynomial(interpolatedData, targetGrid, 
-                                            ("Cardinal", "Cardinal", "Chebyshev", "Chebyshev"), 
-                                            ("pz","pp","pz","pp"), endpoints=False)
+                                            ("Array", "Cardinal", "Cardinal", "Array", "Chebyshev", "Chebyshev"), 
+                                            ("z","pz","pp","z","pz","pp"), endpoints=False)
         
-        newCollision = CollisionArray.newFromPolynomial(interpolatedPolynomial, source.particle1, source.particle2)
+        newCollision = CollisionArray.newFromPolynomial(interpolatedPolynomial, source.particles)
 
         ## Change back to the original basis
         newCollision.changeBasis(srcCollision.getBasisType())

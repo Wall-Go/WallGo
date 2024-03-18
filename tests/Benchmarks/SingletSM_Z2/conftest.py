@@ -69,23 +69,25 @@ def singletBenchmarkThermo(
     singletBenchmarkModel: BenchmarkModel,
 ) -> Tuple[WallGo.Thermodynamics, BenchmarkPoint]:
 
-    ## annoyingly Thermo needs Tc in the constructor, even though the class doesn't really use it
-
     BM = singletBenchmarkModel.benchmarkPoint
 
-    Tc = BM.expectedResults["Tc"]
     Tn = BM.phaseInfo["Tn"]
     phase1 = BM.expectedResults["phaseLocation1"]
     phase2 = BM.expectedResults["phaseLocation2"]
 
-    ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
-    ## so WallGo could safely assume that the transition is always phase1 -> phase2
+    # I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
+    # so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1
+        singletBenchmarkModel.model.effectivePotential, Tn, phase2, phase1,
     )
 
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
+
+    thermo.freeEnergyHigh.minPossibleTemperature = 50
+    thermo.freeEnergyHigh.maxPossibleTemperature = 200
+    thermo.freeEnergyLow.minPossibleTemperature = 50
+    thermo.freeEnergyLow.maxPossibleTemperature = 200
 
     yield thermo, BM
 
@@ -98,7 +100,6 @@ def singletBenchmarkThermo_interpolate(
 
     BM = singletBenchmarkModel.benchmarkPoint
 
-    Tc = BM.expectedResults["Tc"]
     Tn = BM.phaseInfo["Tn"]
     phase1 = BM.expectedResults["phaseLocation1"]
     phase2 = BM.expectedResults["phaseLocation2"]
@@ -106,7 +107,7 @@ def singletBenchmarkThermo_interpolate(
     ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
     ## so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletBenchmarkModel.model.effectivePotential, Tc, Tn, phase2, phase1
+        singletBenchmarkModel.model.effectivePotential, Tn, phase2, phase1
     )
 
     ## Let's turn these off so that things are more transparent
@@ -161,10 +162,47 @@ def singletSimpleBenchmarkFreeEnergy(
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
-    freeEnergy1.tracePhase(TMin, TMax, dT)
-    freeEnergy2.tracePhase(TMin, TMax, dT)
+    freeEnergy1.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
+    freeEnergy2.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
 
     yield freeEnergy1, freeEnergy2, BM
+
+
+# Test for thermodynamics of simple model
+@pytest.fixture(scope="session")
+def singletSimpleBenchmarkThermodynamics(
+    singletSimpleBenchmarkModel: BenchmarkModel,
+) -> Tuple[WallGo.Thermodynamics, BenchmarkPoint]:
+    
+    BM = singletSimpleBenchmarkModel.benchmarkPoint
+
+    Tn = BM.phaseInfo["Tn"]
+    phase1 = BM.expectedResults["phaseLocation1"]
+    phase2 = BM.expectedResults["phaseLocation2"]
+
+    # interpolation range
+    TMin = 50
+    TMax = 150
+    dT = 0.1
+    BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
+
+    # I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
+    # so WallGo could safely assume that the transition is always phase1 -> phase2
+    thermo = WallGo.Thermodynamics(
+        singletSimpleBenchmarkModel.model.effectivePotential,
+        Tn,
+        phase2,
+        phase1,
+    )
+
+    # Let's turn these off so that things are more transparent
+    thermo.freeEnergyHigh.disableAdaptiveInterpolation()
+    thermo.freeEnergyLow.disableAdaptiveInterpolation()
+
+    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
+    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
+    yield thermo, BM
 
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
@@ -197,19 +235,17 @@ def singletBenchmarkCollisionArray(
     singletBenchmarkModel: BenchmarkModel, singletBenchmarkGrid: WallGo.Grid
 ) -> WallGo.CollisionArray:
 
-    particle = singletBenchmarkModel.model.outOfEquilibriumParticles[0]
+    particles = singletBenchmarkModel.model.outOfEquilibriumParticles
     ## TODO better file path
     import pathlib
 
     fileDir = pathlib.Path(__file__).parent.resolve()
 
-    fname = (
-        fileDir
-        / "../../../Models/SingletStandardModel_Z2/Collisions/collisions_top_top_N11.hdf5"
-    )
-    return WallGo.CollisionArray.newFromFile(
-        fname, singletBenchmarkGrid, "Chebyshev", particle, particle, bInterpolate=False
-    )
+    collisionPath = fileDir / "../../Testdata/N11/"
+    return WallGo.CollisionArray.newFromDirectory(collisionPath, singletBenchmarkGrid, "Chebyshev", 
+                                      particles, bInterpolate=False)
+
+
 
 
 @pytest.fixture(scope="session")

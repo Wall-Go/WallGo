@@ -12,11 +12,12 @@ class Particle:
         self,
         name,
         msqVacuum,
+        msqDerivative,
         msqThermal,
         statistics,
         inEquilibrium,
         ultrarelativistic,
-        multiplicity
+        totalDOFs
     ):
         r"""Initialisation
 
@@ -25,7 +26,11 @@ class Particle:
         name : string
             A string naming the particle.
         msqVacuum : function
-            Function :math:`m^2_0(\phi)`, should take a float and return one.
+            Function :math:`m^2_0(\phi)`, should take a Fields object and 
+            return an array of length Fields.NumPoints().
+        msqDerivative : function
+            Function :math:`d(m_0^2)/d(\phi)`, should take a Fields object and 
+            return an array of shape Fields.shape.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
@@ -34,9 +39,9 @@ class Particle:
             True if particle is treated as in local equilibrium.
         ultrarelativistic : bool
             True if particle is treated as ultrarelativistic.
-        multiplicity : int
-            How many identical copies of this particle the theory has. 
-            Use eg. for light quarks that for our purposes are identical. 
+        totalDOFs : int
+            Total number of degrees of freedom (should include the multiplicity 
+            factor).
         
 
         Returns
@@ -47,29 +52,32 @@ class Particle:
         Particle.__validateInput(
             name,
             msqVacuum,
+            msqDerivative,
             msqThermal,
             statistics,
             inEquilibrium,
             ultrarelativistic,
-            multiplicity
+            totalDOFs
         )
         self.name = name
         self.msqVacuum = msqVacuum
+        self.msqDerivative = msqDerivative
         self.msqThermal = msqThermal
         self.statistics = statistics
         self.inEquilibrium = inEquilibrium
         self.ultrarelativistic = ultrarelativistic
-        self.multiplicity = multiplicity
+        self.totalDOFs = totalDOFs
 
     @staticmethod
     def __validateInput(
         name,
         msqVacuum,
+        msqDerivative,
         msqThermal,
         statistics,
         inEquilibrium,
         ultrarelativistic,
-        multiplicity
+        totalDOFs
     ):
         """
         Checks that the input fits expectations
@@ -88,5 +96,5 @@ class Particle:
             "inEquilibrium must be a bool"
         assert isinstance(ultrarelativistic, bool), \
             "ultrarelativistic must be a bool"
-        assert isinstance(multiplicity, int) , \
-            "multiplicity must be an integer"
+        assert isinstance(totalDOFs, int) , \
+            "totalDOFs must be an integer"

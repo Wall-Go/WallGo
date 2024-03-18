@@ -28,7 +28,7 @@ BM1 = BenchmarkPoint(
         "interpolateTemperatureRange": (
             79.85352365651234,
             122.82493098783233,
-            0.5,
+            0.1,
         ),  ##Set by hand to appropriate values, obtained from Template model
         "hydroTMinGuess": 79.85352365651234,  ##Set by hand to appropriate value, obtained from Template model
         "hydroTMaxGuess": 122.82493098783233,  ##Set by hand to appropriate value, obtained from Template model

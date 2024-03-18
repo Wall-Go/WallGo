@@ -109,49 +109,6 @@ class EffectivePotential(ABC):
 
         ## Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
-    
-
-    ## Find Tc for two minima, search only range [TMin, TMax].
-    ## Feel free to override this if your potential needs a more sophisticated minimization algorithm.
-    def findCriticalTemperature(self, minimum1: Fields, minimum2: Fields, TMin: float, TMax: float) -> float:
-
-        if (TMax < TMin):
-            raise ValueError("findCriticalTemperature needs TMin < TMax")    
-
-        ## TODO Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
-
-        ## Wrapper that computes free-energy difference between our phases. This goes into scipy so scalar in, scalar out
-        def freeEnergyDifference(inputT: np.double) -> np.double:
-            _, f1 = self.findLocalMinimum(minimum1, inputT)
-            _, f2 = self.findLocalMinimum(minimum2, inputT)
-            diff = f2.real - f1.real
-            ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
-            return diff.item()
-
-        ## start from TMin and increase temperature in small steps until the free energy difference changes sign
-
-        T = TMin
-        dT = 0.5 # If this is too large the high-T phase may disappear before we see the free-energy sign change. TODO better solution
-        signAtStart = np.sign(freeEnergyDifference(T))
-        bConverged = False
-
-        while (T < TMax):
-            T += dT
-            if (np.sign(freeEnergyDifference(T)) != signAtStart):
-                bConverged = True
-                break
-
-        if (not bConverged):
-            raise RuntimeWarning("Could not find critical temperature")
-            return None
-
-
-        # Improve Tc estimate by solving DeltaF = 0 in narrow range near the above T 
-
-        # NB: bracket will break if the function has same sign on both ends. The rough loop above should prevent this.
-        rootResults = scipy.optimize.root_scalar(freeEnergyDifference, bracket=(T-dT, T), rtol=1e-6, xtol=1e-6)
-
-        return rootResults.root
 
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with
@@ -261,8 +218,8 @@ class EffectivePotential(ABC):
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : float
-            the temperature
+        temperature : npt.ArrayLike
+            Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
 
         Returns
         ----------
