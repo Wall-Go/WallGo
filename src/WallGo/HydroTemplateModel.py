@@ -13,6 +13,10 @@ class HydroTemplateModel:
 
     References
     ----------
+    Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
+    Model-independent energy budget for LISA
+    arXiv:2010.09744 (2020)
+
     Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
     Model-independent bubble wall velocities in local thermal equilibrium.
     arXiv:2303.10171 (2023).
@@ -93,12 +97,13 @@ class HydroTemplateModel:
         if alN is None:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
-
+        
+    
     def minVelocity(self):
         r"""
         Finds the minimum velocity that is possible for a given nucleation temeperature. 
-        It is found by shooting with alpha_+ = 1/3 at the wall. This is the maximum value possible.
-        The wall velocity which yields alpha_+ = 1/3 for a given alpha_N is the minimum possible wall velocity.
+        It is found by shooting in vp with :math:`\alpha_+ = 1/3` at the wall. This is the maximum value of :math:`\alpha_+` possible.
+        The wall velocity which yields :math:`\alpha_+ = 1/3` for a given :math:`\alpha_N` is the minimum possible wall velocity.
 
         It is possible that no solution can be found, in this case there is no minimum value of the wall velocity
         and the function returns zero.
@@ -110,7 +115,10 @@ class HydroTemplateModel:
             vmin: double
                 The minimum value of the wall velocity for which a solution can be found
         """
-        shootingalphamax = lambda vw: self.__shooting(vw,1/3.)
+        def shootingalphamax(vw):
+            vm = min(self.cb,vw)
+            vp = self.get_vp(vm, 1/3.)
+            return self.__shooting(vw,vp)
 
         try:
             return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
@@ -283,13 +291,13 @@ class HydroTemplateModel:
         event.terminal = True
         sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
-
-    def __shooting(self,vw,al):
+    
+    def __shooting(self,vw,vp):
         """
         Integrates through the shock wave and returns the residual of the matching equation at the shock front.
         """
         vm = min(self.cb,vw)
-        vp = self.get_vp(vm, al)
+        al = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3.
         wp = self.w_from_alpha(al)
         if abs(vp*vw-self.cs2) < 1e-12:
             # If the wall is already very close to the shock front, we do not integrate through the shock wave
@@ -310,40 +318,80 @@ class HydroTemplateModel:
             wm_sw = sol.y[1,-1]
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
 
+
     def findvwLTE(self):
         """
         Computes the wall velocity for a deflagration or hybrid solution.
+        TODO: Explain the logic
+
+        Parameters
+        ----------
+        
+
+        Returns
+        -------
+            vwLTE : double
         """
-        func = lambda vw: self.__shooting(vw,self.solve_alpha(vw))
+
+        def shootingInLTE(vw):
+            vm = min(self.cb,vw)
+            al = self.solve_alpha(vw)
+            vp = self.get_vp(vm, al)
+            return self.__shooting(vw, vp)
+
         if self.alN < (1-self.psiN)/3 or self.alN <= (self.mu-self.nu)/(3*self.mu):
             # print('alN too small')
             return 0
-        if self.alN > self.max_al(100) or func(self.vJ) < 0:
+        if self.alN > self.max_al(100) or shootingInLTE(self.vJ) < 0:
             # print('alN too large')
             return 1
-        sol = root_scalar(func,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
+        sol = root_scalar(shootingInLTE,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
         return sol.root
 
     def findMatching(self,vw):
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution when the wall velocity is vw.
+        
+        Parameters
+        ----------
+        vw : double
+            Wall velocity at which to solve the matching equation.
+
+        Returns
+        -------
+        vp : double
+            Value of :math:`v_+` that solves the matching equation.
+        vm : double
+            Value of :math:`v_-` that solves the matching equation.
+        Tp : double
+            Value of :math:`T_+` that solves the matching equation.
+        Tm : double
+            Value of :math:`T_-` that solves the matching equation.
+
         """
         if vw > self.vJ:
             return self.detonation_vAndT(vw)
+        
+        vm = min(self.cb,vw)
 
-        shockIntegrator = lambda al: self.__shooting(vw,al)
+        if vw > self.vMax:
+            # alN too small for shock 
+            return (None,None,None,None)
+        
+        if vw < self.vMin:
+            # alN too large for shock
+            return (None,None,None,None)
+
+        shockIntegrator = lambda vp: self.__shooting(vw,vp)
 
         ## Please add reference to a paper where these can be found (with eq numbers) 
 
-        vm = min(self.cb,vw)
-        al_max = 1/3.
-        vp_max = min(self.cs2/vw,vw,vm)
-        al_min = max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))
+        vp_max = min(self.cs2/vw,vw) #Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187
 
         print(f"{vw=} {al_max=} {al_min=}")
 
         try:
-            sol = root_scalar(shockIntegrator, bracket=(al_min,al_max), rtol=self.rtol, xtol=self.atol)
+            sol = root_scalar(shockIntegrator, bracket=(0,vp_max), rtol=self.rtol, xtol=self.atol)
 
         except Exception as e:
 #            print("!!! Exception in HydroTemplateModel.findMatching():")
@@ -351,11 +399,13 @@ class HydroTemplateModel:
 #            print()
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
-        wp = self.w_from_alpha(sol.root)
-        vp = self.get_vp(vm, sol.root)
-        Tp = self.Tnucl*wp**(1/self.mu)
+        vp = sol.root
+        alp = (vp/vm-1.)*(vp*vm/self.cb2 - 1.)/(1-vp**2)/3. #This is equation 20a of arXiv:2303.10171 solved for alpha_+
+        wp = self.w_from_alpha(alp)
+        Tp = self.Tnucl*wp**(1/self.mu) #This follows from equation 22 and 23 of arXiv:2303.10171, and setting wn = 1
         Tm = self.__find_Tm(vm, vp, Tp)
         return vp,vm,Tp,Tm
+
 
     def matchDeflagOrHybInitial(self,vw,vp):
         r"""
@@ -402,7 +452,13 @@ class HydroTemplateModel:
         ----------
         upper_limit : double, optional
             Largest value of :math:`\alpha_n` at which the solver will look. If the true value is above upper_limit,
-            returns upper_limit. The default is 100.
+        
+                
+        Returns
+        -------
+        upper_limit : double
+            Upper limit for :math:`\alpha_n`. The default is 100.
+
 
         """
         vm = self.cb
