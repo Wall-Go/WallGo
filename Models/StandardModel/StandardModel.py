@@ -47,13 +47,12 @@ class StandardModel(GenericModel):
 
         topQuark = Particle("top", 
                             msqVacuum = topMsqVacuum,
-                            msqDerivative = topMsqDerivative
+                            msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 12
+                            totalDOFs = 12
         )
         self.addParticle(topQuark)
 
@@ -67,8 +66,7 @@ class StandardModel(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 5,
-                            DOF = 60
+                            totalDOFs = 60
         )
         self.addParticle(lightQuark)
 
@@ -77,13 +75,12 @@ class StandardModel(GenericModel):
 
         gluon = Particle("gluon", 
                             msqVacuum = 0.0,
-                            msqDerivative 0.0,
+                            msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 16
+                            totalDOFs = 16
         )
         self.addParticle(gluon)
 
@@ -272,8 +269,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/collisions_top_top_N11.hdf5"
-    manager.loadCollisionFile(collisionFileName)
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    manager.loadCollisionFiles(collisionDirectory)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
