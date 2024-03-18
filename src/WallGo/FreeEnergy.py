@@ -59,6 +59,7 @@ class FreeEnergy(InterpolatableFunction):
         resultsArray = super().__call__(x, useInterpolatedValues)
 
         # Last column is Veff value. But awkward dimensionality check needed to figure out correct slicing
+        # TODO can we simplify by forcing resultsArray to always be of certain shape?
         if resultsArray.ndim < 2:
             values = resultsArray[-1]
             fields = resultsArray[:-1]

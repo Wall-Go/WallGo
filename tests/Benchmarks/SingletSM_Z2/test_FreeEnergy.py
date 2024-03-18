@@ -33,7 +33,7 @@ def test_freeEnergy_singletSimple(
     f1: WallGo.FreeEnergyValueType = freeEnergy1(T)
     f2: WallGo.FreeEnergyValueType = freeEnergy2(T)
 
-    
+    ## We get two fields (v = Higgs, x = singlet) and the Veff value at this field configuration
     fields, veffValue = f1.fieldsAtMinimum, f1.veffValue
 
     v, x = fields.GetField(0), fields.GetField(1)
