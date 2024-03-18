@@ -132,8 +132,8 @@ class Thermodynamics:
         # Wrapper that computes free-energy difference between our phases.
         # This goes into scipy so scalar in, scalar out
         def freeEnergyDifference(inputT: np.double) -> np.double:
-            f1 = self.freeEnergyHigh(inputT).getVeffValue()
-            f2 = self.freeEnergyLow(inputT).getVeffValue()
+            f1 = self.freeEnergyHigh(inputT).veffValue
+            f2 = self.freeEnergyLow(inputT).veffValue
             diff = f2 - f1
             # Force into scalar type. This errors out if the size is not 1;
             # no failsafes to avoid overhead
@@ -189,8 +189,8 @@ class Thermodynamics:
             Pressure in the high-temperature phase.
 
         """
-        VeffValue = self.freeEnergyHigh(temperature).getVeffValue()
-        return -VeffValue
+        veffValue = self.freeEnergyHigh(temperature).veffValue
+        return -veffValue
 
     def dpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -316,7 +316,7 @@ class Thermodynamics:
             Pressure in the low-temperature phase.
         """
 
-        VeffValue = self.freeEnergyLow(temperature).getVeffValue()
+        VeffValue = self.freeEnergyLow(temperature).veffValue
         return -VeffValue
 
     def dpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:

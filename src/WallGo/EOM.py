@@ -290,9 +290,9 @@ class EOM:
             velocityJouget=self.hydro.vJ,
         )
 
-        vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
-        vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
-        
+        vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
+        vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
+                
         # Estimate L_xi
         # msq1 = self.particle.msqVacuum(vevHighT)
         # msq2 = self.particle.msqVacuum(vevLowT)

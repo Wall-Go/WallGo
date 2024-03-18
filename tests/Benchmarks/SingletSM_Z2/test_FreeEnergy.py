@@ -29,14 +29,21 @@ def test_freeEnergy_singletSimple(
     rTol = 1e-5
     aTol = rTol * T
 
-    # results from freeEnergy1
-    v, x, V = freeEnergy1(T)
+    # evaluate the free energy objects
+    f1: WallGo.FreeEnergyValueType = freeEnergy1(T)
+    f2: WallGo.FreeEnergyValueType = freeEnergy2(T)
+
+    
+    fields, veffValue = f1.fieldsAtMinimum, f1.veffValue
+
+    v, x = fields.GetField(0), fields.GetField(1)
     assert 0 == pytest.approx(v, abs=aTol)
     assert xExact == pytest.approx(x, rel=rTol)
-    assert f0 + VxExact == pytest.approx(V, rel=rTol)
+    assert f0 + VxExact == pytest.approx(veffValue, rel=rTol)
 
-    # results from freeEnergy2
-    v, x, V = freeEnergy2(T)
+    fields, veffValue = f2.fieldsAtMinimum, f2.veffValue
+
+    v, x = fields.GetField(0), fields.GetField(1)
     assert vExact == pytest.approx(v, rel=rTol)
     assert 0 == pytest.approx(x, abs=aTol)
-    assert f0 + VvExact == pytest.approx(V, rel=rTol)
+    assert f0 + VvExact == pytest.approx(veffValue, rel=rTol)
