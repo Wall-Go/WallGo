@@ -68,14 +68,16 @@ class SingletSM_Z2(GenericModel):
         self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
+        gluonMsqVacuum = lambda fields: 0 * 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
+        gluonMsqDerivative = lambda fields: 0 * self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = False,
+                            inEquilibrium = True,
                             ultrarelativistic = True,
                             totalDOFs = 16
         )
