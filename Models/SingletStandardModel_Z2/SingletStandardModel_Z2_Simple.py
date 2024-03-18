@@ -3,6 +3,7 @@ import numpy as np
 
 # WallGo imports
 from WallGo import Fields
+from WallGo import EffectivePotential
 from .SingletStandardModel_Z2 import SingletSM_Z2, EffectivePotentialxSM_Z2
 
 
@@ -20,7 +21,7 @@ class SingletSM_Z2_Simple(SingletSM_Z2):
 
 
 # Overwrite more complicated effective potential keeping only O(g^2T^4) bits
-class EffectivePotentialxSM_Z2_Simple(EffectivePotentialxSM_Z2):
+class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary=False,

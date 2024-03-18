@@ -16,6 +16,7 @@ class FreeEnergyValueType:
     # Values of background fields at the free-energy minimum
     fieldsAtMinimum: Fields
 
+    
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
     This is used to keep track of a minimum with respect to the temperature.
