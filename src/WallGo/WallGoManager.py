@@ -175,9 +175,9 @@ class WallGoManager:
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large
         enough, and the template model only provides an estimate.
-        HACK! fudgeFactor and -2 * dT, see issue #145 """
+        HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
-        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate   ## Jorinde: it does not work if TMinHightT is set to Tn - 2*dT. It does if it is set to 0
+        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate  
         TMinLowT, TMaxLowT = 0, fudgeFactor * TLowTTMaxTemplate
 
         # Interpolate phases and check that they remain stable in this range

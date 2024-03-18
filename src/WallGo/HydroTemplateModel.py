@@ -388,8 +388,6 @@ class HydroTemplateModel:
 
         vp_max = min(self.cs2/vw,vw) #Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187
 
-        print(f"{vw=} {al_max=} {al_min=}")
-
         try:
             sol = root_scalar(shockIntegrator, bracket=(0,vp_max), rtol=self.rtol, xtol=self.atol)
 

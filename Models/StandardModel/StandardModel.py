@@ -179,7 +179,7 @@ class EffectivePotentialSM(EffectivePotential):
         # NLO 1-loop correction in Landau gauge, so g^3. Debyes are integrated out by getThermalParameters
         V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + J3(mHsq) + 3.*J3(mGsq)
 
-        VTotal = V0 + V1 + self.constantTerms(T)
+        VTotal = np.real(V0 + V1 + self.constantTerms(T))
 
         return VTotal
 
@@ -221,13 +221,16 @@ class EffectivePotentialSM(EffectivePotential):
         ## Debye masses squared (U1, SU2) 
         mDsq1 = g1**2 * T**2 * (Nd/6. + 5.*Nf/9.)
         mDsq2 = g2**2 * T**2 * ( (4. + Nd) / 6. + Nf/3.)
-        mD1 = np.sqrt(mDsq1)
-        mD2 = np.sqrt(mDsq2)
+        # HACK add infinitesimal contribution to masses to avoid division by zero when T = 0
+        mD1 = np.sqrt(mDsq1) + 1e-5
+        mD2 = np.sqrt(mDsq2) + 1e-5
 
         ## Let's also integrate out A0/B0
         h3 = g2**2 / 4.
         h3p = g2**2 / 4.
         h3pp = g2*g1 / 2.
+
+        #print(f"{T=} {mD2=} {mD1=} {h3pp =}")
 
         thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
         thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
