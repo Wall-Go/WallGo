@@ -54,7 +54,7 @@ class Hydro:
         self.vMin = max(1e-3, self.minVelocity())
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
-    def findJouguetVelocity(self):
+    def findJouguetVelocity(self) -> float:
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics, and at the model's nucleation temperature,
         using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity.
