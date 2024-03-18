@@ -1,5 +1,7 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.optimize
+from typing import Tuple
 
 from .EffectivePotential import EffectivePotential
 from .Fields import Fields
@@ -31,8 +33,6 @@ class Thermodynamics:
     """
     Thermodynamic functions corresponding to the potential
     """
-
-    effectivePotential: EffectivePotential
 
     def __init__(
         self,
@@ -85,7 +85,7 @@ class Thermodynamics:
             self.effectivePotential, self.Tnucl, self.phaseLowT,
         )
 
-    def getCoexistenceRange(self):
+    def getCoexistenceRange(self) -> Tuple[float, float]:
         """
         Ensures that there is phase coexistence, by comparing the temperature ranges
         """
@@ -132,8 +132,8 @@ class Thermodynamics:
         # Wrapper that computes free-energy difference between our phases.
         # This goes into scipy so scalar in, scalar out
         def freeEnergyDifference(inputT: np.double) -> np.double:
-            f1 = self.freeEnergyHigh(inputT).getVeffValue()
-            f2 = self.freeEnergyLow(inputT).getVeffValue()
+            f1 = self.freeEnergyHigh(inputT).veffValue
+            f2 = self.freeEnergyLow(inputT).veffValue
             diff = f2 - f1
             # Force into scalar type. This errors out if the size is not 1;
             # no failsafes to avoid overhead
@@ -174,275 +174,275 @@ class Thermodynamics:
 
         return rootResults.root
 
-    def pHighT(self, T: float):
+    def pHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Pressure in the high-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        pHighT : double
+        pHighT : array-like (float)
             Pressure in the high-temperature phase.
 
         """
-        VeffValue = self.freeEnergyHigh(T).getVeffValue()
-        return -VeffValue
+        veffValue = self.freeEnergyHigh(temperature).veffValue
+        return -veffValue
 
-    def dpHighT(self, T):
+    def dpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the pressure in the high-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        dpHighT : double
+        dpHighT : array-like (float)
             Temperature derivative of the pressure in the high-temperature phase.
         """
         return WallGo.helpers.derivative(
             self.pHighT,
-            T,
+            temperature,
             dx=self.dT,
             n=1,
             order=4,
         )
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
-    def ddpHighT(self, T):
+    def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Second temperature derivative of the pressure in the high-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        ddpHighT : double
+        ddpHighT : array-like (float)
             Second temperature derivative of the pressure in the high-temperature phase.
         """
         return WallGo.helpers.derivative(
             self.pHighT,
-            T,
+            temperature,
             dx=self.dT,
             n=2,
             order=4,
         )
 
-    def eHighT(self, T):
+    def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        eHighT : double
+        eHighT : array-like (float)
             Energy density in the high-temperature phase.
         """
-        return T*self.dpHighT(T) - self.pHighT(T)
+        return temperature*self.dpHighT(temperature) - self.pHighT(temperature)
 
-    def deHighT(self, T):
+    def deHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the energy density in the high-temperature phase.
         
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        deHighT : double
+        deHighT : array-like (float)
             Temperature derivative of the energy density in the high-temperature phase.
         """
-        return T*self.ddpHighT(T)
+        return temperature * self.ddpHighT(temperature)
 
-    def wHighT(self,T):
+    def wHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Enthalpy density in the high-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        wHighT : double
+        wHighT : array-like (float)
             Enthalpy density in the high-temperature phase.
         """
-        return self.pHighT(T)+self.eHighT(T)
+        return self.pHighT(temperature) + self.eHighT(temperature)
 
-    def csqHighT(self,T):
+    def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Sound speed squared in the high-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        csqHighT : double
+        csqHighT : array-like (float)
             Sound speed squared in the high-temperature phase.
         """
-        return self.dpHighT(T)/self.deHighT(T)
+        return self.dpHighT(temperature) / self.deHighT(temperature)
 
-    def pLowT(self, T):
+    def pLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Pressure in the low-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        pLowT : double
+        pLowT : array-like (float)
             Pressure in the low-temperature phase.
-
         """
 
-        VeffValue = self.freeEnergyLow(T).getVeffValue()
+        VeffValue = self.freeEnergyLow(temperature).veffValue
         return -VeffValue
 
-    def dpLowT(self, T):
+    def dpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the pressure in the low-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        dpLowT : double
+        dpLowT : array-like (float)
             Temperature derivative of the pressure in the low-temperature phase.
         """
         return WallGo.helpers.derivative(
             self.pLowT,
-            T,
+            temperature,
             dx=self.dT,
             n=1,
             order=4,
         )
 
-    def ddpLowT(self, T):
+    def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Second temperature derivative of the pressure in the low-temperature phase.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        ddpLowT : double
+        ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
         """
         return WallGo.helpers.derivative(
             self.pLowT,
-            T,
+            temperature,
             dx=self.dT,
             n=2,
             order=4,
         )
 
-    def eLowT(self, T):
+    def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        eLowT : double
+        eLowT : array-like (float)
             Energy density in the low-temperature phase.
         """
-        return T*self.dpLowT(T) - self.pLowT(T)
+        return temperature*self.dpLowT(temperature) - self.pLowT(temperature)
 
-    def deLowT(self, T):
+    def deLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the energy density in the low-temperature phase.
         
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        deLowT : double
+        deLowT : array-like (float)
             Temperature derivative of the energy density in the low-temperature phase.
         """
-        return T*self.ddpLowT(T)
+        return temperature*self.ddpLowT(temperature)
 
-    def wLowT(self,T):
+    def wLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Enthalpy density in the low-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        wLowT : double
+        wLowT : array-like (float)
             Enthalpy density in the low-temperature phase.
         """
-        return self.pLowT(T)+self.eLowT(T)
+        return self.pLowT(temperature) + self.eLowT(temperature)
 
-    def csqLowT(self,T):
+    def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         Sound speed squared in the low-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
 
         Parameters
         ----------
-        T : double
-            Temperature
-e
+        temperature : array-like
+            Temperature(s)
+
         Returns
         -------
-        csqLowT : double
+        csqLowT : array-like (float)
             Sound speed squared in the low-temperature phase.
         """
-        return self.dpLowT(T)/self.deLowT(T)
+        return self.dpLowT(temperature) / self.deLowT(temperature)
 
-    def alpha(self,T):
+    def alpha(self, T: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via 
         :math:`\alpha = \frac{(eHighT(T)-pHighT(T)/csqHighT(T))-(eLowT(T)-pLowT(T)/csqLowT(T))}{3wHighT(T)}`
 
         Parameters
         ----------
-        T : double
-            Temperature
+        temperature : array-like
+            Temperature(s)
 
         Returns
         -------
-        alpha : double
+        alpha : array-like (float)
             Phase transition strength.
         """
+        # LN: keeping T instead of 'temperature' here since the expression is long
         # LN: Please add reference to a paper and eq number
-        return (self.eHighT(T)-self.pHighT(T)/self.csqHighT(T)-self.eLowT(T)+self.pLowT(T)/self.csqLowT(T))/3/self.wHighT(T)
+        return (self.eHighT(T) - self.pHighT(T) / self.csqHighT(T) - self.eLowT(T) + self.pLowT(T) / self.csqLowT(T)) / 3 / self.wHighT(T)
 

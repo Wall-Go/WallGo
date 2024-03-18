@@ -2,15 +2,14 @@ import numpy as np
 
 # WallGo imports
 from .Boltzmann import BoltzmannSolver
-from .Config import Config
 from .EOM import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
-from .Hydro import Hydro  # why is this not Hydrodynamics? compare with Thermodynamics
+from .Hydro import Hydro  # TODO why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
-from .WallGoExceptions import WallGoPhaseValidationError
+from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo, WallGoResults
 from .WallGoUtils import getSafePathToResource
 
@@ -23,22 +22,6 @@ class WallGoManager:
     function, and is good for hiding some of our internal implementation
     details from the user.
     """
-
-    # Critical temperature
-    Tc: float
-
-    # Locations of the two phases in field space, at nucleation temperature.
-    phasesAtTn: PhaseInfo
-
-    # WallGo objects
-    config: Config
-    integrals: Integrals  # use a dedicated Integrals object to make management of interpolations easier
-    model: GenericModel
-    thermodynamics: Thermodynamics
-    hydro: Hydro
-    grid: Grid
-    eom: EOM
-    boltzmannSolver: BoltzmannSolver
 
     def __init__(self):
         """do common model-independent setup here"""
@@ -260,8 +243,8 @@ class WallGoManager:
             self.grid, basisM="Cardinal", basisN="Chebyshev"
         )
 
-    def loadCollisionFile(self, fileName: str) -> None:
-        self.boltzmannSolver.readCollision(fileName)
+    def loadCollisionFiles(self, fileName: str) -> None:
+        self.boltzmannSolver.readCollisions(fileName)
 
     def wallSpeedLTE(self) -> float:
       
