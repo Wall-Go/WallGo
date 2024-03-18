@@ -3,58 +3,25 @@ import numpy.typing as npt
 import math
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
+from dataclasses import dataclass
 
 from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
 from .EffectivePotential import EffectivePotential
 from .Fields import FieldPoint, Fields
 
+@dataclass
+class FreeEnergyValueType:
+    # Value of the effective potential at the free-energy minimum
+    veffValue: npt.ArrayLike
+    # Values of background fields at the free-energy minimum
+    fieldsAtMinimum: Fields
 
-class FreeEnergyValueType(np.ndarray):
-
-    def __new__(cls, arr: np.ndarray):
-        obj = arr.view(cls)
-        return obj
-
-    def getVeffValue(self):
-        """Returns value of the effective potential at a free-energy minimum.
-        Returns a scalar if we only contain info for one temperature, otherwise returns a 1D array.
-        """
-        # Our last column is value of the potential at minimum.
-        if (self.ndim < 2):
-            values = self[-1]
-        else:
-            values = self[:, -1]
-            if (len(values) == 1):
-                values = values[0]
-
-        return values
-
-    def getFields(self):
-        """Returns Fields array corresponding to local free energy minimum.
-        """
-        # Last column is Veff value, other columns are fields
-        if (self.ndim < 2):
-            values = self[:-1]
-        else:
-            values = self[:, :-1]
-        return Fields.CastFromNumpy(values)
-
-
+    
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
     This is used to keep track of a minimum with respect to the temperature.
     By definition: free energy density of a phase == value of Veff in its local minimum.
     """
-
-    effectivePotential: EffectivePotential
-    # Approx field values where the phase lies at starting temperature
-    startingTemperature: float
-    startingPhaseLocationGuess: Fields
-
-    # Lowest possible temperature so that the phase is still (meta)stable
-    minPossibleTemperature: float
-    # Highest possible temperature so that the phase is still (meta)stable
-    maxPossibleTemperature: float
 
     def __init__(
         self,
@@ -74,30 +41,64 @@ class FreeEnergy(InterpolatableFunction):
         )
         self.setExtrapolationType(EExtrapolationType.ERROR, EExtrapolationType.ERROR)
         
-        self.effectivePotential = effectivePotential 
+        self.effectivePotential = effectivePotential
         self.startingTemperature = startingTemperature
+        # Approx field values where the phase lies at starting temperature
         self.startingPhaseLocationGuess = startingPhaseLocationGuess
 
+        # Lowest possible temperature so that the phase is still (meta)stable
         self.minPossibleTemperature = 0.
+        # Highest possible temperature so that the phase is still (meta)stable
         self.maxPossibleTemperature = np.Inf
 
+
     def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> FreeEnergyValueType:
-        return FreeEnergyValueType(super().__call__(x, useInterpolatedValues))
+        """Evaluate the free energy. Return value is a FreeEnergyValueType dataclass object.
+        """
+        # Implementation returns array, here we just unpack it. Super call needed because it handles interpolation logic
+        resultsArray = super().__call__(x, useInterpolatedValues)
+
+        # Last column is Veff value. But awkward dimensionality check needed to figure out correct slicing
+        # TODO can we simplify by forcing resultsArray to always be of certain shape?
+        if resultsArray.ndim < 2:
+            values = resultsArray[-1]
+            fields = resultsArray[:-1]
+        
+        else:
+            values = resultsArray[:, -1]
+            fields = resultsArray[:, :-1] 
+            ## ???
+            if len(values) == 1:
+                values = values[0]
+
+
+        return FreeEnergyValueType(veffValue=values, 
+                                   fieldsAtMinimum=Fields.CastFromNumpy(fields))
+
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
+        Internal implementation of free energy computation. You should NOT call this directly!
+        Use the __call__() routine instead.
+
         Parameters
         ----------
         temperature: float or numpy array of floats.
+
+        Returns
+        -------
+        freeEnergyArray: array-like
+            Array with field values on the first columns and Veff values on the last column.
         """
+
+        # InterpolatableFunction logic requires this to return things in array format,f
+        # so we pack Veff(T) and minimum(T) into a 2D array. The __call__ routine above unpacks this into a FreeEnergyValueType for easier use.
+        # Hence you should NOT call this directly when evaluating free energy
 
         # Minimising potential. N.B. should already be real for this.
         phaseLocation, potentialAtMinimum = self.effectivePotential.findLocalMinimum(
             self.startingPhaseLocationGuess, temperature
         )
-
-        """TODO make the following work independently of how the Field array is organized.
-        Too much hardcoded slicing right now."""
 
         # reshape so that potentialAtMinimum is a column vector
         potentialAtMinimum_column = potentialAtMinimum[:, np.newaxis]
@@ -107,6 +108,7 @@ class FreeEnergy(InterpolatableFunction):
 
         # This is now a 2D array where rows are [f1, f2, ..., Veff]
         return result
+
 
     def tracePhaseOld(self, TMin: float, TMax: float, dT: float) -> None:
         """For now this will always update the interpolation table.

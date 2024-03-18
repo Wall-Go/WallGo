@@ -84,10 +84,10 @@ def singletBenchmarkThermo(
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
 
-    thermo.freeEnergyHigh.minPossibleTemperature = 50
-    thermo.freeEnergyHigh.maxPossibleTemperature = 200
-    thermo.freeEnergyLow.minPossibleTemperature = 50
-    thermo.freeEnergyLow.maxPossibleTemperature = 200
+    thermo.freeEnergyHigh.minPossibleTemperature = 50.
+    thermo.freeEnergyHigh.maxPossibleTemperature = 200.
+    thermo.freeEnergyLow.minPossibleTemperature = 50.
+    thermo.freeEnergyLow.maxPossibleTemperature = 200.
 
     yield thermo, BM
 
@@ -157,8 +157,8 @@ def singletSimpleBenchmarkFreeEnergy(
     )
 
     # interpolation range
-    TMin = 50
-    TMax = 150
+    TMin = 50.
+    TMax = 150.
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
@@ -181,8 +181,8 @@ def singletSimpleBenchmarkThermodynamics(
     phase2 = BM.expectedResults["phaseLocation2"]
 
     # interpolation range
-    TMin = 50
-    TMax = 150
+    TMin = 50.
+    TMax = 150.
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
