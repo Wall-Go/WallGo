@@ -74,10 +74,10 @@ class Thermodynamics:
         self.phaseHighT = phaseHighT
 
         self.freeEnergyHigh = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseHighT, temperatureScale=self.Tc-self.Tnucl,
+            self.effectivePotential, self.Tnucl, self.phaseHighT, temperatureScale=self.Tnucl,
         )
         self.freeEnergyLow = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseLowT, temperatureScale=self.Tc-self.Tnucl,
+            self.effectivePotential, self.Tnucl, self.phaseLowT, temperatureScale=self.Tnucl,
         )
 
     def getCoexistenceRange(self) -> Tuple[float, float]:
@@ -201,7 +201,7 @@ class Thermodynamics:
         dpHighT : array-like (float)
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return -self.freeEnergyHigh(T, derivOrder=1).getVeffValue()
+        return -self.freeEnergyHigh(temperature, derivOrder=1).veffValue
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
@@ -218,7 +218,7 @@ class Thermodynamics:
         ddpHighT : array-like (float)
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return -self.freeEnergyHigh(T, derivOrder=2).getVeffValue()
+        return -self.freeEnergyHigh(temperature, derivOrder=2).veffValue
 
     def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -266,7 +266,7 @@ class Thermodynamics:
         wHighT : array-like (float)
             Enthalpy density in the high-temperature phase.
         """
-        return T*self.dpHighT(T)
+        return temperature*self.dpHighT(temperature)
 
     def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -316,7 +316,7 @@ class Thermodynamics:
         dpLowT : array-like (float)
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return -self.freeEnergyLow(T, derivOrder=1).getVeffValue()
+        return -self.freeEnergyLow(temperature, derivOrder=1).veffValue
 
     def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -332,7 +332,7 @@ class Thermodynamics:
         ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return -self.freeEnergyLow(T, derivOrder=2).getVeffValue()
+        return -self.freeEnergyLow(temperature, derivOrder=2).veffValue
 
     def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -380,7 +380,7 @@ class Thermodynamics:
         wLowT : array-like (float)
             Enthalpy density in the low-temperature phase.
         """
-        return T*self.dpLowT(T)
+        return temperature*self.dpLowT(temperature)
 
     def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
