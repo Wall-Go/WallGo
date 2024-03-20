@@ -201,7 +201,7 @@ class Thermodynamics:
         dpHighT : array-like (float)
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return -self.freeEnergyHigh(temperature, derivOrder=1).veffValue
+        return -self.freeEnergyHigh.derivative(temperature, order=1).veffValue
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
@@ -218,7 +218,7 @@ class Thermodynamics:
         ddpHighT : array-like (float)
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return -self.freeEnergyHigh(temperature, derivOrder=2).veffValue
+        return -self.freeEnergyHigh.derivative(temperature, order=2).veffValue
 
     def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -316,7 +316,7 @@ class Thermodynamics:
         dpLowT : array-like (float)
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return -self.freeEnergyLow(temperature, derivOrder=1).veffValue
+        return -self.freeEnergyLow.derivative(temperature, order=1).veffValue
 
     def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -332,7 +332,7 @@ class Thermodynamics:
         ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return -self.freeEnergyLow(temperature, derivOrder=2).veffValue
+        return -self.freeEnergyLow.derivative(temperature, order=2).veffValue
 
     def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -415,5 +415,5 @@ class Thermodynamics:
         """
         # LN: keeping T instead of 'temperature' here since the expression is long
         # LN: Please add reference to a paper and eq number
-        return (self.eHighT(T)-self.eLowT(T)-(self.pHighT(T)-self.pLowT(T))/self.csqLowT(T))/3/self.wHighT(T)
+        return (self.eHighT(T) - self.eLowT(T) - (self.pHighT(T) - self.pLowT(T)) / self.csqLowT(T)) / 3 / self.wHighT(T)
 

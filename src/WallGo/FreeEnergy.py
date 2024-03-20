@@ -16,6 +16,24 @@ class FreeEnergyValueType:
     # Values of background fields at the free-energy minimum
     fieldsAtMinimum: Fields
 
+    @staticmethod
+    def fromArray(arr: npt.ArrayLike) -> 'FreeEnergyValueType':
+        """ASSUMES that the last column is Veff value."""
+        # Awkward dimensionality check needed to figure out correct slicing
+        # TODO can we simplify by forcing resultsArray to always be of certain shape?
+        if arr.ndim < 2:
+            values = arr[-1]
+            fields = arr[:-1]
+        
+        else:
+            values = arr[:, -1]
+            fields = arr[:, :-1] 
+            ## ???
+            if len(values) == 1:
+                values = values[0]
+
+        return FreeEnergyValueType(veffValue=values, fieldsAtMinimum=Fields.CastFromNumpy(fields))
+
     
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
@@ -67,9 +85,7 @@ class FreeEnergy(InterpolatableFunction):
         super().__init__(
             bUseAdaptiveInterpolation=adaptiveInterpolation,
             returnValueCount=returnValueCount,
-            initialInterpolationPointCount=initialInterpolationPointCount,
-            functionError=effectivePotentialError,
-            xScale=temperatureScale,
+            initialInterpolationPointCount=initialInterpolationPointCount
         )
         self.setExtrapolationType(EExtrapolationType.ERROR, EExtrapolationType.ERROR)
         
@@ -83,29 +99,23 @@ class FreeEnergy(InterpolatableFunction):
         # Highest possible temperature so that the phase is still (meta)stable
         self.maxPossibleTemperature = np.Inf
 
-    def __call__(self, x: npt.ArrayLike, derivOrder: int=0, useInterpolatedValues=True) -> FreeEnergyValueType:
+        self.effectivePotentialError = effectivePotentialError
+        self.temperatureScale = temperatureScale
+
+
+    def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
         """Evaluate the free energy. Return value is a FreeEnergyValueType dataclass object.
         """
-        # Implementation returns array, here we just unpack it. Super call needed because it handles interpolation logic
-        resultsArray = super().__call__(x, derivOrder, useInterpolatedValues)
-
-        # Last column is Veff value. But awkward dimensionality check needed to figure out correct slicing
-        # TODO can we simplify by forcing resultsArray to always be of certain shape?
-        if resultsArray.ndim < 2:
-            values = resultsArray[-1]
-            fields = resultsArray[:-1]
-        
-        else:
-            values = resultsArray[:, -1]
-            fields = resultsArray[:, :-1] 
-            ## ???
-            if len(values) == 1:
-                values = values[0]
+        # Implementation returns array, here we just unpack it. Call to parent class needed to handle interpolation logic 
+        resultsArray = super().evaluate(x, bUseInterpolatedValues)
+        return FreeEnergyValueType.fromArray(resultsArray)
 
 
-        return FreeEnergyValueType(veffValue=values, 
-                                   fieldsAtMinimum=Fields.CastFromNumpy(fields))
 
+    def __call__(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
+        """Just calls self.evaluate()"""
+        return self.evaluate(x, bUseInterpolatedValues)
+    
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -139,6 +149,18 @@ class FreeEnergy(InterpolatableFunction):
 
         # This is now a 2D array where rows are [f1, f2, ..., Veff]
         return result
+    
+
+    def derivative(self, x: npt.ArrayLike, order: int = 1, bUseInterpolation=True) -> FreeEnergyValueType:
+        """Override of InterpolatableFunction.derivative() function. Specifies accuracy based on our internal variables
+        and puts the results in FreeEnergyValueType format. Otherwise similar to the parent function."""
+        resultsArray = super().derivative(x,
+                                  order,
+                                  bUseInterpolation=bUseInterpolation,
+                                  epsilon=self.effectivePotentialError,
+                                  scale=self.temperatureScale)
+        
+        return FreeEnergyValueType.fromArray(resultsArray)
 
 
     def tracePhaseOld(self, TMin: float, TMax: float, dT: float) -> None:
