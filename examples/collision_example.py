@@ -1,7 +1,17 @@
+"""Simple example file for using the WallGo collision module from Python.
+The module is written in C++ but implements Python bindings. There is also a pure Python wrapper class,
+WallGo.Collision, which handles dynamic loading of the module and provides complementary functionality.
+Note that WallGo.Collision is a singleton class, ie. only one instance of it can exist.
+Loading of the module happens when the instance is first created."""
+
 import pathlib
 
 import WallGo
 from WallGo import Particle
+
+
+
+## TODO move this to the collision wrapper:
 
 ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
 ## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
@@ -29,23 +39,26 @@ def constructPybindParticle(p: Particle, T: float):
     ## Convert to correct enum for particle statistics
     particleType = None
     if p.statistics == "Boson":
-        particleType = CollisionModule.EParticleType.BOSON
+        particleType = WallGo.Collision().module.EParticleType.BOSON
     elif p.statistics == "Fermion":
-        particleType = CollisionModule.EParticleType.FERMION
+        particleType =  WallGo.Collision().module.EParticleType.FERMION
 
-    return CollisionModule.ParticleSpecies(p.name, particleType, p.inEquilibrium, 
+    return WallGo.Collision().module.ParticleSpecies(p.name, particleType, p.inEquilibrium, 
                                 p.msqVacuum / T**2.0, p.msqThermal(T) / T**2.0,  p.ultrarelativistic)
+
 
 
 WallGo.initialize()
 
-CollisionModule = WallGo.loadCollisionModule()
+## Create Collision singleton which automatically loads the collision module
+collision = WallGo.Collision()
 
 ## Optional: set the seed used by Monte Carlo integration. Default is 0
-CollisionModule.setSeed(0)
+collision.setSeed(0)
 
 ## Construct a "control" object for collision integrations
-collisionManager = CollisionModule.CollisionManager()
+collisionManager = collision.module.CollisionManager()
+## TODO wrap the above too
 
 # Use help(collisionManager) for info about what functionality is available
 
@@ -55,7 +68,6 @@ Define couplings (Lagrangian parameters)
 gs = 1.2279920495357861
 
 collisionManager.addCoupling(gs)
-
 
 """
 Define particles. 
@@ -99,6 +111,9 @@ lightQuark = Particle(
 # hack
 temperatureHack = 1.0
 
+"""Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+including particle species that are assumed to stay in equilibrium."""
+
 collisionManager.addParticle( constructPybindParticle(topQuark, temperatureHack) )
 collisionManager.addParticle( constructPybindParticle(gluon, temperatureHack) )
 collisionManager.addParticle( constructPybindParticle(lightQuark, temperatureHack) )
@@ -110,7 +125,7 @@ collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
 collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements_QCD.txt"))
 
 ## Configure integration. Can skip this step if you're happy with the defaults
-integrationOptions = CollisionModule.IntegrationOptions()
+integrationOptions = collision.module.IntegrationOptions()
 integrationOptions.bVerbose = True
 integrationOptions.maxTries = 50
 integrationOptions.calls = 50000
@@ -123,7 +138,7 @@ collisionManager.configureIntegration(integrationOptions)
 collisionManager.setMatrixElementVerbosity(True)
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-basisSize = 3
+basisSize = 5
 
 ## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
 collisionManager.calculateCollisionIntegrals(basisSize, bVerbose = False)
