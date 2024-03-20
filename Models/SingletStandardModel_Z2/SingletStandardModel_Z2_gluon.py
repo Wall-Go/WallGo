@@ -196,7 +196,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
+    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 

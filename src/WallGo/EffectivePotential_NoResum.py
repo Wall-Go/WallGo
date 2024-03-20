@@ -97,7 +97,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
     ## @todo do we want this, or use Philipp's version Jcw below?
     @staticmethod
     def ColemanWeinberg(massSquared: float, RGScale: float, c: float) -> complex:
-        return massSquared**2 / (64.*np.pi**2) * ( np.log(massSquared / RGScale**2 + 0j) - c)
+        return massSquared**2 / (64.*np.pi**2) * (np.log(massSquared / RGScale**2 + 0j) - c)
 
 
     @staticmethod
@@ -132,7 +132,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
 
     ## LN: Why is this separate from Jcw?
-    def V1(self, bosons, fermions, RGScale: float):
+    def V1(self, bosons, fermions, RGScale: float, checkForImaginary: bool = False):
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -154,16 +154,23 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         ## LN: should the return value actually be complex in general?
 
         m2, nb, c = bosons
-        V = np.sum(self.Jcw(m2,nb,c, RGScale), axis=-1)
+        V = np.sum(self.Jcw(m2, nb, c, RGScale), axis=-1)
 
         m2, nf = fermions
         c = 1.5
-        V -= np.sum(self.Jcw(m2,nf,c, RGScale), axis=-1)
+        V -= np.sum(self.Jcw(m2, nf, c, RGScale), axis=-1)
+
+        if checkForImaginary and np.any(m2 < 0):
+            try:
+                VI = V.imag/(64*np.pi*np.pi)[np.any(m2 < 0, axis=0)]
+            except:
+                VI = V.imag/(64*np.pi*np.pi)
+            print(f"Im(V1)={VI}")
 
         return V/(64*np.pi*np.pi)
 
 
-    def V1T(self, bosons, fermions, temperature: npt.ArrayLike):
+    def V1T(self, bosons, fermions, temperature: npt.ArrayLike, checkForImaginary: bool = False):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
@@ -202,5 +209,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         m2, nf = fermions
         V += np.sum(nf* self.integrals.Jf(m2 / T2), axis=-1)
+
+        if checkForImaginary and np.any(m2 < 0):
+            try:
+                VI = V.imag*T**4 / (2*np.pi*np.pi)[np.any(m2 < 0, axis=-1)]
+            except:
+                VI = V.imag*T**4 / (2*np.pi*np.pi)
+            print(f"Im(VT)={VI}")
         
         return V*T**4 / (2*np.pi*np.pi)
