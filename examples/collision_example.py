@@ -41,6 +41,9 @@ WallGo.initialize()
 
 CollisionModule = WallGo.loadCollisionModule()
 
+## Optional: set the seed used by Monte Carlo integration. Default is 0
+CollisionModule.setSeed(0)
+
 ## Construct a "control" object for collision integrations
 collisionManager = CollisionModule.CollisionManager()
 
@@ -120,7 +123,7 @@ collisionManager.configureIntegration(integrationOptions)
 collisionManager.setMatrixElementVerbosity(True)
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-basisSize = 5
+basisSize = 3
 
 ## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
 collisionManager.calculateCollisionIntegrals(basisSize, bVerbose = False)
