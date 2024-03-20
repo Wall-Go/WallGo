@@ -64,6 +64,8 @@ private:
     void testExpression();
 
     void defineSymbol(const std::string& symbol, double initValue);
+    void initParser();
+    void clearParser();
 };
 
 } // namespace

@@ -40,7 +40,12 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	manager.addParticle(gluon);
 	manager.addParticle(lightQuark);
 
-	manager.setVariable("gs", gs);
+	// Define all symbol that appear in matrix elements along with an initial value. The values can safely be changed later with the same function
+	//manager.setVariable("gs", gs);
+	manager.setVariable("c[0]", gs);
+	manager.setVariable("msq[0]", mq2);
+	manager.setVariable("msq[1]", mg2);
+	manager.setVariable("msq[2]", mq2);
 
 	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
 	This function returns false if the file is not found, in which case we abort here. */

@@ -14,22 +14,13 @@ namespace wallgo
 
 MatrixElement::MatrixElement() 
 {
-    parser = new mu::Parser();
     s_internal = 0; t_internal = 0; u_internal = 0;
-
-    parser->SetExpr("0");
-
-    parser->DefineVar("s", &s_internal);
-    parser->DefineVar("t", &t_internal);
-    parser->DefineVar("u", &u_internal);
-
-    // To allow variable names like msq[2] we need to add [] to parser's character list
-    parser->DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+    initParser();
 }
 
 MatrixElement::~MatrixElement()
 {
-    delete parser;
+    clearParser();
 }
 
 
@@ -38,7 +29,7 @@ MatrixElement::MatrixElement(const MatrixElement& other)
     const std::map<std::string, double> parameters = other.parametersInternal;
     expression = other.getExpression();
 
-    parser = new mu::Parser();
+    initParser();
     initSymbols(parameters);
     parser->SetExpr(expression);
 }
@@ -48,10 +39,10 @@ void MatrixElement::operator=(const MatrixElement &other)
     const std::map<std::string, double> parameters = other.parametersInternal;
     expression = other.getExpression();
 
-    // deleting this just to make sure we clear everything
-    delete parser;
+    // Reset the parser just in case
+    clearParser();
 
-    parser = new mu::Parser();
+    initParser();
     initSymbols(parameters);
     parser->SetExpr(expression);
 }
@@ -97,6 +88,7 @@ double MatrixElement::evaluate(double s, double t, double u)
     return parser->Eval();
 }
 
+
 void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
 {
     try
@@ -109,6 +101,30 @@ void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
         std::cerr << "=== Error when defining symbol '" << symbol << "'. Parser threw error: \n"; 
         std::cerr << parserException.GetMsg() << std::endl;
     }
+}
+
+void MatrixElement::initParser()
+{
+    if (parser != nullptr)
+    {
+        clearParser();
+    }
+
+    parser = new mu::Parser;
+    parser->SetExpr("0");
+
+    parser->DefineVar("s", &s_internal);
+    parser->DefineVar("t", &t_internal);
+    parser->DefineVar("u", &u_internal);
+
+    // To allow variable names like msq[2] we need to add [] to parser's character list
+    parser->DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+}
+
+void MatrixElement::clearParser()
+{
+    delete parser;
+    parser = nullptr;
 }
 
 void MatrixElement::testExpression() 
