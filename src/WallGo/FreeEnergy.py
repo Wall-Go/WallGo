@@ -51,6 +51,31 @@ class FreeEnergy(InterpolatableFunction):
     maxPossibleTemperature: float ## Highest possible temperature so that the phase is still (meta)stable
 
     def __init__(self, effectivePotential: EffectivePotential, phaseLocationGuess: Fields, initialInterpolationPointCount: int=1000, effectivePotentialError: float=1e-10, temperatureScale: float=10.0):
+        """
+        Initialize a FreeEnergy object
+
+        Parameters
+        ----------
+        effectivePotential : EffectivePotential
+            EffectivePotential object used to compute the free energy.
+        phaseLocationGuess : Fields
+            Approximate position of the minimum.
+        initialInterpolationPointCount : int, optional
+            Initial number of points sampled for the interpolation. 
+            The default is 1000.
+        effectivePotentialError : float, optional
+            Typical relative accuracy at which the effective potential can be 
+            computed. The default is 1e-10.
+        temperatureScale : float, optional
+            Typical temperature scale over which the effective potential 
+            changes by O(1). A reasonable value would be of order Tc-Tn. 
+            The default is 10.0.
+
+        Returns
+        -------
+        None.
+
+        """
 
         adaptiveInterpolation = True
         ## Set return value count. Currently the InterpolatableFunction requires this to be set manually:
