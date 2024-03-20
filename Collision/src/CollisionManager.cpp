@@ -88,9 +88,9 @@ void CollisionManager::addParticle(const ParticleSpecies &particle)
     }
 }
 
-void CollisionManager::addCoupling(double coupling) 
+void CollisionManager::setVariable(const std::string &name, double value)
 {
-    couplings.push_back(coupling);
+    modelParameters[name] = value;
 }
 
 
@@ -98,7 +98,7 @@ CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecie
     const std::string &matrixElementFile, uint basisSize, bool bVerbose)
 {
     CollisionIntegral4 collisionIntegral(basisSize);
-    std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), matrixElementFile, bVerbose);
+    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1.getName(), particle2.getName(), matrixElementFile, bVerbose);
     
     for (const CollElem<4> &elem : collisionElements)
     {
@@ -293,7 +293,7 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
             Array4D errors;
             
             CollisionIntegral4 collisionIntegral(basisSize);
-            std::vector<CollElem<4>> collisionElements = makeCollisionElements(particle1.getName(), particle2.getName(), 
+            std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1.getName(), particle2.getName(), 
                 matrixElementFile.string(), bVerboseMatrixElements);
             
             for (const CollElem<4> &elem : collisionElements)
@@ -337,8 +337,45 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
 }
 
 
-std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::string &particleName1, const std::string &particleName2, 
-    const std::string &matrixElementFile, bool bVerbose)
+CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, 
+    const std::string &expr, const std::vector<std::string> &symbols)
+{
+    assert(indices.size() == 4);
+
+    const ParticleSpecies p1 = particles[indices[0]];
+    const ParticleSpecies p2 = particles[indices[1]];
+    const ParticleSpecies p3 = particles[indices[2]];
+    const ParticleSpecies p4 = particles[indices[3]];
+    
+    CollElem<4> collisionElement( { p1, p2, p3, p4} );
+
+    std::map<std::string, double> variables;
+    for (const std::string& s : symbols)
+    {
+        if (modelParameters.count(s) < 1)
+        {
+            std::cerr << "CollisionManager error: symbol " << s << " not found in modelParameters map, can't parse matrix element " << expr << "\n";
+            return collisionElement;
+        }
+        variables[s] = modelParameters.at(s);
+    }
+
+    collisionElement.matrixElement.initSymbols(variables);
+    // Parse expr as a math function
+    collisionElement.matrixElement.setExpression(expr);
+
+    // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
+    for (uint i = 0; i < collisionElement.bDeltaF.size(); ++i) 
+    {
+        collisionElement.bDeltaF[i] = (collisionElement.particles[i].getName() == particleName2);
+    }
+    
+    return collisionElement;
+}
+
+
+std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string &particleName1, const std::string &particleName2,
+                                                                 const std::string &matrixElementFile, bool bVerbose)
 {
     // Just for logging 
     const std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
@@ -356,14 +393,14 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
     // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
-    // Here we parse the lhs to extract indices, then parse the rhs as a math expression (function of s,t,u and couplings/masses). 
+    // Here we parse the lhs to extract indices, then parse the rhs as a math expression (function of s,t,u and other symbols that we infer).
     // For each of these we make a CollElem<4> object with correct deltaF structure which we infer from the indices 
 
     std::vector<CollElem<4>> collisionElements;
 
     if (!file.is_open()) {
         std::cerr << "!!! Error: Failed to open matrix element file " << matrixElementFile << std::endl;
-        exit(10);
+        return collisionElements;
     }
 
     /* Now use regex to read all lines of form M[...] -> expr
@@ -379,12 +416,29 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
     while (std::getline(file, line)) {
         if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)"))) {
 
+            /* Big TODO. Change matrix element file format so that 
+            1. It's easier to parse without regex hacks. Eg: JSON format
+            2. Each matrix element could be associated with a list of symbols needed to evaluate it.
+            This would make it possible to safely define just enough symbols needed for each matrix element.
+            */
+            
             interpretMatrixElement(line, indices, expr);
             
             if (indices[0] != particleIndex[particleName1]) continue;
             if ( std::find(indices.begin(), indices.end(), particleIndex[particleName2]) == indices.end() ) continue;
             
-            CollElem<4> newElem = makeCollisionElement(particleName2, indices, expr);
+            /* Since we don't have per-expression symbol lists implemented in the files,
+            here I just define each symbol in our modelParameters list as a variable. This wastes memory.
+            Alternatively, could try to implicitly find free symbols with the parser, but this seems error prone. */ 
+
+            std::vector<std::string> symbols;
+            symbols.reserve(modelParameters.size());
+            for (const auto& [key, _] : modelParameters)
+            {
+                symbols.push_back(key);
+            }
+
+            CollElem<4> newElem = makeCollisionElement(particleName2, indices, expr, symbols);
             collisionElements.push_back(newElem);
 
             if (bVerbose)
@@ -403,28 +457,6 @@ std::vector<CollElem<4>> CollisionManager::makeCollisionElements(const std::stri
     return collisionElements;
 }
 
-CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr)
-{
-    assert(indices.size() == 4);
-
-    const ParticleSpecies p1 = particles[indices[0]];
-    const ParticleSpecies p2 = particles[indices[1]];
-    const ParticleSpecies p3 = particles[indices[2]];
-    const ParticleSpecies p4 = particles[indices[3]];
-    
-    CollElem<4> collisionElement( { p1, p2, p3, p4} );
-
-    collisionElement.matrixElement.initParser(couplings, massSquares);
-    // Parses the RHS math expression so that we can evaluate it as a function of the symbols
-    collisionElement.matrixElement.setExpression(expr);
-    // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
-    for (uint i = 0; i < collisionElement.bDeltaF.size(); ++i) 
-    {
-        collisionElement.bDeltaF[i] = (collisionElement.particles[i].getName() == particleName2);
-    }
-    
-    return collisionElement;
-}
 
 long CollisionManager::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
 {

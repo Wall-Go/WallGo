@@ -108,8 +108,8 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "Args:\n"
         "    particle (ParticleSpecies): Particle to add\n";
 
-    std::string usage_addCoupling = 
-        "Add a new coupling constant. This is intended for action/Lagrangian parameters."
+    std::string usage_setVariable = 
+        "Sets value of a physics parameter used in matrix elements. Registers a new variable if the name is not already defined."
         "Do NOT use for particle thermal/vacuum masses.\n\n"
         "Args:\n"
         "    coupling (double): Coupling to add\n";
@@ -146,7 +146,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
     py::class_<CollisionPython>(m, "CollisionManager")
         .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
-        .def("addCoupling", &CollisionPython::addCoupling, usage_addCoupling.c_str())
+        .def("addCoupling", &CollisionPython::setVariable, usage_setVariable.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, 
             usage_calculateCollisionIntegrals.c_str(), py::arg("basisSize"), py::arg("bVerbose")=false)
         .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())

@@ -25,7 +25,9 @@ public:
     CollisionManager();
 
     void addParticle(const ParticleSpecies& particle);
-    void addCoupling(double coupling);
+
+    // Set numerical value to a physics parameter used in matrix elements. Registers a new variable if the name is not already defined. 
+    void setVariable(const std::string& name, double value);
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
     CollisionIntegral4 setupCollisionIntegral(const ParticleSpecies& particle1, const ParticleSpecies& particle2, 
@@ -72,12 +74,14 @@ protected:
 
     /* Turns a symbolic string expression into usable CollElem<4>. 
     Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
-    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]) */  
-    CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, const std::string &expr);
+    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]). 
+    The symbols array needs to contain all free symbols that appear in the expr, apart from 's','t','u' which are automatically defined.
+    As a sensibility check, the symbols MUST be contained in our modelParameters map, from which we also pick initial values for the symbols. */  
+    CollElem<4> makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices,
+        const std::string &expr, const std::vector<std::string>& symbols);
     
-
     // Creates all collision elements that mix two out-of-eq particles (can be the same particle).
-    std::vector<CollElem<4>> makeCollisionElements(const std::string &particleName1, const std::string &particleName2,
+    std::vector<CollElem<4>> parseMatrixElements(const std::string &particleName1, const std::string &particleName2,
         const std::string &matrixElementFile, bool bVerbose = false);
 
     // List of all particles that contribute to collisions
@@ -89,8 +93,7 @@ protected:
     // Masses of the above particles in a vector form. Same ordering. This is vacuum + thermal
     std::vector<double> massSquares;
 
-    // List of Lagrangian parameters
-    std::vector<double> couplings;
+    std::map<std::string, double> modelParameters;
 
     // Mapping: particle name -> tensor index. Need to put out-of-eq particles first if the input doesn't have this @todo
     std::map<std::string, uint> particleIndex;

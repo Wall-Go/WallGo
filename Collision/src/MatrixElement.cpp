@@ -1,6 +1,7 @@
 #include <iostream>
 #include <functional>
 #include <array>
+#include <assert.h>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
@@ -34,32 +35,27 @@ MatrixElement::~MatrixElement()
 
 MatrixElement::MatrixElement(const MatrixElement& other)
 {
-    parametersInternal = other.parametersInternal;
-    parametersInternal = other.parametersInternal;
+    const std::map<std::string, double> parameters = other.parametersInternal;
     expression = other.getExpression();
+
     parser = new mu::Parser();
-    initParser(couplings_internal, msq_internal);
+    initSymbols(parameters);
     parser->SetExpr(expression);
 }
 
 void MatrixElement::operator=(const MatrixElement &other)
 {
-    couplings_internal = other.couplings_internal;
-    msq_internal = other.msq_internal;
+    const std::map<std::string, double> parameters = other.parametersInternal;
     expression = other.getExpression();
+
     // deleting this just to make sure we clear everything
     delete parser;
+
     parser = new mu::Parser();
-    initParser(couplings_internal, msq_internal);
+    initSymbols(parameters);
     parser->SetExpr(expression);
 }
 
-void MatrixElement::initParser(const std::vector<double> &couplings, const std::vector<double> &massSquares)
-{
-    setConstants(couplings, massSquares);
-
-    
-}
 
 void MatrixElement::setExpression(const std::string &expressionIn)
 {
@@ -70,17 +66,29 @@ void MatrixElement::setExpression(const std::string &expressionIn)
     testExpression();
 }
 
-void MatrixElement::initParser(const std::map<std::string, double> &parameters, const std::map<std::string, double> &massSquares)
+
+void MatrixElement::initSymbols(const std::map<std::string, double> &parameters)
 {
+    parametersInternal.clear();
+
+    for (auto const& [symbol, value] : parameters)
+    {
+        defineSymbol(symbol, value);
+    }
 }
 
-void MatrixElement::setConstants(const std::vector<double> &couplings, const std::vector<double> &massSquares)
+void MatrixElement::setParameters(const std::map<std::string, double> &parameters)
 {
-    couplings_internal = couplings;
-    msq_internal = massSquares;
+    for (auto const& [key, val] : parametersInternal)
+    {
+        // NB: check only in debug builds, otherwise just assume that the key exists
+        assert(parameters.count(key) > 0);
+
+        parametersInternal[key] = parameters.at(key);
+    }
 }
 
-double MatrixElement::evaluate(double s, double t, double u) 
+double MatrixElement::evaluate(double s, double t, double u)
 {
     s_internal = s;
     t_internal = t;
@@ -89,15 +97,16 @@ double MatrixElement::evaluate(double s, double t, double u)
     return parser->Eval();
 }
 
-void MatrixElement::defineSymbol(const std::string &symbol)
+void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
 {
     try
     {
-        parser->DefineVar(symbol, )
+        parametersInternal[symbol] = initValue;
+        parser->DefineVar(symbol, &parametersInternal.at(symbol));
     }
     catch (mu::Parser::exception_type &parserException) 
     {
-        std::cerr << "=== Error when initializing symbol '" << symbol << "'. Parser threw error: \n"; 
+        std::cerr << "=== Error when defining symbol '" << symbol << "'. Parser threw error: \n"; 
         std::cerr << parserException.GetMsg() << std::endl;
     }
 }

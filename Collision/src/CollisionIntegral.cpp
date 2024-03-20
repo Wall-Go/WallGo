@@ -135,6 +135,9 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
         massSquared[i] = collElem.particles[i].getVacuumMassSquared();
     }
 
+    // TODO! pretty sure we should use m^2 = vacuum^2 + thermal^2 when computing particle energy, also when solving p3 below. 
+    // No effect if everything is ultrarelativistic, of course 
+
     // Energies: Since p3 is not fixed yet we only know E1, E2
     const double E1 = std::sqrt(p1 * p1 + massSquared[0]);
     const double E2 = std::sqrt(p2 * p2 + massSquared[1]);
@@ -147,22 +150,27 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     const double eps = 2.0 * (E1 + E2);
     const double delta = 2.0 * (p1p3HatDot + p2p3HatDot);
 
-    // The eq is this. Could be used for failsafe checks, but so far haven't had any issues so commented out */
-    /*
-    auto funcG = [&](double p3) {
-         double m3sq = massSquared[2];
-         return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
-    };
-    */
-
     // Quadratic eq. A p3^2 + B p3 + C = 0, take positive root(s)
     const double A = delta * delta - eps * eps;
     const double B = 2.0 * kappa * delta;
     const double C = kappa * kappa - eps * eps * massSquared[2];
     // Roots of g(p3):
     const double discriminant = B * B - 4.0 * A * C;
+
+    assert(discriminant >= 0);
+
     const double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
     const double root2 = 0.5 * (-B + sqrt(discriminant)) / A;
+
+#ifndef NDEBUG
+    // Check that g(p3) == 0 is reasonably satisfied 
+    auto funcG = [&](double p3) {
+         double m3sq = massSquared[2];
+         return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
+    };
+
+    assert(std::abs(funcG(root1)) < 1e-8 && std::abs(funcG(root2)) < 1e-8)
+#endif
 
     // Since p3 is supposed to be magnitude, pick only positive roots (p3 = 0 contributes nothing to the integral)
     const std::vector<double> roots{root1, root2};
@@ -170,32 +178,31 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     std::vector<Kinematics> kinematics;
     kinematics.reserve(2);
 
-    for (double p3 : roots)
-        if (p3 > 0)
-        {
-            const double E3 = std::sqrt(p3 * p3 + massSquared[2]);
+    for (double p3 : roots) if (p3 > 0)
+    {
+        const double E3 = std::sqrt(p3 * p3 + massSquared[2]);
 
-            // E4 is fixed by 4-momentum conservation. There is a theta(E4) so we only accept E4 >= 0
-            const double E4 = E1 + E2 - E3;
-            if (E4 < 0)
-                continue;
+        // E4 is fixed by 4-momentum conservation. There is a theta(E4) so we only accept E4 >= 0
+        const double E4 = E1 + E2 - E3;
+        if (E4 < 0)
+            continue;
 
-            Kinematics newKinematics;
+        Kinematics newKinematics;
 
-            // Make four vectors
-            newKinematics.FV1 = FourVector(E1, p1Vec);
-            newKinematics.FV2 = FourVector(E2, p2Vec);
-            newKinematics.FV3 = FourVector(E3, p3 * p3VecHat);
+        // Make four vectors
+        newKinematics.FV1 = FourVector(E1, p1Vec);
+        newKinematics.FV2 = FourVector(E2, p2Vec);
+        newKinematics.FV3 = FourVector(E3, p3 * p3VecHat);
 
-            newKinematics.FV4 = newKinematics.FV1 + newKinematics.FV2 - newKinematics.FV3;
+        newKinematics.FV4 = newKinematics.FV1 + newKinematics.FV2 - newKinematics.FV3;
 
-            // g'(p3). Probably safe since we required p3 > 0, so E3 > 0:
-            const double gDer = delta - eps * p3 / E3;
+        // g'(p3). Probably safe since we required p3 > 0, so E3 > 0:
+        const double gDer = delta - eps * p3 / E3;
 
-            newKinematics.prefactor = p2 * p3 * (p2 / (E2 + SMALL_NUMBER)) * (p3 / (E3 + SMALL_NUMBER)) / std::abs(gDer);
+        newKinematics.prefactor = p2 * p3 * (p2 / (E2 + SMALL_NUMBER)) * (p3 / (E3 + SMALL_NUMBER)) / std::abs(gDer);
 
-            kinematics.push_back(newKinematics);
-        }
+        kinematics.push_back(newKinematics);
+    }
 
     return kinematics;
 }

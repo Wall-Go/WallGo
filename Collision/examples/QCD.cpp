@@ -40,7 +40,7 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	manager.addParticle(gluon);
 	manager.addParticle(lightQuark);
 
-	manager.addCoupling(gs);
+	manager.setVariable("gs", gs);
 
 	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
 	This function returns false if the file is not found, in which case we abort here. */
