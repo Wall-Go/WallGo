@@ -223,7 +223,6 @@ class FreeEnergy(InterpolatableFunction):
                     ode.y = phaset[0]
                 if spinodal_event(ode.t, ode.y) <= 0:
                     print(f"Phase ends at T={ode.t}, vev={ode.y}")
-                    print(f"{dT=}")
                     break
                 if not paranoid:
                     # check if extremum is still accurate

@@ -99,6 +99,8 @@ class WallGoManager:
                               data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
 
         print(f"Jouguet: {self.hydro.vJ}")
+        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
+    
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
         """This checks that the user-specified phases are OK.
@@ -161,6 +163,7 @@ class WallGoManager:
         try:
             ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
             hydrotemplate = HydroTemplateModel(self.thermodynamics)
+            print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
 
         except WallGoError as error:
             # Throw new error with more info
@@ -169,8 +172,10 @@ class WallGoManager:
         _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrotemplate.findMatching(
             0.99 * hydrotemplate.vJ
         )
+
+        print(f"{hydrotemplate.alN = } {hydrotemplate.cb2 =} {hydrotemplate.cs2 =} {hydrotemplate.psiN =} ")
         
-        dT = self.config.getfloat("EffectivePotential", "dT") ## !!! changed for debugging purposes
+        dT = self.config.getfloat("EffectivePotential", "dT")
 
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large

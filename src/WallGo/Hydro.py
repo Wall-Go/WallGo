@@ -433,6 +433,7 @@ class Hydro:
         """
 
         if vwTry > self.vJ:  # Detonation
+            print('Hello!')
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
