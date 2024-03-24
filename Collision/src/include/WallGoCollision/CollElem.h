@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <memory>
 
 #include "FourVector.h"
 #include "ParticleSpecies.h"
@@ -21,7 +22,7 @@ struct Mandelstam
 
 
 /* CollElem class: This describes collision process with external particles types being fixed */
-template <std::size_t NPARTICLES>
+template <size_t NPARTICLES>
 class CollElem
 {
 
@@ -32,12 +33,12 @@ public:
 
 	/* Use initialization list here for setting the particle species, 
 	otherwise may run into compiler errors due to (lack of) copy constructors */
-	CollElem(const std::array<ParticleSpecies, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies)
+	CollElem(const std::array<std::shared_ptr<ParticleSpecies>, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies)
 	{
 		bool bAllUltrarelativistic = true;
-		for (const ParticleSpecies &p : particles)
+		for (const auto& p : inputParticleSpecies)
 		{
-			if (!p.isUltrarelativistic()) 
+			if (!p->isUltrarelativistic()) 
 			{
 				bAllUltrarelativistic = false;
 				break;	
@@ -70,10 +71,10 @@ public:
 		const std::array<double, NPARTICLES> &deltaF)
 	{
 
-		const double f1 = particles[0].fEq( momenta[0].energy() );
-		const double f2 = particles[1].fEq( momenta[1].energy() );
-		const double f3 = particles[2].fEq( momenta[2].energy() );
-		const double f4 = particles[3].fEq( momenta[3].energy() );
+		const double f1 = particles[0]->fEq( momenta[0].energy() );
+		const double f2 = particles[1]->fEq( momenta[1].energy() );
+		const double f3 = particles[2]->fEq( momenta[2].energy() );
+		const double f4 = particles[3]->fEq( momenta[3].energy() );
 		
 		double res =  int(bDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
 					+ int(bDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
@@ -97,7 +98,7 @@ public:
 public:
 
 	// Particle 0 is the 'incoming' one whose momentum is kept fixed to p1
-	std::array<ParticleSpecies, NPARTICLES> particles;
+	std::array<std::shared_ptr<ParticleSpecies>, NPARTICLES> particles;
 
 	// Parsed matrix element for this process
 	MatrixElement matrixElement;

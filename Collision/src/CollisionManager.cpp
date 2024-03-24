@@ -82,7 +82,7 @@ CollisionManager::CollisionManager(size_t basisSize) : CollisionManager()
 void CollisionManager::addParticle(const ParticleSpecies &particle)
 {
     const std::string name = particle.getName();
-
+    
     if (particleRegistered(particle))
     {
         std::cout << "Particle " << name << " already registered with CollisionManager, doing nothing\n";
@@ -90,15 +90,14 @@ void CollisionManager::addParticle(const ParticleSpecies &particle)
     }
 
     // TODO let the user specify the index themselves?
-    particles.push_back(particle);
+    particles.push_back(std::make_shared<ParticleSpecies>(particle));
+
     particleIndex[name] = particles.size() - 1;
-    
+
     if (!particle.isInEquilibrium())
     {
-        outOfEqParticles.push_back(particle);
+        outOfEqParticles.push_back(particles.back());
     }
-
-    //massSquares.push_back(particle.getThermalMassSquared() + particle.getVacuumMassSquared());
 }
 
 void CollisionManager::changePolynomialBasis(size_t newBasisSize)
@@ -116,11 +115,11 @@ void CollisionManager::setVariable(const std::string &name, double value)
 }
 
 
-CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecies &particle1, const ParticleSpecies &particle2, 
+CollisionIntegral4 CollisionManager::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
     const std::string &matrixElementFile, size_t basisSize, bool bVerbose)
 {
     CollisionIntegral4 collisionIntegral(basisSize);
-    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1.getName(), particle2.getName(), matrixElementFile, bVerbose);
+    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), matrixElementFile, bVerbose);
     
     for (const CollElem<4> &elem : collisionElements)
     {
@@ -134,11 +133,11 @@ void CollisionManager::setupCollisionIntegrals(bool bVerbose)
 {
     clearCollisionIntegrals();
 
-    for (const ParticleSpecies& particle1 : outOfEqParticles) 
-    for (const ParticleSpecies& particle2 : outOfEqParticles)
+    for (const std::shared_ptr<ParticleSpecies>& particle1 : outOfEqParticles) 
+    for (const std::shared_ptr<ParticleSpecies>& particle2 : outOfEqParticles)
     {
-        const std::string name1 = particle1.getName();
-        const std::string name2 = particle2.getName();
+        const std::string name1 = particle1->getName();
+        const std::string name2 = particle2->getName();
 
         const auto namePair = std::make_pair(name1, name2);
 
@@ -312,9 +311,6 @@ bool CollisionManager::setMatrixElementFile(const std::string &filePath)
 
 void CollisionManager::calculateCollisionIntegrals(bool bVerbose)
 {
-    // Particle list is assumed to be fixed from now on!
-    //findOutOfEquilibriumParticles();
-    //makeParticleIndexMap();´
 
     if (integrals.size() < 1)
     {
@@ -381,10 +377,10 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
 {
     assert(indices.size() == 4);
 
-    const ParticleSpecies p1 = particles[indices[0]];
-    const ParticleSpecies p2 = particles[indices[1]];
-    const ParticleSpecies p3 = particles[indices[2]];
-    const ParticleSpecies p4 = particles[indices[3]];
+    const std::shared_ptr<ParticleSpecies> p1 = particles[indices[0]];
+    const std::shared_ptr<ParticleSpecies> p2 = particles[indices[1]];
+    const std::shared_ptr<ParticleSpecies> p3 = particles[indices[2]];
+    const std::shared_ptr<ParticleSpecies> p4 = particles[indices[3]];
     
     CollElem<4> collisionElement( { p1, p2, p3, p4} );
 
@@ -406,7 +402,7 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
     // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
     for (size_t i = 0; i < collisionElement.bDeltaF.size(); ++i) 
     {
-        collisionElement.bDeltaF[i] = (collisionElement.particles[i].getName() == particleName2);
+        collisionElement.bDeltaF[i] = (collisionElement.particles[i]->getName() == particleName2);
     }
     
     return collisionElement;

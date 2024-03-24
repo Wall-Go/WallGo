@@ -7,6 +7,7 @@
 #include <chrono>
 #include <filesystem>
 #include <utility> // std::pair
+#include <memory>
 
 #include "CollElem.h"
 #include "ParticleSpecies.h"
@@ -35,7 +36,7 @@ public:
     void setVariable(const std::string& name, double value);
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
-    CollisionIntegral4 setupCollisionIntegral(const ParticleSpecies& particle1, const ParticleSpecies& particle2, 
+    CollisionIntegral4 setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
         const std::string &matrixElementFile, size_t basisSize, bool bVerbose = false);
 
     /* Initializes and caches collision integrals for all registered particles. Basis size and matrix element file need to be set before calling this.
@@ -95,9 +96,6 @@ protected:
 
     // TODO have some way of preventing duplicate particles in the above lists
 
-    // Masses of the above particles in a vector form. Same ordering. This is vacuum + thermal
-    std::vector<double> massSquares;
-
     std::map<std::string, double> modelParameters;
 
 private:
@@ -117,13 +115,16 @@ private:
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 
-    /** How we manage particles. */
+    /** How we manage particles. When new particle is registered through addParticle(particle), we store a copy of that particle
+     * in our 'particles' list. For off-equilibrium particles, we also store a raw pointer to the added particle in 'outOfEqParticles' list.
+     * CollElem objects need references to external particles in their respective matrix element. 
+     */
 
     // List of all particles that contribute to collisions
-    std::vector<ParticleSpecies> particles;
+    std::vector<std::shared_ptr<ParticleSpecies>> particles;
 
-    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
-    std::vector<ParticleSpecies> outOfEqParticles;
+    // List of out-of-equilibrium particles, managed internally
+    std::vector<std::shared_ptr<ParticleSpecies>> outOfEqParticles;
 
     // Mapping: particle name -> tensor index. Ordering does not matter.
     std::map<std::string, size_t> particleIndex;

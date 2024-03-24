@@ -128,7 +128,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     std::array<double, 4> massSquared;
     for (int i = 0; i < 4; ++i)
     {
-        massSquared[i] = collElem.particles[i].getVacuumMassSquared();
+        massSquared[i] = collElem.particles[i]->getVacuumMassSquared();
     }
 
     // TODO! pretty sure we should use m^2 = vacuum^2 + thermal^2 when computing particle energy, also when solving p3 below. 
@@ -236,7 +236,7 @@ double CollisionIntegral4::evaluateCollisionElement(CollElem<4> &collElem, const
     std::array<double, 4> deltaF;
     for (int i = 0; i < 4; ++i)
     {
-        if (collElem.particles[i].isInEquilibrium())
+        if (collElem.particles[i]->isInEquilibrium())
         {
             deltaF[i] = 0.0;
         }
