@@ -3,14 +3,8 @@
 
 #include <vector>
 
-// Define 'uint' in case the compiler doesn't do it for us 
-#if !defined(uint)
-    typedef unsigned int uint;
-#endif
-
-
 // Generic helpers for shared library support
-#if defined _WIN32 || defined __CYGWIN__ // include Windows for completeness, but note that Windows builds of WallGo are untested
+#if defined _WIN32 || defined __CYGWIN__
     #define COLLISION_API __declspec(dllexport)
     
 #elif __GNUC__ >= 4 // GCC, clang

@@ -33,7 +33,6 @@ struct IntegrationOptions
     double relativeErrorGoal;
     double absoluteErrorGoal;
     double maxTries;
-    bool bVerbose;
     bool bOptimizeUltrarelativistic;
 
     // Set sensible defaults
@@ -45,7 +44,6 @@ struct IntegrationOptions
         absoluteErrorGoal = 1e-8;
         maxTries = 50;
         bOptimizeUltrarelativistic = true;
-        bVerbose = false;
     }
 };
 
@@ -83,9 +81,11 @@ public:
     };
 
 
-    CollisionIntegral4(std::size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
+    CollisionIntegral4(size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
 
     ~CollisionIntegral4() {}  
+
+    void changePolynomialBasis(size_t newBasisSize);
 
     // 
     IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const {
@@ -124,7 +124,7 @@ private:
     // For avoiding 1/0
     const double SMALL_NUMBER = 1e-50;
 
-    const Chebyshev polynomialBasis;
+    Chebyshev polynomialBasis;
 
     /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
     We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector.

@@ -15,7 +15,7 @@ namespace wallgo
 {
 
 // Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-void interpretMatrixElement(const std::string &inputString, std::vector<uint> &indices, std::string &mathExpression)
+void interpretMatrixElement(const std::string &inputString, std::vector<size_t> &indices, std::string &mathExpression)
 {
     // First split the string by "->""
     std::vector<std::string> tokens(2);
@@ -57,16 +57,15 @@ void interpretMatrixElement(const std::string &inputString, std::vector<uint> &i
     }
 }
 
-
 CollisionManager::CollisionManager()
 {
     // Set default options
-    bVerboseMatrixElements = false;
+
+    basisSize = 0;
 
     outputDirectory = std::filesystem::current_path();
     matrixElementFile = std::filesystem::path("MatrixElements.txt");
 
-    integrationOptions.bVerbose = false;
     integrationOptions.calls = 50000;
     integrationOptions.maxIntegrationMomentum = 20;
     integrationOptions.maxTries = 50;
@@ -75,16 +74,39 @@ CollisionManager::CollisionManager()
     integrationOptions.bOptimizeUltrarelativistic = true;
 }
 
+CollisionManager::CollisionManager(size_t basisSize) : CollisionManager()
+{
+    changePolynomialBasis(basisSize);
+}
 
 void CollisionManager::addParticle(const ParticleSpecies &particle)
 {
-    particles.push_back(particle);
+    const std::string name = particle.getName();
 
-    massSquares.push_back(particle.getThermalMassSquared() + particle.getVacuumMassSquared());
-
-    if (bMatrixElementsDone) 
+    if (particleRegistered(particle))
     {
-        std::cerr << "Warning: New particle added after parsing of matrix elements. You probably do NOT want to do this." << std::endl;
+        std::cout << "Particle " << name << " already registered with CollisionManager, doing nothing\n";
+        return;
+    }
+
+    // TODO let the user specify the index themselves?
+    particles.push_back(particle);
+    particleIndex[name] = particles.size() - 1;
+    
+    if (!particle.isInEquilibrium())
+    {
+        outOfEqParticles.push_back(particle);
+    }
+
+    //massSquares.push_back(particle.getThermalMassSquared() + particle.getVacuumMassSquared());
+}
+
+void CollisionManager::changePolynomialBasis(size_t newBasisSize)
+{
+    basisSize = newBasisSize;
+    for (auto &[key, integral] : integrals)
+    {
+        integral.changePolynomialBasis(newBasisSize);
     }
 }
 
@@ -95,7 +117,7 @@ void CollisionManager::setVariable(const std::string &name, double value)
 
 
 CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecies &particle1, const ParticleSpecies &particle2, 
-    const std::string &matrixElementFile, uint basisSize, bool bVerbose)
+    const std::string &matrixElementFile, size_t basisSize, bool bVerbose)
 {
     CollisionIntegral4 collisionIntegral(basisSize);
     std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1.getName(), particle2.getName(), matrixElementFile, bVerbose);
@@ -108,9 +130,34 @@ CollisionIntegral4 CollisionManager::setupCollisionIntegral(const ParticleSpecie
     return collisionIntegral;
 }
 
+void CollisionManager::setupCollisionIntegrals(bool bVerbose)
+{
+    clearCollisionIntegrals();
+
+    for (const ParticleSpecies& particle1 : outOfEqParticles) 
+    for (const ParticleSpecies& particle2 : outOfEqParticles)
+    {
+        const std::string name1 = particle1.getName();
+        const std::string name2 = particle2.getName();
+
+        const auto namePair = std::make_pair(name1, name2);
+
+        CollisionIntegral4 newIntegral = setupCollisionIntegral(particle1, particle2, matrixElementFile.string(), basisSize, bVerbose);
+
+        integrals.insert( {namePair, newIntegral} );
+    }
+
+}
+
+void CollisionManager::clearCollisionIntegrals()
+{
+    integrals.clear();
+}
+
 void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors, bool bVerbose)
 {
-    const uint N = collisionIntegral.getPolynomialBasisSize();
+
+    const size_t N = collisionIntegral.getPolynomialBasisSize();
     results = Array4D(N-1, N-1, N-1, N-1, 0.0);
     errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
 
@@ -139,12 +186,12 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 
         #pragma omp for collapse(4) 
         // m,n = Polynomial indices
-        for (uint m = 2; m <= N; ++m)
-        for (uint n = 1; n <= N-1; ++n)
+        for (size_t m = 2; m <= N; ++m)
+        for (size_t n = 1; n <= N-1; ++n)
         {
             // j,k = grid momentum indices 
-            for (uint j = 1; j <= N/2; ++j)
-            for (uint k = 1; k <= N-1; ++k)
+            for (size_t j = 1; j <= N/2; ++j)
+            for (size_t k = 1; k <= N-1; ++k)
             {
             
                 IntegrationResult result;
@@ -166,8 +213,8 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
                 localIntegralCount++;
 
                 if (bVerbose)
-                {
-                    printf("m=%d n=%d j=%d k=%d : %g +/- %g\n", m, n, j, k, result.result, result.error);
+                {   
+                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : " << result.result << " +/- " << result.error << "\n";
                 }
 
                 if (threadID == 0 && (localIntegralCount % progressReportInterval == 0)) 
@@ -202,14 +249,14 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 
 	// Fill in the j > N/2 elements
 	#pragma omp parallel for collapse(4)
-	for (uint m = 2; m <= N; ++m) 
-	for (uint n = 1; n <= N-1; ++n) 
+	for (size_t m = 2; m <= N; ++m) 
+	for (size_t n = 1; n <= N-1; ++n) 
     {
-		for (uint j = N/2+1; j <= N-1; ++j)
-		for (uint k = 1; k <= N-1; ++k) 
+		for (size_t j = N/2+1; j <= N-1; ++j)
+		for (size_t k = 1; k <= N-1; ++k) 
         {
 
-			uint jOther = N - j;
+			size_t jOther = N - j;
 			int sign = (m % 2 == 0 ? 1 : -1);
             
 			results[m-2][n-1][j-1][k-1] = sign * results[m-2][n-1][jOther-1][k-1];
@@ -263,16 +310,17 @@ bool CollisionManager::setMatrixElementFile(const std::string &filePath)
     return true;
 }
 
-void CollisionManager::setMatrixElementVerbosity(bool bVerbose)
-{
-    bVerboseMatrixElements = bVerbose;
-}
-
-void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose)
+void CollisionManager::calculateCollisionIntegrals(bool bVerbose)
 {
     // Particle list is assumed to be fixed from now on!
-    findOutOfEquilibriumParticles();
-    makeParticleIndexMap();
+    //findOutOfEquilibriumParticles();
+    //makeParticleIndexMap();´
+
+    if (integrals.size() < 1)
+    {
+        std::cout << "Warning: calculateCollisionIntegrals() called, but no integrals have been initialized." 
+            << "Please call setupCollisionIntegrals() first." << std::endl;
+    }
 
     // Initialize progress tracking 
     totalIntegralCount = countIndependentIntegrals(basisSize, outOfEqParticles.size());
@@ -281,63 +329,54 @@ void CollisionManager::calculateCollisionIntegrals(uint basisSize, bool bVerbose
     startTime = std::chrono::steady_clock::now();
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
-    for (const ParticleSpecies& particle1 : outOfEqParticles) 
+
+    for (auto & [namePair, integral] : integrals)
     {
-        for (const ParticleSpecies& particle2 : outOfEqParticles)
-        {
+        std::chrono::steady_clock::time_point pairStartTime = std::chrono::steady_clock::now();
 
-            std::chrono::steady_clock::time_point pairStartTime = std::chrono::steady_clock::now();
+        const std::string name1 = namePair.first;
+        const std::string name2 = namePair.second;
 
-            // integration results/errors on the grid
-            Array4D results;
-            Array4D errors;
-            
-            CollisionIntegral4 collisionIntegral(basisSize);
-            std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1.getName(), particle2.getName(), 
-                matrixElementFile.string(), bVerboseMatrixElements);
-            
-            for (const CollElem<4> &elem : collisionElements)
-            {
-                collisionIntegral.addCollisionElement(elem);
-            }
+        // integration results/errors on the grid
+        Array4D results;
+        Array4D errors;
 
-            evaluateCollisionTensor(collisionIntegral, results, errors, bVerbose);
+        evaluateCollisionTensor(integral, results, errors, bVerbose);
 
-            // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
-            const std::string fileNameBase = "collisions_" + particle1.getName() + "_" + particle2.getName() + ".hdf5";
-            std::filesystem::path outputPath(outputDirectory);
-            
-            outputPath = outputPath / fileNameBase;
+        // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
+        const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
+        std::filesystem::path outputPath(outputDirectory);
+        
+        outputPath = outputPath / fileNameBase;
 
-            H5::H5File h5File(outputPath.string(), H5F_ACC_TRUNC);
+        H5::H5File h5File(outputPath.string(), H5F_ACC_TRUNC);
 
-            H5Metadata metadata;
-            metadata.basisSize = basisSize;
-            metadata.basisName = "Chebyshev";
-            metadata.integrator = "Vegas Monte Carlo (GSL)";
+        H5Metadata metadata;
+        metadata.basisSize = basisSize;
+        metadata.basisName = "Chebyshev";
+        metadata.integrator = "Vegas Monte Carlo (GSL)";
 
+        writeMetadata(h5File, metadata);
 
-            writeMetadata(h5File, metadata);
+        writeDataSet(h5File, results, name1 + ", " + name2);
+        writeDataSet(h5File, errors, name1 + ", " + name2 + " errors");
+        
+        h5File.close();
 
-            writeDataSet(h5File, results, particle1.getName() + ", " + particle2.getName());
-            writeDataSet(h5File, errors, particle1.getName() + ", " + particle2.getName() + " errors");
-            
-            h5File.close();
+        // How long did this all take
+        std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
+        double seconds = duration.count();
+        int hours = seconds / 3600;
+        // leftover mins
+        int minutes = (seconds - hours * 3600) / 60;
+        std::cout << "[" << name1 << ", " << name2 << "] done in " << hours << "h " << minutes << "min." << std::endl;
 
-            // How long did this all take
-            std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
-            double seconds = duration.count();
-            int hours = seconds / 3600;
-            // leftover mins
-            int minutes = (seconds - hours * 3600) / 60;
-            std::cout << "[" << particle1.getName() << ", " << particle2.getName() << "] done in " << hours << "h " << minutes << "min." << std::endl;
-
-        }
     }
+
 }
 
 
-CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleName2, const std::vector<uint> &indices, 
+CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleName2, const std::vector<size_t> &indices, 
     const std::string &expr, const std::vector<std::string> &symbols)
 {
     assert(indices.size() == 4);
@@ -365,7 +404,7 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
     collisionElement.matrixElement.setExpression(expr);
 
     // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
-    for (uint i = 0; i < collisionElement.bDeltaF.size(); ++i) 
+    for (size_t i = 0; i < collisionElement.bDeltaF.size(); ++i) 
     {
         collisionElement.bDeltaF[i] = (collisionElement.particles[i].getName() == particleName2);
     }
@@ -410,7 +449,7 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
     */
     std::string line;
     std::string expr;
-    std::vector<uint> indices;
+    std::vector<size_t> indices;
     indices.resize(4);
     
     while (std::getline(file, line)) {
@@ -452,15 +491,13 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
     file.close();
 
     std::cout << "\n";
-    bMatrixElementsDone = true;
 
     return collisionElements;
 }
 
-
-long CollisionManager::countIndependentIntegrals(uint basisSize, uint outOfEqCount)
+long CollisionManager::countIndependentIntegrals(size_t basisSize, size_t outOfEqCount)
 {
-    const uint N = basisSize;
+    const size_t N = basisSize;
     // How many independent integrals in each CollisionIntegral4
     long count = (N-1)*(N-1)*(N-1)*(N-1);
     // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
@@ -492,30 +529,9 @@ void CollisionManager::reportProgress()
     bFinishedInitialProgressCheck = true;
 }
 
-
-void CollisionManager::makeParticleIndexMap()
+bool CollisionManager::particleRegistered(const ParticleSpecies& particle)
 {
-    particleIndex.clear();
-    
-    uint i = 0;
-    for (const ParticleSpecies& particle : particles) 
-    {
-        particleIndex[particle.getName()] = i;
-        i++; 
-    }
-}
-
-void CollisionManager::findOutOfEquilibriumParticles()
-{
-    outOfEqParticles.clear();
-
-    for (const ParticleSpecies &particle : particles) 
-    {
-        if (!particle.isInEquilibrium())
-        {
-            outOfEqParticles.push_back(particle);
-        }
-    }
+    return particleIndex.count(particle.getName()) > 0;
 }
 
 } // namespace

@@ -31,7 +31,6 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     const double relativeErrorGoal = options.relativeErrorGoal;
     const double absoluteErrorGoal = options.absoluteErrorGoal;
     const int maxTries = options.maxTries;
-    const bool bVerbose = options.bVerbose;
 
     bOptimizeUltrarelativistic = options.bOptimizeUltrarelativistic;
 
@@ -93,10 +92,7 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
         currentTries++;
         if (currentTries >= maxTries)
         {
-            if (bVerbose)
-            {
-                std::cerr << "Warning: Integration failed to reach accuracy goal. Result: " << mean << " +/- " << error << "\n";
-            }
+            // TODO return some error or warning flag
             break;
         }
     }
@@ -258,6 +254,11 @@ double CollisionIntegral4::evaluateCollisionElement(CollElem<4> &collElem, const
     res *= kinematics.prefactor;
 
     return res;
+}
+
+void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)
+{
+    polynomialBasis = Chebyshev(newBasisSize);
 }
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3,

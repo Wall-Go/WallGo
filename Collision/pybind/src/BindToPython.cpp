@@ -94,7 +94,6 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
         .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
         .def_readwrite("maxTries", &IntegrationOptions::maxTries)
-        .def_readwrite("bVerbose", &IntegrationOptions::bVerbose)
         .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic);
 
     //*********** Bind functions of the main control class
@@ -119,7 +118,6 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "This is the main computation routine and will typically run for a while."
         "Call only after specifying all particles and couplings with addParticle, addCoupling.\n\n"
         "Args:\n"
-        "   basisSize (unsigned int): Polynomial basis size.\n"
         "   verbose = false (bool): Floods stdout with intermediate results. For debugging only.\n\n";
 
     std::string usage_setOutputDirectory =
@@ -132,11 +130,6 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "Args:\n"
         "   path (string)";
 
-    std::string usage_setMatrixElementVerbosity =
-        "Enable or disable verbose printing of symbolic matrix elements as they get parsed.\n"
-        "Args:\n"
-        "   bool";
-
     std::string usage_configureIntegration =
         "Specify options for the integration routine.\n"
         "Args:\n"
@@ -148,11 +141,10 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("addCoupling", &CollisionPython::setVariable, usage_setVariable.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, 
-            usage_calculateCollisionIntegrals.c_str(), py::arg("basisSize"), py::arg("bVerbose")=false)
+            usage_calculateCollisionIntegrals.c_str(), py::arg("bVerbose")=false)
         .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
         .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
-        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str())
-        .def("setMatrixElementVerbosity", &CollisionPython::setMatrixElementVerbosity, usage_setMatrixElementVerbosity.c_str());
+        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
 
     std::atexit(gslWrapper::clearRNG);
 }

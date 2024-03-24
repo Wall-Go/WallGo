@@ -23,10 +23,11 @@ namespace wallgo
 class Chebyshev {
 
 private:
-    std::size_t N = 1;
+    size_t N = 1;
 
 public:
-    Chebyshev(std::size_t basisSize) {
+    Chebyshev(size_t basisSize) 
+    {
         N = basisSize;
     }
 
@@ -63,9 +64,7 @@ public:
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
 
-
-    inline std::size_t getBasisSize() const { return N; }
-
+    inline size_t getBasisSize() const { return N; }
 };
 
 } // namespace
