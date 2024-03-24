@@ -59,9 +59,9 @@ endif()
 # Build the Python module unless the user disabled this
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 
-if(BUILD_PYTHON_MODULE) 
+if(BUILD_PYTHON_MODULE)
 	add_compile_definitions(WITH_PYTHON=1) ## C++: #if WITH_PYTHON
-else() 
+else()
     add_compile_definitions(WITH_PYTHON=0)
 endif()
 
@@ -72,7 +72,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra)
 
     #add_compile_options(-fvisibility=hidden)
-    
+
     if (PROFILER)
         # profiler flags needed also for linking
         add_compile_options(-pg)
@@ -81,7 +81,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     endif()
 
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")		
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		option(BUILD_UNIT_TESTS "Build unit tests" ON)
 		message(STATUS "==== NOTE: Configuring Debug build")
 		message(STATUS "")
@@ -89,7 +89,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Treat all warnings as errors?
         #add_compile_options(-Werror)
         # Allow compiler to become annoying
-        add_compile_options(-Wpedantic)        
+        add_compile_options(-Wpedantic)
     endif()
 
     if (NOT USE_OMP)

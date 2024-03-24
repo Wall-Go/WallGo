@@ -28,22 +28,22 @@ public:
 		setThermalMassSquared(msqThermal);
 	}
 
-	bool isUltrarelativistic() const { return bUltrarelativistic; }
-	bool isInEquilibrium() const { return bInEquilibrium; }
+	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
+	inline bool isInEquilibrium() const { return bInEquilibrium; }
 
-	std::string getName() const { return name; }
+	inline std::string getName() const { return name; }
 
-    double getVacuumMassSquared() const { return vacuumMassSquared; }
-    double getThermalMassSquared() const { return thermalMassSquared; }
+    inline double getVacuumMassSquared() const { return vacuumMassSquared; }
+    inline double getThermalMassSquared() const { return thermalMassSquared; }
 
 	// Set the non-thermal part of particle's mass squared. Needs to be in units of temperature
-	void setVacuumMassSquared(double msq)
+	inline void setVacuumMassSquared(double msq)
 	{
 		vacuumMassSquared = msq;
 	}
 
 	// Set thermal mass squared. Needs to be in units of temperature
-	void setThermalMassSquared(double msq)
+	inline void setThermalMassSquared(double msq)
 	{
 		thermalMassSquared = msq;
 	}

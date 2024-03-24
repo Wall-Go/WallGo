@@ -47,7 +47,7 @@ public:
 	}
 
 
-	Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const
+	inline Mandelstam calculateMandelstam(const FourVector& p1, const FourVector& p2, const FourVector& p3, const FourVector& p4) const
 	{
 		Mandelstam m;
 		m.s = (p1 + p2) * (p1 + p2);
@@ -57,7 +57,7 @@ public:
 	}
 
 	// Calculate |M|^2 
-	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta)
+	inline double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta)
 	{
 		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
 
@@ -85,14 +85,14 @@ public:
 	}
 
 	// Calculate matrix element times population factor for this 2->2 process 
-	double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
+	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta,
 		const std::array<double, NPARTICLES> &deltaF)
 	{
 
 		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
 	}
 
-	bool isUltrarelativistic() const { return bUltrarelativistic; }
+	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
 
 public:
 

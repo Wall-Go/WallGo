@@ -108,7 +108,7 @@ int main()
 	manager.configureIntegration(options);
 
 	/* Evaluates all collision integrals that were prepared in the setupCollisionIntegrals() step.*/
-	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
+	manager.calculateCollisionIntegrals(/*bVerbose*/ false);
 
     wallgo::gslWrapper::clearRNG();
     
