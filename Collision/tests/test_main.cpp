@@ -5,7 +5,7 @@
 
 
 // ---- Configure test model (QCD)
-Collision setupQCD(uint basisSize)
+Collision setupQCD(size_t basisSize)
 {
     const double gs = 1.2279920495357861;
 

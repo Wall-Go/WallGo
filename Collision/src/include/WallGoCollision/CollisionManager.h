@@ -115,9 +115,18 @@ private:
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 
-    /** How we manage particles. When new particle is registered through addParticle(particle), we store a copy of that particle
-     * in our 'particles' list. For off-equilibrium particles, we also store a raw pointer to the added particle in 'outOfEqParticles' list.
-     * CollElem objects need references to external particles in their respective matrix element. 
+    /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionManager.
+     * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
+     * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
+     * we pass references to appropriate particles from our 'particles' list.
+     * Using references instead of copies of ParticleSpecies objects in CollElems is beneficial because if the user needs to
+     * modify any property of particles after creating the CollisionIntegral objects (eg. change mass), 
+     * we can just make the change in our 'particles' list and it will automatically propagate to integrals stored in our 'integrals' list.
+     *
+     * I though about using raw pointers to dodge the overhead of std::shared_ptr, but:
+     * 1) The overhead really doesn't seem to affect performance much, at least in my test run at N = 5 (runs at same speed)
+     * 2) As usual, raw pointers are error prone. Concretely: If we store ParticleSpecies objects in 'particles' and give CollElems
+     *  raw pointers to these objects, then the pointers get invalidated whenever 'particles' is resized. 
      */
 
     // List of all particles that contribute to collisions
