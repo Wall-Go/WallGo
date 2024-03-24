@@ -55,6 +55,22 @@ struct IntegrationResult
     //bool bConverged; // Did the integration converge to goal accuracy
 };
 
+
+/**** Comment about particle masses. Masses in the integrals appear in two places: 
+ *  1) Inside dispersion relations, E^2 = p^2 + m^2
+ *  2) Inside propagators in the matrix elements
+ * Handling of these two kinds of masses is different in the code and usually also in physical applications:
+ * 
+ * For 1) we use the total mass-squared values in each of our CollElem,
+ * ie. this mass squared is msq_vacuum + msq_thermal for each external particle. If the ultrarelativistic approximation is used,
+ * the mass for ultrarelativistic particles is set to 0.
+ * 
+ * For 2) we treat these masses similarly to any other parameter in matrix elements, ie. they are variables contained in MatrixElement objects.
+ * Note that in leading-log approximation the common approach is to only use thermal masses in propagators. This is NOT built in to our
+ * integration logic in any way, but can be achieved by passing the wanted (symbol, value) pair to matrix elements.  
+*/
+
+
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
 This is always assumed to be first particle in collisionElements[i].particles.

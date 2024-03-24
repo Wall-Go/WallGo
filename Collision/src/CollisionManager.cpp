@@ -2,6 +2,7 @@
 
 #include <array>
 #include <fstream>
+#include <sstream>
 #include <regex> // Reading matrix elements from file
 #include <algorithm> // std::remove_if
 #include <chrono>
@@ -100,6 +101,33 @@ void CollisionManager::addParticle(const ParticleSpecies &particle)
     }
 }
 
+void CollisionManager::clear()
+{
+    clearCollisionIntegrals();
+    modelParameters.clear();
+    particleIndex.clear();
+    outOfEqParticles.clear();
+    particles.clear();
+}
+
+
+void CollisionManager::updateParticleMasses(const std::map<std::string, double> &msqVacuum, const std::map<std::string, double> &msqThermal)
+{
+    // TODO proper validation. The .at() will crash if the key is not found 
+    for (const auto &[name, msq] : msqVacuum)
+    {
+        const size_t idx = particleIndex.at(name);
+        particles[idx]->setVacuumMassSquared(msq);
+    }
+
+    for (const auto &[name, msq] : msqThermal)
+    {
+        const size_t idx = particleIndex.at(name);
+        particles[idx]->setThermalMassSquared(msq);
+    }
+}
+
+
 void CollisionManager::changePolynomialBasis(size_t newBasisSize)
 {
     basisSize = newBasisSize;
@@ -112,6 +140,7 @@ void CollisionManager::changePolynomialBasis(size_t newBasisSize)
 void CollisionManager::setVariable(const std::string &name, double value)
 {
     modelParameters[name] = value;
+    // TODO sync CollElems
 }
 
 

@@ -128,11 +128,8 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     std::array<double, 4> massSquared;
     for (int i = 0; i < 4; ++i)
     {
-        massSquared[i] = collElem.particles[i]->getVacuumMassSquared();
+        massSquared[i] = collElem.particles[i]->getTotalMassSquared();
     }
-
-    // TODO! pretty sure we should use m^2 = vacuum^2 + thermal^2 when computing particle energy, also when solving p3 below. 
-    // No effect if everything is ultrarelativistic, of course 
 
     // Energies: Since p3 is not fixed yet we only know E1, E2
     const double E1 = std::sqrt(p1 * p1 + massSquared[0]);
@@ -161,8 +158,8 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
 #ifndef NDEBUG
     // Check that g(p3) == 0 is reasonably satisfied 
     auto funcG = [&](double p3) {
-         double m3sq = massSquared[2];
-         return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
+        const double m3sq = massSquared[2];
+        return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
     };
 
     assert(std::abs(funcG(root1)) < 1e-8 && std::abs(funcG(root2)) < 1e-8)

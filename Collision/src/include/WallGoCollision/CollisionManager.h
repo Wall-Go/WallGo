@@ -29,6 +29,15 @@ public:
 
     void addParticle(const ParticleSpecies& particle);
 
+    /* Resets the manager to a mostly-default state. This means that defined parameters, particles and integral expression are all cleared.
+    Integration options and matrix element file are NOT reset. */
+    void clear();
+
+    /* Sets vacuum and thermal mass squares of particles. Only particles whose names appear as keys in the maps are updated.
+    The masses should be in units of the temperature.
+    The particles have to be registered with the manager prior to using this, otherwise std::out_of_range is thrown. */
+    void updateParticleMasses(const std::map<std::string, double>& msqVacuum, const std::map<std::string, double>& msqThermal);
+
     // Change basis size used by the polynomial grid. Does not force rebuild of stored integral objects
     void changePolynomialBasis(size_t newBasisSize);
 
@@ -132,7 +141,7 @@ private:
     // List of all particles that contribute to collisions
     std::vector<std::shared_ptr<ParticleSpecies>> particles;
 
-    // List of out-of-equilibrium particles, managed internally
+    // List of out-of-equilibrium particles, managed internally. TODO replace with list of indices or something
     std::vector<std::shared_ptr<ParticleSpecies>> outOfEqParticles;
 
     // Mapping: particle name -> tensor index. Ordering does not matter.

@@ -5,7 +5,11 @@
 #include <vector>
 #include <string>
 
-#include "muParser.h" // math expression parser
+// Forward declare things from muparser
+namespace mu
+{
+    class Parser;
+}
 
 namespace wallgo
 {

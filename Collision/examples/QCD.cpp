@@ -27,13 +27,13 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	const double msqVacuum = 0.0;
 
     /* Approximate all particles as ultrarelativistic, allowing heavy optimizations.
-    * This means E = |p| inside collision integrations, but the masses are kept inside matrix element propagators.
+    * This means E = |p| inside collision integrations, but thermal masses are kept inside matrix element propagators.
     */
 	const bool bUltraRelativistic = true;
 
 	// Take top and gluon to be out-of-equilibrium
     wallgo::ParticleSpecies topQuark("top", wallgo::EParticleType::FERMION, /*inEquilibrium*/false, msqVacuum, mq2, bUltraRelativistic);
-    wallgo::ParticleSpecies gluon("gluon", wallgo::EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
+	wallgo::ParticleSpecies gluon("gluon", wallgo::EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
 	wallgo::ParticleSpecies lightQuark("quark", wallgo::EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Ordering NEEDS to match the order in which particles are defined in the matrix element file(s). TODO improve this
@@ -103,12 +103,21 @@ int main()
 	options.maxIntegrationMomentum = 20;
 	options.absoluteErrorGoal = 1e-8;
 	options.relativeErrorGoal = 1e-1;
+
+	/* The bOptimizeUltrarelativistic flag, when used in combination with ultrarelativistic flags in particle definitions,
+	tells the program to use a more optimized expression for the integrals. In general there should be no reason to turn this off,
+	and you should instead flag the particles accordingly if you don't want to use ultrarelativistic approximations. */
 	options.bOptimizeUltrarelativistic = true;
 	
 	manager.configureIntegration(options);
 
 	/* Evaluates all collision integrals that were prepared in the setupCollisionIntegrals() step.*/
-	manager.calculateCollisionIntegrals(/*bVerbose*/ false);
+	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
+
+	wallgo::gslWrapper::setSeed(0);
+	options.bOptimizeUltrarelativistic = false;
+	manager.configureIntegration(options);
+	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
 
     wallgo::gslWrapper::clearRNG();
     

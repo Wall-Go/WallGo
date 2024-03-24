@@ -35,6 +35,7 @@ public:
 
     inline double getVacuumMassSquared() const { return vacuumMassSquared; }
     inline double getThermalMassSquared() const { return thermalMassSquared; }
+	inline double getTotalMassSquared() const { return vacuumMassSquared + thermalMassSquared; }
 
 	// Set the non-thermal part of particle's mass squared. Needs to be in units of temperature
 	inline void setVacuumMassSquared(double msq)

@@ -76,10 +76,10 @@ public:
 		const double f3 = particles[2]->fEq( momenta[2].energy() );
 		const double f4 = particles[3]->fEq( momenta[3].energy() );
 		
-		double res =  int(bDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
-					+ int(bDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
-					- int(bDeltaF[2]) * std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
-					- int(bDeltaF[3]) * std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
+		double res =  static_cast<int>(bDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
+					+ static_cast<int>(bDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
+					- static_cast<int>(bDeltaF[2]) * std::exp(momenta[3].energy()) * deltaF[2] / (f3*f3)
+					- static_cast<int>(bDeltaF[3]) * std::exp(momenta[2].energy()) * deltaF[3] / (f4*f4);
 
 		res = res * f1*f2*f3*f4;
 		return res;
