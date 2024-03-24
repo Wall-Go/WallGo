@@ -19,50 +19,62 @@ class ParticleSpecies {
 public: 
 
 	ParticleSpecies(std::string speciesName, EParticleType particleType, bool speciesInEquilibrium, 
-		double msqVacuum, double msqThermal, bool ultrarelativistic) : type(particleType)  
+		double msqVacuum, double msqThermal, bool ultrarelativistic)
+		: type(particleType),
+		name(speciesName),
+		bInEquilibrium(speciesInEquilibrium),
+		bUltrarelativistic(ultrarelativistic)
 	{
-		name = speciesName;
-        bInEquilibrium = speciesInEquilibrium;
-		bUltrarelativistic = ultrarelativistic;
-		vacuumMassSquared = msqVacuum;
-		thermalMassSquared = msqThermal;
+		setVacuumMassSquared(msqVacuum);
+		setThermalMassSquared(thermalMassSquared);
 	}
 
-	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
-	inline bool isInEquilibrium() const { return bInEquilibrium; }
+	bool isUltrarelativistic() const { return bUltrarelativistic; }
+	bool isInEquilibrium() const { return bInEquilibrium; }
 
-	inline std::string getName() const { return name; }
+	std::string getName() const { return name; }
 
-    inline double getVacuumMassSquared() const { return vacuumMassSquared; }
-    inline double getThermalMassSquared() const { return thermalMassSquared; }
+    double getVacuumMassSquared() const { return vacuumMassSquared; }
+    double getThermalMassSquared() const { return thermalMassSquared; }
 
+	// Set the non-thermal part of particle's mass squared. Needs to be in units of temperature
+	void setVacuumMassSquared(double msq)
+	{
+		vacuumMassSquared = msq;
+	}
+
+	// Set thermal mass squared. Needs to be in units of temperature
+	void setThermalMassSquared(double msq)
+	{
+		thermalMassSquared = msq;
+	}
+	
 
 	// Equilibrium distribution function for the particle species
-	double fEq(double energy) const {
-		double res = 0.0;
-		if (type == EParticleType::BOSON) {
-			// TODO better cutoff
-			res = 1.0 / (std::exp(energy) - 1.0 + 1e-6);
-		} else {
-			res = 1.0 / (std::exp(energy) + 1.0);
+	double fEq(double energy) const
+	{
+		if (type == EParticleType::BOSON)
+		{
+			return 1.0 / (std::exp(energy) - 1.0 + 1e-50);
+		} 
+		else
+		{
+			return 1.0 / (std::exp(energy) + 1.0);
 		}
-		return res;
 	}
 
 private:
-	// TODO setters for these 
-	// Neglect mass in dispersion relations or not? (this flag is not used ATM)
-	bool bUltrarelativistic;
+
+	const std::string name;
+	const EParticleType type;
+
+	// Neglect mass in dispersion relations or not?
+	const bool bUltrarelativistic;
 	// Is the particle assumed to be in thermal equilibrium?
-	bool bInEquilibrium;
+	const bool bInEquilibrium;
 
 	double vacuumMassSquared;
 	double thermalMassSquared;
-
-	std::string name;
-
-	// Set this in the constructor
-	const EParticleType type;
 };
 
 } // namespace

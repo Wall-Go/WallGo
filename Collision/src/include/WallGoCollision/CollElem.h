@@ -64,17 +64,16 @@ public:
 		return matrixElement.evaluate(mandelstam.s, mandelstam.t, mandelstam.u);
 	}
 
-	// Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong
+	/* Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong.
+	delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i */
 	double evaluatePopulationFactor(const std::array<FourVector, NPARTICLES> &momenta, 
 		const std::array<double, NPARTICLES> &deltaF)
 	{
 
-		// delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i
-
-		double f1 = particles[0].fEq( momenta[0].energy() );
-		double f2 = particles[1].fEq( momenta[1].energy() );
-		double f3 = particles[2].fEq( momenta[2].energy() );
-		double f4 = particles[3].fEq( momenta[3].energy() );
+		const double f1 = particles[0].fEq( momenta[0].energy() );
+		const double f2 = particles[1].fEq( momenta[1].energy() );
+		const double f3 = particles[2].fEq( momenta[2].energy() );
+		const double f4 = particles[3].fEq( momenta[3].energy() );
 		
 		double res =  int(bDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1*f1)
 					+ int(bDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2*f2)
@@ -85,17 +84,15 @@ public:
 		return res;
 	}
 
-
-
 	// Calculate matrix element times population factor for this 2->2 process 
-	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
+	double evaluate(const std::array<FourVector, NPARTICLES> &momenta, 
 		const std::array<double, NPARTICLES> &deltaF)
 	{
 
 		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
 	}
 
-	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
+	bool isUltrarelativistic() const { return bUltrarelativistic; }
 
 public:
 
@@ -111,7 +108,7 @@ public:
 
 
 
-
+// OLD STUFF: hardcoded typical matrix elements at leading-log
 
 /*
 //Note to self: Move these matrix elements to their own file

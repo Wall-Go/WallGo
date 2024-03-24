@@ -43,8 +43,6 @@ public:
     void setupCollisionIntegrals(bool bVerbose = false);
     
     void clearCollisionIntegrals();
-
-
     
     /* Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays. 
     Integration options are read from out internal integrationOptions struct. */ 
@@ -95,15 +93,6 @@ protected:
     /* Holds collision integrals so that they can be reused. Keys are pairs of particle names. */
     std::map<std::pair<std::string, std::string>, CollisionIntegral4> integrals;
 
-    // List of all particles that contribute to collisions
-    std::vector<ParticleSpecies> particles;
-
-    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
-    std::vector<ParticleSpecies> outOfEqParticles;
-
-    // Mapping: particle name -> tensor index. Ordering does not matter.
-    std::map<std::string, size_t> particleIndex;
-
     // TODO have some way of preventing duplicate particles in the above lists
 
     // Masses of the above particles in a vector form. Same ordering. This is vacuum + thermal
@@ -127,6 +116,17 @@ private:
     IntegrationOptions integrationOptions;
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
+
+    /** How we manage particles. */
+
+    // List of all particles that contribute to collisions
+    std::vector<ParticleSpecies> particles;
+
+    // List of out-of-equilibrium particles, handled internally. @todo should be list of references, not objects?
+    std::vector<ParticleSpecies> outOfEqParticles;
+
+    // Mapping: particle name -> tensor index. Ordering does not matter.
+    std::map<std::string, size_t> particleIndex;
 };
 
 } // namespace
