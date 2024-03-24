@@ -18,15 +18,14 @@ class ParticleSpecies {
 
 public: 
 
-	ParticleSpecies(std::string speciesName, EParticleType particleType, bool speciesInEquilibrium, 
-		double msqVacuum, double msqThermal, bool ultrarelativistic)
+	ParticleSpecies(std::string speciesName, EParticleType particleType, bool speciesInEquilibrium, double msqVacuum, double msqThermal, bool ultrarelativistic)
 		: type(particleType),
 		name(speciesName),
 		bInEquilibrium(speciesInEquilibrium),
 		bUltrarelativistic(ultrarelativistic)
 	{
 		setVacuumMassSquared(msqVacuum);
-		setThermalMassSquared(thermalMassSquared);
+		setThermalMassSquared(msqThermal);
 	}
 
 	bool isUltrarelativistic() const { return bUltrarelativistic; }
@@ -65,13 +64,13 @@ public:
 
 private:
 
-	const std::string name;
 	const EParticleType type;
-
-	// Neglect mass in dispersion relations or not?
-	const bool bUltrarelativistic;
+	const std::string name;
+	
 	// Is the particle assumed to be in thermal equilibrium?
 	const bool bInEquilibrium;
+	// Neglect mass in dispersion relations or not?
+	const bool bUltrarelativistic;
 
 	double vacuumMassSquared;
 	double thermalMassSquared;
