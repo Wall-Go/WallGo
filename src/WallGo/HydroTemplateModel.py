@@ -113,15 +113,12 @@ class HydroTemplateModel:
             vmin: double
                 The minimum value of the wall velocity for which a solution can be found
         """
-        def shootingalphamax(vw):
-            vm = min(self.cb,vw)
-            vp = self.get_vp(vm, 1/3.)
-            return self.__shooting(vw,vp)
+        shootingalphamax = lambda vw: self.__shooting(vw,0)
 
-        try:
-            return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
-        except:
+        if self.alN < 1/3:
             return 0
+        else:
+            return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
         
 
     def maxVelocity(self):
