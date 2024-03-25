@@ -51,6 +51,11 @@ class WallGoManager:
         """Register a physics model with WallGo."""
         assert isinstance(model, GenericModel)
         self.model = model
+        
+        temperatureScale = self.config.getfloat("EffectivePotential", "temperatureScale")
+        potentialError = self.config.getfloat("EffectivePotential", "potentialError")
+        self.model.effectivePotential.setPotentialError(potentialError)
+        self.model.effectivePotential.setTemperatureScale(temperatureScale)
 
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
@@ -170,7 +175,11 @@ class WallGoManager:
             0.99 * hydrotemplate.vJ
         )
         
-        dT = self.config.getfloat("EffectivePotential", "dT")
+        phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
+        
+        # Estimate of the dT needed to reach the desired tolerance considering 
+        # the error of a cubic spline scales like dT**4.
+        dT = self.model.effectivePotential.temperatureScale * phaseTracerTol**0.25
 
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large
@@ -183,12 +192,12 @@ class WallGoManager:
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
-        fHighT.tracePhase(TMinHighT, TMaxHighT, dT)
-        fLowT.tracePhase(TMinLowT, TMaxLowT, dT)
+        fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
+        fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 
         # Find critical temperature for dT
         self.Tc = self.thermodynamics.findCriticalTemperature(
-            dT=dT, rTol=1e-6,
+            dT=dT, rTol=phaseTracerTol,
         )
 
         if (self.Tc < Tn):

@@ -36,6 +36,13 @@ class EffectivePotential(ABC):
 
     ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
     fieldLowerBound: float = 1e-8
+    
+    ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
+    ## when the potential can be computed in terms of simple functions.
+    effectivePotentialError: float = 1e-15
+    
+    ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
+    temperatureScale: float = 1.0
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
@@ -59,6 +66,18 @@ class EffectivePotential(ABC):
     
 
     #### Non-abstract stuff from here on
+    
+    def setPotentialError(self, potentialError):
+        """
+        Sets self.effectivePotentialError to potentialError.
+        """
+        self.effectivePotentialError = potentialError
+        
+    def setTemperatureScale(self, temperatureScale):
+        """
+        Sets self.temperatureScale to temperatureScale
+        """
+        self.temperatureScale = temperatureScale
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
         """
@@ -131,9 +150,10 @@ class EffectivePotential(ABC):
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
-            dx=self.dT,
             n=1,
             order=4,
+            epsilon=self.effectivePotentialError,
+            scale=self.temperatureScale,
         )
         return der
 

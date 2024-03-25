@@ -123,7 +123,7 @@ def test_effectivePotential_dVdT_singletSimple(
 
     # results from Veff
     dVdT = Veff.derivT(fields, T)
-    assert dVdTExact == pytest.approx(dVdT, rel=1e-12)
+    assert dVdTExact == pytest.approx(dVdT, rel=1e-10)
 
 
 @pytest.mark.parametrize("T", [90, 110])

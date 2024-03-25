@@ -47,8 +47,6 @@ class FreeEnergy(InterpolatableFunction):
         startingTemperature: float,
         startingPhaseLocationGuess: Fields,
         initialInterpolationPointCount: int = 1000,
-        effectivePotentialError: float=1e-10,
-        temperatureScale: float=10.0,
     ):
         """
         Initialize a FreeEnergy object
@@ -65,13 +63,6 @@ class FreeEnergy(InterpolatableFunction):
         initialInterpolationPointCount : int, optional
             Initial number of points sampled for the interpolation. 
             The default is 1000.
-        effectivePotentialError : float, optional
-            Typical relative accuracy at which the effective potential can be 
-            computed. The default is 1e-10.
-        temperatureScale : float, optional
-            Typical temperature scale over which the effective potential 
-            changes by O(1). A reasonable value would be of order Tc-Tn. 
-            The default is 10.0.
 
         Returns
         -------
@@ -98,9 +89,6 @@ class FreeEnergy(InterpolatableFunction):
         self.minPossibleTemperature = 0.
         # Highest possible temperature so that the phase is still (meta)stable
         self.maxPossibleTemperature = np.Inf
-
-        self.effectivePotentialError = effectivePotentialError
-        self.temperatureScale = temperatureScale
 
 
     def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
@@ -157,8 +145,8 @@ class FreeEnergy(InterpolatableFunction):
         resultsArray = super().derivative(x,
                                   order,
                                   bUseInterpolation=bUseInterpolation,
-                                  epsilon=self.effectivePotentialError,
-                                  scale=self.temperatureScale)
+                                  epsilon=self.effectivePotential.effectivePotentialError,
+                                  scale=self.effectivePotential.temperatureScale)
         
         return FreeEnergyValueType.fromArray(resultsArray)
 
