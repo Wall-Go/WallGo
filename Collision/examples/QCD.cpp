@@ -21,14 +21,14 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 
     //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
 	// Thermal
-	const double mq2 = 0.251327; // quark
-	const double mg2 = 3.01593; // SU(3) gluon
+	const double mq2 = 0.251327; // quark, m^2 = gs^2 * T^2 / 6.0
+	const double mg2 = 3.01593; // SU(3) gluon, m^2 = 2*gs^2 T^2
 	// Set vacuum masses to 0 
 	const double msqVacuum = 0.0;
 
     /* Approximate all particles as ultrarelativistic, allowing heavy optimizations.
     * This means E = |p| inside collision integrations, but thermal masses are kept inside matrix element propagators.
-    */
+	* Note that this may not be a good approximation for the gluons in particular due to its large thermal mass. */
 	const bool bUltraRelativistic = true;
 
 	// Take top and gluon to be out-of-equilibrium
@@ -112,11 +112,6 @@ int main()
 	manager.configureIntegration(options);
 
 	/* Evaluates all collision integrals that were prepared in the setupCollisionIntegrals() step.*/
-	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
-
-	wallgo::gslWrapper::setSeed(0);
-	options.bOptimizeUltrarelativistic = false;
-	manager.configureIntegration(options);
 	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
 
     wallgo::gslWrapper::clearRNG();
