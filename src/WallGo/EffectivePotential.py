@@ -153,6 +153,7 @@ class EffectivePotential(ABC):
             order=4,
             epsilon=self.effectivePotentialError,
             scale=self.temperatureScale,
+            bounds=(0,np.inf),
         )
         return der
 
@@ -224,6 +225,7 @@ class EffectivePotential(ABC):
             order=4,
             epsilon=self.effectivePotentialError,
             scale=self.temperatureScale,
+            bounds=(0,np.inf),
         )
         
         return res
