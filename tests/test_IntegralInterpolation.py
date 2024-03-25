@@ -16,6 +16,15 @@ def test_directJb(x: float, expectedResult: float):
 
     Jb = JbIntegral(bUseAdaptiveInterpolation=False)
     assert Jb(x) == pytest.approx(expectedResult, rel=1e-6)
+
+@pytest.mark.parametrize("x, expectedResult", [
+    (5, 0.1195247494387632),
+    (-1, 0.516703124731066)
+])
+def test_directJb_derivative(x: float, expectedResult: float):
+
+    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    assert Jb.derivative(x,1,False) == pytest.approx(expectedResult, rel=1e-6)
     
 
 @pytest.mark.parametrize("x, expectedResult", [
@@ -27,14 +36,30 @@ def test_directJf(x: float, expectedResult: float):
     Jf = JfIntegral(bUseAdaptiveInterpolation=False)
     assert Jf(x) == pytest.approx(expectedResult, rel=1e-6)
     
+@pytest.mark.parametrize("x, expectedResult", [
+    (5, 0.1113267810730111),
+    (-1, 0.5376680405566582)
+])
+def test_directJf_derivative(x: float, expectedResult: float):
+
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    assert Jf.derivative(x,1,False) == pytest.approx(expectedResult, rel=1e-6)
+    
 
 ## Interpolated Jb integral fixture, no extrapolation. The interpolation here is very rough to make this run fast
 @pytest.fixture()
 def Jb_interpolated():
     
     Jb = JbIntegral(bUseAdaptiveInterpolation=False)
-    Jb.newInterpolationTable(1.0, 10.0, 10)
+    Jb.newInterpolationTable(1.0, 10.0, 100)
     return Jb
+
+@pytest.fixture()
+def Jf_interpolated():
+    
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf.newInterpolationTable(1.0, 10.0, 100)
+    return Jf
 
 
 @pytest.mark.parametrize("x, expectedResult", [
@@ -46,6 +71,22 @@ def test_Jb_interpolated(Jb_interpolated: JbIntegral, x, expectedResult):
     ## This also tests array input
 
     np.testing.assert_allclose( Jb_interpolated(x), expectedResult, rtol=1e-6)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jb_derivative_interpolated(Jb_interpolated: JbIntegral, x):
+    np.testing.assert_allclose( Jb_interpolated.derivative(x, 1, True), Jb_interpolated.derivative(x, 1, False), rtol=1e-4)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jb_second_derivative_interpolated(Jb_interpolated: JbIntegral, x):
+    np.testing.assert_allclose( Jb_interpolated.derivative(x, 2, True), Jb_interpolated.derivative(x, 2, False), rtol=1e-3, atol=1e-3)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jf_derivative_interpolated(Jf_interpolated: JfIntegral, x):
+    np.testing.assert_allclose( Jf_interpolated.derivative(x, 1, True), Jf_interpolated.derivative(x, 1, False), rtol=1e-4)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jf_second_derivative_interpolated(Jf_interpolated: JfIntegral, x):
+    np.testing.assert_allclose( Jf_interpolated.derivative(x, 2, True), Jf_interpolated.derivative(x, 2, False), rtol=1e-3, atol=1e-3)
     
 
 class JbJf(InterpolatableFunction):
@@ -67,7 +108,7 @@ def JbJf_interpolated():
     JbJf_interpolated.newInterpolationTable(1.0, 10.0, 10)
     return JbJf_interpolated
 
-
+    
 ## just shorthands because I'm lazy
 def jb(x: npt.ArrayLike) -> npt.ArrayLike:
     return JbIntegral()(x)
