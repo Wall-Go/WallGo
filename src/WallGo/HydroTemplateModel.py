@@ -444,9 +444,9 @@ class HydroTemplateModel:
         
         vm = min(self.cb,vw)
 
-        if vw > self.vMax:
-            # alN too small for shock 
-            return (None,None,None,None)
+#        if vw > self.vMax:
+#            # alN too small for shock 
+#            return (None,None,None,None)
         
         if vw < self.vMin:
             # alN too large for shock
