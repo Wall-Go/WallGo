@@ -161,10 +161,11 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     Returns
     -------
     res : float
-        The value of the derivative of :py:data:`f` evaluated at :py:data:`x`.
+        The value of the gradient of :py:data:`f` evaluated at :py:data:`x`.
 
     """
     x = np.asarray(x)
+    nbrVariables = x.shape[-1]
     
     if args is None:
         args = []
@@ -182,6 +183,15 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     # is exactly equal to dx (no precision error).
     temp = x + dx
     dx = temp - x
+    
+    if order == 2:
+        pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS['2'][0,:,None,None]*np.identity(nbrVariables)*dx
+        coeff = FIRST_DERIV_COEFF['2'].T[0,:,None]/dx
+    if order == 4:
+        pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS['4'][0,:,None,None]*np.identity(nbrVariables)*dx
+        coeff = FIRST_DERIV_COEFF['4'][0,:,None]/dx
+        
+    return np.sum(coeff*f(pos, *args), axis=-2)
     
 
 
