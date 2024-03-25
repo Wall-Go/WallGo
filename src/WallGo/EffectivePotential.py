@@ -50,7 +50,6 @@ class EffectivePotential(ABC):
         self.fieldCount = fieldCount
 
         ## Used for derivatives. TODO read from config file probably
-        self.dT = 0.1  ## HACK! These defaults are bad, as the quantities have dimensions
         self.dPhi = 0.1  ## field difference
 
 
@@ -176,7 +175,7 @@ class EffectivePotential(ABC):
         """
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
-        res = np.empty_like(fields, dtype=float)
+        res = np.empty_like((fields.T*temperature).T, dtype=float)
 
         for idx in range(fields.NumFields()):
             fieldsOffset = np.zeros_like(fields, dtype=float)
@@ -217,18 +216,16 @@ class EffectivePotential(ABC):
             # HACK! Not sure how best to deal with this edge case, which
             # arises due to how scipyint.RK45 is initialised
             fields = Fields((fields))
-
-        # O(dPhi^4) accurate, central finite difference scheme
-        res = (
-            - self.derivField(fields, temperature + 2 * self.dT)
-            + 8 * self.derivField(fields, temperature + self.dT)
-            - 8 * self.derivField(fields, temperature - self.dT)
-            + self.derivField(fields, temperature - 2 * self.dT)
-        ) / (12 * self.dT)
-
-        if len(res.shape) == 2 and res.shape[0] == 1:
-            # HACK! SHOULD DO THIS MORE TIDILY
-            return res[0]
+        
+        res = derivative(
+            lambda T: self.derivField(fields, T),
+            temperature,
+            n=1,
+            order=4,
+            epsilon=self.effectivePotentialError,
+            scale=self.temperatureScale,
+        )
+        
         return res
 
     def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):

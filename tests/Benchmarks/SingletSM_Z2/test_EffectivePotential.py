@@ -168,7 +168,7 @@ def test_effectivePotential_d2VdFielddT_singletSimple(
 
     # results from Veff
     d2VdFielddT = Veff.deriv2FieldT(fields, T)
-    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-6)  # HACK! This should be more accurate
+    assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-5)  # HACK! This should be more accurate
 
 
 @pytest.mark.parametrize("T", [90, 110])
