@@ -70,12 +70,18 @@ void MatrixElement::initSymbols(const std::map<std::string, double> &parameters)
 
 void MatrixElement::setParameters(const std::map<std::string, double> &parameters)
 {
-    for (auto const& [key, val] : parametersInternal)
+    for (auto const& [name, newValue] : parameters)
     {
-        // NB: check only in debug builds, otherwise just assume that the key exists
-        assert(parameters.count(key) > 0);
+        setParameter(name, newValue);
+    }
+}
 
-        parametersInternal[key] = parameters.at(key);
+void MatrixElement::setParameter(const std::string &name, double newValue)
+{
+    // Change only keys that the MatrixElement already holds internally
+    if (parametersInternal.count(name) > 0) 
+    {
+        parametersInternal[name] = newValue;
     }
 }
 

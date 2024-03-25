@@ -42,12 +42,12 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	manager.addParticle(lightQuark);
 	
 
-	// Define all symbol that appear in matrix elements along with an initial value. The values can safely be changed later with the same function
-	//manager.setVariable("gs", gs);
-	manager.setVariable("c[0]", gs);
-	manager.setVariable("msq[0]", mq2);
-	manager.setVariable("msq[1]", mg2);
-	manager.setVariable("msq[2]", mq2);
+	// Define all symbol that appear in matrix elements along with an initial value. The values can be changed later with manager.setVariable(name, value)
+	//manager.defineVariable("gs", gs);
+	manager.defineVariable("c[0]", gs);
+	manager.defineVariable("msq[0]", mq2);
+	manager.defineVariable("msq[1]", mg2);
+	manager.defineVariable("msq[2]", mq2);
 
 	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
 	This function returns false if the file is not found, in which case we abort here. */
@@ -104,14 +104,27 @@ int main()
 	options.absoluteErrorGoal = 1e-8;
 	options.relativeErrorGoal = 1e-1;
 
-	/* The bOptimizeUltrarelativistic flag, when used in combination with ultrarelativistic flags in particle definitions,
-	tells the program to use a more optimized expression for the integrals. In general there should be no reason to turn this off,
-	and you should instead flag the particles accordingly if you don't want to use ultrarelativistic approximations. */
+	/* The bOptimizeUltrarelativistic flag allows the program to use a more optimized expression for the integrals
+	when only particles with the ultrarelativistic flag appear as external particles.
+	You should not have any reason to disable this optimization. */
 	options.bOptimizeUltrarelativistic = true;
 	
 	manager.configureIntegration(options);
 
 	/* Evaluates all collision integrals that were prepared in the setupCollisionIntegrals() step.*/
+	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
+
+	/* We can evaluate the integrals again at different parameters, without the need to re-define particles or matrix elements.
+	Demonstration: */
+	std::map<std::string, double> newVars 
+	{
+		{"c[0]", 1},
+		{"msq[1]", 0.2},
+	};
+
+	manager.setVariables(newVars);
+	manager.setVariable("msq[2]", 0.3);
+
 	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
 
     wallgo::gslWrapper::clearRNG();

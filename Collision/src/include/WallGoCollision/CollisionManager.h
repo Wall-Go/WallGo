@@ -15,6 +15,33 @@
 #include "hdf5Interface.h"
 
 
+/** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionManager.
+ * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
+ * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
+ * we pass references to appropriate particles from our 'particles' list.
+ * Using references instead of copies of ParticleSpecies objects in CollElems is beneficial because if the user needs to
+ * modify any property of particles after creating the CollisionIntegral objects (eg. change mass), 
+ * we can just make the change in our 'particles' list and it will automatically propagate to integrals stored in our 'integrals' list.
+ *
+ * I though about using raw pointers to dodge the overhead of std::shared_ptr, but:
+ * 1) The overhead really doesn't seem to affect performance much, at least in my test run at N = 5 (runs at same speed)
+ * 2) As usual, raw pointers are error prone. Concretely: If we store ParticleSpecies objects in 'particles' and give CollElems
+ *  raw pointers to these objects, then the pointers get invalidated whenever 'particles' is resized. 
+ */
+
+
+/** Handling of model parameters. The manager holds a map of [string, double] pairs that can be updated
+ * through CollisionManager::setVariable(key, val). These need to be defined before parsing matrix elements,
+ * otherwise the parsing will error out due to undefined symbols. Each matrix element will hold their own internal map
+ * of parameter values, so if they change at any point, it is up to the manager to sync all built CollisionIntegral objects
+ * and their stored MatrixElement objects. 
+ * 
+ * I considered using a map of shared_ptrs to hold parameters, so that all MatrixElements constructed by the manager would 
+ * automatically point to the same parameters. But this may lead to much overhead.
+ * I did try using a shared_ptr<map<string, double>>: This was fast but seemed too unsafe, since MatrixElements would crash if anything is removed from the map.
+ * 
+*/
+
 namespace wallgo
 {
 
@@ -41,8 +68,17 @@ public:
     // Change basis size used by the polynomial grid. Does not force rebuild of stored integral objects
     void changePolynomialBasis(size_t newBasisSize);
 
-    // Set numerical value to a physics parameter used in matrix elements. Registers a new variable if the name is not already defined. 
+    // Defines a new symbolic variable that can appear in matrix elements and an initial value for it.
+    void defineVariable(const std::string& name, double value);
+
+    // Defines new symbolic variables that can appear in matrix elements and initial values for them.
+    void defineVariables(const std::map<std::string, double>& variables);
+
+    // Set numerical value to a previously defined variable
     void setVariable(const std::string& name, double value);
+
+    // Set numerical values to previously defined variables
+    void setVariables(const std::map<std::string, double>& newValues);
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
     CollisionIntegral4 setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
@@ -99,14 +135,6 @@ protected:
     std::vector<CollElem<4>> parseMatrixElements(const std::string &particleName1, const std::string &particleName2,
         const std::string &matrixElementFile, bool bVerbose = false);
 
-
-    /* Holds collision integrals so that they can be reused. Keys are pairs of particle names. */
-    std::map<std::pair<std::string, std::string>, CollisionIntegral4> integrals;
-
-    // TODO have some way of preventing duplicate particles in the above lists
-
-    std::map<std::string, double> modelParameters;
-
 private:
 
     size_t basisSize = 0;
@@ -124,19 +152,8 @@ private:
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 
-    /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionManager.
-     * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
-     * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
-     * we pass references to appropriate particles from our 'particles' list.
-     * Using references instead of copies of ParticleSpecies objects in CollElems is beneficial because if the user needs to
-     * modify any property of particles after creating the CollisionIntegral objects (eg. change mass), 
-     * we can just make the change in our 'particles' list and it will automatically propagate to integrals stored in our 'integrals' list.
-     *
-     * I though about using raw pointers to dodge the overhead of std::shared_ptr, but:
-     * 1) The overhead really doesn't seem to affect performance much, at least in my test run at N = 5 (runs at same speed)
-     * 2) As usual, raw pointers are error prone. Concretely: If we store ParticleSpecies objects in 'particles' and give CollElems
-     *  raw pointers to these objects, then the pointers get invalidated whenever 'particles' is resized. 
-     */
+    /* Holds collision integrals so that they can be reused. Keys are pairs of particle names. */
+    std::map<std::pair<std::string, std::string>, CollisionIntegral4> integrals;
 
     // List of all particles that contribute to collisions
     std::vector<std::shared_ptr<ParticleSpecies>> particles;
@@ -146,6 +163,9 @@ private:
 
     // Mapping: particle name -> tensor index. Ordering does not matter.
     std::map<std::string, size_t> particleIndex;
+
+    // User defined parameters, can be anything. These get passed to matrix elements
+    std::map<std::string, double> modelParameters;
 };
 
 } // namespace

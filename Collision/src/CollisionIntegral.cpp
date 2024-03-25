@@ -109,8 +109,6 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
 void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
 {
     // TODO should check here that the collision element makes sense: has correct p1 particle etc
-
-    collisionElements.push_back(elem);
     if (elem.isUltrarelativistic())
     {
         collisionElements_ultrarelativistic.push_back(elem);
@@ -121,27 +119,48 @@ void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
     }
 }
 
-std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4> &collElem, double p1, double p2, const ThreeVector &p1Vec, const ThreeVector &p2Vec,
-                                                                const ThreeVector &p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot)
+void CollisionIntegral4::updateModelParameters(const std::map<std::string, double> &parameters)
+{
+    for (auto &collElem : collisionElements_ultrarelativistic)
+    {
+        collElem.matrixElement.setParameters(parameters);
+    }
+
+    for (auto &collElem : collisionElements_nonUltrarelativistic)
+    {
+        collElem.matrixElement.setParameters(parameters);
+    }
+}
+
+void CollisionIntegral4::updateModelParameter(const std::string &name, double newValue)
+{
+    for (auto &collElem : collisionElements_ultrarelativistic) collElem.matrixElement.setParameter(name, newValue);
+    for (auto &collElem : collisionElements_nonUltrarelativistic) collElem.matrixElement.setParameter(name, newValue);
+}
+
+std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const
 {
     // Vacuum masses squared
     std::array<double, 4> massSquared;
     for (int i = 0; i < 4; ++i)
     {
-        massSquared[i] = collElem.particles[i]->getTotalMassSquared();
+        massSquared[i] =  collElem.particles[i]->isUltrarelativistic() ? 0.0 : collElem.particles[i]->getTotalMassSquared();
     }
 
+    const double p1 = kinematicInput.p1;
+    const double p2 = kinematicInput.p2;
+
     // Energies: Since p3 is not fixed yet we only know E1, E2
-    const double E1 = std::sqrt(p1 * p1 + massSquared[0]);
-    const double E2 = std::sqrt(p2 * p2 + massSquared[1]);
+    const double E1 = std::sqrt(p1*p1 + massSquared[0]);
+    const double E2 = std::sqrt(p2*p2 + massSquared[1]);
 
     // Now def. function g(p3) = FV4(p3) - msq4 and express the delta function in
     // terms of roots of g(p3) and delta(p3 - p3root); p3 integral becomes trivial.
     // Will need to solve a quadratic equation; some helper variables for it:
     const double Q = massSquared[0] + massSquared[1] + massSquared[2] - massSquared[3];
-    const double kappa = Q + 2.0 * (E1 * E2 - p1p2Dot);
+    const double kappa = Q + 2.0 * (E1 * E2 - kinematicInput.p1p2Dot);
     const double eps = 2.0 * (E1 + E2);
-    const double delta = 2.0 * (p1p3HatDot + p2p3HatDot);
+    const double delta = 2.0 * (kinematicInput.p1p3HatDot + kinematicInput.p2p3HatDot);
 
     // Quadratic eq. A p3^2 + B p3 + C = 0, take positive root(s)
     const double A = delta * delta - eps * eps;
@@ -188,9 +207,9 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
         Kinematics newKinematics;
 
         // Make four vectors
-        newKinematics.FV1 = FourVector(E1, p1Vec);
-        newKinematics.FV2 = FourVector(E2, p2Vec);
-        newKinematics.FV3 = FourVector(E3, p3 * p3VecHat);
+        newKinematics.FV1 = FourVector(E1, kinematicInput.p1Vec);
+        newKinematics.FV2 = FourVector(E2, kinematicInput.p2Vec);
+        newKinematics.FV3 = FourVector(E3, p3 * kinematicInput.p3VecHat);
 
         newKinematics.FV4 = newKinematics.FV1 + newKinematics.FV2 - newKinematics.FV3;
 
@@ -205,21 +224,24 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     return kinematics;
 }
 
-Kinematics CollisionIntegral4::calculateKinematics_ultrarelativistic(double p1, double p2, const ThreeVector &p1Vec, const ThreeVector &p2Vec, const ThreeVector &p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot)
+Kinematics CollisionIntegral4::calculateKinematics_ultrarelativistic(const InputsForKinematics& kinematicInput) const
 {
     // Now E_i = p_i and the momentum-conserving delta function gives p3 = (p1*p2 - p1.p2 ) / (p1 + p2 - p3hat.(p1+p2))
 
-    const double denom = p1 + p2 - p1p3HatDot - p2p3HatDot;
-    const double p3 = (p1 * p2 - p1p2Dot) / denom;
+    const double p1 = kinematicInput.p1;
+    const double p2 = kinematicInput.p2;
+
+    const double denom = p1 + p2 - kinematicInput.p1p3HatDot - kinematicInput.p2p3HatDot;
+    const double p3 = (p1 * p2 - kinematicInput.p1p2Dot) / denom;
 
     assert(p3 >= 0);
 
     Kinematics newKinematics;
 
     // Make four vectors
-    newKinematics.FV1 = FourVector(p1, p1Vec);
-    newKinematics.FV2 = FourVector(p2, p2Vec);
-    newKinematics.FV3 = FourVector(p3, p3 * p3VecHat);
+    newKinematics.FV1 = FourVector(p1, kinematicInput.p1Vec);
+    newKinematics.FV2 = FourVector(p2, kinematicInput.p2Vec);
+    newKinematics.FV3 = FourVector(p3, p3 * kinematicInput.p3VecHat);
     
     newKinematics.FV4 = newKinematics.FV1 + newKinematics.FV2 - newKinematics.FV3;
 
@@ -263,10 +285,26 @@ void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)
     polynomialBasis = Chebyshev(newBasisSize);
 }
 
+CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandParameters(int m, int n, int j, int k) const
+{
+    IntegrandParameters params;
+    params.m = m;
+    params.n = n;
+
+    // Precalculate stuff related to the p1 momentum (optimization)
+    params.rhoZ1 = polynomialBasis.rhoZGrid(j);
+    params.rhoPar1 = polynomialBasis.rhoParGrid(k);
+    params.pZ1 = polynomialBasis.rhoZ_to_pZ(params.rhoZ1);
+    params.pPar1 = polynomialBasis.rhoPar_to_pPar(params.rhoPar1);
+    params.TmTn_p1 = polynomialBasis.TmTn(m, n, params.rhoZ1, params.rhoPar1);
+    params.p1 = std::sqrt(params.pZ1*params.pZ1 + params.pPar1*params.pPar1);
+    return params;
+}
+
+
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3,
                                               const IntegrandParameters &integrandParameters)
 {
-
     double fullIntegrand = 0.0;
 
     // Variables from the input structure, redefine locally here for convenience
@@ -287,29 +325,34 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
     const double cosPhi2 = std::cos(phi2);
     const double cosPhi3 = std::cos(phi3);
 
+    InputsForKinematics kinematicInput;
+    kinematicInput.p1 = p1;
+    kinematicInput.p2 = p2;
+
     // Create momentum 3-vectors
-    ThreeVector p1Vec(pPar1, 0, pZ1);
-    ThreeVector p2Vec(p2 * sinTheta2 * cosPhi2, p2 * sinTheta2 * sinPhi2, p2 * cosTheta2);
+    const ThreeVector p1Vec(pPar1, 0, pZ1);
+    const ThreeVector p2Vec(p2 * sinTheta2 * cosPhi2, p2 * sinTheta2 * sinPhi2, p2 * cosTheta2);
 
     // 'p3VecHat': like p3Vec, but normalized to 1. We will fix its magnitude using a delta(FV4^2 - msq4)
     const ThreeVector p3VecHat(sinTheta3 * cosPhi3, sinTheta3 * sinPhi3, cosTheta3);
 
+    kinematicInput.p1Vec = p1Vec;
+    kinematicInput.p2Vec = p2Vec;
+    kinematicInput.p3VecHat = p3VecHat;
+
     // Precalculate some dot products of 3-vectors that are same for all CollElems
-    const double p1p2Dot = p1Vec * p2Vec;
-    const double p1p3HatDot = p1Vec * p3VecHat;
-    const double p2p3HatDot = p2Vec * p3VecHat;
+    kinematicInput.p1p2Dot = p1Vec * p2Vec;
+    kinematicInput.p1p3HatDot = p1Vec * p3VecHat;
+    kinematicInput.p2p3HatDot = p2Vec * p3VecHat;
 
     // Kinematics differs for each collision element since the masses are generally different.
     // But for CollElems with only ultrarelativistic (UR) particles the kinematic factors will always be the same
 
-    // Handle these after doing optimized evaluation of the UR parts
-    std::vector<CollElem<4>>* remainingCollElems = &collisionElements;
+    bool bDoneUR = false;
 
     if (bOptimizeUltrarelativistic && collisionElements_ultrarelativistic.size() > 0)
     {
-        remainingCollElems = &collisionElements_nonUltrarelativistic;
-
-        Kinematics kinematics = calculateKinematics_ultrarelativistic(p1, p2, p1Vec, p2Vec, p3VecHat, p1p2Dot, p1p3HatDot, p2p3HatDot);
+        Kinematics kinematics = calculateKinematics_ultrarelativistic(kinematicInput);
 
         // Account for theta(E4). Note that in the non-UR case this is built-in to the kinematics computation
         if (kinematics.FV4.energy() >= 0)
@@ -329,12 +372,17 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
                 fullIntegrand += evaluateCollisionElement(collElem, kinematics, TmTn);
             }
         }
+        bDoneUR = true;
     }
 
-    // Non-ultrarelativistic computations. Here each CollElem has its own kinematics and the momentum delta-function needs a sum over p3 roots
-    for (CollElem<4> &collElem : *remainingCollElems)
+    //---- Non-ultrarelativistic computations. Here each CollElem has its own kinematics and the momentum delta-function needs a sum over p3 roots
+
+    // ugly lambda to avoid copy-paste or unnecessary member function just for this
+    auto evaluateNonUR = [&](CollElem<4> &collElem)
     {
-        const std::vector<Kinematics> kinematicFactors = calculateKinematics(collElem, p1, p2, p1Vec, p2Vec, p3VecHat, p1p2Dot, p1p3HatDot, p2p3HatDot);
+        double res = 0.0;
+
+        const std::vector<Kinematics> kinematicFactors = calculateKinematics(collElem, kinematicInput);
 
         // kinematicFactors only contains solutions with E4 > 0 so the theta(E4) is OK.
         for (const Kinematics &kinematics : kinematicFactors)
@@ -347,10 +395,14 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
                 polynomialBasis.TmTn(m, n, kinematics.FV4)
             };
 
-            fullIntegrand += evaluateCollisionElement(collElem, kinematics, TmTn);
+            res += evaluateCollisionElement(collElem, kinematics, TmTn);
         }
+        return res;
+    };
 
-    } // end collElem : collisionElements
+    for (CollElem<4> &collElem : collisionElements_nonUltrarelativistic) fullIntegrand += evaluateNonUR(collElem);
+    
+    if (!bDoneUR) for (CollElem<4> &collElem : collisionElements_ultrarelativistic) fullIntegrand += evaluateNonUR(collElem);
 
     // Common numerical prefactor
     constexpr double PI = constants::pi;

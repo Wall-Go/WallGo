@@ -47,8 +47,10 @@ public:
     and associates them with variables in parametersInternal. Needs to be called before actual parsing. */
     void initSymbols(const std::map<std::string, double>& parameters);
 
-    // This gives numerical values to all our internal symbols except for (s,t,u), as defined in initParser.
+    // Used to change numerical values of our internal symbols except for (s,t,u). Does not add or remove symbols.
     void setParameters(const std::map<std::string, double>& parameters);
+
+    void setParameter(const std::string& name, double newValue);
 
     // Evaluate the matrix element at s,t,u, using cached couplings and masses
     double evaluate(double s, double t, double u);
@@ -63,6 +65,11 @@ private:
 
     // Internal map of model-specific symbols that are not (s,t,u), and their current values
     std::map<std::string, double> parametersInternal;
+
+    /* LN: In principle it may be better to use a map of shared_ptrs to describe the parameters.
+    That way we could automatically sync parameter values with eg. those contained in CollisionManager.
+    But this probably introduces too much overhead to be worth it - it's easy to enough to update the map here
+    by calling MatrixElement::setParameters() from the manager. */
 
     // Tests that our expression is valid and can be evaluated by the parser
     void testExpression();

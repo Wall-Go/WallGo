@@ -137,12 +137,49 @@ void CollisionManager::changePolynomialBasis(size_t newBasisSize)
     }
 }
 
-void CollisionManager::setVariable(const std::string &name, double value)
+void CollisionManager::defineVariable(const std::string &name, double value)
 {
-    modelParameters[name] = value;
-    // TODO sync CollElems
+    if (modelParameters.count(name) > 0)
+    {
+        std::cerr << "Error: variable " << name << " has already been defined\n";
+    }
+    else
+    {
+        modelParameters[name] = value;
+    }
 }
 
+void CollisionManager::defineVariables(const std::map<std::string, double> &variables)
+{
+    for (const auto& [name, value] : variables)
+    {
+        defineVariable(name, value);
+    }
+}
+
+void CollisionManager::setVariable(const std::string &name, double value)
+{
+    if (modelParameters.count(name) < 1)
+    {
+        std::cerr << "Error: can't change value of undefined variable " << name << "\n";
+        return;
+    }
+    modelParameters[name] = value;
+
+    // Sync collision elements    
+    for (auto& [_, integral] : integrals)
+    {
+        integral.updateModelParameter(name, value);
+    }
+}
+
+void CollisionManager::setVariables(const std::map<std::string, double> &newValues)
+{
+    for (const auto &[key, val] : newValues)
+    {
+        setVariable(key, val);
+    }
+}
 
 CollisionIntegral4 CollisionManager::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
     const std::string &matrixElementFile, size_t basisSize, bool bVerbose)

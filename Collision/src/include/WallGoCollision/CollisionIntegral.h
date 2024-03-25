@@ -14,6 +14,29 @@
 namespace wallgo
 {
 
+/**** Comment about particle masses. Masses in the integrals appear in two places: 
+ *  1) Inside dispersion relations, E^2 = p^2 + m^2
+ *  2) Inside propagators in the matrix elements
+ * Handling of these two kinds of masses is different in the code and usually also in physical applications:
+ * 
+ * For 1) we use the total mass-squared values in each of our CollElem,
+ * ie. this mass squared is msq_vacuum + msq_thermal for each external particle. If the ultrarelativistic approximation is used,
+ * the mass for ultrarelativistic particles is set to 0.
+ * 
+ * For 2) we treat these masses similarly to any other parameter in matrix elements, ie. they are variables contained in MatrixElement objects.
+ * Note that in leading-log approximation the common approach is to only use thermal masses in propagators. This is NOT built in to our
+ * integration logic in any way, but can be achieved by passing the wanted (symbol, value) pair to matrix elements.  
+*/
+
+/**** Ultrarelativistic approximations. We separate CollElem objects to ultrarelativistic (UR) and non-UR elements.
+ * A CollElem is UR if all its external particles have the UR flag enabled. For particles, the UR flag means that the
+ * their mass is neglected in dispersion relations, ie. E(p) = |p| always. For UR CollElems, the kinematic factors
+ * can be calculated in a more optimized way. Whether this optimization is used or not is controlled by our bOptimizeUltrarelativistic flag,
+ * which can be changed by passing a IntegrationOptions struct to CollisionIntegral4::integrate(). 
+ * NOTE: If a particle is UR, its mass (both thermal and vacuum) is ALWAYS neglected in energy expressions,
+ * irrespectively of whether bOptimizeUltrarelativistic is enabled or not. As described above, masses in propagators are treated differently.  
+*/
+
 /* This holds data for computing the "kinematic" factor in a collision integral. The kinematic factor is: 
     p2^2/E2 * p3^2/E3 * theta(E4) * delta(g(p3))
 where the delta function enforces momentum conservation. Standard delta-trick expresses it as sum_i |1/g'(p3)| where we sum over roots of g(p3) = 0.
@@ -25,6 +48,20 @@ struct Kinematics
     double prefactor; // This is p2^2/E2 * p3^2/E3 * |1 / g'(p3)|
 };
 
+/* Helper struct for computing unknown kinematic factors. 
+There is some redundancy but we're trying to avoid having to compute them many times. */ 
+struct InputsForKinematics
+{
+    double p1;
+    double p2;
+    ThreeVector p1Vec;
+    ThreeVector p2Vec;
+    ThreeVector p3VecHat;
+    double p1p2Dot;
+    double p1p3HatDot;
+    double p2p3HatDot;
+};
+
 struct IntegrationOptions
 {
     double maxIntegrationMomentum;
@@ -33,6 +70,7 @@ struct IntegrationOptions
     double relativeErrorGoal;
     double absoluteErrorGoal;
     double maxTries;
+    // Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing
     bool bOptimizeUltrarelativistic;
 
     // Set sensible defaults
@@ -56,24 +94,9 @@ struct IntegrationResult
 };
 
 
-/**** Comment about particle masses. Masses in the integrals appear in two places: 
- *  1) Inside dispersion relations, E^2 = p^2 + m^2
- *  2) Inside propagators in the matrix elements
- * Handling of these two kinds of masses is different in the code and usually also in physical applications:
- * 
- * For 1) we use the total mass-squared values in each of our CollElem,
- * ie. this mass squared is msq_vacuum + msq_thermal for each external particle. If the ultrarelativistic approximation is used,
- * the mass for ultrarelativistic particles is set to 0.
- * 
- * For 2) we treat these masses similarly to any other parameter in matrix elements, ie. they are variables contained in MatrixElement objects.
- * Note that in leading-log approximation the common approach is to only use thermal masses in propagators. This is NOT built in to our
- * integration logic in any way, but can be achieved by passing the wanted (symbol, value) pair to matrix elements.  
-*/
-
-
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
-This is always assumed to be first particle in collisionElements[i].particles.
+This is always assumed to be first particle in each stored CollElem.
 Momenta are denoted p1, p2 ; p3, p4.
 Assumes a 5D integral of form:
     int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
@@ -83,8 +106,8 @@ class CollisionIntegral4 {
 
 public:
 
-    // Struct to carry info about parameters other than the 5 integration variables. 
-    // Optimization (precalculate p1 etc) + thread safety (since each thread can have its own copy of this struct)
+    /* Struct to carry info about parameters other than the 5 integration variables. 
+    * Good for optimization (precalculate p1 etc) + thread safety (since each thread can have its own copy of this struct) */
     struct IntegrandParameters {
         // Basis polynomial indices (Tbar_m, Ttilde_n)
         int m, n;
@@ -103,22 +126,6 @@ public:
 
     void changePolynomialBasis(size_t newBasisSize);
 
-    // 
-    IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const {
-        IntegrandParameters params;
-        params.m = m;
-        params.n = n;
-
-        // Precalculate stuff related to the p1 momentum (optimization)
-        params.rhoZ1 = polynomialBasis.rhoZGrid(j);
-        params.rhoPar1 = polynomialBasis.rhoParGrid(k);
-        params.pZ1 = polynomialBasis.rhoZ_to_pZ(params.rhoZ1);
-        params.pPar1 = polynomialBasis.rhoPar_to_pPar(params.rhoPar1);
-        params.TmTn_p1 = polynomialBasis.TmTn(m, n, params.rhoZ1, params.rhoPar1);
-        params.p1 = std::sqrt(params.pZ1*params.pZ1 + params.pPar1*params.pPar1);
-        return params;
-    }
-
     /* Calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
     Includes the 1/(2N) prefactor. Kinematics is solved (from delta functions) separately for each 
     CollElem in our collisionElements array. For ultrarelativistic CollElems we heavily optimize the kinematic part. */
@@ -132,8 +139,11 @@ public:
 
     void addCollisionElement(const CollElem<4>& elem);
 
-    /* Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing */
-    bool bOptimizeUltrarelativistic = true;
+    /* Used to update parameters inside CollElems (actually their MatrixElements).
+    This does not define new parameters, so things work even if the input map is "too big". */
+    void updateModelParameters(const std::map<std::string, double>& parameters);
+
+    void updateModelParameter(const std::string& name, double newValue);
 
 private:
 
@@ -142,28 +152,27 @@ private:
 
     Chebyshev polynomialBasis;
 
+    // mn = polynomial indices, jk = momentum indices
+    IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const;
+
     /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
-    We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector.
-    This takes a bunch of vectors, their magnitudes and dot products as input, there is some redundancy but we're trying to avoid having to compute them many times. */
-    std::vector<Kinematics> calculateKinematics(const CollElem<4> &collElem, double p1, double p2, 
-        const ThreeVector& p1Vec, const ThreeVector& p2Vec, const ThreeVector& p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
+    We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector. */
+    std::vector<Kinematics> calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const;
 
     /* Optimized computation of the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollElem itself. 
     In UR limit the momentum-conserving delta function gives only one solution for p3, so this one does not return an array. */
-    Kinematics calculateKinematics_ultrarelativistic(double p1, double p2, 
-        const ThreeVector& p1Vec, const ThreeVector& p2Vec, const ThreeVector& p3VecHat, double p1p2Dot, double p1p3HatDot, double p2p3HatDot);
-
+    Kinematics calculateKinematics_ultrarelativistic(const InputsForKinematics& kinematicInput) const;
 
     /* Evaluate |M^2|/N * P[TmTn] * (kinematics.prefactor). TmTn are the polynomial factors evaluated at each momenta. TODO make this so that collElem can be const...? */
     double evaluateCollisionElement(CollElem<4> &collElem, const Kinematics& kinematics, const std::array<double, 4>& TmTn);
 
-    // 4-particle 'collision elements' that contribute to the process
-    std::vector<CollElem<4>> collisionElements;
-
     /* We separate the collision elements into two subsets: ones with only ultrarelativistic (UR) external particles, and all others. 
-    This allows optimizations related to the kinematic factor in UR terms. Not ideal to have both these and the full array though */
+    This allows optimizations related to the kinematic factor in UR terms */
     std::vector<CollElem<4>> collisionElements_ultrarelativistic;
     std::vector<CollElem<4>> collisionElements_nonUltrarelativistic;
+
+    // This is set again whenever integrate() is called, based on the options inputted there
+    bool bOptimizeUltrarelativistic = true;
 };
 
 
