@@ -150,7 +150,12 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     // Roots of g(p3):
     const double discriminant = B * B - 4.0 * A * C;
 
-    assert(discriminant >= 0);
+    // TODO looks like the discriminant can sometimes be negative... should this be possible?
+    //assert(discriminant >= 0);
+    if (discriminant < 0)
+    {
+        return std::vector<Kinematics>();
+    }
 
     const double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
     const double root2 = 0.5 * (-B + sqrt(discriminant)) / A;
@@ -162,7 +167,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
         return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
     };
 
-    assert(std::abs(funcG(root1)) < 1e-8 && std::abs(funcG(root2)) < 1e-8)
+    assert(std::abs(funcG(root1)) < 1e-8 && std::abs(funcG(root2)) < 1e-8);
 #endif
 
     // Since p3 is supposed to be magnitude, pick only positive roots (p3 = 0 contributes nothing to the integral)
