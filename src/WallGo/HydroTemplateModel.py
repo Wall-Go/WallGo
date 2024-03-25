@@ -71,7 +71,6 @@ class HydroTemplateModel:
         self.mu = 1+1/self.cs2
         self.vJ = self.findJouguetVelocity()
         self.vMin = self.minVelocity()
-        self.vMax = self.maxVelocity()
 
     def findJouguetVelocity(self, alN=None):
         r"""
@@ -120,31 +119,6 @@ class HydroTemplateModel:
         else:
             return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
         
-
-    def maxVelocity(self):
-        r"""
-        Finds the maximum velocity that is possible for a given nucleation temeperature. 
-        It is found by use of some function that is also used below, and I don't know where it 
-        came from. 
-        TODO: figure out where that came from!
-
-        Parameters
-        ----------
-
-        Returns
-            vmax: double
-                The maximum value of the wall velocity for which a solution can be found
-        """
-        def minalpha(vw):
-            vm = min(vw,self.cb)
-            vp_max = min(self.cs2,vw)            
-            return max((vm-vp_max)*(self.cb2-vm*vp_max)/(3*self.cb2*vm*(1-vp_max**2)),(self.mu-self.nu)/(3*self.mu))-self.alN
-
-        try:
-            return root_scalar(minalpha,bracket=(1e-2,self.vJ),rtol=self.rtol,xtol=self.atol).root
-
-        except:
-            return self.vJ
 
     def get_vp(self,vm,al,branch=-1):
         r"""
@@ -368,10 +342,6 @@ class HydroTemplateModel:
             return self.detonation_vAndT(vw)
         
         vm = min(self.cb,vw)
-
-        if vw > self.vMax:
-            # alN too small for shock 
-            return (None,None,None,None)
         
         if vw < self.vMin:
             # alN too large for shock
