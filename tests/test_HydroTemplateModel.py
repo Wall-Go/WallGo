@@ -1,7 +1,13 @@
 import pytest
+from dataclasses import dataclass
 import numpy as np
 from scipy.integrate import odeint
 import WallGo
+
+@dataclass
+class FreeEnergyHack:
+    minPossibleTemperature: float
+    maxPossibleTemperature: float 
 
 class TestModelTemplate(WallGo.Thermodynamics):
     __test__ = False
@@ -21,6 +27,8 @@ class TestModelTemplate(WallGo.Thermodynamics):
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
         self.eps = 0
         self.eps = (self.pHighT(Tn)-self.pLowT(Tn)-cb2*(self.eHighT(Tn)-self.eLowT(Tn)-3*wn*alN))/(1+cb2)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
 
     #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pHighT(self, T):
@@ -60,7 +68,7 @@ def test_JouguetVelocity():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-6,1e-6)
+        hydro = WallGo.Hydro(model,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydro.findJouguetVelocity()
         res2[i] = hydroTemplate.findJouguetVelocity()
@@ -75,7 +83,7 @@ def test_findMatching():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-6,1e-6)
+        hydro = WallGo.Hydro(model,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         if vw[i] < hydro.minVelocity():
             res1[i] = [0,0,0,0]
@@ -95,7 +103,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-6,1e-6)
+        hydro = WallGo.Hydro(model,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydro.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
@@ -110,7 +118,7 @@ def test_findHydroBoundaries():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydro = WallGo.Hydro(model,1e-6,10,1e-10,1e-10)
+        hydro = WallGo.Hydro(model,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydro.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])

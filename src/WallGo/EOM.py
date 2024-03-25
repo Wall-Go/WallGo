@@ -114,7 +114,7 @@ class EOM:
         )
 
         vmin = self.hydro.vMin
-        vmax = self.hydro.vJ - 1e-6
+        vmax = self.hydro.vJ - 1e-6  # can we drop this 1e-6?
 
         return self.solveWall(vmin, vmax, wallParams)
     
@@ -145,7 +145,7 @@ class EOM:
         """
         results = WallGoResults()
 
-        self.pressAbsErrTol = 1e-8
+        self.pressAbsErrTol = 1e-8  # why 1e-8?
         ## HACK! LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
         pressureMax, wallParamsMax, _, _, _ = self.wallPressure(
             wallVelocityMax, wallParamsGuess, True
@@ -172,7 +172,7 @@ class EOM:
             In principle a direct float == float comparison could work here, but that's illegal.
             I also include the case where vw is outside [wallVelocityMin, wallVelocityMax] although it probably does not occur.
             """ 
-            absTolerance = 1e-8
+            absTolerance = 1e-8  # why 1e-8?
             if np.abs(vw - wallVelocityMin) < absTolerance or vw < wallVelocityMin:
                 return pressureMin
             elif np.abs(vw - wallVelocityMax) < absTolerance or vw > wallVelocityMax:
@@ -290,9 +290,9 @@ class EOM:
             velocityJouget=self.hydro.vJ,
         )
 
-        vevLowT = self.thermo.freeEnergyLow(Tminus).getFields()
-        vevHighT = self.thermo.freeEnergyHigh(Tplus).getFields()
-        
+        vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
+        vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
+                
         # Estimate L_xi
         # msq1 = self.particle.msqVacuum(vevHighT)
         # msq2 = self.particle.msqVacuum(vevLowT)
@@ -616,7 +616,16 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,self.thermo.Tc])
+        # HACK! shoved in this Tc as a short term hack
+        Tc = self.thermo.findCriticalTemperature(
+            dT=0.1, rTol=1e-6, paranoid=True,
+        )
+        #(TMin, TMax) = self.thermo.getCoexistenceRange()
+        minRes = scipy.optimize.minimize_scalar(
+            lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
+            method='Bounded',
+            bounds=[0, Tc],
+        )
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
@@ -641,7 +650,7 @@ class EOM:
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
             TLowerBound,
             TUpperBound,
-            xtol=1e-9,
+            xtol=1e-9,  # all these hard-coded tolerances are aweful
             rtol=1e-9, ## really???
         )
         # TODO: Can the function have multiple zeros?

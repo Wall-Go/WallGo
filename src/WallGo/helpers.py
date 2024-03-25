@@ -122,7 +122,10 @@ def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=Non
         pos = x[None,...] + SECOND_DERIV_POS['4'].T[:,offset.tolist()]*dx
         coeff = SECOND_DERIV_COEFF['4'].T[:,offset.tolist()]/dx**2
     
-    return np.sum(coeff * f(pos, *args), axis=0)
+    fx = f(pos, *args)
+    fxShapeLength = len(fx.shape)
+    coeffShapeLength = len(coeff.shape)
+    return np.sum(coeff.reshape(coeff.shape+(fxShapeLength-coeffShapeLength)*(1,)) * f(pos, *args), axis=0)
         
     
     
