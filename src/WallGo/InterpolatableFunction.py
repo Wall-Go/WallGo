@@ -3,8 +3,9 @@ import numpy.typing as npt
 from abc import ABC, abstractmethod
 import scipy.interpolate
 from enum import Enum, auto
-from typing import Callable
+from typing import Callable, Tuple
 
+from . import helpers
 
 ## Enums for extrapolation. Default is NONE, no extrapolation at all. 
 class EExtrapolationType(Enum):
@@ -57,6 +58,9 @@ class InterpolatableFunction(ABC):
         self.__RETURN_VALUE_COUNT = returnValueCount  # TODO figure out how to do internal logic without requiring this as input
         
         self.__interpolatedFunction: Callable = None
+
+        ## Will hold list of interpolated derivatives, 1st and 2nd derivatives only
+        self.__interpolatedDerivatives: list[Callable] = None
 
         ## These control out-of-bounds extrapolations. See toggleExtrapolation() function below.
         self.extrapolationTypeLower = EExtrapolationType.NONE
@@ -206,10 +210,12 @@ class InterpolatableFunction(ABC):
             if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
                 self.__adaptiveInterpolationUpdate()
 
+
     def evaluateInterpolation(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """Evaluates our interpolated function at input x
         """
         return self.__interpolatedFunction(x)
+
 
     def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """This gets called when the function is called outside the range of its interpolation table.
@@ -260,54 +266,37 @@ class InterpolatableFunction(ABC):
                     res[xUpper] = self.evaluateInterpolation(x[xUpper])
 
         return res
+    
 
-    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> npt.ArrayLike:
-        
+    def __call__(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> npt.ArrayLike:
+        """Just calls evaluate()"""
+        return self.evaluate(x, bUseInterpolatedValues)
+    
+
+    def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> npt.ArrayLike:
+        """"""
+
         x = np.asanyarray(x)
 
-        if (not useInterpolatedValues):
-            return self.__evaluateDirectly(x)
-        elif (self.__interpolatedFunction == None):
+        if (not bUseInterpolatedValues or not self.hasInterpolation()):
             return self.__evaluateDirectly(x)
 
+        # Use interpolated values whenever possible
+        canInterpolateCondition, fxShape = self.__findInterpolatablePoints(x)
 
-        if (np.ndim(x) == 0):
-            canInterpolateCondition = (x <= self.__rangeMax) and (x >= self.__rangeMin)
+        needsEvaluationCondition = ~canInterpolateCondition 
 
-            if (canInterpolateCondition):
-                return self.evaluateInterpolation(x)
-            else:
-                return self.__evaluateOutOfBounds(x)
+        xInterpolateRegion = x[ canInterpolateCondition ] 
+        xEvaluateRegion = x[ needsEvaluationCondition ]
 
-        else: 
+        results = np.empty(fxShape)
+        results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion)
 
-            ## Now input is array of many x values. Use interpolated values whenever possible,
-            ## so split the x array into two parts. However, be careful with array shapes
-        
-            canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
+        if (xEvaluateRegion.size > 0):
+            results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion)
             
-            needsEvaluationCondition = ~canInterpolateCondition 
+        return results
 
-            xInterpolateRegion = x[ canInterpolateCondition ] 
-            xEvaluateRegion = x[ needsEvaluationCondition ]
-
-            """If x is N-dimensional array and idx is a tuple index for this array,
-            we want to return fx so that fx[idx] is the result of function evaluation at x[idx].
-            But if f(x) is vector-valued then necessarily fx shape will not match x shape.
-            So figure out the shape here. 
-            """
-            if (self.__RETURN_VALUE_COUNT > 1):
-                fxShape = x.shape + (self.__RETURN_VALUE_COUNT, )
-            else:
-                fxShape = x.shape
-
-            results = np.empty(fxShape)
-            results[canInterpolateCondition] = self.evaluateInterpolation(xInterpolateRegion)
-
-            if (xEvaluateRegion.size > 0):
-                results[needsEvaluationCondition] = self.__evaluateOutOfBounds(xEvaluateRegion)
-                
-            return results
 
     def __evaluateDirectly(self, x: npt.ArrayLike, bScheduleForInterpolation=True) -> npt.ArrayLike: 
         """Evaluate the function directly based on _functionImplementation, instead of using interpolations.
@@ -320,6 +309,56 @@ class InterpolatableFunction(ABC):
             self.scheduleForInterpolation(x, fx)
 
         return fx 
+    
+
+    def derivative(self, x: npt.ArrayLike, order: int = 1, bUseInterpolation=True, epsilon=1e-16, scale=1.0) -> npt.ArrayLike:
+        """Takes derivative of the function at points x. If bUseInterpolation=True, will compute derivatives
+        from the interpolated function (if it exists). nth order derivative can be taken with order=n,
+        however we only support interpolated derivative of order=1,2 for now.
+        epsilon and scale are parameters for the helpers.derivative() routine
+        """
+        x = np.asanyarray(x)
+        if (not bUseInterpolation or not self.hasInterpolation() or order > 2):
+            return helpers.derivative(self.__evaluateDirectly, x, n=order)
+
+
+        # Use interpolated values whenever possible
+        canInterpolateCondition, fxShape = self.__findInterpolatablePoints(x)
+        needsEvaluationCondition = ~canInterpolateCondition 
+
+        xEvaluateRegion = x[needsEvaluationCondition]
+
+        results = np.empty(fxShape)
+        results[canInterpolateCondition] = self.__interpolatedDerivatives[order-1]( x[canInterpolateCondition] )
+
+        ## Outside the interpolation region use whatever extrapolation type the function uses
+        if (xEvaluateRegion.size > 0):
+            results[needsEvaluationCondition] = helpers.derivative(self.__evaluateOutOfBounds, x, n=order, epsilon=epsilon, scale=scale)
+            
+        return results
+
+        
+
+
+    def __findInterpolatablePoints(self, x: npt.ArrayLike) -> Tuple[npt.ArrayLike, Tuple]:
+        """Finds x values where interpolation can be used.
+        Return tuple is: canInterpolateCondition, fxShape
+        where the condition is a numpy bool array and fxShape is the resulting shape of f(x). 
+        """
+
+        canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
+        
+        """If x is N-dimensional array and idx is a tuple index for this array,
+        we want to return fx so that fx[idx] is the result of function evaluation at x[idx].
+        But if f(x) is vector-valued then necessarily fx shape will not match x shape.
+        So figure out the shape here. 
+        """
+        if (self.__RETURN_VALUE_COUNT > 1):
+            fxShape = x.shape + (self.__RETURN_VALUE_COUNT, )
+        else:
+            fxShape = x.shape
+
+        return canInterpolateCondition, fxShape
 
     ## 
     def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
@@ -344,6 +383,12 @@ class InterpolatableFunction(ABC):
         self.__rangeMax = np.max(xFiltered)
         self.__interpolationPoints = xFiltered
         self.__interpolationValues = fxFiltered
+
+        """Store a cubic spline for the 1st and 2nd derivatives into a list.
+        We do not attempt to spline the higher derivatives as they are not 
+        guaranteed to be continuous."""
+        self.__interpolatedDerivatives = [self.__interpolatedFunction.derivative(1), 
+                                          self.__interpolatedFunction.derivative(2)]
 
     @staticmethod
     def __dropBadPoints(x: npt.ArrayLike, fx: npt.ArrayLike) -> tuple[npt.ArrayLike, npt.ArrayLike]:

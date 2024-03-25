@@ -16,6 +16,24 @@ class FreeEnergyValueType:
     # Values of background fields at the free-energy minimum
     fieldsAtMinimum: Fields
 
+    @staticmethod
+    def fromArray(arr: npt.ArrayLike) -> 'FreeEnergyValueType':
+        """ASSUMES that the last column is Veff value."""
+        # Awkward dimensionality check needed to figure out correct slicing
+        # TODO can we simplify by forcing resultsArray to always be of certain shape?
+        if arr.ndim < 2:
+            values = arr[-1]
+            fields = arr[:-1]
+        
+        else:
+            values = arr[:, -1]
+            fields = arr[:, :-1] 
+            ## ???
+            if len(values) == 1:
+                values = values[0]
+
+        return FreeEnergyValueType(veffValue=values, fieldsAtMinimum=Fields.CastFromNumpy(fields))
+
     
 class FreeEnergy(InterpolatableFunction):
     """ Class FreeEnergy: Describes properties of a local effective potential minimum. 
@@ -29,7 +47,37 @@ class FreeEnergy(InterpolatableFunction):
         startingTemperature: float,
         startingPhaseLocationGuess: Fields,
         initialInterpolationPointCount: int = 1000,
+        effectivePotentialError: float=1e-10,
+        temperatureScale: float=10.0,
     ):
+        """
+        Initialize a FreeEnergy object
+
+        Parameters
+        ----------
+        effectivePotential : EffectivePotential
+            EffectivePotential object used to compute the free energy.
+        startingTemperature: float
+            Temperature at which the interpolation of the effective potential 
+            starts.
+        startingPhaseLocationGuess : Fields
+            Approximate position of the phase at startingTemperature.
+        initialInterpolationPointCount : int, optional
+            Initial number of points sampled for the interpolation. 
+            The default is 1000.
+        effectivePotentialError : float, optional
+            Typical relative accuracy at which the effective potential can be 
+            computed. The default is 1e-10.
+        temperatureScale : float, optional
+            Typical temperature scale over which the effective potential 
+            changes by O(1). A reasonable value would be of order Tc-Tn. 
+            The default is 10.0.
+
+        Returns
+        -------
+        None.
+
+        """
 
         adaptiveInterpolation = True
         # Set return value count. Currently the InterpolatableFunction requires this to be set manually:
@@ -37,7 +85,7 @@ class FreeEnergy(InterpolatableFunction):
         super().__init__(
             bUseAdaptiveInterpolation=adaptiveInterpolation,
             returnValueCount=returnValueCount,
-            initialInterpolationPointCount=initialInterpolationPointCount,
+            initialInterpolationPointCount=initialInterpolationPointCount
         )
         self.setExtrapolationType(EExtrapolationType.ERROR, EExtrapolationType.ERROR)
         
@@ -51,30 +99,23 @@ class FreeEnergy(InterpolatableFunction):
         # Highest possible temperature so that the phase is still (meta)stable
         self.maxPossibleTemperature = np.Inf
 
+        self.effectivePotentialError = effectivePotentialError
+        self.temperatureScale = temperatureScale
 
-    def __call__(self, x: npt.ArrayLike, useInterpolatedValues=True) -> FreeEnergyValueType:
+
+    def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
         """Evaluate the free energy. Return value is a FreeEnergyValueType dataclass object.
         """
-        # Implementation returns array, here we just unpack it. Super call needed because it handles interpolation logic
-        resultsArray = super().__call__(x, useInterpolatedValues)
-
-        # Last column is Veff value. But awkward dimensionality check needed to figure out correct slicing
-        # TODO can we simplify by forcing resultsArray to always be of certain shape?
-        if resultsArray.ndim < 2:
-            values = resultsArray[-1]
-            fields = resultsArray[:-1]
-        
-        else:
-            values = resultsArray[:, -1]
-            fields = resultsArray[:, :-1] 
-            ## ???
-            if len(values) == 1:
-                values = values[0]
+        # Implementation returns array, here we just unpack it. Call to parent class needed to handle interpolation logic 
+        resultsArray = super().evaluate(x, bUseInterpolatedValues)
+        return FreeEnergyValueType.fromArray(resultsArray)
 
 
-        return FreeEnergyValueType(veffValue=values, 
-                                   fieldsAtMinimum=Fields.CastFromNumpy(fields))
 
+    def __call__(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
+        """Just calls self.evaluate()"""
+        return self.evaluate(x, bUseInterpolatedValues)
+    
 
     def _functionImplementation(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -108,6 +149,18 @@ class FreeEnergy(InterpolatableFunction):
 
         # This is now a 2D array where rows are [f1, f2, ..., Veff]
         return result
+    
+
+    def derivative(self, x: npt.ArrayLike, order: int = 1, bUseInterpolation=True) -> FreeEnergyValueType:
+        """Override of InterpolatableFunction.derivative() function. Specifies accuracy based on our internal variables
+        and puts the results in FreeEnergyValueType format. Otherwise similar to the parent function."""
+        resultsArray = super().derivative(x,
+                                  order,
+                                  bUseInterpolation=bUseInterpolation,
+                                  epsilon=self.effectivePotentialError,
+                                  scale=self.temperatureScale)
+        
+        return FreeEnergyValueType.fromArray(resultsArray)
 
 
     def tracePhaseOld(self, TMin: float, TMax: float, dT: float) -> None:
