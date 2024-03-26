@@ -499,32 +499,11 @@ def main():
         print(f"{widths=}")
         print(f"{offsets=}")
 
-        import matplotlib.pyplot as plt
-        fig, (ax1, ax2) = plt.subplots(2, 1, layout='constrained')
-        coords = manager.grid.getCoordinates()
-        xi = coords[0]
-        # below the [0] is to take the first particle
+        # some estimate of deviation from O(dz^2) finite difference method
         delta00 = results.Deltas.Delta00.coefficients[0]
         delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
-
         errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        print(f"{errorFD=}")
-
-        ax1.plot(xi, delta00, label="Spectral")
-        ax1.plot(xi, delta00FD, label="Finite Difference")
-        ax1.set_xlabel(r'$\xi$')
-        ax1.set_ylabel(r'$\Delta_{00}$')
-        ax1.grid(True)
-        ax1.legend(loc="best")
-
-        ax2.plot(xi, delta00 - delta00FD, label="Difference")
-        ax2.set_xlabel(r'$\xi$')
-        ax2.set_ylabel(r'$\delta \Delta_{00}$')
-        ax2.grid(True)
-        ax2.legend(loc="best")
-
-        plt.savefig("deltas.png")
-        plt.show()
+        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop
