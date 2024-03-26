@@ -108,10 +108,10 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "    particle (ParticleSpecies): Particle to add\n";
 
     std::string usage_setVariable = 
-        "Sets value of a physics parameter used in matrix elements. Registers a new variable if the name is not already defined."
-        "Do NOT use for particle thermal/vacuum masses.\n\n"
+        "Sets value of a physics parameter used in matrix elements. The variable needs to already be defined previously with defineVariable()"
         "Args:\n"
-        "    coupling (double): Coupling to add\n";
+        "    name (string): Variable name"
+        "    newValue (double): New value of the variable\n";
 
     std::string usage_calculateCollisionIntegrals =
         "Calculates all collision integrals with the currently defined particle content and stores in .hdf5 file."
@@ -139,7 +139,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
     py::class_<CollisionPython>(m, "CollisionManager")
         .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
-        .def("addCoupling", &CollisionPython::setVariable, usage_setVariable.c_str())
+        .def("setVariable", &CollisionPython::setVariable, usage_setVariable.c_str())
         .def("calculateCollisionIntegrals", &CollisionPython::calculateCollisionIntegrals, 
             usage_calculateCollisionIntegrals.c_str(), py::arg("bVerbose")=false)
         .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
