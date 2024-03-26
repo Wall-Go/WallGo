@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
 from typing import Tuple
+import copy  # for deepcopy
 
 
 import scipy.optimize
@@ -215,6 +216,17 @@ class EOM:
         results.setWallParams(wallParams)
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
+
+        # do finite difference computation to estimate errors
+        if self.includeOffEq:
+            finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
+        else:
+            finiteDifferenceBoltzmannResults = boltzmannResults
+        results.setFiniteDifferenceBoltzmannResults(
+            finiteDifferenceBoltzmannResults
+        )
+
+        # return collected results
         return results
 
 
@@ -775,6 +787,41 @@ class EOM:
             - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particles)])
 
         return T30, T33
+
+    def getBoltzmannFiniteDifference(self) -> BoltzmannResults:
+        """Mostly to estimate errors, recomputes Boltzmann stuff using 
+        finite difference derivatives.
+        """
+        # finite difference method requires everything to be in
+        # the Cardinal basis
+        collisionsCardinal = copy.deepcopy(self.boltzmannSolver.collisionArray)
+        collisionsCardinal.changeBasis("Cardinal")
+        # making new BoltzmannSolver object
+        boltzmannSolverFiniteDifference = BoltzmannSolver(
+            grid=self.grid,
+            basisM="Cardinal",
+            basisN="Cardinal",
+            derivatives="Finite Difference",
+        )
+        # double checking the background is in the Cardinal basis
+        assert self.boltzmannSolver.background.polynomialBasis == "Cardinal", \
+            "Error in boltzmannFiniteDifference: must be in Cardinal basis"
+        boltzmannSolverFiniteDifference.setBackground(
+            self.boltzmannSolver.background
+        )
+        boltzmannSolverFiniteDifference.setCollisionArray(
+            collisionsCardinal
+        )
+        boltzmannSolverFiniteDifference.updateParticleList(self.particles)
+        # trying a different route
+        boltzmannSolverFiniteDifference = copy.deepcopy(self.boltzmannSolver)
+        boltzmannSolverFiniteDifference.derivatives = "Finite Difference"
+        assert boltzmannSolverFiniteDifference.basisM == "Cardinal", \
+            "Error in boltzmannFiniteDifference: must be in Cardinal basis"
+        boltzmannSolverFiniteDifference.basisN = "Cardinal"
+        boltzmannSolverFiniteDifference.collisionArray.changeBasis("Cardinal")
+        # now computing results
+        return boltzmannSolverFiniteDifference.getDeltas()
 
 
 
