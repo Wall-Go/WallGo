@@ -9,7 +9,7 @@
 #include "WallGoCollision/CollisionIntegral.h"
 #include "WallGoCollision/ParticleSpecies.h"
 #include "WallGoCollision/CollisionManager.h"
-#include "WallGoCollision/gslWrapper.h"
+#include "WallGoCollision/Utils.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -55,10 +55,10 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
 
     m.doc() = "WallGo collision module";
 
-    gslWrapper::initializeRNG();
+    wallgo::initializeRNG();
 
     // Bind GSL seed setter
-    m.def("setSeed", &gslWrapper::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
+    m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
@@ -146,7 +146,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
         .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
 
-    std::atexit(gslWrapper::clearRNG);
+    std::atexit(wallgo::clearRNG);
 }
 
 } // namespace

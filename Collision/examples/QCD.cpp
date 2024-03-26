@@ -71,10 +71,10 @@ int main()
 	std::cout << "Running WallGo collision example: QCD" << std::endl;
 
 	// We use GSL for Monte Carlo integration. It needs to be initialized before use, with optional seed (default = 0)
-    wallgo::gslWrapper::initializeRNG();
+    wallgo::initializeRNG();
 
 	// Can also set the seed at any later time:
-	//wallgo::gslWrapper::setSeed(42);
+	//wallgo::setSeed(42);
 
     wallgo::CollisionManager manager;
 
@@ -127,7 +127,7 @@ int main()
 
 	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
 
-    wallgo::gslWrapper::clearRNG();
+    wallgo::clearRNG();
     
     return 0;
 }

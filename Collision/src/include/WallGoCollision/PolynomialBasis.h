@@ -2,7 +2,7 @@
 #define POLYNOMIAL_H
 
 #include <cmath>
-#include "Common.h"
+#include "Utils.h"
 #include "FourVector.h"
 
 /* Note to self: GSL library has functions for computing Chebyshev series expansions so could investigate 

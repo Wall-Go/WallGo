@@ -2,7 +2,7 @@
 set(BINARY WallGoCollision)
 
 # source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp)
+set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp Utils.cpp)
 
 if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(-fPIC)

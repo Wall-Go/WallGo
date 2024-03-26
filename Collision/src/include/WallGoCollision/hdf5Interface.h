@@ -5,7 +5,7 @@
 #include <vector>
 #include <H5Cpp.h> // C++ API for HDF5 files
 
-#include "Common.h"
+#include "Utils.h"
 
 namespace wallgo
 {
