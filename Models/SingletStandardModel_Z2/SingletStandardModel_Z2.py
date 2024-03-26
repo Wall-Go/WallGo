@@ -507,6 +507,9 @@ def main():
         delta00 = results.Deltas.Delta00.coefficients[0]
         delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
 
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"{errorFD=}")
+
         ax1.plot(xi, delta00, label="Spectral")
         ax1.plot(xi, delta00FD, label="Finite Difference")
         ax1.set_xlabel(r'$\xi$')
@@ -519,7 +522,7 @@ def main():
         ax2.set_ylabel(r'$\delta \Delta_{00}$')
         ax2.grid(True)
         ax2.legend(loc="best")
-        
+
         plt.savefig("deltas.png")
         plt.show()
 
