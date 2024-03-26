@@ -61,7 +61,11 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 int main() 
 {
 
+	// We use GSL for Monte Carlo integration. It needs to be initialized before use, with optional seed (default = 0)
     wallgo::gslWrapper::initializeRNG();
+
+	// Can also set the seed at any later time:
+	//wallgo::gslWrapper::setSeed(42);
 
     wallgo::CollisionManager manager;
 
@@ -94,7 +98,8 @@ int main()
 	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
 
-	manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/false);
+	manager.calculateCollisionIntegrals(basisSizeN, /*verbose*/true);
+
 
     wallgo::gslWrapper::clearRNG();
     
