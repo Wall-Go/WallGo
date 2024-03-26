@@ -789,31 +789,11 @@ class EOM:
         return T30, T33
 
     def getBoltzmannFiniteDifference(self) -> BoltzmannResults:
-        """Mostly to estimate errors, recomputes Boltzmann stuff using 
-        finite difference derivatives.
+        """Mostly to estimate errors, recomputes Boltzmann stuff
+        using finite difference derivatives.
         """
         # finite difference method requires everything to be in
         # the Cardinal basis
-        collisionsCardinal = copy.deepcopy(self.boltzmannSolver.collisionArray)
-        collisionsCardinal.changeBasis("Cardinal")
-        # making new BoltzmannSolver object
-        boltzmannSolverFiniteDifference = BoltzmannSolver(
-            grid=self.grid,
-            basisM="Cardinal",
-            basisN="Cardinal",
-            derivatives="Finite Difference",
-        )
-        # double checking the background is in the Cardinal basis
-        assert self.boltzmannSolver.background.polynomialBasis == "Cardinal", \
-            "Error in boltzmannFiniteDifference: must be in Cardinal basis"
-        boltzmannSolverFiniteDifference.setBackground(
-            self.boltzmannSolver.background
-        )
-        boltzmannSolverFiniteDifference.setCollisionArray(
-            collisionsCardinal
-        )
-        boltzmannSolverFiniteDifference.updateParticleList(self.particles)
-        # trying a different route
         boltzmannSolverFiniteDifference = copy.deepcopy(self.boltzmannSolver)
         boltzmannSolverFiniteDifference.derivatives = "Finite Difference"
         assert boltzmannSolverFiniteDifference.basisM == "Cardinal", \
