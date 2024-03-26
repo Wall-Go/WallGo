@@ -9,7 +9,7 @@ from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential
-from WallGo import Fields
+from WallGo import Fields, WallGoResults
 
 ### LN: This file is very WIP, test with SingletStandardModel_Z2.py instead
 
@@ -244,6 +244,10 @@ def main():
 
     WallGo.initialize()
 
+    # Print WallGo config. This was read by WallGo.initialize()
+    print("=== WallGo configuration options ===")
+    print(WallGo.config)
+
     ## Create WallGo control object
     manager = WallGoManager()
 
@@ -262,7 +266,6 @@ def main():
        #"mH" : 50.0,  this PT was so weak, let's revisit this later
         "mH" : 35.0
     }
-
 
     model = StandardModel(inputParameters)
 
@@ -304,54 +307,51 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
+        manager.setParameters(modelParameters, phaseInfo)
 
+        """WallGo can now be used to compute wall stuff!"""
 
-        ## Wrap everything in a try-except block to check for WallGo specific errors
-        try:
-            manager.setParameters(modelParameters, phaseInfo)
+        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-            """WallGo can now be used to compute wall stuff!"""
+        vwLTE = manager.wallSpeedLTE()
 
-            ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+        print(f"LTE wall speed: {vwLTE}")
 
-            vwLTE = manager.wallSpeedLTE()
+        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
-            print(f"LTE wall speed: {vwLTE}")
+        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+        wallParams: WallGo.WallParams
 
-            ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-            ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-            wallParams: WallGo.WallParams
+        results = manager.solveWall(bIncludeOffEq)
+        print(f"{results=}")
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
-            bIncludeOffEq = False
-            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"{wallVelocity=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
-            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+        bIncludeOffEq = True
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-            print(f"{wallVelocity=}")
-            print(f"{wallParams.widths=}")
-            print(f"{wallParams.offsets=}")
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
-            ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-            bIncludeOffEq = True
-            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
-            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
-
-            print(f"{wallVelocity=}")
-            print(f"{wallParams.widths=}")
-            print(f"{wallParams.offsets=}")
-
-        except WallGo.WallGoError as error:
-            ## something went wrong!
-            print(error)
-            continue
+        print(f"{wallVelocity=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
 
     # end parameter-space loop
 
 # end main()
-
 
 
 ## Don't run the main function if imported to another file
