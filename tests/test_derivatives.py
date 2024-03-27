@@ -17,24 +17,24 @@ def d2fdx2_analytic(x):
     # the second derivative, analytically
     return 2 * np.cos(x) - x * np.sin(x)
 
-def fMultivariate_analytic(x):
+def fMultivariate_analytic(x, scaleRatio=1):
     # a simple multivariate function to test gradient and hessian
-    return np.sin(x[...,0])*np.cos(x[...,1])
+    return np.sin(x[...,0])*np.cos(x[...,1]/scaleRatio)
 
-def gradient_fMultivariate_analytic(x):
+def gradient_fMultivariate_analytic(x, scaleRatio=1):
     # the gradient, analytically
     grad = np.zeros_like(x)
-    grad[...,0] = np.cos(x[...,0])*np.cos(x[...,1])
-    grad[...,1] = -np.sin(x[...,0])*np.sin(x[...,1])
+    grad[...,0] = np.cos(x[...,0])*np.cos(x[...,1]/scaleRatio)
+    grad[...,1] = -np.sin(x[...,0])*np.sin(x[...,1]/scaleRatio)/scaleRatio
     return grad
 
-def hessian_fMultivariate_analytic(x):
+def hessian_fMultivariate_analytic(x, scaleRatio=1):
     # the hessian, analytically
     hess = np.zeros(x.shape+x.shape[-1:])
-    hess[...,0,0] = -np.sin(x[...,0])*np.cos(x[...,1])
-    hess[...,0,1] = -np.cos(x[...,0])*np.sin(x[...,1])
-    hess[...,1,0] = -np.cos(x[...,0])*np.sin(x[...,1])
-    hess[...,1,1] = -np.sin(x[...,0])*np.cos(x[...,1])
+    hess[...,0,0] = -np.sin(x[...,0])*np.cos(x[...,1]/scaleRatio)
+    hess[...,0,1] = -np.cos(x[...,0])*np.sin(x[...,1]/scaleRatio)/scaleRatio
+    hess[...,1,0] = -np.cos(x[...,0])*np.sin(x[...,1]/scaleRatio)/scaleRatio
+    hess[...,1,1] = -np.sin(x[...,0])*np.cos(x[...,1]/scaleRatio)/scaleRatio**2
     return hess
 
 
@@ -97,31 +97,35 @@ def test_derivative(
     np.testing.assert_allclose(deriv_WallGo, deriv_analytic, atol=0, rtol=rTol)
     
 @pytest.mark.parametrize(
-    "order, rTol",
+    "order, scaleRatio, rTol",
     [
-         (2, 1e-8),
-         (4, 1e-10),
+         (2, 1, 1e-8),
+         (4, 1, 1e-10),
+         (2, 100, 1e-8),
+         (4, 100, 1e-10),
      ]
 )
-def test_gradient(multivariateRange, order: int, rTol: float):
+def test_gradient(multivariateRange, order: int, scaleRatio: float, rTol: float):
     """
     Tests accuracy of gradient function
     """
-    gradient_analytic = gradient_fMultivariate_analytic(multivariateRange)
-    gradient_WallGo = WallGo.helpers.gradient(fMultivariate_analytic, multivariateRange, order, 1e-12)
+    gradient_analytic = gradient_fMultivariate_analytic(multivariateRange, scaleRatio)
+    gradient_WallGo = WallGo.helpers.gradient(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], args=(scaleRatio,))
     np.testing.assert_allclose(gradient_analytic, gradient_WallGo, atol=0, rtol=rTol)
     
 @pytest.mark.parametrize(
-    "order, rTol",
+    "order, scaleRatio, rTol",
     [
-         (2, 1e-6),
-         (4, 1e-8),
+         (2, 1, 1e-6),
+         (4, 1, 1e-7),
+         (2, 100, 1e-6),
+         (4, 100, 1e-7),
      ]
 )
-def test_hessian(multivariateRange, order: int, rTol: float):
+def test_hessian(multivariateRange, order: int, scaleRatio: float, rTol: float):
     """
     Tests accuracy of hessian function
     """
-    hessian_analytic = hessian_fMultivariate_analytic(multivariateRange)
-    hessian_WallGo = WallGo.helpers.hessian(fMultivariate_analytic, multivariateRange, order, 1e-12)
+    hessian_analytic = hessian_fMultivariate_analytic(multivariateRange, scaleRatio)
+    hessian_WallGo = WallGo.helpers.hessian(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], args=(scaleRatio,))
     np.testing.assert_allclose(hessian_analytic, hessian_WallGo, atol=0, rtol=rTol)

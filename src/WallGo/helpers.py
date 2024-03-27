@@ -150,11 +150,14 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     epsilon : float, optional
         Fractional accuracy at which f can be evaluated. If f is a simple 
         function, should be close to the machine precision. Default is 1e-16.
-    scale : float, optional 
-        Typical scale at which f(x) change by order 1. Default is 1.
+    scale : float or array-like, optional 
+        Typical scale at which f(x) change by order 1. Can be an array, in which 
+        case each element corresponds to the scale of a different variable.
+        Default is 1.
     dx : float or None, optional
-        The magnitude of finite differences. If None, use epsilon and scale to
-        estimate the optimal dx. Default is None.
+        The magnitude of finite differences. Can be an array, in which case 
+        each element corresponds to the dx of a different variable.If None, use 
+        epsilon and scale to estimate the optimal dx. Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
 
@@ -176,8 +179,18 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     # the total error ~ epsilon/dx**n + dx**order.
     if dx is None:
         assert isinstance(epsilon, float), "Gradient error: epsilon must be a float."
-        assert isinstance(scale, float), "Gradient error: scale must be a float."
+        
+        if isinstance(scale, float):
+            scale = scale*np.ones(nbrVariables)
+        else:
+            scale = np.asanyarray(scale)
+            assert scale.size == nbrVariables, "Gradient error: scale must be a float or an array of size nbrVariables."
         dx = scale * epsilon**(1/(1+order))
+    elif isinstance(dx, float):
+        dx = dx*np.ones(nbrVariables)
+    else:
+        dx = np.asanyarray(dx)
+        assert dx.size == nbrVariables, "Gradient error: dx must be None, a float or an array of size nbrVariables."
     
     # This step increases greatly the accuracy because it makes sure (x + dx) - x
     # is exactly equal to dx (no precision error).
@@ -235,9 +248,19 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     # If dx is not provided, we estimate it from scale and epsilon by minimizing 
     # the total error ~ epsilon/dx**n + dx**order.
     if dx is None:
-        assert isinstance(epsilon, float), "Hessian error: epsilon must be a float."
-        assert isinstance(scale, float), "Hessian error: scale must be a float."
+        assert isinstance(epsilon, float), "Gradient error: epsilon must be a float."
+        
+        if isinstance(scale, float):
+            scale = scale*np.ones(nbrVariables)
+        else:
+            scale = np.asanyarray(scale)
+            assert scale.size == nbrVariables, "Gradient error: scale must be a float or an array of size nbrVariables."
         dx = scale * epsilon**(1/(2+order))
+    elif isinstance(dx, float):
+        dx = dx*np.ones(nbrVariables)
+    else:
+        dx = np.asanyarray(dx)
+        assert dx.size == nbrVariables, "Gradient error: dx must be None, a float or an array of size nbrVariables."
     
     # This step increases greatly the accuracy because it makes sure (x + dx) - x
     # is exactly equal to dx (no precision error).
@@ -247,7 +270,7 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     pos = (np.expand_dims(x, (-4,-3,-2)) 
            + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
            + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
-    coeff = HESSIAN_COEFF[str(order)][:,None,None]/np.expand_dims(dx, (-3,-2)) **2
+    coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx, (-3,-2))*np.expand_dims(dx, (-3,-1)))
         
     return np.sum(coeff*f(pos, *args), axis=-3)
     
