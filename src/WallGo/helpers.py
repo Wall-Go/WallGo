@@ -248,19 +248,19 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     # If dx is not provided, we estimate it from scale and epsilon by minimizing 
     # the total error ~ epsilon/dx**n + dx**order.
     if dx is None:
-        assert isinstance(epsilon, float), "Gradient error: epsilon must be a float."
+        assert isinstance(epsilon, float), "Hessian error: epsilon must be a float."
         
         if isinstance(scale, float):
             scale = scale*np.ones(nbrVariables)
         else:
             scale = np.asanyarray(scale)
-            assert scale.size == nbrVariables, "Gradient error: scale must be a float or an array of size nbrVariables."
+            assert scale.size == nbrVariables, "Hessian error: scale must be a float or an array of size nbrVariables."
         dx = scale * epsilon**(1/(2+order))
     elif isinstance(dx, float):
         dx = dx*np.ones(nbrVariables)
     else:
         dx = np.asanyarray(dx)
-        assert dx.size == nbrVariables, "Gradient error: dx must be None, a float or an array of size nbrVariables."
+        assert dx.size == nbrVariables, "Hessian error: dx must be None, a float or an array of size nbrVariables."
     
     # This step increases greatly the accuracy because it makes sure (x + dx) - x
     # is exactly equal to dx (no precision error).
