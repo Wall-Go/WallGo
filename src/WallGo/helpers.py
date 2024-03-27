@@ -202,7 +202,7 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
         
     return np.sum(coeff*f(pos, *args), axis=-2)
 
-def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
+def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=None):
     r"""Computes the hessian of a callable function. Use the epsilon
     and scale parameters to estimate the optimal value of dx, if the latter is
     not provided. 
@@ -228,6 +228,9 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     dx : float or None, optional
         The magnitude of finite differences. If None, use epsilon and scale to
         estimate the optimal dx. Default is None.
+    axis : int or None, optional
+        Line of the hessian matrix to return. If None, returns the whole matrix.
+        Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
 
@@ -242,6 +245,11 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     
     if args is None:
         args = []
+        
+    if isinstance(axis, int):
+        assert -nbrVariables <= axis < nbrVariables, "Hessian error: axis must be between -nbrVariables and nbrVariables-1 or None."
+    else:
+        assert axis is None, "Hessian error: axis must be an int or None."
     
     assert order == 2 or order == 4, "Hessian error: order must be 2 or 4."
     
@@ -267,12 +275,19 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     temp = x + dx
     dx = temp - x
     
-    pos = (np.expand_dims(x, (-4,-3,-2)) 
-           + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
-           + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
-    coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx, (-3,-2))*np.expand_dims(dx, (-3,-1)))
+    if axis is None:
+        pos = (np.expand_dims(x, (-4,-3,-2)) 
+               + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
+               + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
+        coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx, (-3,-2))*np.expand_dims(dx, (-3,-1)))
+        return np.sum(coeff*f(pos, *args), axis=-3)
+    else:
+        pos = (np.expand_dims(x, (-3,-2)) 
+               + HESSIAN_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)[:,:]*np.expand_dims(dx, (-3,-2))  
+               + HESSIAN_POS[str(order)][1,:,None,None]*np.identity(nbrVariables)[None,axis,:]*np.expand_dims(dx, (-3,-2)) )
+        coeff = HESSIAN_COEFF[str(order)][:,None]/(np.expand_dims(dx[...,axis], (-2,-1))*np.expand_dims(dx, -2))
+        return np.sum(coeff*f(pos, *args), axis=-2)
         
-    return np.sum(coeff*f(pos, *args), axis=-3)
     
 
 
