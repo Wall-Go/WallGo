@@ -38,7 +38,7 @@ HESSIAN_POS = {'2': np.array([[1,1,-1,-1],
                               [1,-1,1,-1]],dtype=float),
                '4': np.array([[2,2,1,1,-1,-1,-2,-2],
                               [2,-2,1,-1,1,-1,2,-2]],dtype=float)}
-HESSIAN_COEFF = {'2': np.array([1,-1,-1,1],dtype=float),
+HESSIAN_COEFF = {'2': np.array([1,-1,-1,1],dtype=float)/4,
                  '4': np.array([-1,1,16,-16,-16,16,1,-1],dtype=float)/48}
 
 def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=None, args=None):
@@ -184,8 +184,8 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     temp = x + dx
     dx = temp - x
     
-    pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)*dx
-    coeff = FIRST_DERIV_COEFF[str(order)][0,:,None]/dx
+    pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)*np.expand_dims(dx, (-3,-2)) 
+    coeff = FIRST_DERIV_COEFF[str(order)][0,:,None]/np.expand_dims(dx, -2) 
         
     return np.sum(coeff*f(pos, *args), axis=-2)
 
@@ -245,9 +245,9 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     dx = temp - x
     
     pos = (np.expand_dims(x, (-4,-3,-2)) 
-           + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*dx 
-           + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*dx)
-    coeff = HESSIAN_COEFF[str(order)][:,None,None]/dx**2
+           + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
+           + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
+    coeff = HESSIAN_COEFF[str(order)][:,None,None]/np.expand_dims(dx, (-3,-2)) **2
         
     return np.sum(coeff*f(pos, *args), axis=-3)
     
