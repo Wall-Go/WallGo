@@ -140,11 +140,17 @@ class EffectivePotential(ABC):
         return Fields.CastFromNumpy(resLocation), resValue
     
     def __wrapperPotential(self, X):
+        """
+        Calls self.evaluate from a single array X that contains both the fields and temperature.
+        """
         fields = Fields(X[...,:-1])
         temperature = X[...,-1]
         return self.evaluate(fields, temperature)
     
     def __combineInputs(self, fields, temperature):
+        """
+        Combines the fields and temperature in a single array.
+        """
         shape = list(fields.shape)
         shape[-1] += 1
         combinedInput = np.empty(shape)
