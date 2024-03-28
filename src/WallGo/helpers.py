@@ -129,7 +129,7 @@ def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=Non
     return np.sum(coeff.reshape(coeff.shape+(fxShapeLength-coeffShapeLength)*(1,)) * f(pos, *args), axis=0)
         
     
-def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
+def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=None):
     r"""Computes the gradient of a callable function. Use the epsilon
     and scale parameters to estimate the optimal value of dx, if the latter is
     not provided. 
@@ -158,6 +158,9 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
         The magnitude of finite differences. Can be an array, in which case 
         each element corresponds to the dx of a different variable.If None, use 
         epsilon and scale to estimate the optimal dx. Default is None.
+    axis : list, int or None, optional
+        Element of the gradient to return. If None, returns the whole gradient.
+        Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
 
@@ -172,6 +175,13 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     
     if args is None:
         args = []
+        
+    if isinstance(axis, int):
+        axis = [axis]
+    elif axis is None:
+        axis = np.arange(nbrVariables).tolist()
+    for i in axis:
+        assert -nbrVariables <= i < nbrVariables, "Gradient error: axis must be between -nbrVariables and nbrVariables-1 or None."
     
     assert order == 2 or order == 4, "Gradient error: order must be 2 or 4."
     
@@ -197,15 +207,15 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     temp = x + dx
     dx = temp - x
     
-    pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)*np.expand_dims(dx, (-3,-2)) 
+    pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)[axis,:]*np.expand_dims(dx, (-3,-2)) 
     shape = pos.shape[:-1]
     pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
-    coeff = FIRST_DERIV_COEFF[str(order)][0,:,None]/np.expand_dims(dx, -2) 
+    coeff = FIRST_DERIV_COEFF[str(order)][0,:,None]/np.expand_dims(dx[...,axis], -2) 
         
     fEvaluation = f(pos, *args).reshape(shape)
     return np.sum(coeff*fEvaluation, axis=-2)
 
-def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=None):
+def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, xAxis=None, yAxis=None, args=None):
     r"""Computes the hessian of a callable function. Use the epsilon
     and scale parameters to estimate the optimal value of dx, if the latter is
     not provided. 
@@ -231,8 +241,11 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=No
     dx : float or None, optional
         The magnitude of finite differences. If None, use epsilon and scale to
         estimate the optimal dx. Default is None.
-    axis : int or None, optional
-        Line of the hessian matrix to return. If None, returns the whole matrix.
+    xAxis : list, int or None, optional
+        Lines of the hessian matrix to return. If None, returns all the lines.
+        Default is None.
+    yAxis : list, int or None, optional
+        Columns of the hessian matrix to return. If None, returns all the columns.
         Default is None.
     args: list, optional
         List of other fixed arguments passed to the function :math:`f`.
@@ -249,10 +262,18 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=No
     if args is None:
         args = []
         
-    if isinstance(axis, int):
-        assert -nbrVariables <= axis < nbrVariables, "Hessian error: axis must be between -nbrVariables and nbrVariables-1 or None."
-    else:
-        assert axis is None, "Hessian error: axis must be an int or None."
+    if isinstance(xAxis, int):
+        xAxis = [xAxis]
+    elif xAxis is None:
+        xAxis = np.arange(nbrVariables).tolist()
+    for i in xAxis:
+        assert -nbrVariables <= i < nbrVariables, "Hessian error: axis must be between -nbrVariables and nbrVariables-1 or None."
+    if isinstance(yAxis, int):
+        yAxis = [yAxis]
+    elif yAxis is None:
+        yAxis = np.arange(nbrVariables).tolist()
+    for i in yAxis:
+        assert -nbrVariables <= i < nbrVariables, "Hessian error: axis must be between -nbrVariables and nbrVariables-1 or None."
     
     assert order == 2 or order == 4, "Hessian error: order must be 2 or 4."
     
@@ -278,24 +299,14 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=No
     temp = x + dx
     dx = temp - x
     
-    if axis is None:
-        pos = (np.expand_dims(x, (-4,-3,-2)) 
-               + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
-               + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
-        shape = pos.shape[:-1]
-        pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
-        coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx, (-3,-2))*np.expand_dims(dx, (-3,-1)))
-        fEvaluation = f(pos, *args).reshape(shape)
-        return np.sum(coeff*fEvaluation, axis=-3)
-    else:
-        pos = (np.expand_dims(x, (-3,-2)) 
-               + HESSIAN_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)[:,:]*np.expand_dims(dx, (-3,-2))  
-               + HESSIAN_POS[str(order)][1,:,None,None]*np.identity(nbrVariables)[None,axis,:]*np.expand_dims(dx, (-3,-2)) )
-        shape = pos.shape[:-1]
-        pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
-        coeff = HESSIAN_COEFF[str(order)][:,None]/(np.expand_dims(dx[...,axis], (-2,-1))*np.expand_dims(dx, -2))
-        fEvaluation = f(pos, *args).reshape(shape)
-        return np.sum(coeff*fEvaluation, axis=-2)
+    pos = (np.expand_dims(x, (-4,-3,-2)) 
+           + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[xAxis,None,:]*np.expand_dims(dx, (-4,-3,-2))  
+           + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,yAxis,:]*np.expand_dims(dx, (-4,-3,-2)) )
+    shape = pos.shape[:-1]
+    pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
+    coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx[...,yAxis], (-3,-2))*np.expand_dims(dx[...,xAxis], (-3,-1)))
+    fEvaluation = f(pos, *args).reshape(shape)
+    return np.sum(coeff*fEvaluation, axis=-3)
         
     
 

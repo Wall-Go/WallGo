@@ -198,6 +198,7 @@ class WallGoManager:
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
+        
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 

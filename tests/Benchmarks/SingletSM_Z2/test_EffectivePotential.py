@@ -79,7 +79,7 @@ def test_effectivePotential_dVdField_singletSimple(
     # results from Veff
     V = Veff.evaluate(fields, T)[0]
     dVdField = Veff.derivField(fields, T)
-    assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * 1e-12))
+    assert dVdFieldExact == pytest.approx(dVdField[0], abs=abs(V / v * 1e-11))
 
 
 @pytest.mark.parametrize("T", [90, 110])

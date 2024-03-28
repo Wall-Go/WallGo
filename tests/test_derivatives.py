@@ -97,20 +97,30 @@ def test_derivative(
     np.testing.assert_allclose(deriv_WallGo, deriv_analytic, atol=0, rtol=rTol)
     
 @pytest.mark.parametrize(
-    "order, scaleRatio, rTol",
+    "order, scaleRatio, rTol, axis",
     [
-         (2, 1, 1e-8),
-         (4, 1, 1e-10),
-         (2, 100, 1e-8),
-         (4, 100, 1e-10),
+         (2, 1, 1e-8,None),
+         (4, 1, 1e-10,None),
+         (2, 100, 1e-8,None),
+         (4, 100, 1e-10,None),
+         (2, 1, 1e-8,[0]),
+         (4, 1, 1e-10,[0]),
+         (2, 100, 1e-8,[0]),
+         (4, 100, 1e-10,[0]),
+         (2, 1, 1e-8,[1]),
+         (4, 1, 1e-10,[1]),
+         (2, 100, 1e-8,[1]),
+         (4, 100, 1e-10,[1]),
      ]
 )
-def test_gradient(multivariateRange, order: int, scaleRatio: float, rTol: float):
+def test_gradient(multivariateRange, order: int, scaleRatio: float, rTol: float, axis: list):
     """
     Tests accuracy of gradient function
     """
     gradient_analytic = gradient_fMultivariate_analytic(multivariateRange, scaleRatio)
-    gradient_WallGo = WallGo.helpers.gradient(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], args=(scaleRatio,))
+    if axis is not None:
+        gradient_analytic = gradient_analytic[...,axis]
+    gradient_WallGo = WallGo.helpers.gradient(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], axis=axis, args=(scaleRatio,))
     np.testing.assert_allclose(gradient_analytic, gradient_WallGo, atol=0, rtol=rTol)
     
 @pytest.mark.parametrize(
@@ -120,14 +130,14 @@ def test_gradient(multivariateRange, order: int, scaleRatio: float, rTol: float)
          (4, 1, 1e-7, None),
          (2, 100, 1e-6, None),
          (4, 100, 1e-7, None),
-         (2, 1, 1e-6, 0),
-         (4, 1, 1e-7, 0),
-         (2, 100, 1e-6, 0),
-         (4, 100, 1e-7, 0),
-         (2, 1, 1e-6, 1),
-         (4, 1, 1e-7, 1),
-         (2, 100, 1e-6, 1),
-         (4, 100, 1e-7, 1),
+         (2, 1, 1e-6, [0]),
+         (4, 1, 1e-7, [0]),
+         (2, 100, 1e-6, [0]),
+         (4, 100, 1e-7, [0]),
+         (2, 1, 1e-6, [1]),
+         (4, 1, 1e-7, [1]),
+         (2, 100, 1e-6, [1]),
+         (4, 100, 1e-7, [1]),
      ]
 )
 def test_hessian(multivariateRange, order: int, scaleRatio: float, rTol: float, axis: int):
@@ -137,5 +147,5 @@ def test_hessian(multivariateRange, order: int, scaleRatio: float, rTol: float, 
     hessian_analytic = hessian_fMultivariate_analytic(multivariateRange, scaleRatio)
     if axis is not None:
         hessian_analytic = hessian_analytic[...,axis]
-    hessian_WallGo = WallGo.helpers.hessian(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], axis=axis, args=(scaleRatio,))
+    hessian_WallGo = WallGo.helpers.hessian(fMultivariate_analytic, multivariateRange, order, 1e-12, [1,scaleRatio], yAxis=axis, args=(scaleRatio,))
     np.testing.assert_allclose(hessian_analytic, hessian_WallGo, atol=0, rtol=rTol)

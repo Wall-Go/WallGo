@@ -204,9 +204,8 @@ class FreeEnergy(InterpolatableFunction):
 
         def ode_function(temperature, field):
             # ode at each temp is a linear matrix equation A*x=b
-            A = self.effectivePotential.deriv2Field2(field, temperature)
-            b = -self.effectivePotential.deriv2FieldT(field, temperature)
-            return scipylinalg.solve(A, b, assume_a="sym")
+            hess,dgraddT,_ = self.effectivePotential.allSecondDerivatives(field, temperature)
+            return scipylinalg.solve(hess, -dgraddT, assume_a="sym")
 
         # finding some sensible mass scales
         ddV_T0 = self.effectivePotential.deriv2Field2(phase0, T0)

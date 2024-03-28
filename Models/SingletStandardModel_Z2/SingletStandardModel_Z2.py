@@ -181,6 +181,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
+        fields = Fields(fields)
         v, x = fields.GetField(0), fields.GetField(1)
 
         msq = self.modelParameters["msq"]
