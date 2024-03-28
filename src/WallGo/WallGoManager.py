@@ -54,8 +54,14 @@ class WallGoManager:
         
         temperatureScale = self.config.getfloat("EffectivePotential", "temperatureScale")
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
+        fieldScaleStr = self.config.get("EffectivePotential", "fieldScale")
+        try:
+            fieldScale = float(fieldScaleStr)
+        except:
+            fieldScale = [float(x) for x in fieldScaleStr.split(',')]
+        
         self.model.effectivePotential.setPotentialError(potentialError)
-        self.model.effectivePotential.setTemperatureScale(temperatureScale)
+        self.model.effectivePotential.setScales(temperatureScale, fieldScale)
 
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)

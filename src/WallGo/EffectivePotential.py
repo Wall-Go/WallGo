@@ -6,7 +6,7 @@ import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
 
-from .helpers import derivative
+from .helpers import derivative, gradient, hessian
 
 from .Fields import Fields
 
@@ -43,11 +43,17 @@ class EffectivePotential(ABC):
     
     ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
     temperatureScale: float = 1.0
+    
+    ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    fieldScale: npt.ArrayLike
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
+        
+        # Intitial guess for fieldScale. Will be overwritten by self.setScales.
+        self.fieldScale = np.ones(fieldCount)
 
         ## Used for derivatives. TODO read from config file probably
         self.dPhi = 0.1  ## field difference
@@ -72,11 +78,17 @@ class EffectivePotential(ABC):
         """
         self.effectivePotentialError = potentialError
         
-    def setTemperatureScale(self, temperatureScale):
+    def setScales(self, temperatureScale, fieldScale):
         """
-        Sets self.temperatureScale to temperatureScale
+        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
         """
         self.temperatureScale = temperatureScale
+        
+        if isinstance(fieldScale, int):
+            self.fiedScale = fieldScale*np.ones(self.fieldCount)
+        else:
+            self.fieldScale = np.asanyarray(fieldScale)
+            assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
         """
@@ -213,20 +225,32 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        if len(fields.shape) == 1:
-            # HACK! Not sure how best to deal with this edge case, which
-            # arises due to how scipyint.RK45 is initialised
-            fields = Fields((fields))
+        # if len(fields.shape) == 1:
+        #     # HACK! Not sure how best to deal with this edge case, which
+        #     # arises due to how scipyint.RK45 is initialised
+        #     fields = Fields((fields))
         
-        res = derivative(
-            lambda T: self.derivField(fields, T),
-            temperature,
-            n=1,
-            order=4,
-            epsilon=self.effectivePotentialError,
-            scale=self.temperatureScale,
-            bounds=(0,np.inf),
-        )
+        # res = derivative(
+        #     lambda T: self.derivField(fields, T),
+        #     temperature,
+        #     n=1,
+        #     order=4,
+        #     epsilon=self.effectivePotentialError,
+        #     scale=self.temperatureScale,
+        #     bounds=(0,np.inf),
+        # )
+        def wrapperPotential(X):
+            fieldsWrapper = Fields(X[...,:-1])
+            T = X[...,-1]
+            return self.evaluate(fieldsWrapper, T)
+        
+        shape = list(fields.shape)
+        shape[-1] += 1
+        hessianInput = np.empty(shape)
+        hessianInput[...,:-1] = fields
+        hessianInput[...,-1] = temperature
+        
+        res = hessian(wrapperPotential,hessianInput, epsilon=self.effectivePotentialError, scale=np.append(self.fieldScale, self.temperatureScale), axis=-1)[...,:-1]
         
         return res
 

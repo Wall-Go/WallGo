@@ -198,9 +198,12 @@ def gradient(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, args=None):
     dx = temp - x
     
     pos = np.expand_dims(x, (-3,-2)) + FIRST_DERIV_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)*np.expand_dims(dx, (-3,-2)) 
+    shape = pos.shape[:-1]
+    pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
     coeff = FIRST_DERIV_COEFF[str(order)][0,:,None]/np.expand_dims(dx, -2) 
         
-    return np.sum(coeff*f(pos, *args), axis=-2)
+    fEvaluation = f(pos, *args).reshape(shape)
+    return np.sum(coeff*fEvaluation, axis=-2)
 
 def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=None):
     r"""Computes the hessian of a callable function. Use the epsilon
@@ -279,14 +282,20 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, axis=None, args=No
         pos = (np.expand_dims(x, (-4,-3,-2)) 
                + HESSIAN_POS[str(order)][0,:,None,None,None]*np.identity(nbrVariables)[:,None,:]*np.expand_dims(dx, (-4,-3,-2))  
                + HESSIAN_POS[str(order)][1,:,None,None,None]*np.identity(nbrVariables)[None,:,:]*np.expand_dims(dx, (-4,-3,-2)) )
+        shape = pos.shape[:-1]
+        pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
         coeff = HESSIAN_COEFF[str(order)][:,None,None]/(np.expand_dims(dx, (-3,-2))*np.expand_dims(dx, (-3,-1)))
-        return np.sum(coeff*f(pos, *args), axis=-3)
+        fEvaluation = f(pos, *args).reshape(shape)
+        return np.sum(coeff*fEvaluation, axis=-3)
     else:
         pos = (np.expand_dims(x, (-3,-2)) 
                + HESSIAN_POS[str(order)][0,:,None,None]*np.identity(nbrVariables)[:,:]*np.expand_dims(dx, (-3,-2))  
                + HESSIAN_POS[str(order)][1,:,None,None]*np.identity(nbrVariables)[None,axis,:]*np.expand_dims(dx, (-3,-2)) )
+        shape = pos.shape[:-1]
+        pos = pos.reshape((int(pos.size/nbrVariables), nbrVariables))
         coeff = HESSIAN_COEFF[str(order)][:,None]/(np.expand_dims(dx[...,axis], (-2,-1))*np.expand_dims(dx, -2))
-        return np.sum(coeff*f(pos, *args), axis=-2)
+        fEvaluation = f(pos, *args).reshape(shape)
+        return np.sum(coeff*fEvaluation, axis=-2)
         
     
 

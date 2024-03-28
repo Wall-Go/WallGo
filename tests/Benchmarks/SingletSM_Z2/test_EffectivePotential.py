@@ -165,9 +165,9 @@ def test_effectivePotential_d2VdFielddT_singletSimple(
     # tolerance
     Veff.dT = 1e-4 * T
     Veff.dPhi = 1e-4 * max(abs(v), abs(x))
-
+    
     # results from Veff
-    d2VdFielddT = Veff.deriv2FieldT(fields, T)
+    d2VdFielddT = Veff.deriv2FieldT(fields, T)[0]
     assert d2VdFielddTExact == pytest.approx(d2VdFielddT, rel=1e-5)  # HACK! This should be more accurate
 
 

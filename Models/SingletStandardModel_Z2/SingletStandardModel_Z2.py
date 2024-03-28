@@ -205,7 +205,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
-
         VTotal = (
             V0 
             + self.constantTerms(temperature)
