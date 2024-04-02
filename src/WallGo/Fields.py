@@ -23,6 +23,10 @@ class FieldPoint(np.ndarray):
     def GetField(self, i: int):
         return self[i]
 
+    def SetField(self, i: int, value: float) -> 'FieldPoint':
+        self[i] = value
+        return self
+
 
 ## TODO should not have SetField(), GetField() because numpy already has setfield(), getfield() ... lol
 
@@ -86,7 +90,7 @@ class Fields(np.ndarray):
         NB: no validation so will error if the index is out of bounds"""
         return self[i].view(FieldPoint)
     
-    def GetField(self, i: int) -> np.ndarray[float]:
+    def GetField(self, i: int) -> np.ndarray:
         """Get field at index i. Ie. if the theory has N background fields f_i, this will give all values of field f_i
         as a 1D array.
         """

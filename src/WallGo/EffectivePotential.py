@@ -43,12 +43,12 @@ class EffectivePotential(ABC):
         self.fieldCount = fieldCount
 
         ## Used for derivatives. TODO read from config file probably
-        self.dT = 1e-3
-        self.dPhi = 1e-3 ## field difference
+        self.dT = 0.1  ## HACK! These defaults are bad, as the quantities have dimensions
+        self.dPhi = 0.1  ## field difference
 
 
     @abstractmethod
-    def evaluate(self, fields: Fields, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def evaluate(self, fields: Fields, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
         at the input field configuration and temperature. 
         
@@ -60,7 +60,7 @@ class EffectivePotential(ABC):
 
     #### Non-abstract stuff from here on
 
-    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike) -> Tuple[Fields, npt.ArrayLike]:
+    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.
@@ -69,7 +69,7 @@ class EffectivePotential(ABC):
         -------
         minimum, functionValue : tuple. 
         minimum: list[float] is the location x of the minimum in field space.
-        functionValue: float is Veff(x) evaluated at the minimum .
+        functionValue: float is Veff(x) evaluated at the minimum.
         If the input temperature is a numpy array, the returned values will be arrays of same length. 
         """
 
@@ -99,110 +99,208 @@ class EffectivePotential(ABC):
 
             guess = guesses.GetFieldPoint(i)
 
-            res = scipy.optimize.minimize(evaluateWrapper, guess)
+            res = scipy.optimize.minimize(evaluateWrapper, guess, tol=tol)
 
             resLocation[i] = res.x
             resValue[i] = res.fun
 
+            # Check for presenece of imaginary parts at minimum
+            self.evaluate(Fields((res.x)), T[i], checkForImaginary=True)
+
         ## Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
-    
-
-    ## Find Tc for two minima, search only range [TMin, TMax].
-    ## Feel free to override this if your potential needs a more sophisticated minimization algorithm.
-    def findCriticalTemperature(self, minimum1: Fields, minimum2: Fields, TMin: float, TMax: float) -> float:
-
-        if (TMax < TMin):
-            raise ValueError("findCriticalTemperature needs TMin < TMax")
-    
-
-        ## TODO Should probably do something more sophisticated so that we can update initial guesses for the minima during T-loop
-
-        ## Wrapper that computes free-energy difference between our phases. This goes into scipy so scalar in, scalar out
-        def freeEnergyDifference(inputT: np.double) -> np.double:
-            _, f1 = self.findLocalMinimum(minimum1, inputT)
-            _, f2 = self.findLocalMinimum(minimum2, inputT)
-            diff = f2.real - f1.real
-            ## Force into scalar type. This errors out if the size is not 1; no failsafes to avoid overhead
-            return diff.item()
-        
-
-        ## start from TMin and increase temperature in small steps until the free energy difference changes sign
-
-        T = TMin
-        dT = 0.5 # If this is too large the high-T phase may disappear before we see the free-energy sign change. TODO better solution
-        signAtStart = np.sign(freeEnergyDifference(T))
-        bConverged = False
-
-        while (T < TMax):
-            T += dT
-            if (np.sign(freeEnergyDifference(T)) != signAtStart):
-                bConverged = True
-                break
-
-        if (not bConverged):
-            raise RuntimeWarning("Could not find critical temperature")
-            return None
-
-
-        # Improve Tc estimate by solving DeltaF = 0 in narrow range near the above T 
-
-        # NB: bracket will break if the function has same sign on both ends. The rough loop above should prevent this.
-        rootResults = scipy.optimize.root_scalar(freeEnergyDifference, bracket=(T-dT, T), rtol=1e-6, xtol=1e-6)
-
-        return rootResults.root
-
 
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
-        """Calculate derivative of (real part of) the effective potential with respect to temperature.
-        """
+        """Calculate derivative of (real part of) the effective potential with
+        respect to temperature.
 
+         Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : array_like
+            The temperature
+
+        Returns
+        ----------
+        dVdT : array_like
+            Temperature derivative of the potential, evaluated at each
+            point of the input temperature array.
+
+        """
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
-            dx = self.dT,
-            n = 1,
-            order = 4
+            dx=self.dT,
+            n=1,
+            order=4,
         )
         return der
 
-
-
     def derivField(self, fields: Fields, temperature: npt.ArrayLike):
-        """
-        Compute field-derivative of the effective potential with respect to all background fields,
-        at given temperature.
+        """ Compute field-derivative of the effective potential with respect to
+        all background fields, at given temperature.
 
         Parameters
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : float
-            the temperature
+        temperature : array_like
+            The temperature
 
         Returns
         ----------
-        dfdX : list[Fields]
-            Field derivatives of the potential, one Fields object for each temperature. They are of Fields type since the shapes match nicely.
+        dVdField : list[Fields]
+            Field derivatives of the potential, one Fields object for each
+            temperature. They are of Fields type since the shapes match nicely.
         """
-
-        ## TODO this is just a first-order finite difference whileas for T-derivatives we already do better...
         ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
 
         res = np.empty_like(fields, dtype=float)
 
         for idx in range(fields.NumFields()):
-
             fieldsOffset = np.zeros_like(fields, dtype=float)
-            fieldsOffset.SetField(idx, np.full( fields.NumPoints(), self.dPhi, dtype=float))
+            fieldsOffset.SetField(
+                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+            )
 
-            veff1 = self.evaluate(fields, temperature)
-            veff2 = self.evaluate(fields + fieldsOffset, temperature)
-
-            ## Do we need to worry about float point accuracy??
-
-            dVdphi = ( veff2 - veff1 ) / self.dPhi
+            # O(dPhi^4) accurate, central finite difference scheme
+            dV = (
+                -self.evaluate(fields + 2 * fieldsOffset, temperature)
+                + 8 * self.evaluate(fields + fieldsOffset, temperature)
+                - 8 * self.evaluate(fields - fieldsOffset, temperature)
+                + self.evaluate(fields - 2 * fieldsOffset, temperature)
+            )
+            dVdphi = dV / (12 * self.dPhi)
 
             res.SetField(idx, dVdphi)
 
+        return res
+
+    def deriv2FieldT(self, fields: Fields, temperature: npt.ArrayLike):
+        r""" Computes :math:`d^2V/(d\text{Field} dT)`.
+
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : array_like
+            The temperature
+
+        Returns
+        ----------
+        d2fdFielddT : list[Fields]
+            Field derivatives of the potential, one Fields object for each
+            temperature. They are of Fields type since the shapes match nicely.
+        """
+        if len(fields.shape) == 1:
+            # HACK! Not sure how best to deal with this edge case, which
+            # arises due to how scipyint.RK45 is initialised
+            fields = Fields((fields))
+
+        # O(dPhi^4) accurate, central finite difference scheme
+        res = (
+            - self.derivField(fields, temperature + 2 * self.dT)
+            + 8 * self.derivField(fields, temperature + self.dT)
+            - 8 * self.derivField(fields, temperature - self.dT)
+            + self.derivField(fields, temperature - 2 * self.dT)
+        ) / (12 * self.dT)
+
+        if len(res.shape) == 2 and res.shape[0] == 1:
+            # HACK! SHOULD DO THIS MORE TIDILY
+            return res[0]
+        return res
+
+    def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):
+        r""" Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
+
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : npt.ArrayLike
+            Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
+
+        Returns
+        ----------
+        d2VdField2 : list[Fields]
+            Field Hessian of the potential. For each temperature, this is
+            a matrix of the same size as Fields.
+        """
+        if len(fields.shape) == 1:
+            # HACK! Not sure how best to deal with this edge case, which
+            # arises due to how scipyint.RK45 is initialised
+            fields = Fields((fields))
+        shapeRes = (fields.NumPoints(), fields.NumFields(), fields.NumFields())
+        res = np.empty(shapeRes, dtype=float)
+
+        # OG: This is all a bit of a mess, and should probably be rewritten
+        # more algorithmically.
+
+        for idx in range(fields.NumFields()):
+            fieldsOffsetX = np.zeros_like(fields, dtype=float)
+            fieldsOffsetX.SetField(
+                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+            )
+            for idy in range(idx, fields.NumFields()):
+                fieldsOffsetY = np.zeros_like(fields, dtype=float)
+                if idy == idx:
+                    """# O(dPhi^2) accurate, central finite difference scheme
+                    dV = (
+                        self.evaluate(fields + fieldsOffsetX, temperature)
+                        - 2 * self.evaluate(fields, temperature)
+                        + self.evaluate(fields - fieldsOffsetX, temperature)
+                    )
+                    res[..., idx, idy] = dV / self.dPhi ** 2"""
+                    # O(dPhi^4) accurate, central finite difference scheme
+                    dV = (
+                        -self.evaluate(fields + 2 * fieldsOffsetX, temperature)
+                        + 16 * self.evaluate(fields + fieldsOffsetX, temperature)
+                        - 30 * self.evaluate(fields, temperature)
+                        + 16 * self.evaluate(fields - fieldsOffsetX, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX, temperature)
+                    )
+                    res[..., idx, idy] = dV / (12 * self.dPhi ** 2)
+                else:
+                    fieldsOffsetY.SetField(
+                        idy, np.full(fields.NumPoints(), self.dPhi, dtype=float)
+                    )
+                    """# O(dPhi^2) accurate, central finite difference scheme
+                    dV = (
+                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
+                    )
+                    res[..., idx, idy] = dV / (4 * self.dPhi ** 2)
+                    res[..., idy, idx] = res[..., idx, idy]"""
+                    # O(dPhi^4) accurate, central finite difference scheme
+                    dV = (
+                        self.evaluate(fields + 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields + 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields - 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                    )
+                    dV += 8 * (
+                        -self.evaluate(fields + 2 * fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields - 2 * fieldsOffsetX + fieldsOffsetY, temperature)
+                        + self.evaluate(fields + 2 * fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields - 2 * fieldsOffsetX - fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX + 2 * fieldsOffsetY, temperature)
+                        + self.evaluate(fields + fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX - 2 * fieldsOffsetY, temperature)
+                    )
+                    dV += 64 * (
+                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
+                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
+                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
+                    )
+                    res[..., idx, idy] = dV / (144 * self.dPhi ** 2)
+                    res[..., idy, idx] = res[..., idx, idy]
+
+        if len(res.shape) == 3 and res.shape[0] == 1:
+            # HACK! SHOULD DO THIS MORE TIDILY
+            return res[0]
         return res

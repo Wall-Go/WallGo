@@ -10,7 +10,7 @@ from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
-from WallGo import Fields
+from WallGo import Fields, WallGoResults
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
@@ -29,10 +29,11 @@ class SingletSM_Z2(GenericModel):
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
-
-        ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
-        ## so @todo define these in a separate file? 
         
+        self.defineParticles()
+
+
+    def defineParticles(self) -> None:
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
@@ -49,8 +50,7 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 12
+                            totalDOFs = 12
         )
         self.addParticle(topQuark)
 
@@ -64,8 +64,7 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 5,
-                            DOF = 60
+                            totalDOFs = 60
         )
         self.addParticle(lightQuark)
 
@@ -79,12 +78,11 @@ class SingletSM_Z2(GenericModel):
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 16
+                            totalDOFs = 16
         )
         self.addParticle(gluon)
 
-
+        
 
 
     ## Go from whatever input params --> action params
@@ -178,7 +176,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
+    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
@@ -211,8 +209,8 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale) 
-            + self.V1T(bosonStuff, fermionStuff, temperature)
+            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
+            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
         return VTotal
@@ -392,6 +390,10 @@ def main():
 
     WallGo.initialize()
 
+    # Print WallGo config. This was read by WallGo.initialize()
+    print("=== WallGo configuration options ===")
+    print(WallGo.config)
+
     ## Create WallGo control object
     manager = WallGoManager()
 
@@ -423,9 +425,9 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/N=5/"
-    manager.loadCollisionFile(collisionFileName)
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    manager.loadCollisionFiles(collisionDirectory)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -475,21 +477,27 @@ def main():
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallParams.widths=}")
-        print(f"{wallParams.offsets=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
 
     # end parameter-space loop

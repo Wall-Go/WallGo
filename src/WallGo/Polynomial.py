@@ -25,8 +25,9 @@ class Polynomial:
             basis. The default is 'Cardinal'.
         direction : string or tuple of strings, optional
             Tuple of length N specifying what direction each dimension of 
-            coefficients represents. Each component can either be 'z', 'pz' or
-            'pp'. Can also be a single string, in which case all the 
+            coefficients represents. Each component can either be 'z', 'pz',
+            'pp' or 'Array'. The latter can only be used if basis is 'Array' 
+            for that axis. Can also be a single string, in which case all the 
             dimensions are assumed to be in that direction. The default is 'z'.
         endpoints : bool or tuple of bool, optional
             Tuple of length N specifying wheither each dimension includes the 
@@ -44,11 +45,12 @@ class Polynomial:
         self.grid = grid
         
         self.allowedBasis = ['Cardinal','Chebyshev','Array']
-        self.allowedDirection = ['z','pz','pp']
+        self.allowedDirection = ['z','pz','pp','Array']
         
         if isinstance(basis, str):
             basis = self.rank*(basis,)
         self.__checkBasis(basis)
+        self.basis = basis
             
         if isinstance(direction, str):
             direction = self.rank*(direction,)
@@ -58,7 +60,6 @@ class Polynomial:
             endpoints = self.rank*(endpoints,)
         self.__checkEndpoints(endpoints)
             
-        self.basis = basis
         self.direction = direction
         self.endpoints = endpoints
         
@@ -684,8 +685,10 @@ class Polynomial:
     def __checkDirection(self, direction):
         assert isinstance(direction, tuple), 'Polynomial error: direction must be a tuple or a string.'
         assert len(direction) == self.rank, 'Polynomial error: direction must be a tuple of length "rank".'
-        for x in direction:
+        for i,x in enumerate(direction):
             assert x in self.allowedDirection, "Polynomial error: unkown direction %s" % x
+            if x == 'Array':
+                assert self.basis[i] == 'Array', "Polynomial error: if the direction is 'Array', the basis must be 'Array' too."
             
     def __checkEndpoints(self, endpoints):
         assert isinstance(endpoints, tuple), 'Polynomial error: endpoints must be a tuple or a bool.'

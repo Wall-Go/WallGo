@@ -1,6 +1,8 @@
 import numpy as np
+import numpy.typing as npt
 import pytest
 
+from WallGo import InterpolatableFunction
 from WallGo.Integrals import JbIntegral, JfIntegral
 from WallGo.InterpolatableFunction import EExtrapolationType
 
@@ -14,6 +16,15 @@ def test_directJb(x: float, expectedResult: float):
 
     Jb = JbIntegral(bUseAdaptiveInterpolation=False)
     assert Jb(x) == pytest.approx(expectedResult, rel=1e-6)
+
+@pytest.mark.parametrize("x, expectedResult", [
+    (5, 0.1195247494387632),
+    (-1, 0.516703124731066)
+])
+def test_directJb_derivative(x: float, expectedResult: float):
+
+    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    assert Jb.derivative(x,1,False) == pytest.approx(expectedResult, rel=1e-6)
     
 
 @pytest.mark.parametrize("x, expectedResult", [
@@ -25,25 +36,100 @@ def test_directJf(x: float, expectedResult: float):
     Jf = JfIntegral(bUseAdaptiveInterpolation=False)
     assert Jf(x) == pytest.approx(expectedResult, rel=1e-6)
     
+@pytest.mark.parametrize("x, expectedResult", [
+    (5, 0.1113267810730111),
+    (-1, 0.5376680405566582)
+])
+def test_directJf_derivative(x: float, expectedResult: float):
+
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    assert Jf.derivative(x,1,False) == pytest.approx(expectedResult, rel=1e-6)
+    
 
 ## Interpolated Jb integral fixture, no extrapolation. The interpolation here is very rough to make this run fast
 @pytest.fixture()
 def Jb_interpolated():
     
     Jb = JbIntegral(bUseAdaptiveInterpolation=False)
-    Jb.newInterpolationTable(1.0, 10.0, 10)
+    Jb.newInterpolationTable(1.0, 10.0, 100)
     return Jb
+
+@pytest.fixture()
+def Jf_interpolated():
+    
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf.newInterpolationTable(1.0, 10.0, 100)
+    return Jf
 
 
 @pytest.mark.parametrize("x, expectedResult", [
     (2.0, -1.408868),
-    (np.array([[-1.0, 0.5], [7.0, 12.0]]), np.array([[-2.81844527, -1.89083137], [-0.70078526, -0.40746745]]))
+    (np.array([-1.0, 0.5]), np.array([-2.81844527, -1.89083137])),
+    (np.array([[-1.0, 0.5], [7.0, 12.0]]), np.array([[-2.81844527, -1.89083137], [-0.70078526, -0.40746745]])),
 ])
 def test_Jb_interpolated(Jb_interpolated: JbIntegral, x, expectedResult):
     ## This also tests array input
 
     np.testing.assert_allclose( Jb_interpolated(x), expectedResult, rtol=1e-6)
     
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jb_derivative_interpolated(Jb_interpolated: JbIntegral, x):
+    np.testing.assert_allclose( Jb_interpolated.derivative(x, 1, True), Jb_interpolated.derivative(x, 1, False), rtol=1e-4)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jb_second_derivative_interpolated(Jb_interpolated: JbIntegral, x):
+    np.testing.assert_allclose( Jb_interpolated.derivative(x, 2, True), Jb_interpolated.derivative(x, 2, False), rtol=1e-3, atol=1e-3)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jf_derivative_interpolated(Jf_interpolated: JfIntegral, x):
+    np.testing.assert_allclose( Jf_interpolated.derivative(x, 1, True), Jf_interpolated.derivative(x, 1, False), rtol=1e-4)
+    
+@pytest.mark.parametrize("x", [-5,-1,0,0.5,1,5,10])
+def test_Jf_second_derivative_interpolated(Jf_interpolated: JfIntegral, x):
+    np.testing.assert_allclose( Jf_interpolated.derivative(x, 2, True), Jf_interpolated.derivative(x, 2, False), rtol=1e-3, atol=1e-3)
+    
+
+class JbJf(InterpolatableFunction):
+    """Function that returns Jb and Jf simultaneously in array format. This emulates a vector-valued function.
+    """
+    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+
+    def _functionImplementation(self, x: npt.ArrayLike) -> npt.ArrayLike:
+        return np.column_stack((self.Jb(x), self.Jf(x)))    
+    
+@pytest.fixture()
+def JbJf_interpolated():
+    """Interpolate Jb and Jf simultaneously as a "vector valued" function
+    """
+
+    JbJf_interpolated = JbJf(bUseAdaptiveInterpolation=False, returnValueCount=2)
+
+    JbJf_interpolated.newInterpolationTable(1.0, 10.0, 10)
+    return JbJf_interpolated
+
+    
+## just shorthands because I'm lazy
+def jb(x: npt.ArrayLike) -> npt.ArrayLike:
+    return JbIntegral()(x)
+
+def jf(x: npt.ArrayLike) -> npt.ArrayLike:
+    return JfIntegral()(x)
+
+@pytest.mark.parametrize("x, fx", [
+( 2.0, np.array([-1.408868, -1.330923]) ),
+( np.array([2.0, 0.5]), np.array([[jb(2.0), jf(2.0)], [jb(0.5), jf(0.5)]]) ),
+( np.array([[-1.0, 0.5], [7.0, 9.0]]), np.array([ [[jb(-1.0), jf(-1.0)], [jb(0.5), jf(0.5)]], [[jb(7.0), jf(7.0)], [jb(9.0), jf(9.0)]] ]) ),
+( np.array([[-1.0, 11.5], [15.0, 12.0]]), np.array([ [[jb(-1.0), jf(-1.0)], [jb(11.5), jf(11.5)]], [[jb(15.0), jf(15.0)], [jb(12.0), jf(12.0)]] ]) ),
+])
+def test_vectorValuedInterpolation(JbJf_interpolated: InterpolatableFunction, x: npt.ArrayLike, fx: npt.ArrayLike):
+    # the last one here checks that things work even when we combine interpolation and direct evaluation
+    x = np.asanyarray(x)
+    fx = np.asanyarray(fx)
+
+    assert fx.shape == x.shape + (2,)
+    np.testing.assert_allclose(JbJf_interpolated(x), fx, rtol=1e-6, atol=1e-8)
+
 
 ### Test out-of-bounds behavior with extrapolations
 
@@ -109,5 +195,3 @@ def test_Jb_extend_range(Jb_interpolated: JbIntegral):
 
     assert Jb.interpolationRangeMax() == pytest.approx(newMax, rel=relativeTolerance)
     assert Jb(newMax) == pytest.approx(JbNewMax_direct, rel=relativeTolerance)
-
-

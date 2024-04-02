@@ -1,53 +1,16 @@
-import warnings
 import sys
-import numpy as np
-import h5py  # read/write hdf5 structured binary data file format
-import codecs  # for decoding unicode string from hdf5 file
 from copy import deepcopy
+import numpy as np
 import findiff  # finite difference methods
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
-from .helpers import boostVelocity
-from .Fields import Fields
 from .CollisionArray import CollisionArray
-
-"""LN: What's going on with the fieldProfile array here? When constructing a background in EOM.wallPressure(), 
-it explicitly reshapes the input fieldProfile to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
-that just removes the endspoints.
-"""
-
-class BoltzmannBackground:
-    def __init__(
-        self,
-        velocityMid: np.ndarray,
-        velocityProfile: np.ndarray,
-        fieldProfile: Fields,
-        temperatureProfile: np.ndarray,
-        polynomialBasis: str = "Cardinal",
-    ):
-        # assumes input is in the wall frame
-        self.vw = 0
-        self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfile = fieldProfile.view(Fields) ## NEEDS to be Fields object
-        self.temperatureProfile = np.asarray(temperatureProfile)
-        self.polynomialBasis = polynomialBasis
-        self.vMid = velocityMid
-        self.TMid = 0.5 * (temperatureProfile[0] + temperatureProfile[-1])
-
-    def boostToPlasmaFrame(self) -> None:
-        """
-        Boosts background to the plasma frame
-        """
-        self.velocityProfile = boostVelocity(self.velocityProfile, self.vMid)
-        self.vw = boostVelocity(self.vw, self.vMid)
-
-    def boostToWallFrame(self) -> None:
-        """
-        Boosts background to the wall frame
-        """
-        self.velocityProfile = boostVelocity(self.velocityProfile, self.vw)
-        self.vw = 0
+from .WallGoTypes import (
+    BoltzmannBackground,
+    BoltzmannDeltas,
+    BoltzmannResults,
+)
 
 
 class BoltzmannSolver:
@@ -132,7 +95,7 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles    
 
-    def getDeltas(self, deltaF=None):
+    def getDeltas(self, deltaF: np.ndarray = None):
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -146,26 +109,26 @@ class BoltzmannSolver:
 
         Returns
         -------
-        Deltas : array_like
-            Defined in equation (15) of [LC22]_. A list of 4 arrays, each of
-            which is of size :py:data:`len(z)`.
+        Deltas : BoltzmannDeltas
+            Defined in equation (15) of [LC22]_. A collection of 4 arrays,
+            each of which is of size :py:data:`len(z)`.
         """
         # checking if result pre-computed
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
+        # getting (optimistic) estimate of truncation error
+        truncationError = self.estimateTruncationError(deltaF)
+
         particles = self.offEqParticles
 
-        # dict to store results
-        Deltas = {"00": 0, "02": 0, "20": 0, "11": 0}
-
         # constructing Polynomial class from deltaF array
-        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
+        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('Array', 'z', 'pz', 'pp'), False)
         deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
-        field = self.background.fieldProfile.TakeSlice(
-            1, -1, axis=self.background.fieldProfile.overFieldPoints
+        field = self.background.fieldProfiles.TakeSlice(
+            1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
@@ -189,13 +152,18 @@ class BoltzmannSolver:
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
         
-        Deltas['00'] = deltaFPoly.integrate((2,3), integrand)
-        Deltas['20'] = deltaFPoly.integrate((2,3), E**2 * integrand)
-        Deltas['02'] = deltaFPoly.integrate((2,3), pz**2 * integrand)
-        Deltas['11'] = deltaFPoly.integrate((2,3), E*pz * integrand)
+        Delta00 = deltaFPoly.integrate((2,3), integrand)
+        Delta02 = deltaFPoly.integrate((2,3), pz**2 * integrand)
+        Delta20 = deltaFPoly.integrate((2,3), E**2 * integrand)
+        Delta11 = deltaFPoly.integrate((2,3), E*pz * integrand)
+        Deltas = BoltzmannDeltas(
+            Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
+        )
 
         # returning results
-        return Deltas
+        return BoltzmannResults(
+            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError,
+        )
 
     def solveBoltzmannEquations(self):
         r"""
@@ -245,7 +213,6 @@ class BoltzmannSolver:
         # Validity of the linearization
         criterion1,criterion2 = self.checkLinearization(deltaF)
         print(f"Validity of the linearization: {np.max(np.minimum(criterion1, criterion2))}")
-
         return deltaF
 
     def estimateTruncationError(self, deltaF):
@@ -268,7 +235,7 @@ class BoltzmannSolver:
         """
         # constructing Polynomial
         basisTypes = ('Array', self.basisM, self.basisN, self.basisN)
-        basisNames = ('z', 'z', 'pz', 'pp')
+        basisNames = ('Array', 'z', 'pz', 'pp')
         deltaFPoly = Polynomial(
             deltaF, self.grid, basisTypes, basisNames, False
         )
@@ -391,7 +358,7 @@ class BoltzmannSolver:
         # background profiles
         TFull = self.background.temperatureProfile
         vFull = self.background.velocityProfile
-        msqFull = np.array([particle.msqVacuum(self.background.fieldProfile) for particle in particles])
+        msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
         vw = self.background.vw
 
         # expanding to be rank 3 arrays, like deltaF
@@ -408,7 +375,7 @@ class BoltzmannSolver:
             # fit the background profiles to polynomials
             TPoly = Polynomial(TFull, self.grid, 'Cardinal', 'z', True)
             vPoly = Polynomial(vFull, self.grid, 'Cardinal', 'z', True)
-            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), 'z', True)
+            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), ('Array','z'), True)
             # intertwiner matrices
             TChiMat = TPoly.matrix(self.basisM, "z")
             TRzMat = TPoly.matrix(self.basisN, "pz")
@@ -530,9 +497,8 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
     
-    def readCollision(self, fileName: str) -> None:
-        ## TODO generalize for many off eq particles
-        self.collisionArray = CollisionArray.newFromFile(fileName, self.grid, self.basisN, self.offEqParticles)
+    def readCollisions(self, directoryName: str) -> None:
+        self.collisionArray = CollisionArray.newFromDirectory(directoryName, self.grid, self.basisN, self.offEqParticles)
 
     def __checkBasis(basis):
         """

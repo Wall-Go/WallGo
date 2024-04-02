@@ -34,7 +34,7 @@ def boltzmannTestBackground(M):
     return WallGo.BoltzmannBackground(
         velocityMid=velocityMid,
         velocityProfile=v,
-        fieldProfile=field,
+        fieldProfiles=field,
         temperatureProfile=T,
         polynomialBasis="Cardinal",
     )
@@ -51,8 +51,7 @@ def particle():
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
-        multiplicity=1,
-        DOF = 12
+        totalDOFs = 12
     )
 
 

@@ -3,7 +3,7 @@ import numpy.typing as npt
 from abc import abstractmethod
 import scipy.integrate
 
-from .InterpolatableFunction import InterpolatableFunction
+from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
 
 
 r""" For 1-loop thermal potential WITHOUT high-T approximations, need to calculate
@@ -57,9 +57,10 @@ class JbIntegral(InterpolatableFunction):
                 # Do some algebra to find the principal log (we do real parts only)
                 integrand_principalLog = lambda y: y*y * np.log( 2. * np.abs(np.sin(0.5 * np.sqrt( np.abs(y*y + x) ))) + self.SMALL_NUMBER)
                 
-                res = ( scipy.integrate.quad(integrand_principalLog, 0.0, np.sqrt(np.abs(x)))[0]
+                res = (
+                    scipy.integrate.quad(integrand_principalLog, 0.0, np.sqrt(np.abs(x)))[0]
                     + scipy.integrate.quad(integrand, np.sqrt(np.abs(x)), np.inf)[0]
-                    )
+                )
             return res.real
         
         if (np.isscalar(xInput)):
