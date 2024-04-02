@@ -303,8 +303,12 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-        wallParams = WallParams(
-            widths=(5 / self.Tnucl) * np.ones(numberOfFields),
+        eom.pressAbsErrTol = 1e-8 #Had to add this here, otherwise eom.wallPressure errors out
+
+        Tn = self.phasesAtTn.temperature
+
+        wallParamsGuess = WallParams(
+            widths=(5 / Tn) * np.ones(numberOfFields),
             offsets=np.zeros(numberOfFields),
         )
 

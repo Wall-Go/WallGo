@@ -75,6 +75,18 @@ def test_JouguetVelocity():
     np.testing.assert_allclose(res1,res2,rtol = 10**-6,atol = 0)
 
 def test_findMatching():
+    alN = 0.02
+    psiN = 0.9
+    cs2 = 0.333
+    cb2 = 0.25
+    model = TestModelTemplate(alN,psiN,cb2,cs2,100.,101.)
+    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=2, maxPossibleTemperature=200)
+    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=1, maxPossibleTemperature=200)
+    hydro = WallGo.Hydro(model,1e-10,1e-10)
+    hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+    print(f"{hydroTemplate.findMatching(0.56)=}")
+    print(f"{hydro.findMatching(0.56)=}")
+
     res1,res2 = np.zeros((N,4)),np.zeros((N,4))
     psiN = 1-0.5*rng.random(N)
     alN = (1-psiN)/3+rng.random(N)
