@@ -71,6 +71,12 @@ class BoltzmannResults:
     deltaF: np.ndarray
     Deltas: BoltzmannDeltas
     truncationError: float
+    
+    # These two criteria are to evaluate the validity of the linearization of the 
+    # Boltzmann equation. The tuples contain one element for each out-of-equilibrium
+    # particle. To be valid, at least one criterion must be small for each particle.
+    linearizationCriterion1: tuple
+    linearizationCriterion2: tuple
 
 
 @dataclass

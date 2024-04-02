@@ -119,6 +119,9 @@ class BoltzmannSolver:
 
         # getting (optimistic) estimate of truncation error
         truncationError = self.estimateTruncationError(deltaF)
+        
+        # getting criteria for validity of linearization
+        criterion1,criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 
@@ -162,7 +165,7 @@ class BoltzmannSolver:
 
         # returning results
         return BoltzmannResults(
-            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError,
+            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError, linearizationCriterion1=criterion1, linearizationCriterion2=criterion2,
         )
 
     def solveBoltzmannEquations(self):
@@ -206,13 +209,6 @@ class BoltzmannSolver:
         deltaFShape = (len(self.offEqParticles), self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
         deltaF = np.reshape(deltaF, deltaFShape, order="C")
 
-        # testing result
-        truncationError = self.estimateTruncationError(deltaF)
-        print(f"(optimistic) estimate of truncation error = {truncationError}")
-        
-        # Validity of the linearization
-        criterion1,criterion2 = self.checkLinearization(deltaF)
-        print(f"Validity of the linearization: {np.max(np.minimum(criterion1, criterion2))}")
         return deltaF
 
     def estimateTruncationError(self, deltaF):
@@ -286,8 +282,8 @@ class BoltzmannSolver:
         deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
         deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
 
-        msqFull = np.array([particle.msqVacuum(self.background.fieldProfile) for particle in particles])
-        fieldPoly = Polynomial(np.sum(self.background.fieldProfile,axis=1), self.grid, 'Cardinal', 'z', True)
+        msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
+        fieldPoly = Polynomial(np.sum(self.background.fieldProfiles,axis=1), self.grid, 'Cardinal', 'z', True)
         dfielddChi = fieldPoly.derivative(0).coefficients[None, 1:-1, None, None]
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
