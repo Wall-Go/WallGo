@@ -106,6 +106,8 @@ class Hydro:
                 rtol=self.rtol,
             )
         else:
+            return 1
+            print('This is not going to work')
             # If we cannot bracket the root, use the 'secant' method instead.
             # This may call thermodynamics outside of its interpolation range?
             rootResult = root_scalar(
@@ -116,13 +118,76 @@ class Hydro:
                 xtol=self.atol,
                 rtol=self.rtol,
             )
+            print(f"{rootResult.root=}")
         if rootResult.converged:
             tmSol = rootResult.root
+            if tmSol < self.TMinLowT or tmSol > self.TMaxHighT:
+                print('This does not make sense')
         else:
             raise WallGoError(rootResult.flag, rootResult)
 
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
         return vp
+    
+    def fastestDeflag(self):
+        r"""
+        Determines the fastest deflagration/hybrid solution for which the plasma temperature inside of the bubble stays below TMaxLowT.
+
+        Parameters
+        ----------
+
+        Returns
+        ---------
+        vwmax: double
+            maximum wall velocity of a deflagration/hybrid given the temperature range
+        """
+        TmFastest = self.TMaxLowT
+
+        # def matchingOfvw(vw):
+        #     vmFastestsq = min(vw**2,self.thermodynamics.csqLowT(TmFastest))
+
+        #     def matchingOfTp(Tp):
+        #         vpvm, vpovm = self.vpvmAndvpovm(Tp, TmFastest)
+        #         return vpvm/vpovm - vmFastestsq
+            
+        #     TpFastest = root_scalar(
+        #         matchingOfTp,
+        #         bracket = [self.TMinLowT, self.TMaxHighT],
+        #         method='brentq',
+        #         xtol=self.atol,
+        #         rtol=self.rtol,
+        #     ).root
+            
+
+        #     vpFastest, _ = self.vpvmAndvpovm(TpFastest, TmFastest)/np.sqrt(vmFastestsq)
+
+        #     _,_,Tpmatch,Tmmatch = self.matchDeflagOrHyb(vw, vpFastest)
+        #     return Tmmatch - TmFastest
+        
+        # vwmax = root_scalar(
+        #         matchingOfvw,
+        #         bracket = [0, 0.4], #Is that the right upper bound??
+        #         method='brentq',
+        #         xtol=self.atol,
+        #         rtol=self.rtol,
+        #     ).root
+        
+        # print(f"{vwmax=}")
+        def templatematching(vw):
+            vp,vm,Tp,Tm =self.template.findMatching(vw)
+            return Tm - TmFastest
+        
+        vwguess = root_scalar(
+                 templatematching,
+                 bracket = [0.01, self.template.vJ], #Is that the right upper bound??
+                 method='brentq',
+                 xtol=self.atol,
+                 rtol=self.rtol,
+             ).root
+
+        return(vwguess)
+
+       
 
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
@@ -433,7 +498,6 @@ class Hydro:
         """
 
         if vwTry > self.vJ:  # Detonation
-            print('Hello!')
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration

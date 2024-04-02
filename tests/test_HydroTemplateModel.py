@@ -75,17 +75,31 @@ def test_JouguetVelocity():
     np.testing.assert_allclose(res1,res2,rtol = 10**-6,atol = 0)
 
 def test_findMatching():
-    alN = 0.02
-    psiN = 0.9
-    cs2 = 0.333
-    cb2 = 0.25
-    model = TestModelTemplate(alN,psiN,cb2,cs2,100.,101.)
-    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=2, maxPossibleTemperature=200)
-    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=1, maxPossibleTemperature=200)
+    alN = 0.0275
+    psiN = 0.92155
+    cs2 = 0.3327
+    cb2 = 0.1873
+    model = TestModelTemplate(alN,psiN,cb2,cs2,45.2,45.62556)
+    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=44.3389, maxPossibleTemperature=54.822)
+    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=45.711)
+#    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=60.822)
+#    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=60.711)
     hydro = WallGo.Hydro(model,1e-10,1e-10)
     hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
-    print(f"{hydroTemplate.findMatching(0.56)=}")
-    print(f"{hydro.findMatching(0.56)=}")
+    print(f"{hydroTemplate.vJ=}")
+    print(f"{hydroTemplate.findMatching(0.52)=}")
+    print(f"{hydro.vJ=}")
+    print(f"{hydro.fastestDeflag()=}") 
+    print(f"{hydroTemplate.findMatching(0.4448307370194915)=}")
+    print(f"{hydroTemplate.findMatching(0.4)=}")
+    print(f"{hydroTemplate.findMatching(0.51)=}")
+    print(f"{hydroTemplate.findMatching(0.52)=}")
+    print(f"{hydroTemplate.findMatching(0.53)=}")
+    print(f"{hydroTemplate.findMatching(0.54)=}")
+    print(f"{hydroTemplate.findMatching(0.3147944073426718)=}")
+    print(f"{hydroTemplate.findMatching(0.34)=}")
+#    print(f"{hydro.findMatching(0.33)=}")
+#    print(f"{hydro.findMatching(0.52)=}")
 
     res1,res2 = np.zeros((N,4)),np.zeros((N,4))
     psiN = 1-0.5*rng.random(N)
