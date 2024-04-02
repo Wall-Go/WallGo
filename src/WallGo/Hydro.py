@@ -49,8 +49,8 @@ class Hydro:
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
-        self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
+        self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
     def findJouguetVelocity(self) -> float:
@@ -765,7 +765,7 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = 0.95*min(self.vJ,self.vMax)
+        vmax = 0.98*min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:

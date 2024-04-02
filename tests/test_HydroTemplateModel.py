@@ -57,7 +57,7 @@ class TestModelTemplate(WallGo.Thermodynamics):
 
 
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydro used with TestTemplateModel
-N = 10
+N = 20
 rng = np.random.default_rng(1)
 
 def test_JouguetVelocity():
@@ -151,24 +151,23 @@ def test_findHydroBoundaries():
             res2[i] = [0,0,0,0,0]
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
 
-def test_vwLTE():
-    alN = 0.02750560614276625
-    psiN = 0.921553556845757
-    cs2 = 0.3327016292291945
-    cb2 = 0.18734230468564994
-    model = TestModelTemplate(alN,psiN,cb2,cs2,45.2,45.625557062002464)
-    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=44.33889999999969, maxPossibleTemperature=54.8230545868435)
-    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=45.71178174785675)
-    hydro = WallGo.Hydro(model,1e-10,1e-10)
-    hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
-    print(f"{hydro.vJ=}")
-    print(f"{hydroTemplate.vJ=}")
-    print(f"{hydroTemplate.findJouguetVelocity2()=}")
-    print(f"{hydro.findvwLTE()=}")
-    #print(f"{hydro.findMatching(0.32889)=}")
-    print(f"{hydroTemplate.findvwLTE()=}")
-    print(f"{hydroTemplate.findMatching(0.3)=}")
-    print(f"{hydroTemplate.findMatching(0.32889)=}")
-    np.testing.assert_allclose(1,1,rtol = 0.01,atol = 0)
+# def test_vwLTE():
+#     alN = 0.02750560614276625
+#     psiN = 0.921553556845757
+#     cs2 = 0.3327016292291945
+#     cb2 = 0.18734230468564994
+#     model = TestModelTemplate(alN,psiN,cb2,cs2,45.2,45.625557062002464)
+#     model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=44.33889999999969, maxPossibleTemperature=54.8230545868435)
+#     model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=45.71178174785675)
+#     hydro = WallGo.Hydro(model,1e-10,1e-10)
+#     hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+#     print(f"{hydro.vJ=}")
+#     print(f"{hydroTemplate.vJ=}")
+#     print(f"{hydro.findvwLTE()=}")
+#     #print(f"{hydro.findMatching(0.32889)=}")
+#     print(f"{hydroTemplate.findvwLTE()=}")
+#     print(f"{hydroTemplate.findMatching(0.3)=}")
+#     print(f"{hydroTemplate.findMatching(0.32889)=}")
+#     np.testing.assert_allclose(1,1,rtol = 0.01,atol = 0)
 
     
