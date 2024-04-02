@@ -46,12 +46,11 @@ class Hydro:
         self.rtol, self.atol = rtol, atol
 
         self.vJ = self.findJouguetVelocity()
-        # LN: Do we need a template model instance here? Can it be replaced by explicit initial guesses for things?
-        # JvdV: Not really - in some cases it gives us a vw-dependent initial guess
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
         self.vMin = max(1e-3, self.minVelocity())
+        self.vMax = self.fastestDeflag()
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
     def findJouguetVelocity(self) -> float:
@@ -177,15 +176,18 @@ class Hydro:
             vp,vm,Tp,Tm =self.template.findMatching(vw)
             return Tm - TmFastest
         
-        vwguess = root_scalar(
-                 templatematching,
-                 bracket = [0.01, self.template.vJ], #Is that the right upper bound??
-                 method='brentq',
-                 xtol=self.atol,
-                 rtol=self.rtol,
-             ).root
-
-        return(vwguess)
+        try:
+            vwguess = root_scalar(
+                     templatematching,
+                     bracket = [0.01, self.template.vJ], #Is that the right upper bound??
+                    method='brentq',
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                    ).root
+            return(vwguess)
+        
+        except:
+            return 1
 
        
 
@@ -466,7 +468,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(1e-5, self.vJ),
+                bracket=(1e-5, min(self.vJ,self.vMax)),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -497,7 +499,7 @@ class Hydro:
 
         """
 
-        if vwTry > self.vJ:  # Detonation
+        if vwTry > min(self.vJ,self.vMax):  # Detonation
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
@@ -738,13 +740,13 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = self.vJ
+        vmax = 0.95*min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
                 vmax = root_scalar(
                     shock,
-                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, self.vJ],
+                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root

@@ -99,7 +99,7 @@ class WallGoManager:
                               data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
 
         print(f"Jouguet: {self.hydro.vJ}")
-        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
+#        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
     
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
