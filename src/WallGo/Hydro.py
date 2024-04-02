@@ -765,7 +765,7 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = 0.98*min(self.vJ,self.vMax)
+        vmax = min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
