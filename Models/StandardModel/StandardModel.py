@@ -335,6 +335,8 @@ def main():
         print(f"{widths=}")
         print(f"{offsets=}")
 
+        print(f"{manager.pressureOfvw(0.3, bIncludeOffEq)=}")
+
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")

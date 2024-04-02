@@ -10,7 +10,7 @@ from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
 from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo, WallGoResults
+from .WallGoTypes import PhaseInfo, WallGoResults, WallParams
 from .WallGoUtils import getSafePathToResource
 
 import WallGo
@@ -283,6 +283,33 @@ class WallGoManager:
 
         # returning results
         return eom.findWallVelocityMinimizeAction()
+    
+    def pressureOfvw(self, vw: float, bIncludeOffEq: bool):
+        numberOfFields = self.model.fieldCount
+
+        errTol = self.config.getfloat("EOM", "errTol")
+        maxIterations = self.config.getint("EOM", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+
+        eom = EOM(
+            self.boltzmannSolver,
+            self.thermodynamics,
+            self.hydro,
+            self.grid,
+            numberOfFields,
+            includeOffEq=bIncludeOffEq,
+            errTol=errTol,
+            maxIterations=maxIterations,
+            pressRelErrTol=pressRelErrTol,
+        )
+
+        wallParams = WallParams(
+            widths=(5 / self.Tnucl) * np.ones(numberOfFields),
+            offsets=np.zeros(numberOfFields),
+        )
+
+        return(eom.wallPressure(vw, wallParamsGuess, False))
+
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 
