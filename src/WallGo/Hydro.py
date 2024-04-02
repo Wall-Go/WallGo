@@ -49,8 +49,8 @@ class Hydro:
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
-        self.vMin = max(1e-3, self.minVelocity())
-        self.vMax = self.fastestDeflag()
+        self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
+        self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
     def findJouguetVelocity(self) -> float:
@@ -171,7 +171,7 @@ class Hydro:
         #         rtol=self.rtol,
         #     ).root
         
-        # print(f"{vwmax=}")
+        # First we find an estimate of the maximum wall velocity using the template model
         def templatematching(vw):
             vp,vm,Tp,Tm =self.template.findMatching(vw)
             return Tm - TmFastest
@@ -184,10 +184,35 @@ class Hydro:
                     xtol=self.atol,
                     rtol=self.rtol,
                     ).root
-            return(vwguess)
         
         except:
-            return 1
+            vwguess = 1
+
+        vlow = 0.9*vwguess
+        vhigh = 1.1*vwguess
+        try:
+            self.findMatching(vlow)
+        except: #If we can not solve the matching relations with vlow, it was chosen too high, and we set it to a really small value
+            vlow = 0.01 
+        try: #If we can still solve the matching relations with vhigh, it was chosen too low, and we set it to a really large value
+            self.findMatching(vhigh)
+            vhigh = 0.99
+        except:
+            1+1
+
+        vmid = (vlow+vhigh)/2
+
+        while abs(vmid - vlow) > 1e-4:
+            try:
+                findMatching(vmid)
+                vhigh = vmid
+            except:
+                vlow = vmid
+            vmid = (vlow + vhigh)/2.
+
+        return(vlow)  # Take the upper bound on vpminup just to be conservative
+
+
 
        
 

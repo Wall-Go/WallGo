@@ -86,6 +86,7 @@ def test_findMatching():
 #    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=60.711)
     hydro = WallGo.Hydro(model,1e-10,1e-10)
     hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+    print(f"{hydro.vMax=}")
     print(f"{hydroTemplate.findMatching(0.2)=}")
     print(f"{hydro.findMatching(0.2)=}")
     print(f"{hydroTemplate.findMatching(0.3)=}")
@@ -94,6 +95,7 @@ def test_findMatching():
     print(f"{hydro.findMatching(0.4)=}")
     print(f"{hydroTemplate.findMatching(0.44)=}")
     print(f"{hydro.findMatching(0.44)=}")
+    print(f"{hydro.findMatching(0.48)=}")
 
 
     res1,res2 = np.zeros((N,4)),np.zeros((N,4))
