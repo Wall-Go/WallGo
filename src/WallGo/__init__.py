@@ -31,7 +31,7 @@ from .CollisionArray import CollisionArray
 from .Integrals import Integrals
 from .Config import Config
 
-from .Collision import loadCollisionModule
+from .collision_wrapper import Collision
 from .WallGoUtils import getSafePathToResource
 
 

@@ -73,16 +73,11 @@ class Thermodynamics:
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
 
-        # Small temperature difference to use for derivatives.
-        # TODO this needs to be read from a config file or solved
-        # for, based on some desired tolerance.
-        self.dT = 1e-2
-
         self.freeEnergyHigh = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseHighT,
+            self.effectivePotential, self.Tnucl, self.phaseHighT, temperatureScale=self.Tnucl,
         )
         self.freeEnergyLow = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseLowT,
+            self.effectivePotential, self.Tnucl, self.phaseLowT, temperatureScale=self.Tnucl,
         )
 
     def getCoexistenceRange(self) -> Tuple[float, float]:
@@ -206,13 +201,7 @@ class Thermodynamics:
         dpHighT : array-like (float)
             Temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pHighT,
-            temperature,
-            dx=self.dT,
-            n=1,
-            order=4,
-        )
+        return -self.freeEnergyHigh.derivative(temperature, order=1).veffValue
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
@@ -229,13 +218,7 @@ class Thermodynamics:
         ddpHighT : array-like (float)
             Second temperature derivative of the pressure in the high-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pHighT,
-            temperature,
-            dx=self.dT,
-            n=2,
-            order=4,
-        )
+        return -self.freeEnergyHigh.derivative(temperature, order=2).veffValue
 
     def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -283,7 +266,7 @@ class Thermodynamics:
         wHighT : array-like (float)
             Enthalpy density in the high-temperature phase.
         """
-        return self.pHighT(temperature) + self.eHighT(temperature)
+        return temperature*self.dpHighT(temperature)
 
     def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -333,13 +316,7 @@ class Thermodynamics:
         dpLowT : array-like (float)
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pLowT,
-            temperature,
-            dx=self.dT,
-            n=1,
-            order=4,
-        )
+        return -self.freeEnergyLow.derivative(temperature, order=1).veffValue
 
     def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
@@ -355,13 +332,7 @@ class Thermodynamics:
         ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
         """
-        return WallGo.helpers.derivative(
-            self.pLowT,
-            temperature,
-            dx=self.dT,
-            n=2,
-            order=4,
-        )
+        return -self.freeEnergyLow.derivative(temperature, order=2).veffValue
 
     def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -409,7 +380,7 @@ class Thermodynamics:
         wLowT : array-like (float)
             Enthalpy density in the low-temperature phase.
         """
-        return self.pLowT(temperature) + self.eLowT(temperature)
+        return temperature*self.dpLowT(temperature)
 
     def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -444,5 +415,5 @@ class Thermodynamics:
         """
         # LN: keeping T instead of 'temperature' here since the expression is long
         # LN: Please add reference to a paper and eq number
-        return (self.eHighT(T) - self.pHighT(T) / self.csqHighT(T) - self.eLowT(T) + self.pLowT(T) / self.csqLowT(T)) / 3 / self.wHighT(T)
+        return (self.eHighT(T) - self.eLowT(T) - (self.pHighT(T) - self.pLowT(T)) / self.csqLowT(T)) / 3 / self.wHighT(T)
 

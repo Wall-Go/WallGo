@@ -3,30 +3,53 @@
 namespace wallgo
 {
 
-namespace gslWrapper {
-
+namespace gslWrapper
+{
     gsl_rng* rng = nullptr;
+    bool bInitialized = false;
     #pragma omp threadprivate(rng)
 }    
 
-void gslWrapper::initializeRNG() {
-
-    gsl_rng_env_setup();
-    #pragma omp parallel 
+void gslWrapper::initializeRNG(int seed)
+{
+    if (!bInitialized)
     {
-        gslWrapper::rng = gsl_rng_alloc(gsl_rng_default);
+        gsl_rng_env_setup();
+        #pragma omp parallel 
+        {
+            gslWrapper::rng = gsl_rng_alloc(gsl_rng_default);
+        }
+        bInitialized = true;
+
+        setSeed(seed);
     }
 }
 
-void gslWrapper::clearRNG() {
-    #pragma omp parallel 
+void gslWrapper::setSeed(int seed)
+{
+    if (!bInitialized) return;
+
+    // All threads get same seed (OK for now)
+    #pragma omp parallel
     {
-        gsl_rng_free(gslWrapper::rng);
+        gsl_rng_set(gslWrapper::rng, static_cast<unsigned long>(seed));
     }
 }
 
-double gslWrapper::integrandWrapper(double *intVars, size_t dim, void *pp) {
+void gslWrapper::clearRNG()
+{
+    if (bInitialized)
+    {
+        #pragma omp parallel 
+        {
+            gsl_rng_free(gslWrapper::rng);
+        }
+        bInitialized = false;
+    }
+}
 
+double gslWrapper::integrandWrapper(double *intVars, size_t dim, void *pp)
+{
     // GSL requires size_t as input: the logic is that dim should be used to check that intVars is correct size.
     // But I'm a badass and just do this:
     (void)dim;
