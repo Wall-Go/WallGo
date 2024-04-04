@@ -142,79 +142,24 @@ class Hydro:
         """
         TmFastest = self.TMaxLowT
 
-        # def matchingOfvw(vw):
-        #     vmFastestsq = min(vw**2,self.thermodynamics.csqLowT(TmFastest))
-
-        #     def matchingOfTp(Tp):
-        #         vpvm, vpovm = self.vpvmAndvpovm(Tp, TmFastest)
-        #         return vpvm/vpovm - vmFastestsq
-            
-        #     TpFastest = root_scalar(
-        #         matchingOfTp,
-        #         bracket = [self.TMinLowT, self.TMaxHighT],
-        #         method='brentq',
-        #         xtol=self.atol,
-        #         rtol=self.rtol,
-        #     ).root
-            
-
-        #     vpFastest, _ = self.vpvmAndvpovm(TpFastest, TmFastest)/np.sqrt(vmFastestsq)
-
-        #     _,_,Tpmatch,Tmmatch = self.matchDeflagOrHyb(vw, vpFastest)
-        #     return Tmmatch - TmFastest
-        
-        # vwmax = root_scalar(
-        #         matchingOfvw,
-        #         bracket = [0, 0.4], #Is that the right upper bound??
-        #         method='brentq',
-        #         xtol=self.atol,
-        #         rtol=self.rtol,
-        #     ).root
-        
         # First we find an estimate of the maximum wall velocity using the template model
         def templatematching(vw):
-            vp,vm,Tp,Tm =self.template.findMatching(vw)
+            _,_,_,Tm =self.template.findMatching(vw)
             return Tm - TmFastest
         
         try:
             vwguess = root_scalar(
-                     templatematching,
-                     bracket = [0.01, self.template.vJ], #Is that the right upper bound??
+                    templatematching,
+                    bracket = [0.01, self.template.vJ], #Is that the right upper bound??
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
                     ).root
+            return vwguess
         
         except:
-            vwguess = 1
+            return 1
 
-        vlow = 0.9*vwguess
-        vhigh = 1.1*vwguess
-        try:
-            self.findMatching(vlow)
-        except: #If we can not solve the matching relations with vlow, it was chosen too high, and we set it to a really small value
-            vlow = 0.01 
-        try: #If we can still solve the matching relations with vhigh, it was chosen too low, and we set it to a really large value
-            self.findMatching(vhigh)
-            vhigh = 0.99
-        except:
-            1+1
-
-        vmid = (vlow+vhigh)/2
-
-        while abs(vmid - vlow) > 1e-4:
-            try:
-                findMatching(vmid)
-                vhigh = vmid
-            except:
-                vlow = vmid
-            vmid = (vlow + vhigh)/2.
-
-        return(vlow)  # Take the upper bound on vpminup just to be conservative
-
-
-
-       
 
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
@@ -765,7 +710,8 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = min(self.vJ,self.vMax)
+        print(f"{self.vMax=}")
+        vmax = 0.95*min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
