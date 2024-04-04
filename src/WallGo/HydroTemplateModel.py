@@ -72,8 +72,6 @@ class HydroTemplateModel:
         self.vJ = self.findJouguetVelocity()
         self.vMin = self.minVelocity()
 
-        self.alNmin = max((1-self.psiN)/3.,(self.mu-self.nu)/3/self.mu)
-
     def findJouguetVelocity(self, alN=None):
         r"""
         Finds the Jouguet velocity, corresponding to the phase transition strength :math:`\alpha_n`,
@@ -163,7 +161,7 @@ class HydroTemplateModel:
             tmSol = rootResult.root
         else:
             raise WallGoError(rootResult.flag, rootResult)
-        print(f"{rootResult=}")
+        
         vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
         return vp
         
