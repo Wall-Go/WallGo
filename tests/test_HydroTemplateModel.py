@@ -75,29 +75,6 @@ def test_JouguetVelocity():
     np.testing.assert_allclose(res1,res2,rtol = 10**-6,atol = 0)
 
 def test_findMatching():
-    alN = 0.0275
-    psiN = 0.92155
-    cs2 = 0.3327
-    cb2 = 0.1873
-    model = TestModelTemplate(alN,psiN,cb2,cs2,45.2,45.62556)
-    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=44.3389, maxPossibleTemperature=54.822)
-    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=45.711)
-#    model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=60.822)
-#    model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=60.711)
-    hydro = WallGo.Hydro(model,1e-10,1e-10)
-    hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
-    print(f"{hydro.vMax=}")
-    print(f"{hydroTemplate.findMatching(0.2)=}")
-    print(f"{hydro.findMatching(0.2)=}")
-    print(f"{hydroTemplate.findMatching(0.3)=}")
-    print(f"{hydro.findMatching(0.3)=}")
-    print(f"{hydroTemplate.findMatching(0.4)=}")
-    print(f"{hydro.findMatching(0.4)=}")
-    print(f"{hydroTemplate.findMatching(0.44)=}")
-    print(f"{hydro.findMatching(0.44)=}")
-    print(f"{hydro.findMatching(0.48)=}")
-
-
     res1,res2 = np.zeros((N,4)),np.zeros((N,4))
     psiN = 1-0.5*rng.random(N)
     alN = (1-psiN)/3+rng.random(N)
@@ -121,7 +98,7 @@ def test_findMatching():
 def test_findvwLTE():
     res1,res2 = np.zeros(N),np.zeros(N)
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+rng.random(N) # I put a 0.1 here - otherwise this test gets stuck. Need to fix that obviously
+    alN = (1-psiN)/3+rng.random(N) 
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
@@ -150,24 +127,5 @@ def test_findHydroBoundaries():
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0,0]
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
-
-# def test_vwLTE():
-#     alN = 0.02750560614276625
-#     psiN = 0.921553556845757
-#     cs2 = 0.3327016292291945
-#     cb2 = 0.18734230468564994
-#     model = TestModelTemplate(alN,psiN,cb2,cs2,45.2,45.625557062002464)
-#     model.freeEnergyHigh = FreeEnergyHack(minPossibleTemperature=44.33889999999969, maxPossibleTemperature=54.8230545868435)
-#     model.freeEnergyLow = FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=45.71178174785675)
-#     hydro = WallGo.Hydro(model,1e-10,1e-10)
-#     hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
-#     print(f"{hydro.vJ=}")
-#     print(f"{hydroTemplate.vJ=}")
-#     print(f"{hydro.findvwLTE()=}")
-#     #print(f"{hydro.findMatching(0.32889)=}")
-#     print(f"{hydroTemplate.findvwLTE()=}")
-#     print(f"{hydroTemplate.findMatching(0.3)=}")
-#     print(f"{hydroTemplate.findMatching(0.32889)=}")
-#     np.testing.assert_allclose(1,1,rtol = 0.01,atol = 0)
 
     
