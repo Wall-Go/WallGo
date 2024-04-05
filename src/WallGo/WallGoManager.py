@@ -93,26 +93,6 @@ class WallGoManager:
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydro(self.thermodynamics)
 
-        print(f"{self.hydro.vMax=}")
-        print(f"{self.hydro.findMatching(0.3)=}")
-        print(f"{self.hydro.findMatching(0.31)=}")
-        print(f"{self.hydro.findMatching(0.32)=}")
-        print(f"{self.hydro.findMatching(0.33)=}")
-        print(f"{self.hydro.findMatching(0.34)=}")
-        print(f"{self.hydro.findMatching(0.35)=}")
-        print(f"{self.hydro.findMatching(0.36)=}")
-        print(f"{self.hydro.findMatching(0.37)=}")
-        print(f"{self.hydro.findMatching(0.38)=}")
-        print(f"{self.hydro.findMatching(0.39)=}")
-        print(f"{self.hydro.findMatching(0.4)=}")
-        print(f"{self.hydro.findMatching(0.41)=}")
-        print(f"{self.hydro.findMatching(0.42)=}")
-        print(f"{self.hydro.findMatching(0.43)=}")
-        print(f"{self.hydro.findMatching(0.44)=}")
-        print(f"{self.hydro.findMatching(self.hydro.vMax)=}")
-#        print(f"{self.hydro.findMatching(0.4588259457623633)=}")
-
-
         if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
             raise WallGoError("Failed to solve Jouguet velocity at input temperature!", 
                               data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
@@ -192,7 +172,6 @@ class WallGoManager:
             0.99 * hydrotemplate.vJ
         )
 
-        print(f"{hydrotemplate.alN = } {hydrotemplate.cb2 =} {hydrotemplate.cs2 =} {hydrotemplate.psiN =} ")
         
         dT = self.config.getfloat("EffectivePotential", "dT")
 

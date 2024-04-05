@@ -289,7 +289,6 @@ class EOM:
             temperatureMinus=Tminus,
             velocityJouget=self.hydro.vJ,
         )
-        print(f"{self.hydro.findHydroBoundaries(wallVelocity)=}")
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum

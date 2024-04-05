@@ -163,11 +163,28 @@ class Hydro:
         except:
             vwguess = 1
 
-        vmaxtry = 0.9*vwguess #HACK -- but we expect vmaxtry to be really close to vwguess, so it is unlikely that this will not work
+        vmaxtry = 0.98*vwguess #HACK -- but we expect vmaxtry to be really close to vwguess, so it is unlikely that this will not work
+        
+        try:
+            _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
+            if Tm > self.TMaxLowT:
+                vmaxtry = 0.01
+        except:
+            vmaxtry = 0.01
 
-        # Tm is not always monotonous, so we need to approach vmax from below
+        # Tm is not always monotonous in vw, so we need to approach vmax from below
         while vmaxtry < 1:
-            print(f"{vmaxtry=}")
+            try:
+                _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
+                if Tm < self.TMaxLowT:
+                    vmaxtry += 0.005
+                else:
+                    break
+            except:
+                break
+        
+        vmaxtry -= 0.005
+        while vmaxtry < 1:
             try:
                 _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
                 if Tm < self.TMaxLowT:
@@ -176,7 +193,7 @@ class Hydro:
                     break
             except:
                 break
-        
+
         return vmaxtry - 0.001
 
 
@@ -773,9 +790,7 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        print(f"{self.vMax=}")
-        print(f"{self.findMatching(self.vMax)=}")
-        vmax = 0.98*min(self.vJ,self.vMax)
+        vmax = min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
@@ -793,14 +808,13 @@ class Hydro:
         # if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
         #      return 1
 
-        #JvdV: not sure if this reparation is necessary, something seems off with the function determining vmax
+        # TODO: Can we do without this?
         try:
             fmax = func(vmax)
             if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
                 return 1
         except:
             while vmax > vmin:
-                print(f"{vmax=}")
                 vmax -= 0.01
                 try: 
                     func(vmax)
