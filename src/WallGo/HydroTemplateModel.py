@@ -94,78 +94,7 @@ class HydroTemplateModel:
         if alN is None:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
-    
-    def findJouguetVelocity2(self) -> float:
-        r"""
-        Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics, and at the model's nucleation temperature,
-        using that the derivative of :math:`v_+` with respect to :math:`T_-` is zero at the Jouguet velocity.
-
-        Returns
-        -------
-        vJ: double
-            The value of the Jouguet velocity for this model.
-
-        """
-        pHighT = self.thermodynamics.pHighT(self.Tnucl)
-        eHighT = self.thermodynamics.eHighT(self.Tnucl)
-
-        def vpDerivNum(tm):  # The numerator of the derivative of v+^2
-            pLowT = self.thermodynamics.pLowT(tm)
-            eLowT = self.thermodynamics.eLowT(tm)
-            num1 = pHighT - pLowT  # First factor in the numerator of v+^2
-            num2 = pHighT + eLowT
-            den1 = eHighT - eLowT  # First factor in the denominator of v+^2
-            den2 = eHighT + pLowT
-            dnum1 = - self.thermodynamics.dpLowT(tm) # T-derivative of first factor wrt tm
-            dnum2 = self.thermodynamics.deLowT(tm)
-            dden1 = - dnum2  # T-derivative of second factor wrt tm
-            dden2 = - dnum1
-            return (
-                dnum1*num2*den1*den2
-                + num1*dnum2*den1*den2
-                - num1*num2*dden1*den2
-                - num1*num2*den1*dden2
-            )
-
-        # For detonations, Tm has a lower bound of Tn, but no upper bound.
-        # We increase Tmax until we find a value that brackets our root.
-
-        # LN: I guess we need to ensure that Tmax does not start from a too large value though
-        Tmin = 0.5*self.Tnucl
-        Tmax = 2 * self.Tnucl  # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
-
-        bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
-
-        tmSol = None
-        if bracket1*bracket2 <= 0:
-            # If Tmin and Tmax bracket our root, use the 'brentq' method.
-            rootResult = root_scalar(
-                vpDerivNum,
-                bracket=[self.Tnucl, 2*self.Tnucl],
-                method='brentq',
-                xtol=self.atol,
-                rtol=self.rtol,
-            )
-        else:
-            # If we cannot bracket the root, use the 'secant' method instead.
-            # This may call thermodynamics outside of its interpolation range?
-            rootResult = root_scalar(
-                vpDerivNum,
-                method='secant',
-                x0=self.Tnucl,
-                x1=Tmax,
-                xtol=self.atol,
-                rtol=self.rtol,
-            )
-        if rootResult.converged:
-            tmSol = rootResult.root
-        else:
-            raise WallGoError(rootResult.flag, rootResult)
         
-        vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
-        return vp
-        
-    
     def minVelocity(self):
         r"""
         Finds the minimum velocity that is possible for a given nucleation temeperature. 
