@@ -150,15 +150,55 @@ class Hydro:
         try:
             vwguess = root_scalar(
                     templatematching,
-                    bracket = [0.01, self.template.vJ], #Is that the right upper bound??
+                    bracket = [0.01, self.template.vJ], 
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
                     ).root
-            return vwguess
-        
         except:
-            return 1
+            vwguess = 1
+
+        vlow = 0.9*vwguess
+        vhigh = 1.1*vwguess
+
+        try: #If we can not solve the matching relations with vlow, or if Tm exceeds the allowed range, vlow was chosen too high, and we set it to a really small value
+            _,_,_,Tm = self.findMatching(vlow, vlow)
+            if Tm > self.TMaxLowT:
+                vlow = 0.01
+        except: 
+            vlow = 0.01 
+
+        try:
+            _,_,_,Tm = self.findMatching(vhigh, vhigh)
+            if Tm < self.TMaxLowT:
+                while vhigh < 1:
+                    try:
+                        self.findMatching(vhigh,vhigh)
+                        if Tm < self.TMaxLowT:
+                            vhigh += 0.1
+                        else:
+                            break
+                    except:
+                        break
+        except:
+            pass
+
+        vmid = (vlow+vhigh)/2
+
+        while abs(vmid - vlow) > 1e-4:
+            try:
+                _,_,_,Tm= self.findMatching(vmid,vmid)
+                if Tm < self.TMaxLowT:
+                    vlow = vmid
+                else:
+                    vhigh = vmid
+            except:
+                vhigh = vmid
+            vmid = (vlow + vhigh)/2.
+
+        self.vMax = vlow
+
+        return(vlow)  
 
 
     def vpvmAndvpovm(self, Tp, Tm):
@@ -448,7 +488,7 @@ class Hydro:
         except:
             return 0
 
-    def findMatching(self, vwTry):
+    def findMatching(self, vwTry, vMaxInit = None):
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -460,6 +500,8 @@ class Hydro:
         ----------
         vwTry : double
             The value of the wall velocity
+        vMaxInit : double or None, optional
+            Guess of the maximum deflragration velocity.
 
         Returns
         -------
@@ -469,7 +511,7 @@ class Hydro:
 
         """
 
-        if vwTry > min(self.vJ,self.vMax):  # Detonation
+        if vMaxInit is None and vwTry > min(self.vJ,self.vMax):  # Detonation
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
