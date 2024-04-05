@@ -49,7 +49,11 @@ class Hydro:
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
-        self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
+        if self.vJ == 1:
+            self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
+        else :
+            self.vMax = self.vJ
+
         self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
@@ -743,6 +747,7 @@ class Hydro:
 
         def func(vw):  # Function given to the root finder. # LN: yea but please use descriptive names
             vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
+            print(f"{[vp,vm,Tp,Tm]=}")
             Tntry = self.solveHydroShock(vw, vp, Tp)
             return Tntry - self.Tnucl
 
@@ -753,7 +758,7 @@ class Hydro:
         self.success = True
         vmin = self.vMin
         print(f"{self.vMax=}")
-        vmax = 0.95*min(self.vJ,self.vMax)
+        vmax = 0.98*min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
@@ -767,9 +772,24 @@ class Hydro:
             except:
                 return 1  # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
 
-        fmax = func(vmax)
-        if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
-            return 1
+        # fmax = func(vmax)
+        # if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
+        #      return 1
+
+        #JvdV: not sure if this reparation is necessary, something seems off with the function determining vmax
+        try:
+            fmax = func(vmax)
+            if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
+                return 1
+        except:
+            while vmax > vmin:
+                print(f"{vmax=}")
+                vmax -= 0.01
+                try: 
+                    func(vmax)
+                    break
+                except:
+                    pass
 
         fmin = func(vmin)
         if fmin < 0:  # vw is smaller than vmin, we return 0.
