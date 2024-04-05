@@ -55,7 +55,7 @@ class WallGoManager:
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
-    #Name of this function does not really describe what it does (it also finds the temperature range)
+    #Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(
         self, modelParameters: dict[str, float], phaseInput: PhaseInfo
     ) -> None:
@@ -281,38 +281,7 @@ class WallGoManager:
         )
 
         # returning results
-        return eom.findWallVelocityMinimizeAction()
-    
-    def pressureOfvw(self, vw: float, bIncludeOffEq: bool):
-        numberOfFields = self.model.fieldCount
-
-        errTol = self.config.getfloat("EOM", "errTol")
-        maxIterations = self.config.getint("EOM", "maxIterations")
-        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-
-        eom = EOM(
-            self.boltzmannSolver,
-            self.thermodynamics,
-            self.hydro,
-            self.grid,
-            numberOfFields,
-            includeOffEq=bIncludeOffEq,
-            errTol=errTol,
-            maxIterations=maxIterations,
-            pressRelErrTol=pressRelErrTol,
-        )
-
-        eom.pressAbsErrTol = 1e-8 #Had to add this here, otherwise eom.wallPressure errors out
-
-        Tn = self.phasesAtTn.temperature
-
-        wallParamsGuess = WallParams(
-            widths=(5 / Tn) * np.ones(numberOfFields),
-            offsets=np.zeros(numberOfFields),
-        )
-
-        return(eom.wallPressure(vw, wallParamsGuess, False))
-
+        return eom.findWallVelocityMinimizeAction()    
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 
