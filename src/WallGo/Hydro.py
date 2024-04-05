@@ -155,6 +155,7 @@ class Hydro:
             vwguess = root_scalar(
                     templatematching,
                     bracket = [0.01, self.template.vJ], 
+                    x1 = 0.01, # there might be multiple roots and we want to find the smallest one
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -162,47 +163,63 @@ class Hydro:
         except:
             vwguess = 1
 
-        vlow = 0.9*vwguess
-        vhigh = 1.1*vwguess
+        vmaxtry = 0.9*vwguess #HACK -- but we expect vmaxtry to be really close to vwguess, so it is unlikely that this will not work
 
-        try: #If we can not solve the matching relations with vlow, or if Tm exceeds the allowed range, vlow was chosen too high, and we set it to a really small value
-            _,_,_,Tm = self.findMatching(vlow, vlow)
-            if Tm > self.TMaxLowT:
-                vlow = 0.01
-        except: 
-            vlow = 0.01 
-
-        try:
-            _,_,_,Tm = self.findMatching(vhigh, vhigh)
-            if Tm < self.TMaxLowT:
-                while vhigh < 1:
-                    try:
-                        self.findMatching(vhigh,vhigh)
-                        if Tm < self.TMaxLowT:
-                            vhigh += 0.1
-                        else:
-                            break
-                    except:
-                        break
-        except:
-            pass
-
-        vmid = (vlow+vhigh)/2
-
-        while abs(vmid - vlow) > 1e-4:
+        # Tm is not always monotonous, so we need to approach vmax from below
+        while vmaxtry < 1:
+            print(f"{vmaxtry=}")
             try:
-                _,_,_,Tm= self.findMatching(vmid,vmid)
+                _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
                 if Tm < self.TMaxLowT:
-                    vlow = vmid
+                    vmaxtry += 0.001
                 else:
-                    vhigh = vmid
+                    break
             except:
-                vhigh = vmid
-            vmid = (vlow + vhigh)/2.
+                break
+        
+        return vmaxtry - 0.001
 
-        self.vMax = vlow
 
-        return(vlow)  
+
+        # vlow = 0.9*vwguess
+        # vhigh = 1.1*vwguess
+
+        # try: #If we can not solve the matching relations with vlow, or if Tm exceeds the allowed range, vlow was chosen too high, and we set it to a really small value
+        #     _,_,_,Tm = self.findMatching(vlow, vlow)
+        #     if Tm > self.TMaxLowT:
+        #         vlow = 0.01
+        # except: 
+        #     vlow = 0.01 
+
+        # try:
+        #     _,_,_,Tm = self.findMatching(vhigh, vhigh)
+        #     if Tm < self.TMaxLowT:
+        #         while vhigh < 1:
+        #             try:
+        #                 self.findMatching(vhigh,vhigh)
+        #                 if Tm < self.TMaxLowT:
+        #                     vhigh += 0.1
+        #                 else:
+        #                     break
+        #             except:
+        #                 break
+        # except:
+        #     pass
+
+        # vmid = (vlow+vhigh)/2
+
+        # while abs(vmid - vlow) > 1e-4:
+        #     try:
+        #         _,_,_,Tm= self.findMatching(vmid,vmid)
+        #         if Tm < self.TMaxLowT:
+        #             vlow = vmid
+        #         else:
+        #             vhigh = vmid
+        #     except:
+        #         vhigh = vmid
+        #     vmid = (vlow + vhigh)/2.
+
+        # return(vlow)  
 
 
     def vpvmAndvpovm(self, Tp, Tm):
@@ -747,7 +764,6 @@ class Hydro:
 
         def func(vw):  # Function given to the root finder. # LN: yea but please use descriptive names
             vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
-            print(f"{[vp,vm,Tp,Tm]=}")
             Tntry = self.solveHydroShock(vw, vp, Tp)
             return Tntry - self.Tnucl
 
@@ -758,6 +774,7 @@ class Hydro:
         self.success = True
         vmin = self.vMin
         print(f"{self.vMax=}")
+        print(f"{self.findMatching(self.vMax)=}")
         vmax = 0.98*min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.

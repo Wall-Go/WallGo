@@ -325,16 +325,11 @@ def main():
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        print(f"{manager.pressureOfvw(0.1, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.2, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.3, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.31, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.32, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.325, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.328, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.32825, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.3285, bIncludeOffEq)=}")
-        print(f"{manager.pressureOfvw(0.3296, bIncludeOffEq)=}")
+        print(f"{manager.pressureOfvw(0.44, bIncludeOffEq)=}")
+        #print(f"{manager.pressureOfvw(0.45, bIncludeOffEq)=}")
+
+        #print(f"{manager.hydro.findMatching(0.4588259457623633)=}")
+        #print(f"{manager.hydro.findHydroBoundaries(0.4588259457623633)=}")
 
         results = manager.solveWall(bIncludeOffEq)
         print(f"{results=}")
