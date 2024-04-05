@@ -55,6 +55,7 @@ class WallGoManager:
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
+    #Name of this function does not really describe what it does (it also finds the temperature range)
     def setParameters(
         self, modelParameters: dict[str, float], phaseInput: PhaseInfo
     ) -> None:

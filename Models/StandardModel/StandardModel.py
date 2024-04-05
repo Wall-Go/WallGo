@@ -245,6 +245,7 @@ def main():
     WallGo.initialize()
 
     # Print WallGo config. This was read by WallGo.initialize()
+    WallGo.config.set("EffectivePotential", "dT", "0.05") #Overwrite the default value of dT, as it is too lrage
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
