@@ -281,6 +281,8 @@ class EOM:
             deltaF=deltaF,
             Deltas=offEquilDeltas,
             truncationError=0,
+            linearizationCriterion1=0,
+            linearizationCriterion2=0,
         )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
