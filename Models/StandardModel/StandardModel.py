@@ -341,6 +341,7 @@ def main():
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
+        print(f"{results=}")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
