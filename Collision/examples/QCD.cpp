@@ -111,11 +111,15 @@ int main()
 	
 	manager.configureIntegration(options);
 
-	/* Evaluates all collision integrals that were prepared in the setupCollisionIntegrals() step.*/
-	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
+	// Evaluate all collision integrals that were prepared in the setupCollisionIntegrals() step
+
+	std::cout << "== Evaluating collision integrals for all particles combinations ==" << std::endl;
+	manager.calculateAllIntegrals(/*bVerbose*/ true);
 
 	/* We can evaluate the integrals again at different parameters, without the need to re-define particles or matrix elements.
-	Demonstration: */
+	We can also request to compute integrals only for a specific off-equilibrium particle pair
+	Demonstration:
+	*/
 	std::map<std::string, double> newVars 
 	{
 		{"c[0]", 1},
@@ -125,9 +129,16 @@ int main()
 	manager.setVariables(newVars);
 	manager.setVariable("msq[2]", 0.3);
 
-	manager.calculateCollisionIntegrals(/*bVerbose*/ true);
+	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
+	wallgo::CollisionTensorResult result = manager.evaluateCollisionTensor("top", "gluon", /*bVerbose*/ true);
 
-    wallgo::clearRNG();
+	// There is also an overloaded version of the above for passing a custom IntegrationOptions struct,
+	// instead of using the one cached in the manager:
+	options.calls = 10000;
+	result = manager.evaluateCollisionTensor("top", "gluon", options, /*bVerbose*/ false);
+
+	// Perform clean exit
+    wallgo::cleanup();
     
     return 0;
 }

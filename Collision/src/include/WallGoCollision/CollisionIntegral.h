@@ -93,7 +93,6 @@ struct IntegrationResult
     //bool bConverged; // Did the integration converge to goal accuracy
 };
 
-
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
 This is always assumed to be first particle in each stored CollElem.

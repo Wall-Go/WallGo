@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef UTILS_H
+#define UTILS_H
 
 #include <vector>
 
@@ -61,6 +61,8 @@ NOTE: if using OpenMP, all threads will get their own RNG, but with the same see
 This is OK since our calculations are trivially parallel, (independent of each other).*/ 
 void setSeed(int seed);
 
+// Cleanup of global state (in practice, just the RNG)
+void cleanup();
 void clearRNG();
 
 } // namespace

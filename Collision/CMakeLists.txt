@@ -113,13 +113,12 @@ endif()
 
 add_subdirectory(src)
 
+if (BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
 if (BUILD_PYTHON_MODULE)
 	add_subdirectory(pybind)
-endif()
-
-if (BUILD_EXAMPLES)
-    add_subdirectory(examples)
 endif()
 
 if(BUILD_UNIT_TESTS)

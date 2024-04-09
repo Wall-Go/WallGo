@@ -14,6 +14,11 @@ void setSeed(int seed)
     gslWrapper::setSeed(seed);
 }
 
+void cleanup()
+{
+    clearRNG();
+}
+
 void clearRNG()
 {
     gslWrapper::clearRNG();

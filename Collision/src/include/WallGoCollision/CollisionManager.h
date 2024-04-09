@@ -45,6 +45,15 @@
 namespace wallgo
 {
 
+// Results of collision integration for (particle1, particle2) pair
+struct CollisionTensorResult
+{
+    CollisionTensorResult(size_t _basisSize);
+    size_t basisSize;
+    Array4D results;
+    Array4D errors;
+};
+
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms */
 class CollisionManager 
@@ -90,20 +99,6 @@ public:
     
     void clearCollisionIntegrals();
     
-    /* Calculate CollisionIntegral4 everywhere on the grid. Results are stored in the input arrays. 
-    Integration options are read from out internal integrationOptions struct. */ 
-    void evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, 
-        Array4D& results, Array4D& errors, bool bVerbose = false);
-
-    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
-    Options for the integration can be changed by with CollisionManager::configureIntegration().
-    If bVerbose is true, will print each result to stdout. */
-    void calculateCollisionIntegrals(bool bVerbose = false);
-
-    // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
-    static long countIndependentIntegrals(size_t basisSize, size_t outOfEqCount);
-
-
     void configureIntegration(const IntegrationOptions& options);
 
     // Specify where to store output files, relative or absolute path. Defaults to current work directory.
@@ -112,6 +107,36 @@ public:
     /* Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt". 
     Return value is false if the file was not found, true otherwise. */
     bool setMatrixElementFile(const std::string& filePath);
+
+    /* ----- Computing integrals everywhere on the grid. These are defined here instead of inside CollisionIntegral4
+    * because these can run for very long, and we want to allow periodic callbacks to pybind11 to check for termination etc.
+    * The manager gets pybind11 bindings, so the callbacks can be achieved easily. 
+    */
+
+    /* Calculate a CollisionIntegral4 everywhere on the grid. */ 
+    CollisionTensorResult evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions& options,
+        bool bVerbose = false);
+
+    /* Calculate a CollisionIntegral4 everywhere on the grid.
+    Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration(). */ 
+    CollisionTensorResult evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose = false);
+
+    /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
+    CollisionTensorResult evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
+        const IntegrationOptions& options, bool bVerbose = false);
+
+    /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
+    Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration() */
+    CollisionTensorResult evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
+        bool bVerbose = false);
+
+    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
+    Options for the integration can be changed by with CollisionManager::configureIntegration().
+    If bVerbose is true, will print each result to stdout. */
+    void calculateAllIntegrals(bool bVerbose = false);
+
+    // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
+    static long countIndependentIntegrals(size_t basisSize, size_t outOfEqCount);
 
 protected:
 

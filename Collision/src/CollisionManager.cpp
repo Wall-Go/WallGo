@@ -15,6 +15,14 @@
 namespace wallgo
 {
 
+CollisionTensorResult::CollisionTensorResult(size_t _basisSize)
+: basisSize(_basisSize),
+results(_basisSize-1, _basisSize-1, _basisSize-1, _basisSize-1, 0.0),
+errors(_basisSize-1, _basisSize-1, _basisSize-1, _basisSize-1, 0.0)
+{
+}
+
+
 // Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
 void interpretMatrixElement(const std::string &inputString, std::vector<size_t> &indices, std::string &mathExpression)
 {
@@ -219,12 +227,12 @@ void CollisionManager::clearCollisionIntegrals()
     integrals.clear();
 }
 
-void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, Array4D &results, Array4D &errors, bool bVerbose)
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions &options, bool bVerbose)
 {
 
     const size_t N = collisionIntegral.getPolynomialBasisSize();
-    results = Array4D(N-1, N-1, N-1, N-1, 0.0);
-    errors = Array4D(N-1, N-1, N-1, N-1, 0.0);
+
+    CollisionTensorResult result(collisionIntegral.getPolynomialBasisSize());
 
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
@@ -244,7 +252,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
         // How many we've calculated inside this function only (so for this out-of-eq pair) 
         int localIntegralCount = 0;
         // Report when thread0 has computed this many integrals. NB: totalIntegralCount is the full count including all out-of-eq pairs
-        int standardProgressInterval = totalIntegralCount / 20 / numThreads; // every 20%
+        int standardProgressInterval = totalIntegralCount / 25 / numThreads; // every 25%
         standardProgressInterval = wallgo::clamp<int>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
 
         int progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
@@ -259,27 +267,28 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
             for (size_t k = 1; k <= N-1; ++k)
             {
             
-                IntegrationResult result;
+                IntegrationResult localResult;
 
                 // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
                 if (2*j == N && m % 2 != 0)
                 {
-                    result.result = 0.0;
-                    result.error = 0.0;
+                    localResult.result = 0.0;
+                    localResult.error = 0.0;
                 }
                 else
                 {
-                    result = collisionIntegral.integrate(m, n, j, k, integrationOptions);
+                    localResult = collisionIntegral.integrate(m, n, j, k, options);
                 }
 
-                results[m-2][n-1][j-1][k-1] = result.result;
-                errors[m-2][n-1][j-1][k-1] = result.error;
+                result.results[m-2][n-1][j-1][k-1] = localResult.result;
+                result.errors[m-2][n-1][j-1][k-1] = localResult.error;
 
                 localIntegralCount++;
 
                 if (bVerbose)
                 {   
-                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : " << result.result << " +/- " << result.error << "\n";
+                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
+                        << localResult.result << " +/- " << localResult.error << "\n";
                 }
 
                 if (threadID == 0 && (localIntegralCount % progressReportInterval == 0)) 
@@ -294,6 +303,7 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
                     computedIntegralCount += localIntegralCount * numThreads;
                     computedIntegralCount = wallgo::clamp<int>(computedIntegralCount, localIntegralCount, totalIntegralCount);
 
+                    // TODO process tracking is not correct now
                     reportProgress();
                     computedIntegralCount = backupCount;
 
@@ -321,19 +331,46 @@ void CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionInte
 		for (size_t k = 1; k <= N-1; ++k) 
         {
 
-			size_t jOther = N - j;
-			int sign = (m % 2 == 0 ? 1 : -1);
+			const size_t jOther = N - j;
+			const int sign = (m % 2 == 0 ? 1 : -1);
             
-			results[m-2][n-1][j-1][k-1] = sign * results[m-2][n-1][jOther-1][k-1];
-			errors[m-2][n-1][j-1][k-1] = sign * errors[m-2][n-1][jOther-1][k-1];
+			result.results[m-2][n-1][j-1][k-1] = sign * result.results[m-2][n-1][jOther-1][k-1];
+			result.errors[m-2][n-1][j-1][k-1] = sign * result.errors[m-2][n-1][jOther-1][k-1];
 		}
 	}
 
     // How many we calculated in this function. 
     // Just recalculate this here instead of trying to combine counts from many threads and manually count j > N/2 cases etc
-    computedIntegralCount += countIndependentIntegrals(N, 1);        
+    computedIntegralCount += countIndependentIntegrals(N, 1);  
+
+    return result;      
 }
 
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose)
+{
+    return evaluateCollisionTensor(collisionIntegral, integrationOptions, bVerbose);
+}
+
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(const std::string &particle1,
+    const std::string &particle2, const IntegrationOptions &options, bool bVerbose)
+{
+    const auto namePair = std::make_pair(particle1, particle2);
+
+    if (integrals.count(namePair) < 1)
+    {
+        std::cerr << "Error: no collisions defined for particle pair ["
+            << namePair.first << ", " << namePair.second << "]\n!";
+        return CollisionTensorResult(1);
+    }
+
+    return evaluateCollisionTensor(integrals.at(namePair), options, bVerbose);
+}
+
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(const std::string &particle1,
+    const std::string &particle2, bool bVerbose)
+{
+    return evaluateCollisionTensor(particle1, particle2, integrationOptions, bVerbose);
+}
 
 void CollisionManager::configureIntegration(const IntegrationOptions &options)
 {
@@ -375,7 +412,7 @@ bool CollisionManager::setMatrixElementFile(const std::string &filePath)
     return true;
 }
 
-void CollisionManager::calculateCollisionIntegrals(bool bVerbose)
+void CollisionManager::calculateAllIntegrals(bool bVerbose)
 {
 
     if (integrals.size() < 1)
@@ -399,11 +436,7 @@ void CollisionManager::calculateCollisionIntegrals(bool bVerbose)
         const std::string name1 = namePair.first;
         const std::string name2 = namePair.second;
 
-        // integration results/errors on the grid
-        Array4D results;
-        Array4D errors;
-
-        evaluateCollisionTensor(integral, results, errors, bVerbose);
+        CollisionTensorResult result = evaluateCollisionTensor(integral, integrationOptions, bVerbose);
 
         // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
         const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
@@ -420,8 +453,8 @@ void CollisionManager::calculateCollisionIntegrals(bool bVerbose)
 
         writeMetadata(h5File, metadata);
 
-        writeDataSet(h5File, results, name1 + ", " + name2);
-        writeDataSet(h5File, errors, name1 + ", " + name2 + " errors");
+        writeDataSet(h5File, result.results, name1 + ", " + name2);
+        writeDataSet(h5File, result.errors, name1 + ", " + name2 + " errors");
         
         h5File.close();
 
@@ -595,5 +628,6 @@ bool CollisionManager::particleRegistered(const ParticleSpecies& particle)
 {
     return particleIndex.count(particle.getName()) > 0;
 }
+
 
 } // namespace
