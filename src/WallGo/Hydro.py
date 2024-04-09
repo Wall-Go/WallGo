@@ -163,6 +163,8 @@ class Hydro:
         except:
             vwguess = 1
 
+        print(f"{vwguess=}")
+
         vmaxtry = 0.98*vwguess #HACK -- but we expect vmaxtry to be really close to vwguess, so it is unlikely that this will not work
         
         try:
