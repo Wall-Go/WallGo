@@ -131,13 +131,13 @@ def test_findHydroBoundaries():
 def test_vmax():
     res1,res2 = np.zeros((N,5)),np.zeros((N,5))  
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+rng.random(N)   
+    alN = 0.1*((1-psiN)/3+rng.random(N))   
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     vw = rng.random(N)
 
     TminHigh = 0.8
-    TmaxHigh = 2 
+    TmaxHigh = 2
     TminLow = 0.5
     TmaxLow = 1 + 0.2*rng.random(N)
 
@@ -147,11 +147,17 @@ def test_vmax():
         model.freeEnergyLow=FreeEnergyHack(minPossibleTemperature=TminLow, maxPossibleTemperature=TmaxLow[i])
         hydro = WallGo.Hydro(model,1e-10,1e-10)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        print(f"{alN[i]=}")
         print(f"{TmaxLow[i]=}")
         print(f"{hydroTemplate.vJ=}")
         print(f"{hydroTemplate.findMatching(0.99*hydroTemplate.vJ)=}")
+        print(f"{hydroTemplate.findMatching(0.004)=}")
         print(f"{hydro.vJ=}")
         print(f"{hydro.vMax=}")
+        print(f"{hydro.findMatching(0.004)=}")
+        print(f"{hydro.findMatching(0.01)=}")
+        print(f"{hydro.findMatching(hydro.vMax)=}")
+        print(f"{hydroTemplate.findMatching(hydro.vMax)=}")
         #res1[i] = hydro.findHydroBoundaries(vw[i])
         #res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         #if np.isnan(res1[i,0]):

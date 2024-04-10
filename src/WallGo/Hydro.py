@@ -49,6 +49,9 @@ class Hydro:
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
+
+        self.vMin = self.template.vMin #we can not compute vMin without knowing vMax, but we need vMin to find vMax, so we use an initial guess for vMin
+
         if self.vJ == 1:
             self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
         else :
@@ -154,8 +157,8 @@ class Hydro:
         try:
             vwguess = root_scalar(
                     templatematching,
-                    bracket = [0.01, self.template.vJ], 
-                    x1 = 0.01, # there might be multiple roots and we want to find the smallest one
+                    bracket = [0.001, self.template.vJ], 
+                    x1 = 0.001, # there might be multiple roots and we want to find the smallest one
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
