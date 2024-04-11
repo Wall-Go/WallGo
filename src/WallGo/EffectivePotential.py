@@ -82,8 +82,8 @@ class EffectivePotential(ABC):
         """
         self.temperatureScale = temperatureScale
         
-        if isinstance(fieldScale, int):
-            self.fiedScale = fieldScale*np.ones(self.fieldCount)
+        if isinstance(fieldScale, float):
+            self.fieldScale = fieldScale*np.ones(self.fieldCount)
         else:
             self.fieldScale = np.asanyarray(fieldScale)
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
