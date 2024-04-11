@@ -499,6 +499,12 @@ def main():
         print(f"{widths=}")
         print(f"{offsets=}")
 
+        # some estimate of deviation from O(dz^2) finite difference method
+        delta00 = results.Deltas.Delta00.coefficients[0]
+        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"finite difference error = {errorFD}")
+
 
     # end parameter-space loop
 
