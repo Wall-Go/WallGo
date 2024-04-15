@@ -167,6 +167,7 @@ class Hydro:
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root
+
             except:
                 vmax1 = self.vJ
             
