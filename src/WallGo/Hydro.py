@@ -191,7 +191,7 @@ class Hydro:
 
         minimizeResult = minimize_scalar(
             tmFromvpsq,
-            bounds=[self.Tnucl, self.TMaxLowT],
+            bounds=[self.Tnucl, self.TMaxHydro],
             method='Bounded',
         )
         if minimizeResult.success:
@@ -200,7 +200,7 @@ class Hydro:
             raise WallGoError(minimizeResult.flag, minimizeResult)
         rootResult = root_scalar(
             tmFromvpsq,
-            bracket=[self.Tnucl, Tmax],
+            bracket=[self.Tnucl, self.TMaxHydro],
             method='brentq',
             xtol=self.atol,
             rtol=self.rtol,
@@ -348,19 +348,19 @@ class Hydro:
                 self.thermodynamicsExtrapolate.wHighT(tn)*xi_sh/(1-xi_sh**2)
                 - self.thermodynamicsExtrapolate.wHighT(Tm_sh)*boostVelocity(xi_sh, vm_sh)*gammaSq(boostVelocity(xi_sh, vm_sh))
             )
-        Tmin, Tmax = (self.TMinHighT+self.Tnucl)/2,Tm_sh 
+        Tmin, Tmax = self.Tnucl/2,Tm_sh #HACK why Tnucl/2? 
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
-        while bracket1*bracket2 > 0 and Tmin > self.TMinHighT:
+        while bracket1*bracket2 > 0 and Tmin > self.TMinHydro:
             Tmax = Tmin
             bracket2 = bracket1
-            Tmin = max(Tmin/1.5, self.TMinHighT)
+            Tmin = max(Tmin/1.5, self.TMinHydro)
             bracket1 = TiiShock(Tmin)
 
         if bracket1*bracket2 <= 0:
             # If Tmin and Tmax bracket our root, use the 'brentq' method.
             TnRootResult = root_scalar(
                 TiiShock,
-                bracket=[Tmin, Tmax],  # [self.TMinHighT, self.TMaxHighT]
+                bracket=[Tmin, Tmax],  
                 method='brentq',
                 xtol=self.atol,
                 rtol=self.rtol,
@@ -381,12 +381,12 @@ class Hydro:
         return TnRootResult.root
 
     def strongestShock(self, vw):
-        matchingStrongest = lambda Tp: self.thermodynamicsExtrapolate.pHighT(Tp) - self.thermodynamicsExtrapolate.pLowT(self.TMinLowT)
+        matchingStrongest = lambda Tp: self.thermodynamicsExtrapolate.pHighT(Tp) - self.thermodynamicsExtrapolate.pLowT(self.TMinHydro)
     
         try:
             TpStrongestRootResult = root_scalar(
                 matchingStrongest,
-                bracket=[self.TMinHighT, self.TMaxHighT],
+                bracket=[self.TMinHydro, self.TMaxHydro],
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -414,7 +414,7 @@ class Hydro:
         except:
             return 0
 
-    def findMatching(self, vwTry, vMaxInit = None):
+    def findMatching(self, vwTry):
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -437,7 +437,7 @@ class Hydro:
 
         """
 
-        if vMaxInit is None and vwTry > min(self.vJ,self.vMax):  # Detonation
+        if vwTry > self.vJ:  # Detonation
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
