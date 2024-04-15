@@ -43,6 +43,7 @@ class Hydro:
         self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
+        # HACK these factors 10 and 100 are somewhat arbitrary. It should be possible to adjust these.
         self.TMaxHydro = 10.*self.Tnucl
         self.TMinHydro = self.Tnucl/100
 
@@ -103,7 +104,7 @@ class Hydro:
 
         # LN: I guess we need to ensure that Tmax does not start from a too large value though
         Tmin = self.Tnucl
-        Tmax = 2 * self.Tnucl  # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
+        Tmax = 2 * self.Tnucl  #HACK (factor 2 is some arbitrary number larger than 1)
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
@@ -112,7 +113,7 @@ class Hydro:
             # If Tmin and Tmax bracket our root, use the 'brentq' method.
             rootResult = root_scalar(
                 vpDerivNum,
-                bracket=[self.Tnucl, self.TMaxLowT],
+                bracket=[self.Tnucl, Tmax],
                 method='brentq',
                 xtol=self.atol,
                 rtol=self.rtol,
@@ -136,128 +137,6 @@ class Hydro:
 
         vp = np.sqrt((pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))*(pHighT + self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT - self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT + self.thermodynamicsExtrapolate.pLowT(tmSol)))
         return vp
-    
-    def fastestDeflag(self):
-        r"""
-        Determines the fastest deflagration/hybrid solution for which the plasma temperature inside of the bubble stays below TMaxLowT.
-
-        Parameters
-        ----------
-
-        Returns
-        ---------
-        vwmax: double
-            maximum wall velocity of a deflagration/hybrid given the temperature range
-        """
-        TmFastest = self.TMaxLowT
-
-        # First we find an estimate of the maximum wall velocity using the template model
-        def templatematching(vw):
-            _,_,_,Tm =self.template.findMatching(vw)
-            return Tm - TmFastest
-        
-        try:
-            vwguess = root_scalar(
-                    templatematching,
-                    bracket = [0.01, self.template.vJ], 
-                    x1 = 0.01, # there might be multiple roots and we want to find the smallest one
-                    method='brentq',
-                    xtol=self.atol,
-                    rtol=self.rtol,
-                    ).root
-        except:
-            vwguess = 1
-
-        vmaxtry = 0.98*vwguess #HACK -- but we expect vmaxtry to be really close to vwguess, so it is unlikely that this will not work
-        
-        try:
-            _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
-            if Tm > self.TMaxLowT:
-                vmaxtry = 0.01
-        except:
-            vmaxtry = 0.01
-
-        # Tm is not always monotonous in vw, so we need to approach vmax from below
-        while vmaxtry < 1:
-            try:
-                _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
-                if Tm < self.TMaxLowT:
-                    vmaxtry += 0.005
-                else:
-                    break
-            except:
-                break
-        
-        vmaxtry -= 0.005
-        while vmaxtry < 1:
-            try:
-                _,_,_,Tm = self.findMatching(vmaxtry, vmaxtry)
-                if Tm < self.TMaxLowT:
-                    vmaxtry += 0.001
-                else:
-                    break
-            except:
-                break
-
-        return vmaxtry - 0.001
-
-
-
-        # vlow = 0.9*vwguess
-        # vhigh = 1.1*vwguess
-
-        # try: #If we can not solve the matching relations with vlow, or if Tm exceeds the allowed range, vlow was chosen too high, and we set it to a really small value
-        #     _,_,_,Tm = self.findMatching(vlow, vlow)
-        #     if Tm > self.TMaxLowT:
-        #         vlow = 0.01
-        # except: 
-        #     vlow = 0.01 
-
-        # try:
-        #     _,_,_,Tm = self.findMatching(vhigh, vhigh)
-        #     if Tm < self.TMaxLowT:
-        #         while vhigh < 1:
-        #             try:
-        #                 self.findMatching(vhigh,vhigh)
-        #                 if Tm < self.TMaxLowT:
-        #                     vhigh += 0.1
-        #                 else:
-        #                     break
-        #             except:
-        #                 break
-        # except:
-        #     pass
-
-        # vmid = (vlow+vhigh)/2
-
-        # while abs(vmid - vlow) > 1e-4:
-        #     try:
-        #         _,_,_,Tm= self.findMatching(vmid,vmid)
-        #         if Tm < self.TMaxLowT:
-        #             vlow = vmid
-        #         else:
-        #             vhigh = vmid
-        #     except:
-        #         vhigh = vmid
-        #     vmid = (vlow + vhigh)/2.
-
-        # return(vlow)  
-
-    def fastestDeflag2(self):
-
-        cc = lambda vw: 1 - 3.*self.template.alN + vw**2*(1./self.template.cb2+3.*self.template.alN)
-        disc = lambda vw: -4*vw**2/self.template.cb2 + cc(vw)**2
-
-        try:
-            ccroot = root_scalar(cc,bracket = [np.sqrt(self.template.cb2),1], method = 'brentq',xtol= self.atol, rtol=self.rtol).root
-        except: 
-            ccroot = 1.
-        try:
-            discroot = root_scalar(disc,bracket = [np.sqrt(self.template.cb2),1], method = 'brentq',xtol= self.atol, rtol=self.rtol).root
-        except:
-            discroot = 1.
-
-        return min(ccroot,discroot)
 
 
     def vpvmAndvpovm(self, Tp, Tm):
