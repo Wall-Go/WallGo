@@ -6,7 +6,7 @@ import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
 
-from .helpers import derivative
+from .helpers import derivative, gradient, hessian
 
 from .Fields import Fields
 
@@ -36,15 +36,25 @@ class EffectivePotential(ABC):
 
     ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
     fieldLowerBound: float = 1e-8
+    
+    ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
+    ## when the potential can be computed in terms of simple functions.
+    effectivePotentialError: float = 1e-15
+    
+    ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
+    temperatureScale: float = 1.0
+    
+    ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    fieldScale: npt.ArrayLike
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
-
-        ## Used for derivatives. TODO read from config file probably
-        self.dT = 0.1  ## HACK! These defaults are bad, as the quantities have dimensions
-        self.dPhi = 0.1  ## field difference
+        
+        # Intitializes fieldScale. Will be overriden by self.setScales.
+        self.fieldScale = np.ones(fieldCount)
+        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
 
     @abstractmethod
@@ -59,6 +69,25 @@ class EffectivePotential(ABC):
     
 
     #### Non-abstract stuff from here on
+    
+    def setPotentialError(self, potentialError):
+        """
+        Sets self.effectivePotentialError to potentialError.
+        """
+        self.effectivePotentialError = potentialError
+        
+    def setScales(self, temperatureScale, fieldScale):
+        """
+        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
+        """
+        self.temperatureScale = temperatureScale
+        
+        if isinstance(fieldScale, float):
+            self.fieldScale = fieldScale*np.ones(self.fieldCount)
+        else:
+            self.fieldScale = np.asanyarray(fieldScale)
+            assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
+        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
         """
@@ -109,6 +138,25 @@ class EffectivePotential(ABC):
 
         ## Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
+    
+    def __wrapperPotential(self, X):
+        """
+        Calls self.evaluate from a single array X that contains both the fields and temperature.
+        """
+        fields = Fields(X[...,:-1])
+        temperature = X[...,-1]
+        return self.evaluate(fields, temperature)
+    
+    def __combineInputs(self, fields, temperature):
+        """
+        Combines the fields and temperature in a single array.
+        """
+        shape = list(fields.shape)
+        shape[-1] += 1
+        combinedInput = np.empty(shape)
+        combinedInput[...,:-1] = fields
+        combinedInput[...,-1] = temperature
+        return combinedInput
 
     def derivT(self, fields: Fields, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with
@@ -131,9 +179,11 @@ class EffectivePotential(ABC):
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
-            dx=self.dT,
             n=1,
             order=4,
+            epsilon=self.effectivePotentialError,
+            scale=self.temperatureScale,
+            bounds=(0,np.inf),
         )
         return der
 
@@ -154,28 +204,9 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        ## LN: had trouble setting the offset because numpy tried to use it integer and rounded it to 0. So paranoid dtype everywhere here
-
-        res = np.empty_like(fields, dtype=float)
-
-        for idx in range(fields.NumFields()):
-            fieldsOffset = np.zeros_like(fields, dtype=float)
-            fieldsOffset.SetField(
-                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
-            )
-
-            # O(dPhi^4) accurate, central finite difference scheme
-            dV = (
-                -self.evaluate(fields + 2 * fieldsOffset, temperature)
-                + 8 * self.evaluate(fields + fieldsOffset, temperature)
-                - 8 * self.evaluate(fields - fieldsOffset, temperature)
-                + self.evaluate(fields - 2 * fieldsOffset, temperature)
-            )
-            dVdphi = dV / (12 * self.dPhi)
-
-            res.SetField(idx, dVdphi)
-
-        return res
+        
+        return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
+                        scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
 
     def deriv2FieldT(self, fields: Fields, temperature: npt.ArrayLike):
         r""" Computes :math:`d^2V/(d\text{Field} dT)`.
@@ -193,22 +224,10 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        if len(fields.shape) == 1:
-            # HACK! Not sure how best to deal with this edge case, which
-            # arises due to how scipyint.RK45 is initialised
-            fields = Fields((fields))
-
-        # O(dPhi^4) accurate, central finite difference scheme
-        res = (
-            - self.derivField(fields, temperature + 2 * self.dT)
-            + 8 * self.derivField(fields, temperature + self.dT)
-            - 8 * self.derivField(fields, temperature - self.dT)
-            + self.derivField(fields, temperature - 2 * self.dT)
-        ) / (12 * self.dT)
-
-        if len(res.shape) == 2 and res.shape[0] == 1:
-            # HACK! SHOULD DO THIS MORE TIDILY
-            return res[0]
+        
+        res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
+                      scale=self.__combinedScales, xAxis=np.arange(self.fieldCount).tolist(), yAxis=-1)[...,0]
+        
         return res
 
     def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):
@@ -227,80 +246,39 @@ class EffectivePotential(ABC):
             Field Hessian of the potential. For each temperature, this is
             a matrix of the same size as Fields.
         """
-        if len(fields.shape) == 1:
-            # HACK! Not sure how best to deal with this edge case, which
-            # arises due to how scipyint.RK45 is initialised
-            fields = Fields((fields))
-        shapeRes = (fields.NumPoints(), fields.NumFields(), fields.NumFields())
-        res = np.empty(shapeRes, dtype=float)
+        
+        axis = np.arange(self.fieldCount).tolist()
+        return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
+                       scale=self.__combinedScales, xAxis=axis, yAxis=axis)
+    
+    def allSecondDerivatives(self, fields: Fields, temperature: npt.ArrayLike):
+        r""" Computes :math:`d^2V/(d\text{Field}^2)`, :math:`d^2V/(d\text{Field} dT)` 
+        and :math:`d^2V/(dT^2)` at the ssame time. This function is more efficient
+        than calling the other functions one at a time.
 
-        # OG: This is all a bit of a mess, and should probably be rewritten
-        # more algorithmically.
+        Parameters
+        ----------
+        fields : Fields
+            The background field values (e.g.: Higgs, singlet)
+        temperature : array_like
+            The temperature
 
-        for idx in range(fields.NumFields()):
-            fieldsOffsetX = np.zeros_like(fields, dtype=float)
-            fieldsOffsetX.SetField(
-                idx, np.full(fields.NumPoints(), self.dPhi, dtype=float)
-            )
-            for idy in range(idx, fields.NumFields()):
-                fieldsOffsetY = np.zeros_like(fields, dtype=float)
-                if idy == idx:
-                    """# O(dPhi^2) accurate, central finite difference scheme
-                    dV = (
-                        self.evaluate(fields + fieldsOffsetX, temperature)
-                        - 2 * self.evaluate(fields, temperature)
-                        + self.evaluate(fields - fieldsOffsetX, temperature)
-                    )
-                    res[..., idx, idy] = dV / self.dPhi ** 2"""
-                    # O(dPhi^4) accurate, central finite difference scheme
-                    dV = (
-                        -self.evaluate(fields + 2 * fieldsOffsetX, temperature)
-                        + 16 * self.evaluate(fields + fieldsOffsetX, temperature)
-                        - 30 * self.evaluate(fields, temperature)
-                        + 16 * self.evaluate(fields - fieldsOffsetX, temperature)
-                        - self.evaluate(fields - 2 * fieldsOffsetX, temperature)
-                    )
-                    res[..., idx, idy] = dV / (12 * self.dPhi ** 2)
-                else:
-                    fieldsOffsetY.SetField(
-                        idy, np.full(fields.NumPoints(), self.dPhi, dtype=float)
-                    )
-                    """# O(dPhi^2) accurate, central finite difference scheme
-                    dV = (
-                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
-                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
-                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
-                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
-                    )
-                    res[..., idx, idy] = dV / (4 * self.dPhi ** 2)
-                    res[..., idy, idx] = res[..., idx, idy]"""
-                    # O(dPhi^4) accurate, central finite difference scheme
-                    dV = (
-                        self.evaluate(fields + 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
-                        - self.evaluate(fields - 2 * fieldsOffsetX + 2 * fieldsOffsetY, temperature)
-                        - self.evaluate(fields + 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
-                        + self.evaluate(fields - 2 * fieldsOffsetX - 2 * fieldsOffsetY, temperature)
-                    )
-                    dV += 8 * (
-                        -self.evaluate(fields + 2 * fieldsOffsetX + fieldsOffsetY, temperature)
-                        + self.evaluate(fields - 2 * fieldsOffsetX + fieldsOffsetY, temperature)
-                        + self.evaluate(fields + 2 * fieldsOffsetX - fieldsOffsetY, temperature)
-                        - self.evaluate(fields - 2 * fieldsOffsetX - fieldsOffsetY, temperature)
-                        - self.evaluate(fields + fieldsOffsetX + 2 * fieldsOffsetY, temperature)
-                        + self.evaluate(fields - fieldsOffsetX + 2 * fieldsOffsetY, temperature)
-                        + self.evaluate(fields + fieldsOffsetX - 2 * fieldsOffsetY, temperature)
-                        - self.evaluate(fields - fieldsOffsetX - 2 * fieldsOffsetY, temperature)
-                    )
-                    dV += 64 * (
-                        self.evaluate(fields + fieldsOffsetX + fieldsOffsetY, temperature)
-                        - self.evaluate(fields - fieldsOffsetX + fieldsOffsetY, temperature)
-                        - self.evaluate(fields + fieldsOffsetX - fieldsOffsetY, temperature)
-                        + self.evaluate(fields - fieldsOffsetX - fieldsOffsetY, temperature)
-                    )
-                    res[..., idx, idy] = dV / (144 * self.dPhi ** 2)
-                    res[..., idy, idx] = res[..., idx, idy]
-
-        if len(res.shape) == 3 and res.shape[0] == 1:
-            # HACK! SHOULD DO THIS MORE TIDILY
-            return res[0]
-        return res
+        Returns
+        ----------
+        d2VdField2 : list[Fields]
+            Field Hessian of the potential. For each temperature, this is
+            a matrix of the same size as Fields.
+        d2fdFielddT : list[Fields]
+            Field derivatives of the potential, one Fields object for each
+            temperature. They are of Fields type since the shapes match nicely.
+        d2VdT2 : array-like
+            Temperature second derivative of the potential.
+        """
+        
+        res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, scale=self.__combinedScales)
+        
+        hess = res[...,:-1,:-1]
+        dgraddT = res[...,-1,:-1]
+        d2VdT2 = res[...,-1,-1]
+        
+        return hess, dgraddT, d2VdT2

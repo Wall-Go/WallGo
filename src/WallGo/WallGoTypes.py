@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
+from .Polynomial import Polynomial
 # Put common data classes etc here
 
 
@@ -57,10 +58,10 @@ class BoltzmannDeltas:
     Integrals of the out-of-equilibrium particle densities,
     defined in equation (15) of arXiv:2204.13120.
     """
-    Delta00: np.ndarray
-    Delta02: np.ndarray
-    Delta20: np.ndarray
-    Delta11: np.ndarray
+    Delta00: Polynomial
+    Delta02: Polynomial
+    Delta20: Polynomial
+    Delta11: Polynomial
 
 
 @dataclass
@@ -71,6 +72,12 @@ class BoltzmannResults:
     deltaF: np.ndarray
     Deltas: BoltzmannDeltas
     truncationError: float
+    
+    # These two criteria are to evaluate the validity of the linearization of the 
+    # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
+    # particle. To be valid, at least one criterion must be small for each particle.
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
 
 @dataclass
@@ -140,10 +147,11 @@ class WallGoResults:
     Deltas: BoltzmannDeltas
     truncationError: float
     # finite difference results
-    #deltaFFiniteDifference: np.ndarray
-    #DeltasFiniteDifference: dict
+    deltaFFiniteDifference: np.ndarray
+    DeltasFiniteDifference: BoltzmannDeltas
     # measures of nonlinearity
-    #nonlinearitys: np.ndarray
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
     def __init__(self):
         pass
@@ -181,3 +189,13 @@ class WallGoResults:
         self.deltaF = boltzmannResults.deltaF
         self.Deltas = boltzmannResults.Deltas
         self.truncationError = boltzmannResults.truncationError
+        self.linearizationCriterion1 = boltzmannResults.linearizationCriterion1
+        self.linearizationCriterion2 = boltzmannResults.linearizationCriterion2
+
+    def setFiniteDifferenceBoltzmannResults(
+        self, boltzmannResults: BoltzmannResults
+    ):
+        # quantities from finite difference versino of BoltzmannResults
+        self.deltaFFiniteDifference = boltzmannResults.deltaF
+        self.DeltasFiniteDifference = boltzmannResults.Deltas
+

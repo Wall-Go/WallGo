@@ -181,6 +181,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
+        fields = Fields(fields)
         v, x = fields.GetField(0), fields.GetField(1)
 
         msq = self.modelParameters["msq"]
@@ -204,7 +205,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # From Philipp. @todo should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
-
 
         VTotal = (
             V0 
@@ -499,6 +499,12 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+
+        # some estimate of deviation from O(dz^2) finite difference method
+        delta00 = results.Deltas.Delta00.coefficients[0]
+        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

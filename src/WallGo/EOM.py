@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
 from typing import Tuple
+import copy  # for deepcopy
 
 
 import scipy.optimize
@@ -215,6 +216,17 @@ class EOM:
         results.setWallParams(wallParams)
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
+
+        # do finite difference computation to estimate errors
+        if self.includeOffEq:
+            finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
+        else:
+            finiteDifferenceBoltzmannResults = boltzmannResults
+        results.setFiniteDifferenceBoltzmannResults(
+            finiteDifferenceBoltzmannResults
+        )
+
+        # return collected results
         return results
 
 
@@ -281,6 +293,8 @@ class EOM:
             deltaF=deltaF,
             Deltas=offEquilDeltas,
             truncationError=0,
+            linearizationCriterion1=0,
+            linearizationCriterion2=0,
         )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
@@ -503,8 +517,6 @@ class EOM:
         else:
             ## Broadcast mess needed
             z_L = z[:,None] / wallParams.widths[None,:]
-
-        ## LN: Should match eq (37) in the ref. But the description there makes no sense so hard to say. Please clarify
 
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
         dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
@@ -775,6 +787,21 @@ class EOM:
             - (particle.msqVacuum(fields)*delta00[i]+ delta02[i]-delta20[i])/2.) for i,particle in enumerate(self.particles)])
 
         return T30, T33
+
+    def getBoltzmannFiniteDifference(self) -> BoltzmannResults:
+        """Mostly to estimate errors, recomputes Boltzmann stuff
+        using finite difference derivatives.
+        """
+        # finite difference method requires everything to be in
+        # the Cardinal basis
+        boltzmannSolverFiniteDifference = copy.deepcopy(self.boltzmannSolver)
+        boltzmannSolverFiniteDifference.derivatives = "Finite Difference"
+        assert boltzmannSolverFiniteDifference.basisM == "Cardinal", \
+            "Error in boltzmannFiniteDifference: must be in Cardinal basis"
+        boltzmannSolverFiniteDifference.basisN = "Cardinal"
+        boltzmannSolverFiniteDifference.collisionArray.changeBasis("Cardinal")
+        # now computing results
+        return boltzmannSolverFiniteDifference.getDeltas()
 
 
 

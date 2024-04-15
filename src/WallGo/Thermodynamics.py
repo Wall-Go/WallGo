@@ -74,10 +74,10 @@ class Thermodynamics:
         self.phaseHighT = phaseHighT
 
         self.freeEnergyHigh = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseHighT, temperatureScale=self.Tnucl,
+            self.effectivePotential, self.Tnucl, self.phaseHighT, 
         )
         self.freeEnergyLow = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseLowT, temperatureScale=self.Tnucl,
+            self.effectivePotential, self.Tnucl, self.phaseLowT,
         )
 
     def getCoexistenceRange(self) -> Tuple[float, float]:
