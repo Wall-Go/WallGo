@@ -60,8 +60,8 @@ class Hydro:
         except:
             self.vJ = self.template.vJ
 
-
-        self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
+        self.dv = 1e-3 #JvdV: this is not a good name - it is supposed to be the smallest velocity that we allow
+        self.vMin = max(self.dv, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
 
 
     def findJouguetVelocity(self) -> float:
@@ -152,7 +152,7 @@ class Hydro:
             try:
                 vmax1 = root_scalar(
                     TmMax,
-                    bracket=[0.001, self.vJ],
+                    bracket=[self.dv, self.vJ],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -164,7 +164,7 @@ class Hydro:
             try:
                 vmax2 = root_scalar(
                     TpMax,
-                    bracket=[0.001, self.vJ],
+                    bracket=[self.dv, self.vJ],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -442,7 +442,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(1e-5, self.vJ),
+                bracket=(self.dv, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -480,7 +480,7 @@ class Hydro:
             # Loop over v+ until the temperature in front of the shock matches
             # the nucleation temperature. 
 
-            vpmin = 1e-3
+            vpmin = self.dv
             vpmax = min(vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry)
 
             def func(vpTry):
