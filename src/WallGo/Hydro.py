@@ -3,10 +3,10 @@ import numpy as np
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
+from .Thermodynamics import ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
 from .WallGoTypes import HydroResults
 from .WallGoExceptions import WallGoError
-
 
 class Hydro:
     """
@@ -42,6 +42,11 @@ class Hydro:
         self.TMinHighT = thermodynamics.freeEnergyHigh.minPossibleTemperature
         self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
+
+        self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
+        print(f"{self.thermodynamicsExtrapolate.pHighT(1.1*thermodynamics.freeEnergyHigh.maxPossibleTemperature)=}")
+        print(f"{self.thermodynamicsExtrapolate.pHighT(0.9*thermodynamics.freeEnergyHigh.minPossibleTemperature)=}")
+        print(f"{self.thermodynamicsExtrapolate.pHighT(0.95*thermodynamics.freeEnergyHigh.maxPossibleTemperature)=}")
         
         self.rtol, self.atol = rtol, atol
 
