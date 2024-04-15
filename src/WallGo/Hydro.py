@@ -136,9 +136,17 @@ class Hydro:
         return vp
 
 
-    def fastestDeflag(self):
+    def fastestDeflag(self) -> float: 
         r"""
-        Finds the largest wall velocity for which the temperature of the plasma is within the allowed regime
+        Finds the largest wall velocity for which the temperature of the plasma is within the allowed regime,
+        by finding the velocity for which Tm = TMaxLowT or Tp = TMaxHighT. 
+        Returns the Jouguet velocity if no solution can be found.
+
+        Returns
+        -------
+        vmax: double
+            The value of the fastest deflagration/hybrid solution for this model
+
         """
         def TpTm(vw):
             _, _, Tp, Tm = self.findMatching(vw)
@@ -175,8 +183,6 @@ class Hydro:
             return min(vmax1,vmax2) 
             
 
-
-
     def vpvmAndvpovm(self, Tp, Tm):
         r"""
         Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`, from the matching conditions.
@@ -200,7 +206,7 @@ class Hydro:
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
         return vpvm, vpovm
 
-    def matchDeton(self, vw, branch=1):
+    def matchDeton(self, vw):
         r"""
         Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+` and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
 
@@ -208,8 +214,6 @@ class Hydro:
         ---------
         vw : double
             Wall velocity
-        branch : int
-            Don't think this is used, can we remove it?
 
         Returns
         -------
@@ -418,7 +422,23 @@ class Hydro:
             raise WallGoError(TnRootResult.flag, TnRootResult)
         return TnRootResult.root
 
-    def strongestShock(self, vw):
+    def strongestShock(self, vw) -> float:
+        r"""
+        Finds the smallest nucleation temperature possible for a given wall velocity vw.
+        The strongest shock is found by finding the value of Tp for which vp = 0 and Tm is TMinHydro (very small).
+        The correspdoning nucleation temperature is obtained from solveHydroShock at this value of Tp and vp=0.
+
+        Parameters
+        ----------
+        vw: double
+            Value of the wall velocity.
+
+        Returns
+        -------
+        Tn: double
+            The nucleation temperature corresponding to the strongest shock.
+
+        """
         matchingStrongest = lambda Tp: self.thermodynamicsExtrapolate.pHighT(Tp) - self.thermodynamicsExtrapolate.pLowT(self.TMinHydro)
     
         try:
@@ -437,7 +457,17 @@ class Hydro:
         except:
             return 0
 
-    def minVelocity(self):
+    def minVelocity(self) -> float:
+        r"""
+        Finds the smallest velocity for which a deflagration/hybrid is possible for the given nucleation temperature.
+        Returns 0 if no solution can be found.
+        
+        Returns
+        -------
+        vMin: double
+            The smallest velocity that allows for a deflagration/hybrid.
+
+        """
         strongestshockTn = lambda vw: self.strongestShock(vw) - self.Tnucl
         try:
             vMinRootResult = root_scalar(
@@ -450,7 +480,7 @@ class Hydro:
                 raise WallGoError(vMinRootResult.flag, vMinRootResult)
             return vMinRootResult.root
         except:
-            return 0
+            return self.dv
 
     def findMatching(self, vwTry):
         r"""
@@ -557,7 +587,7 @@ class Hydro:
         return (c1, c2, Tp, Tm, vMid)
 
 
-    def findvwLTE(self):
+    def findvwLTE(self) -> float:
         r"""
         Returns the wall velocity in local thermal equilibrium for the model's nucleation temperature.
         The wall velocity is determined by solving the matching condition :math:`T_+ \gamma_+= T_-\gamma_-`.
@@ -617,7 +647,7 @@ class Hydro:
 
     def __mappingT(self, TpTm):
         """
-        Maps the variables Tp and Tm, which are constrained to TMinGuess < Tm,Tp < TMaxGuess to the interval (-inf,inf) to allow root finding algorithms 
+        Maps the variables Tp and Tm, which are constrained to TMinHydro < Tm,Tp < TMaxHydro to the interval (-inf,inf) to allow root finding algorithms 
         to explore different values of (Tp,Tm), without going outside of the bounds above.
 
         Parameters
