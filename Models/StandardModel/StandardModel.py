@@ -247,6 +247,7 @@ def main():
 
     # Print WallGo config. This was read by WallGo.initialize()
     WallGo.config.set("EffectivePotential", "fieldScale", "10")
+    WallGo.config.set("EffectivePotential", "temperatureScale", "1")
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
