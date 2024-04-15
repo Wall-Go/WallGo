@@ -293,6 +293,8 @@ class EOM:
             deltaF=deltaF,
             Deltas=offEquilDeltas,
             truncationError=0,
+            linearizationCriterion1=0,
+            linearizationCriterion2=0,
         )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
@@ -515,8 +517,6 @@ class EOM:
         else:
             ## Broadcast mess needed
             z_L = z[:,None] / wallParams.widths[None,:]
-
-        ## LN: Should match eq (37) in the ref. But the description there makes no sense so hard to say. Please clarify
 
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
         dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )

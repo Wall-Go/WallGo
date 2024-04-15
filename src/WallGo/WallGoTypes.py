@@ -72,6 +72,12 @@ class BoltzmannResults:
     deltaF: np.ndarray
     Deltas: BoltzmannDeltas
     truncationError: float
+    
+    # These two criteria are to evaluate the validity of the linearization of the 
+    # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
+    # particle. To be valid, at least one criterion must be small for each particle.
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
 
 @dataclass
@@ -144,7 +150,8 @@ class WallGoResults:
     deltaFFiniteDifference: np.ndarray
     DeltasFiniteDifference: BoltzmannDeltas
     # measures of nonlinearity
-    #nonlinearitys: np.ndarray
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
     def __init__(self):
         pass
@@ -182,6 +189,8 @@ class WallGoResults:
         self.deltaF = boltzmannResults.deltaF
         self.Deltas = boltzmannResults.Deltas
         self.truncationError = boltzmannResults.truncationError
+        self.linearizationCriterion1 = boltzmannResults.linearizationCriterion1
+        self.linearizationCriterion2 = boltzmannResults.linearizationCriterion2
 
     def setFiniteDifferenceBoltzmannResults(
         self, boltzmannResults: BoltzmannResults
@@ -189,3 +198,4 @@ class WallGoResults:
         # quantities from finite difference versino of BoltzmannResults
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
+

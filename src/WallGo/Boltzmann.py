@@ -119,6 +119,9 @@ class BoltzmannSolver:
 
         # getting (optimistic) estimate of truncation error
         truncationError = self.estimateTruncationError(deltaF)
+        
+        # getting criteria for validity of linearization
+        criterion1,criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 
@@ -130,7 +133,7 @@ class BoltzmannSolver:
             ('Array', 'z', 'pz', 'pp'),
             False,
         )
-        deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
         field = self.background.fieldProfiles.TakeSlice(
@@ -165,13 +168,18 @@ class BoltzmannSolver:
         Delta02 = deltaFPoly.integrate((2, 3), pz**2 * integrand)
         Delta20 = deltaFPoly.integrate((2, 3), E**2 * integrand)
         Delta11 = deltaFPoly.integrate((2, 3), E*pz * integrand)
+        
         Deltas = BoltzmannDeltas(
             Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
         )
 
         # returning results
         return BoltzmannResults(
-            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError,
+            deltaF=deltaF,
+            Deltas=Deltas,
+            truncationError=truncationError,
+            linearizationCriterion1=criterion1,
+            linearizationCriterion2=criterion2,
         )
 
     def solveBoltzmannEquations(self):
@@ -248,13 +256,13 @@ class BoltzmannSolver:
         )
 
         # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis(('Array',)+ 3*('Cardinal',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
         deltaFMeanAbs = np.mean(
             np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
         )
 
         # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis(('Array',)+3*('Chebyshev',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
 
         # estimating truncation errors in each direction
         truncationErrorChi = np.mean(
@@ -273,6 +281,82 @@ class BoltzmannSolver:
             np.max(truncationErrorPz / deltaFMeanAbs),
             np.max(truncationErrorPp / deltaFMeanAbs),
         )
+    
+    def checkLinearization(self, deltaF=None):
+        """
+        Compute two criteria to verify the validity of the linearization of the
+        Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
+        To be valid, at least one of the two criteria must be small for each particle.
+
+        Parameters
+        ----------
+        deltaF : array-like, optional
+            Solution of the Boltzmann equation. The default is None.
+
+        Returns
+        -------
+        deltaFCriterion : tuple
+        collCriterion : tuple
+            Criteria for the validity of the linearization.
+
+        """
+        if deltaF is None:
+            deltaF = self.solveBoltzmannEquations()
+
+        particles = self.offEqParticles
+
+        # constructing Polynomial class from deltaF array
+        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
+
+        msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
+        fieldPoly = Polynomial(np.sum(self.background.fieldProfiles,axis=1), self.grid, 'Cardinal', 'z', True)
+        dfielddChi = fieldPoly.derivative(0).coefficients[None, 1:-1, None, None]
+
+        # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
+        # for fast multiplication of arrays, using numpy's broadcasting rules
+        pz = self.grid.pzValues[None, None, :, None]
+        pp = self.grid.ppValues[None, None, None, :]
+        msq = msqFull[:, 1:-1, None, None]
+        # constructing energy with (z, pz, pp) axes
+        E = np.sqrt(msq + pz**2 + pp**2)
+
+        TFull = self.background.temperatureProfile
+        T = TFull[None, 1:-1, None, None]
+        statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
+
+        fEq = BoltzmannSolver.__feq(E / T, statistics)
+        fEqPoly = Polynomial(fEq, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z', 'z', 'pz', 'pp'), False)
+
+        # temperature here is the T-scale of grid
+        dpzdrz = (
+            2 * self.grid.momentumFalloffT
+            / (1 - self.grid.rzValues**2)[None, None, :, None]
+        )
+        dppdrp = (
+            self.grid.momentumFalloffT
+            / (1 - self.grid.rpValues)[None, None, None, :]
+        )
+
+        # base integrand, for '00'
+        integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
+
+        # The first criterion is to require that POut/PEq is small
+        POut = deltaFPoly.integrate((1,2,3), integrand).coefficients
+        PEq = fEqPoly.integrate((1,2,3), integrand).coefficients
+        deltaFCriterion = POut/PEq
+
+        # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
+        operator, source, liouville, collision = self.buildLinearEquations()
+        CdeltaF = np.sum(collision*deltaF[None,None,None,None,...], axis=(4,5,6,7))
+        LdeltaF = np.sum(liouville*deltaF[None,None,None,None,...], axis=(4,5,6,7))
+        CdeltaFPoly = Polynomial(CdeltaF, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z','z','pz','pp'), False)
+        LdeltaFPoly = Polynomial(LdeltaF, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z','z','pz','pp'), False)
+        CdeltaFIntegrated = CdeltaFPoly.integrate((1,2,3), integrand).coefficients
+        LdeltaFIntegrated = LdeltaFPoly.integrate((1,2,3), integrand).coefficients
+        collCriterion = CdeltaFIntegrated/LdeltaFIntegrated
+
+        return deltaFCriterion, collCriterion
 
     def buildLinearEquations(self):
         """
@@ -474,12 +558,12 @@ class BoltzmannSolver:
         """
         Thermal distribution functions, Bose-Einstein and Fermi-Dirac
         """
-        if np.isclose(statistics, 1, atol=1e-14):
-            # np.expm1(x) = np.exp(x) - 1, but avoids large floating point
-            # errors for small x
-            return 1 / np.expm1(x)
-        else:
-            return 1 / (np.exp(x) + 1)
+        x = np.asarray(x)
+        return np.where(
+            x > BoltzmannSolver.MAX_EXPONENT,
+            0,
+            1 / (np.exp(x) - statistics),
+        )
 
     @staticmethod
     def __dfeq(x, statistics):
