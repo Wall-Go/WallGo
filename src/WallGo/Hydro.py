@@ -50,18 +50,19 @@ class Hydro:
         
         self.rtol, self.atol = rtol, atol
 
-        self.vJ = self.findJouguetVelocity()
         self.template = HydroTemplateModel(
             thermodynamics, rtol=rtol, atol=atol
         )
-        if self.vJ == 1:
-            self.vMax = self.fastestDeflag() # Maximum velocity with Tm that respects the temperature bounds
-        else :
-            self.vMax = self.vJ
+
+        self.vJ = self.template.vJ #Because the Jouguet velocity only depends on the sound speed and alpha at Tn, it can be determined from the template model
 
         self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
+        print(f"{self.template.vJ=}")
+
+
+#Can delete this!!
     def findJouguetVelocity(self) -> float:
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics, and at the model's nucleation temperature,
@@ -73,18 +74,18 @@ class Hydro:
             The value of the Jouguet velocity for this model.
 
         """
-        pHighT = self.thermodynamics.pHighT(self.Tnucl)
-        eHighT = self.thermodynamics.eHighT(self.Tnucl)
+        pHighT = self.thermodynamicsExtrapolate.pHighT(self.Tnucl)
+        eHighT = self.thermodynamicsExtrapolate.eHighT(self.Tnucl)
 
         def vpDerivNum(tm):  # The numerator of the derivative of v+^2
-            pLowT = self.thermodynamics.pLowT(tm)
-            eLowT = self.thermodynamics.eLowT(tm)
+            pLowT = self.thermodynamicsExtrapolate.pLowT(tm)
+            eLowT = self.thermodynamicsExtrapolate.eLowT(tm)
             num1 = pHighT - pLowT  # First factor in the numerator of v+^2
             num2 = pHighT + eLowT
             den1 = eHighT - eLowT  # First factor in the denominator of v+^2
             den2 = eHighT + pLowT
-            dnum1 = - self.thermodynamics.dpLowT(tm) # T-derivative of first factor wrt tm
-            dnum2 = self.thermodynamics.deLowT(tm)
+            dnum1 = - self.thermodynamicsExtrapolate.dpLowT(tm) # T-derivative of first factor wrt tm
+            dnum2 = self.thermodynamicsExtrapolate.deLowT(tm)
             dden1 = - dnum2  # T-derivative of second factor wrt tm
             dden2 = - dnum1
             return (
@@ -114,8 +115,6 @@ class Hydro:
                 rtol=self.rtol,
             )
         else:
-            return 1
-            print('This is not going to work')
             # If we cannot bracket the root, use the 'secant' method instead.
             # This may call thermodynamics outside of its interpolation range?
             rootResult = root_scalar(
@@ -126,15 +125,13 @@ class Hydro:
                 xtol=self.atol,
                 rtol=self.rtol,
             )
-            print(f"{rootResult.root=}")
+
         if rootResult.converged:
             tmSol = rootResult.root
-            if tmSol < self.TMinLowT or tmSol > self.TMaxHighT:
-                print('This does not make sense')
         else:
             raise WallGoError(rootResult.flag, rootResult)
 
-        vp = np.sqrt((pHighT - self.thermodynamics.pLowT(tmSol))*(pHighT + self.thermodynamics.eLowT(tmSol))/(eHighT - self.thermodynamics.eLowT(tmSol))/(eHighT + self.thermodynamics.pLowT(tmSol)))
+        vp = np.sqrt((pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))*(pHighT + self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT - self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT + self.thermodynamicsExtrapolate.pLowT(tmSol)))
         return vp
     
     def fastestDeflag(self):
@@ -242,6 +239,23 @@ class Hydro:
         #     vmid = (vlow + vhigh)/2.
 
         # return(vlow)  
+
+    def fastestDeflag2(self):
+        #Don't need this function, we can just use the Jouguet velocity of the template model
+
+        cc = lambda vw: 1 - 3.*self.template.alN + vw**2*(1./self.template.cb2+3.*self.template.alN)
+        disc = lambda vw: -4*vw**2/self.template.cb2 + cc(vw)**2
+
+        try:
+            ccroot = root_scalar(cc,bracket = [np.sqrt(self.template.cb2),1], method = 'brentq',xtol= self.atol, rtol=self.rtol).root
+        except: 
+            ccroot = 1.
+        try:
+            discroot = root_scalar(disc,bracket = [np.sqrt(self.template.cb2),1], method = 'brentq',xtol= self.atol, rtol=self.rtol).root
+        except:
+            discroot = 1.
+
+        return min(ccroot,discroot)
 
 
     def vpvmAndvpovm(self, Tp, Tm):
@@ -521,7 +535,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(1e-5, min(self.vJ,self.vMax)),
+                bracket=(1e-5, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -531,7 +545,7 @@ class Hydro:
         except:
             return 0
 
-    def findMatching(self, vwTry, vMaxInit = None):
+    def findMatching(self, vwTry):
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -543,8 +557,6 @@ class Hydro:
         ----------
         vwTry : double
             The value of the wall velocity
-        vMaxInit : double or None, optional
-            Guess of the maximum deflragration velocity.
 
         Returns
         -------
@@ -554,7 +566,7 @@ class Hydro:
 
         """
 
-        if vMaxInit is None and vwTry > min(self.vJ,self.vMax):  # Detonation
+        if vwTry > self.vJ:  # Detonation
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
@@ -795,13 +807,13 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = min(self.vJ,self.vMax)
+        vmax = self.vJ
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
                 vmax = root_scalar(
                     shock,
-                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
+                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, self.vJ],
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root

@@ -114,7 +114,7 @@ class EOM:
         )
 
         vmin = self.hydro.vMin
-        vmax = min(self.hydro.vMax, self.hydro.vJ) - 1e-6  # can we drop this 1e-6?
+        vmax = self.hydro.vJ - 1e-6  # can we drop this 1e-6?
 
         return self.solveWall(vmin, vmax, wallParams)
     
