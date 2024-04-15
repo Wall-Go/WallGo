@@ -43,6 +43,9 @@ class Hydro:
         self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
+        self.TMaxHydro = 10*self.Tnucl
+        self.TMinHydro = 0.
+
         self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
         
         self.rtol, self.atol = rtol, atol
@@ -274,8 +277,8 @@ class Hydro:
             `v_+v_-` and :math:`v_+/v_-`
         """
 
-        pHighT, pLowT = self.thermodynamics.pHighT(Tp), self.thermodynamics.pLowT(Tm)
-        eHighT, eLowT = self.thermodynamics.eHighT(Tp), self.thermodynamics.eLowT(Tm)
+        pHighT, pLowT = self.thermodynamicsExtrapolate.pHighT(Tp), self.thermodynamicsExtrapolate.pLowT(Tm)
+        eHighT, eLowT = self.thermodynamicsExtrapolate.eHighT(Tp), self.thermodynamicsExtrapolate.eLowT(Tm)
         vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
         return vpvm, vpovm
@@ -299,11 +302,11 @@ class Hydro:
         """
         vp = vw
         Tp = self.Tnucl
-        pHighT, wHighT = self.thermodynamics.pHighT(Tp), self.thermodynamics.wHighT(Tp)
+        pHighT, wHighT = self.thermodynamicsExtrapolate.pHighT(Tp), self.thermodynamicsExtrapolate.wHighT(Tp)
         eHighT = wHighT - pHighT
 
         def tmFromvpsq(tm):
-            pLowT, wLowT = self.thermodynamics.pLowT(tm), self.thermodynamics.wLowT(tm)
+            pLowT, wLowT = self.thermodynamicsExtrapolate.pLowT(tm), self.thermodynamicsExtrapolate.wLowT(tm)
             eLowT = wLowT - pLowT
             return vp**2*(eHighT-eLowT) - (pHighT-pLowT)*(eLowT+pHighT)/(eHighT+pLowT)
 
@@ -356,7 +359,7 @@ class Hydro:
 
         def matching(XpXm): #Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
-            vmsq = min(vw**2,self.thermodynamics.csqLowT(Tpm[1]))
+            vmsq = min(vw**2,self.thermodynamicsExtrapolate.csqLowT(Tpm[1]))
             if vp is None:
                 vpsq = (Tpm[1]**2-Tpm[0]**2*(1-vmsq))/Tpm[1]**2
             else:
@@ -382,8 +385,8 @@ class Hydro:
             #so we use 1.1 Tnucl as initial guess, unless that is above the maximum allowed temperature
         if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01*Tpm0[1]
-        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1])))):
-            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamics.csqLowT(Tpm0[1]))))/2
+        if (vwMapping is not None) and (Tpm0[0] <= Tpm0[1] or Tpm0[0] > Tpm0[1]/np.sqrt(1-min(vw**2,self.thermodynamicsExtrapolate.csqLowT(Tpm0[1])))):
+            Tpm0[0] = Tpm0[1]*(1+1/np.sqrt(1-min(vw**2,self.thermodynamicsExtrapolate.csqLowT(Tpm0[1]))))/2
 
         if Tpm0[0] > self.TMaxHighT: #If the obtained values are above T of the allowed range, we take an initial guess close to TmaxGuess
             Tpm0 = [0.98*self.TMaxHighT,Tpm0[1]]
@@ -404,7 +407,7 @@ class Hydro:
         self.success = sol.success or np.sum(sol.fun**2) < 1e-6 #If the error is small enough, we consider that root has converged even if it returns False.
         [Tp, Tm] = self.__inverseMappingT(sol.x)
           
-        vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
+        vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
             vp = np.sqrt((Tm**2-Tp**2*(1-vm**2)))/Tm
@@ -429,8 +432,8 @@ class Hydro:
             The expressions for :math:`\frac{\partial v}{\partial \xi}` and :math:`\frac{\partial v}{\partial T}`
         """
         xi, T = xiAndT
-        eq1 = gammaSq(v) * (1. - v*xi)*(boostVelocity(xi,v)**2/self.thermodynamics.csqHighT(T)-1.)*xi/2./v
-        eq2 = self.thermodynamics.wHighT(T)/self.thermodynamics.dpHighT(T)*gammaSq(v)*boostVelocity(xi,v)
+        eq1 = gammaSq(v) * (1. - v*xi)*(boostVelocity(xi,v)**2/self.thermodynamicsExtrapolate.csqHighT(T)-1.)*xi/2./v
+        eq2 = self.thermodynamicsExtrapolate.wHighT(T)/self.thermodynamicsExtrapolate.dpHighT(T)*gammaSq(v)*boostVelocity(xi,v)
         return [eq1,eq2]
 
     def solveHydroShock(self, vw, vp, Tp):
@@ -456,7 +459,7 @@ class Hydro:
 
         def shock(v, xiAndT):
             xi, T = xiAndT
-            return boostVelocity(xi,v)*xi - self.thermodynamics.csqHighT(T)
+            return boostVelocity(xi,v)*xi - self.thermodynamicsExtrapolate.csqHighT(T)
         shock.terminal = True
         xi0T0 = [vw,Tp]
         vpcent = boostVelocity(vw,vp)
@@ -466,7 +469,7 @@ class Hydro:
             Tm_sh = Tp
         elif vw == vp:
             vm_sh = 0
-            xi_sh = self.thermodynamics.csqHighT(Tp)**0.5
+            xi_sh = self.thermodynamicsExtrapolate.csqHighT(Tp)**0.5
             Tm_sh = Tp
         else:
             solshock = solve_ivp(self.shockDE, [vpcent,1e-8], xi0T0, events=shock, rtol=self.rtol, atol=0) #solve differential equation all the way from v = v+ to v = 0
@@ -475,8 +478,8 @@ class Hydro:
 
         def TiiShock(tn):  #continuity of Tii
             return (
-                self.thermodynamics.wHighT(tn)*xi_sh/(1-xi_sh**2)
-                - self.thermodynamics.wHighT(Tm_sh)*boostVelocity(xi_sh, vm_sh)*gammaSq(boostVelocity(xi_sh, vm_sh))
+                self.thermodynamicsExtrapolate.wHighT(tn)*xi_sh/(1-xi_sh**2)
+                - self.thermodynamicsExtrapolate.wHighT(Tm_sh)*boostVelocity(xi_sh, vm_sh)*gammaSq(boostVelocity(xi_sh, vm_sh))
             )
         Tmin, Tmax = (self.TMinHighT+self.Tnucl)/2,Tm_sh 
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
@@ -511,7 +514,7 @@ class Hydro:
         return TnRootResult.root
 
     def strongestShock(self, vw):
-        matchingStrongest = lambda Tp: self.thermodynamics.pHighT(Tp) - self.thermodynamics.pLowT(self.TMinLowT)
+        matchingStrongest = lambda Tp: self.thermodynamicsExtrapolate.pHighT(Tp) - self.thermodynamicsExtrapolate.pLowT(self.TMinLowT)
     
         try:
             TpStrongestRootResult = root_scalar(
@@ -582,7 +585,7 @@ class Hydro:
 
             # Value of vm**2 corresponding to TmMin and vwTry
             # First option is for deflagration, second for hybrid
-            vmSqAtTmMin = min(vwTry**2, self.thermodynamics.csqLowT(TmMin))
+            vmSqAtTmMin = min(vwTry**2, self.thermodynamicsExtrapolate.csqLowT(TmMin))
 
             def matchingOfTp(tp):
                 # (vm**2 from the matching relations, as a function of Tp,
@@ -616,7 +619,7 @@ class Hydro:
             TpMin = self.TMinHighT  # smallest allowed value of Tp
 
             def vmSqAtTpMin(tm):
-                return min(vwTry**2, self.thermodynamics.csqLowT(tm))
+                return min(vwTry**2, self.thermodynamicsExtrapolate.csqLowT(tm))
 
             def matchingOfTm(tm):
                 # (vm**2 from the matching relations, as a function of Tm,
@@ -650,7 +653,7 @@ class Hydro:
             TpMax = self.TMaxHighT
 
             def vmSqAtTpMax(tm):
-                min(vwTry**2, self.thermodynamics.csqLowT(tm))
+                min(vwTry**2, self.thermodynamicsExtrapolate.csqLowT(tm))
 
             def matchingOfTm(tm):
                 # (vm**2 from the matching relations, as a function of Tm,
@@ -679,7 +682,7 @@ class Hydro:
             # TmaxGuess. In that case, vp is just set to 
             # min(vwTry, self.thermodynamics.csqHighT(self.Tnucl)/vwTry)
                 vpmax = min(
-                    vwTry, self.thermodynamics.csqHighT(self.Tnucl) / vwTry
+                    vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
                 )
 
             def func(vpTry):
@@ -773,9 +776,9 @@ class Hydro:
             # not sure what is going on here
             #return (vp,vm,Tp,Tm,boostVelocity(vwTry,vp))
             return (vp,vm,Tp,Tm,None)
-        wHighT = self.thermodynamics.wHighT(Tp)
+        wHighT = self.thermodynamicsExtrapolate.wHighT(Tp)
         c1 = -wHighT*gammaSq(vp)*vp
-        c2 = self.thermodynamics.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
+        c2 = self.thermodynamicsExtrapolate.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
         vMid = -0.5*(vm+vp)  # minus sign for convention change
         return (c1, c2, Tp, Tm, vMid)
 
@@ -804,7 +807,7 @@ class Hydro:
 
         def shock(vw):  # Equation to find the position of the shock front. If shock(vw) < 0, the front is ahead of vw.
             vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
-            return vp*vw-self.thermodynamics.csqHighT(Tp)
+            return vp*vw-self.thermodynamicsExtrapolate.csqHighT(Tp)
 
         self.success = True
         vmin = self.vMin
@@ -814,7 +817,7 @@ class Hydro:
             try:
                 vmax = root_scalar(
                     shock,
-                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
+                    bracket=[self.thermodynamicsExtrapolate.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root
