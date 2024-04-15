@@ -599,23 +599,9 @@ class Hydro:
             except:
                 return 1  # No shock can be found, e.g. when the PT is too strong -- is there a risk here of returning 1 when it should be 0?
 
-        # fmax = func(vmax)
-        # if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
-        #      return 1
-
-        # TODO: Can we do without this?
-        try:
-            fmax = func(vmax)
-            if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
-                return 1
-        except:
-            while vmax > vmin:
-                vmax -= 0.01
-                try: 
-                    func(vmax)
-                    break
-                except:
-                    pass
+        fmax = func(vmax)
+        if fmax > 0 or not self.success:  # There is no deflagration or hybrid solution, we return 1.
+              return 1
 
         fmin = func(vmin)
         if fmin < 0:  # vw is smaller than vmin, we return 0.
