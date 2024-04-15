@@ -95,7 +95,7 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles    
 
-    def getDeltas(self, deltaF: np.ndarray = None):
+    def getDeltas(self, deltaF: np.ndarray = None) -> BoltzmannResults:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -126,7 +126,13 @@ class BoltzmannSolver:
         particles = self.offEqParticles
 
         # constructing Polynomial class from deltaF array
-        deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('Array', 'z', 'pz', 'pp'), False)
+        deltaFPoly = Polynomial(
+            deltaF,
+            self.grid,
+            ('Array', self.basisM, self.basisN, self.basisN),
+            ('Array', 'z', 'pz', 'pp'),
+            False,
+        )
         deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
@@ -136,29 +142,33 @@ class BoltzmannSolver:
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
-        pz = self.grid.pzValues[np.newaxis, np.newaxis, :, np.newaxis]
-        pp = self.grid.ppValues[np.newaxis, np.newaxis, np.newaxis, :]
-        msq = np.array([particle.msqVacuum(field) for particle in particles])[:, :, np.newaxis, np.newaxis]
+        pz = self.grid.pzValues[None, None, :, None]
+        pp = self.grid.ppValues[None, None, None, :]
+        msq = np.array([
+            particle.msqVacuum(field)
+            for particle in particles
+        ])[:, :, None, None]
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # temperature here is the T-scale of grid
         dpzdrz = (
             2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[np.newaxis, np.newaxis, :, np.newaxis]
+            / (1 - self.grid.rzValues**2)[None, None, :, None]
         )
         dppdrp = (
             self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[np.newaxis, np.newaxis, np.newaxis, :]
+            / (1 - self.grid.rpValues)[None, None, None, :]
         )
 
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
-
-        Delta00 = deltaFPoly.integrate((2,3), integrand)
-        Delta02 = deltaFPoly.integrate((2,3), pz**2 * integrand)
-        Delta20 = deltaFPoly.integrate((2,3), E**2 * integrand)
-        Delta11 = deltaFPoly.integrate((2,3), E*pz * integrand)
+        
+        Delta00 = deltaFPoly.integrate((2, 3), integrand)
+        Delta02 = deltaFPoly.integrate((2, 3), pz**2 * integrand)
+        Delta20 = deltaFPoly.integrate((2, 3), E**2 * integrand)
+        Delta11 = deltaFPoly.integrate((2, 3), E*pz * integrand)
+        
         Deltas = BoltzmannDeltas(
             Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
         )
@@ -210,7 +220,12 @@ class BoltzmannSolver:
         deltaF = np.linalg.solve(operator, source)
 
         # returning result
-        deltaFShape = (len(self.offEqParticles), self.grid.M - 1, self.grid.N - 1, self.grid.N - 1)
+        deltaFShape = (
+            len(self.offEqParticles),
+            self.grid.M - 1,
+            self.grid.N - 1,
+            self.grid.N - 1,
+        )
         deltaF = np.reshape(deltaF, deltaFShape, order="C")
 
         return deltaF
@@ -242,21 +257,29 @@ class BoltzmannSolver:
 
         # mean(|deltaF|) in the Cardinal basis as the norm
         deltaFPoly.changeBasis(('Array',)+ 3*('Cardinal',))
-        deltaFMeanAbs = np.mean(np.abs(deltaFPoly.coefficients), axis=(1,2,3))
+        deltaFMeanAbs = np.mean(
+            np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
+        )
 
         # last coefficient in Chebyshev basis estimates error
         deltaFPoly.changeBasis(('Array',)+3*('Chebyshev',))
 
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1,2))
-        truncationErrorPz = np.mean(np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1,2))
-        truncationErrorPp = np.mean(np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1,2))
+        truncationErrorChi = np.mean(
+            np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1, 2),
+        )
+        truncationErrorPz = np.mean(
+            np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1, 2),
+        )
+        truncationErrorPp = np.mean(
+            np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1, 2),
+        )
 
         # estimating the total truncation error as the maximum of these three
-        return (
-            max((np.max(truncationErrorChi / deltaFMeanAbs), 
-                 np.max(truncationErrorPz / deltaFMeanAbs), 
-                 np.max(truncationErrorPp / deltaFMeanAbs)))
+        return max(
+            np.max(truncationErrorChi / deltaFMeanAbs),
+            np.max(truncationErrorPz / deltaFMeanAbs),
+            np.max(truncationErrorPp / deltaFMeanAbs),
         )
     
     def checkLinearization(self, deltaF=None):
@@ -348,9 +371,9 @@ class BoltzmannSolver:
         xi, pz, pp = self.grid.getCoordinates()  # non-compact
         # adding new axes, to make everything rank 3 like deltaF, (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
-        xi = xi[np.newaxis, :, np.newaxis, np.newaxis]
-        pz = pz[np.newaxis, np.newaxis, :, np.newaxis]
-        pp = pp[np.newaxis, np.newaxis, np.newaxis, :]
+        xi = xi[None, :, None, None]
+        pz = pz[None, None, :, None]
+        pp = pp[None, None, None, :]
 
         # compactified coordinates
         chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)
@@ -358,24 +381,30 @@ class BoltzmannSolver:
         # background profiles
         TFull = self.background.temperatureProfile
         vFull = self.background.velocityProfile
-        msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
+        msqFull = np.array([
+            particle.msqVacuum(self.background.fieldProfiles)
+            for particle in particles
+        ])
         vw = self.background.vw
 
         # expanding to be rank 3 arrays, like deltaF
-        T = TFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
-        v = vFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
-        msq = msqFull[:, 1:-1, np.newaxis, np.newaxis]
+        T = TFull[None, 1:-1, None, None]
+        v = vFull[None, 1:-1, None, None]
+        msq = msqFull[:, 1:-1, None, None]
         E = np.sqrt(msq + pz**2 + pp**2)
 
         # fluctuation mode
-        statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
+        statistics = np.array([
+            -1 if particle.statistics == "Fermion" else 1
+            for particle in particles
+        ])[:, None, None, None]
 
         # building parts which depend on the 'derivatives' argument
         if self.derivatives == "Spectral":
             # fit the background profiles to polynomials
             TPoly = Polynomial(TFull, self.grid, 'Cardinal', 'z', True)
             vPoly = Polynomial(vFull, self.grid, 'Cardinal', 'z', True)
-            msqPoly = Polynomial(msqFull, self.grid, ('Array','Cardinal'), ('Array','z'), True)
+            msqPoly = Polynomial(msqFull, self.grid, ('Array', 'Cardinal'), ('Array', 'z'), True)
             # intertwiner matrices
             TChiMat = TPoly.matrix(self.basisM, "z")
             TRzMat = TPoly.matrix(self.basisN, "pz")
@@ -403,13 +432,20 @@ class BoltzmannSolver:
             derivMatrixRz = derivOperatorRz.matrix((self.grid.N + 1,))
             # spatial derivatives of profiles, endpoints used for taking
             # derivatives but then dropped as deltaF fixed at 0 at endpoints
-            dTdChi = (derivMatrixChi @ TFull)[np.newaxis, 1:-1, np.newaxis, np.newaxis]
-            dvdChi = (derivMatrixChi @ vFull)[np.newaxis, 1:-1, np.newaxis, np.newaxis]
-            dMsqdChi = np.sum(derivMatrixChi[None,:,:] * msqFull[:,None,:],axis=-1)[:, 1:-1, np.newaxis, np.newaxis]
+            dTdChi = (derivMatrixChi @ TFull)[None, 1:-1, None, None]
+            dvdChi = (derivMatrixChi @ vFull)[None, 1:-1, None, None]
+            # the following is equivalent to:
+            # dMsqdChiEinsum = np.einsum(
+            #   "ij,aj->ai", derivMatrixChi.toarray(), msqFull
+            # )[:, 1:-1, None, None]
+            dMsqdChi = np.sum(
+                derivMatrixChi.toarray()[None, :, :] * msqFull[:, None, :],
+                axis=-1,
+            )[:, 1:-1, None, None]
             # restructuring derivative matrices to appropriate forms for
             # Liouville operator
-            derivMatrixChi = np.asarray(derivMatrixChi.todense())[1:-1, 1:-1]
-            derivMatrixRz = np.asarray(derivMatrixRz.todense())[1:-1, 1:-1]
+            derivMatrixChi = derivMatrixChi.toarray()[1:-1, 1:-1]
+            derivMatrixRz = derivMatrixRz.toarray()[1:-1, 1:-1]
 
 
         # dot products with wall velocity
@@ -426,8 +462,8 @@ class BoltzmannSolver:
 
         # (exact) derivatives of compactified coordinates
         dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
-        dchidxi = dchidxi[np.newaxis, :, np.newaxis, np.newaxis]
-        drzdpz = drzdpz[np.newaxis, np.newaxis, :, np.newaxis]
+        dchidxi = dchidxi[None, :, None, None]
+        drzdpz = drzdpz[None, None, :, None]
 
         # derivative of equilibrium distribution
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)
@@ -444,19 +480,19 @@ class BoltzmannSolver:
         ##### liouville operator #####
         # Given in the LHS of Eq. (5) in 2204.13120, with further details given
         # by the second line of Eq. (32).
-        liouville = np.identity(len(particles))[:, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis]*(
-            dchidxi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
-                * PWall[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
-                * derivMatrixChi[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * TRzMat[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :]
-            - dchidxi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
-                * drzdpz[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
+        liouville = np.identity(len(particles))[:, None, None, None, :, None, None, None]*(
+            dchidxi[:, :, :, :, None, None, None, None]
+                * PWall[:, :, :, :, None, None, None, None]
+                * derivMatrixChi[None, :, None, None, None, :, None, None]
+                * TRzMat[None, None, :, None, None, None, :, None]
+                * TRpMat[None, None, None, :, None, None, None, :]
+            - dchidxi[:, :, :, :, None, None, None, None]
+                * drzdpz[:, :, :, :, None, None, None, None]
                 * gammaWall / 2
-                * dMsqdChi[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
-                * TChiMat[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-                * derivMatrixRz[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis]
-                * TRpMat[np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :]
+                * dMsqdChi[:, :, :, :, None, None, None, None]
+                * TChiMat[None, :, None, None, None, :, None, None]
+                * derivMatrixRz[None, None, :, None, None, None, :, None]
+                * TRpMat[None, None, None, :, None, None, None, :]
         )
         """
         An alternative, but slower, implementation is given by the following:
@@ -482,9 +518,9 @@ class BoltzmannSolver:
        
         # including factored-out T^2 in collision integrals
         collision = (
-            (T ** 2)[:, :, :, :, np.newaxis, np.newaxis, np.newaxis, np.newaxis]
-            * TChiMat[np.newaxis, :, np.newaxis, np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
-            * self.collisionArray[:, np.newaxis, :, :, :, np.newaxis, :, :]
+            (T ** 2)[:, :, :, :, None, None, None, None]
+            * TChiMat[None, :, None, None, None, :, None, None]
+            * self.collisionArray[:, None, :, :, :, None, :, :]
         )
         ##### total operator #####
         operator = liouville + collision
@@ -498,7 +534,9 @@ class BoltzmannSolver:
         return operator, source, liouville, collision
     
     def readCollisions(self, directoryName: str) -> None:
-        self.collisionArray = CollisionArray.newFromDirectory(directoryName, self.grid, self.basisN, self.offEqParticles)
+        self.collisionArray = CollisionArray.newFromDirectory(
+            directoryName, self.grid, self.basisN, self.offEqParticles,
+        )
 
     def __checkBasis(basis):
         """

@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdlib> // std::atexit
 
 #include "WallGoCollision/CollisionIntegral.h"
 #include "WallGoCollision/ParticleSpecies.h"
@@ -17,10 +18,6 @@
 
 namespace wallgo
 {
-
-/* @TODO in principle we'd need some cleanup routine that eg. calls gslWrapper::clearRNG().
-But seems hard to dictate when/how this should be called in Python context.
-*/
 
 /* We bind a subclass of the CollisionManager "control" class. 
 This way we can override some functions with python-specific functionality.
@@ -59,6 +56,9 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
     m.doc() = "WallGo collision module";
 
     gslWrapper::initializeRNG();
+
+    // Bind GSL seed setter
+    m.def("setSeed", &gslWrapper::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
@@ -154,6 +154,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str())
         .def("setMatrixElementVerbosity", &CollisionPython::setMatrixElementVerbosity, usage_setMatrixElementVerbosity.c_str());
 
+    std::atexit(gslWrapper::clearRNG);
 }
 
 } // namespace

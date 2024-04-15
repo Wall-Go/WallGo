@@ -28,6 +28,7 @@ class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
     ) -> float:
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
+        fields = Fields(fields)
         v, x = fields.GetField(0), fields.GetField(1)
 
         # 4D units

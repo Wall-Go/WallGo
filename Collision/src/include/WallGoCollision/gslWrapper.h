@@ -27,11 +27,19 @@ namespace gslWrapper {
         CollisionIntegral4::IntegrandParameters integrandParameters;
     };
 
-    void initializeRNG();
+    /* Initializes RNG used by GSL routines. Needs to be called before eg. integrating anything. seed = 0 means we use the default gsl seed (which is 0). */
+    void initializeRNG(int seed = 0);
+    
+    /* Set RNG seed used by GSL routines. By default we use 0. This can safely be called at any time after initializeRNG(). 
+    NOTE: if using OpenMP, all threads will get their own RNG, but with the same seed. This is OK since our calculations are trivially parallel, (independent of each other).*/ 
+    void setSeed(int seed);
+
     void clearRNG();
 
     // pp should be of gslFunctionParams type
     double integrandWrapper(double* intVars, size_t dim, void* pp); 
+
+    extern bool bInitialized;
 }
 
 } // namespace
