@@ -315,14 +315,14 @@ class BoltzmannSolver:
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
-        pz = self.grid.pzValues[np.newaxis, np.newaxis, :, np.newaxis]
-        pp = self.grid.ppValues[np.newaxis, np.newaxis, np.newaxis, :]
-        msq = msqFull[:, 1:-1, np.newaxis, np.newaxis]
+        pz = self.grid.pzValues[None, None, :, None]
+        pp = self.grid.ppValues[None, None, None, :]
+        msq = msqFull[:, 1:-1, None, None]
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
 
         TFull = self.background.temperatureProfile
-        T = TFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
+        T = TFull[None, 1:-1, None, None]
         statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
 
         fEq = BoltzmannSolver.__feq(E / T, statistics)
@@ -331,11 +331,11 @@ class BoltzmannSolver:
         # temperature here is the T-scale of grid
         dpzdrz = (
             2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[np.newaxis, np.newaxis, :, np.newaxis]
+            / (1 - self.grid.rzValues**2)[None, None, :, None]
         )
         dppdrp = (
             self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[np.newaxis, np.newaxis, np.newaxis, :]
+            / (1 - self.grid.rpValues)[None, None, None, :]
         )
 
         # base integrand, for '00'
@@ -344,7 +344,7 @@ class BoltzmannSolver:
         # The first criterion is to require that POut/PEq is small
         POut = deltaFPoly.integrate((1,2,3), integrand).coefficients
         PEq = fEqPoly.integrate((1,2,3), integrand).coefficients
-        criterion1 = POut/PEq
+        deltaFCriterion = POut/PEq
 
         # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
         operator, source, liouville, collision = self.buildLinearEquations()
@@ -354,9 +354,9 @@ class BoltzmannSolver:
         LdeltaFPoly = Polynomial(LdeltaF, self.grid, ('Array',)+3*('Cardinal',), ('z','z','pz','pp'), False)
         CdeltaFIntegrated = CdeltaFPoly.integrate((1,2,3), integrand).coefficients
         LdeltaFIntegrated = LdeltaFPoly.integrate((1,2,3), integrand).coefficients
-        criterion2 = CdeltaFIntegrated/LdeltaFIntegrated
+        collCriterion = CdeltaFIntegrated/LdeltaFIntegrated
 
-        return criterion1, criterion2
+        return deltaFCriterion, collCriterion
 
     def buildLinearEquations(self):
         """
