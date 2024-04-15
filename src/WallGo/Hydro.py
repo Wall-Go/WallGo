@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
+import numpy.typing as npt
+from typing import Tuple
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
@@ -183,7 +185,7 @@ class Hydro:
             return min(vmax1,vmax2) 
             
 
-    def vpvmAndvpovm(self, Tp, Tm):
+    def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
         r"""
         Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`, from the matching conditions.
 
@@ -204,9 +206,9 @@ class Hydro:
         eHighT, eLowT = self.thermodynamicsExtrapolate.eHighT(Tp), self.thermodynamicsExtrapolate.eLowT(Tm)
         vpvm = (pHighT-pLowT)/(eHighT-eLowT) if eHighT != eLowT else (pHighT-pLowT)*1e50
         vpovm = (eLowT+pHighT)/(eHighT+pLowT)
-        return vpvm, vpovm
+        return (vpvm, vpovm)
 
-    def matchDeton(self, vw):
+    def matchDeton(self, vw)-> Tuple[float, float, float, float]:
         r"""
         Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+` and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
 
@@ -255,7 +257,7 @@ class Hydro:
         vm = np.sqrt(vpvm/vpovm)
         return (vp, vm, Tp, Tm)
 
-    def matchDeflagOrHyb(self, vw, vp=None):
+    def matchDeflagOrHyb(self, vw, vp=None) -> Tuple[float, float, float, float]:
         r"""
         Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration or hybrid by solving the matching relations.
 
@@ -324,7 +326,7 @@ class Hydro:
         return vp, vm, Tp, Tm
 
 
-    def shockDE(self, v, xiAndT):
+    def shockDE(self, v, xiAndT) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
 
@@ -345,7 +347,7 @@ class Hydro:
         eq2 = self.thermodynamicsExtrapolate.wHighT(T)/self.thermodynamicsExtrapolate.dpHighT(T)*gammaSq(v)*boostVelocity(xi,v)
         return [eq1,eq2]
 
-    def solveHydroShock(self, vw, vp, Tp):
+    def solveHydroShock(self, vw, vp, Tp) -> float:
         r"""
         Solves the hydrodynamic equations in the shock for a given wall velocity :math:`v_w` and matching parameters :math:`v_+,T_+`
         and returns the corresponding nucleation temperature :math:`T_n`, which is the temperature of the plasma in front of the shock.
@@ -482,7 +484,7 @@ class Hydro:
         except:
             return self.dv
 
-    def findMatching(self, vwTry):
+    def findMatching(self, vwTry) -> Tuple[float, float, float, float]:
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -553,7 +555,7 @@ class Hydro:
         return (vp, vm, Tp, Tm)
 
 
-    def findHydroBoundaries(self, vwTry):
+    def findHydroBoundaries(self, vwTry) -> Tuple[float, float, float, float, float]:
         r"""
         Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid velocity in right in front of the wall) for the scalar and plasma equations of motion for a given wall velocity and the model's nucletion temperature.
 
