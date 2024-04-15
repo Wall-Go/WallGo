@@ -60,13 +60,8 @@ class Hydro:
         except:
             self.vJ = self.template.vJ
 
-        #Will remove
-        self.vMax = self.vJ
 
         self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
-        self.alpha = self.thermodynamics.alpha(self.Tnucl)
-
-        print(f"{self.fastestDeflag()=}")
 
 
     def findJouguetVelocity(self) -> float:
@@ -447,7 +442,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(1e-5, min(self.vJ,self.vMax)),
+                bracket=(1e-5, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -469,8 +464,6 @@ class Hydro:
         ----------
         vwTry : double
             The value of the wall velocity
-        vMaxInit : double or None, optional
-            Guess of the maximum deflragration velocity.
 
         Returns
         -------
@@ -592,13 +585,13 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = min(self.vJ,self.vMax)
+        vmax = self.vJ
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
                 vmax = root_scalar(
                     shock,
-                    bracket=[self.thermodynamicsExtrapolate.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
+                    bracket=[self.thermodynamicsExtrapolate.csqHighT(self.Tnucl)**0.5, self.vJ],
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root
