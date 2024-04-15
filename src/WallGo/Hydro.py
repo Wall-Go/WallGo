@@ -44,9 +44,6 @@ class Hydro:
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
         self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
-        print(f"{self.thermodynamicsExtrapolate.pHighT(1.1*thermodynamics.freeEnergyHigh.maxPossibleTemperature)=}")
-        print(f"{self.thermodynamicsExtrapolate.pHighT(0.9*thermodynamics.freeEnergyHigh.minPossibleTemperature)=}")
-        print(f"{self.thermodynamicsExtrapolate.pHighT(0.95*thermodynamics.freeEnergyHigh.maxPossibleTemperature)=}")
         
         self.rtol, self.atol = rtol, atol
 
@@ -54,15 +51,18 @@ class Hydro:
             thermodynamics, rtol=rtol, atol=atol
         )
 
-        self.vJ = self.template.vJ #Because the Jouguet velocity only depends on the sound speed and alpha at Tn, it can be determined from the template model
+        try:
+            self.vJ = self.findJouguetVelocity()
+        except:
+            self.vJ = self.template.vJ
+
+        #Will remove
+        self.vMax = self.vJ
 
         self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
-        print(f"{self.template.vJ=}")
 
-
-#Can delete this!!
     def findJouguetVelocity(self) -> float:
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by thermodynamics, and at the model's nucleation temperature,
@@ -100,7 +100,7 @@ class Hydro:
 
         # LN: I guess we need to ensure that Tmax does not start from a too large value though
         Tmin = self.Tnucl
-        Tmax = min(self.TMaxLowT, 2 * self.Tnucl)  # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
+        Tmax = min(2 * self.Tnucl)  # In case TmaxGuess is chosen really high, it is not a good initial guess. In that case we take 2*Tnucl
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
@@ -241,7 +241,6 @@ class Hydro:
         # return(vlow)  
 
     def fastestDeflag2(self):
-        #Don't need this function, we can just use the Jouguet velocity of the template model
 
         cc = lambda vw: 1 - 3.*self.template.alN + vw**2*(1./self.template.cb2+3.*self.template.alN)
         disc = lambda vw: -4*vw**2/self.template.cb2 + cc(vw)**2
@@ -535,7 +534,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(1e-5, self.vJ),
+                bracket=(1e-5, min(self.vJ,self.vMax)),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -545,7 +544,7 @@ class Hydro:
         except:
             return 0
 
-    def findMatching(self, vwTry):
+    def findMatching(self, vwTry, vMaxInit = None):
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -557,6 +556,8 @@ class Hydro:
         ----------
         vwTry : double
             The value of the wall velocity
+        vMaxInit : double or None, optional
+            Guess of the maximum deflragration velocity.
 
         Returns
         -------
@@ -566,7 +567,7 @@ class Hydro:
 
         """
 
-        if vwTry > self.vJ:  # Detonation
+        if vMaxInit is None and vwTry > min(self.vJ,self.vMax):  # Detonation
             vp, vm, Tp, Tm = self.matchDeton(vwTry)
 
         else:  # Hybrid or deflagration
@@ -807,13 +808,13 @@ class Hydro:
 
         self.success = True
         vmin = self.vMin
-        vmax = self.vJ
+        vmax = min(self.vJ,self.vMax)
 
         if shock(vmax) > 0:  # Finds the maximum vw such that the shock front is ahead of the wall.
             try:
                 vmax = root_scalar(
                     shock,
-                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, self.vJ],
+                    bracket=[self.thermodynamics.csqHighT(self.Tnucl)**0.5, min(self.vJ,self.vMax)],
                     xtol=self.atol,
                     rtol=self.rtol,
                 ).root
