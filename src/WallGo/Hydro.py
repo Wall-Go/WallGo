@@ -66,6 +66,8 @@ class Hydro:
         self.vMin = max(1e-3, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
         self.alpha = self.thermodynamics.alpha(self.Tnucl)
 
+        print(f"{self.fastestDeflag()=}")
+
 
     def findJouguetVelocity(self) -> float:
         r"""
@@ -137,6 +139,47 @@ class Hydro:
 
         vp = np.sqrt((pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))*(pHighT + self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT - self.thermodynamicsExtrapolate.eLowT(tmSol))/(eHighT + self.thermodynamicsExtrapolate.pLowT(tmSol)))
         return vp
+
+
+    def fastestDeflag(self):
+        r"""
+        Finds the largest wall velocity for which the temperature of the plasma is within the allowed regime
+        """
+        def TpTm(vw):
+            _, _, Tp, Tm = self.findMatching(vw)
+            return [Tp,Tm]
+        
+        if TpTm(self.vJ)[1] < self.TMaxLowT and TpTm(self.vJ)[0]< self.TMaxHighT:
+            return self.vJ
+        else:
+            TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+
+            try:
+                vmax1 = root_scalar(
+                    TmMax,
+                    bracket=[0.001, self.vJ],
+                    method='brentq',
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                ).root
+            except:
+                vmax1 = self.vJ
+            
+            TpMax = lambda vw: TpTm(vw)[0] - self.TMaxHighT
+            try:
+                vmax2 = root_scalar(
+                    TpMax,
+                    bracket=[0.001, self.vJ],
+                    method='brentq',
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                ).root
+            except:
+                vmax2 = self.vJ
+
+            return min(vmax1,vmax2) 
+            
+
 
 
     def vpvmAndvpovm(self, Tp, Tm):
