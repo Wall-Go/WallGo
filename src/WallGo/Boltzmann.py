@@ -133,7 +133,7 @@ class BoltzmannSolver:
             ('Array', 'z', 'pz', 'pp'),
             False,
         )
-        deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
 
         ## Take all field-space points, but throw the boundary points away (LN: why? see comment at top of this file)
         field = self.background.fieldProfiles.TakeSlice(
@@ -256,13 +256,13 @@ class BoltzmannSolver:
         )
 
         # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis(('Array',)+ 3*('Cardinal',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
         deltaFMeanAbs = np.mean(
             np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
         )
 
         # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis(('Array',)+3*('Chebyshev',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
 
         # estimating truncation errors in each direction
         truncationErrorChi = np.mean(
@@ -295,8 +295,8 @@ class BoltzmannSolver:
 
         Returns
         -------
-        criterion1 : tuple
-        criterion2 : tuple
+        deltaFCriterion : tuple
+        collCriterion : tuple
             Criteria for the validity of the linearization.
 
         """
@@ -307,7 +307,7 @@ class BoltzmannSolver:
 
         # constructing Polynomial class from deltaF array
         deltaFPoly = Polynomial(deltaF, self.grid, ('Array', self.basisM, self.basisN, self.basisN), ('z', 'z', 'pz', 'pp'), False)
-        deltaFPoly.changeBasis(('Array',)+3*('Cardinal',))
+        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
 
         msqFull = np.array([particle.msqVacuum(self.background.fieldProfiles) for particle in particles])
         fieldPoly = Polynomial(np.sum(self.background.fieldProfiles,axis=1), self.grid, 'Cardinal', 'z', True)
@@ -326,7 +326,7 @@ class BoltzmannSolver:
         statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
 
         fEq = BoltzmannSolver.__feq(E / T, statistics)
-        fEqPoly = Polynomial(fEq, self.grid, ('Array',)+3*('Cardinal',), ('z', 'z', 'pz', 'pp'), False)
+        fEqPoly = Polynomial(fEq, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z', 'z', 'pz', 'pp'), False)
 
         # temperature here is the T-scale of grid
         dpzdrz = (
@@ -350,8 +350,8 @@ class BoltzmannSolver:
         operator, source, liouville, collision = self.buildLinearEquations()
         CdeltaF = np.sum(collision*deltaF[None,None,None,None,...], axis=(4,5,6,7))
         LdeltaF = np.sum(liouville*deltaF[None,None,None,None,...], axis=(4,5,6,7))
-        CdeltaFPoly = Polynomial(CdeltaF, self.grid, ('Array',)+3*('Cardinal',), ('z','z','pz','pp'), False)
-        LdeltaFPoly = Polynomial(LdeltaF, self.grid, ('Array',)+3*('Cardinal',), ('z','z','pz','pp'), False)
+        CdeltaFPoly = Polynomial(CdeltaF, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z','z','pz','pp'), False)
+        LdeltaFPoly = Polynomial(LdeltaF, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z','z','pz','pp'), False)
         CdeltaFIntegrated = CdeltaFPoly.integrate((1,2,3), integrand).coefficients
         LdeltaFIntegrated = LdeltaFPoly.integrate((1,2,3), integrand).coefficients
         collCriterion = CdeltaFIntegrated/LdeltaFIntegrated

@@ -74,10 +74,10 @@ class BoltzmannResults:
     truncationError: float
     
     # These two criteria are to evaluate the validity of the linearization of the 
-    # Boltzmann equation. The tuples contain one element for each out-of-equilibrium
+    # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
-    linearizationCriterion1: tuple
-    linearizationCriterion2: tuple
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
 
 @dataclass
@@ -150,8 +150,8 @@ class WallGoResults:
     deltaFFiniteDifference: np.ndarray
     DeltasFiniteDifference: BoltzmannDeltas
     # measures of nonlinearity
-    linearizationCriterion1: tuple
-    linearizationCriterion2: tuple
+    linearizationCriterion1: np.ndarray
+    linearizationCriterion2: np.ndarray
 
     def __init__(self):
         pass
