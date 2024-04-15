@@ -200,7 +200,7 @@ class Hydro:
             raise WallGoError(minimizeResult.flag, minimizeResult)
         rootResult = root_scalar(
             tmFromvpsq,
-            bracket=[self.Tnucl, self.TMaxHydro],
+            bracket=[self.Tnucl, Tmax],
             method='brentq',
             xtol=self.atol,
             rtol=self.rtol,
