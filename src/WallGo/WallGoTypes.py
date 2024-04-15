@@ -149,7 +149,8 @@ class WallGoResults:
     #deltaFFiniteDifference: np.ndarray
     #DeltasFiniteDifference: dict
     # measures of nonlinearity
-    #nonlinearitys: np.ndarray
+    linearizationCriterion1: tuple
+    linearizationCriterion2: tuple
 
     def __init__(self):
         pass
@@ -186,4 +187,5 @@ class WallGoResults:
         # quantities from BoltzmannResults
         self.deltaF = boltzmannResults.deltaF
         self.Deltas = boltzmannResults.Deltas
-        self.truncationError = boltzmannResults.truncationError
+        self.linearizationCriterion1 = boltzmannResults.linearizationCriterion1
+        self.linearizationCriterion2 = boltzmannResults.linearizationCriterion2

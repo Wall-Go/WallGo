@@ -154,7 +154,7 @@ class BoltzmannSolver:
 
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
-        
+
         Delta00 = deltaFPoly.integrate((2,3), integrand)
         Delta02 = deltaFPoly.integrate((2,3), pz**2 * integrand)
         Delta20 = deltaFPoly.integrate((2,3), E**2 * integrand)
@@ -165,7 +165,11 @@ class BoltzmannSolver:
 
         # returning results
         return BoltzmannResults(
-            deltaF=deltaF, Deltas=Deltas, truncationError=truncationError, linearizationCriterion1=criterion1, linearizationCriterion2=criterion2,
+            deltaF=deltaF,
+            Deltas=Deltas,
+            truncationError=truncationError,
+            linearizationCriterion1=criterion1,
+            linearizationCriterion2=criterion2,
         )
 
     def solveBoltzmannEquations(self):
@@ -257,9 +261,9 @@ class BoltzmannSolver:
     
     def checkLinearization(self, deltaF=None):
         """
-        Compute two criteria to verify the validity of the linearization of the 
-        Boltzmann equation: :math: `\delta f/f_{eq}` and :math: `C[\delta f]/L[\delta f]`. To be valid, at least one of the two criteria must
-        be small for each particle.
+        Compute two criteria to verify the validity of the linearization of the
+        Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
+        To be valid, at least one of the two criteria must be small for each particle.
 
         Parameters
         ----------
@@ -293,11 +297,11 @@ class BoltzmannSolver:
         msq = msqFull[:, 1:-1, np.newaxis, np.newaxis]
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
-        
+
         TFull = self.background.temperatureProfile
         T = TFull[np.newaxis, 1:-1, np.newaxis, np.newaxis]
         statistics = np.array([-1 if particle.statistics == "Fermion" else 1 for particle in particles])[:,None,None,None]
-        
+
         fEq = BoltzmannSolver.__feq(E / T, statistics)
         fEqPoly = Polynomial(fEq, self.grid, ('Array',)+3*('Cardinal',), ('z', 'z', 'pz', 'pp'), False)
 
@@ -313,12 +317,12 @@ class BoltzmannSolver:
 
         # base integrand, for '00'
         integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
-        
+
         # The first criterion is to require that POut/PEq is small
         POut = deltaFPoly.integrate((1,2,3), integrand).coefficients
         PEq = fEqPoly.integrate((1,2,3), integrand).coefficients
         criterion1 = POut/PEq
-        
+
         # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
         operator, source, liouville, collision = self.buildLinearEquations()
         CdeltaF = np.sum(collision*deltaF[None,None,None,None,...], axis=(4,5,6,7))
@@ -328,7 +332,7 @@ class BoltzmannSolver:
         CdeltaFIntegrated = CdeltaFPoly.integrate((1,2,3), integrand).coefficients
         LdeltaFIntegrated = LdeltaFPoly.integrate((1,2,3), integrand).coefficients
         criterion2 = CdeltaFIntegrated/LdeltaFIntegrated
-        
+
         return criterion1, criterion2
 
     def buildLinearEquations(self):
@@ -522,12 +526,6 @@ class BoltzmannSolver:
             0,
             1 / (np.exp(x) - statistics),
         )
-        if np.isclose(statistics, 1, atol=1e-14):
-            # np.expm1(x) = np.exp(x) - 1, but avoids large floating point
-            # errors for small x
-            return 1 / np.expm1(x)
-        else:
-            return 1 / (np.exp(x) + 1)
 
     @staticmethod
     def __dfeq(x, statistics):
