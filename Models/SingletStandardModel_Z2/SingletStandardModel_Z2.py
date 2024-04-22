@@ -390,6 +390,11 @@ def main():
 
     WallGo.initialize()
 
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -492,18 +497,14 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
-
-        # some estimate of deviation from O(dz^2) finite difference method
-        delta00 = results.Deltas.Delta00.coefficients[0]
-        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
-        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

@@ -194,17 +194,12 @@ class EOM:
             xtol=self.errTol,
         )
         wallVelocity = optimizeResult.root
-        # HACK! Should come up with a better error estimate
-        wallVelocityError = self.errTol * optimizeResult.root
+
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
-        results.setWallVelocities(
-            wallVelocity=wallVelocity,
-            wallVelocityError=wallVelocityError,
-            wallVelocityLTE=wallVelocityLTE,
-        )
 
-        # Get wall params:
+
+        # Get wall params, and other results
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
         newWallParams = (
             wallParamsMin + (wallParamsMax - wallParamsMin) * fractionWallVelocity
@@ -212,16 +207,42 @@ class EOM:
         _, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(
             wallVelocity, newWallParams, returnExtras=True,
         )
-        results.setHydroResults(hydroResults)
-        results.setWallParams(wallParams)
-        results.setBoltzmannBackground(boltzmannBackground)
-        results.setBoltzmannResults(boltzmannResults)
 
         # do finite difference computation to estimate errors
         if self.includeOffEq:
             finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
         else:
             finiteDifferenceBoltzmannResults = boltzmannResults
+
+        # estimating the error in the wall speed
+        wallVelocityMinError = self.errTol * optimizeResult.root
+        # assuming nonequilibrium errors proportional to deviation from LTE
+        wallVelocityDeltaLTE = abs(wallVelocity - wallVelocityLTE)
+        # the truncation error in the spectral method within Boltzmann
+        wallVelocityTruncationError = boltzmannResults.truncationError * wallVelocityDeltaLTE
+        # the deviation from the finite difference method within Boltzmann
+        delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
+        delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
+        # estimating the error by the largest of these
+        wallVelocityError = max(
+            wallVelocityMinError,
+            wallVelocityTruncationError,
+            wallVelocityDerivativeError,
+        )
+
+        # setting results
+        results.setWallVelocities(
+            wallVelocity=wallVelocity,
+            wallVelocityError=wallVelocityError,
+            wallVelocityLTE=wallVelocityLTE,
+        )
+
+        results.setHydroResults(hydroResults)
+        results.setWallParams(wallParams)
+        results.setBoltzmannBackground(boltzmannBackground)
+        results.setBoltzmannResults(boltzmannResults)
         results.setFiniteDifferenceBoltzmannResults(
             finiteDifferenceBoltzmannResults
         )
