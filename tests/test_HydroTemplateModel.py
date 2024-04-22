@@ -127,3 +127,46 @@ def test_findHydroBoundaries():
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0,0]
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
+
+def test_minVelocity():
+    res1,res2 = np.zeros(N),np.zeros(N)
+    psiN = 1-0.5*rng.random(N)
+    alN = (1-psiN)/3+rng.random(N) 
+    cs2 = 1/4+(1/3-1/4)*rng.random(N)
+    cb2 = cs2-(1/3-1/4)*rng.random(N)
+    for i in range(N):
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        hydro = WallGo.Hydro(model,1e-6,1e-6)
+        hydroTemplate = WallGo.HydroTemplateModel(model)
+        res1[i] = hydro.minVelocity()
+        res2[i] = hydroTemplate.minVelocity()
+    np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
+
+# def test_fastestDeflag():
+#     res1,res2 = np.zeros(N),np.zeros(N)
+#     psiN = 1-0.5*rng.random(N)
+#     alN = (1-psiN)/3+rng.random(N)   
+#     cs2 = 1/4+(1/3-1/4)*rng.random(N)
+#     cb2 = cs2-(1/3-1/4)*rng.random(N)
+#     for i in range(N):
+#         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+#         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+
+#         vw = hydroTemplate.vMin + rng.random()*(hydroTemplate.vJ-hydroTemplate.vMin)
+#         print(f"{hydroTemplate.vJ=}")
+#         print(f"{vw=}")
+#         res1[i] = vw
+#         _,_,_,Tm = hydroTemplate.findMatching(vw)
+#         print(f"{Tm=}")
+
+#         if Tm is not None:
+#             model.freeEnergyLow=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tm)
+
+#             hydro = WallGo.Hydro(model,1e-10,1e-10)
+#             print(f"{hydro.vMin=}")
+#             res2[i] = hydro.fastestDeflag()
+#             print(f"{res2[i]=}")
+        
+#         else:
+#             res2[i] = vw
+#     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)

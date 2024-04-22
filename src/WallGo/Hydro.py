@@ -154,15 +154,16 @@ class Hydro:
             _, _, Tp, Tm = self.findMatching(vw)
             return [Tp,Tm]
         
-        if TpTm(self.vJ)[1] < self.TMaxLowT and TpTm(self.vJ)[0]< self.TMaxHighT:
+        if TpTm(self.vJ-self.dv)[1] < self.TMaxLowT and TpTm(self.vJ-self.dv)[0]< self.TMaxHighT:
             return self.vJ
         else:
             TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+            print(f"{TpTm(self.vMin)=} {TpTm(self.vJ)=}")
 
             try:
                 vmax1 = root_scalar(
                     TmMax,
-                    bracket=[self.dv, self.vJ],
+                    bracket=[self.vMin, self.vJ-self.dv],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -175,7 +176,7 @@ class Hydro:
             try:
                 vmax2 = root_scalar(
                     TpMax,
-                    bracket=[self.dv, self.vJ],
+                    bracket=[self.vMin, self.vJ-self.dv],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -483,7 +484,7 @@ class Hydro:
                 raise WallGoError(vMinRootResult.flag, vMinRootResult)
             return vMinRootResult.root
         except:
-            return self.dv
+            return 0
 
     def findMatching(self, vwTry) -> Tuple[float, float, float, float]:
         r"""
