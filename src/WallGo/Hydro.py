@@ -158,12 +158,11 @@ class Hydro:
             return self.vJ
         else:
             TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
-            print(f"{TpTm(self.vMin)=} {TpTm(self.vJ)=}")
 
             try:
                 vmax1 = root_scalar(
                     TmMax,
-                    bracket=[self.vMin, self.vJ-self.dv],
+                    bracket=[self.vMin+self.dv, self.vJ-self.dv],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -176,7 +175,7 @@ class Hydro:
             try:
                 vmax2 = root_scalar(
                     TpMax,
-                    bracket=[self.vMin, self.vJ-self.dv],
+                    bracket=[self.vMin+self.dv, self.vJ-self.dv],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
