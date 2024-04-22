@@ -423,12 +423,13 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
+    # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
     temperatureScale = 10.
-
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a float, in which case all the fields have the same scale, or a list (separated by commas, without (), [] or {}).
-    fieldScale = 10
+    # Can either be a single float, in which case all the fields have the same scale, or a string (separated by commas, without (), [] or {}).
+    fieldScale = '10, 10'
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
