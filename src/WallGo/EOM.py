@@ -198,7 +198,6 @@ class EOM:
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
 
-
         # Get wall params, and other results
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
         newWallParams = (
@@ -208,29 +207,30 @@ class EOM:
             wallVelocity, newWallParams, returnExtras=True,
         )
 
-        # do finite difference computation to estimate errors
+        # minimum possible error in the wall speed
+        wallVelocityMinError = self.errTol * optimizeResult.root
+
+        # estimating errors from truncation and comparison to finite differences
         if self.includeOffEq:
             finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
+            # assuming nonequilibrium errors proportional to deviation from LTE
+            wallVelocityDeltaLTE = abs(wallVelocity - wallVelocityLTE)
+            # the truncation error in the spectral method within Boltzmann
+            wallVelocityTruncationError = boltzmannResults.truncationError * wallVelocityDeltaLTE
+            # the deviation from the finite difference method within Boltzmann
+            delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
+            delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
+            errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+            wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
+            # estimating the error by the largest of these
+            wallVelocityError = max(
+                wallVelocityMinError,
+                wallVelocityTruncationError,
+                wallVelocityDerivativeError,
+            )
         else:
             finiteDifferenceBoltzmannResults = boltzmannResults
-
-        # estimating the error in the wall speed
-        wallVelocityMinError = self.errTol * optimizeResult.root
-        # assuming nonequilibrium errors proportional to deviation from LTE
-        wallVelocityDeltaLTE = abs(wallVelocity - wallVelocityLTE)
-        # the truncation error in the spectral method within Boltzmann
-        wallVelocityTruncationError = boltzmannResults.truncationError * wallVelocityDeltaLTE
-        # the deviation from the finite difference method within Boltzmann
-        delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
-        delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
-        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
-        # estimating the error by the largest of these
-        wallVelocityError = max(
-            wallVelocityMinError,
-            wallVelocityTruncationError,
-            wallVelocityDerivativeError,
-        )
+            wallVelocityError = wallVelocityMinError
 
         # setting results
         results.setWallVelocities(

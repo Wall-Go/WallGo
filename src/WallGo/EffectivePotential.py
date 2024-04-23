@@ -42,6 +42,7 @@ class EffectivePotential(ABC):
     effectivePotentialError: float = 1e-15
     
     ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
+    # HACK! What is this = 1.0 doing? What if I want to consider transitions at eV or PeV scales? Or to use different units?
     temperatureScale: float = 1.0
     
     ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
