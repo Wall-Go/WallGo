@@ -255,23 +255,20 @@ class BoltzmannSolver:
             deltaF, self.grid, basisTypes, basisNames, False
         )
 
-        # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-        deltaFMeanAbs = np.mean(
+        # sum(|deltaF|) as the norm
+        deltaFPoly.changeBasis(('Array', 'Chebyshev', 'Chebyshev', 'Chebyshev'))
+        deltaFMeanAbs = np.sum(
             np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
         )
 
-        # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(
+        truncationErrorChi = np.sum(
             np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1, 2),
         )
-        truncationErrorPz = np.mean(
+        truncationErrorPz = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1, 2),
         )
-        truncationErrorPp = np.mean(
+        truncationErrorPp = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1, 2),
         )
 
