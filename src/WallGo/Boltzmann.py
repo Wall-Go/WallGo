@@ -121,7 +121,7 @@ class BoltzmannSolver:
         truncationError = self.estimateTruncationError(deltaF)
         
         # getting criteria for validity of linearization
-        criterion1,criterion2 = self.checkLinearization(deltaF)
+        criterion1, criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 

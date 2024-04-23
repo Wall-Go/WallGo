@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.typing as npt
-from dataclasses import dataclass
+import warnings
 from typing import Tuple
 import copy  # for deepcopy
 
@@ -222,11 +222,18 @@ class EOM:
             delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
             errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
             wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
+
+            # if truncation waringin large, raise a warning
+            if (
+                wallVelocityTruncationError > wallVelocityDerivativeError
+                and wallVelocityTruncationError > self.errTol
+            ):
+                warnings.warn("Truncation error large, increase N or M", RuntimeWarning)
+
             # estimating the error by the largest of these
             wallVelocityError = max(
                 wallVelocityMinError,
                 wallVelocityTruncationError,
-                wallVelocityDerivativeError,
             )
         else:
             finiteDifferenceBoltzmannResults = boltzmannResults
