@@ -27,8 +27,6 @@ class StandardModel(GenericModel):
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
 
-        print(f"{self.effectivePotential.constantTerms(1)*90/np.pi**2=}")
-
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
         
@@ -253,14 +251,23 @@ def main():
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
-    """ Example mass loop that just does one value of mH. Note that the WallGoManager class is NOT thread safe internally, 
+    """ Example mass loop that does two value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mH = [ 35.0 ]
+    values_mH = [ 35.0,  45.0]
+    values_Tn = [44.6, 56.8]
 
-    for mH in values_mH:
+    for i in range(len(values_mH)):
 
-        inputParameters["mH"] = mH
+        print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
+
+        inputParameters["mH"] = values_mH[i]
+        model = StandardModel(inputParameters)
+
+        """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
+        If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+        """
+        manager.registerModel(model)
 
         modelParameters = model.calculateModelParameters(inputParameters)
 
@@ -268,7 +275,7 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
 
-        Tn = 44.6
+        Tn = values_Tn[i]
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
@@ -318,6 +325,7 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+
 
 
     # end parameter-space loop
