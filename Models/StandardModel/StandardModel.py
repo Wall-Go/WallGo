@@ -7,13 +7,10 @@ import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential
 from WallGo import Fields, WallGoResults
 
-### LN: This file is very WIP, test with SingletStandardModel_Z2.py instead
 
-## V = msq |phi|^2 + lambda (|phi|^2)^2
 class StandardModel(GenericModel):
 
     particles = []
@@ -22,7 +19,6 @@ class StandardModel(GenericModel):
 
     ## Specifying this is REQUIRED
     fieldCount = 1
-
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
@@ -85,7 +81,6 @@ class StandardModel(GenericModel):
         self.addParticle(gluon)
 
         ## Go from whatever input params --> action params
-    ## This function was just copied from SingletStandardModel_Z2
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         super().calculateModelParameters(inputParameters)
     
@@ -209,8 +204,6 @@ class EffectivePotentialSM(EffectivePotential):
         h3p = g1**2 / 4.
         h3pp = g2*g1 / 2.
 
-        #print(f"{T=} {mD2=} {mD1=} {h3pp =}")
-
         thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
         thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
 
@@ -305,7 +298,6 @@ def main():
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        print(f"{results=}")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -319,7 +311,6 @@ def main():
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        print(f"{results=}")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
