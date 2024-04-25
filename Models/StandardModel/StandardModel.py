@@ -120,28 +120,6 @@ class StandardModel(GenericModel):
         return modelParameters
 
 
-
-    # ## Define parameter dict here. @todo correct values, these are from top of my head.
-    # ## In practice the user would define a function that computes these from whatever their input is (mW, mt, mH etc).
-    # ## But this still needs to be initialized here as required by the interface. modelParameters = None is fine.
-    # modelParameters = {
-    #     "RGScale" : 91, # MS-bar scale. Units: GeV
-    #     "yt" : 1.0, # Top Yukawa
-    #     "g1" : 0.3, # U1 coupling
-    #     "g2" : 0.6,  # SU2 coupling
-    #     "g3" : 1.4,  # SU3 coupling
-    #     "lambda" : 0.13,
-    #     "msq" : -7000 # Units: GeV^2
-    # }
-    
-    ## @todo kinda would want to have these as individual member variables for easier access. 
-    ## But that alone is not good enough as we need to pass the params to other things like the collision module,
-    ## and for that we want some common routine that does not involve hardcoding parameter names. So I anticipate that 
-    ## some combination of these approaches would be good.
-
-# end StandardModel
-
-
 class EffectivePotentialSM(EffectivePotential):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
@@ -228,7 +206,7 @@ class EffectivePotentialSM(EffectivePotential):
 
         ## Let's also integrate out A0/B0
         h3 = g2**2 / 4.
-        h3p = g2**2 / 4.
+        h3p = g1**2 / 4.
         h3pp = g2*g1 / 2.
 
         #print(f"{T=} {mD2=} {mD1=} {h3pp =}")
@@ -266,7 +244,6 @@ def main():
         "MZ" : 91.1876,
         "Mt" : 173.0,
         "g3" : 1.2279920495357861,
-       #"mH" : 50.0,  this PT was so weak, let's revisit this later
         "mH" : 35.0
     }
 
@@ -298,8 +275,7 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
 
-#        Tn = 63.1 ## nucleation temperature for mH = 50 -- revisit later
-        Tn = 45.2
+        Tn = 44.6
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
