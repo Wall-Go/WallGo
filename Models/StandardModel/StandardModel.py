@@ -203,7 +203,7 @@ class EffectivePotentialSM(EffectivePotential):
         h3pp = g2*g1 / 2.
 
         thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
-        thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
+        thermalParameters["lambda"] += -1/(8.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
 
         # skipping corrections to gauge couplings because those are not needed at O(g^3)
 
