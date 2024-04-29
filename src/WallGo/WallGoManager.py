@@ -103,6 +103,7 @@ class WallGoManager:
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydro(self.thermodynamics)
+        self._initEOM()
 
 
         if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
@@ -258,6 +259,25 @@ class WallGoManager:
         self.boltzmannSolver = BoltzmannSolver(
             self.grid, basisM="Cardinal", basisN="Chebyshev"
         )
+        
+    def _initEOM(self):
+        numberOfFields = self.model.fieldCount
+
+        errTol = self.config.getfloat("EOM", "errTol")
+        maxIterations = self.config.getint("EOM", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+
+        self.eom = EOM(
+            self.boltzmannSolver,
+            self.thermodynamics,
+            self.hydro,
+            self.grid,
+            numberOfFields,
+            errTol=errTol,
+            maxIterations=maxIterations,
+            pressRelErrTol=pressRelErrTol,
+        )
+        self.eom.includeOffEq = True
 
     def loadCollisionFiles(self, fileName: str) -> None:
         self.boltzmannSolver.readCollisions(fileName)
@@ -274,26 +294,9 @@ class WallGoManager:
         """Returns wall speed and wall parameters (widths and offsets).
         """
 
-        numberOfFields = self.model.fieldCount
-
-        errTol = self.config.getfloat("EOM", "errTol")
-        maxIterations = self.config.getint("EOM", "maxIterations")
-        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-
-        eom = EOM(
-            self.boltzmannSolver,
-            self.thermodynamics,
-            self.hydro,
-            self.grid,
-            numberOfFields,
-            includeOffEq=bIncludeOffEq,
-            errTol=errTol,
-            maxIterations=maxIterations,
-            pressRelErrTol=pressRelErrTol,
-        )
-
+        self.eom.includeOffEq = bIncludeOffEq
         # returning results
-        return eom.findWallVelocityMinimizeAction()
+        return self.eom.findWallVelocityMinimizeAction()
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 

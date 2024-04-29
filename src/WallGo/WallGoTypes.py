@@ -62,6 +62,11 @@ class BoltzmannDeltas:
     Delta02: Polynomial
     Delta20: Polynomial
     Delta11: Polynomial
+    
+    def __mul__(self, other):
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __rmul__(self, other):
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
 
 
 @dataclass

@@ -473,37 +473,39 @@ def main():
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
+        
+        manager.eom.interpolatePressure(0.7, 0.99, 50, 1e-3)
 
-        bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        # bIncludeOffEq = False
+        # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+        # results = manager.solveWall(bIncludeOffEq)
+        # wallVelocity = results.wallVelocity
+        # widths = results.wallWidths
+        # offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        # print(f"{wallVelocity=}")
+        # print(f"{widths=}")
+        # print(f"{offsets=}")
 
-        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        # ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+        # bIncludeOffEq = True
+        # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+        # results = manager.solveWall(bIncludeOffEq)
+        # wallVelocity = results.wallVelocity
+        # widths = results.wallWidths
+        # offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        # print(f"{wallVelocity=}")
+        # print(f"{widths=}")
+        # print(f"{offsets=}")
 
-        # some estimate of deviation from O(dz^2) finite difference method
-        delta00 = results.Deltas.Delta00.coefficients[0]
-        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
-        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        print(f"finite difference error = {errorFD}")
+        # # some estimate of deviation from O(dz^2) finite difference method
+        # delta00 = results.Deltas.Delta00.coefficients[0]
+        # delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        # errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        # print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

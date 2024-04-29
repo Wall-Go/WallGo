@@ -6,6 +6,7 @@ import copy  # for deepcopy
 
 
 import scipy.optimize
+import matplotlib.pyplot as plt
 
 from .Boltzmann import (
     BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
@@ -88,6 +89,7 @@ class EOM:
         self.errTol = errTol
         self.maxIterations = maxIterations
         self.pressRelErrTol = pressRelErrTol
+        self.pressAbsErrTol = 0
 
 
     def findWallVelocityMinimizeAction(self):
@@ -235,6 +237,9 @@ class EOM:
         wallVelocity: float,
         wallParams: WallParams,
         returnExtras: bool = False,
+        atol: float = None,
+        rtol: float = None,
+        boltzmannResults: BoltzmannResults = None
     ):
         """
         Computes the total pressure on the wall by finding the tanh profile
@@ -267,6 +272,11 @@ class EOM:
         if wallParams is None:
             wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
         """
+        
+        if atol is None:
+            atol = self.pressAbsErrTol
+        if rtol is None:
+            rtol = self.pressRelErrTol
 
         print(f"\nTrying {wallVelocity=}")
 
@@ -289,13 +299,15 @@ class EOM:
             direction=("Array", "z", "pz", "pp"),
             endpoints=False,
         )
-        boltzmannResults = BoltzmannResults(
-            deltaF=deltaF,
-            Deltas=offEquilDeltas,
-            truncationError=0,
-            linearizationCriterion1=0,
-            linearizationCriterion2=0,
-        )
+        
+        if boltzmannResults is None:
+            boltzmannResults = BoltzmannResults(
+                deltaF=deltaF,
+                Deltas=offEquilDeltas,
+                truncationError=0,
+                linearizationCriterion1=0,
+                linearizationCriterion2=0,
+            )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
         hydroResults = HydroResults(
@@ -313,11 +325,18 @@ class EOM:
         # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
         # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 2*max(wallParams.widths)
+        L_xi = 2*max(wallParams.widths)/np.sqrt(1-velocityMid**2)
         self.grid.changePositionFalloffScale(L_xi)
+        
+        fields, dPhidz = self.wallProfile(
+            self.grid.xiValues, vevLowT, vevHighT, wallParams
+        )
+        Tprofile, velocityProfile = self.findPlasmaProfile(
+            c1, c2, velocityMid, fields, dPhidz, 0*boltzmannResults.Deltas, Tplus, Tminus
+        )
 
         pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
-            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
+            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, Tprofile, velocityProfile
         )
 
         i = 0
@@ -325,13 +344,13 @@ class EOM:
             pressureOld = pressure
             
             pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
-                wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
+                wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, Tprofile, velocityProfile
             )
 
             error = np.abs(pressure-pressureOld)
-            errTol = np.maximum(self.pressRelErrTol * np.abs(pressure), self.pressAbsErrTol)
+            errTol = np.maximum(rtol * np.abs(pressure), atol)
             
-            print(f"{pressure=} {error=} {errTol=}")
+            print(f"{pressure=} {error=} {errTol=} {L_xi=}")
             i += 1
 
             if error < errTol:
@@ -342,7 +361,14 @@ class EOM:
                     "sufficient accuracy with the given maximum number "
                     "for iterations."
                 )
+                plt.plot(self.grid.xiValues,boltzmannResults.Deltas.Delta00.coefficients[0])
+                plt.grid()
+                plt.show()
                 break
+            elif i >= self.maxIterations-2:
+                plt.plot(self.grid.xiValues,boltzmannResults.Deltas.Delta00.coefficients[0])
+                plt.grid()
+                plt.show()
 
         if returnExtras:
             return pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults
@@ -350,35 +376,36 @@ class EOM:
             return pressure
         
 
-    def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus):
+    def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, Tprofile=None, velocityProfile=None):
 
         ## here dPhidz are z-derivatives of the fields
         fields, dPhidz = self.wallProfile(
             self.grid.xiValues, vevLowT, vevHighT, wallParams
         )
 
-        Tprofile, velocityProfile = self.findPlasmaProfile(
-            c1, c2, velocityMid, fields, dPhidz, boltzmannResults.Deltas, Tplus, Tminus
-        )
+        if Tprofile is None and velocityProfile is None:
+            Tprofile, velocityProfile = self.findPlasmaProfile(
+                c1, c2, velocityMid, fields, dPhidz, boltzmannResults.Deltas, Tplus, Tminus
+            )
 
         """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
         Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile().
         TODO also BoltzmannSolver seems to drop the endpoints internally anyway!!
         """
-        ## Prepare a new background for Boltzmann
-        TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
-        fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
-        vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
-        boltzmannBackground = BoltzmannBackground(
-            velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints,
-        ) 
-        if self.includeOffEq:
-             ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
-            """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
-                and let BoltzmannSolver create/manage the actual BoltzmannBackground object
-                """
-            self.boltzmannSolver.setBackground(boltzmannBackground)
-            boltzmannResults = self.boltzmannSolver.getDeltas()
+        # ## Prepare a new background for Boltzmann
+        # TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
+        # fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
+        # vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
+        # boltzmannBackground = BoltzmannBackground(
+        #     velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints,
+        # ) 
+        # if self.includeOffEq:
+        #      ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
+        #     """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
+        #         and let BoltzmannSolver create/manage the actual BoltzmannBackground object
+        #         """
+        #     self.boltzmannSolver.setBackground(boltzmannBackground)
+        #     boltzmannResults = self.boltzmannSolver.getDeltas()
 
         ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
         ## NOT including the first offset which we keep at 0.
@@ -414,6 +441,22 @@ class EOM:
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdPhi = self.thermo.effectivePotential.derivField(fields, Tprofile)
         
+        ## Prepare a new background for Boltzmann
+        TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
+        fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
+        vWithEndpoints = np.concatenate(([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])) 
+        boltzmannBackground = BoltzmannBackground(
+            velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints,
+        ) 
+        if self.includeOffEq:
+             ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
+            """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
+                and let BoltzmannSolver create/manage the actual BoltzmannBackground object
+                """
+            self.boltzmannSolver.setBackground(boltzmannBackground)
+            boltzmannResults = self.boltzmannSolver.getDeltas()
+        Delta00 = boltzmannResults.Deltas.Delta00
+        
         # Out-of-equilibrium term of the EOM
         dVout = np.sum([particle.totalDOFs * particle.msqDerivative(fields) * Delta00.coefficients[i,:,None]
                         for i,particle in enumerate(self.particles)], axis=0) / 2
@@ -428,7 +471,7 @@ class EOM:
         minimized. This sets their pressure to 0. The first field doesn't have 
         an offset, so its pressure is nonzero.
         """
-        dVdz = (dVfull * dPhidz).GetField(0)
+        dVdz = np.sum(np.array(dVfull * dPhidz), axis=1)
 
         EOMPoly = Polynomial(dVdz, self.grid)
 
@@ -437,6 +480,38 @@ class EOM:
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
+    
+    def interpolatePressure(self, vmin, vmax, nbrPoints, rtol=1e-3, atol=0):
+        # wallVelocities = np.sqrt(1-1/np.linspace(1/np.sqrt(1-vmin**2), 1/np.sqrt(1-vmax**2), nbrPoints)**2)
+        wallVelocities = np.linspace(vmin, vmax, nbrPoints)
+        wallParams = WallParams(
+            widths=(5 / self.Tnucl) * np.ones(self.nbrFields),
+            offsets=np.zeros(self.nbrFields),
+        )
+        # wallParamsPrev = WallParams(
+        #     widths=(5 / self.Tnucl) * np.ones(self.nbrFields),
+        #     offsets=np.zeros(self.nbrFields),
+        # )
+        
+        boltzmannResults = None
+        
+        pressures = []
+        for i,wallVelocity in enumerate(wallVelocities):
+        #     if i > 0:
+        #         wallParamsTry = wallParams + (wallParams-wallParamsPrev)*(wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2])
+        #     else:
+        #         wallParamsTry = wallParams
+        #     wallParamsPrev = wallParams
+            pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(wallVelocity, wallParams, True, atol, rtol, boltzmannResults)
+            pressures.append(pressure)
+        #     plt.plot(self.grid.xiValues,boltzmannResults.Deltas.Delta00.coefficients[0])
+        #     plt.grid()
+        #     plt.show()
+        
+        # print('-------------------------')
+        plt.plot(wallVelocities, pressures)
+        plt.grid()
+        plt.show()
 
 
 
@@ -628,16 +703,7 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        # HACK! shoved in this Tc as a short term hack
-        Tc = self.thermo.findCriticalTemperature(
-            dT=0.1, rTol=1e-6, paranoid=True,
-        )
-        #(TMin, TMax) = self.thermo.getCoexistenceRange()
-        minRes = scipy.optimize.minimize_scalar(
-            lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            method='Bounded',
-            bounds=[0, Tc],
-        )
+        minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,2*max(Tplus,Tminus)])
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
@@ -647,22 +713,22 @@ class EOM:
             return T, vPlasma
 
 
-        TLowerBound = minRes.x
-        TStep = np.abs(Tplus - TLowerBound)
-        if TStep == 0:
-            TStep = np.abs(Tminus - TLowerBound)
+        T1 = minRes.x
+        TMultiplier = max(Tplus/T1, 1.2)
+        if Tplus < Tminus: # If this is a detonation solution, finds a solution below TLowerBound
+            TMultiplier = min(Tminus/T1, 0.8)
 
-        TUpperBound = TLowerBound + TStep
-        while self.temperatureProfileEqLHS(fields, dPhidz, TUpperBound, s1, s2) < 0:
-            TStep *= 2
-            TUpperBound = TLowerBound + TStep
+        T2 = T1*TMultiplier
+        while self.temperatureProfileEqLHS(fields, dPhidz, T2, s1, s2) < 0:
+            T1 *= TMultiplier
+            T2 *= TMultiplier
 
 
         res = scipy.optimize.brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            TLowerBound,
-            TUpperBound,
-            xtol=1e-9,  # all these hard-coded tolerances are aweful
+            T1,
+            T2,
+            xtol=1e-9,
             rtol=1e-9, ## really???
         )
         # TODO: Can the function have multiple zeros?
