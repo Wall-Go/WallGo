@@ -390,6 +390,9 @@ def main():
 
     WallGo.initialize()
 
+    ## Modify the config, we use N=5 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -426,7 +429,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    # collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
     manager.loadCollisionFiles(collisionDirectory)
 
 
@@ -478,6 +482,7 @@ def main():
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
+        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
