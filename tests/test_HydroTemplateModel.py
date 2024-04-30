@@ -98,7 +98,7 @@ def test_findMatching():
 def test_findvwLTE():
     res1,res2 = np.zeros(N),np.zeros(N)
     psiN = 1-0.5*rng.random(N)
-    alN = (1-psiN)/3+rng.random(N) # I put a 0.1 here - otherwise this test gets stuck. Need to fix that obviously
+    alN = (1-psiN)/3+rng.random(N) 
     cs2 = 1/4+(1/3-1/4)*rng.random(N)
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
@@ -126,4 +126,41 @@ def test_findHydroBoundaries():
             res1[i] = [0,0,0,0,0]
         if np.isnan(res2[i,0]):
             res2[i] = [0,0,0,0,0]
+    np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)
+
+def test_minVelocity():
+    res1,res2 = np.zeros(N),np.zeros(N)
+    psiN = 1-0.5*rng.random(N)
+    alN = (1-psiN)/3+rng.random(N) 
+    cs2 = 1/4+(1/3-1/4)*rng.random(N)
+    cb2 = cs2-(1/3-1/4)*rng.random(N)
+    for i in range(N):
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        hydro = WallGo.Hydro(model,1e-6,1e-6)
+        hydroTemplate = WallGo.HydroTemplateModel(model)
+        res1[i] = hydro.minVelocity()
+        res2[i] = hydroTemplate.minVelocity()
+    np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
+
+def test_fastestDeflag():
+    res1,res2 = np.zeros(N),np.zeros(N)
+    psiN = 1-0.5*rng.random(N)
+    alN = (1-psiN)/3+rng.random(N)   
+    cs2 = 1/4+(1/3-1/4)*rng.random(N)
+    cb2 = cs2-(1/3-1/4)*rng.random(N)
+    for i in range(N):
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        vw = hydroTemplate.vMin + rng.random()*(hydroTemplate.vJ-hydroTemplate.vMin)
+        res1[i] = vw
+        if i%2 == 0:
+            _,_,_,Tm = hydroTemplate.findMatching(vw)
+            model.freeEnergyLow=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tm)
+        else:
+            _,_,Tp,_ = hydroTemplate.findMatching(vw)
+            model.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tp)
+
+        hydro = WallGo.Hydro(model,1e-10,1e-10)
+        res2[i] = hydro.fastestDeflag()
+
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)

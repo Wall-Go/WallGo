@@ -106,7 +106,8 @@ hydro = WallGo.Hydro(model1)
 def test_JouguetVelocity():
     res = np.zeros(5)
     for i in range(5):
-        hydro.Tnucl = 0.5+i*0.1
+        model1.Tnucl = 0.5+i*0.1
+        hydro = WallGo.Hydro(model1)
         res[i] = hydro.findJouguetVelocity()
     np.testing.assert_allclose(res,[0.840948,0.776119,0.7240,0.6836,0.651791],rtol = 10**-3,atol = 0)
 
