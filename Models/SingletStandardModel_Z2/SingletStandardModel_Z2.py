@@ -431,7 +431,7 @@ def main():
     manager.registerModel(model)
 
     ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N17"
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
     manager.loadCollisionFiles(collisionDirectory)
 
 
