@@ -280,7 +280,7 @@ class BoltzmannSolver:
         )
     
     def checkLinearization(self, deltaF=None):
-        """
+        r"""
         Compute two criteria to verify the validity of the linearization of the
         Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
         To be valid, at least one of the two criteria must be small for each particle.
