@@ -42,7 +42,7 @@ class EffectivePotential(ABC):
     effectivePotentialError: float = 1e-15
     
     ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
-    temperatureScale: float = 1.0
+    temperatureScale: float
     
     ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     fieldScale: npt.ArrayLike
@@ -52,8 +52,10 @@ class EffectivePotential(ABC):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
         
-        # Intitializes fieldScale. Will be overriden by self.setScales.
+        # HACK! This intitializes fieldScale and temperatureScale to 1s.
+        # Should be overriden by self.setScales, but used in some tests.
         self.fieldScale = np.ones(fieldCount)
+        self.temperatureScale = 1.
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
 
@@ -83,7 +85,7 @@ class EffectivePotential(ABC):
         self.temperatureScale = temperatureScale
         
         if isinstance(fieldScale, float):
-            self.fieldScale = fieldScale*np.ones(self.fieldCount)
+            self.fieldScale = fieldScale * np.ones(self.fieldCount)
         else:
             self.fieldScale = np.asanyarray(fieldScale)
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."

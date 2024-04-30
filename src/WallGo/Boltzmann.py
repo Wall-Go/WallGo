@@ -121,7 +121,7 @@ class BoltzmannSolver:
         truncationError = self.estimateTruncationError(deltaF)
         
         # getting criteria for validity of linearization
-        criterion1,criterion2 = self.checkLinearization(deltaF)
+        criterion1, criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 
@@ -255,23 +255,20 @@ class BoltzmannSolver:
             deltaF, self.grid, basisTypes, basisNames, False
         )
 
-        # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-        deltaFMeanAbs = np.mean(
+        # sum(|deltaF|) as the norm
+        deltaFPoly.changeBasis(('Array', 'Chebyshev', 'Chebyshev', 'Chebyshev'))
+        deltaFMeanAbs = np.sum(
             np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
         )
 
-        # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(
+        truncationErrorChi = np.sum(
             np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1, 2),
         )
-        truncationErrorPz = np.mean(
+        truncationErrorPz = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1, 2),
         )
-        truncationErrorPp = np.mean(
+        truncationErrorPp = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1, 2),
         )
 
@@ -283,7 +280,7 @@ class BoltzmannSolver:
         )
     
     def checkLinearization(self, deltaF=None):
-        """
+        r"""
         Compute two criteria to verify the validity of the linearization of the
         Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
         To be valid, at least one of the two criteria must be small for each particle.
