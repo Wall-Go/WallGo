@@ -399,8 +399,18 @@ def main():
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
+    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
+    Lxi = 0.05
+
     ## Create WallGo control object
-    manager = WallGoManager()
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 10.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = [10.,10.]
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
