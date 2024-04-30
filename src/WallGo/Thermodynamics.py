@@ -458,7 +458,7 @@ class ThermodynamicsExtrapolate():
         self.aMaxLowT = 3*self.thermodynamics.wLowT(self.TMaxLowT)/(self.muMaxLowT*pow(self.TMaxLowT,self.muMaxLowT))
         self.epsilonMaxLowT = 1/3.*self.aMaxLowT*pow(self.TMaxLowT,self.muMaxLowT) - thermodynamics.pLowT(self.TMaxLowT)
     
-    def pHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def pHighT(self, temperature: float) -> float:
         r"""
         Pressure in the high-temperature phase, obtained from thermodynamics.pHighT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -473,13 +473,6 @@ class ThermodynamicsExtrapolate():
         pHighT : array-like (float)
             Pressure in the high-temperature phase.
         """
-        # condlist = [temperature <= self.TMinHighT, temperature >= self.TMaxHighT]
-        # choicelist = [1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT,  1/3.*self.aMaxHighT*pow(temperature,self.muMaxHighT) - self.epsilonMaxHighT]
-        # return np.select(condlist,choicelist,self.thermodynamics.pHighT(temperature))
-        # newpressure =  1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT
-        # newpressure = np.where(temperature >= self.TMaxHighT, 1/3.*self.aMaxHighT*pow(temperature,self.muMaxHighT) - self.epsilonMaxHighT, newpressure)
-        # newpressure = np.where((temperature < self.TMaxHighT) & (temperature > self.TMinHighT), self.thermodynamics.pHighT(temperature), newpressure)
-        # return newpressure
         if temperature < self.TMinHighT:
             return 1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT
         elif temperature > self.TMaxHighT:
@@ -487,7 +480,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.pHighT(temperature)
         
-    def dpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def dpHighT(self, temperature: float) -> float:
         r"""
         Temperature-derivative of the pressure in the high-temperature phase, obtained from thermodynamics.dpHighT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -509,7 +502,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.dpHighT(temperature)
         
-    def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def ddpHighT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the high-temperature phase, obtained from thermodynamics.ddpHighT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -531,7 +524,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.ddpHighT(temperature)
         
-    def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def eHighT(self, temperature: float) -> float:
         r"""
         Energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
         valid outside of the allowed temeperature range.
@@ -548,7 +541,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature*self.dpHighT(temperature) - self.pHighT(temperature)
     
-    def deHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def deHighT(self, temperature: float) -> float:
         """
         Temperature derivative of the energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
@@ -565,7 +558,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature * self.ddpHighT(temperature)
 
-    def wHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def wHighT(self, temperature: float) -> float:
         r"""
         Enthalpy density in the high-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`,
         outside of the allowed temperature range.
@@ -582,7 +575,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature*self.dpHighT(temperature)
     
-    def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def csqHighT(self, temperature: float) -> float:
         r"""
         Sound speed squared in the high-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range
         and by its value at TMinHighT and TMaxHighT outside of the allowed temperature range.
@@ -604,7 +597,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.csqHighT(temperature)
         
-    def pLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def pLowT(self, temperature: float) -> float:
         r"""
         Pressure in the low-temperature phase, obtained from thermodynamics.pLowT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -626,7 +619,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.pLowT(temperature)
         
-    def dpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def dpLowT(self, temperature: float) -> float:
         r"""
         Temperature-derivative of the pressure in the low-temperature phase, obtained from thermodynamics.dpLowT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -648,7 +641,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.dpLowT(temperature)
         
-    def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def ddpLowT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the low-temperature phase, obtained from thermodynamics.ddpLowT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
@@ -670,7 +663,7 @@ class ThermodynamicsExtrapolate():
         else:
             return self.thermodynamics.ddpLowT(temperature)
         
-    def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def eLowT(self, temperature: float) -> float:
         r"""
         Energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
         valid outside of the allowed temeperature range.
@@ -687,7 +680,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature*self.dpLowT(temperature) - self.pLowT(temperature)
     
-    def deLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def deLowT(self, temperature: float) -> float:
         """
         Temperature derivative of the energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
@@ -704,7 +697,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature * self.ddpLowT(temperature)
 
-    def wLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def wLowT(self, temperature: float) -> float:
         r"""
         Enthalpy density in the low-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`,
         outside of the allowed temperature range.
@@ -721,7 +714,7 @@ class ThermodynamicsExtrapolate():
         """
         return temperature*self.dpLowT(temperature)
     
-    def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def csqLowT(self, temperature: float) -> float:
         r"""
         Sound speed squared in the low-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range
         and by its value at TMinLowT and TMaxLowT outside of the allowed temperature range.
