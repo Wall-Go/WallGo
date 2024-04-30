@@ -473,6 +473,13 @@ class ThermodynamicsExtrapolate():
         pHighT : array-like (float)
             Pressure in the high-temperature phase.
         """
+        # condlist = [temperature <= self.TMinHighT, temperature >= self.TMaxHighT]
+        # choicelist = [1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT,  1/3.*self.aMaxHighT*pow(temperature,self.muMaxHighT) - self.epsilonMaxHighT]
+        # return np.select(condlist,choicelist,self.thermodynamics.pHighT(temperature))
+        # newpressure =  1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT
+        # newpressure = np.where(temperature >= self.TMaxHighT, 1/3.*self.aMaxHighT*pow(temperature,self.muMaxHighT) - self.epsilonMaxHighT, newpressure)
+        # newpressure = np.where((temperature < self.TMaxHighT) & (temperature > self.TMinHighT), self.thermodynamics.pHighT(temperature), newpressure)
+        # return newpressure
         if temperature < self.TMinHighT:
             return 1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT
         elif temperature > self.TMaxHighT:
