@@ -127,9 +127,6 @@ scriptLocation = pathlib.Path(__file__).parent.resolve()
 collisionManager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
 collisionManager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.txt"))
 
-## Calculate Matrix Elements
-os.system("wolframscript -file "+str(scriptLocation / "MatrixElements/matrixElements.qcd.m"))
-
 ## Configure integration. Can skip this step if you're happy with the defaults
 integrationOptions = collision.module.IntegrationOptions()
 integrationOptions.bVerbose = True
