@@ -76,7 +76,7 @@ class EffectivePotential(ABC):
         """
         self.effectivePotentialError = potentialError
         
-    def setScales(self, temperatureScale, fieldScale):
+    def setScales(self, temperatureScale: float, fieldScale: npt.ArrayLike):
         """
         Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
         """

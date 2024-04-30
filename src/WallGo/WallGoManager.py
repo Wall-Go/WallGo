@@ -1,5 +1,5 @@
 import numpy as np
-
+import numpy.typing as npt
 # WallGo imports
 from .Boltzmann import BoltzmannSolver
 from .EOM import EOM
@@ -23,7 +23,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: str):
+    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -55,13 +55,9 @@ class WallGoManager:
         self.model = model
         
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
-        try:
-            fieldScale = float(self.fieldScaleInput)
-        except ValueError:
-            fieldScale = [float(x) for x in self.fieldScaleInput.split(',')]
         
         self.model.effectivePotential.setPotentialError(potentialError)
-        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), fieldScale)
+        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), self.fieldScaleInput)
 
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)

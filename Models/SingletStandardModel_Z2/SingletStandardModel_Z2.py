@@ -403,8 +403,8 @@ def main():
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
     temperatureScale = 10.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or a string (separated by commas, without (), [] or {}).
-    fieldScale = '10., 10.'
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = [10.,10.]
     manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
