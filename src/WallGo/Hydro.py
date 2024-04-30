@@ -62,8 +62,8 @@ class Hydro:
         except:
             self.vJ = self.template.vJ
 
-        self.dv = 1e-3 #JvdV: this is not a good name - it is supposed to be the smallest velocity that we allow
-        self.vMin = max(self.dv, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
+        self.vBracketLow = 1e-3 #JvdV: this is not a good name - it is supposed to be the smallest velocity that we allow
+        self.vMin = max(self.vBracketLow, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
 
 
     def findJouguetVelocity(self) -> float:
@@ -154,7 +154,7 @@ class Hydro:
             _, _, Tp, Tm = self.findMatching(vw)
             return [Tp,Tm]
         
-        if TpTm(self.vJ-self.dv)[1] < self.TMaxLowT and TpTm(self.vJ-self.dv)[0]< self.TMaxHighT:
+        if TpTm(self.vJ-self.vBracketLow)[1] < self.TMaxLowT and TpTm(self.vJ-self.vBracketLow)[0]< self.TMaxHighT:
             return self.vJ
         else:
             TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
@@ -162,7 +162,7 @@ class Hydro:
             try:
                 vmax1 = root_scalar(
                     TmMax,
-                    bracket=[self.vMin+self.dv, self.vJ-self.dv],
+                    bracket=[self.vMin+self.vBracketLow, self.vJ-self.vBracketLow],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -175,7 +175,7 @@ class Hydro:
             try:
                 vmax2 = root_scalar(
                     TpMax,
-                    bracket=[self.vMin+self.dv, self.vJ-self.dv],
+                    bracket=[self.vMin+self.vBracketLow, self.vJ-self.vBracketLow],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -475,7 +475,7 @@ class Hydro:
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
-                bracket=(self.dv, self.vJ),
+                bracket=(self.vBracketLow, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
@@ -513,7 +513,7 @@ class Hydro:
             # Loop over v+ until the temperature in front of the shock matches
             # the nucleation temperature. 
 
-            vpmin = self.dv
+            vpmin = self.vBracketLow
             vpmax = min(vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry)
 
             def func(vpTry):
