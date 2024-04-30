@@ -23,7 +23,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, Lxi: float):
+    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: str):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -46,20 +46,22 @@ class WallGoManager:
         )
 
         self._initBoltzmann()
+        self.temperatureScaleInput = temperatureScaleInput
+        self.fieldScaleInput = fieldScaleInput
 
-    def registerModel(self, model: GenericModel, temperatureScale: float, fieldScaleInput: str) -> None:
+    def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo."""
         assert isinstance(model, GenericModel)
         self.model = model
         
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
         try:
-            fieldScale = float(fieldScaleInput)
-        except:
-            fieldScale = [float(x) for x in fieldScaleInput.split(',')]
+            fieldScale = float(self.fieldScaleInput)
+        except ValueError:
+            fieldScale = [float(x) for x in self.fieldScaleInput.split(',')]
         
         self.model.effectivePotential.setPotentialError(potentialError)
-        self.model.effectivePotential.setScales(float(temperatureScale), fieldScale)
+        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), fieldScale)
 
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)

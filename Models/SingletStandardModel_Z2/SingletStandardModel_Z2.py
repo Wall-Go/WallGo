@@ -398,7 +398,14 @@ def main():
     Lxi = 0.05
 
     ## Create WallGo control object
-    manager = WallGoManager(Lxi)
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 10.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or a string (separated by commas, without (), [] or {}).
+    fieldScale = '10., 10.'
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -423,18 +430,10 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
-    # The following 2 parameters are used to estimate the optimal value of dT used 
-    # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-    temperatureScale = 10.
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or a string (separated by commas, without (), [] or {}).
-    fieldScale = '10., 10.'
-
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
-    manager.registerModel(model, temperatureScale, fieldScale)
+    manager.registerModel(model)
 
     ## ---- Directory name for collisions integrals. Currently we just load these
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
