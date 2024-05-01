@@ -277,7 +277,7 @@ class WallGoManager:
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,
         )
-        self.eom.includeOffEq = True
+        self.eom.includeOffEq = False
 
     def loadCollisionFiles(self, fileName: str) -> None:
         self.boltzmannSolver.readCollisions(fileName)

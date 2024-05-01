@@ -211,7 +211,7 @@ class BoltzmannSolver:
             of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501
             doi:10.1103/PhysRevD.106.023501
         """
-        print("Starting solveBoltzmannEquations")
+        # print("Starting solveBoltzmannEquations")
 
         # contructing the various terms in the Boltzmann equation
         operator, source, liouville, collision = self.buildLinearEquations()
