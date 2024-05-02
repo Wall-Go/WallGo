@@ -34,6 +34,7 @@ class StandardModel(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        #This line is really important when looping over several parameter points!
         self.outOfEquilibriumParticles = []
 
         ## === Top quark ===
