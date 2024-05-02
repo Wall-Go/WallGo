@@ -151,15 +151,9 @@ class BoltzmannSolver:
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
 
-        # temperature here is the T-scale of grid
-        dpzdrz = (
-            2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[None, None, :, None]
-        )
-        dppdrp = (
-            self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[None, None, None, :]
-        )
+        _, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
+        dpzdrz = 1/drzdpz[None, None, :, None]
+        dppdrp = 1/drpdpp[None, None, None, :]
 
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
@@ -325,15 +319,9 @@ class BoltzmannSolver:
         fEq = BoltzmannSolver.__feq(E / T, statistics)
         fEqPoly = Polynomial(fEq, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z', 'z', 'pz', 'pp'), False)
 
-        # temperature here is the T-scale of grid
-        dpzdrz = (
-            2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[None, None, :, None]
-        )
-        dppdrp = (
-            self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[None, None, None, :]
-        )
+        _, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
+        dpzdrz = 1/drzdpz[None, None, :, None]
+        dppdrp = 1/drpdpp[None, None, None, :]
 
         # base integrand, for '00'
         integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
