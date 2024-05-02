@@ -34,6 +34,8 @@ class StandardModel(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.outOfEquilibriumParticles = []
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
@@ -247,16 +249,16 @@ def main():
         "mH" : 35.0
     }
 
-    model = StandardModel(inputParameters)
+#    model = StandardModel(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
-    manager.registerModel(model)
+#    manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
-    manager.loadCollisionFiles(collisionDirectory)
+#    manager.loadCollisionFiles(collisionDirectory)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
@@ -270,10 +272,7 @@ def main():
     values_Tn = [56.8,44.6]
 
     for i in range(len(values_mH)):
-
-        del manager
         manager = WallGoManager(Lxi, temperatureScale, fieldScale)
-
 
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 

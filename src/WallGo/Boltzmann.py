@@ -61,6 +61,8 @@ class BoltzmannSolver:
             An object of the BoltzmannSolver class.
         """
 
+        print("Hello, I am the Boltzmann solver. ")
+
         self.grid = grid
         BoltzmannSolver.__checkDerivatives(derivatives)
         self.derivatives = derivatives
@@ -92,6 +94,7 @@ class BoltzmannSolver:
         # TODO: update the collision array as well when one updates the particle list
         for p in offEqParticles:
             assert isinstance(p, Particle)
+            print(f"{p.msqThermal=} {p.name = }")
 
         self.offEqParticles = offEqParticles    
 
