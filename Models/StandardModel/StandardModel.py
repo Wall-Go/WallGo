@@ -50,6 +50,7 @@ class StandardModel(GenericModel):
         )
         self.addParticle(topQuark)
 
+
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
@@ -262,10 +263,17 @@ def main():
     """ Example mass loop that does two value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mH = [ 35.0,  45.0]
-    values_Tn = [44.6, 56.8]
+#    values_mH = [ 45.0]
+#    values_Tn = [56.8]
+    
+    values_mH = [45.0, 35.0]
+    values_Tn = [56.8,44.6]
 
     for i in range(len(values_mH)):
+
+        del manager
+        manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+
 
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
@@ -275,9 +283,14 @@ def main():
         """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
-        manager.registerModel(model)
 
         modelParameters = model.calculateModelParameters(inputParameters)
+
+
+
+        manager.registerModel(model)
+
+        manager.loadCollisionFiles(collisionDirectory)
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
