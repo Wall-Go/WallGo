@@ -218,8 +218,8 @@ class Grid:
         drpValues : array_like
             Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
         """
-        xi, pz, pp = self.getCoordinates(endpoints)
-        return self.compactificationDerivatives(xi, pz, pp)
+        chi, rp, rz = self.getCompactCoordinates(endpoints)
+        return self.compactificationDerivatives(chi, rp, rz)
 
     def compactify(self, z, pz, pp):
         r"""
@@ -241,12 +241,12 @@ class Grid:
         pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
         return z, pz, pp
 
-    def compactificationDerivatives(self, z, pz, pp):
+    def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
         r"""
-        Derivative of transforms coordinates to [-1, 1] interval
+        Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
         """
         #shouldn't you call this xi instead of z?
-        dz_compact = self.L_xi**2 / (self.L_xi**2 + z**2)**1.5
-        dpz_compact = 1 / 2 / self.momentumFalloffT / np.cosh(pz / 2 / self.momentumFalloffT)**2
-        dpp_compact = 2 / self.momentumFalloffT * np.exp(-pp / self.momentumFalloffT)
-        return dz_compact, dpz_compact, dpp_compact
+        dzdzCompact = self.L_xi / (1 - z_compact**2)**1.5
+        dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
+        dppdppCompact = self.momentumFalloffT / (1-pp_compact)
+        return dzdzCompact, dpzdpzCompact, dppdppCompact
