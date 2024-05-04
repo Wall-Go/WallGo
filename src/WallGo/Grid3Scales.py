@@ -1,5 +1,5 @@
 import numpy as np
-from WallGo import Grid
+from .Grid import Grid
 
 class Grid3Scales(Grid):
     r"""
