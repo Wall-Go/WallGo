@@ -123,6 +123,7 @@ class Grid:
         """Compute physical coordinates and store them internally.
         """
         (self.xiValues, self.pzValues, self.ppValues) = self.decompactify(self.chiValues, self.rzValues, self.rpValues)
+        (self.dxidchi, self.dpzdrz, self.dppdrp) = self.compactificationDerivatives(self.chiValues, self.rzValues, self.rpValues)
     
 
     def changeMomentumFalloffScale(self, newScale: float) -> None:
@@ -218,8 +219,13 @@ class Grid:
         drpValues : array_like
             Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
         """
-        chi, rp, rz = self.getCompactCoordinates(endpoints)
-        return self.compactificationDerivatives(chi, rp, rz)
+        if endpoints:
+            dxidchi = np.array([np.inf] + list(self.dxidchi) + [np.inf])
+            dpzdrz = np.array([np.inf] + list(self.dpzdrz) + [np.inf])
+            dppdrp = np.array(list(self.dppdrp) + [np.inf])
+            return dxidchi, dpzdrz, dppdrp
+        else:
+            return self.dxidchi, self.dpzdrz, self.dppdrp
 
     def compactify(self, z, pz, pp):
         r"""
