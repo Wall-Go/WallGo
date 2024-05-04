@@ -2,13 +2,68 @@ import numpy as np
 from WallGo import Grid
 
 class Grid3Scales(Grid):
-    def __init__(self, M: int, N: int, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, momentumFalloffT: float, ratioPointsWall: float=0.5, smoothness: float=0.1, spacing: str="Spectral"):
-        assert wallThickness > 0, "Grid3Scales error: wallThickness must be positive."
-        assert tailLengthInside > wallThickness, "Grid3Scales error: tailLengthInside must be greater than wallThickness."
-        assert tailLengthOutside > wallThickness, "Grid3Scales error: tailLengthOutside must be greater than wallThickness."
-        assert 0 < ratioPointsWall < 1, "Grid3Scales error: ratioPointsWall must be between 0 and 1."
+    r"""
+    Redefinition of the Grid class to take into account the different scales present in the z direction. 
+    More specifically, the z mapping function should scale as :math:`\lambda_- \log(1+\chi)` 
+    when :math:`\chi\to -1` and :math:`-\lambda_+ \log(1-\chi)` when :math:`\chi\to 1`,
+    where :math:`\lambda_-` and :math:`\lambda_+` are the lengths of the solution's 
+    tails inside and outside the bubble, respectively. Furthermore, the mapping 
+    should be approximately linear in the region :math:`-r<\chi<r`, where :math:`r`
+    is roughly the ratio of points that are used to resolve the wall's interior.
+    The slope in that region should be :math:`L/R`, where :math:`L` is the wall thickness.
+    
+    It is easier to find the derivative of a function that has these properties, 
+    and then integrate it. We choose here :math:`z'(\chi)=\frac{f(\chi)}{1-\chi^2}`,
+    where :math:`f(\chi)` is a smoothed step function equal to :math:`\lambda_-`
+    when :math:`\chi<-r`, :math:`L/r` when :math:`-r<\chi<r` and :math:`\lambda_+`
+    when :math:`\chi>r`. We choose :math:`f(\chi)` to be a sum of functions like
+    :math:`\frac{\chi-\chi_0}{\sqrt{a^2+(\chi-\chi_0)^2}}`, which allows us to find
+    analytically the mapping function with :math:`z(\chi)=\int d\chi\ z'(\chi)`.
+    The parameter :math:`a` can be adjusted to control the smoothness of the mapping
+    function.
+    """
+    
+    def __init__(self, M: int, N: int, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, momentumFalloffT: float, ratioPointsWall: float=0.5, smoothing: float=0.1, spacing: str="Spectral"):
+        r"""
         
-        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, ratioPointsWall, smoothness)
+
+        Parameters
+        ----------
+        M : int
+            Number of basis functions in the :math:`\xi` (and :math:`\chi`)
+            direction.
+        N : int
+            Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
+            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
+        tailLengthInside : float
+            Decay length of the solution's tail inside the wall. Should be larger
+            than wallThickness*(1+2*smoothing)/ratioPointsWall
+        tailLengthOutside : float
+            Decay length of the solution's tail outside the wall. Should be larger
+            than wallThickness*(1+2*smoothing)/ratioPointsWall
+        wallThickness : float
+            Thickness of the wall.
+        momentumFalloffT : float
+            Temperature scale determining transform in momentum directions. Should be close to the plasma temperature.
+        ratioPointsWall : float, optional
+            Ratio of grid points inside the wall. The remaining points are 
+            distributed equally between the 2 tails. The default is 0.5.
+        smoothing : float, optional
+            Controls the smoothness of the mapping function. Its first derivative 
+            becomes discontinuous at :math:`\chi=\pm r` when smoothness is 0. 
+            Should be smaller than 1, otherwise the function would not be linear 
+            at :math:`\chi=0` anymore. The default is 0.1.
+        spacing : {'Spectral', 'Uniform'}
+            Choose 'Spectral' for the Gauss-Lobatto collocation points, as
+            required for WallGo's spectral representation, or 'Uniform' for
+            a uniform grid. Default is 'Spectral'.
+
+        Returns
+        -------
+        None.
+
+        """
+        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, ratioPointsWall, smoothing)
         
         super().__init__(M, N, wallThickness, momentumFalloffT, spacing)
         
@@ -37,6 +92,9 @@ class Grid3Scales(Grid):
         # self.aOut = np.arctanh((ratioPointsWall*tailLengthOutside/wallThickness-1-2*smoothness)/(ratioPointsWall*tailLengthOutside/wallThickness-1))
         
     def decompactify(self, z_compact, pz_compact, pp_compact):
+        r"""
+        Transforms coordinates from [-1, 1] interval (inverse of compactify).
+        """
         L = self.wallThickness
         r = self.ratioPointsWall
         tailIn = self.tailLengthInside
