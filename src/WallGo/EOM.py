@@ -32,6 +32,7 @@ class EOM:
         hydro: Hydro,
         grid: Grid,
         nbrFields: int,
+        meanFreePath: float,
         includeOffEq: bool=False,
         errTol=1e-3,
         maxIterations=10,
@@ -50,6 +51,8 @@ class EOM:
             Object of the class Grid.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
+        meanFreePath : float
+            Estimate of the mean free path of the particles in the plasma.
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
@@ -75,6 +78,7 @@ class EOM:
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
+        self.meanFreePath = meanFreePath
         self.includeOffEq = includeOffEq
 
         self.thermo = thermodynamics
@@ -341,8 +345,11 @@ class EOM:
         # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
         # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 2*max(wallParams.widths)
-        self.grid.changePositionFalloffScale(L_xi)
+        wallThicknessGrid = max(wallParams.widths)
+        gammaWall = 1/np.sqrt(1-velocityMid**2)
+        tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        self.grid.changePositionFalloffScale(tailInside, tailOutside ,wallThicknessGrid)
 
         pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus

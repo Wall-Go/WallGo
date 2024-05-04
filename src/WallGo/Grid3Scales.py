@@ -67,17 +67,17 @@ class Grid3Scales(Grid):
         
         super().__init__(M, N, wallThickness, momentumFalloffT, spacing)
         
-    def changePositionFalloffScale(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, ratioPointsWall: float=0.5, smoothing: float=0.1) -> None:
-        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, ratioPointsWall, smoothing)
+    def changePositionFalloffScale(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float) -> None:
+        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, self.ratioPointsWall, self.smoothing)
         
         self._cacheCoordinates()
         
     def _updateParameters(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, ratioPointsWall: float=0.5, smoothing: float=0.1) -> None:
         assert wallThickness > 0, "Grid3Scales error: wallThickness must be positive."
-        assert smoothing > 0, "Grid3Scales error: smoothness must be positive."
+        assert smoothing >= 0, "Grid3Scales error: smoothness must be positive."
         assert tailLengthInside > wallThickness*(1+2*smoothing)/ratioPointsWall, "Grid3Scales error: tailLengthInside must be greater than wallThickness*(1+2*smoothness)/ratioPointsWall."
         assert tailLengthOutside > wallThickness*(1+2*smoothing)/ratioPointsWall, "Grid3Scales error: tailLengthOutside must be greater than wallThickness*(1+2*smoothness)/ratioPointsWall."
-        assert 0 < ratioPointsWall < 1, "Grid3Scales error: ratioPointsWall must be between 0 and 1."
+        assert 0 <= ratioPointsWall <= 1, "Grid3Scales error: ratioPointsWall must be between 0 and 1."
         
         self.tailLengthInside = tailLengthInside
         self.tailLengthOutside = tailLengthOutside
@@ -86,8 +86,8 @@ class Grid3Scales(Grid):
         self.smoothing = smoothing
         
         # Defining parameters used in the mapping functions
-        self.aIn = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthInside-wallThickness*(1+smoothing)))/(ratioPointsWall*tailLengthInside-wallThickness*(1+2*smoothing))
-        self.aOut = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthOutside-wallThickness*(1+smoothing)))/(ratioPointsWall*tailLengthOutside-wallThickness*(1+2*smoothing))
+        self.aIn = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthInside-wallThickness*(1+smoothing)))/abs(ratioPointsWall*tailLengthInside-wallThickness*(1+2*smoothing)) + 1e-50
+        self.aOut = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthOutside-wallThickness*(1+smoothing)))/abs(ratioPointsWall*tailLengthOutside-wallThickness*(1+2*smoothing)) + 1e-50
         # self.aIn = np.arctanh((ratioPointsWall*tailLengthInside/wallThickness-1-2*smoothness)/(ratioPointsWall*tailLengthInside/wallThickness-1))
         # self.aOut = np.arctanh((ratioPointsWall*tailLengthOutside/wallThickness-1-2*smoothness)/(ratioPointsWall*tailLengthOutside/wallThickness-1))
         

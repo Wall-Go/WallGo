@@ -5,6 +5,7 @@ from .Boltzmann import BoltzmannSolver
 from .EOM import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
+from .Grid3Scales import Grid3Scales
 from .Hydro import Hydro  # TODO why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
@@ -23,7 +24,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
+    def __init__(self, wallThicknessIni: float, meanFreePath: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -40,9 +41,8 @@ class WallGoManager:
 
         # Grid
         self._initGrid(
-            self.config.getint("PolynomialGrid", "spatialGridSize"),
-            self.config.getint("PolynomialGrid", "momentumGridSize"),
-            Lxi,
+            wallThicknessIni,
+            meanFreePath,
         )
 
         self._initBoltzmann()
@@ -222,7 +222,7 @@ class WallGoManager:
         
         self.hydro = Hydro(thermodynamics)
 
-    def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
+    def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> Grid:
         r"""
         Parameters
         ----------
@@ -244,14 +244,20 @@ class WallGoManager:
         # nucleation temperature is obtained.
         initialMomentumFalloffScale = 50.0
 
-        N, M = int(N), int(M)
+        N = self.config.getint("PolynomialGrid", "momentumGridSize")
+        M = self.config.getint("PolynomialGrid", "spatialGridSize")
+        ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
+        smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
+        self.meanFreePath = meanFreePath
+        
+        tailLength = max(meanFreePath, wallThicknessIni*(1+3*smoothing)/ratioPointsWall)
+        
         if N % 2 == 0:
             raise ValueError(
                 "You have chosen an even number N of momentum-grid points. "
                 "WallGo only works with odd N, please change it to an odd number."
             )
-
-        self.grid = Grid(M, N, L_xi, initialMomentumFalloffScale)
+        self.grid = Grid3Scales(M, N, tailLength, tailLength, wallThicknessIni, initialMomentumFalloffScale, ratioPointsWall, smoothing)
 
     def _initBoltzmann(self):
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
@@ -286,6 +292,7 @@ class WallGoManager:
             self.hydro,
             self.grid,
             numberOfFields,
+            self.meanFreePath,
             includeOffEq=bIncludeOffEq,
             errTol=errTol,
             maxIterations=maxIterations,
