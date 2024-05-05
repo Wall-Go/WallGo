@@ -95,7 +95,6 @@ class HydroTemplateModel:
             alN = self.alN
         return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
         
-    
     def minVelocity(self):
         r"""
         Finds the minimum velocity that is possible for a given nucleation temeperature. 

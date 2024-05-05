@@ -121,7 +121,7 @@ class BoltzmannSolver:
         truncationError = self.estimateTruncationError(deltaF)
         
         # getting criteria for validity of linearization
-        criterion1,criterion2 = self.checkLinearization(deltaF)
+        criterion1, criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 
@@ -151,15 +151,9 @@ class BoltzmannSolver:
         # constructing energy with (z, pz, pp) axes
         E = np.sqrt(msq + pz**2 + pp**2)
 
-        # temperature here is the T-scale of grid
-        dpzdrz = (
-            2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[None, None, :, None]
-        )
-        dppdrp = (
-            self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[None, None, None, :]
-        )
+        _, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
+        dpzdrz = dpzdrz[None, None, :, None]
+        dppdrp = dppdrp[None, None, None, :]
 
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
@@ -255,23 +249,20 @@ class BoltzmannSolver:
             deltaF, self.grid, basisTypes, basisNames, False
         )
 
-        # mean(|deltaF|) in the Cardinal basis as the norm
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-        deltaFMeanAbs = np.mean(
+        # sum(|deltaF|) as the norm
+        deltaFPoly.changeBasis(('Array', 'Chebyshev', 'Chebyshev', 'Chebyshev'))
+        deltaFMeanAbs = np.sum(
             np.abs(deltaFPoly.coefficients), axis=(1, 2, 3),
         )
 
-        # last coefficient in Chebyshev basis estimates error
-        deltaFPoly.changeBasis(('Array', 'Cardinal', 'Cardinal', 'Cardinal'))
-
         # estimating truncation errors in each direction
-        truncationErrorChi = np.mean(
+        truncationErrorChi = np.sum(
             np.abs(deltaFPoly.coefficients[:, -1, :, :]), axis=(1, 2),
         )
-        truncationErrorPz = np.mean(
+        truncationErrorPz = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, -1, :]), axis=(1, 2),
         )
-        truncationErrorPp = np.mean(
+        truncationErrorPp = np.sum(
             np.abs(deltaFPoly.coefficients[:, :, :, -1]), axis=(1, 2),
         )
 
@@ -283,7 +274,7 @@ class BoltzmannSolver:
         )
     
     def checkLinearization(self, deltaF=None):
-        """
+        r"""
         Compute two criteria to verify the validity of the linearization of the
         Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
         To be valid, at least one of the two criteria must be small for each particle.
@@ -328,15 +319,9 @@ class BoltzmannSolver:
         fEq = BoltzmannSolver.__feq(E / T, statistics)
         fEqPoly = Polynomial(fEq, self.grid, ('Array', 'Cardinal', 'Cardinal', 'Cardinal'), ('z', 'z', 'pz', 'pp'), False)
 
-        # temperature here is the T-scale of grid
-        dpzdrz = (
-            2 * self.grid.momentumFalloffT
-            / (1 - self.grid.rzValues**2)[None, None, :, None]
-        )
-        dppdrp = (
-            self.grid.momentumFalloffT
-            / (1 - self.grid.rpValues)[None, None, None, :]
-        )
+        _, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
+        dpzdrz = dpzdrz[None, None, :, None]
+        dppdrp = dppdrp[None, None, None, :]
 
         # base integrand, for '00'
         integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * E)
@@ -461,9 +446,9 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # (exact) derivatives of compactified coordinates
-        dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
-        dchidxi = dchidxi[None, :, None, None]
-        drzdpz = drzdpz[None, None, :, None]
+        dxidchi, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
+        dchidxi = 1/dxidchi[None, :, None, None]
+        drzdpz = 1/dpzdrz[None, None, :, None]
 
         # derivative of equilibrium distribution
         dfEq = BoltzmannSolver.__dfeq(EPlasma / T, statistics)

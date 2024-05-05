@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.typing as npt
-from dataclasses import dataclass
+import warnings
 from typing import Tuple
 import copy  # for deepcopy
 
@@ -33,6 +33,7 @@ class EOM:
         hydro: Hydro,
         grid: Grid,
         nbrFields: int,
+        meanFreePath: float,
         includeOffEq: bool=False,
         errTol=1e-3,
         maxIterations=10,
@@ -51,6 +52,8 @@ class EOM:
             Object of the class Grid.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
+        meanFreePath : float
+            Estimate of the mean free path of the particles in the plasma.
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
@@ -76,6 +79,7 @@ class EOM:
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
+        self.meanFreePath = meanFreePath
         self.includeOffEq = includeOffEq
 
         self.thermo = thermodynamics
@@ -117,7 +121,7 @@ class EOM:
         )
 
         vmin = self.hydro.vMin
-        vmax = self.hydro.vJ - 1e-6  # can we drop this 1e-6?
+        vmax = min(self.hydro.vJ,self.hydro.fastestDeflag())
 
         return self.solveWall(vmin, vmax, wallParams)
     
@@ -196,17 +200,11 @@ class EOM:
             xtol=self.errTol,
         )
         wallVelocity = optimizeResult.root
-        # HACK! Should come up with a better error estimate
-        wallVelocityError = self.errTol * optimizeResult.root
+
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
-        results.setWallVelocities(
-            wallVelocity=wallVelocity,
-            wallVelocityError=wallVelocityError,
-            wallVelocityLTE=wallVelocityLTE,
-        )
 
-        # Get wall params:
+        # Get wall params, and other results
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
         newWallParams = (
             wallParamsMin + (wallParamsMax - wallParamsMin) * fractionWallVelocity
@@ -214,16 +212,50 @@ class EOM:
         _, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(
             wallVelocity, newWallParams, returnExtras=True,
         )
+
+        # minimum possible error in the wall speed
+        wallVelocityMinError = self.errTol * optimizeResult.root
+
+        # estimating errors from truncation and comparison to finite differences
+        if self.includeOffEq:
+            finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
+            # assuming nonequilibrium errors proportional to deviation from LTE
+            wallVelocityDeltaLTE = abs(wallVelocity - wallVelocityLTE)
+            # the truncation error in the spectral method within Boltzmann
+            wallVelocityTruncationError = boltzmannResults.truncationError * wallVelocityDeltaLTE
+            # the deviation from the finite difference method within Boltzmann
+            delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
+            delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
+            errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+            wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
+
+            # if truncation waringin large, raise a warning
+            if (
+                wallVelocityTruncationError > wallVelocityDerivativeError
+                and wallVelocityTruncationError > self.errTol
+            ):
+                warnings.warn("Truncation error large, increase N or M", RuntimeWarning)
+
+            # estimating the error by the largest of these
+            wallVelocityError = max(
+                wallVelocityMinError,
+                wallVelocityTruncationError,
+            )
+        else:
+            finiteDifferenceBoltzmannResults = boltzmannResults
+            wallVelocityError = wallVelocityMinError
+
+        # setting results
+        results.setWallVelocities(
+            wallVelocity=wallVelocity,
+            wallVelocityError=wallVelocityError,
+            wallVelocityLTE=wallVelocityLTE,
+        )
+
         results.setHydroResults(hydroResults)
         results.setWallParams(wallParams)
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
-
-        # do finite difference computation to estimate errors
-        if self.includeOffEq:
-            finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
-        else:
-            finiteDifferenceBoltzmannResults = boltzmannResults
         results.setFiniteDifferenceBoltzmannResults(
             finiteDifferenceBoltzmannResults
         )
@@ -326,7 +358,6 @@ class EOM:
         # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
         # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 0.2/np.sqrt(1-velocityMid**2)
         # self.grid.changePositionFalloffScale(L_xi)
         
         # fields, dPhidz = self.wallProfile(
@@ -338,6 +369,11 @@ class EOM:
         
         Tprofile = Tminus + (Tplus-Tminus)*(np.tanh(self.grid.xiValues/0.1)+1)/2
         velocityProfile = -vm - (vp-vm)*(np.tanh(self.grid.xiValues/0.1)+1)/2
+        wallThicknessGrid = max(wallParams.widths)
+        gammaWall = 1/np.sqrt(1-velocityMid**2)
+        tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        self.grid.changePositionFalloffScale(tailInside, tailOutside ,wallThicknessGrid)
 
         deltaFMultiplier = 1
         pressureEq, pressureOut, _, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
@@ -484,11 +520,18 @@ class EOM:
         dVeqdz = np.sum(np.array(dVdPhi * dPhidz), axis=1)
         dVoutdz = np.sum(np.array(dVout * dPhidz), axis=1)
 
+<<<<<<< HEAD
         EOMeqPoly = Polynomial(dVeqdz, self.grid)
         EOMoutPoly = Polynomial(dVoutdz, self.grid)
 
         pressureEq = EOMeqPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
         pressureOut = EOMoutPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+=======
+        EOMPoly = Polynomial(dVdz, self.grid)
+        
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        pressure = EOMPoly.integrate(w=-dzdchi)
+>>>>>>> BetterMapping
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
@@ -567,7 +610,8 @@ class EOM:
         Vref = (VLowT+VHighT)/2
         
         VPoly = Polynomial(V+VOut-Vref, self.grid)
-        U = VPoly.integrate(w = self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        U = VPoly.integrate(w = dzdchi)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
         return U + K  

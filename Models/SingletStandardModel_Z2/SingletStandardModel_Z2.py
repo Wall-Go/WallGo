@@ -390,12 +390,30 @@ def main():
 
     WallGo.initialize()
 
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 0.2
+
     ## Create WallGo control object
-    manager = WallGoManager()
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 10.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = [10.,10.]
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -479,10 +497,18 @@ def main():
         # bIncludeOffEq = False
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
+<<<<<<< HEAD
         # results = manager.solveWall(bIncludeOffEq)
         # wallVelocity = results.wallVelocity
         # widths = results.wallWidths
         # offsets = results.wallOffsets
+=======
+        results = manager.solveWall(bIncludeOffEq)
+        print(f"results=")
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
+>>>>>>> BetterMapping
 
         # print(f"{wallVelocity=}")
         # print(f"{widths=}")
@@ -492,6 +518,7 @@ def main():
         # bIncludeOffEq = True
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
+<<<<<<< HEAD
         # results = manager.solveWall(bIncludeOffEq)
         # wallVelocity = results.wallVelocity
         # widths = results.wallWidths
@@ -507,6 +534,19 @@ def main():
         # errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
         # print(f"finite difference error = {errorFD}")
 
+=======
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
+        widths = results.wallWidths
+        offsets = results.wallOffsets
+
+        print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
+
+>>>>>>> BetterMapping
 
     # end parameter-space loop
 
