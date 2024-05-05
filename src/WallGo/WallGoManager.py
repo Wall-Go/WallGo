@@ -279,6 +279,7 @@ class WallGoManager:
             self.hydro,
             self.grid,
             numberOfFields,
+            self.meanFreePath,
             errTol=errTol,
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,

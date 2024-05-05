@@ -520,18 +520,12 @@ class EOM:
         dVeqdz = np.sum(np.array(dVdPhi * dPhidz), axis=1)
         dVoutdz = np.sum(np.array(dVout * dPhidz), axis=1)
 
-<<<<<<< HEAD
         EOMeqPoly = Polynomial(dVeqdz, self.grid)
         EOMoutPoly = Polynomial(dVoutdz, self.grid)
 
-        pressureEq = EOMeqPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
-        pressureOut = EOMoutPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
-=======
-        EOMPoly = Polynomial(dVdz, self.grid)
-        
         dzdchi,_,_ = self.grid.getCompactificationDerivatives()
-        pressure = EOMPoly.integrate(w=-dzdchi)
->>>>>>> BetterMapping
+        pressureEq = EOMeqPoly.integrate(w=-dzdchi)
+        pressureOut = EOMoutPoly.integrate(w=-dzdchi)
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 

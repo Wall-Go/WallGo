@@ -497,18 +497,10 @@ def main():
         # bIncludeOffEq = False
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-<<<<<<< HEAD
         # results = manager.solveWall(bIncludeOffEq)
         # wallVelocity = results.wallVelocity
         # widths = results.wallWidths
         # offsets = results.wallOffsets
-=======
-        results = manager.solveWall(bIncludeOffEq)
-        print(f"results=")
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
->>>>>>> BetterMapping
 
         # print(f"{wallVelocity=}")
         # print(f"{widths=}")
@@ -518,7 +510,6 @@ def main():
         # bIncludeOffEq = True
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-<<<<<<< HEAD
         # results = manager.solveWall(bIncludeOffEq)
         # wallVelocity = results.wallVelocity
         # widths = results.wallWidths
@@ -534,19 +525,6 @@ def main():
         # errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
         # print(f"finite difference error = {errorFD}")
 
-=======
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
-        offsets = results.wallOffsets
-
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
-
->>>>>>> BetterMapping
 
     # end parameter-space loop
 
