@@ -23,7 +23,7 @@ class Grid3Scales(Grid):
     function.
     """
     
-    def __init__(self, M: int, N: int, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, momentumFalloffT: float, ratioPointsWall: float=0.5, smoothing: float=0.1, spacing: str="Spectral"):
+    def __init__(self, M: int, N: int, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, momentumFalloffT: float, ratioPointsWall: float=0.5, smoothing: float=0.1, wallCenter: float=0, spacing: str="Spectral"):
         r"""
         
 
@@ -53,6 +53,8 @@ class Grid3Scales(Grid):
             becomes discontinuous at :math:`\chi=\pm r` when smoothness is 0. 
             Should be smaller than 1, otherwise the function would not be linear 
             at :math:`\chi=0` anymore. The default is 0.1.
+        wallCenter : float, optional
+            Position of the wall's center (in the z coordinates). Default is 0.
         spacing : {'Spectral', 'Uniform'}
             Choose 'Spectral' for the Gauss-Lobatto collocation points, as
             required for WallGo's spectral representation, or 'Uniform' for
@@ -63,16 +65,16 @@ class Grid3Scales(Grid):
         None.
 
         """
-        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, ratioPointsWall, smoothing)
+        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, ratioPointsWall, smoothing, wallCenter)
         
         super().__init__(M, N, wallThickness, momentumFalloffT, spacing)
         
-    def changePositionFalloffScale(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float) -> None:
-        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, self.ratioPointsWall, self.smoothing)
+    def changePositionFalloffScale(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, wallCenter: float) -> None:
+        self._updateParameters(tailLengthInside, tailLengthOutside, wallThickness, self.ratioPointsWall, self.smoothing, wallCenter)
         
         self._cacheCoordinates()
         
-    def _updateParameters(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, ratioPointsWall: float=0.5, smoothing: float=0.1) -> None:
+    def _updateParameters(self, tailLengthInside: float, tailLengthOutside: float, wallThickness: float, ratioPointsWall: float, smoothing: float, wallCenter: float) -> None:
         assert wallThickness > 0, "Grid3Scales error: wallThickness must be positive."
         assert smoothing >= 0, "Grid3Scales error: smoothness must be positive."
         assert tailLengthInside > wallThickness*(1+2*smoothing)/ratioPointsWall, "Grid3Scales error: tailLengthInside must be greater than wallThickness*(1+2*smoothness)/ratioPointsWall."
@@ -84,6 +86,7 @@ class Grid3Scales(Grid):
         self.wallThickness = wallThickness
         self.ratioPointsWall = ratioPointsWall
         self.smoothing = smoothing
+        self.wallCenter = wallCenter
         
         # Defining parameters used in the mapping functions
         self.aIn = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthInside-wallThickness*(1+smoothing)))/abs(ratioPointsWall*tailLengthInside-wallThickness*(1+2*smoothing)) + 1e-50
@@ -109,7 +112,7 @@ class Grid3Scales(Grid):
         term5 = lambda x: (tailIn+tailOut-4*self.smoothing*L/r)*np.arctanh(x)
         totalMapping = lambda x: (term1(x)+term2(x)+term3(x)+term4(x)+term5(x))/2
         
-        z = totalMapping(z_compact) - totalMapping(0)
+        z = totalMapping(z_compact) - totalMapping(0) + self.wallCenter
         pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
         pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
         

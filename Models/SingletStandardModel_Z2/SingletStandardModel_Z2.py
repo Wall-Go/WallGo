@@ -391,9 +391,9 @@ def main():
     WallGo.initialize()
 
     # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
+    # WallGo.config.readINI(
+    #     pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    # )
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -403,7 +403,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 0.2
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -492,7 +492,7 @@ def main():
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
         
-        manager.eom.interpolatePressure(0.7, 0.99, 50, 1e-3)
+        manager.eom.interpolatePressure(0.7, 0.99, 30, wallThicknessIni, 1e-3)
 
         # bIncludeOffEq = False
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")

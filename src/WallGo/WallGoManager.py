@@ -284,7 +284,7 @@ class WallGoManager:
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,
         )
-        self.eom.includeOffEq = False
+        self.eom.includeOffEq = True
 
     def loadCollisionFiles(self, fileName: str) -> None:
         self.boltzmannSolver.readCollisions(fileName)
@@ -297,12 +297,12 @@ class WallGoManager:
 
     # Call after initGrid. I guess this would be the main workload function
 
-    def solveWall(self, bIncludeOffEq: bool) -> WallGoResults:
+    def solveWall(self, bIncludeOffEq: bool, wallThicknessIni: float=None) -> WallGoResults:
         """Returns wall speed and wall parameters (widths and offsets).
         """
         self.eom.includeOffEq = bIncludeOffEq
         # returning results
-        return self.eom.findWallVelocityMinimizeAction()
+        return self.eom.findWallVelocityMinimizeAction(wallThicknessIni)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 

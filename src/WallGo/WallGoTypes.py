@@ -67,6 +67,10 @@ class BoltzmannDeltas:
         return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
     def __rmul__(self, other):
         return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __add__(self, other):
+        return BoltzmannDeltas(Delta00=other.Delta00+self.Delta00, Delta02=other.Delta02+self.Delta02, Delta20=other.Delta20+self.Delta20, Delta11=other.Delta11+self.Delta11)
+    def __sub__(self, other):
+        return self.__add__((-1)*other)
 
 
 @dataclass
@@ -83,6 +87,15 @@ class BoltzmannResults:
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
+    
+    def __mul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __rmul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __add__(self, other):
+        return BoltzmannResults(deltaF=other.deltaF+self.deltaF, Deltas=other.Deltas+self.Deltas, truncationError=other.truncationError+self.truncationError, linearizationCriterion1=other.linearizationCriterion1+self.linearizationCriterion1, linearizationCriterion2=other.linearizationCriterion2+self.linearizationCriterion2)
+    def __sub__(self, other):
+        return self.__add__((-1)*other)
 
 
 @dataclass
