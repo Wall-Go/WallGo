@@ -54,11 +54,24 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
+        ## === SU(3) gluon ===
+        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+        gluon = Particle("gluon", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = gluonMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 16
+        )
+        self.addParticle(gluon)
+
+
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
         lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
+                            msqVacuum = lambda fields: 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
@@ -68,19 +81,7 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(lightQuark)
 
-        ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
-        gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 16
-        )
-        self.addParticle(gluon)
 
         
 
@@ -422,9 +423,6 @@ def main():
     }
 
     model = SingletSM_Z2(inputParameters)
-
-    print(model.outOfEquilibriumParticles)
-    exit()
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
