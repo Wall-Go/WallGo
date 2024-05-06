@@ -114,8 +114,12 @@ class StandardModel(GenericModel):
 
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
-        self.modelParameters = modelParameters
         return modelParameters
+        
+    ## Change the input parameters and set the corresponding model parameters and effective potential
+    def changeInputParameters(self, inputParameters: dict[str,float]) -> None:
+        self.modelParameters = self.calculateModelParameters(inputParameters)
+        self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
 
 
 class EffectivePotentialSM(EffectivePotential):
@@ -279,18 +283,12 @@ def main():
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
         inputParameters["mH"] = values_mH[i]
-        #model = StandardModel(inputParameters) #Without this line, the following does not work!
 
         """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
 
-        modelParameters = model.calculateModelParameters(inputParameters)
-        model.effectivePotential = EffectivePotentialSM(model.modelParameters, model.fieldCount)
-
-
-        print(f"{modelParameters=}")
-        print(f"{model.modelParameters=}")
+        model.changeInputParameters(inputParameters)
 
         manager.registerModel(model)
 
@@ -311,7 +309,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(model.modelParameters, phaseInfo)
 
         """WallGo can now be used to compute wall stuff!"""
 
