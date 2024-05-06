@@ -114,6 +114,7 @@ class StandardModel(GenericModel):
 
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
+        self.modelParameters = modelParameters
         return modelParameters
 
 
@@ -285,10 +286,11 @@ def main():
         """
 
         modelParameters = model.calculateModelParameters(inputParameters)
-        model.effectivePotential = EffectivePotentialSM(modelParameters, model.fieldCount)
+        model.effectivePotential = EffectivePotentialSM(model.modelParameters, model.fieldCount)
 
 
         print(f"{modelParameters=}")
+        print(f"{model.modelParameters=}")
 
         manager.registerModel(model)
 
