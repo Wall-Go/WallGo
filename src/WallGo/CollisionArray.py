@@ -115,7 +115,8 @@ class CollisionArray:
 
         """
         collisionFileArray = None
-        basisSizeFile = None
+        # basisSizeFile = None
+        basisSizeFile = grid.N 
         basisTypeFile = None
         
         for i, particle1 in enumerate(particles):
@@ -142,6 +143,7 @@ class CollisionArray:
                         if collisionFileArray is None:
                             collisionFileArray = np.zeros((len(particles),size-1,size-1,len(particles),size-1,size-1))
                             basisSizeFile = size
+                            # assert size == basisSizeFile, "CollisionArray error: Collision file has different basis size than initial value."
                             basisTypeFile = btype
                         else:
                             ## TODO throw WallGo error?

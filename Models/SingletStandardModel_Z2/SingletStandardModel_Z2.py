@@ -423,14 +423,21 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
+    print(model.outOfEquilibriumParticles)
+    exit()
+
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
+
     ## ---- Directory name for collisions integrals. Currently we just load these
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
     # collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+
     manager.loadCollisionFiles(collisionDirectory)
 
 
