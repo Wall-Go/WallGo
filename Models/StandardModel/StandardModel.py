@@ -233,7 +233,7 @@ def main():
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = 10.,
     ## Create WallGo control object
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    #manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
@@ -250,12 +250,12 @@ def main():
         "mH" : 35.0
     }
 
-#    model = StandardModel(inputParameters)
+    model = StandardModel(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
-#    manager.registerModel(model)
+    #manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
@@ -278,15 +278,17 @@ def main():
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
         inputParameters["mH"] = values_mH[i]
-        model = StandardModel(inputParameters)
+        #model = StandardModel(inputParameters) #Without this line, the following does not work!
 
         """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
 
         modelParameters = model.calculateModelParameters(inputParameters)
+        model.effectivePotential = EffectivePotentialSM(modelParameters, model.fieldCount)
 
 
+        print(f"{modelParameters=}")
 
         manager.registerModel(model)
 
@@ -325,27 +327,27 @@ def main():
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+        #results = manager.solveWall(bIncludeOffEq)
+        #wallVelocity = results.wallVelocity
+        #widths = results.wallWidths
+        #offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        #print(f"{wallVelocity=}")
+        #print(f"{widths=}")
+        #print(f"{offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+        #results = manager.solveWall(bIncludeOffEq)
+        #wallVelocity = results.wallVelocity
+        #widths = results.wallWidths
+        #offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        #print(f"{wallVelocity=}")
+        #print(f"{widths=}")
+        #print(f"{offsets=}")
 
 
 
