@@ -1,5 +1,5 @@
 import numpy as np
-
+import numpy.typing as npt
 # WallGo imports
 from .Boltzmann import BoltzmannSolver
 from .EOM import EOM
@@ -10,7 +10,7 @@ from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
 from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo, WallGoResults
+from .WallGoTypes import PhaseInfo, WallGoResults, WallParams
 from .WallGoUtils import getSafePathToResource
 
 import WallGo
@@ -23,7 +23,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self):
+    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -42,30 +42,27 @@ class WallGoManager:
         self._initGrid(
             self.config.getint("PolynomialGrid", "spatialGridSize"),
             self.config.getint("PolynomialGrid", "momentumGridSize"),
-            self.config.getfloat("PolynomialGrid", "L_xi"),
+            Lxi,
         )
 
         self._initBoltzmann()
+        self.temperatureScaleInput = temperatureScaleInput
+        self.fieldScaleInput = fieldScaleInput
 
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo."""
         assert isinstance(model, GenericModel)
         self.model = model
         
-        temperatureScale = self.config.getfloat("EffectivePotential", "temperatureScale")
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
-        fieldScaleStr = self.config.get("EffectivePotential", "fieldScale")
-        try:
-            fieldScale = float(fieldScaleStr)
-        except:
-            fieldScale = [float(x) for x in fieldScaleStr.split(',')]
         
         self.model.effectivePotential.setPotentialError(potentialError)
-        self.model.effectivePotential.setScales(temperatureScale, fieldScale)
+        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), self.fieldScaleInput)
 
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
+    #Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(
         self, modelParameters: dict[str, float], phaseInput: PhaseInfo
     ) -> None:
@@ -104,12 +101,13 @@ class WallGoManager:
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydro(self.thermodynamics)
 
-
         if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
             raise WallGoError("Failed to solve Jouguet velocity at input temperature!", 
                               data = {"vJ" : self.hydro.vJ, "temperature" : phaseInput.temperature, "TMin" : self.TMin, "TMax" : self.TMax})
 
         print(f"Jouguet: {self.hydro.vJ}")
+#        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
+    
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
         """This checks that the user-specified phases are OK.
@@ -172,6 +170,7 @@ class WallGoManager:
         try:
             ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
             hydrotemplate = HydroTemplateModel(self.thermodynamics)
+            print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
 
         except WallGoError as error:
             # Throw new error with more info
@@ -180,6 +179,7 @@ class WallGoManager:
         _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrotemplate.findMatching(
             0.99 * hydrotemplate.vJ
         )
+
         
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
         
@@ -190,9 +190,9 @@ class WallGoManager:
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large
         enough, and the template model only provides an estimate.
-        HACK! fudgeFactor and -2 * dT, see issue #145 """
+        HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
-        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate   ## Jorinde: it does not work if TMinHightT is set to Tn - 2*dT. It does if it is set to 0
+        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate  
         TMinLowT, TMaxLowT = 0, fudgeFactor * TLowTTMaxTemplate
 
         # Interpolate phases and check that they remain stable in this range
@@ -293,7 +293,7 @@ class WallGoManager:
         )
 
         # returning results
-        return eom.findWallVelocityMinimizeAction()
+        return eom.findWallVelocityMinimizeAction()    
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 
