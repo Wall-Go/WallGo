@@ -116,11 +116,6 @@ class StandardModel(GenericModel):
 
         return modelParameters
         
-    ## Change the input parameters and set the corresponding model parameters and effective potential
-    def changeInputParameters(self, inputParameters: dict[str,float]) -> None:
-        self.modelParameters = self.calculateModelParameters(inputParameters)
-        self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
-
 
 class EffectivePotentialSM(EffectivePotential):
 
@@ -288,7 +283,7 @@ def main():
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
 
-        model.changeInputParameters(inputParameters)
+        model.changeInputParameters(inputParameters, EffectivePotentialSM)
 
         manager.registerModel(model)
 
