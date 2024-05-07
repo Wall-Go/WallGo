@@ -27,14 +27,16 @@ class StandardModel(GenericModel):
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
 
-        ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
-        ## so @todo define these in a separate file? 
-        
+        self.defineParticles()
+
+
+    def defineParticles(self) -> None:
+        self.clearParticles()
+
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
     
-
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)

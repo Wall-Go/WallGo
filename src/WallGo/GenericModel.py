@@ -26,7 +26,7 @@ class GenericModel(ABC):
     @property
     @abstractmethod
     def outOfEquilibriumParticles(self) -> list[Particle]:
-        return []
+        pass
 
     ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
     ## Here is a property definition for it. Child classes can just do modelParameters = { ... } to define it
@@ -64,6 +64,11 @@ class GenericModel(ABC):
         # add to out-of-eq particles too if applicable
         if (not particleToAdd.inEquilibrium):
             self.outOfEquilibriumParticles.append(particleToAdd)
+
+    ## Empties the particle lists
+    def clearParticles(self) -> None:
+        self.particles = []
+        self.outOfEquilibriumParticles = []
 
 
     ## Go from whatever input parameters to renormalized Lagrangian parameters. Override this if your inputs are something else than Lagrangian parameters

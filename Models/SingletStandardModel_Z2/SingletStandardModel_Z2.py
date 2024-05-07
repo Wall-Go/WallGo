@@ -38,6 +38,8 @@ class SingletSM_Z2(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.clearParticles()
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
