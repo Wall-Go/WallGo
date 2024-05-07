@@ -93,54 +93,45 @@ class StandardModel(GenericModel):
         modelParameters = {}
 
         v0 = inputParameters["v0"]
-        # Higgs zero-temperature mass
-        mH = inputParameters["mH"] 
-
-        ## this are direct input:
-        modelParameters["RGScale"] = inputParameters["RGScale"]
         
-        modelParameters["lambda"] = 0.5 * mH**2 / v0**2
-        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
+        # Higgs parameters
+        mh = inputParameters["mh"] 
+        
+        modelParameters["lambda"] = 0.5 * mh**2 / v0**2
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
 
-        ## Then the gauge/Yukawa sector
+        ## Then the Yukawa sector
         
         Mt = inputParameters["Mt"] 
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
+        modelParameters["yt"] = np.sqrt(2.)*Mt/v0
 
-        # helper
-        g0 = 2.*MW / v0
-        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
-        modelParameters["g2"] = g0
-        # Just take QCD coupling as input
+        ## Then the inert doublet parameters
+        mH = inputParameters["mH"]
+        mA = inputParameters["mA"]
+        mHp = inputParameters["mHp"]
+
+        lambda5 = (mH**2 - mA**2)/v0**2
+        lambda4 = -2*(mHp**2- mA**2)/v0**2
+        lambda3 = 2*inputParameters["lambdaL"]-lambda4 -lambda5
+        msq2 = mHp**2 - lambda3*v0**2/2
+
+        modelParameters["msq2"] = msq2
+
+        modelParameters["lambda3"] = lambda3
+        modelParameters["lambda4"] = lambda4
+        modelParameters["lambda5"] = lambda5
+
+
+        ## Some couplings are input parameters
+        modelParameters["g1"] = inputParameters["g1"]
+        modelParameters["g2"] = inputParameters["g2"]
         modelParameters["g3"] = inputParameters["g3"]
-
-        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+        modelParameters["lambda2"] = inputParameters["lambda2"]
+        modelParameters["lambdaL"] = inputParameters["lambdaL"]
 
         return modelParameters
 
 
-
-    # ## Define parameter dict here. @todo correct values, these are from top of my head.
-    # ## In practice the user would define a function that computes these from whatever their input is (mW, mt, mH etc).
-    # ## But this still needs to be initialized here as required by the interface. modelParameters = None is fine.
-    # modelParameters = {
-    #     "RGScale" : 91, # MS-bar scale. Units: GeV
-    #     "yt" : 1.0, # Top Yukawa
-    #     "g1" : 0.3, # U1 coupling
-    #     "g2" : 0.6,  # SU2 coupling
-    #     "g3" : 1.4,  # SU3 coupling
-    #     "lambda" : 0.13,
-    #     "msq" : -7000 # Units: GeV^2
-    # }
-    
-    ## @todo kinda would want to have these as individual member variables for easier access. 
-    ## But that alone is not good enough as we need to pass the params to other things like the collision module,
-    ## and for that we want some common routine that does not involve hardcoding parameter names. So I anticipate that 
-    ## some combination of these approaches would be good.
-
-# end StandardModel
 
 
 class EffectivePotentialSM(EffectivePotential):
@@ -251,13 +242,17 @@ def main():
 
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
-        "RGScale" : 91.1876,
-        "v0" : 246.0,
-        "MW" : 80.379,
-        "MZ" : 91.1876,
-        "Mt" : 173.0,
+        "v0" : 246.22,
+        "Mt" : 172.76,
+        "g1" : 0.35,
+        "g2" : 0.65,
         "g3" : 1.2279920495357861,
-        "mH" : 50.0,
+        "lambda2" : 0.1,
+        "lambdaL" : 0.0015,
+        "mh" : 125.0,
+        "mH" : 65.0,
+        "mA" : 300.,
+        "mHp" : 300. # We don't use mHm as input parameter, as it is equal to mHp
     }
 
 
