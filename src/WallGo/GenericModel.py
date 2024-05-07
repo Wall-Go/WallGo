@@ -26,7 +26,7 @@ class GenericModel(ABC):
     @property
     @abstractmethod
     def outOfEquilibriumParticles(self) -> list[Particle]:
-        pass
+        return []
 
     ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
     ## Here is a property definition for it. Child classes can just do modelParameters = { ... } to define it
@@ -52,6 +52,7 @@ class GenericModel(ABC):
     effectivePotential: EffectivePotential
     
     inputParameters: dict[str, float]
+
     
 
 
@@ -70,7 +71,8 @@ class GenericModel(ABC):
         self.inputParameters = inputParameters
         return {}
 
-    ## Redefine the modelParameters and effectivePotential based on new inputparameters
+
+    ## Redefine modelParameters and effectivePotential based on new inputparameters
     def changeInputParameters(self, inputParameters: dict[str, float], effectivePotential: EffectivePotential) -> None:
         self.modelParameters = self.calculateModelParameters(inputParameters)
         self.effectivePotential = effectivePotential(self.modelParameters, self.fieldCount)

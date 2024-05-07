@@ -33,9 +33,7 @@ class StandardModel(GenericModel):
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
-        
-        #This line is really important when looping over several parameter points!
-        self.outOfEquilibriumParticles = []
+    
 
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
@@ -226,14 +224,16 @@ def main():
     Lxi = 0.05
 
     # The following 2 parameters are used to estimate the optimal value of dT used 
+    
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
     temperatureScale = 1.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = 10.,
+    
     ## Create WallGo control object
-    #manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
@@ -255,26 +255,21 @@ def main():
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
-    #manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
-#    manager.loadCollisionFiles(collisionDirectory)
+
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
     """ Example mass loop that does two value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-#    values_mH = [ 45.0]
-#    values_Tn = [56.8]
     
     values_mH = [45.0, 35.0]
     values_Tn = [56.8,44.6]
 
     for i in range(len(values_mH)):
-        manager = WallGoManager(Lxi, temperatureScale, fieldScale)
-
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
         inputParameters["mH"] = values_mH[i]
@@ -292,7 +287,6 @@ def main():
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
-
         Tn = values_Tn[i]
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
@@ -322,27 +316,27 @@ def main():
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        #results = manager.solveWall(bIncludeOffEq)
-        #wallVelocity = results.wallVelocity
-        #widths = results.wallWidths
-        #offsets = results.wallOffsets
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
-        #print(f"{wallVelocity=}")
-        #print(f"{widths=}")
-        #print(f"{offsets=}")
+        print(f"{wallVelocity=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        #results = manager.solveWall(bIncludeOffEq)
-        #wallVelocity = results.wallVelocity
-        #widths = results.wallWidths
-        #offsets = results.wallOffsets
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        widths = results.wallWidths
+        offsets = results.wallOffsets
 
-        #print(f"{wallVelocity=}")
-        #print(f"{widths=}")
-        #print(f"{offsets=}")
+        print(f"{wallVelocity=}")
+        print(f"{widths=}")
+        print(f"{offsets=}")
 
 
 
