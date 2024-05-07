@@ -3,12 +3,12 @@
 (*Quit[];*)
 
 
-SetDirectory[NotebookDirectory[]];
+SetDirectory[DirectoryName[$InputFileName]];
 (*Put this if you want to create multiple model-files with the same kernel*)
 $GroupMathMultipleModels=True;
 $LoadGroupMath=True;
-<<DRalgo`
-<<matrixElements`
+<<DRalgo`;
+<<matrixElements`;
 
 
 (* ::Chapter:: *)
@@ -90,6 +90,6 @@ UserMasses={mq2,mg2};
 UserCouplings={gs};
 
 
-SetDirectory[NotebookDirectory[]];
+SetDirectory[DirectoryName[$InputFileName]];
 ParticleName={"Top","Gluon"};
-MatrixElements=ExportMatrixElements["MatrixElements/matrixElements",ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];
+MatrixElements=ExportMatrixElements["MatrixElements",ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];

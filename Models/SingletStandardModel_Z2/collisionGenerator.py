@@ -77,9 +77,6 @@ inputParameters = {
 
 model = SingletSM_Z2(inputParameters)
 
-print(model.outOfEquilibriumParticles[0].msqThermal(1))
-print(model.particles[0].msqThermal(1))
-
 ## Create Collision singleton which automatically loads the collision module
 collision = WallGo.Collision()
 
@@ -94,10 +91,8 @@ collisionManager = collision.module.CollisionManager()
 
 """
 Define couplings (Lagrangian parameters)
+list as they appear in the MatrixElements file
 """
-gs = 1.2279920495357861
-print(inputParameters["g3"])
-
 collisionManager.addCoupling(inputParameters["g3"])
 
 """
@@ -109,7 +104,6 @@ a temperature. So hacking this by setting T = 1. Also, for this example the vacu
 temperatureHack = 1.0
 fieldHack = WallGo.Fields([0]*model.fieldCount)
 
-
 """
 Register particles with the collision module. This is required for each particle that can appear in matrix elements,
 including particle species that are assumed to stay in equilibrium.
@@ -117,7 +111,6 @@ The order here should be the same as in the matrix elements and how they are int
 """
 for particle in model.particles:
     collisionManager.addParticle( constructPybindParticle(particle, temperatureHack, fieldHack) )
-    print(particle.name)
 
 ## Set input/output paths
 scriptLocation = pathlib.Path(__file__).parent.resolve()

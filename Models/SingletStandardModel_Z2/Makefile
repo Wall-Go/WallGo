@@ -1,31 +1,33 @@
-.PHONY:
+.PHONY=clean, run_main
 
 PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
-MATRIX_SCRIPT=MatrixElements/MatrixElements.qcd.m
-MATRIX_DATA=MatrixElements/MatrixElements.txt
+MATRIXELEMENTS=MatrixElements
+MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
+MATRIX_DATA=${MATRIXELEMENTS}/MatrixElements.txt
+COLLISIONS=CollisionOutput
 MAIN=SingletStandardModel_Z2
 
-all: run_main generate_collisions
+# File Types (fod dependencies)
+COLLISION_FILES = $(shell find ${COLLISIONS} -name 'collisions_*.hdf5')
 
-CollisionOutput:
-	mkdir -p CollisionOutput
+all: run_main
 
-generate_collisions: ${MATRIX_DATA} | CollisionOutput
-	@if [ ! -d CollisionOutput ]; then \
-		echo "CollisionOutput folder not found. Generating collisions..."; \
-		mkdir CollisionOutput; \
-	else \
-		echo "CollisionOutput folder found."; \
-	fi
-	python3 collisionGenerator.py
+${COLLISIONS}:
+	echo "${COLLISIONS} folder not found. Generating collisions..."; \
+	mkdir -p ${COLLISIONS} 
+
+generate_collisions: ${MATRIX_DATA} | ${COLLISIONS} 
+	@echo "Running collision generator"
+	${PYTHON} collisionGenerator.py
 
 ${MATRIX_DATA}: ${MATRIX_SCRIPT}
-	@echo "Running MatrixElements.m..."
+	@echo "Running ${MATRIX_SCRIPT}"
 	${WOLFRAMSCRIPT} ${MATRIX_SCRIPT}
 
-run_main: generate_collisions
+run_main: ${COLLISION_FILES} | generate_collisions
 	@echo "Running model file"
-	python3 ${MAIN}.py
+	${PYTHON} ${MAIN}.py
 
 clean:
+	rm -rf ${COLLISIONS}
