@@ -8,13 +8,11 @@ from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotential
+from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
 
-### LN: This file is very WIP, test with SingletStandardModel_Z2.py instead
-
-## V = msq |phi|^2 + lambda (|phi|^2)^2
-class StandardModel(GenericModel):
+# Inert doublet model, as implemented in 2211.13142
+class InertDoubletModel(GenericModel):
 
     particles = []
     outOfEquilibriumParticles = []
@@ -29,7 +27,7 @@ class StandardModel(GenericModel):
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
+        self.effectivePotential = EffectivePotentialIDM(self.modelParameters, self.fieldCount)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -132,49 +130,176 @@ class StandardModel(GenericModel):
         return modelParameters
 
 
-
-
-class EffectivePotentialSM(EffectivePotential):
+## For this benchmark model we use the 4D potential, implemented as in 2211.13142. We use interpolation tables for Jb/Jf 
+class EffectivePotentialIDM(EffectivePotential_NoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
-        ## ... do SM specific initialization here. The super call already gave us the model params
-
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 28 #check if correct 
+        self.num_boson_dof = 32
         self.num_fermion_dof = 90 
 
-    def evaluate(self, fields: Fields, temperature: float) -> complex:
+
+        #JvdV: TODO figure out which integrals to use!
+        """For this benchmark model we do NOT use the default integrals from WallGo.
+        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
+        In real applications we recommend using the WallGo default implementations.
+        """
+        self._configureBenchmarkIntegrals()
+
+
+    def _configureBenchmarkIntegrals(self):
+        
+        ## Load custom interpolation tables for Jb/Jf. 
+        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
+        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
+        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
+        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
+        
+        self.integrals.Jb.disableAdaptiveInterpolation()
+        self.integrals.Jf.disableAdaptiveInterpolation()
+
+        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
+        => not really reliable for very negative (m/T)^2 ! 
+        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
+        at the upper limit.
+        """
+
+        from WallGo.InterpolatableFunction import EExtrapolationType
+        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+        
+        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
+                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
+        
+    
+
+    ## ---------- EffectivePotential overrides. 
+    # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
+    # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
+
+    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
+
         # phi ~ 1/sqrt(2) (0, v)
         v = fields.GetField(0) 
-
-        T = temperature
-
-        # 4D units
-        thermalParameters = self.getThermalParameters(temperature)
         
-        msq = thermalParameters["msq"]
-        lam = thermalParameters["lambda"]
+        msq = self.modelParameters["msq"]
+        lam = self.modelParameters["lambda"]
+
+        b2 = self.modelParameters["b2"]
+        b4 = self.modelParameters["b4"]
+        a2 = self.modelParameters["a2"]
+
+
+        """
+        # Get thermal masses
+        thermalParams = self.getThermalParameters(temperature)
+        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
+        mh2_thermal = b2 - thermalParams["b2"]
+        """
 
         # tree level potential
-        V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4
+        V0 = 0.5*msq*v**2 + 0.25*lam*v**4
 
-        ## @todo should have something like a static class just for defining loop integrals. NB: m^2 can be negative for scalars
-        J3 = lambda msq : -(msq + 0j)**(3/2) / (12.*np.pi) * T # keep 4D units
+        # From Philipp. @todo should probably use the list of defined particles here?
+        bosonStuff = self.boson_massSq(fields, temperature)
+        fermionStuff = self.fermion_massSq(fields, temperature)
 
-        ## Cheating a bit here and just hardcoding gauge/scalar masses in SM
-        mWsq = thermalParameters["g2"]**2 * v**2 / 4.
-        mZsq = (thermalParameters["g1"]**2 + thermalParameters["g2"]**2) * v**2 / 4.
-        mHsq = msq + 3*lam*v**2
-        mGsq = msq + lam*v**2
-    
-        # NLO 1-loop correction in Landau gauge, so g^3. Debyes are integrated out by getThermalParameters
-        V1 = 2*(3-1) * J3(mWsq) + (3-1) * J3(mZsq) + J3(mHsq) + 3.*J3(mGsq)
-
-        VTotal = V0 + V1 + self.constantTerms(T)
+        VTotal = (
+            V0 
+            + self.constantTerms(temperature)
+            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
+            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
+        )
 
         return VTotal
+    
+    
+    def ColemanWeinberg(massSquared: float, massSquared0T: float) -> float:
+        return (64.*np.pi**2) * (massSquared**2*(np.log(np.abs(massSquared) /massSquared0T ) - 3./2.) + 2*massSquared*massSquared0T)
+    
+    def boson_massSqCW(self, fields: Fields):
 
+        v = fields.GetField(0) 
+
+        # TODO: numerical determination of scalar masses from V0
+
+        msq = self.modelParameters["msq"]
+        lam = self.modelParameters["lambda"]
+
+        msq2 = self.modelParameters["msq2"]
+        lam3 = self.modelParameters["lambda3"]
+        lam4 = self.modelParameters["lambda4"]
+        lam5 = self.modelParameters["lambda5"]
+
+        g1 = self.modelParameters["g1"]
+        g2 = self.modelParameters["g2"]
+        
+        mhsq = msq + 3*lam*v**2
+        mHsq = msq2 + (lam3 + lam4 + lam5)/2*v**2
+        mAsq = msq2 + (lam3 + lam4 - lam5)/2*v**2
+        mHpmsq = msq2 + lam3/2*v**2
+
+        mWsq = g2**2 * v**2 / 4.
+        mZsq = (g1**2 + g2**2) * v**2 / 4.
+
+        # this feels error prone:
+
+        # W, Z, h, H, A, Hpm
+        massSq = np.column_stack( (mWsq, mZsq, mhsq, mHsq, mAsq,mHpmsq ) )
+        degreesOfFreedom = np.array([6,3,1,1,1,2]) 
+
+        return massSq, degreesOfFreedom
+    
+    def boson_massSqResummed(self, fields: Fields, temperature):
+
+        v = fields.GetField(0) 
+
+        # TODO: numerical determination of scalar masses from V0
+
+        msq = self.modelParameters["msq"]
+        lam = self.modelParameters["lambda"]
+
+        msq2 = self.modelParameters["msq2"]
+        lam2 = self.modelParameters["lambda2"]
+        lam3 = self.modelParameters["lambda3"]
+        lam4 = self.modelParameters["lambda4"]
+        lam5 = self.modelParameters["lambda5"]
+
+        yt = self.modelParameters["yt"]
+        g1 = self.modelParameters["g1"]
+        g2 = self.modelParameters["g2"]
+
+        PiPhi = temperature**2/12.*(6*lam + 2*lam3 + lam4 + 3/4*(3*g2**2 + g1**2) + 3*yt**2) # Eq. (15) of  2211.13142 (note the different normalization of lam)
+        PiEta = temperature**2/12.*(6*lam2 + 2*lam3 + lam4 + 3/4*(3*g2**2 + g1**2))# Eq. (16) of 2211.13142 (note the different normalization of lam2)
+
+        mhsq = msq + 3*lam*v**2 + PiPhi
+        mGsq = msq + lam*v**2 + PiPhi #Goldstone bosons
+        mHsq = msq2 + (lam3 + lam4 + lam5)/2*v**2 + PiEta
+        mAsq = msq2 + (lam3 + lam4 - lam5)/2*v**2 + PiEta
+        mHpmsq = msq2 + lam3/2*v**2 + PiEta
+
+        mWsq = g2**2 * v**2 / 4.
+        mWsqL = g2**2 * v**2 / 4. + 2*g2**2*temperature**2
+        mZsq = (g1**2 + g2**2) * v**2 / 4.
+
+        #Eigenvalues of the Z&B-boson mass matrix
+        PiB = 2*g1**2*temperature**2
+        PiW = 2*g2**2*temperature**2
+        m1sq = g1**2*v**2/4
+        m2sq = g2**2*v**2/4
+        m12sq = -g1*g2*v**2/4
+
+        msqEig1 = (m1sq + m2sq + PiB+ PiW - np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB -PiW)**2))/2
+        msqEig2 = (m1sq + m2sq + PiB+ PiW + np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB -PiW)**2))/2
+
+        # this feels error prone:
+
+        # W, Wlong, Z,Zlong,photonLong, h, Goldstone H, A, Hpm
+        massSq = np.column_stack( (mWsq, mWsqL, mZsq, msqEig1, msqEig2, mhsq, mGsq, mHsq, mAsq,mHpmsq ) )
+        degreesOfFreedom = np.array([4,2,2,1,1,1,3,1,1,2]) 
+
+        return massSq, degreesOfFreedom
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -185,48 +310,11 @@ class EffectivePotentialSM(EffectivePotential):
         ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 13 # 13 =  6 + 3 + 4 (W + Z + Higgs)
+        dofsBoson = self.num_boson_dof - 14
         dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
-
-    
-    ## Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
-    def getThermalParameters(self, temperature: float) -> dict[str, float]:
-        T = temperature
-
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        yt = self.modelParameters["yt"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-        ## LO matching: only masses get corrected
-        thermalParameters = self.modelParameters.copy()
-
-        thermalParameters["msq"] = msq + T**2 / 16. * (3. * g2**2 + g1**2 + 4.*yt**2 + 8.*lam)
-
-        # how many Higgs doublets / fermion generations
-        Nd = 1
-        Nf = 3
-
-        ## Debye masses squared (U1, SU2) 
-        mDsq1 = g1**2 * T**2 * (Nd/6. + 5.*Nf/9.)
-        mDsq2 = g2**2 * T**2 * ( (4. + Nd) / 6. + Nf/3.)
-        mD1 = np.sqrt(mDsq1)
-        mD2 = np.sqrt(mDsq2)
-
-        ## Let's also integrate out A0/B0
-        h3 = g2**2 / 4.
-        h3p = g2**2 / 4.
-        h3pp = g2*g1 / 2.
-
-        thermalParameters["msq"] += -1/(4.*np.pi) * T * (3. * h3 * mD2 + h3p * mD1)
-        thermalParameters["lambda"] += -1/(4.*np.pi) * T * (3.*h3**2 / mD2 + h3p**2 / mD1 + h3pp**2 / (mD1 + mD2))
-
-        # skipping corrections to gauge couplings because those are not needed at O(g^3)
-
-        return thermalParameters
 
 
 def main():
