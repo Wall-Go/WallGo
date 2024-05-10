@@ -493,7 +493,7 @@ def main():
         wallParams: WallGo.WallParams
         
         # manager.eom.interpolatePressure(0.9, 0.999, 20, wallThicknessIni, 1e-3)
-        print(manager.eom.solveInterpolation(0.7, 0.99, wallThicknessIni, 1.2e6, dvMin=0.02))
+        print(manager.eom.solveInterpolation(0.7, 0.99, wallThicknessIni, 1.2e6, dvMin=0.01))
 
         # bIncludeOffEq = False
         # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
