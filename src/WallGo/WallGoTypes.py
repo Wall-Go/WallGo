@@ -134,6 +134,8 @@ class WallParams():
     def __mul__(self, other):
         ## does not work if other = WallParams type
         return WallParams(widths = self.widths * other, offsets = self.offsets * other)
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         ## does not work if other = WallParams type
