@@ -303,6 +303,31 @@ class WallGoManager:
         self.eom.includeOffEq = bIncludeOffEq
         # returning results
         return self.eom.findWallVelocityMinimizeAction(wallThicknessIni)
+    
+    def solveWallDetonation(self, bIncludeOffEq: bool=True, wallThicknessIni: float=None, dvMinInterpolation: float=0.02):
+        """
+        Finds all the detonation solutions by computing the pressure on a grid
+        and interpolating to find the roots. 
+
+        Parameters
+        ----------
+        bIncludeOffEq : bool, optional
+            If True, includes the out-of-equilibrium effects. The default is True.
+        wallThicknessIni : float, optional
+            Initial wall thickness. The default is None.
+        dvMinInterpolation : float, optional
+            Minimal spacing between each grid points. The default is 0.02.
+
+        Returns
+        -------
+        WallGoInterpolationResults
+            Object containing the solutions and the pressures computed on the
+            velocity grid.
+
+        """
+        self.eom.includeOffEq = bIncludeOffEq
+        errTol = self.config.getfloat("EOM", "errTol")
+        return self.eom.solveInterpolation(self.hydro.vJ+1e-4, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 

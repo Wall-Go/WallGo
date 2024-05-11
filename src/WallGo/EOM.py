@@ -525,20 +525,53 @@ class EOM:
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
     
-    def interpolatePressure(self, vmin, vmax, nbrPoints, wallThicknessIni=None, rtol=1e-3, atol=0):
+    def interpolatePressure(self, vmin: float, vmax: float, nbrPoints: int, wallThicknessIni: float=None, rtol: float=1e-3):
+        """
+        Computes the pressure on a grid.
+
+        Parameters
+        ----------
+        vmin : float
+            Lower bound of the interpolation interval.
+        vmax : float
+            Upper bound of the interpolation interval.
+        nbrPoints : int
+            Number of points on the grid.
+        wallThicknessIni : float, optional
+            Initial wall thickness used to compute the first pressure at vmin.
+            The default is None.
+        rtol : float, optional
+            Relative tolerance. The default is 1e-3.
+
+        Returns
+        -------
+        wallVelocities : list[float]
+            Velocity grid.
+        pressures: ndarray
+            Pressure evaluated on the grid.
+        wallParamsList : list[WallParams]
+            WallParams evaluated on the grid.
+        boltzmannResultsList : list[BoltzmannResults]
+            BoltzmannResults evaluated on the grid.
+        boltzmannBackgroundList : list[BoltzmannBackground]
+            BoltzmannBackground evaluated on the grid.
+        hydroResultsList : list[HydroResults]
+            HydroResults evaluated on the grid.
+
+        """
         wallVelocities = np.linspace(vmin, vmax, nbrPoints)
         
         if wallThicknessIni is None:
             wallThicknessIni = 5 / self.Tnucl
             
-        wallParamsPrev = WallParams(
+        wallParams = WallParams(
             widths=wallThicknessIni * np.ones(self.nbrFields),
             offsets=np.zeros(self.nbrFields),
         )
         
-        boltzmannResultsPrev = None
+        boltzmannResults = None
         
-        pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(vmin, wallParamsPrev, True, atol, rtol, boltzmannResultsPrev)
+        pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(vmin, wallParams, True, 0, rtol, boltzmannResults)
         
         pressures = []
         boltzmannBackgroundList = []
@@ -546,16 +579,16 @@ class EOM:
         hydroResultsList = []
         wallParamsList = []
         for i,wallVelocity in enumerate(wallVelocities):
-            if i > 0:
+            if i > 1:
                 # Use linear extrapolation to get a more accurate initial value of wall parameters
-                wallParamsTry = wallParams + (wallParams-wallParamsPrev)*(wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2])
-                boltzmannResultsTry = boltzmannResults + (boltzmannResults-boltzmannResultsPrev)*((wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2]))
+                wallParamsTry = wallParamsList[-1] + (wallParamsList[-1]-wallParamsList[-2])*(wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2])
+                boltzmannResultsTry = boltzmannResultsList[-1] + (boltzmannResultsList[-1]-boltzmannResultsList[-2])*((wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2]))
             else:
                 wallParamsTry = wallParams
                 boltzmannResultsTry = boltzmannResults
-            wallParamsPrev = wallParams
-            boltzmannResultsPrev = boltzmannResults
-            pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(wallVelocity, wallParamsTry, True, atol, rtol, boltzmannResultsTry)
+                
+            pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(wallVelocity, wallParamsTry, True, 0, rtol, boltzmannResultsTry)
+            
             pressures.append(pressure)
             wallParamsList.append(wallParams)
             boltzmannResultsList.append(boltzmannResults)
@@ -564,7 +597,33 @@ class EOM:
         
         return wallVelocities, np.array(pressures), wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList
     
-    def solveInterpolation(self, vmin, vmax, wallThicknessIni=None, desiredPressure=0, rtol=1e-3, dvMin=0.02):
+    def solveInterpolation(self, vmin: float, vmax: float, wallThicknessIni: float=None, desiredPressure: float=0, rtol: float=1e-3, dvMin: float=0.02):
+        """
+        Finds all the EOM solutions in some interval by computing the pressure 
+        on a grid and interpolating to get the roots.
+
+        Parameters
+        ----------
+        vmin : float
+            Lower bound of the interpolation interval.
+        vmax : float
+            Upper bound of the interpolation interval.
+        wallThicknessIni : float, optional
+            Initial wall thickness used to compute the first pressure at vmin. 
+            The default is None.
+        desiredPressure : float, optional
+            The solver finds the velocities for which the pressure is equal to 
+            desiredPressure. The default is 0.
+        rtol : float, optional
+            Relative tolerance. The default is 1e-3.
+        dvMin : float, optional
+            Minimal spacing between each grid points. The default is 0.02.
+
+        Returns
+        -------
+        wallGoInterpolationResults : WallGoInterpolationResults
+
+        """
         nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
         wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.interpolatePressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
         pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
