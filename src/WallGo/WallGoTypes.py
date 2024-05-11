@@ -3,6 +3,7 @@ import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
 from .Polynomial import Polynomial
+from scipy.interpolate import UnivariateSpline
 # Put common data classes etc here
 
 
@@ -218,4 +219,26 @@ class WallGoResults:
         # quantities from finite difference versino of BoltzmannResults
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
-
+        
+@dataclass
+class WallGoInterpolationResults:
+    ## List of stable solutions
+    wallVelocities: list[float]
+    ## List of unstable solutions
+    unstableWallVelocities: list[float]
+    
+    ## Velocity grid on which the pressures were computed
+    velocityGrid: list[float]
+    ## Pressures evaluated at velocityGrid
+    pressures: list[float]
+    ## Spline of the pressure
+    pressureSpline: UnivariateSpline
+    
+    ## WallParams evaluated at velocityGrid
+    wallParams: list[WallParams]
+    ## BoltzmannResults evaluated at velocityGrid
+    boltzmannResults: list[BoltzmannResults]
+    ## BoltzmannBackground evaluated at velocityGrid
+    boltzmannBackgrounds: list[BoltzmannBackground]
+    ## HydroResults evaluated at velocityGrid
+    hydroResults: list[HydroResults]

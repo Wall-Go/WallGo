@@ -18,7 +18,7 @@ from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams
+from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
 
 
 class EOM:
@@ -385,7 +385,7 @@ class EOM:
             print(f"{pressure=} {error=} {errTol=} {max(wallParams.widths)=}")
             i += 1
 
-            if (error < errTol):
+            if (error < errTol or errorSolver < errTol):
                 ## Even if two consecutive call to __getNextPressure() give similar pressures, it is possible
                 ## that the internal calls made to intermediatePressureResults() do not converge. This is measured
                 ## by 'errorSolver'. If __getNextPressure() converges but not intermediatePressureResults() doesn't,
@@ -541,6 +541,10 @@ class EOM:
         pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(vmin, wallParamsPrev, True, atol, rtol, boltzmannResultsPrev)
         
         pressures = []
+        boltzmannBackgroundList = []
+        boltzmannResultsList = []
+        hydroResultsList = []
+        wallParamsList = []
         for i,wallVelocity in enumerate(wallVelocities):
             if i > 0:
                 # Use linear extrapolation to get a more accurate initial value of wall parameters
@@ -551,14 +555,18 @@ class EOM:
                 boltzmannResultsTry = boltzmannResults
             wallParamsPrev = wallParams
             boltzmannResultsPrev = boltzmannResults
-            pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(wallVelocity, wallParamsTry, True, atol, rtol, boltzmannResultsTry)
+            pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(wallVelocity, wallParamsTry, True, atol, rtol, boltzmannResultsTry)
             pressures.append(pressure)
+            wallParamsList.append(wallParams)
+            boltzmannResultsList.append(boltzmannResults)
+            boltzmannBackgroundList.append(boltzmannBackground)
+            hydroResultsList.append(hydroResults)
         
-        return wallVelocities, np.array(pressures)
+        return wallVelocities, np.array(pressures), wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList
     
     def solveInterpolation(self, vmin, vmax, wallThicknessIni=None, desiredPressure=0, rtol=1e-3, dvMin=0.02):
         nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
-        wallVelocities, pressures = self.interpolatePressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
+        wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.interpolatePressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
         pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
         
         roots = pressuresSpline.roots()
@@ -568,8 +576,19 @@ class EOM:
                 stableRoots.append(root)
             else:
                 unstableRoots.append(root)
-            
-        return stableRoots, unstableRoots
+        
+        wallGoInterpolationResults = WallGoInterpolationResults(
+            wallVelocities=stableRoots,
+            unstableWallVelocities=unstableRoots,
+            velocityGrid=wallVelocities.tolist(),
+            pressures=pressures.tolist(),
+            pressureSpline=pressuresSpline,
+            wallParams=wallParamsList,
+            boltzmannResults=boltzmannResultsList,
+            boltzmannBackgrounds=boltzmannBackgroundList,
+            hydroResults=hydroResultsList,
+            )
+        return wallGoInterpolationResults
         
 
     def __toWallParams(self, wallArray: np.ndarray) -> WallParams:
