@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.typing as npt
+import os
 import pathlib
 
 ## WallGo imports
@@ -43,13 +44,12 @@ class InertDoubletModel(GenericModel):
 
         topQuark = Particle("top", 
                             msqVacuum = topMsqVacuum,
-                            msqDerivative = topMsqDerivative
+                            msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 12
+                            totalDOFs = 12
         )
         self.addParticle(topQuark)
 
@@ -63,8 +63,7 @@ class InertDoubletModel(GenericModel):
                             statistics = "Fermion",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 5,
-                            DOF = 60
+                            totalDOFs = 60
         )
         self.addParticle(lightQuark)
 
@@ -73,13 +72,12 @@ class InertDoubletModel(GenericModel):
 
         gluon = Particle("gluon", 
                             msqVacuum = 0.0,
-                            msqDerivative 0.0,
+                            msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
                             ultrarelativistic = True,
-                            multiplicity = 1,
-                            DOF = 16
+                            totalDOFs = 16
         )
         self.addParticle(gluon)
 
@@ -91,6 +89,7 @@ class InertDoubletModel(GenericModel):
         modelParameters = {}
 
         v0 = inputParameters["v0"]
+        modelParameters["v0"] = v0
         
         # Higgs parameters
         mh = inputParameters["mh"] 
@@ -109,7 +108,7 @@ class InertDoubletModel(GenericModel):
         mHp = inputParameters["mHp"]
 
         lambda5 = (mH**2 - mA**2)/v0**2
-        lambda4 = -2*(mHp**2- mA**2)/v0**2
+        lambda4 = -2*(mHp**2- mA**2)/v0**2 + lambda5
         lambda3 = 2*inputParameters["lambdaL"]-lambda4 -lambda5
         msq2 = mHp**2 - lambda3*v0**2/2
 
@@ -186,10 +185,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
-        b2 = self.modelParameters["b2"]
-        b4 = self.modelParameters["b4"]
-        a2 = self.modelParameters["a2"]
-
 
         """
         # Get thermal masses
@@ -202,25 +197,51 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4
 
         # From Philipp. @todo should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
+        bosonStuff = self.boson_massSq(fields)
+        fermionStuff = self.fermion_massSq(fields)
 
         VTotal = (
             V0 
-            + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
-            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
+#            + self.constantTerms(temperature)
+            + self.ColemanWeinberg(bosonStuff, fermionStuff) 
+#            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
         return VTotal
     
     
-    def ColemanWeinberg(massSquared: float, massSquared0T: float) -> float:
-        return (64.*np.pi**2) * (massSquared**2*(np.log(np.abs(massSquared) /massSquared0T ) - 3./2.) + 2*massSquared*massSquared0T)
+    def ColemanWeinberg(self,bosons, fermions) -> float:
+        c = 3./2.
+        m2, m20T, nb = bosons
+        print(f"{m2=}")
+        Vboson = 1./(64.*np.pi**2)*np.sum(nb*(m2**2*(np.log(np.abs(m2) /m20T)- c) + 2*m2*m20T), axis=-1)
+        
+        m2, m20T, nf = fermions
+        Vfermion = -1./(64.*np.pi**2)*np.sum(nf*(m2**2*(np.log(np.abs(m2) /m20T)- c) + 2*m2*m20T), axis=-1)
+
+        return  Vboson + Vfermion
     
-    def boson_massSqCW(self, fields: Fields):
+    def fermion_massSq(self, fields: Fields):
+
+        v = fields.GetField(0)
+
+        # Just top quark, others are taken massless
+        yt = self.modelParameters["yt"]
+        mtsq = yt**2 * v**2 / 2
+        mtsq0T = yt**2 *self.modelParameters["v0"]**2/2
+    
+        # @todo include spins for each particle
+
+        massSq = np.stack((mtsq,), axis=-1)
+        massSq0T = np.stack((mtsq0T,), axis = -1)
+        degreesOfFreedom = np.array([12])
+        
+        return massSq, massSq0T, degreesOfFreedom
+
+    def boson_massSq(self, fields: Fields):
 
         v = fields.GetField(0) 
+        v0 = self.modelParameters["v0"]
 
         # TODO: numerical determination of scalar masses from V0
 
@@ -240,16 +261,25 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         mAsq = msq2 + (lam3 + lam4 - lam5)/2*v**2
         mHpmsq = msq2 + lam3/2*v**2
 
+        mhsq0T = msq + 3*lam*v0**2
+        mHsq0T = msq2 + (lam3 + lam4 + lam5)/2*v0**2
+        mAsq0T = msq2 + (lam3 + lam4 - lam5)/2*v0**2
+        mHpmsq0T = msq2 + lam3/2*v0**2
+
         mWsq = g2**2 * v**2 / 4.
         mZsq = (g1**2 + g2**2) * v**2 / 4.
+
+        mWsq0T = g2**2*v0**2/4.
+        mZsq0T = (g1**2 + g2**2)*v0**2/4.
 
         # this feels error prone:
 
         # W, Z, h, H, A, Hpm
         massSq = np.column_stack( (mWsq, mZsq, mhsq, mHsq, mAsq,mHpmsq ) )
+        massSq0 = np.column_stack( ( mWsq0T, mZsq0T, mhsq0T, mHsq0T, mAsq0T,mHpmsq0T  ))
         degreesOfFreedom = np.array([6,3,1,1,1,2]) 
 
-        return massSq, degreesOfFreedom
+        return massSq, massSq0, degreesOfFreedom
     
     def boson_massSqResummed(self, fields: Fields, temperature):
 
@@ -344,7 +374,9 @@ def main():
     }
 
 
-    model = StandardModel(inputParameters)
+    model = InertDoubletModel(inputParameters)
+
+    print(f"{model.effectivePotential.evaluate(Fields(10.),100.)=}")
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
