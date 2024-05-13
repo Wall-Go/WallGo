@@ -390,12 +390,27 @@ def main():
 
     WallGo.initialize()
 
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
+    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
+    Lxi = 0.05
+
     ## Create WallGo control object
-    manager = WallGoManager()
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 10.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = [10.,10.]
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -478,6 +493,7 @@ def main():
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
+        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -492,18 +508,14 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
-
-        # some estimate of deviation from O(dz^2) finite difference method
-        delta00 = results.Deltas.Delta00.coefficients[0]
-        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
-        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

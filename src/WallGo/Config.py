@@ -28,6 +28,9 @@ class Config:
     def getfloat(self, section: str, key: str) -> float:
         return self.config.getfloat(section, key)
     
+    def set(self, section: str, key: str, value: str):
+        self.config.set(section, key, value)
+    
     def getboolean(self, section: str, key: str) -> bool:
         return self.config.getboolean(section, key)
     
