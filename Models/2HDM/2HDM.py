@@ -200,11 +200,15 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         bosonStuff = self.boson_massSq(fields)
         fermionStuff = self.fermion_massSq(fields)
 
+        bosonStuffResummed = self.boson_massSqResummed(fields, temperature)
+        fermionMass, _, fermionDOF = fermionStuff
+        fermionStuffT = fermionMass, fermionDOF
+
         VTotal = (
             V0 
-#            + self.constantTerms(temperature)
+            + self.constantTerms(temperature)
             + self.ColemanWeinberg(bosonStuff, fermionStuff) 
-#            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
+            + self.V1T(bosonStuffResummed, fermionStuffT, temperature, checkForImaginary)
         )
 
         return VTotal
@@ -213,7 +217,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
     def ColemanWeinberg(self,bosons, fermions) -> float:
         c = 3./2.
         m2, m20T, nb = bosons
-        print(f"{m2=}")
         Vboson = 1./(64.*np.pi**2)*np.sum(nb*(m2**2*(np.log(np.abs(m2) /m20T)- c) + 2*m2*m20T), axis=-1)
         
         m2, m20T, nf = fermions
@@ -281,6 +284,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
 
         return massSq, massSq0, degreesOfFreedom
     
+    
     def boson_massSqResummed(self, fields: Fields, temperature):
 
         v = fields.GetField(0) 
@@ -303,8 +307,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         PiPhi = temperature**2/12.*(6*lam + 2*lam3 + lam4 + 3/4*(3*g2**2 + g1**2) + 3*yt**2) # Eq. (15) of  2211.13142 (note the different normalization of lam)
         PiEta = temperature**2/12.*(6*lam2 + 2*lam3 + lam4 + 3/4*(3*g2**2 + g1**2))# Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
-        mhsq = msq + 3*lam*v**2 + PiPhi
-        mGsq = msq + lam*v**2 + PiPhi #Goldstone bosons
+        mhsq = np.abs(msq + 3*lam*v**2 + PiPhi)
+        mGsq = np.abs(msq + lam*v**2 + PiPhi) #Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5)/2*v**2 + PiEta
         mAsq = msq2 + (lam3 + lam4 - lam5)/2*v**2 + PiEta
         mHpmsq = msq2 + lam3/2*v**2 + PiEta
@@ -320,8 +324,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         m2sq = g2**2*v**2/4
         m12sq = -g1*g2*v**2/4
 
-        msqEig1 = (m1sq + m2sq + PiB+ PiW - np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB -PiW)**2))/2
-        msqEig2 = (m1sq + m2sq + PiB+ PiW + np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB -PiW)**2))/2
+        msqEig1 = (m1sq + m2sq + PiB+ PiW - np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
+        msqEig2 = (m1sq + m2sq + PiB+ PiW + np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
 
         # this feels error prone:
 
@@ -329,7 +333,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         massSq = np.column_stack( (mWsq, mWsqL, mZsq, msqEig1, msqEig2, mhsq, mGsq, mHsq, mAsq,mHpmsq ) )
         degreesOfFreedom = np.array([4,2,2,1,1,1,3,1,1,2]) 
 
-        return massSq, degreesOfFreedom
+        return massSq, degreesOfFreedom, 0
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -340,7 +344,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 14
+        dofsBoson = self.num_boson_dof - 17
         dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
