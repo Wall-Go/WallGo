@@ -327,8 +327,11 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msqEig1 = (m1sq + m2sq + PiB+ PiW - np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
         msqEig2 = (m1sq + m2sq + PiB+ PiW + np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
 
+        # HACK This is probably not the optimal solution
         if(mWsq.shape != mWsqL.shape):
-            print(f"{mWsq=} {mWsqL=} {mWsq.shape=} {mWsqL.shape=} {v=} {temperature=}") 
+            mWsq = mWsq*np.ones(mWsqL.shape[0])
+            mZsq = mZsq*np.ones(mWsqL.shape[0])
+             
 
         # this feels error prone:
 
