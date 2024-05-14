@@ -217,7 +217,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
     def ColemanWeinberg(self,bosons, fermions) -> float:
         c = 3./2.
         m2, m20T, nb = bosons
-        Vboson = 1./(64.*np.pi**2)*np.sum(nb*(m2**2*(np.log(np.abs(m2) /m20T)- c) + 2*m2*m20T), axis=-1)
+        Vboson = 1./(64.*np.pi**2)*np.sum(nb*(m2**2*(np.log(np.abs(m2) /m20T )- c) + 2*m2*m20T), axis=-1)
         
         m2, m20T, nf = fermions
         Vfermion = -1./(64.*np.pi**2)*np.sum(nf*(m2**2*(np.log(np.abs(m2) /m20T)- c) + 2*m2*m20T), axis=-1)
@@ -230,7 +230,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
-        mtsq = yt**2 * v**2 / 2
+        mtsq = yt**2 * v**2 / 2 + 1e-100
         mtsq0T = yt**2 *self.modelParameters["v0"]**2/2
     
         # @todo include spins for each particle
@@ -269,8 +269,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         mAsq0T = msq2 + (lam3 + lam4 - lam5)/2*v0**2
         mHpmsq0T = msq2 + lam3/2*v0**2
 
-        mWsq = g2**2 * v**2 / 4.
-        mZsq = (g1**2 + g2**2) * v**2 / 4.
+        mWsq = g2**2 * v**2 / 4.+1e-100
+        mZsq = (g1**2 + g2**2) * v**2 / 4. + 1e-100
 
         mWsq0T = g2**2*v0**2/4.
         mZsq0T = (g1**2 + g2**2)*v0**2/4.
@@ -288,7 +288,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
     def boson_massSqResummed(self, fields: Fields, temperature):
 
         v = fields.GetField(0) 
-
+        
         # TODO: numerical determination of scalar masses from V0
 
         msq = self.modelParameters["msq"]
@@ -327,10 +327,13 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msqEig1 = (m1sq + m2sq + PiB+ PiW - np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
         msqEig2 = (m1sq + m2sq + PiB+ PiW + np.sqrt(4*m12sq**2 + (m2sq - m1sq - PiB +PiW)**2))/2
 
+        if(mWsq.shape != mWsqL.shape):
+            print(f"{mWsq=} {mWsqL=} {mWsq.shape=} {mWsqL.shape=} {v=} {temperature=}") 
+
         # this feels error prone:
 
         # W, Wlong, Z,Zlong,photonLong, h, Goldstone H, A, Hpm
-        massSq = np.column_stack( (mWsq, mWsqL, mZsq, msqEig1, msqEig2, mhsq, mGsq, mHsq, mAsq,mHpmsq ) )
+        massSq = np.column_stack((mWsq, mWsqL,mZsq, msqEig1, msqEig2, mhsq, mGsq, mHsq, mAsq,mHpmsq ) )
         degreesOfFreedom = np.array([4,2,2,1,1,1,3,1,1,2]) 
 
         return massSq, degreesOfFreedom, 0
@@ -355,8 +358,22 @@ def main():
 
     WallGo.initialize()
 
+    # Print WallGo config. This was read by WallGo.initialize()
+    print("=== WallGo configuration options ===")
+    print(WallGo.config)
+
+    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
+    Lxi = 0.05
+
     ## Create WallGo control object
-    manager = WallGoManager()
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 1.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = 10.
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
@@ -372,7 +389,7 @@ def main():
         "lambda2" : 0.1,
         "lambdaL" : 0.0015,
         "mh" : 125.0,
-        "mH" : 65.0,
+        "mH" : 62.66,
         "mA" : 300.,
         "mHp" : 300. # We don't use mHm as input parameter, as it is equal to mHp
     }
@@ -380,23 +397,21 @@ def main():
 
     model = InertDoubletModel(inputParameters)
 
-    print(f"{model.effectivePotential.evaluate(Fields(10.),100.)=}")
-
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "Collisions/collisions_top_top_N11.hdf5"
-    manager.loadCollisionFile(collisionFileName)
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    manager.loadCollisionFiles(collisionDirectory)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
     """ Example mass loop that just does one value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mH = [ 50.0 ]
+    values_mH = [ 62.66 ]
 
     for mH in values_mH:
 
@@ -408,7 +423,7 @@ def main():
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
 
-        Tn = 63.1 ## nucleation temperature
+        Tn = 117.1 ## nucleation temperature
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
@@ -419,7 +434,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-
+        #print(f"{model.effectivePotential.evaluate(Fields(10.),100.)=} {model.effectivePotential.evaluate(Fields(10.),10.)=} {model.effectivePotential.evaluate(Fields(1.),0.1)=} ")
 
         ## Wrap everything in a try-except block to check for WallGo specific errors
         try:
