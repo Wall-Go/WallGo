@@ -38,8 +38,8 @@ class InertDoubletModel(GenericModel):
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields[0]**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0)])
+        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
+        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
@@ -459,21 +459,30 @@ def main():
             bIncludeOffEq = False
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+            results = manager.solveWall(bIncludeOffEq)
+            print(f"results=")
+            wallVelocity = results.wallVelocity
+            widths = results.wallWidths
+            offsets = results.wallOffsets
 
             print(f"{wallVelocity=}")
-            print(f"{wallParams.widths=}")
-            print(f"{wallParams.offsets=}")
+            print(f"{widths=}")
+            print(f"{offsets=}")
 
             ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-            wallVelocity, wallParams = manager.solveWall(bIncludeOffEq)
+            results = manager.solveWall(bIncludeOffEq)
+            wallVelocity = results.wallVelocity
+            wallVelocityError = results.wallVelocityError
+            widths = results.wallWidths
+            offsets = results.wallOffsets
 
             print(f"{wallVelocity=}")
-            print(f"{wallParams.widths=}")
-            print(f"{wallParams.offsets=}")
+            print(f"{wallVelocityError=}")
+            print(f"{widths=}")
+            print(f"{offsets=}")
 
         except WallGo.WallGoError as error:
             ## something went wrong!
