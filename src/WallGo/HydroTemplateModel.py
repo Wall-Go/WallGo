@@ -311,6 +311,7 @@ class HydroTemplateModel:
             # print('alN too small')
             return 0
         if self.alN > self.max_al(100) or shootingInLTE(self.vJ) < 0:
+            print(f"{self.alN=} {self.max_al(100)} {shootingInLTE(self.vJ) = }" )
             # print('alN too large')
             return 1
         sol = root_scalar(shootingInLTE,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
