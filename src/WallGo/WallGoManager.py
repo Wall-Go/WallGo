@@ -65,7 +65,7 @@ class WallGoManager:
 
     #Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(
-        self, modelParameters: dict[str, float], phaseInput: PhaseInfo
+        self, phaseInput: PhaseInfo
     ) -> None:
         """Parameters
         ----------
@@ -77,7 +77,7 @@ class WallGoManager:
                     and the nucleation temperature. Transition is assumed to go phaseLocation1 --> phaseLocation2.
         """
 
-        self.model.modelParameters = modelParameters
+        #self.model.modelParameters = modelParameters
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
@@ -112,6 +112,11 @@ class WallGoManager:
     def changeInputParameters(self, inputParameters:  dict[str, float], effectivePotential: EffectivePotential) -> None:
         self.model.modelParameters = self.model.calculateModelParameters(inputParameters)
         self.model.effectivePotential = effectivePotential(self.model.modelParameters, self.model.fieldCount)
+
+        potentialError = self.config.getfloat("EffectivePotential", "potentialError")
+        
+        self.model.effectivePotential.setPotentialError(potentialError)
+        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), self.fieldScaleInput)
     
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:

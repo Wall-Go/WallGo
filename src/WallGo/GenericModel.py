@@ -76,9 +76,3 @@ class GenericModel(ABC):
         self.inputParameters = inputParameters
         return {}
 
-
-    ## Redefine modelParameters and effectivePotential based on new inputparameters
-    def changeInputParameters(self, inputParameters: dict[str, float], effectivePotential: EffectivePotential) -> None:
-        self.modelParameters = self.calculateModelParameters(inputParameters)
-        self.effectivePotential = effectivePotential(self.modelParameters, self.fieldCount)
-

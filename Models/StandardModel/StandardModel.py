@@ -283,9 +283,7 @@ def main():
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
 
-        model.changeInputParameters(inputParameters, EffectivePotentialSM)
-
-        manager.registerModel(model)
+        manager.changeInputParameters(inputParameters, EffectivePotentialSM)
 
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
@@ -302,7 +300,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(manager.model.modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         """WallGo can now be used to compute wall stuff!"""
 
