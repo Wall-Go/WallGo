@@ -300,7 +300,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(model.modelParameters, phaseInfo)
+        manager.setParameters(manager.model.modelParameters, phaseInfo)
 
         """WallGo can now be used to compute wall stuff!"""
 
