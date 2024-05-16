@@ -403,7 +403,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 0.2
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -519,6 +519,7 @@ def main():
         print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+        
 
 
     # end parameter-space loop

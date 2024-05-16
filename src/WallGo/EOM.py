@@ -339,17 +339,15 @@ class EOM:
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
                 
-        # Estimate L_xi
-        # msq1 = self.particle.msqVacuum(vevHighT)
-        # msq2 = self.particle.msqVacuum(vevLowT)
-        # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
-        # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
-        
-        wallThicknessGrid = max(wallParams.widths)
+        # Estimate the new grid parameters
+        widths = wallParams.widths
+        offsets = wallParams.offsets
+        wallThicknessGrid = (np.max((1-offsets)*widths)-np.min((-1-offsets)*widths))/2
+        wallCenterGrid = (np.max((1-offsets)*widths)+np.min((-1-offsets)*widths))/2 - wallThicknessGrid*np.log(2)/2
         gammaWall = 1/np.sqrt(1-velocityMid**2)
         tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
         tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
-        self.grid.changePositionFalloffScale(tailInside, tailOutside ,wallThicknessGrid)
+        self.grid.changePositionFalloffScale(tailInside, tailOutside, wallThicknessGrid, wallCenterGrid)
 
         pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
