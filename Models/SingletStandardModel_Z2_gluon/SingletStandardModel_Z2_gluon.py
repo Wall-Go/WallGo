@@ -323,6 +323,11 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
+<<<<<<< HEAD:Models/SingletStandardModel_Z2_gluon/SingletStandardModel_Z2_gluon.py
+=======
+
+    ## Create WallGo control object
+>>>>>>> 43036c0 (updated SingletStandardModel_Z2 and SingletStandardModel_Z2_gluon corresponding to WallGoManager modifications):Models/SingletStandardModel_Z2/SingletStandardModel_Z2_gluon.py
     manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
