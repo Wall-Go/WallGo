@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 # WallGo imports
 from .Boltzmann import BoltzmannSolver
+from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
@@ -107,6 +108,10 @@ class WallGoManager:
 
         print(f"Jouguet: {self.hydro.vJ}")
 #        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
+        
+    def changeInputParameters(self, inputParameters:  dict[str, float], effectivePotential: EffectivePotential) -> None:
+        self.model.modelParameters = self.model.calculateModelParameters(inputParameters)
+        self.model.effectivePotential = effectivePotential(self.model.modelParameters, self.model.fieldCount)
     
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:

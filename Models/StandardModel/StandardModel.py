@@ -258,8 +258,11 @@ def main():
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
 
+    manager.registerModel(model)
+
     ## ---- File name for collisions integrals. Currently we just load this
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    manager.loadCollisionFiles(collisionDirectory)
 
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -280,11 +283,8 @@ def main():
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
 
-        model.changeInputParameters(inputParameters, EffectivePotentialSM)
+        manager.changeInputParameters(inputParameters, EffectivePotentialSM)
 
-        manager.registerModel(model)
-
-        manager.loadCollisionFiles(collisionDirectory)
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
