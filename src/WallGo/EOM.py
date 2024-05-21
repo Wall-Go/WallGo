@@ -338,13 +338,20 @@ class EOM:
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
-                
-        # Estimate the new grid parameters
+        
+        ######################################        
+        ## Estimate the new grid parameters ##
+        ###################################### 
         widths = wallParams.widths
         offsets = wallParams.offsets
+        ## Distance between the right and left edges of the walls at the boundaries
         wallThicknessGrid = (np.max((1-offsets)*widths)-np.min((-1-offsets)*widths))/2
+        ## Center between these two edges
+        ## The source and pressure are proportional to d(m^2)/dz, which peaks at -wallThicknessGrid*np.log(2)/2. This is why we substract this value.
         wallCenterGrid = (np.max((1-offsets)*widths)+np.min((-1-offsets)*widths))/2 - wallThicknessGrid*np.log(2)/2
         gammaWall = 1/np.sqrt(1-velocityMid**2)
+        ## The tail inside typically scales like gamma, while the one outside like 1/gamma
+        ## We take the max because the tail lengths must be larger than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall
         tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
         tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
         self.grid.changePositionFalloffScale(tailInside, tailOutside, wallThicknessGrid, wallCenterGrid)

@@ -52,7 +52,10 @@ class Grid3Scales(Grid):
             Controls the smoothness of the mapping function. Its first derivative 
             becomes discontinuous at :math:`\chi=\pm r` when smoothness is 0. 
             Should be smaller than 1, otherwise the function would not be linear 
-            at :math:`\chi=0` anymore. The default is 0.1.
+            at :math:`\chi=0` anymore. As explained above, the decay length is 
+            controlled by adding 2 smoothed step functions. 'smoothing' is the 
+            value of these functions at the origin, in units of :math:`L/r`. 
+            The default is 0.1.
         wallCenter : float, optional
             Position of the wall's center (in the z coordinates). Default is 0.
         spacing : {'Spectral', 'Uniform'}
@@ -88,11 +91,12 @@ class Grid3Scales(Grid):
         self.smoothing = smoothing
         self.wallCenter = wallCenter
         
-        # Defining parameters used in the mapping functions
+        # Defining parameters used in the mapping functions.
+        # These are set to insure that the smoothed step functions used to get 
+        # the right decay length have a value of smoothing*L/ratioPointsWall
+        # at the origin.
         self.aIn = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthInside-wallThickness*(1+smoothing)))/abs(ratioPointsWall*tailLengthInside-wallThickness*(1+2*smoothing)) + 1e-50
         self.aOut = np.sqrt(4*smoothing*wallThickness*ratioPointsWall**2*(ratioPointsWall*tailLengthOutside-wallThickness*(1+smoothing)))/abs(ratioPointsWall*tailLengthOutside-wallThickness*(1+2*smoothing)) + 1e-50
-        # self.aIn = np.arctanh((ratioPointsWall*tailLengthInside/wallThickness-1-2*smoothness)/(ratioPointsWall*tailLengthInside/wallThickness-1))
-        # self.aOut = np.arctanh((ratioPointsWall*tailLengthOutside/wallThickness-1-2*smoothness)/(ratioPointsWall*tailLengthOutside/wallThickness-1))
         
     def decompactify(self, z_compact, pz_compact, pp_compact):
         r"""
