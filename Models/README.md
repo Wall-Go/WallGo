@@ -19,7 +19,7 @@ The workflow includes running WolframScript to generate matrix elements, using P
 This is the default target which runs the `run_main` target.
 
 ### `generateMatrixElements`
-Generates Matrix Elements from
+Generates matrix Elements from
 `MatrixElements/<Model>.m`
 as sometimes only the matrix elements need to be generated.
 
@@ -53,15 +53,16 @@ Often, the paths are the following:
 ### For Linux
 
     /usr/share/Mathematica/Applications
-    /home/<computer name>/.Mathematica/Applications
+    /home/<computer-name>/.Mathematica/Applications
 
 ### For Windows
 
     C:\ProgramData\Mathematica\Applications
-    C:\Users\<computer name>\AppData\Roaming\Mathematica\Applications
+    C:\Users\<computer-name>\AppData\Roaming\Mathematica\Applications
 
 ## Usage
 
+### Full pipeline
 1. **Generate Collisions**:
     Ensure that the matrix elements data file `MatrixElements/MatrixElements.txt` exists, then generate collision data by running:
    ```sh
@@ -74,16 +75,17 @@ Often, the paths are the following:
    make run_main
    ```
 
-3. **Generate Matrix Elements**:
+4. **Clean Up**:
+    To clean up the generated collision data files and matrix elements:
+   ```sh
+   make clean
+   ```
+
+### Matrix Elements
+1. **Generate Matrix Elements**:
     In that case it suffices to run:
    ```sh
    make generateMatrixElements
-   ```
-
-4. **Clean Up**:
-    To clean up the generated collision data files:
-   ```sh
-   make clean
    ```
 
 ## File Descriptions
@@ -91,7 +93,7 @@ Often, the paths are the following:
 - `MatrixElements/matrixElements.qcd.m` - WolframScript file for generating matrix elements.
 - `MatrixElements/MatrixElements.txt` - Output data file containing matrix elements.
 - `collisionGenerator.py` - Python script for generating collision data.
-- `SingletStandardModel_Z2.py` - Main Python Model script that uses the collision data.
+- `<model-name>.py` - Main Python Model script that uses the collision data e.g. `SingletStandardModel_Z2.py`
 
 ## Notes
 
