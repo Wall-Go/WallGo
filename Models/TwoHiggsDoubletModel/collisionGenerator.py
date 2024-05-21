@@ -100,7 +100,7 @@ a temperature. So hacking this by setting T = 1. Also, for this example the vacu
 """
 # hack
 temperatureHack = 1.0
-fieldHack = WallGo.Fields([0.])
+fieldHack = WallGo.Fields([0]*model.fieldCount)
 
 """
 Register particles with the collision module. This is required for each particle that can appear in matrix elements,
