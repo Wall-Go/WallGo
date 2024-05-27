@@ -57,7 +57,7 @@ class InertDoubletModel(GenericModel):
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
+                            msqVacuum = lambda fields: 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
@@ -71,7 +71,7 @@ class InertDoubletModel(GenericModel):
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
+                            msqVacuum = lambda fields: 0.0,
                             msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
