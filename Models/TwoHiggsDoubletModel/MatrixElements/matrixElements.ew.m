@@ -81,24 +81,25 @@ one right-handed fermoon
 	reps 5,6 are vector bosons
 *)
 (*left-handed top-quark*)
-ReptL=CreateOutOfEq[{1},"F"];
+ReptL=CreateOutOfEq[{1,1},"F"];
 
 (*right-handed top-quark*)
-ReptR=CreateOutOfEq[{2},"F"];
+ReptR=CreateOutOfEq[{2,1},"F"];
 
 (*light quarks*)
-RepLight=CreateOutOfEq[{3,4,5,6,7,8,9},"F"];
+RepLight=CreateOutOfEq[{{1,2},3,4,5,6,7,8,9},"F"];
 
 (*Vector bosons*)
 RepGluon=CreateOutOfEq[{1},"V"];
-RepW=CreateOutOfEq[{{2,1}},"V"];
+RepW=CreateOutOfEq[{2},"V"];
 
 
 ParticleList={ReptL,ReptR,RepGluon,RepW,RepLight};
 (*
 These particles do not have out-of-eq contributions
 *)
-LightParticles={3,4,5,6,7,8,9};
+(*LightParticles={3,4,5,6,7,8,9};*)
+EqParticles={5};
 
 
 (*Defining various masses and couplings*)
@@ -111,7 +112,7 @@ FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
 (*
 up to the user to make sure that the same order is given in the python code
 *)
-UserMasses={mq2,mw2,mg2}; 
+UserMasses={mq2,mg2,mw2}; 
 UserCouplings=CouplingName;
 
 
@@ -121,7 +122,7 @@ UserCouplings=CouplingName;
 OutputFile="MatrixElements";
 SetDirectory[DirectoryName[$InputFileName]];
 ParticleName={"TopL","TopR","Gluon","W"};
-MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];
+MatrixElements=ExportMatrixElements[OutputFile,ParticleList,EqParticles,UserMasses,UserCouplings,ParticleName];
 
 
 MatrixElements//Expand
