@@ -3,6 +3,7 @@ import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
 from .Polynomial import Polynomial
+from .Particle import Particle
 # Put common data classes etc here
 
 

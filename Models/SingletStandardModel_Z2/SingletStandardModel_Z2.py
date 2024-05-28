@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
+from time import time
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -507,8 +508,10 @@ def main():
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
+        
+        t = time()
         results = manager.solveWall(bIncludeOffEq)
+        print(f"{time()-t=}")
         wallVelocity = results.wallVelocity
         wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
