@@ -112,7 +112,7 @@ FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
 (*
 up to the user to make sure that the same order is given in the python code
 *)
-UserMasses={mq2,mg2,mw2}; 
+UserMasses={mq2,mq2,mg2,mw2}; 
 UserCouplings=CouplingName;
 
 
