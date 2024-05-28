@@ -42,16 +42,55 @@ class InertDoubletModel(GenericModel):
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
-        topQuark = Particle("top", 
+        topQuarkL = Particle("topL", 
                             msqVacuum = topMsqVacuum,
                             msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 12
+                            totalDOFs = 6
         )
-        self.addParticle(topQuark)
+        self.addParticle(topQuarkL)
+
+        topQuarkR = Particle("topR", 
+                            msqVacuum = topMsqVacuum,
+                            msqDerivative = topMsqDerivative,
+                            msqThermal = topMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = False,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(topQuarkR)
+
+        ## === SU(3) gluon ===
+        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+
+        gluon = Particle("gluon", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = gluonMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 16
+        )
+        self.addParticle(gluon)
+
+        ## === SU(2) gauge boson ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+
+        W = Particle("W", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = False,
+                            ultrarelativistic = True,
+                            totalDOFs = 9
+        )
+        self.addParticle(W)
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
@@ -67,33 +106,7 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(lightQuark)
 
-        ## === SU(2) gauge boson ===
-        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
 
-        WBoson = Particle("gluon", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = WMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = False,
-                            ultrarelativistic = True,
-                            totalDOFs = 9
-        )
-        self.addParticle(WBoson)
-
-        ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
-
-        gluon = Particle("gluon", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 16
-        )
-        self.addParticle(gluon)
 
     ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:

@@ -86,22 +86,19 @@ ReptL=CreateOutOfEq[{1},"F"];
 (*right-handed top-quark*)
 ReptR=CreateOutOfEq[{2},"F"];
 
-(*right-handed bottom-quark*)
-RepbR=CreateOutOfEq[{3},"F"];
-
 (*light quarks*)
-RepLight=CreateOutOfEq[{4,5,6,7,8,9},"F"];
+RepLight=CreateOutOfEq[{3,4,5,6,7,8,9},"F"];
 
 (*Vector bosons*)
 RepGluon=CreateOutOfEq[{1},"V"];
 RepW=CreateOutOfEq[{{2,1}},"V"];
 
 
-ParticleList={ReptL,ReptR,RepbR,RepGluon,RepW,RepLight};
+ParticleList={ReptL,ReptR,RepGluon,RepW,RepLight};
 (*
 These particles do not have out-of-eq contributions
 *)
-LightParticles={6};
+LightParticles={3,4,5,6,7,8,9};
 
 
 (*Defining various masses and couplings*)
@@ -123,7 +120,7 @@ UserCouplings=CouplingName;
 *)
 OutputFile="MatrixElements";
 SetDirectory[DirectoryName[$InputFileName]];
-ParticleName={"TopL","TopR","BotR","Gluon","W"};
+ParticleName={"TopL","TopR","Gluon","W"};
 MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];
 
 
