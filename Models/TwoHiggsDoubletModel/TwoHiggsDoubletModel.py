@@ -8,7 +8,7 @@ import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-## For Benoit benchmarks we need the unresummed, non-high-T potential:
+## To compare to 2211.13142 we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
 
@@ -67,6 +67,20 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(lightQuark)
 
+        ## === SU(2) gauge boson ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+
+        WBoson = Particle("gluon", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = False,
+                            ultrarelativistic = True,
+                            totalDOFs = 9
+        )
+        self.addParticle(WBoson)
+
         ## === SU(3) gluon ===
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
@@ -81,8 +95,7 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(gluon)
 
-        ## Go from whatever input params --> action params
-    ## This function was just copied from SingletStandardModel_Z2
+    ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         super().calculateModelParameters(inputParameters)
     
