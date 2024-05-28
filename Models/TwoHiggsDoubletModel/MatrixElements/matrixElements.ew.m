@@ -1,21 +1,21 @@
 (* ::Package:: *)
 
-Quit[];
+(*Quit[];*)
 
 
-SetDirectory[NotebookDirectory[]];
+SetDirectory[DirectoryName[$InputFileName]];
 (*Put this if you want to create multiple model-files with the same kernel*)
 $GroupMathMultipleModels=True;
 $LoadGroupMath=True;
-<<../DRalgo/DRalgo.m
-<<../src/matrixElements.m
+<<DRalgo`;
+<<matrixElements`;
 
 
 (* ::Chapter:: *)
 (*QCD+W boson*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Model*)
 
 
@@ -62,10 +62,6 @@ Ysff=-GradYukawa[yt*YukawaDoublet[[1]]];
 
 vev={0,v,0,0};
 SymmetryBreaking[vev]
-
-
-(* ::Print:: *)
-(*SequenceForm["One particle with mass ", 2^Rational[-1, 2] v yt]*)
 
 
 (* ::Subsection:: *)
@@ -125,8 +121,8 @@ UserCouplings=CouplingName;
 (*
 	output of matrix elements
 *)
-OutputFile="matrixElements.ew";
-SetDirectory[NotebookDirectory[]];
+OutputFile="MatrixElements";
+SetDirectory[DirectoryName[$InputFileName]];
 ParticleName={"TopL","TopR","BotR","Gluon","W"};
 MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];
 
