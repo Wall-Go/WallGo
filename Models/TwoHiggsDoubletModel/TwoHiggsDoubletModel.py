@@ -86,7 +86,7 @@ class InertDoubletModel(GenericModel):
                             msqDerivative = 0.0,
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = False,
+                            inEquilibrium = True,
                             ultrarelativistic = True,
                             totalDOFs = 9
         )

@@ -15,6 +15,9 @@ $LoadGroupMath=True;
 (*QCD+W boson*)
 
 
+$UserBaseDirectory
+
+
 (* ::Section:: *)
 (*Model*)
 
@@ -121,8 +124,9 @@ UserCouplings=CouplingName;
 *)
 OutputFile="MatrixElements";
 SetDirectory[DirectoryName[$InputFileName]];
+RepOptional={c[1]->0};
 ParticleName={"TopL","TopR","Gluon","W"};
-MatrixElements=ExportMatrixElements[OutputFile,ParticleList,EqParticles,UserMasses,UserCouplings,ParticleName];
+MatrixElements=ExportMatrixElements[OutputFile,ParticleList,EqParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
 
 
 MatrixElements//Expand

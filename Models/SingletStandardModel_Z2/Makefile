@@ -1,6 +1,6 @@
 .PHONY=clean, run_main
 
-PYTHON=python3
+PYTHON=python3.11
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
 MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
