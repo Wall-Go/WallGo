@@ -210,8 +210,8 @@ class BoltzmannSolver:
         self.drzdpz = drzdpz[None, None, :, None]
         self.drpdpp = drpdpp[None, None, None, :]
         
-        self.fEq = BoltzmannSolver.feq(self.EPlasma / self.T, self.statistics)
-        self.dfEq = BoltzmannSolver.dfeq(self.EPlasma / self.T, self.statistics)
+        self.fEq = BoltzmannSolver.__feq(self.EPlasma / self.T, self.statistics)
+        self.dfEq = BoltzmannSolver.__dfeq(self.EPlasma / self.T, self.statistics)
 
     def getDeltas(self, deltaF: np.ndarray = None) -> BoltzmannResults:
         """
@@ -255,9 +255,9 @@ class BoltzmannSolver:
         integrand = self.pp / (4 * np.pi**2 * self.E * self.drzdpz * self.drpdpp)
         
         Delta00 = deltaFPoly.integrate((2, 3), integrand)
-        Delta02 = deltaFPoly.integrate((2, 3), self.pz**2 * integrand)
-        Delta20 = deltaFPoly.integrate((2, 3), self.E**2 * integrand)
-        Delta11 = deltaFPoly.integrate((2, 3), self.E * self.pz * integrand)
+        Delta02 = deltaFPoly.integrate((2, 3), self.PPlasma**2 * integrand)
+        Delta20 = deltaFPoly.integrate((2, 3), self.EPlasma**2 * integrand)
+        Delta11 = deltaFPoly.integrate((2, 3), self.EPlasma * self.PPlasma * integrand)
         
         Deltas = BoltzmannDeltas(
             Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
@@ -521,7 +521,7 @@ class BoltzmannSolver:
             f"BoltzmannSolver error: unkown derivatives option {derivatives}"
 
     @staticmethod
-    def feq(x, statistics):
+    def __feq(x, statistics):
         """
         Thermal distribution functions, Bose-Einstein and Fermi-Dirac
         """
@@ -533,7 +533,7 @@ class BoltzmannSolver:
         )
 
     @staticmethod
-    def dfeq(x, statistics):
+    def __dfeq(x, statistics):
         """
         Temperature derivative of thermal distribution functions
         """
