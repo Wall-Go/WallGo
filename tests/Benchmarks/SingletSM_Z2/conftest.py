@@ -225,7 +225,7 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
     # The magic numbers here are falloff scales in position and momentum directions.
     # Hardcoded for main singlet benchmark point. Would need a different grid for each benchmark point tbh
-    grid = WallGo.Grid(M, N, 0.05, 100)
+    grid = WallGo.Grid3Scales.Grid3Scales(M, N, 0.2, 0.2, 0.05, 100)
 
     return grid
 
@@ -278,12 +278,13 @@ def singletBenchmarkEOM_equilibrium(
     hydro, _ = singletBenchmarkHydro
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
+    meanFreePath = 0
 
     fieldCount = 2
 
     ## TODO fix error tolerance?
     eom = WallGo.EOM(
-        boltzmannSolver, thermo, hydro, grid, fieldCount, includeOffEq=False
+        boltzmannSolver, thermo, hydro, grid, fieldCount, meanFreePath, includeOffEq=False
     )
 
     return eom, BM

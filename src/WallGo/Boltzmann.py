@@ -205,10 +205,10 @@ class BoltzmannSolver:
         self.uwuPl = self.gammaWall * self.gammaPlasma * (1 - vw * self.v)
         
         # (exact) derivatives of compactified coordinates
-        dchidxi, drzdpz, drpdpp = self.grid.getCompactificationDerivatives()
-        self.dchidxi = dchidxi[None, :, None, None]
-        self.drzdpz = drzdpz[None, None, :, None]
-        self.drpdpp = drpdpp[None, None, None, :]
+        dxidchi, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
+        self.dchidxi = 1/dxidchi[None, :, None, None]
+        self.drzdpz = 1/dpzdrz[None, None, :, None]
+        self.drpdpp = 1/dppdrp[None, None, None, :]
         
         self.fEq = BoltzmannSolver.__feq(self.EPlasma / self.T, self.statistics)
         self.dfEq = BoltzmannSolver.__dfeq(self.EPlasma / self.T, self.statistics)
@@ -301,7 +301,7 @@ class BoltzmannSolver:
             of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501
             doi:10.1103/PhysRevD.106.023501
         """
-        print("Starting solveBoltzmannEquations")
+        # print("Starting solveBoltzmannEquations")
 
         # contructing the various terms in the Boltzmann equation
         operator, source, liouville, collision = self.buildLinearEquations()
@@ -442,6 +442,7 @@ class BoltzmannSolver:
         return operator, source, liouville, collision
     
     def liouville(self):
+        
         # Given in the LHS of Eq. (5) in 2204.13120, with further details given
         # by the second line of Eq. (32).
         liouville = np.identity(len(self.offEqParticles))[:, None, None, None, :, None, None, None]*(

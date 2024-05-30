@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
-from time import time
+import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -394,16 +394,19 @@ def main():
     WallGo.initialize()
 
     # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
+    # WallGo.config.readINI(
+    #     pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    # )
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -413,7 +416,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -491,12 +494,19 @@ def main():
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
+        
+        ## Computes the detonation solutions
+        # wallGoInterpolationResults = manager.solveWallDetonation()
+        # print(wallGoInterpolationResults.wallVelocities)
+        # plt.plot(wallGoInterpolationResults.velocityGrid, wallGoInterpolationResults.pressures)
+        # plt.grid()
+        # plt.show()
+        
 
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -509,18 +519,20 @@ def main():
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
         
-        t = time()
         results = manager.solveWall(bIncludeOffEq)
-        print(f"{time()-t=}")
         wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+
+        # some estimate of deviation from O(dz^2) finite difference method
+        delta00 = results.Deltas.Delta00.coefficients[0]
+        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

@@ -6,6 +6,7 @@ import copy  # for deepcopy
 
 
 import scipy.optimize
+from scipy.interpolate import UnivariateSpline
 
 from .Boltzmann import (
     BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
@@ -17,7 +18,7 @@ from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams
+from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
 
 
 class EOM:
@@ -32,6 +33,7 @@ class EOM:
         hydro: Hydro,
         grid: Grid,
         nbrFields: int,
+        meanFreePath: float,
         includeOffEq: bool=False,
         errTol=1e-3,
         maxIterations=10,
@@ -50,6 +52,8 @@ class EOM:
             Object of the class Grid.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
+        meanFreePath : float
+            Estimate of the mean free path of the particles in the plasma.
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
@@ -75,6 +79,7 @@ class EOM:
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
+        self.meanFreePath = meanFreePath
         self.includeOffEq = includeOffEq
 
         self.thermo = thermodynamics
@@ -88,9 +93,10 @@ class EOM:
         self.errTol = errTol
         self.maxIterations = maxIterations
         self.pressRelErrTol = pressRelErrTol
+        self.pressAbsErrTol = 0
 
 
-    def findWallVelocityMinimizeAction(self):
+    def findWallVelocityMinimizeAction(self, wallThicknessIni: float=None):
         """
         Finds the wall velocity by minimizing the action and solving for the
         solution with 0 total pressure on the wall.
@@ -108,9 +114,12 @@ class EOM:
         assert self.grid is self.boltzmannSolver.grid, "EOM and BoltzmannSolver must have the same instance of the Grid object."
 
         # LN: note that I've made widths and offsets be same size. Previously offsets was one element shorter
-
+        
+        if wallThicknessIni is None:
+            wallThicknessIni = 5 / self.Tnucl
+            
         wallParams = WallParams(
-            widths=(5 / self.Tnucl) * np.ones(self.nbrFields),
+            widths=wallThicknessIni * np.ones(self.nbrFields),
             offsets=np.zeros(self.nbrFields),
         )
 
@@ -262,6 +271,9 @@ class EOM:
         wallVelocity: float,
         wallParams: WallParams,
         returnExtras: bool = False,
+        atol: float = None,
+        rtol: float = None,
+        boltzmannResults: BoltzmannResults = None
     ):
         """
         Computes the total pressure on the wall by finding the tanh profile
@@ -289,11 +301,10 @@ class EOM:
 
         """
         
-        # Let's not allow this:
-        """ 
-        if wallParams is None:
-            wallParams = np.append(self.nbrFields*[5/self.Tnucl], (self.nbrFields-1)*[0])
-        """
+        if atol is None:
+            atol = self.pressAbsErrTol
+        if rtol is None:
+            rtol = self.pressRelErrTol
 
         print(f"\nTrying {wallVelocity=}")
 
@@ -316,15 +327,18 @@ class EOM:
             direction=("Array", "z", "pz", "pp"),
             endpoints=False,
         )
-        boltzmannResults = BoltzmannResults(
-            deltaF=deltaF,
-            Deltas=offEquilDeltas,
-            truncationError=0,
-            linearizationCriterion1=0,
-            linearizationCriterion2=0,
-        )
+        
+        if boltzmannResults is None:
+            boltzmannResults = BoltzmannResults(
+                deltaF=deltaF,
+                Deltas=offEquilDeltas,
+                truncationError=0,
+                linearizationCriterion1=0,
+                linearizationCriterion2=0,
+            )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+        vp, vm, _,_ = self.hydro.findMatching(wallVelocity)
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
@@ -333,36 +347,53 @@ class EOM:
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
-                
-        # Estimate L_xi
-        # msq1 = self.particle.msqVacuum(vevHighT)
-        # msq2 = self.particle.msqVacuum(vevLowT)
-        # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
-        # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 2*max(wallParams.widths)
-        self.grid.changePositionFalloffScale(L_xi)
+        # Estimate the new grid parameters
+        widths = wallParams.widths
+        offsets = wallParams.offsets
+        wallThicknessGrid = (np.max((1-offsets)*widths)-np.min((-1-offsets)*widths))/2
+        wallCenterGrid = (np.max((1-offsets)*widths)+np.min((-1-offsets)*widths))/2
+        gammaWall = 1/np.sqrt(1-velocityMid**2)
+        tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        self.grid.changePositionFalloffScale(tailInside, tailOutside, wallThicknessGrid, wallCenterGrid)
 
-        pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
-            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
+        pressure, _, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
+            wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, 
         )
+        
+        pressures = [pressure]
+        
+        ## The 'multiplier' parameter is used to reduced the size of the wall
+        ## parameters updates during the iteration procedure. The next iteration
+        ## will use multiplier*newWallParams+(1-multiplier)*oldWallParams. 
+        ## Can be used when the iterations do not converge, even close to the 
+        ## true solution. For small enough values, we should always be able to converge.
+        multiplier = 1
 
         i = 0
         while True:
-            pressureOld = pressure
-            
-            pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
-                wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
+            pressure, wallParams, boltzmannResults, boltzmannBackground, errorSolver = self.__getNextPressure(
+                pressure, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, multiplier=multiplier
             )
+            pressures.append(pressure)
 
-            error = np.abs(pressure-pressureOld)
-            errTol = np.maximum(self.pressRelErrTol * np.abs(pressure), self.pressAbsErrTol)
+            error = np.abs(pressures[-1]-pressures[-2])
+            errTol = np.maximum(rtol * np.abs(pressure), atol)*multiplier
             
-            print(f"{pressure=} {error=} {errTol=}")
+            print(f"{pressure=} {error=} {errTol=} {max(wallParams.widths)=}")
             i += 1
 
-            if error < errTol:
-                break
+            if (error < errTol or errorSolver < errTol):
+                ## Even if two consecutive call to __getNextPressure() give similar pressures, it is possible
+                ## that the internal calls made to intermediatePressureResults() do not converge. This is measured
+                ## by 'errorSolver'. If __getNextPressure() converges but not intermediatePressureResults() doesn't,
+                ## m'ultiplier' is probably too large. We therefore continue the iteration procedure with a smaller 
+                ## value of 'multiplier'.
+                if errorSolver > errTol:
+                    multiplier /= 2
+                else:
+                    break
             elif i >= self.maxIterations-1:
                 print(
                     "Pressure for a wall velocity has not converged to "
@@ -376,17 +407,49 @@ class EOM:
         else:
             return pressure
         
+    def __getNextPressure(self, pressure1, wallParams1, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults1, Tplus, Tminus, Tprofile=None, velocityProfile=None, multiplier=1.0):
+        """
+        Performs the next iteration to solve the EOM and Boltzmann equation. 
+        First computes twice the pressure, updating the wall parameters and 
+        Boltzmann results each time. If the iterations overshot the true solution
+        (the two pressure updates go in opposite directions), uses linear 
+        interpolation to find a better estimate of the true solution.
+        """
+        pressure2, wallParams2, boltzmannResults2, _= self.intermediatePressureResults(
+            wallParams1, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults1, Tplus, Tminus, Tprofile, velocityProfile, multiplier
+        )
+        pressure3, wallParams3, boltzmannResults3, boltzmannBackground3 = self.intermediatePressureResults(
+            wallParams2, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults2, Tplus, Tminus, Tprofile, velocityProfile, multiplier
+        )
+        
+        ## If the last iteration does not overshoot the real pressure (the two 
+        ## last update go in the same direction), returns the last iteration.
+        if (pressure3-pressure2)*(pressure2-pressure1) >= 0:
+            err = abs(pressure3-pressure2)
+            return pressure3, wallParams3, boltzmannResults3, boltzmannBackground3, err
+        
+        ## If the last iteration overshot, uses linear interpolation to find a 
+        ## better estimate of the true solution.
+        x = (pressure1-pressure2)/(pressure1-2*pressure2+pressure3)
+        pressure4, wallParams4, boltzmannResults4, boltzmannBackground4 = self.intermediatePressureResults(
+            wallParams1+(wallParams2-wallParams1)*x, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults1+(boltzmannResults2-boltzmannResults1)*x, Tplus, Tminus, Tprofile, velocityProfile, multiplier
+        )
+        err = abs(pressure4-pressure2)
+        return pressure4, wallParams4, boltzmannResults4, boltzmannBackground4, err
+        
+        
 
-    def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus):
+    def intermediatePressureResults(self, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, Tprofile=None, velocityProfile=None, multiplier=1.0):
 
         ## here dPhidz are z-derivatives of the fields
         fields, dPhidz = self.wallProfile(
             self.grid.xiValues, vevLowT, vevHighT, wallParams
         )
 
-        Tprofile, velocityProfile = self.findPlasmaProfile(
-            c1, c2, velocityMid, fields, dPhidz, boltzmannResults.Deltas, Tplus, Tminus
-        )
+        if Tprofile is None and velocityProfile is None:
+            Tprofile, velocityProfile = self.findPlasmaProfile(
+                c1, c2, velocityMid, fields, dPhidz, boltzmannResults.Deltas, Tplus, Tminus
+            )
 
         """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
         Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile().
@@ -400,21 +463,16 @@ class EOM:
             velocityMid, vWithEndpoints, fieldsWithEndpoints, TWithEndpoints,
         ) 
         if self.includeOffEq:
-             ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
+              ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
             """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
                 and let BoltzmannSolver create/manage the actual BoltzmannBackground object
                 """
             self.boltzmannSolver.setBackground(boltzmannBackground)
-            boltzmannResults = self.boltzmannSolver.getDeltas()
+            boltzmannResults = multiplier*self.boltzmannSolver.getDeltas() + (1-multiplier)*boltzmannResults
 
         ## ---- Next need to solve wallWidth and wallOffset. For this, put wallParams in a np 1D array,
         ## NOT including the first offset which we keep at 0.
         wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
-        
-        ## This gives WallParams back from the above array, putting 0 as the first offset
-        def __toWallParams(_wallArray: np.ndarray) -> WallParams:
-            offsets = np.concatenate( ([0], _wallArray[self.nbrFields:]) )
-            return WallParams(widths = _wallArray[:self.nbrFields], offsets = offsets)
 
         ## LN: Where do these bounds come from!?
         ## first width, then offset
@@ -424,7 +482,7 @@ class EOM:
 
         ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
         def actionWrapper(wallArray: np.ndarray, *args) -> float:
-            return self.action( __toWallParams(wallArray), *args )
+            return self.action( self.__toWallParams(wallArray), *args )
         
         Delta00 = boltzmannResults.Deltas.Delta00
         sol = scipy.optimize.minimize(
@@ -436,7 +494,7 @@ class EOM:
         )
 
         ## Put the resulting width, offset back in WallParams format
-        wallParams = __toWallParams(sol.x)
+        wallParams = multiplier*self.__toWallParams(sol.x) + (1-multiplier)*wallParams
 
         fields, dPhidz = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)
         dVdPhi = self.thermo.effectivePotential.derivField(fields, Tprofile)
@@ -455,17 +513,145 @@ class EOM:
         minimized. This sets their pressure to 0. The first field doesn't have 
         an offset, so its pressure is nonzero.
         """
-        dVdz = (dVfull * dPhidz).GetField(0)
+        dVdz = np.sum(np.array(dVfull * dPhidz), axis=1)
 
         EOMPoly = Polynomial(dVdz, self.grid)
 
-        pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        pressure = EOMPoly.integrate(w=-dzdchi)
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
+    
+    def interpolatePressure(self, vmin: float, vmax: float, nbrPoints: int, wallThicknessIni: float=None, rtol: float=1e-3):
+        """
+        Computes the pressure on a grid.
 
+        Parameters
+        ----------
+        vmin : float
+            Lower bound of the interpolation interval.
+        vmax : float
+            Upper bound of the interpolation interval.
+        nbrPoints : int
+            Number of points on the grid.
+        wallThicknessIni : float, optional
+            Initial wall thickness used to compute the first pressure at vmin.
+            The default is None.
+        rtol : float, optional
+            Relative tolerance. The default is 1e-3.
 
+        Returns
+        -------
+        wallVelocities : list[float]
+            Velocity grid.
+        pressures: ndarray
+            Pressure evaluated on the grid.
+        wallParamsList : list[WallParams]
+            WallParams evaluated on the grid.
+        boltzmannResultsList : list[BoltzmannResults]
+            BoltzmannResults evaluated on the grid.
+        boltzmannBackgroundList : list[BoltzmannBackground]
+            BoltzmannBackground evaluated on the grid.
+        hydroResultsList : list[HydroResults]
+            HydroResults evaluated on the grid.
+
+        """
+        wallVelocities = np.linspace(vmin, vmax, nbrPoints)
+        
+        if wallThicknessIni is None:
+            wallThicknessIni = 5 / self.Tnucl
+            
+        wallParams = WallParams(
+            widths=wallThicknessIni * np.ones(self.nbrFields),
+            offsets=np.zeros(self.nbrFields),
+        )
+        
+        boltzmannResults = None
+        
+        pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(vmin, wallParams, True, 0, rtol, boltzmannResults)
+        
+        pressures = []
+        boltzmannBackgroundList = []
+        boltzmannResultsList = []
+        hydroResultsList = []
+        wallParamsList = []
+        for i,wallVelocity in enumerate(wallVelocities):
+            if i > 1:
+                # Use linear extrapolation to get a more accurate initial value of wall parameters
+                wallParamsTry = wallParamsList[-1] + (wallParamsList[-1]-wallParamsList[-2])*(wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2])
+                boltzmannResultsTry = boltzmannResultsList[-1] + (boltzmannResultsList[-1]-boltzmannResultsList[-2])*((wallVelocity-wallVelocities[i-1])/(wallVelocities[i-1]-wallVelocities[i-2]))
+            else:
+                wallParamsTry = wallParams
+                boltzmannResultsTry = boltzmannResults
+                
+            pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults = self.wallPressure(wallVelocity, wallParamsTry, True, 0, rtol, boltzmannResultsTry)
+            
+            pressures.append(pressure)
+            wallParamsList.append(wallParams)
+            boltzmannResultsList.append(boltzmannResults)
+            boltzmannBackgroundList.append(boltzmannBackground)
+            hydroResultsList.append(hydroResults)
+        
+        return wallVelocities, np.array(pressures), wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList
+    
+    def solveInterpolation(self, vmin: float, vmax: float, wallThicknessIni: float=None, desiredPressure: float=0, rtol: float=1e-3, dvMin: float=0.02):
+        """
+        Finds all the EOM solutions in some interval by computing the pressure 
+        on a grid and interpolating to get the roots.
+
+        Parameters
+        ----------
+        vmin : float
+            Lower bound of the interpolation interval.
+        vmax : float
+            Upper bound of the interpolation interval.
+        wallThicknessIni : float, optional
+            Initial wall thickness used to compute the first pressure at vmin. 
+            The default is None.
+        desiredPressure : float, optional
+            The solver finds the velocities for which the pressure is equal to 
+            desiredPressure. The default is 0.
+        rtol : float, optional
+            Relative tolerance. The default is 1e-3.
+        dvMin : float, optional
+            Minimal spacing between each grid points. The default is 0.02.
+
+        Returns
+        -------
+        wallGoInterpolationResults : WallGoInterpolationResults
+
+        """
+        nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
+        wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.interpolatePressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
+        pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
+        
+        roots = pressuresSpline.roots()
+        stableRoots, unstableRoots = [], []
+        for root in roots:
+            if pressuresSpline.derivative()(root) > 0:
+                stableRoots.append(root)
+            else:
+                unstableRoots.append(root)
+        
+        wallGoInterpolationResults = WallGoInterpolationResults(
+            wallVelocities=stableRoots,
+            unstableWallVelocities=unstableRoots,
+            velocityGrid=wallVelocities.tolist(),
+            pressures=pressures.tolist(),
+            pressureSpline=pressuresSpline,
+            wallParams=wallParamsList,
+            boltzmannResults=boltzmannResultsList,
+            boltzmannBackgrounds=boltzmannBackgroundList,
+            hydroResults=hydroResultsList,
+            )
+        return wallGoInterpolationResults
+        
+
+    def __toWallParams(self, wallArray: np.ndarray) -> WallParams:
+        offsets = np.concatenate( ([0], wallArray[self.nbrFields:]) )
+        return WallParams(widths = wallArray[:self.nbrFields], offsets = offsets)
 
     def action(self, wallParams: WallParams, vevLowT: Fields, vevHighT: Fields, Tprofile: np.ndarray, offEquilDelta00: np.ndarray) -> float:
         r"""
@@ -506,7 +692,8 @@ class EOM:
         Vref = (VLowT+VHighT)/2
         
         VPoly = Polynomial(V+VOut-Vref, self.grid)
-        U = VPoly.integrate(w = self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        U = VPoly.integrate(w = dzdchi)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
         return U + K  
@@ -655,16 +842,7 @@ class EOM:
         s2 = c2 - Tout33
 
         ## TODO figure out better bounds
-        # HACK! shoved in this Tc as a short term hack
-        Tc = self.thermo.findCriticalTemperature(
-            dT=0.1, rTol=1e-6, paranoid=True,
-        )
-        #(TMin, TMax) = self.thermo.getCoexistenceRange()
-        minRes = scipy.optimize.minimize_scalar(
-            lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            method='Bounded',
-            bounds=[0, Tc],
-        )
+        minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,2*max(Tplus,Tminus)])
         # TODO: A fail safe
 
         ## Whats this? shouldn't we check that LHS == 0 ?
@@ -674,22 +852,22 @@ class EOM:
             return T, vPlasma
 
 
-        TLowerBound = minRes.x
-        TStep = np.abs(Tplus - TLowerBound)
-        if TStep == 0:
-            TStep = np.abs(Tminus - TLowerBound)
+        T1 = minRes.x
+        TMultiplier = max(Tplus/T1, 1.2)
+        if Tplus < Tminus: # If this is a detonation solution, finds a solution below TLowerBound
+            TMultiplier = min(Tminus/T1, 0.8)
 
-        TUpperBound = TLowerBound + TStep
-        while self.temperatureProfileEqLHS(fields, dPhidz, TUpperBound, s1, s2) < 0:
-            TStep *= 2
-            TUpperBound = TLowerBound + TStep
+        T2 = T1*TMultiplier
+        while self.temperatureProfileEqLHS(fields, dPhidz, T2, s1, s2) < 0:
+            T1 *= TMultiplier
+            T2 *= TMultiplier
 
 
         res = scipy.optimize.brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            TLowerBound,
-            TUpperBound,
-            xtol=1e-9,  # all these hard-coded tolerances are aweful
+            T1,
+            T2,
+            xtol=1e-9,
             rtol=1e-9, ## really???
         )
         # TODO: Can the function have multiple zeros?

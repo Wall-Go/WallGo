@@ -6,6 +6,7 @@ from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
+from .Grid3Scales import Grid3Scales
 from .Hydro import Hydro  # TODO why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
@@ -24,7 +25,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
+    def __init__(self, wallThicknessIni: float, meanFreePath: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -41,9 +42,8 @@ class WallGoManager:
 
         # Grid
         self._initGrid(
-            self.config.getint("PolynomialGrid", "spatialGridSize"),
-            self.config.getint("PolynomialGrid", "momentumGridSize"),
-            Lxi,
+            wallThicknessIni,
+            meanFreePath,
         )
 
         self._initBoltzmann()
@@ -101,6 +101,7 @@ class WallGoManager:
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydro(self.thermodynamics)
+        self._initEOM()
 
         if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
             raise WallGoError("Failed to solve Jouguet velocity at input temperature!", 
@@ -236,7 +237,7 @@ class WallGoManager:
         
         self.hydro = Hydro(thermodynamics)
 
-    def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
+    def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> Grid:
         r"""
         Parameters
         ----------
@@ -258,20 +259,46 @@ class WallGoManager:
         # nucleation temperature is obtained.
         initialMomentumFalloffScale = 50.0
 
-        N, M = int(N), int(M)
+        N = self.config.getint("PolynomialGrid", "momentumGridSize")
+        M = self.config.getint("PolynomialGrid", "spatialGridSize")
+        ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
+        smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
+        self.meanFreePath = meanFreePath
+        
+        tailLength = max(meanFreePath, wallThicknessIni*(1+3*smoothing)/ratioPointsWall)
+        
         if N % 2 == 0:
             raise ValueError(
                 "You have chosen an even number N of momentum-grid points. "
                 "WallGo only works with odd N, please change it to an odd number."
             )
-
-        self.grid = Grid(M, N, L_xi, initialMomentumFalloffScale)
+        self.grid = Grid3Scales(M, N, tailLength, tailLength, wallThicknessIni, initialMomentumFalloffScale, ratioPointsWall, smoothing)
 
     def _initBoltzmann(self):
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
         self.boltzmannSolver = BoltzmannSolver(
             self.grid, basisM="Cardinal", basisN="Chebyshev"
         )
+        
+    def _initEOM(self):
+        numberOfFields = self.model.fieldCount
+
+        errTol = self.config.getfloat("EOM", "errTol")
+        maxIterations = self.config.getint("EOM", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+
+        self.eom = EOM(
+            self.boltzmannSolver,
+            self.thermodynamics,
+            self.hydro,
+            self.grid,
+            numberOfFields,
+            self.meanFreePath,
+            errTol=errTol,
+            maxIterations=maxIterations,
+            pressRelErrTol=pressRelErrTol,
+        )
+        self.eom.includeOffEq = True
 
     def loadCollisionFiles(self, fileName: str) -> None:
         self.boltzmannSolver.readCollisions(fileName)
@@ -284,30 +311,37 @@ class WallGoManager:
 
     # Call after initGrid. I guess this would be the main workload function
 
-    def solveWall(self, bIncludeOffEq: bool) -> WallGoResults:
+    def solveWall(self, bIncludeOffEq: bool, wallThicknessIni: float=None) -> WallGoResults:
         """Returns wall speed and wall parameters (widths and offsets).
         """
-
-        numberOfFields = self.model.fieldCount
-
-        errTol = self.config.getfloat("EOM", "errTol")
-        maxIterations = self.config.getint("EOM", "maxIterations")
-        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-
-        eom = EOM(
-            self.boltzmannSolver,
-            self.thermodynamics,
-            self.hydro,
-            self.grid,
-            numberOfFields,
-            includeOffEq=bIncludeOffEq,
-            errTol=errTol,
-            maxIterations=maxIterations,
-            pressRelErrTol=pressRelErrTol,
-        )
-
+        self.eom.includeOffEq = bIncludeOffEq
         # returning results
-        return eom.findWallVelocityMinimizeAction()    
+        return self.eom.findWallVelocityMinimizeAction(wallThicknessIni)
+    
+    def solveWallDetonation(self, bIncludeOffEq: bool=True, wallThicknessIni: float=None, dvMinInterpolation: float=0.02):
+        """
+        Finds all the detonation solutions by computing the pressure on a grid
+        and interpolating to find the roots. 
+
+        Parameters
+        ----------
+        bIncludeOffEq : bool, optional
+            If True, includes the out-of-equilibrium effects. The default is True.
+        wallThicknessIni : float, optional
+            Initial wall thickness. The default is None.
+        dvMinInterpolation : float, optional
+            Minimal spacing between each grid points. The default is 0.02.
+
+        Returns
+        -------
+        WallGoInterpolationResults
+            Object containing the solutions and the pressures computed on the
+            velocity grid.
+
+        """
+        self.eom.includeOffEq = bIncludeOffEq
+        errTol = self.config.getfloat("EOM", "errTol")
+        return self.eom.solveInterpolation(self.hydro.vJ+1e-4, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 

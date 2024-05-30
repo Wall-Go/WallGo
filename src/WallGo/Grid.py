@@ -122,7 +122,8 @@ class Grid:
     def _cacheCoordinates(self) -> None:
         """Compute physical coordinates and store them internally.
         """
-        (self.xiValues, self.pzValues, self.ppValues) = Grid.decompactify(self.chiValues, self.rzValues, self.rpValues, self.L_xi, self.momentumFalloffT)
+        (self.xiValues, self.pzValues, self.ppValues) = self.decompactify(self.chiValues, self.rzValues, self.rpValues)
+        (self.dxidchi, self.dpzdrz, self.dppdrp) = self.compactificationDerivatives(self.chiValues, self.rzValues, self.rpValues)
     
 
     def changeMomentumFalloffScale(self, newScale: float) -> None:
@@ -218,35 +219,40 @@ class Grid:
         drpValues : array_like
             Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.
         """
-        xi, pz, pp = self.getCoordinates(endpoints)
-        return Grid.compactificationDerivatives(xi, pz, pp, self.L_xi, self.momentumFalloffT)
+        if endpoints:
+            dxidchi = np.array([np.inf] + list(self.dxidchi) + [np.inf])
+            dpzdrz = np.array([np.inf] + list(self.dpzdrz) + [np.inf])
+            dppdrp = np.array(list(self.dppdrp) + [np.inf])
+            return dxidchi, dpzdrz, dppdrp
+        else:
+            return self.dxidchi, self.dpzdrz, self.dppdrp
 
-    def compactify(z, pz, pp, L_xi, T):
+    def compactify(self, z, pz, pp):
         r"""
         Transforms coordinates to [-1, 1] interval
         """
         #shouldn't you call this xi instead of z?
-        z_compact = z / np.sqrt(L_xi**2 + z**2)
-        pz_compact = np.tanh(pz / 2 / T)
-        pp_compact = 1 - 2 * np.exp(-pp / T)
+        z_compact = z / np.sqrt(self.L_xi**2 + z**2)
+        pz_compact = np.tanh(pz / 2 / self.momentumFalloffT)
+        pp_compact = 1 - 2 * np.exp(-pp / self.momentumFalloffT)
         return z_compact, pz_compact, pp_compact
 
-    def decompactify(z_compact, pz_compact, pp_compact, L_xi, T):
+    def decompactify(self, z_compact, pz_compact, pp_compact):
         r"""
         Transforms coordinates from [-1, 1] interval (inverse of compactify).
         """
         #shouldn't you call this xi instead of z?
-        z = L_xi * z_compact / np.sqrt(1 - z_compact**2)
-        pz = 2 * T * np.arctanh(pz_compact)
-        pp = -T * np.log((1 - pp_compact) / 2)
+        z = self.L_xi * z_compact / np.sqrt(1 - z_compact**2)
+        pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
+        pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
         return z, pz, pp
 
-    def compactificationDerivatives(z, pz, pp, L_xi, T):
+    def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
         r"""
-        Derivative of transforms coordinates to [-1, 1] interval
+        Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
         """
         #shouldn't you call this xi instead of z?
-        dz_compact = L_xi**2 / (L_xi**2 + z**2)**1.5
-        dpz_compact = 1 / 2 / T / np.cosh(pz / 2 / T)**2
-        dpp_compact = 2 / T * np.exp(-pp / T)
-        return dz_compact, dpz_compact, dpp_compact
+        dzdzCompact = self.L_xi / (1 - z_compact**2)**1.5
+        dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
+        dppdppCompact = self.momentumFalloffT / (1-pp_compact)
+        return dzdzCompact, dpzdpzCompact, dppdppCompact

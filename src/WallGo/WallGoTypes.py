@@ -3,7 +3,8 @@ import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
 from .Polynomial import Polynomial
-from .Particle import Particle
+from scipy.interpolate import UnivariateSpline
+
 # Put common data classes etc here
 
 
@@ -63,6 +64,15 @@ class BoltzmannDeltas:
     Delta02: Polynomial
     Delta20: Polynomial
     Delta11: Polynomial
+    
+    def __mul__(self, other):
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __rmul__(self, other):
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __add__(self, other):
+        return BoltzmannDeltas(Delta00=other.Delta00+self.Delta00, Delta02=other.Delta02+self.Delta02, Delta20=other.Delta20+self.Delta20, Delta11=other.Delta11+self.Delta11)
+    def __sub__(self, other):
+        return self.__add__((-1)*other)
 
 
 @dataclass
@@ -79,6 +89,15 @@ class BoltzmannResults:
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
+    
+    def __mul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __rmul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __add__(self, other):
+        return BoltzmannResults(deltaF=other.deltaF+self.deltaF, Deltas=other.Deltas+self.Deltas, truncationError=other.truncationError+self.truncationError, linearizationCriterion1=other.linearizationCriterion1+self.linearizationCriterion1, linearizationCriterion2=other.linearizationCriterion2+self.linearizationCriterion2)
+    def __sub__(self, other):
+        return self.__add__((-1)*other)
 
 
 @dataclass
@@ -117,6 +136,8 @@ class WallParams():
     def __mul__(self, other):
         ## does not work if other = WallParams type
         return WallParams(widths = self.widths * other, offsets = self.offsets * other)
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         ## does not work if other = WallParams type
@@ -199,4 +220,26 @@ class WallGoResults:
         # quantities from finite difference versino of BoltzmannResults
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
-
+        
+@dataclass
+class WallGoInterpolationResults:
+    ## List of stable solutions
+    wallVelocities: list[float]
+    ## List of unstable solutions
+    unstableWallVelocities: list[float]
+    
+    ## Velocity grid on which the pressures were computed
+    velocityGrid: list[float]
+    ## Pressures evaluated at velocityGrid
+    pressures: list[float]
+    ## Spline of the pressure
+    pressureSpline: UnivariateSpline
+    
+    ## WallParams evaluated at velocityGrid
+    wallParams: list[WallParams]
+    ## BoltzmannResults evaluated at velocityGrid
+    boltzmannResults: list[BoltzmannResults]
+    ## BoltzmannBackground evaluated at velocityGrid
+    boltzmannBackgrounds: list[BoltzmannBackground]
+    ## HydroResults evaluated at velocityGrid
+    hydroResults: list[HydroResults]
