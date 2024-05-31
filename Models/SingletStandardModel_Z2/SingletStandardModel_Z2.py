@@ -2,7 +2,6 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
-import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -496,9 +495,6 @@ def main():
         ## Computes the detonation solutions
         wallGoInterpolationResults = manager.solveWallDetonation()
         print(wallGoInterpolationResults.wallVelocities)
-        plt.plot(wallGoInterpolationResults.velocityGrid, wallGoInterpolationResults.pressures)
-        plt.grid()
-        plt.show()
         
 
         bIncludeOffEq = False
