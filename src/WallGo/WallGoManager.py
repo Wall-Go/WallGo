@@ -280,11 +280,12 @@ class WallGoManager:
             self.grid,
             numberOfFields,
             self.meanFreePath,
+            includeOffEq=True,
+            forceImproveConvergence=False,
             errTol=errTol,
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,
         )
-        self.eom.includeOffEq = True
 
     def loadCollisionFiles(self, fileName: str) -> None:
         self.boltzmannSolver.readCollisions(fileName)

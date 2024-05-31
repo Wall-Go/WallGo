@@ -35,6 +35,7 @@ class EOM:
         nbrFields: int,
         meanFreePath: float,
         includeOffEq: bool=False,
+        forceImproveConvergence: bool=False,
         errTol=1e-3,
         maxIterations=10,
         pressRelErrTol=0.3679,
@@ -57,6 +58,9 @@ class EOM:
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
+        forceImproveConvergence : bool, optional
+            If True, uses a slower algorithm that improves the convergence when 
+            computing the pressure. Default is False.
         errTol : double, optional
             Absolute error tolerance. The default is 1e-3.
         maxIterations : integer, optional
@@ -81,6 +85,7 @@ class EOM:
         self.nbrFields = nbrFields
         self.meanFreePath = meanFreePath
         self.includeOffEq = includeOffEq
+        self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
         self.hydro = hydro
@@ -306,6 +311,10 @@ class EOM:
             atol = self.pressAbsErrTol
         if rtol is None:
             rtol = self.pressRelErrTol
+            
+        improveConvergence = self.forceImproveConvergence
+        if wallVelocity > self.hydro.vJ:
+            improveConvergence = True
 
         print(f"\nTrying {wallVelocity=}")
 
@@ -359,7 +368,7 @@ class EOM:
         tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
         self.grid.changePositionFalloffScale(tailInside, tailOutside, wallThicknessGrid, wallCenterGrid)
 
-        pressure, _, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
+        pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, 
         )
         
@@ -374,18 +383,25 @@ class EOM:
 
         i = 0
         while True:
-            pressure, wallParams, boltzmannResults, boltzmannBackground, errorSolver = self.__getNextPressure(
-                pressure, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, multiplier=multiplier
-            )
+            if improveConvergence:
+                # Use the improved algorithm (which converges better but slowly)
+                pressure, wallParams, boltzmannResults, boltzmannBackground, errorSolver = self.__getNextPressure(
+                    pressure, wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, multiplier=multiplier
+                )
+            else:
+                pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
+                    wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus, multiplier=multiplier,
+                )
+                errorSolver = 0
             pressures.append(pressure)
 
             error = np.abs(pressures[-1]-pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol)*multiplier
             
-            print(f"{pressure=} {error=} {errTol=} {max(wallParams.widths)=}")
+            print(f"{pressure=} {error=} {errTol=} {improveConvergence=} {multiplier=}")
             i += 1
 
-            if (error < errTol or errorSolver < errTol):
+            if (error < errTol or (errorSolver < errTol and improveConvergence)):
                 ## Even if two consecutive call to __getNextPressure() give similar pressures, it is possible
                 ## that the internal calls made to intermediatePressureResults() do not converge. This is measured
                 ## by 'errorSolver'. If __getNextPressure() converges but not intermediatePressureResults() doesn't,
@@ -402,6 +418,11 @@ class EOM:
                     "for iterations."
                 )
                 break
+            
+            # if len(pressures) > 2:
+            #     if error > abs(pressures[-2]-pressures[-3])/1.5:
+            #         # If the error decreases too slowly, use the improved algorithm
+            #         improveConvergence = True
 
         if returnExtras:
             return pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults
