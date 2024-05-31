@@ -3,7 +3,6 @@ import numpy.typing as npt
 import os
 import pathlib
 import matplotlib.pyplot as plt
-from time import time
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -495,10 +494,8 @@ def main():
         wallParams: WallGo.WallParams
         
         ## Computes the detonation solutions
-        t = time()
         wallGoInterpolationResults = manager.solveWallDetonation()
         print(wallGoInterpolationResults.wallVelocities)
-        print(f"{time()-t=}")
         plt.plot(wallGoInterpolationResults.velocityGrid, wallGoInterpolationResults.pressures)
         plt.grid()
         plt.show()
@@ -520,9 +517,7 @@ def main():
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        t = time()
         results = manager.solveWall(bIncludeOffEq)
-        print(f"{time()-t=}")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets

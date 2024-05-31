@@ -419,10 +419,10 @@ class EOM:
                 )
                 break
             
-            # if len(pressures) > 2:
-            #     if error > abs(pressures[-2]-pressures[-3])/1.5:
-            #         # If the error decreases too slowly, use the improved algorithm
-            #         improveConvergence = True
+            if len(pressures) > 2:
+                if error > abs(pressures[-2]-pressures[-3])/1.5:
+                    # If the error decreases too slowly, use the improved algorithm
+                    improveConvergence = True
 
         if returnExtras:
             return pressure, wallParams, boltzmannResults, boltzmannBackground, hydroResults
