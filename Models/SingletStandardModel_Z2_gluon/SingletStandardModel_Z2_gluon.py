@@ -305,8 +305,8 @@ def main():
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
-    ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    ## Modify the config, we use N=5 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
