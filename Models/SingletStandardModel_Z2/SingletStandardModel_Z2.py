@@ -56,26 +56,17 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
-        )
-        self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
+        # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -84,7 +75,18 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
-        
+        ## === Light quarks, 5 of them ===
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuark = Particle("lightQuark", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = lightQuarkMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 60
+        )
+        self.addParticle(lightQuark)
 
 
     ## Go from whatever input params --> action params
@@ -397,6 +399,9 @@ def main():
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
+    ## Modify the config, we use N=11 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -442,8 +447,12 @@ def main():
     """
     manager.registerModel(model)
 
+
     ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+
     manager.loadCollisionFiles(collisionDirectory)
 
 

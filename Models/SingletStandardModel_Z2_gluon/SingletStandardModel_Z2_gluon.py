@@ -61,20 +61,6 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
-        )
-        self.addParticle(lightQuark)
-
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
         gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
@@ -93,18 +79,18 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
-        gluon = Particle("gluon", 
-                            msqVacuum = gluonMsqVacuum,
-                            msqDerivative = gluonMsqDerivative,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = False,
+        ## === Light quarks, 5 of them ===
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuark = Particle("lightQuark", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = lightQuarkMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = True,
                             ultrarelativistic = True,
-                            totalDOFs = 16
+                            totalDOFs = 60
         )
-        self.addParticle(gluon)
-
-
+        self.addParticle(lightQuark)
 
 
     ## Go from whatever input params --> action params
@@ -314,6 +300,11 @@ def main():
 
     WallGo.initialize()
 
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
+
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
@@ -332,8 +323,6 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-
-    ## Create WallGo control object
     manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
@@ -365,7 +354,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_N5/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "CollisionOutput/"
+
     manager.loadCollisionFiles(collisionFileName)
 
 
