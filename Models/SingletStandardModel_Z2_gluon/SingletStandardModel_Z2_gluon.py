@@ -43,6 +43,8 @@ class SingletSM_Z2(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.clearParticles()
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
@@ -303,8 +305,8 @@ def main():
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
-    ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    ## Modify the config, we use N=11 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -383,7 +385,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
