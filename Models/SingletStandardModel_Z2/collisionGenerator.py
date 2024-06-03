@@ -56,8 +56,8 @@ def constructPybindParticle(particle: Particle, T: float, fields: Fields):
 WallGo.initialize()
 
 
-## Modify the config, we use N=5 for this example
-WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+## Modify the config, we use N=11 for this example
+WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
 ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
 inputParameters = {

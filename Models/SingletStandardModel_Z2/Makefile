@@ -29,6 +29,10 @@ run_main: ${COLLISION_FILES} | generate_collisions
 	@echo "Running model file"
 	${PYTHON} ${MAIN}.py
 
+model:
+	@echo "Running model file"
+	${PYTHON} ${MAIN}.py
+
 generateMatrixElements: ${MATRIX_DATA}
 
 clean:
