@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from .EffectivePotential import EffectivePotential
 from .Integrals import Integrals
+from .WallGoUtils import getSafePathToResource
 
 class EffectivePotential_NoResum(EffectivePotential, ABC):
     """Class EffectivePotential_NoResum -- Specialization of the abstract EffectivePotential class
@@ -25,6 +26,27 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             self.integrals = integrals 
         else:
             self.integrals = Integrals()
+
+    def _configureBenchmarkIntegrals(self, config):
+        
+        ## Load interpolation tables for Jb/Jf. 
+        self.integrals.Jb.readInterpolationTable(
+            getSafePathToResource(
+                config.config.get("DataFiles", "InterpolationTable_Jb")
+            ),
+            bVerbose=False,
+        )
+
+        self.integrals.Jf.readInterpolationTable(
+            getSafePathToResource(
+                config.config.get("DataFiles", "InterpolationTable_Jf")
+            ),
+            bVerbose=False,
+        )
+
+        self.integrals.Jb.disableAdaptiveInterpolation()
+        self.integrals.Jf.disableAdaptiveInterpolation()
+
 
     ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps  
     ## define a separate helper class for the output (holds mass squares, dofs etc)

@@ -11,7 +11,6 @@ from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
-from WallGo import getSafePathToResource
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
@@ -24,12 +23,12 @@ class InertDoubletModel(GenericModel):
     fieldCount = 1
 
 
-    def __init__(self, initialInputParameters: dict[str, float]):
+    def __init__(self, initialInputParameters: dict[str, float], config):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialIDM(self.modelParameters, self.fieldCount)
+        self.effectivePotential = EffectivePotentialIDM(self.modelParameters, self.fieldCount, config)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -133,7 +132,7 @@ class InertDoubletModel(GenericModel):
 ## For this benchmark model we use the 4D potential, implemented as in 2211.13142. We use interpolation tables for Jb/Jf 
 class EffectivePotentialIDM(EffectivePotential_NoResum):
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int, config):
         super().__init__(modelParameters, fieldCount)
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
         self.num_boson_dof = 32
@@ -145,49 +144,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
         In real applications we recommend using the WallGo default implementations.
         """
-        self._configureBenchmarkIntegrals()
+        self._configureBenchmarkIntegrals(config)
 
-
-    def _configureBenchmarkIntegrals(self):
-        
-        ## Load custom interpolation tables for Jb/Jf. 
-        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
-        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-#        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
-        self.integrals.Jb.readInterpolationTable(
-            getSafePathToResource(
-                WallGo.config.config.get("DataFiles", "InterpolationTable_Jb")
-            ),
-            bVerbose=False,
-        )
-#        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
-
-        self.integrals.Jf.readInterpolationTable(
-            getSafePathToResource(
-                WallGo.config.config.get("DataFiles", "InterpolationTable_Jf")
-            ),
-            bVerbose=False,
-        )
-
-        print(f"{thisFileDirectory =}")
-        print(WallGo.config.config.get("DataFiles", "InterpolationTable_Jb"))
-
-        self.integrals.Jb.disableAdaptiveInterpolation()
-        self.integrals.Jf.disableAdaptiveInterpolation()
-
-        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
-        => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
-        at the upper limit.
-        """
-
-        from WallGo.InterpolatableFunction import EExtrapolationType
-        self.integrals.Jb.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
-        self.integrals.Jf.setExtrapolationType(extrapolationTypeLower = EExtrapolationType.CONSTANT, 
-                                               extrapolationTypeUpper = EExtrapolationType.CONSTANT)
-        
     
 
     ## ---------- EffectivePotential overrides. 
@@ -418,7 +376,7 @@ def main():
     }
 
 
-    model = InertDoubletModel(inputParameters)
+    model = InertDoubletModel(inputParameters, WallGo.config)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
