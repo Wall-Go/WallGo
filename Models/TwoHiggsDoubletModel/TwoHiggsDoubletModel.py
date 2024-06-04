@@ -11,6 +11,7 @@ from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
+from WallGo import getSafePathToResource
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
@@ -152,9 +153,25 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         ## Load custom interpolation tables for Jb/Jf. 
         # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
-        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
-        
+#        self.integrals.Jb.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"), bVerbose=False)
+        self.integrals.Jb.readInterpolationTable(
+            getSafePathToResource(
+                WallGo.config.config.get("DataFiles", "InterpolationTable_Jb")
+            ),
+            bVerbose=False,
+        )
+#        self.integrals.Jf.readInterpolationTable(os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"), bVerbose=False)
+
+        self.integrals.Jf.readInterpolationTable(
+            getSafePathToResource(
+                WallGo.config.config.get("DataFiles", "InterpolationTable_Jf")
+            ),
+            bVerbose=False,
+        )
+
+        print(f"{thisFileDirectory =}")
+        print(WallGo.config.config.get("DataFiles", "InterpolationTable_Jb"))
+
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
 

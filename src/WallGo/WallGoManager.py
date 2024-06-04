@@ -32,9 +32,9 @@ class WallGoManager:
 
         self.config = WallGo.config
 
-        #self.integrals = Integrals()
+#        self.integrals = Integrals()
 
-        #self._initalizeIntegralInterpolations(self.integrals)
+#        self._initializeIntegralInterpolations(self.integrals)
 
         # -- Order of initialization matters here
 
@@ -295,7 +295,7 @@ class WallGoManager:
         # returning results
         return eom.findWallVelocityMinimizeAction()    
 
-    def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
+    def _initializeIntegralInterpolations(self, integrals: Integrals) -> None:
 
         assert self.config != None
 
