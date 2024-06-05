@@ -84,10 +84,10 @@ one right-handed fermoon
 	reps 5,6 are vector bosons
 *)
 (*left-handed top-quark*)
-ReptL=CreateOutOfEq[{1,1},"F"];
+ReptL=CreateOutOfEq[{{1,1}},"F"];
 
 (*right-handed top-quark*)
-ReptR=CreateOutOfEq[{2,1},"F"];
+ReptR=CreateOutOfEq[{{2,1}},"F"];
 
 (*light quarks*)
 RepLight=CreateOutOfEq[{{1,2},3,4,5,6,7,8,9},"F"];
