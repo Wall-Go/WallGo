@@ -39,3 +39,27 @@ def test_integration(wallThickness, tails, ratio):
     integralPoly = polynomial.integrate(w=dxidchi[:,None,None]*dpzdrz[None,:,None]*dppdrp[None,None,:]*grid.ppValues[None,None,:]/(grid.ppValues[None,None,:]**2+grid.pzValues[None,:,None]**2)/2)
     
     assert np.isclose(integralExact, integralPoly,rtol=0,atol=1e-3)
+    
+def test_simpleIntegration(N=None):
+    r"""
+    Computes the simpler integral :math:`\int_0^\infty dp\ \frac{1}{E(e^p+1)}=\int_{-1}^1 d\rho\ \frac{1}{3-\rho}=\log(2)`, 
+    with :math:`\rho(p)=1-2e^{-p}`, and compare it to the value computed from the Polynomial class.
+    """
+    if N is None:
+        N = 101
+        M = 101
+    else:
+        M = N
+    
+    grid = WallGo.Grid3Scales.Grid3Scales(M, N, 1, 1, 0.1, 1, 0.5)
+    
+    func = lambda pp: 1/(np.exp(pp)+1)
+    
+    polyCoeff = func(grid.ppValues)
+    polynomial = WallGo.Polynomial(polyCoeff, grid, direction=('pp'))
+    
+    integralExact = np.log(2)
+    dxidchi, dpzdrz, dppdrp = grid.getCompactificationDerivatives()
+    integral = polynomial.integrate(w=dppdrp)
+    
+    assert np.isclose(integralExact, integral,rtol=0,atol=1e-4)
