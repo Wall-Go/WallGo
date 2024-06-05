@@ -390,11 +390,6 @@ def main():
 
     WallGo.initialize()
 
-    # loading in local config file
-    # WallGo.config.readINI(
-    #     pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    # )
-
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)

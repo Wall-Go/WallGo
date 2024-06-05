@@ -65,12 +65,24 @@ class BoltzmannDeltas:
     Delta11: Polynomial
     
     def __mul__(self, other):
+        """ 
+        Multiply a BoltzmannDeltas object with a scalar.
+        """
         return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
     def __rmul__(self, other):
+        """ 
+        Multiply a BoltzmannDeltas object with a scalar.
+        """
         return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
     def __add__(self, other):
+        """ 
+        Add two BoltzmannDeltas objects.
+        """
         return BoltzmannDeltas(Delta00=other.Delta00+self.Delta00, Delta02=other.Delta02+self.Delta02, Delta20=other.Delta20+self.Delta20, Delta11=other.Delta11+self.Delta11)
     def __sub__(self, other):
+        """ 
+        Substract two BoltzmannDeltas objects.
+        """
         return self.__add__((-1)*other)
 
 

@@ -60,7 +60,8 @@ class EOM:
             The default is False.
         forceImproveConvergence : bool, optional
             If True, uses a slower algorithm that improves the convergence when 
-            computing the pressure. Default is False.
+            computing the pressure. The improved algorithm is automatically used 
+            for detonation. Default is False.
         errTol : double, optional
             Absolute error tolerance. The default is 1e-3.
         maxIterations : integer, optional
@@ -283,7 +284,11 @@ class EOM:
     ):
         """
         Computes the total pressure on the wall by finding the tanh profile
-        that minimizes the action.
+        that minimizes the action. Can use two different iteration algorithms 
+        to find the pressure. If self.forceImproveConvergence=False and 
+        wallVelocity<self.hydro.vJ, uses a fast algorithm that sometimes fails 
+        to converge. Otherwise, or if the previous algorithm converges slowly,
+        uses a slower, but more robust algorithm.
 
         Parameters
         ----------
@@ -295,6 +300,14 @@ class EOM:
             If False, only the pressure is returned. If True, the pressure,
             and WallParams, BoltzmannResults and HydroResults, objects are
             returned. The default is False.
+        atol : float or None
+            Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.
+        rtol : float or None
+            Relative tolerance. If None, uses self.pressRelErrTol. Default is None.
+        boltzmannResults : BoltzmannResults or None
+            Object of the BoltzmannResults class containing the initial solution
+            of the Boltzmann equation. If None, sets the initial deltaF to 0.
+            Default is None.
 
         Returns
         -------
@@ -348,7 +361,6 @@ class EOM:
             )
 
         c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
-        vp, vm, _,_ = self.hydro.findMatching(wallVelocity)
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
@@ -374,11 +386,12 @@ class EOM:
         
         pressures = [pressure]
         
-        ## The 'multiplier' parameter is used to reduced the size of the wall
+        ## The 'multiplier' parameter is used to reduce the size of the wall
         ## parameters updates during the iteration procedure. The next iteration
         ## will use multiplier*newWallParams+(1-multiplier)*oldWallParams. 
         ## Can be used when the iterations do not converge, even close to the 
         ## true solution. For small enough values, we should always be able to converge.
+        ## The value will be reduced if the algorithm doesn't converge.
         multiplier = 1
 
         i = 0
@@ -405,7 +418,7 @@ class EOM:
                 ## Even if two consecutive call to __getNextPressure() give similar pressures, it is possible
                 ## that the internal calls made to intermediatePressureResults() do not converge. This is measured
                 ## by 'errorSolver'. If __getNextPressure() converges but not intermediatePressureResults() doesn't,
-                ## m'ultiplier' is probably too large. We therefore continue the iteration procedure with a smaller 
+                ## 'multiplier' is probably too large. We therefore continue the iteration procedure with a smaller 
                 ## value of 'multiplier'.
                 if errorSolver > errTol:
                     multiplier /= 2
@@ -432,7 +445,7 @@ class EOM:
     def __getNextPressure(self, pressure1, wallParams1, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults1, Tplus, Tminus, Tprofile=None, velocityProfile=None, multiplier=1.0):
         """
         Performs the next iteration to solve the EOM and Boltzmann equation. 
-        First computes twice the pressure, updating the wall parameters and 
+        First computes the pressure twice, updating the wall parameters and 
         Boltzmann results each time. If the iterations overshot the true solution
         (the two pressure updates go in opposite directions), uses linear 
         interpolation to find a better estimate of the true solution.
@@ -546,7 +559,7 @@ class EOM:
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
     
-    def interpolatePressure(self, vmin: float, vmax: float, nbrPoints: int, wallThicknessIni: float=None, rtol: float=1e-3):
+    def gridPressure(self, vmin: float, vmax: float, nbrPoints: int, wallThicknessIni: float=None, rtol: float=1e-3):
         """
         Computes the pressure on a grid.
 
@@ -646,7 +659,7 @@ class EOM:
 
         """
         nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
-        wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.interpolatePressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
+        wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
         pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
         
         roots = pressuresSpline.roots()

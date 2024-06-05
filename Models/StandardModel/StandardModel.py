@@ -222,7 +222,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 0.2
+    meanFreePath = 1
 
     # The following 2 parameters are used to estimate the optimal value of dT used 
     # for the finite difference derivatives of the potential.
