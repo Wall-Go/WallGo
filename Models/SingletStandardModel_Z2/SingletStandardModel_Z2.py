@@ -442,22 +442,70 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
+
+    print("=== WallGo collision generation ===")
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
+    ## collision stuff
 
-    ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    ## Create Collision singleton which automatically loads the collision module
+    # Use help(Collision.manager) for info about what functionality is available
+    collision = WallGo.Collision()
+
+    ## Optional: set the seed used by Monte Carlo integration. Default is 0
+    collision.setSeed(0)
+
+    """
+    Define couplings (Lagrangian parameters)
+    list as they appear in the MatrixElements file
+    """
+    collision.manager.addCoupling(inputParameters["g3"])
+
+    """
+    Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+    including particle species that are assumed to stay in equilibrium.
+    The order here should be the same as in the matrix elements and how they are introduced in the model file
+    """
+    collision.addParticles(model)
+
+   ## ---- Directory name for collisions integrals. Currently we just load these
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+    collisionDirectory = scriptLocation / "CollisionOutput"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
+    
+    collision.manager.setOutputDirectory(str(collisionDirectory))
+    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.txt"))
 
+    ## Configure integration. Can skip this step if you're happy with the defaults
+    ## TODO move this to config file
+    integrationOptions = collision.module.IntegrationOptions()
+    integrationOptions.bVerbose = True
+    integrationOptions.maxTries = 50
+    integrationOptions.calls = 50000
+    integrationOptions.relativeErrorGoal = 1e-1
+    integrationOptions.absoluteErrorGoal = 1e-8
+
+    collision.manager.configureIntegration(integrationOptions)
+
+    ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+    collision.manager.setMatrixElementVerbosity(True)
+
+    ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+    basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
+    # print(WallGo.config)
+
+    ## Computes collisions for all out-of-eq particles specified above.
+    ## The last argument is optional and mainly useful for debugging
+    ## comment this line if collision integrals already exist
+    # collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
 
     manager.loadCollisionFiles(collisionDirectory)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
-    
 
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 

@@ -2,7 +2,10 @@
 import os, sys
 import importlib
 from types import ModuleType
-from .Particle import Particle
+from WallGo import GenericModel
+from WallGo import Particle
+from WallGo import Fields
+# from .Particle import Particle
 
 class Collision:
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
@@ -23,6 +26,9 @@ class Collision:
             self._loadCollisionModule()
             self.bInitialized = True
 
+            ## Construct a "control" object for collision integrations
+            # Use help(Collision.manager) for info about what functionality is available
+            self.manager = self.module.CollisionManager()
     
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
@@ -56,3 +62,54 @@ class Collision:
 
     def _assertLoaded(self) -> None:
         assert self.module is not None, "Collision module has not been loaded!"
+
+    """
+    Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+    including particle species that are assumed to stay in equilibrium.
+    The order here should be the same as in the matrix elements and how they are introduced in the model file
+    """
+    def addParticles(self, model: GenericModel, T = 1.0) -> None:
+        """
+        Particles need masses in GeV units, ie. T dependent, but for this example we don't really have 
+        a temperature. So hacking this by setting T = 1. Also, for this example the vacuum mass = 0
+        """
+        fieldHack = Fields([0]*model.fieldCount)
+        for particle in model.particles:
+            self.manager.addParticle( self.constructPybindParticle(particle, T, fieldHack) )
+
+    ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
+    ## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
+    ## Should do the same for field values since the vacuum mass can depend on that.
+    ## Return value is a ParticleSpecies object
+    def constructPybindParticle(self, particle: Particle, T: float, fields: Fields):
+        r"""
+            Converts 'Particle' object to ParticleSpecies object that the Collision module can understand.
+            CollisionModule operates with dimensionless (m/T)^2 etc, so the temperature is taken as an input here. 
+
+            Parameters
+            ----------
+            particle : Particle
+                Particle object with p.msqVacuum and p.msqThermal being in GeV^2 units.
+            T : float
+                Temperature in GeV units.
+
+            Returns
+            -------
+            CollisionModule.ParticleSpecies
+                ParticleSpecies object
+        """
+
+
+        ## Convert to correct enum for particle statistics
+        particleType = None
+        if particle.statistics == "Boson":
+            particleType = self.module.EParticleType.BOSON
+        elif particle.statistics == "Fermion":
+            particleType =  self.module.EParticleType.FERMION
+
+        ## Hack vacuum masses are ignored
+        return self.module.ParticleSpecies(particle.name, particleType,
+                                    particle.inEquilibrium, 
+                                    particle.msqVacuum(fields) / T**2.0,
+                                    particle.msqThermal(T) / T**2.0,
+                                    particle.ultrarelativistic)
