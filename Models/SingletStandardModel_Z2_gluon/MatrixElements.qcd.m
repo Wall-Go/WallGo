@@ -91,6 +91,6 @@ UserCouplings={gs};
 
 
 SetDirectory[DirectoryName[$InputFileName]];
-OutputFile="../MatrixElements";
+OutputFile="MatrixElements";
 ParticleName={"Top","Gluon"};
 MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];

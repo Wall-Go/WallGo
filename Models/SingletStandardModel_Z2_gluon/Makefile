@@ -3,7 +3,7 @@
 PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
-MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
+MATRIX_SCRIPT=${MATRIXELEMENTS}.qcd.m
 MATRIX_DATA=${MATRIXELEMENTS}.txt
 COLLISIONS=CollisionOutput
 MAIN=SingletStandardModel_Z2_gluon
