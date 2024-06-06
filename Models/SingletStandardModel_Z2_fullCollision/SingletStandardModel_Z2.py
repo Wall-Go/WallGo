@@ -84,6 +84,31 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
+        ## === SU(2) gauge bosons ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        W = Particle("W", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(W)
+
+        ZMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 * 11./6.
+        Z = Particle("Z", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = ZMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 3
+        )
+        self.addParticle(Z)
+
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
         lightQuark = Particle("lightQuark", 
@@ -441,6 +466,8 @@ def main():
         "MW" : 80.379,
         "MZ" : 91.1876,
         "Mt" : 173.0,
+        "g1" : 0.35,
+        "g2" : 0.65,
         "g3" : 1.2279920495357861,
         # scalar specific, choose Benoit benchmark values
         "mh1" : 125.0,
@@ -472,6 +499,8 @@ def main():
     list as they appear in the MatrixElements file
     """
     collision.manager.addCoupling(inputParameters["g3"])
+    collision.manager.addCoupling(inputParameters["g2"])
+    collision.manager.addCoupling(inputParameters["g1"])
 
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()

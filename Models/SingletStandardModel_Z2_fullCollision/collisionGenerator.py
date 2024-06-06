@@ -27,6 +27,8 @@ inputParameters = {
     "MW" : 80.379,
     "MZ" : 91.1876,
     "Mt" : 173.0,
+    "g1" : 0.35,
+    "g2" : 0.65,
     "g3" : 1.2279920495357861,
     # scalar specific, choose Benoit benchmark values
     "mh1" : 125.0,
@@ -49,6 +51,8 @@ Define couplings (Lagrangian parameters)
 list as they appear in the MatrixElements file
 """
 collision.manager.addCoupling(inputParameters["g3"])
+collision.manager.addCoupling(inputParameters["g2"])
+collision.manager.addCoupling(inputParameters["g1"])
 
 ## Set input/output paths
 scriptLocation = pathlib.Path(__file__).parent.resolve()

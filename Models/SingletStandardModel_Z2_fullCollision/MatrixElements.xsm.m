@@ -165,7 +165,7 @@ ParticleList={ReptL,ReptR,RepGluon,RepW,RepZ,RepbL,RepLight};
 (*
 These particles do not have out-of-eq contributions
 *)
-LightParticles=Range[4,Length[ParticleList]];
+LightParticles=Range[6,Length[ParticleList]];
 
 
 VectorMass=Join[
@@ -182,8 +182,9 @@ UserCouplings={g3,gw,g1};
 
 SetDirectory[DirectoryName[$InputFileName]];
 OutputFile="MatrixElements";
-RepOptional={c[1]->0,c[2]->0};
-ParticleName={"TopL","TopR","Gluon"};
+(*RepOptional={c[1]->0,c[2]->0};*)
+RepOptional={};
+ParticleName={"TopL","TopR","Gluon","W","Z"};
 MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
 
 
