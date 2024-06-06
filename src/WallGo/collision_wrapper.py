@@ -33,11 +33,6 @@ class Collision():
             # Use help(Collision.manager) for info about what functionality is available
             self.manager = self.module.CollisionManager()
 
-            """
-            Register particles with the collision module. This is required for each particle that can appear in matrix elements,
-            including particle species that are assumed to stay in equilibrium.
-            The order here should be the same as in the matrix elements and how they are introduced in the model file
-            """
             self.addParticles(modelCls)
     
     def setSeed(self, seed: int) -> None:
@@ -73,17 +68,19 @@ class Collision():
     def _assertLoaded(self) -> None:
         assert self.module is not None, "Collision module has not been loaded!"
 
-    """
-    Register particles with the collision module. This is required for each particle that can appear in matrix elements,
-    including particle species that are assumed to stay in equilibrium.
-    The order here should be the same as in the matrix elements and how they are introduced in the model file
-    """
     def addParticles(self, model: GenericModel, T = 1.0) -> None:
         """
-        Particles need masses in GeV units, ie. T dependent, but for this example we don't really have 
-        a temperature. So hacking this by setting T = 1. Also, for this example the vacuum mass = 0
+        Particles need masses in GeV units, ie. T dependent.
+        Thermal masses are rescaled by the temperature and the default argument of T = 1.
+        This needs to be adapted for non-zero vacuum masses
         """
         fieldHack = Fields([0]*model.fieldCount)
+        """
+        Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+        including particle species that are assumed to stay in equilibrium.
+        The order of registration is the same as the particles are defined in model.particles which
+        should be the same as in MatrixElements.txt
+        """
         for particle in model.particles:
             self.manager.addParticle( self.constructPybindParticle(particle, T, fieldHack) )
 

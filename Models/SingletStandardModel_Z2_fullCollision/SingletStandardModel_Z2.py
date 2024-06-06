@@ -240,7 +240,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
-        # From Philipp. @todo should probably use the list of defined particles here?
+        # TODO should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
@@ -511,7 +511,6 @@ def main():
     collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
 
     ## Configure integration. Can skip this step if you're happy with the defaults
-    ## TODO move this to config file
     integrationOptions = collision.module.IntegrationOptions()
     integrationOptions.bVerbose = True
     integrationOptions.maxTries = 50
@@ -527,7 +526,6 @@ def main():
     ## Computes collisions for all out-of-eq particles specified above.
     ## The last argument is optional and mainly useful for debugging
     ## comment this line if collision integrals already exist
-    # collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
     collision.calculateCollisionIntegrals(bVerbose = False)
 
     manager.loadCollisionFiles(collisionDirectory)
