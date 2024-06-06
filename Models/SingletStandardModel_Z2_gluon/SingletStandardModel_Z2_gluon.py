@@ -353,10 +353,12 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "CollisionOutput/"
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+    collisionDirectory = scriptLocation / "CollisionOutput/"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
 
-    manager.loadCollisionFiles(collisionFileName)
+    manager.loadCollisionFiles(collisionDirectory)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----

@@ -466,7 +466,7 @@ def main():
 
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput"
+    collisionDirectory = scriptLocation / "CollisionOutput/"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
     
     collision.manager.setOutputDirectory(str(collisionDirectory))
