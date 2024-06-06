@@ -16,14 +16,14 @@ class Collision():
     """
     _instance = None
     
-    def __new__(cls, model: GenericModel):
+    def __new__(cls, modelCls: GenericModel):
         # Implement singleton pattern
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
     
     
-    def __init__(self, model: GenericModel):
+    def __init__(self, modelCls: GenericModel):
         if not hasattr(self, "bInitialized"):
             self.module: ModuleType = None
             self._loadCollisionModule()
@@ -38,7 +38,7 @@ class Collision():
             including particle species that are assumed to stay in equilibrium.
             The order here should be the same as in the matrix elements and how they are introduced in the model file
             """
-            self.addParticles(model)
+            self.addParticles(modelCls)
     
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
