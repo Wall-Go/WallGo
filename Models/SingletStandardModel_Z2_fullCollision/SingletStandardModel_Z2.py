@@ -462,31 +462,24 @@ def main():
 
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
-    collision = WallGo.Collision()
+    collision = WallGo.Collision(model)
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
     collision.setSeed(0)
-
+    
     """
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
     collision.manager.addCoupling(inputParameters["g3"])
 
-    """
-    Register particles with the collision module. This is required for each particle that can appear in matrix elements,
-    including particle species that are assumed to stay in equilibrium.
-    The order here should be the same as in the matrix elements and how they are introduced in the model file
-    """
-    collision.addParticles(model)
-
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput"
+    collisionDirectory = scriptLocation / "CollisionOutput/"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
     
     collision.manager.setOutputDirectory(str(collisionDirectory))
-    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.txt"))
+    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
 
     ## Configure integration. Can skip this step if you're happy with the defaults
     ## TODO move this to config file
@@ -502,14 +495,11 @@ def main():
     ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
     collision.manager.setMatrixElementVerbosity(True)
 
-    ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-    basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-    # print(WallGo.config)
-
     ## Computes collisions for all out-of-eq particles specified above.
     ## The last argument is optional and mainly useful for debugging
     ## comment this line if collision integrals already exist
     # collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
+    collision.calculateCollisionIntegrals(bVerbose = False)
 
     manager.loadCollisionFiles(collisionDirectory)
 

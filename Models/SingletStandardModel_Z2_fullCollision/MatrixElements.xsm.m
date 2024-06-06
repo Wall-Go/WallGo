@@ -181,9 +181,10 @@ UserCouplings={g3,gw,g1};
 
 
 SetDirectory[DirectoryName[$InputFileName]];
+OutputFile="MatrixElements";
 RepOptional={c[1]->0,c[2]->0};
 ParticleName={"TopL","TopR","Gluon"};
-MatrixElements=ExportMatrixElements["MatrixElements",ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
+MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
 
 
 (*tL q->tL q*)

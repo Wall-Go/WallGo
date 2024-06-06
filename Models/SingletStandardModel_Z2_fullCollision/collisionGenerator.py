@@ -39,11 +39,10 @@ model = SingletSM_Z2(inputParameters)
 
 ## Create Collision singleton which automatically loads the collision module
 # Use help(Collision.manager) for info about what functionality is available
-collision = WallGo.Collision()
+collision = WallGo.Collision(model)
 
 ## Optional: set the seed used by Monte Carlo integration. Default is 0
 collision.setSeed(0)
-
 
 """
 Define couplings (Lagrangian parameters)
@@ -51,18 +50,11 @@ list as they appear in the MatrixElements file
 """
 collision.manager.addCoupling(inputParameters["g3"])
 
-"""
-Register particles with the collision module. This is required for each particle that can appear in matrix elements,
-including particle species that are assumed to stay in equilibrium.
-The order here should be the same as in the matrix elements and how they are introduced in the model file
-"""
-collision.addParticles(model)
-
 ## Set input/output paths
 scriptLocation = pathlib.Path(__file__).parent.resolve()
 
 collision.manager.setOutputDirectory(str(scriptLocation / "CollisionOutput"))
-collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements/MatrixElements.txt"))
+collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
 
 ## Configure integration. Can skip this step if you're happy with the defaults
 integrationOptions = collision.module.IntegrationOptions()
