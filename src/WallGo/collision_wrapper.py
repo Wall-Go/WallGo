@@ -2,25 +2,28 @@
 import os, sys
 import importlib
 from types import ModuleType
+
+# TODO here only need the current config instead of whole wallgo package
+import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import Fields
 # from .Particle import Particle
 
-class Collision:
+class Collision():
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
     This class is a singleton.
     """
     _instance = None
     
-    def __new__(cls):
+    def __new__(cls, model: GenericModel):
         # Implement singleton pattern
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
     
     
-    def __init__(self):
+    def __init__(self, model: GenericModel):
         if not hasattr(self, "bInitialized"):
             self.module: ModuleType = None
             self._loadCollisionModule()
@@ -29,6 +32,13 @@ class Collision:
             ## Construct a "control" object for collision integrations
             # Use help(Collision.manager) for info about what functionality is available
             self.manager = self.module.CollisionManager()
+
+            """
+            Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+            including particle species that are assumed to stay in equilibrium.
+            The order here should be the same as in the matrix elements and how they are introduced in the model file
+            """
+            self.addParticles(model)
     
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
@@ -113,3 +123,8 @@ class Collision:
                                     particle.msqVacuum(fields) / T**2.0,
                                     particle.msqThermal(T) / T**2.0,
                                     particle.ultrarelativistic)
+
+    def calculateCollisionIntegrals(self, bVerbose = False):
+        ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+        basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
+        self.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
