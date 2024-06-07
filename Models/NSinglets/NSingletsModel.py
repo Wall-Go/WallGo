@@ -18,6 +18,8 @@ class NSinglets(GenericModel):
     particles = []
     outOfEquilibriumParticles = []
     modelParameters = {}
+    
+    fieldCount = 3
 
 
     def __init__(self, initialInputParameters: dict[str, float], nbrSinglets: int):
@@ -118,8 +120,12 @@ class NSinglets(GenericModel):
         g0 = 2.*MW / v0
         modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
         modelParameters["g2"] = g0
+        modelParameters["g3"] = inputParameters["g3"]
 
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+        
+        modelParameters["cH"] = (6*modelParameters["lHH"]+sum(modelParameters["lHS"])+6*modelParameters["yt"]**2+(9/4)*modelParameters["g2"]**2+(3/4)*modelParameters["g1"]**2)/12
+        modelParameters["cS"] = (3*modelParameters["lSS"]+4*modelParameters["lHS"])/12
 
         return modelParameters
 
@@ -143,6 +149,78 @@ class EffectivePotentialNSinglets(EffectivePotential):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
+    def canTunnel(self):
+        tunnel = True
+        # Higgs phase is the true vacuum at T=0
+        if self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] <= sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"]):
+            print("Higgs phase is not the true vacuum at T=0")
+            print(f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}""")
+            tunnel = False
+        
+        # Higgs phase exists at T=0
+        if self.modelParameters["muHsq"] >= 0 or self.modelParameters["lHH"] <= 0:
+            print("Higgs phase doesn't exist at T=0")
+            print(f"""{self.modelParameters["muHsq"]=} {self.modelParameters["lHH"]=}""")
+            tunnel = False
+        # Higgs phase is stable at T=0
+        if np.any(self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"] <= 0):
+            print("Higgs phase is not stable at T=0")
+            print(f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}""")
+            tunnel = False
+            
+        Tc = self.findTc()
+        print(f'{Tc=}')
+        if Tc is None:
+            tunnel = False
+        else:
+            muSsqT = self.modelParameters["muSsq"]+self.modelParameters["cS"]*Tc**2
+            muHsqT = self.modelParameters["muHsq"]+self.modelParameters["cH"]*Tc**2
+            
+            # Higgs phase exists at T=Tc
+            if muHsqT >= 0:
+                print("Higgs phase doesn't exist at T=Tc")
+                tunnel = False
+            # Higgs phase is stable at T=Tc
+            if np.any(muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"] <= 0):
+                print("Higgs phase is not stable at T=Tc")
+                tunnel = False
+                
+            # Singlets phase exists at T=Tc
+            if np.any(muSsqT >= 0) or np.any(self.modelParameters["lSS"] <= 0):
+                print("Singlets phase doesn't exist at T=Tc")
+                tunnel = False
+            # Singlets phase is stable at T=Tc
+            if muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"]) <= 0:
+                print("Singlets phase is not stable at T=Tc")
+                tunnel = False
+                
+        return tunnel
+            
+    def findTc(self):
+        A = self.modelParameters["cH"]**2/self.modelParameters["lHH"]-sum(self.modelParameters["cS"]**2/self.modelParameters["lSS"])    
+        B = 2*(self.modelParameters["cH"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]-sum(self.modelParameters["cS"]*self.modelParameters["muSsq"]/self.modelParameters["lSS"])) 
+        C = self.modelParameters["muHsq"]**2/self.modelParameters["lHH"]-sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])
+        
+        discr = B**2-4*A*C
+        if discr < 0:
+            print("No critical temperature : negative discriminant")
+            return None
+        
+        Tc1 = (-B+np.sqrt(discr))/(2*A)
+        Tc2 = (-B-np.sqrt(discr))/(2*A)
+        
+        if Tc1 <= 0 and Tc2 <= 0:
+            print("Negative critical temperature")
+            return None
+        if Tc1 > 0 and Tc2 > 0:
+            return min(Tc1, Tc2)
+        if Tc1 > 0:
+            return Tc1
+        if Tc2 > 0:
+            return Tc2
+            
+        
+    
     def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
@@ -296,20 +374,21 @@ def main():
 
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
-        #"RGScale" : 91.1876,
-        "RGScale" : 125., # <- Benoit benchmark
+        "RGScale" : 125., 
         "v0" : 246.0,
         "MW" : 80.379,
         "MZ" : 91.1876,
         "Mt" : 173.0,
-        # scalar specific, choose Benoit benchmark values
-        "mh1" : 125.0,
-        "mh2" : 120.0,
-        "a2" : 0.9,
-        "b4" : 1.0
+        "g3" : 1.2279920495357861,
+        # scalar specific
+        "mh" : 125.0,
+        "ms" : [120.0,100],
+        "lHS" : [1,0.5],
+        "lSS" : [0.5,0.75]
     }
 
-    model = NSinglets(inputParameters)
+    model = NSinglets(inputParameters, 3)
+    print(model.effectivePotential.canTunnel())
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
@@ -331,71 +410,71 @@ def main():
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mh2 = [ 120.0 ]
-    for mh2 in values_mh2:
+    # values_mh2 = [ 120.0 ]
+    # for mh2 in values_mh2:
 
-        inputParameters["mh2"] = mh2
+    #     inputParameters["mh2"] = mh2
 
-        modelParameters = model.calculateModelParameters(inputParameters)
+    #     modelParameters = model.calculateModelParameters(inputParameters)
 
-        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
-        """
-        Tn = 100. ## nucleation temperature
-        phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
-                                        phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
+    #     """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
+    #     Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+    #     """
+    #     Tn = 100. ## nucleation temperature
+    #     phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
+    #                                     phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
+    #                                     phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
         
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
-            1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
-        """ 
-        manager.setParameters(phaseInfo)
+    #     """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+    #         1) WallGo needs the PhaseInfo 
+    #         2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+    #     """ 
+    #     manager.setParameters(phaseInfo)
 
-        ## TODO initialize collisions. Either do it here or already in registerModel(). 
-        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
+    #     ## TODO initialize collisions. Either do it here or already in registerModel(). 
+    #     ## But for now it's just hardcoded in Boltzmann.py and __init__.py
 
-        """WallGo can now be used to compute wall stuff!"""
+    #     """WallGo can now be used to compute wall stuff!"""
 
-        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+    #     ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-        vwLTE = manager.wallSpeedLTE()
+    #     vwLTE = manager.wallSpeedLTE()
 
-        print(f"LTE wall speed: {vwLTE}")
+    #     print(f"LTE wall speed: {vwLTE}")
 
-        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+    #     ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
-        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-        wallParams: WallGo.WallParams
+    #     ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+    #     wallParams: WallGo.WallParams
 
-        bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    #     bIncludeOffEq = False
+    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        print(f"results=")
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+    #     results = manager.solveWall(bIncludeOffEq)
+    #     print(f"results=")
+    #     wallVelocity = results.wallVelocity
+    #     widths = results.wallWidths
+    #     offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+    #     print(f"{wallVelocity=}")
+    #     print(f"{widths=}")
+    #     print(f"{offsets=}")
 
-        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-        bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    #     ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+    #     bIncludeOffEq = True
+    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-        results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
-        offsets = results.wallOffsets
+    #     results = manager.solveWall(bIncludeOffEq)
+    #     wallVelocity = results.wallVelocity
+    #     wallVelocityError = results.wallVelocityError
+    #     widths = results.wallWidths
+    #     offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+    #     print(f"{wallVelocity=}")
+    #     print(f"{wallVelocityError=}")
+    #     print(f"{widths=}")
+    #     print(f"{offsets=}")
         
 
 
