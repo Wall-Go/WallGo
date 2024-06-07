@@ -32,6 +32,7 @@ class EOM:
         hydro: Hydro,
         grid: Grid,
         nbrFields: int,
+        meanFreePath: float,
         includeOffEq: bool=False,
         errTol=1e-3,
         maxIterations=10,
@@ -50,6 +51,8 @@ class EOM:
             Object of the class Grid.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
+        meanFreePath : float
+            Estimate of the mean free path of the particles in the plasma.
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
@@ -75,6 +78,7 @@ class EOM:
         self.grid = grid
         self.errTol = errTol
         self.nbrFields = nbrFields
+        self.meanFreePath = meanFreePath
         self.includeOffEq = includeOffEq
 
         self.thermo = thermodynamics
@@ -333,15 +337,23 @@ class EOM:
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
-                
-        # Estimate L_xi
-        # msq1 = self.particle.msqVacuum(vevHighT)
-        # msq2 = self.particle.msqVacuum(vevLowT)
-        # L1,L2 = self.boltzmannSolver.collisionArray.estimateLxi(-velocityMid, Tplus, Tminus, msq1, msq2)
-        # L_xi = max(L1/2, L2/2, 2*max(wallParams.widths))
         
-        L_xi = 2*max(wallParams.widths)
-        self.grid.changePositionFalloffScale(L_xi)
+        ######################################        
+        ## Estimate the new grid parameters ##
+        ###################################### 
+        widths = wallParams.widths
+        offsets = wallParams.offsets
+        ## Distance between the right and left edges of the walls at the boundaries
+        wallThicknessGrid = (np.max((1-offsets)*widths)-np.min((-1-offsets)*widths))/2
+        ## Center between these two edges
+        ## The source and pressure are proportional to d(m^2)/dz, which peaks at -wallThicknessGrid*np.log(2)/2. This is why we substract this value.
+        wallCenterGrid = (np.max((1-offsets)*widths)+np.min((-1-offsets)*widths))/2 - wallThicknessGrid*np.log(2)/2
+        gammaWall = 1/np.sqrt(1-velocityMid**2)
+        ## The tail inside typically scales like gamma, while the one outside like 1/gamma
+        ## We take the max because the tail lengths must be larger than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall
+        tailInside = max(self.meanFreePath*gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        tailOutside = max(self.meanFreePath/gammaWall*self.includeOffEq, wallThicknessGrid*(1+2.1*self.grid.smoothing)/self.grid.ratioPointsWall)
+        self.grid.changePositionFalloffScale(tailInside, tailOutside, wallThicknessGrid, wallCenterGrid)
 
         pressure, wallParams, boltzmannResults, boltzmannBackground = self.intermediatePressureResults(
             wallParams, vevLowT, vevHighT, c1, c2, velocityMid, boltzmannResults, Tplus, Tminus
@@ -458,8 +470,9 @@ class EOM:
         dVdz = (dVfull * dPhidz).GetField(0)
 
         EOMPoly = Polynomial(dVdz, self.grid)
-
-        pressure = EOMPoly.integrate(w=-self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        pressure = EOMPoly.integrate(w=-dzdchi)
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
@@ -506,7 +519,8 @@ class EOM:
         Vref = (VLowT+VHighT)/2
         
         VPoly = Polynomial(V+VOut-Vref, self.grid)
-        U = VPoly.integrate(w = self.grid.L_xi/(1-self.grid.chiValues**2)**1.5)
+        dzdchi,_,_ = self.grid.getCompactificationDerivatives()
+        U = VPoly.integrate(w = dzdchi)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
         return U + K  

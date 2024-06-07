@@ -32,7 +32,7 @@ def test_GridCompactifyInversion():
 
     chi, rz, rp = grid.getCompactCoordinates()
     xi, pz, pp = grid.getCoordinates()
-    xi_inv, pz_inv, pp_inv = WallGo.Grid.decompactify(chi, rz, rp, L, T)
+    xi_inv, pz_inv, pp_inv = grid.decompactify(chi, rz, rp)
 
     max_diff = np.amax([abs(xi - xi_inv), abs(pz - pz_inv), abs(pp - pp_inv)])
     assert max_diff == pytest.approx(0, abs=1e-13)
