@@ -38,6 +38,8 @@ class SingletSM_Z2(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.clearParticles()
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
@@ -54,26 +56,17 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
-        )
-        self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
+        # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -82,7 +75,18 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
-        
+        ## === Light quarks, 5 of them ===
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuark = Particle("lightQuark", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = lightQuarkMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 60
+        )
+        self.addParticle(lightQuark)
 
 
     ## Go from whatever input params --> action params
@@ -438,8 +442,12 @@ def main():
     """
     manager.registerModel(model)
 
+
     ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+
     manager.loadCollisionFiles(collisionDirectory)
 
 
@@ -469,7 +477,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
@@ -516,6 +524,7 @@ def main():
         print(f"{wallVelocity=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+        
 
         # some estimate of deviation from O(dz^2) finite difference method
         delta00 = results.Deltas.Delta00.coefficients[0]
