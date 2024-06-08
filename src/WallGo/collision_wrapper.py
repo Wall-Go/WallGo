@@ -14,16 +14,36 @@ class Collision():
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
     This class is a singleton.
     """
+
     _instance = None
     
     def __new__(cls, modelCls: GenericModel):
-        # Implement singleton pattern
+        """
+        Implement singleton pattern
+        Create a new instance of the class if it doesn't already exist.
+
+        Args:
+            modelCls (GenericModel): The model class to be wrapped.
+
+        Returns:
+            The instance of the class.
+
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
     
     
     def __init__(self, modelCls: GenericModel):
+        """
+        Initializes the CollisionWrapper object.
+
+        Args:
+            modelCls (GenericModel): The model class to be used for collision integrations.
+
+        Returns:
+            None
+        """
         if not hasattr(self, "bInitialized"):
             self.module: ModuleType = None
             self._loadCollisionModule()
@@ -37,13 +57,23 @@ class Collision():
     
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
+
+        Args:
+            seed (int): The seed value to set for the Monte Carlo integration.
+
+        Returns:
+            None
         """
         self._assertLoaded()
         self.module.setSeed(seed)
 
 
     def _loadCollisionModule(self) -> None:
+        """Load the collision module.
 
+        Raises:
+            ImportError: If the module fails to load.
+        """
         try: 
             currentDirectory = os.path.dirname(__file__)
 
@@ -66,47 +96,61 @@ class Collision():
 
 
     def _assertLoaded(self) -> None:
+        """Assert that the collision module has been loaded.
+        
+        Raises:
+            AssertionError: If the collision module has not been loaded.
+        """
         assert self.module is not None, "Collision module has not been loaded!"
 
     def addParticles(self, model: GenericModel, T = 1.0) -> None:
         """
-        Particles need masses in GeV units, ie. T dependent.
-        Thermal masses are rescaled by the temperature and the default argument of T = 1.
-        This needs to be adapted for non-zero vacuum masses
+        Adds particles to the collision module.
+
+        Args:
+            model (GenericModel): The model containing the particles.
+            T (float, optional): The temperature in GeV units. Defaults to 1.0.
+
+        Returns:
+            None
+
+        Notes:
+            - Particles need masses in GeV units, i.e., T dependent.
+            - Thermal masses are rescaled by the temperature and the default argument of T = 1.
+            - This needs to be adapted for non-zero vacuum masses.
+            - Register particles with the collision module. This is required for each particle that can appear in matrix elements,
+              including particle species that are assumed to stay in equilibrium.
+            - The order of registration is the same as the particles are defined in model.particles which
+              should be the same as in MatrixElements.txt.
         """
         fieldHack = Fields([0]*model.fieldCount)
-        """
-        Register particles with the collision module. This is required for each particle that can appear in matrix elements,
-        including particle species that are assumed to stay in equilibrium.
-        The order of registration is the same as the particles are defined in model.particles which
-        should be the same as in MatrixElements.txt
-        """
+
         for particle in model.particles:
-            self.manager.addParticle( self.constructPybindParticle(particle, T, fieldHack) )
+            self.manager.addParticle(self.constructPybindParticle(particle, T, fieldHack))
 
-    ## Convert Python 'Particle' object to pybind-bound ParticleSpecies object.
-    ## But 'Particle' uses masses in GeV^2 units while we need m^2/T^2, so T is needed as input here.
-    ## Should do the same for field values since the vacuum mass can depend on that.
-    ## Return value is a ParticleSpecies object
+
     def constructPybindParticle(self, particle: Particle, T: float, fields: Fields):
-        r"""
-            Converts 'Particle' object to ParticleSpecies object that the Collision module can understand.
-            CollisionModule operates with dimensionless (m/T)^2 etc, so the temperature is taken as an input here. 
-
-            Parameters
-            ----------
-            particle : Particle
-                Particle object with p.msqVacuum and p.msqThermal being in GeV^2 units.
-            T : float
-                Temperature in GeV units.
-
-            Returns
-            -------
-            CollisionModule.ParticleSpecies
-                ParticleSpecies object
         """
+        Converts python 'Particle' object to pybind-bound ParticleSpecies object that the Collision module can understand.
+        'Particle' uses masses in GeV^2 units while CollisionModule operates with dimensionless (m/T)^2 etc,
+        so the temperature is taken as an input here, and the masses are rescaled accordingly.
+        The same should be done for field values since the vacuum mass can depend on that.
 
+        Parameters
+        ----------
+        particle : Particle
+            Particle object with p.msqVacuum and p.msqThermal being in GeV^2 units.
+        T : float
+            Temperature in GeV units.
+        fields : Fields
+            Fields object representing the fields in the system.
 
+        Returns
+        -------
+        CollisionModule.ParticleSpecies
+            ParticleSpecies object representing the converted particle.
+
+        """
         ## Convert to correct enum for particle statistics
         particleType = None
         if particle.statistics == "Boson":
@@ -121,7 +165,13 @@ class Collision():
                                     particle.msqThermal(T) / T**2.0,
                                     particle.ultrarelativistic)
 
-    def calculateCollisionIntegrals(self, bVerbose = False):
-        ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+    def calculateCollisionIntegrals(self, bVerbose=False):
+        """
+        Calculates the collision integrals.
+
+        Args:
+            bVerbose (bool, optional): If True, prints verbose output. Defaults to False.
+        """
+        ## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
         basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-        self.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
+        self.manager.calculateCollisionIntegrals(basisSize, bVerbose=False)
