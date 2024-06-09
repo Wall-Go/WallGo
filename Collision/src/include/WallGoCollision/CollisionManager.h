@@ -9,6 +9,7 @@
 #include <utility> // std::pair
 #include <memory>
 
+#include "EnvironmentMacros.h"
 #include "CollElem.h"
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
@@ -46,7 +47,7 @@ namespace wallgo
 {
 
 // Results of collision integration for (particle1, particle2) pair
-struct CollisionTensorResult
+struct WALLGO_API CollisionTensorResult
 {
     CollisionTensorResult(size_t _basisSize);
     size_t basisSize;
@@ -56,7 +57,7 @@ struct CollisionTensorResult
 
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms */
-class CollisionManager 
+class WALLGO_API CollisionManager 
 {
 
 public: 

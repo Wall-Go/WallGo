@@ -4,11 +4,21 @@ project(Collision VERSION 0.2.0 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+option(USE_CXX20 "Prefer C++20 if available (may allow small optimizations)" ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
+if (USE_CXX20)
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
+    
+    if (COMPILER_SUPPORTS_CXX20)
+        set(CMAKE_CXX_STANDARD 20)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    else()
+        # Fallback to C++17
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    endif()
+endif()
 
 # Set output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -23,12 +33,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE Release)
 endif()
 
-
 MESSAGE(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
-
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-## Do compile with profiler support? This is off by default
+## Compile with profiler support?
 option(PROFILER "Compile with profiler flags" OFF)
 
 
@@ -38,11 +46,6 @@ option(BUILD_EXAMPLES "Build WallGo/Collision C++ examples" ON)
 
 ## For MacOS, may need to manually setup OpenMP
 if(APPLE AND USE_OMP)
-
-    ## not good! TODO
-    set(CMAKE_C_COMPILER clang)
-    set(CMAKE_CXX_COMPILER clang++)
-
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
         set(OpenMP_C_LIB_NAMES "libomp")

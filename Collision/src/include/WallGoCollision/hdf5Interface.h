@@ -5,13 +5,15 @@
 #include <vector>
 #include <H5Cpp.h> // C++ API for HDF5 files
 
+#include "EnvironmentMacros.h"
 #include "Utils.h"
 
 namespace wallgo
 {
 
 // Struct for holding metadata about collision tensor. Default values are set to prevent exceptions in HDF5 routines
-struct H5Metadata {
+struct H5Metadata
+{
 	int basisSize = 1;
 	std::string basisName = "Unknown";
 	std::string integrator = "Unknown";

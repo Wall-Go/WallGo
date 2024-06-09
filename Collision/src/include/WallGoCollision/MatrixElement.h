@@ -1,6 +1,8 @@
 #ifndef MATRIXELEMENTPARSER_H
 #define MATRIXELEMENTPARSER_H
 
+#include "EnvironmentMacros.h"
+
 #include <map>
 #include <vector>
 #include <string>
@@ -28,7 +30,8 @@ Therefore, once you have a math expression in string format to describe a matrix
     3. Evaluate with evaluate(s, t, u) with Mandelstam variables of your choice.
     4. Can change parameter values with the setParameters function without having to redefine or re-parse anything.
 */
-class MatrixElement {
+class WALLGO_API MatrixElement
+{
 
 public:
 

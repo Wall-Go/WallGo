@@ -8,9 +8,10 @@
 namespace wallgo
 {
 
-void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata) {
-
-	try {
+void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata)
+{
+	try
+	{
 
 		// Create a group to hold metadata (keeping it separate from the actual data)
 		H5::Group metadataGroup = h5File.createGroup("metadata");
@@ -31,11 +32,15 @@ void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata) {
 		integratorAttr.close();
 		metadataGroup.close();
 
-	} catch (const H5::Exception& error) {
+	}
+	catch (const H5::Exception& error)
+	{
 		// Handle HDF5 errors
 		std::cerr << "Caught HDF5 exception when writing metadata: " << error.getDetailMsg() << std::endl;
 		std::exit(EXIT_FAILURE);
-	} catch (const std::exception& error) {
+	}
+	catch (const std::exception& error)
+	{
 		// Handle other exceptions
 		std::cerr << "Caught exception when writing metadata: " << error.what() << std::endl;
 		std::exit(EXIT_FAILURE);
@@ -54,9 +59,12 @@ void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetNa
 	// For writing we need to pass the data as a contiguous block of memory. A nested std::vector is not
 	// guaranteed to be contiguous so need to flatten the data here
 	std::vector<double> flattened_data;
-	for (const auto& vec3 : data) {
-		for (const auto& vec2 : vec3) {
-			for (const auto& vec1 : vec2) {
+	for (const auto& vec3 : data)
+	{
+		for (const auto& vec2 : vec3)
+		{
+			for (const auto& vec1 : vec2)
+			{
 				flattened_data.insert(flattened_data.end(), vec1.begin(), vec1.end());
 			}
 		}
@@ -66,9 +74,10 @@ void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetNa
 	writeDataSet(h5File, &flattened_data[0], arrayDimension, dims, datasetName);
 }
 
-void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension, const hsize_t* dims, std::string datasetName) {
-
-	try {
+void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension, const hsize_t* dims, std::string datasetName)
+{
+	try
+	{
 
 		// Create dataspace
 		H5::DataSpace dataspace(arrayDimension, dims);
@@ -85,11 +94,15 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 
 		std::cout << "Wrote dataset '" << datasetName << "' to " << h5File.getFileName() << std::endl;
 
-	} catch (const H5::Exception& error) {
+	}
+	catch (const H5::Exception& error)
+	{
 		// Handle HDF5 errors
 		std::cerr << "Caught HDF5 exception: " << error.getDetailMsg() << std::endl;
 		std::exit(EXIT_FAILURE);
-	} catch (const std::exception& error) {
+	}
+	catch (const std::exception& error)
+	{
 		// Handle other exceptions
 		std::cerr << "Caught exception: " << error.what() << std::endl;
 		std::exit(EXIT_FAILURE);

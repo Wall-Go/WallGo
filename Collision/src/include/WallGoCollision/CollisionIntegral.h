@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 
+#include "EnvironmentMacros.h"
 #include "FourVector.h"
 #include "ThreeVector.h"
 #include "CollElem.h"
@@ -62,7 +63,7 @@ struct InputsForKinematics
     double p2p3HatDot;
 };
 
-struct IntegrationOptions
+struct WALLGO_API IntegrationOptions
 {
     double maxIntegrationMomentum;
     // How many Monte Carlo calls between convergence checks 
@@ -101,7 +102,7 @@ Assumes a 5D integral of form:
     int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
 So that 9D -> 5D reduction has been done analytically and this class calculates the rest.
 */
-class CollisionIntegral4 {
+class WALLGO_API CollisionIntegral4 {
 
 public:
 

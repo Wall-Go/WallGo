@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 #include "CollisionIntegral.h"
 #include "CollElem.h"

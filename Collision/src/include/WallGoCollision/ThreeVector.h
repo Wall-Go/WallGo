@@ -1,8 +1,10 @@
 #ifndef THREEVECTOR_H
 #define THREEVECTOR_H
 
-#include <assert.h>
+#include <cassert>
 #include <cmath>
+
+#include "EnvironmentMacros.h"
 
 namespace wallgo
 {

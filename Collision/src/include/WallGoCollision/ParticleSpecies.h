@@ -5,16 +5,20 @@
 #include <cmath>
 #include <iostream>
 
+#include "EnvironmentMacros.h"
+
 namespace wallgo
 {
 
 // Boson or fermion?
-enum class EParticleType {
+enum class WALLGO_API EParticleType
+{
 	BOSON, FERMION
 };
 
 
-class ParticleSpecies {
+class WALLGO_API ParticleSpecies
+{
 
 public: 
 

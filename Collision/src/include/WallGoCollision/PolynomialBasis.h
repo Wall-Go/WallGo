@@ -2,26 +2,24 @@
 #define POLYNOMIAL_H
 
 #include <cmath>
+
 #include "Utils.h"
 #include "FourVector.h"
+#include "EnvironmentMacros.h"
 
 /* Note to self: GSL library has functions for computing Chebyshev series expansions so could investigate 
 * if their implementation of Chebyshev polynomials are faster than what we have here. However I didn't find 
 * any documentation about computing individual polynomials in GSL, just series expansions. */
 
-/* Note to self: Probably the 'best' implementation in terms of clarity would be 
-* an interface 'PolynomialBasis' that declares functions for computing basis polynomials and 
-* grid momenta for a given fixed grid size N (template parameter?).
-* Then we could implement the interface in different bases like Chebyshev, Cardinal etc.
-* However people have warned about the performance cost of virtual functions so let's not do this
-* at least for now. Instead, just def. class for Chebyshev polynomials only 
+/* TODO would be good to investigate if there's some other basis where the collision integrals are faster to evaluate.
+The Chebyshev class should be straightforward to generalize as a virtual interface for example.
 */
 
 namespace wallgo 
 {
 
-class Chebyshev {
-
+class Chebyshev
+{
 private:
     size_t N = 1;
 
@@ -32,31 +30,33 @@ public:
     }
 
     // Chebyshev polynomials of 1st kind (see eg. Wikipedia for the definition) 
-    inline double T(int n, double x) const { return std::cos(n* std::acos(x)); }
+    inline WG_CONSTEXPR20 double T(int n, double x) const { return std::cos(n* std::acos(x)); }
 
     // "Reduced" Chebyshev polynomials Tbar and Ttilde. Eq. (28) in 2204.13120 
-    inline double Tbar(int m, double x) const { return (m % 2 == 0 ? T(m, x) - 1.0 : T(m, x) - x); }
-    inline double Ttilde(int n, double x) const { return T(n, x) - 1.0; }
+    inline WG_CONSTEXPR20 double Tbar(int m, double x) const { return (m % 2 == 0 ? T(m, x) - 1.0 : T(m, x) - x); }
+    inline WG_CONSTEXPR20 double Ttilde(int n, double x) const { return T(n, x) - 1.0; }
     
     // Construct "rho" momenta on the grid
-    inline double rhoZGrid(int j) const { return std::cos(j * constants::pi / N); }
-    inline double rhoParGrid(int k) const { return std::cos(k * constants::pi / (N-1)); }
+    inline WG_CONSTEXPR20 double rhoZGrid(int j) const { return std::cos(j * constants::pi / N); }
+    inline WG_CONSTEXPR20 double rhoParGrid(int k) const { return std::cos(k * constants::pi / (N-1)); }
 
     // Convert p_z and p_par to rho_z, rho_par
-    inline double pZ_to_rhoZ(double pZ) const { return tanh(pZ / 2.0); }
-    inline double pPar_to_rhoPar(double pPar) const { return 1.0 - 2.0 * exp(-pPar); }
+    inline WG_CONSTEXPR20 double pZ_to_rhoZ(double pZ) const { return tanh(pZ / 2.0); }
+    inline WG_CONSTEXPR20 double pPar_to_rhoPar(double pPar) const { return 1.0 - 2.0 * exp(-pPar); }
 
     // Calculate "physical" momentum components p_z and p_par, in units of T, by inverting definitions of rho_z and rho_par
-    inline double rhoZ_to_pZ(double rho_z) const { return 2.0 * atanh(rho_z); }
-    inline double rhoPar_to_pPar(double rho_par) const { return -log(0.5 * (1 - rho_par)); } 
+    inline WG_CONSTEXPR20 double rhoZ_to_pZ(double rho_z) const { return 2.0 * atanh(rho_z); }
+    inline WG_CONSTEXPR20 double rhoPar_to_pPar(double rho_par) const { return -log(0.5 * (1 - rho_par)); } 
 
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
-    inline double TmTn(int m, int n, double rhoZ, double rhoPar) const {
+    inline WG_CONSTEXPR20 double TmTn(int m, int n, double rhoZ, double rhoPar) const
+    {
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
     
     // Same as above but with FourVector input
-    inline double TmTn(int m, int n, const FourVector &FV) const {
+    inline WG_CONSTEXPR20 double TmTn(int m, int n, const FourVector &FV) const
+    {
         double pZ = FV.zComp();
         double pPar = FV.parComp();
         double rhoZ = pZ_to_rhoZ(pZ);
@@ -64,7 +64,7 @@ public:
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
 
-    inline size_t getBasisSize() const { return N; }
+    inline constexpr size_t getBasisSize() const { return N; }
 };
 
 } // namespace

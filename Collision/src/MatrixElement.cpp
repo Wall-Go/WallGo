@@ -1,7 +1,7 @@
 #include <iostream>
 #include <functional>
 #include <array>
-#include <assert.h>
+#include <cassert>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
@@ -78,6 +78,8 @@ void MatrixElement::setParameters(const std::map<std::string, double> &parameter
 
 void MatrixElement::setParameter(const std::string &name, double newValue)
 {
+    assert(parametersInternal.count(name) > 0 && "parameter \"" << name << "\" has not been defined");
+    
     // Change only keys that the MatrixElement already holds internally
     if (parametersInternal.count(name) > 0) 
     {
