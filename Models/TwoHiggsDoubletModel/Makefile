@@ -3,7 +3,7 @@
 PYTHON=python3.11
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
-MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
+MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.ew.m
 MATRIX_DATA=${MATRIXELEMENTS}/MatrixElements.txt
 COLLISIONS=CollisionOutput
 MAIN=TwoHiggsDoubletModel
@@ -29,5 +29,12 @@ run_main: ${COLLISION_FILES} | generate_collisions
 	@echo "Running model file"
 	${PYTHON} ${MAIN}.py
 
+model:
+	@echo "Running model file"
+	${PYTHON} ${MAIN}.py
+
+generateMatrixElements: ${MATRIX_DATA}
+
 clean:
 	rm -rf ${COLLISIONS}
+	rm -rf ${MATRIX_DATA}

@@ -92,6 +92,7 @@ Define couplings (Lagrangian parameters)
 list as they appear in the MatrixElements file
 """
 collisionManager.addCoupling(inputParameters["g3"])
+collisionManager.addCoupling(inputParameters["g2"])
 
 """
 Define particles. 

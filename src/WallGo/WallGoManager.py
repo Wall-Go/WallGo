@@ -2,9 +2,11 @@ import numpy as np
 import numpy.typing as npt
 # WallGo imports
 from .Boltzmann import BoltzmannSolver
+from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
+from .Grid3Scales import Grid3Scales
 from .Hydro import Hydro  # TODO why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
@@ -23,7 +25,7 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, Lxi: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
+    def __init__(self, wallThicknessIni: float, meanFreePath: float, temperatureScaleInput: float, fieldScaleInput: npt.ArrayLike):
         """do common model-independent setup here"""
 
         # TODO cleanup, should not read the config here if we have a global WallGo config object
@@ -40,9 +42,8 @@ class WallGoManager:
 
         # Grid
         self._initGrid(
-            self.config.getint("PolynomialGrid", "spatialGridSize"),
-            self.config.getint("PolynomialGrid", "momentumGridSize"),
-            Lxi,
+            wallThicknessIni,
+            meanFreePath,
         )
 
         self._initBoltzmann()
@@ -64,7 +65,7 @@ class WallGoManager:
 
     #Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(
-        self, modelParameters: dict[str, float], phaseInput: PhaseInfo
+        self, phaseInput: PhaseInfo
     ) -> None:
         """Parameters
         ----------
@@ -76,7 +77,7 @@ class WallGoManager:
                     and the nucleation temperature. Transition is assumed to go phaseLocation1 --> phaseLocation2.
         """
 
-        self.model.modelParameters = modelParameters
+        #self.model.modelParameters = modelParameters
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
@@ -107,6 +108,18 @@ class WallGoManager:
 
         print(f"Jouguet: {self.hydro.vJ}")
 #        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
+        
+    def changeInputParameters(self, inputParameters:  dict[str, float], effectivePotential: EffectivePotential) -> None:
+        """Recomputes the model parameters when the user provides new inputparameters.
+        Also updates the effectivePotential correspondingly.
+        """
+        self.model.modelParameters = self.model.calculateModelParameters(inputParameters)
+        self.model.effectivePotential = effectivePotential(self.model.modelParameters, self.model.fieldCount)
+
+        potentialError = self.config.getfloat("EffectivePotential", "potentialError")
+        
+        self.model.effectivePotential.setPotentialError(potentialError)
+        self.model.effectivePotential.setScales(float(self.temperatureScaleInput), self.fieldScaleInput)
     
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
@@ -172,6 +185,7 @@ class WallGoManager:
             hydrotemplate = HydroTemplateModel(self.thermodynamics)
             print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
 
+
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
@@ -222,7 +236,7 @@ class WallGoManager:
         
         self.hydro = Hydro(thermodynamics)
 
-    def _initGrid(self, M: int, N: int, L_xi: float) -> Grid:
+    def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> Grid:
         r"""
         Parameters
         ----------
@@ -244,14 +258,20 @@ class WallGoManager:
         # nucleation temperature is obtained.
         initialMomentumFalloffScale = 50.0
 
-        N, M = int(N), int(M)
+        N = self.config.getint("PolynomialGrid", "momentumGridSize")
+        M = self.config.getint("PolynomialGrid", "spatialGridSize")
+        ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
+        smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
+        self.meanFreePath = meanFreePath
+        
+        tailLength = max(meanFreePath, wallThicknessIni*(1+3*smoothing)/ratioPointsWall)
+        
         if N % 2 == 0:
             raise ValueError(
                 "You have chosen an even number N of momentum-grid points. "
                 "WallGo only works with odd N, please change it to an odd number."
             )
-
-        self.grid = Grid(M, N, L_xi, initialMomentumFalloffScale)
+        self.grid = Grid3Scales(M, N, tailLength, tailLength, wallThicknessIni, initialMomentumFalloffScale, ratioPointsWall, smoothing)
 
     def _initBoltzmann(self):
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
@@ -286,6 +306,7 @@ class WallGoManager:
             self.hydro,
             self.grid,
             numberOfFields,
+            self.meanFreePath,
             includeOffEq=bIncludeOffEq,
             errTol=errTol,
             maxIterations=maxIterations,

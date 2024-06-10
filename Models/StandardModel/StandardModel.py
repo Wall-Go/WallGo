@@ -27,13 +27,16 @@ class StandardModel(GenericModel):
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
 
-        ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
-        ## so @todo define these in a separate file? 
-        
+        self.defineParticles()
+
+
+    def defineParticles(self) -> None:
+        self.clearParticles()
+
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
-        
+    
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
@@ -49,6 +52,7 @@ class StandardModel(GenericModel):
                             totalDOFs = 12
         )
         self.addParticle(topQuark)
+
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
@@ -111,7 +115,7 @@ class StandardModel(GenericModel):
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
         return modelParameters
-
+        
 
 class EffectivePotentialSM(EffectivePotential):
 
@@ -218,18 +222,23 @@ def main():
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 0.2
 
     # The following 2 parameters are used to estimate the optimal value of dT used 
+    
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
     temperatureScale = 1.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = 10.,
+    
     ## Create WallGo control object
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
@@ -251,38 +260,38 @@ def main():
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
+
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
     manager.loadCollisionFiles(collisionDirectory)
 
+
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
     """ Example mass loop that does two value of mH. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
-    values_mH = [ 35.0,  45.0]
-    values_Tn = [44.6, 56.8]
+    
+    values_mH = [45.0, 35.0]
+    values_Tn = [56.8,44.6]
 
     for i in range(len(values_mH)):
-
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
         inputParameters["mH"] = values_mH[i]
-        model = StandardModel(inputParameters)
 
         """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
         """
-        manager.registerModel(model)
 
-        modelParameters = model.calculateModelParameters(inputParameters)
+        manager.changeInputParameters(inputParameters, EffectivePotentialSM)
+
 
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
-
         Tn = values_Tn[i]
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
@@ -294,7 +303,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         """WallGo can now be used to compute wall stuff!"""
 

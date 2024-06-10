@@ -8,7 +8,7 @@ import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-## For Benoit benchmarks we need the unresummed, non-high-T potential:
+## To compare to 2211.13142 we need the unresummed, non-high-T potential:
 from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
 
@@ -42,37 +42,36 @@ class InertDoubletModel(GenericModel):
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
-        topQuark = Particle("top", 
+        topQuarkL = Particle("topL", 
                             msqVacuum = topMsqVacuum,
                             msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 12
+                            totalDOFs = 6
         )
-        self.addParticle(topQuark)
+        self.addParticle(topQuarkL)
 
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
+        topQuarkR = Particle("topR", 
+                            msqVacuum = topMsqVacuum,
+                            msqDerivative = topMsqDerivative,
+                            msqThermal = topMsqThermal,
                             statistics = "Fermion",
-                            inEquilibrium = True,
+                            inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 60
+                            totalDOFs = 6
         )
-        self.addParticle(lightQuark)
+        self.addParticle(topQuarkR)
 
         ## === SU(3) gluon ===
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
 
         gluon = Particle("gluon", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
+                            msqDerivative = lambda fields: 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -81,8 +80,38 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(gluon)
 
-        ## Go from whatever input params --> action params
-    ## This function was just copied from SingletStandardModel_Z2
+        ## === SU(2) gauge boson ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        WMsqDerivative = lambda fields: np.zeros_like(fields)
+
+        W = Particle("W", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = lambda fields: 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 9
+        )
+        self.addParticle(W)
+
+        ## === Light quarks, 5 of them ===
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+
+        lightQuark = Particle("lightQuark", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = lambda fields: 0.0,
+                            msqThermal = lightQuarkMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 60
+        )
+        self.addParticle(lightQuark)
+
+
+
+    ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         super().calculateModelParameters(inputParameters)
     
@@ -337,8 +366,11 @@ def main():
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -348,7 +380,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = 10.
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
@@ -377,8 +409,11 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+
     manager.loadCollisionFiles(collisionDirectory)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -413,7 +448,7 @@ def main():
 
         ## Wrap everything in a try-except block to check for WallGo specific errors
         try:
-            manager.setParameters(modelParameters, phaseInfo)
+            manager.setParameters(phaseInfo)
 
             """WallGo can now be used to compute wall stuff!"""
 

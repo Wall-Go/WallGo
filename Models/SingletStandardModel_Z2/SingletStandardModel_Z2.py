@@ -38,6 +38,8 @@ class SingletSM_Z2(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.clearParticles()
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
@@ -54,11 +56,17 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
+
         ## === SU(3) gluon ===
+        # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+
         gluon = Particle("gluon", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -66,7 +74,6 @@ class SingletSM_Z2(GenericModel):
                             totalDOFs = 16
         )
         self.addParticle(gluon)
-
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
@@ -80,10 +87,6 @@ class SingletSM_Z2(GenericModel):
                             totalDOFs = 60
         )
         self.addParticle(lightQuark)
-
-
-
-        
 
 
     ## Go from whatever input params --> action params
@@ -391,21 +394,23 @@ def main():
 
     WallGo.initialize()
 
-
     # loading in local config file
     WallGo.config.readINI(
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
-    ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    ## Modify the config, we use N=11 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -415,7 +420,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -448,7 +453,6 @@ def main():
 
     ## ---- Directory name for collisions integrals. Currently we just load these
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
-    # collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
 
 
@@ -481,7 +485,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
@@ -526,6 +530,7 @@ def main():
         print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
+        
 
 
     # end parameter-space loop
