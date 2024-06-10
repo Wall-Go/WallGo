@@ -71,10 +71,10 @@ class InertDoubletModel(GenericModel):
 
         gluon = Particle("gluon", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = gluonMsqDerivative,
+                            msqDerivative = lambda fields: 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = False,
+                            inEquilibrium = True,
                             ultrarelativistic = True,
                             totalDOFs = 16
         )
@@ -86,7 +86,7 @@ class InertDoubletModel(GenericModel):
 
         W = Particle("W", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = WMsqDerivative,
+                            msqDerivative = lambda fields: 0.0,
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -100,7 +100,7 @@ class InertDoubletModel(GenericModel):
 
         lightQuark = Particle("lightQuark", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
+                            msqDerivative = lambda fields: 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = True,
