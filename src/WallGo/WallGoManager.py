@@ -346,7 +346,9 @@ class WallGoManager:
         """
         self.eom.includeOffEq = bIncludeOffEq
         errTol = self.config.getfloat("EOM", "errTol")
-        return self.eom.solveInterpolation(self.hydro.vJ+1e-4, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
+
+        vmin = max(self.hydro.vJ+1e-4, self.hydro.slowestDeton())
+        return self.eom.solveInterpolation(vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 
