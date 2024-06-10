@@ -63,7 +63,7 @@ class Hydro:
             self.vJ = self.template.vJ
 
         self.vBracketLow = 1e-3 #JvdV: this is not a good name - it is supposed to be the smallest velocity that we allow
-        self.vMin = max(self.vBracketLow, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
+        self.vMin = max(self.vBracketLow, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature
 
 
     def findJouguetVelocity(self) -> float:
@@ -184,7 +184,39 @@ class Hydro:
                 vmax2 = self.vJ
 
             return min(vmax1,vmax2) 
+        
+    def slowestDeton(self) -> float:
+        r"""
+        Finds the smallest detonation wall velocity for which the temperature of the plasma is withint the allowed range,
+        by finding the velocity for which Tm = TMaxLowT. For detonations, Tp = Tn, so always in the allowed range.
+        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity if no solution can be found.
+
+        Returns
+        -------
+        vmin: double
+            The value of the slowest detonation solution for this model
+        """
+        def TpTm(vw):
+            _, _, Tp, Tm = self.findMatching(vw)
+            return [Tp,Tm]
+        
+        if TpTm(1)[1] > self.TMaxLowT:
+            return 1
+        
+        else:
+            TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+            try:
+                vmin = root_scalar(
+                    TmMax,
+                    bracket=[self.vJ, 1],
+                    method='brentq',
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                    ).root
+                return vmin
             
+            except ValueError:  
+                return self.vJ          
 
     def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
         r"""
