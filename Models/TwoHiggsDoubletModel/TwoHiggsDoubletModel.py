@@ -66,10 +66,12 @@ class InertDoubletModel(GenericModel):
 
         ## === SU(3) gluon ===
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
 
         gluon = Particle("gluon", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = False,
@@ -80,10 +82,11 @@ class InertDoubletModel(GenericModel):
 
         ## === SU(2) gauge boson ===
         WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        WMsqDerivative = lambda fields: np.zeros_like(fields)
 
         W = Particle("W", 
                             msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
+                            msqDerivative = WMsqDerivative,
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
@@ -437,8 +440,11 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+
     manager.loadCollisionFiles(collisionDirectory)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -473,7 +479,7 @@ def main():
 
         ## Wrap everything in a try-except block to check for WallGo specific errors
         try:
-            manager.setParameters(modelParameters, phaseInfo)
+            manager.setParameters(phaseInfo)
 
             """WallGo can now be used to compute wall stuff!"""
 
