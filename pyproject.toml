@@ -57,6 +57,7 @@ docs = [
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-automodapi",
+    "sphinxcontrib-bibtex",
 ]
 
 [project.urls]

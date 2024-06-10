@@ -43,7 +43,7 @@ If you use WallGo, please cite arXiv:....
     WallGoUtils
 
 .. toctree::
-    :caption: Getting Started:
+    :caption: Development:
     :maxdepth: 2
     :hidden:
 
