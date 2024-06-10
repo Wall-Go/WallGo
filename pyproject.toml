@@ -44,8 +44,7 @@ docs = [
 ]
 lint = [
     "black",
-    "flake8",
-    "flake8-pyproject",
+    "pylint",
     "mypy",
 ]
 
@@ -73,8 +72,9 @@ target-version = 'py310'
 
 [tool.pylint.main]
 max-line-length = 88
-indent-size = 4
+indent-string = "    "
 
+[tool.pylint.basic]
 # naming styles: PEP8 except camelCase instead of snake_case
 argument-naming-style = "camelCase"
 attr-naming-style = "camelCase"
