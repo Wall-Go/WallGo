@@ -23,12 +23,12 @@ class InertDoubletModel(GenericModel):
     fieldCount = 1
 
 
-    def __init__(self, initialInputParameters: dict[str, float], config):
+    def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialIDM(self.modelParameters, self.fieldCount, config)
+        self.effectivePotential = EffectivePotentialIDM(self.modelParameters, self.fieldCount)
 
         ## Define particles. this is a lot of clutter, especially if the mass expressions are long, 
         ## so @todo define these in a separate file? 
@@ -132,19 +132,13 @@ class InertDoubletModel(GenericModel):
 ## For this benchmark model we use the 4D potential, implemented as in 2211.13142. We use interpolation tables for Jb/Jf 
 class EffectivePotentialIDM(EffectivePotential_NoResum):
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int, config):
+    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
         ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90 
 
-
-        #JvdV: TODO figure out which integrals to use!
-        """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
-        In real applications we recommend using the WallGo default implementations.
-        """
-        #self._configureBenchmarkIntegrals(config)
+        self._configureBenchmarkIntegrals()
 
     
 
@@ -376,7 +370,7 @@ def main():
     }
 
 
-    model = InertDoubletModel(inputParameters, WallGo.config)
+    model = InertDoubletModel(inputParameters)
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 

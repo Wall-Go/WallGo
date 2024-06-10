@@ -6,6 +6,8 @@ from .EffectivePotential import EffectivePotential
 from .Integrals import Integrals
 from .WallGoUtils import getSafePathToResource
 
+import WallGo
+
 class EffectivePotential_NoResum(EffectivePotential, ABC):
     """Class EffectivePotential_NoResum -- Specialization of the abstract EffectivePotential class
     that implements common functions for computing the 1-loop potential at finite temperature, without 
@@ -27,19 +29,19 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         else:
             self.integrals = Integrals()
 
-    def _configureBenchmarkIntegrals(self, config):
+    def _configureBenchmarkIntegrals(self):
         
         ## Load interpolation tables for Jb/Jf. 
         self.integrals.Jb.readInterpolationTable(
             getSafePathToResource(
-                config.config.get("DataFiles", "InterpolationTable_Jb")
+                WallGo.config.get("DataFiles", "InterpolationTable_Jb")
             ),
             bVerbose=False,
         )
 
         self.integrals.Jf.readInterpolationTable(
             getSafePathToResource(
-                config.config.get("DataFiles", "InterpolationTable_Jf")
+                WallGo.config.get("DataFiles", "InterpolationTable_Jf")
             ),
             bVerbose=False,
         )

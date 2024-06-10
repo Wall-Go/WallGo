@@ -59,8 +59,6 @@ class WallGoManager:
         self.model.effectivePotential.setPotentialError(potentialError)
         self.model.effectivePotential.setScales(float(self.temperatureScaleInput), self.fieldScaleInput)
 
-        self.model.effectivePotential._configureBenchmarkIntegrals(self.config)
-
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
