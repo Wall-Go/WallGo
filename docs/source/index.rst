@@ -20,6 +20,16 @@ If you use WallGo, please cite arXiv:....
 
 
 .. toctree::
+    :caption: Development:
+    :maxdepth: 2
+    :hidden:
+
+    contact
+    changelog
+    development
+
+
+.. toctree::
     :caption: API Reference
     :maxdepth: 4
     :hidden:
@@ -45,12 +55,3 @@ If you use WallGo, please cite arXiv:....
     WallGoManager
     WallGoTypes
     WallGoUtils
-
-.. toctree::
-    :caption: Development:
-    :maxdepth: 2
-    :hidden:
-
-    contact
-    changelog
-    development
