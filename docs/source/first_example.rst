@@ -14,6 +14,18 @@ Concretely, let's consider a simple model of a real scalar field coupled to a Di
 
 In this case the scalar field may undergo a phase transition, with the fermion field contributing to the friction for the bubble wall growth.
 
+The definition of the Model starts by inheriting from the :py:data:`WallGo.GenericModel` class. This class holds the features of a model which enter directly in the Python side of WallGo. This includes the list of particles (:py:data:`WallGo.Particles` objects) and a reference to a definition of the effective potential.
+
+.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+   :language: py
+   :lines: 4-69
+
+The effective potential itself is defined separately, by inheriting from the :py:data:`WallGo.EffectivePotential` class.
+
+.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+   :language: py
+   :lines: 72-109
+
 **********
 References
 **********
