@@ -110,9 +110,6 @@ class WallGoManager:
         print(f"Jouguet: {self.hydro.vJ}")
 #        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
         
-        print(f"{self.hydro.slowestDeton()=}")
-        print(f"{self.hydro.findMatching(0.1)=} {self.hydro.findMatching(0.2)=} {self.hydro.findMatching(0.3)=} {self.hydro.findMatching(0.4)=} {self.hydro.findMatching(0.5)=}")
-        print(f"{self.hydro.findMatching(0.6)=} {self.hydro.findMatching(0.7)=} {self.hydro.findMatching(0.8)=} {self.hydro.findMatching(0.9)=} {self.hydro.findMatching(1.)=}")
         
     def changeInputParameters(self, inputParameters:  dict[str, float], effectivePotential: EffectivePotential) -> None:
         """Recomputes the model parameters when the user provides new inputparameters.

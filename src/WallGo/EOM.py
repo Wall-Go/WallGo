@@ -664,7 +664,6 @@ class EOM:
         wallGoInterpolationResults : WallGoInterpolationResults
 
         """
-        print(f"{vmin=}")
         if vmin < 0.99:
             nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
             wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
