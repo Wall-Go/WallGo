@@ -31,3 +31,4 @@ run_main: ${COLLISION_FILES} | generate_collisions
 
 clean:
 	rm -rf ${COLLISIONS}
+	rm -rf ${MATRIX_DATA}
