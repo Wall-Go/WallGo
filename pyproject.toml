@@ -44,8 +44,8 @@ docs = [
 ]
 lint = [
     "black",
-    "pylint",
     "mypy",
+    "pylint",
 ]
 
 [project.urls]
