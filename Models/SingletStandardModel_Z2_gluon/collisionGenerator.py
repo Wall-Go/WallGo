@@ -11,9 +11,9 @@ import WallGo
 from WallGo import Particle
 from WallGo import Fields
 
-from SingletStandardModel_Z2 import (
+from SingletStandardModel_Z2_gluon import (
     SingletSM_Z2,
-)  # Benoit benchmark model
+)
 
 
 ## TODO move this to the collision wrapper:
@@ -56,8 +56,8 @@ def constructPybindParticle(particle: Particle, T: float, fields: Fields):
 WallGo.initialize()
 
 
-## Modify the config, we use N=11 for this example
-WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+## Modify the config, we use N=5 for this example
+WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
 ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
 inputParameters = {

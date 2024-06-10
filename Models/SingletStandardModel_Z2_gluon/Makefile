@@ -1,12 +1,12 @@
 .PHONY=clean, run_main
 
-PYTHON=python3.11
+PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
 MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
 MATRIX_DATA=${MATRIXELEMENTS}/MatrixElements.txt
 COLLISIONS=CollisionOutput
-MAIN=SingletStandardModel_Z2
+MAIN=SingletStandardModel_Z2_gluon
 
 # File Types (fod dependencies)
 COLLISION_FILES = $(shell find ${COLLISIONS} -name 'collisions_*.hdf5')
@@ -15,9 +15,9 @@ all: run_main
 
 ${COLLISIONS}:
 	echo "${COLLISIONS} folder not found. Generating collisions..."; \
-	mkdir -p ${COLLISIONS} 
+	mkdir -p ${COLLISIONS}
 
-generate_collisions: ${MATRIX_DATA} | ${COLLISIONS} 
+generate_collisions: ${MATRIX_DATA} | ${COLLISIONS}
 	@echo "Running collision generator"
 	${PYTHON} collisionGenerator.py
 

@@ -43,6 +43,8 @@ class SingletSM_Z2(GenericModel):
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
         
+        self.clearParticles()
+
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
@@ -58,20 +60,6 @@ class SingletSM_Z2(GenericModel):
                             totalDOFs = 12
         )
         self.addParticle(topQuark)
-
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
-        )
-        self.addParticle(lightQuark)
 
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
@@ -91,18 +79,18 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
-        gluon = Particle("gluon", 
-                            msqVacuum = gluonMsqVacuum,
-                            msqDerivative = gluonMsqDerivative,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = False,
+        ## === Light quarks, 5 of them ===
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuark = Particle("lightQuark", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = lightQuarkMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = True,
                             ultrarelativistic = True,
-                            totalDOFs = 16
+                            totalDOFs = 60
         )
-        self.addParticle(gluon)
-
-
+        self.addParticle(lightQuark)
 
 
     ## Go from whatever input params --> action params
@@ -312,14 +300,30 @@ def main():
 
     WallGo.initialize()
 
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
+
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
+    # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
+    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
+    Lxi = 0.05
+
     ## Create WallGo control object
-    manager = WallGoManager()
+        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # for the finite difference derivatives of the potential.
+    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    temperatureScale = 10.
+    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    fieldScale = [10.,10.]
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -350,7 +354,8 @@ def main():
     manager.registerModel(model)
 
     ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "collisions_N5/"
+    collisionFileName = pathlib.Path(__file__).parent.resolve() / "CollisionOutput/"
+
     manager.loadCollisionFiles(collisionFileName)
 
 
@@ -380,7 +385,7 @@ def main():
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        manager.setParameters(modelParameters, phaseInfo)
+        manager.setParameters(phaseInfo)
 
         ## TODO initialize collisions. Either do it here or already in registerModel(). 
         ## But for now it's just hardcoded in Boltzmann.py and __init__.py
