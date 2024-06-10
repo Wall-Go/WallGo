@@ -27,6 +27,7 @@ If you use WallGo, please cite arXiv:....
     contact
     changelog
     development
+    license
 
 
 .. toctree::
