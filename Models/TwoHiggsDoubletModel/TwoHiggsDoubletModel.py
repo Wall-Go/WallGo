@@ -394,8 +394,11 @@ def main():
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -405,7 +408,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = 10.
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input, but this is likely to change in the future
