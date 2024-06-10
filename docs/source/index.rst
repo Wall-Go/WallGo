@@ -13,6 +13,10 @@ If you use WallGo, please cite arXiv:....
     :hidden:
 
     intro
+    installation
+    first_example
+    collected_examples
+    faqs
 
 
 .. toctree::
