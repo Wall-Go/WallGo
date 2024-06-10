@@ -52,7 +52,6 @@ class GenericModel(ABC):
     effectivePotential: EffectivePotential
     
     inputParameters: dict[str, float]
-
     
 
 
@@ -65,14 +64,10 @@ class GenericModel(ABC):
         if (not particleToAdd.inEquilibrium):
             self.outOfEquilibriumParticles.append(particleToAdd)
 
-    ## Empties the particle lists
-    def clearParticles(self) -> None:
-        self.particles = []
-        self.outOfEquilibriumParticles = []
-
 
     ## Go from whatever input parameters to renormalized Lagrangian parameters. Override this if your inputs are something else than Lagrangian parameters
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         self.inputParameters = inputParameters
         return {}
+
 

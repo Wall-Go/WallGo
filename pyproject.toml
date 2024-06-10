@@ -42,6 +42,12 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-automodapi",
 ]
+lint = [
+    "black",
+    "flake8",
+    "flake8-pyproject",
+    "mypy",
+]
 
 [project.urls]
 "Homepage" = "https://wallspeed.readthedocs.io/"
@@ -65,9 +71,22 @@ WallGo = ["Config/*.ini", "Data/*"]
 line-length = 88
 target-version = 'py310'
 
-[tool.flake8]
+[tool.pylint.main]
 max-line-length = 88
 indent-size = 4
+
+# naming styles: PEP8 except camelCase instead of snake_case
+argument-naming-style = "camelCase"
+attr-naming-style = "camelCase"
+class-naming-style = "PascalCase"
+class-attribute-naming-style = "camelCase"
+class-const-naming-style = "UPPER_CASE"
+const-naming-style = "UPPER_CASE"
+function-naming-style = "camelCase"
+inlinevar-naming-style = "camelCase"
+method-naming-style = "camelCase"
+module-naming-style = "camelCase"
+variable-naming-style = "camelCase"
 
 [tool.mypy]
 warn_return_any = true
