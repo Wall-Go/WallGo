@@ -144,7 +144,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
         In real applications we recommend using the WallGo default implementations.
         """
-        self._configureBenchmarkIntegrals(config)
+        #self._configureBenchmarkIntegrals(config)
 
     
 
