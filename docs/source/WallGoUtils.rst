@@ -1,8 +1,8 @@
 ======================================
-Model
+WallGoUtils
 ======================================
 
-.. automodule:: WallGo.GenericModel
+.. automodule:: WallGo.WallGoUtils
     :members:
     :inherited-members:
     :special-members: __init__

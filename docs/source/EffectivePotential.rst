@@ -1,8 +1,8 @@
 ======================================
-Model
+EffectivePotential
 ======================================
 
-.. automodule:: WallGo.GenericModel
+.. automodule:: WallGo.EffectivePotential
     :members:
     :inherited-members:
     :special-members: __init__

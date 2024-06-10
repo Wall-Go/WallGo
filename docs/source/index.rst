@@ -6,13 +6,6 @@ WallGo is a Python package for computing the bubble wall speed in
 cosmological phase transitions. The code is open source and free to use.
 If you use WallGo, please cite arXiv:....
 
-.. image:: desy.jpeg
-    :width: 400
-    :align: center
-    :alt: Group at DESY
-
-|
-
 
 .. toctree::
     :caption: Getting Started:
@@ -29,13 +22,25 @@ If you use WallGo, please cite arXiv:....
 
     Boltzmann
     Collision
+    CollisionArray
+    Config
+    EffectivePotential
     EoM
+    Fields
+    FreeEnergy
     Grid
     Hydro
     HydroTemplateModel
-    Polynomial
+    Integrals
+    InterpolatableFunction
     Model
+    Particle
+    Polynomial
     Thermodynamics
+    WallGoExceptions
+    WallGoManager
+    WallGoTypes
+    WallGoUtils
 
 .. toctree::
     :caption: Getting Started:
@@ -43,4 +48,5 @@ If you use WallGo, please cite arXiv:....
     :hidden:
 
     contact
+    changelog
     development

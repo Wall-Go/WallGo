@@ -1,8 +1,8 @@
 ======================================
-Model
+Fields
 ======================================
 
-.. automodule:: WallGo.GenericModel
+.. automodule:: WallGo.Fields
     :members:
     :inherited-members:
     :special-members: __init__
