@@ -1,6 +1,7 @@
 """
 A simple example model, of a real scalar field coupled to a Dirac fermion
 """
+
 import pathlib
 import numpy as np
 import WallGo
@@ -42,7 +43,7 @@ class YukawaModel(WallGo.GenericModel):
         psiMsqDerivative = lambda fields: y
         psiMsqThermal = lambda T: 1 / 16 * y**2 * T**2
         psi = WallGo.Particle(
-            "top",  #HACK! should be psi, but just rehashing old collision integrals
+            "top",  # HACK! should be psi, but just rehashing old collision integrals
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
@@ -81,8 +82,10 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     WallGo class EffectivePotential.
     """
 
-    #HACK! this checkForImaginary should be removed from the codebase
-    def evaluate(self, fields: WallGo.Fields, temperature: float, checkForImaginary: bool = False) -> float:
+    # HACK! not a fan of requiring checkForImaginary when manifestly real
+    def evaluate(
+        self, fields: WallGo.Fields, temperature: float, checkForImaginary: bool = False
+    ) -> float:
         """
         It is necessary to define a member function called 'evaluate'
         which returns the value of the potential.
@@ -122,13 +125,16 @@ def main():
     WallGo.initialize()
 
     # Scales used for determining suitable values of dxi, dT, dphi etc in derivatives.
-    Lxi = 0.05
-    temperatureScale = 1.0
-    fieldScale = (100.0,)
+    wallThicknessIni = 0.05
+    meanFreePath = 1.0
+    temperatureScaleInput = 1.0
+    fieldScaleInput = (100.0,)
 
     # Create WallGo control object
-    manager = WallGo.WallGoManager(Lxi, temperatureScale, fieldScale)
-    
+    manager = WallGo.WallGoManager(
+        wallThicknessIni, meanFreePath, temperatureScaleInput, fieldScaleInput
+    )
+
     # Lagrangian parameters.
     inputParameters = {
         "sigma": 0,
@@ -145,14 +151,14 @@ def main():
     # Register the model with WallGo.
     manager.registerModel(model)
 
-    ## File name for collisions integrals. Currently we just load this
+    # Loading collision integrals.
     collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
     manager.loadCollisionFiles(collisionDirectory)
 
-    # Phase information. Transition goes from phasePrevious to phaseNext.
-    Tn = 86.3929
-    phasePrevious = WallGo.Fields([33.8906])
-    phaseNext = WallGo.Fields([202.001])
+    # Phase information.
+    Tn = 89.0
+    phasePrevious = WallGo.Fields([30.79])
+    phaseNext = WallGo.Fields([192.35])
 
     phaseInfo = WallGo.PhaseInfo(
         temperature=Tn, phaseLocation1=phasePrevious, phaseLocation2=phaseNext
@@ -164,6 +170,7 @@ def main():
     # Solve for the wall velocity
     results = manager.solveWall(bIncludeOffEq=True)
     print(f"Wall speed: {results.wallVelocity}")
+
 
 # end main()
 
