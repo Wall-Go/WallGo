@@ -43,7 +43,7 @@ class NSinglets(GenericModel):
 
         ## === Top quark ===
         topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
+        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.GetField(i) for i in range(self.fieldCount)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle("top", 
@@ -99,7 +99,6 @@ class NSinglets(GenericModel):
         v0 = inputParameters["v0"]
         # Scalar eigenvalues
         mh = inputParameters["mh"] # 125 GeV
-        ms = np.array(inputParameters["ms"])
 
         ## these are direct inputs:
         modelParameters["lHS"] = np.array(inputParameters["lHS"])
@@ -108,7 +107,7 @@ class NSinglets(GenericModel):
 
         modelParameters["lHH"] = 0.5 * mh**2 / v0**2
         modelParameters["muHsq"] = -mh**2/2
-        modelParameters["muSsq"] = ms**2 - modelParameters["lHS"]*v0**2
+        modelParameters["muSsq"] = np.array(inputParameters["muSsq"])
 
         ## Then the gauge/Yukawa sector
         
@@ -149,49 +148,57 @@ class EffectivePotentialNSinglets(EffectivePotential):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def canTunnel(self):
+    def canTunnel(self, tunnelingTemperature=None):
         tunnel = True
-        # Higgs phase is the true vacuum at T=0
-        if self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] <= sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"]):
-            print("Higgs phase is not the true vacuum at T=0")
-            print(f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}""")
-            tunnel = False
         
-        # Higgs phase exists at T=0
-        if self.modelParameters["muHsq"] >= 0 or self.modelParameters["lHH"] <= 0:
-            print("Higgs phase doesn't exist at T=0")
-            print(f"""{self.modelParameters["muHsq"]=} {self.modelParameters["lHH"]=}""")
-            tunnel = False
-        # Higgs phase is stable at T=0
-        if np.any(self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"] <= 0):
-            print("Higgs phase is not stable at T=0")
-            print(f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}""")
-            tunnel = False
+        if tunnelingTemperature is None:
+            # Higgs phase is the true vacuum at T=0
+            if self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] <= sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"]):
+                print("Higgs phase is not the true vacuum at T=0")
+                print(f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}""")
+                tunnel = False
             
-        Tc = self.findTc()
-        print(f'{Tc=}')
-        if Tc is None:
+            # Higgs phase exists at T=0
+            if self.modelParameters["muHsq"] >= 0 or self.modelParameters["lHH"] <= 0:
+                print("Higgs phase doesn't exist at T=0")
+                print(f"""{self.modelParameters["muHsq"]=} {self.modelParameters["lHH"]=}""")
+                tunnel = False
+            # Higgs phase is stable at T=0
+            if np.any(self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"] <= 0):
+                print("Higgs phase is not stable at T=0")
+                print(f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}""")
+                tunnel = False
+                
+            T = self.findTc()
+            print(f'Tc={T}')
+        else: 
+            T = tunnelingTemperature
+        if T is None:
             tunnel = False
         else:
-            muSsqT = self.modelParameters["muSsq"]+self.modelParameters["cS"]*Tc**2
-            muHsqT = self.modelParameters["muHsq"]+self.modelParameters["cH"]*Tc**2
+            muSsqT = self.modelParameters["muSsq"]+self.modelParameters["cS"]*T**2
+            muHsqT = self.modelParameters["muHsq"]+self.modelParameters["cH"]*T**2
             
             # Higgs phase exists at T=Tc
             if muHsqT >= 0:
                 print("Higgs phase doesn't exist at T=Tc")
+                print(f"{muHsqT=}")
                 tunnel = False
             # Higgs phase is stable at T=Tc
             if np.any(muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"] <= 0):
                 print("Higgs phase is not stable at T=Tc")
+                print(f"""{muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"]}""")
                 tunnel = False
                 
             # Singlets phase exists at T=Tc
             if np.any(muSsqT >= 0) or np.any(self.modelParameters["lSS"] <= 0):
                 print("Singlets phase doesn't exist at T=Tc")
+                print(f"{muSsqT=} {self.modelParameters['lSS']=}")
                 tunnel = False
             # Singlets phase is stable at T=Tc
             if muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"]) <= 0:
                 print("Singlets phase is not stable at T=Tc")
+                print(f"""{muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"])=}""")
                 tunnel = False
                 
         return tunnel
@@ -210,53 +217,47 @@ class EffectivePotentialNSinglets(EffectivePotential):
         Tc2 = (-B-np.sqrt(discr))/(2*A)
         
         if Tc1 <= 0 and Tc2 <= 0:
-            print("Negative critical temperature")
+            print("Negative critical temperature squared")
             return None
         if Tc1 > 0 and Tc2 > 0:
-            return min(Tc1, Tc2)
+            return min(np.sqrt(Tc1), np.sqrt(Tc2))
         if Tc1 > 0:
-            return Tc1
+            return np.sqrt(Tc1)
         if Tc2 > 0:
-            return Tc2
+            return np.sqrt(Tc2)
             
+    def findPhases(self, temperature):
+        muHsqT = self.modelParameters['muHsq']+self.modelParameters['cH']*temperature**2
+        muSsqT = self.modelParameters['muSsq']+self.modelParameters['cS']*temperature**2
         
+        phase1 = np.sqrt(np.append([0],-muSsqT/self.modelParameters['lSS']))
+        phase2 = np.sqrt(np.append([-muHsqT/self.modelParameters['lHH']], (self.fieldCount-1)*[0]))
+        
+        return phase1, phase2
     
     def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
 
-        # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
+        h,s = fields[...,0], fields[...,1:]
+        temperature = np.array(temperature)
 
-        # phi ~ 1/sqrt(2) (0, v), S ~ x
-        fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        muHsq = self.modelParameters['muHsq']
+        muSsq = self.modelParameters['muSsq']
+        lHH = self.modelParameters['lHH']
+        lHS = self.modelParameters['lHS']
+        lSS = self.modelParameters['lSS']
+        cH = self.modelParameters['cH']
+        cS = self.modelParameters['cS']
 
-        msq = self.modelParameters["msq"]
-        b2 = self.modelParameters["b2"]
-        lam = self.modelParameters["lambda"]
-        b4 = self.modelParameters["b4"]
-        a2 = self.modelParameters["a2"]
-
-        RGScale = self.modelParameters["RGScale"]
-
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
+        muHsqT = muHsq+cH*temperature**2
+        if len(temperature.shape) > 0:
+            muSsqT = muSsq+cS*temperature[:,None]**2
+        else:
+            muSsqT = muSsq+cS*temperature**2
 
         # tree level potential
-        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
+        V0 = 0.5*muHsqT*h**2 + 0.5*np.sum(muSsqT*s**2, axis=-1) + 0.25*lHH*h**4 + 0.25*np.sum(lSS*s**4, axis=-1) + 0.5*h**2*np.sum(lHS*s**2, axis=-1)
 
-        # From Philipp. @todo should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
-
-        VTotal = (
-            V0 
-            + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
-            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
-        )
+        VTotal = V0 + self.constantTerms(temperature)
 
         return VTotal
     
@@ -267,71 +268,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
         (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
         """
 
-        ## See Eq. (39) in hep-ph/0510375 for general LO formula
-
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 14
-        dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
-
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
-        return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
-
-
-
-    def boson_massSq(self, fields: Fields, temperature):
-
-        v, x = fields.GetField(0), fields.GetField(1)
-
-        # TODO: numerical determination of scalar masses from V0
-
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-        
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
-        
-        # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
-
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
-
-        mWsq = g2**2 * v**2 / 4.
-        mZsq = (g1**2 + g2**2) * v**2 / 4.
-        # "Goldstones"
-        mGsq = msq + lam*v**2 + 0.5*a2*x**2
-
-        # this feels error prone:
-
-        # h, s, chi, W, Z
-        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom = np.array([1,1,3,6,3]) 
-        c = np.array([3/2,3/2,3/2,5/6,5/6])
-
-        return massSq, degreesOfFreedom, c
-    
-
-    def fermion_massSq(self, fields: Fields, temperature):
-
-        v = fields.GetField(0)
-
-        # Just top quark, others are taken massless
-        yt = self.modelParameters["yt"]
-        mtsq = yt**2 * v**2 / 2
-    
-        # @todo include spins for each particle
-
-        massSq = np.stack((mtsq,), axis=-1)
-        degreesOfFreedom = np.array([12])
-        
-        return massSq, degreesOfFreedom
+        return -(self.num_boson_dof + (7./8.) * self.num_fermion_dof) * np.pi**2 * temperature**4 / 90.
 
 
 
@@ -364,7 +302,7 @@ def main():
     temperatureScale = 10.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
-    fieldScale = [10.,10.]
+    fieldScale = [10.,10.,10.]
     manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
@@ -382,13 +320,16 @@ def main():
         "g3" : 1.2279920495357861,
         # scalar specific
         "mh" : 125.0,
-        "ms" : [120.0,100],
-        "lHS" : [1,0.5],
-        "lSS" : [0.5,0.75]
+        "muSsq" : [-10000,-6000],
+        "lHS" : [1,0.85],
+        "lSS" : [1.5,2]
     }
 
-    model = NSinglets(inputParameters, 3)
+    model = NSinglets(inputParameters, 2)
     print(model.effectivePotential.canTunnel())
+    Tc = model.effectivePotential.findTc()
+    Tn = 0.9*Tc
+    print(model.effectivePotential.canTunnel(Tn))
 
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
@@ -404,78 +345,67 @@ def main():
     manager.loadCollisionFiles(collisionDirectory)
 
 
-    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
+    modelParameters = model.calculateModelParameters(inputParameters)
+    
+    phase1, phase2 = model.effectivePotential.findPhases(Tn)
+    print(phase1, phase2)
+    print(model.effectivePotential.evaluate(phase1[None,:], Tn), model.effectivePotential.evaluate(phase2[None,:], Tn))
+
+    phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
+                                    phaseLocation1 = WallGo.Fields(phase1[None,:]), 
+                                    phaseLocation2 = WallGo.Fields(phase2[None,:]))
     
 
-    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
-    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
-    """  
-    # values_mh2 = [ 120.0 ]
-    # for mh2 in values_mh2:
+    """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+        1) WallGo needs the PhaseInfo 
+        2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+    """ 
+    manager.setParameters(phaseInfo)
 
-    #     inputParameters["mh2"] = mh2
+    ## TODO initialize collisions. Either do it here or already in registerModel(). 
+    ## But for now it's just hardcoded in Boltzmann.py and __init__.py
 
-    #     modelParameters = model.calculateModelParameters(inputParameters)
+    """WallGo can now be used to compute wall stuff!"""
 
-    #     """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-    #     Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
-    #     """
-    #     Tn = 100. ## nucleation temperature
-    #     phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-    #                                     phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
-    #                                     phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
-        
+    ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-    #     """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
-    #         1) WallGo needs the PhaseInfo 
-    #         2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
-    #     """ 
-    #     manager.setParameters(phaseInfo)
+    vwLTE = manager.wallSpeedLTE()
 
-    #     ## TODO initialize collisions. Either do it here or already in registerModel(). 
-    #     ## But for now it's just hardcoded in Boltzmann.py and __init__.py
+    print(f"LTE wall speed: {vwLTE}")
 
-    #     """WallGo can now be used to compute wall stuff!"""
+    ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
-    #     ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+    ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
+    wallParams: WallGo.WallParams
 
-    #     vwLTE = manager.wallSpeedLTE()
+    bIncludeOffEq = False
+    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    #     print(f"LTE wall speed: {vwLTE}")
+    results = manager.solveWall(bIncludeOffEq)
+    print(f"results=")
+    wallVelocity = results.wallVelocity
+    widths = results.wallWidths
+    offsets = results.wallOffsets
 
-    #     ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+    print(f"{wallVelocity=}")
+    print(f"{widths=}")
+    print(f"{offsets=}")
 
-    #     ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-    #     wallParams: WallGo.WallParams
+    ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+    bIncludeOffEq = True
+    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    #     bIncludeOffEq = False
-    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    results = manager.solveWall(bIncludeOffEq)
+    wallVelocity = results.wallVelocity
+    wallVelocityError = results.wallVelocityError
+    widths = results.wallWidths
+    offsets = results.wallOffsets
 
-    #     results = manager.solveWall(bIncludeOffEq)
-    #     print(f"results=")
-    #     wallVelocity = results.wallVelocity
-    #     widths = results.wallWidths
-    #     offsets = results.wallOffsets
-
-    #     print(f"{wallVelocity=}")
-    #     print(f"{widths=}")
-    #     print(f"{offsets=}")
-
-    #     ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-    #     bIncludeOffEq = True
-    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
-    #     results = manager.solveWall(bIncludeOffEq)
-    #     wallVelocity = results.wallVelocity
-    #     wallVelocityError = results.wallVelocityError
-    #     widths = results.wallWidths
-    #     offsets = results.wallOffsets
-
-    #     print(f"{wallVelocity=}")
-    #     print(f"{wallVelocityError=}")
-    #     print(f"{widths=}")
-    #     print(f"{offsets=}")
-        
+    print(f"{wallVelocity=}")
+    print(f"{wallVelocityError=}")
+    print(f"{widths=}")
+    print(f"{offsets=}")
+    
 
 
     # end parameter-space loop
