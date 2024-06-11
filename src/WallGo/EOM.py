@@ -664,30 +664,46 @@ class EOM:
         wallGoInterpolationResults : WallGoInterpolationResults
 
         """
-        nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
-        wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
-        pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
+        if vmin < 0.99:
+            nbrPoints = max(1+int((vmax-vmin)/min(dvMin,rtol**0.25)), 5)
+            wallVelocities, pressures, wallParamsList, boltzmannResultsList, boltzmannBackgroundList, hydroResultsList = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
+            pressuresSpline = UnivariateSpline(wallVelocities, pressures-desiredPressure, s=0)
         
-        roots = pressuresSpline.roots()
-        stableRoots, unstableRoots = [], []
-        for root in roots:
-            if pressuresSpline.derivative()(root) > 0:
-                stableRoots.append(root)
-            else:
-                unstableRoots.append(root)
+            roots = pressuresSpline.roots()
+            stableRoots, unstableRoots = [], []
+            for root in roots:
+                if pressuresSpline.derivative()(root) > 0:
+                    stableRoots.append(root)
+                else:
+                    unstableRoots.append(root)
         
-        wallGoInterpolationResults = WallGoInterpolationResults(
-            wallVelocities=stableRoots,
-            unstableWallVelocities=unstableRoots,
-            velocityGrid=wallVelocities.tolist(),
-            pressures=pressures.tolist(),
-            pressureSpline=pressuresSpline,
-            wallParams=wallParamsList,
-            boltzmannResults=boltzmannResultsList,
-            boltzmannBackgrounds=boltzmannBackgroundList,
-            hydroResults=hydroResultsList,
-            )
-        return wallGoInterpolationResults
+            wallGoInterpolationResults = WallGoInterpolationResults(
+                wallVelocities=stableRoots,
+                unstableWallVelocities=unstableRoots,
+                velocityGrid=wallVelocities.tolist(),
+                pressures=pressures.tolist(),
+                pressureSpline=pressuresSpline,
+                wallParams=wallParamsList,
+                boltzmannResults=boltzmannResultsList,
+                boltzmannBackgrounds=boltzmannBackgroundList,
+                hydroResults=hydroResultsList,
+                )
+            return wallGoInterpolationResults
+        
+        else: 
+            wallGoInterpolationResults = WallGoInterpolationResults(
+                wallVelocities=[],
+                unstableWallVelocities=[],
+                velocityGrid=[],
+                pressures=[],
+                pressureSpline=[],
+                wallParams=[],
+                boltzmannResults=[],
+                boltzmannBackgrounds=[],
+                hydroResults=[],
+                )
+            return wallGoInterpolationResults
+
         
 
     def __toWallParams(self, wallArray: np.ndarray) -> WallParams:

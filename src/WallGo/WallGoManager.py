@@ -110,6 +110,7 @@ class WallGoManager:
         print(f"Jouguet: {self.hydro.vJ}")
 #        print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
         
+        
     def changeInputParameters(self, inputParameters:  dict[str, float], effectivePotential: EffectivePotential) -> None:
         """Recomputes the model parameters when the user provides new inputparameters.
         Also updates the effectivePotential correspondingly.
@@ -342,7 +343,9 @@ class WallGoManager:
         """
         self.eom.includeOffEq = bIncludeOffEq
         errTol = self.config.getfloat("EOM", "errTol")
-        return self.eom.solveInterpolation(self.hydro.vJ+1e-4, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
+
+        vmin = max(self.hydro.vJ+1e-4, self.hydro.slowestDeton())
+        return self.eom.solveInterpolation(vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
 
