@@ -394,14 +394,6 @@ def main():
 
     WallGo.initialize()
 
-    # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
-
-    ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -502,12 +494,16 @@ def main():
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
+        
+        ## Computes the detonation solutions
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print(wallGoInterpolationResults.wallVelocities)
+        
 
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -522,15 +518,19 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
         
+
+        # some estimate of deviation from O(dz^2) finite difference method
+        delta00 = results.Deltas.Delta00.coefficients[0]
+        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"finite difference error = {errorFD}")
 
 
     # end parameter-space loop

@@ -226,7 +226,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 0.2
+    meanFreePath = 1
 
     # The following 2 parameters are used to estimate the optimal value of dT used 
     
@@ -314,6 +314,10 @@ def main():
         print(f"LTE wall speed: {vwLTE}")
 
         ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+
+        ## Computes the detonation solutions
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print(wallGoInterpolationResults.wallVelocities)
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
