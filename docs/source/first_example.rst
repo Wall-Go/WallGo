@@ -12,7 +12,7 @@ Concretely, let's consider a simple model of a real scalar field coupled to a Di
 	-i\bar{\psi}\gamma^\mu \partial_\mu \psi - m \bar{\psi}\psi
 	-y \phi \bar{\psi}\psi.
 
-In this case the scalar field may undergo a phase transition, with the fermion field contributing to the friction for the bubble wall growth.
+In this case the scalar field may undergo a phase transition, with the fermion field contributing to the friction for the bubble wall growth. This model has been used as a toy model for the study of bubble nucleation in cosmological phase transitions. :footcite:p:`Gould:2021ccf`
 
 The definition of the Model starts by inheriting from the :py:data:`WallGo.GenericModel` class. This class holds the features of a model which enter directly in the Python side of WallGo. This includes the list of particles (:py:data:`WallGo.Particle` objects) and a reference to a definition of the effective potential.
 
