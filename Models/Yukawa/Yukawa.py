@@ -161,7 +161,7 @@ def main():
     # Pass the input to WallGo.
     manager.setParameters(phaseInfo)
 
-    # Solve for the wall speed
+    # Solve for the wall velocity
     results = manager.solveWall(bIncludeOffEq=True)
     print(f"Wall speed: {results.wallVelocity}")
 
