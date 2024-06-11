@@ -20,11 +20,34 @@ The definition of the Model starts by inheriting from the :py:data:`WallGo.Gener
    :language: py
    :lines: 4-69
 
-The effective potential itself is defined separately, by inheriting from the :py:data:`WallGo.EffectivePotential` class.
+The scalar potential is used both for determining the free energy of homogeneous phases and for the shape and width of the bubble wall. In principle the potentials determining these two phenomena are different, as the former is coarse grained all the way to infinite length scales, while the latter can only consistenly be coarse grained on length scales shorter than the bubble wall width. :footcite:p:`Langer:1974cpa` Nervertheless, at high temperatures and to leading order in powers of the coupling, these two potentials agree.
+
+At high temperatures, the leading order effective potential of our simple model is
+
+.. math::
+	V^\text{eff}(\phi, T) =
+	- \frac{\pi^2}{20} T^4 + 
+	\sigma_\text{eff}\phi
+	+ \frac{1}{2}m^2_\text{eff}\phi^2
+	+ \frac{1}{3!}g \phi^3
+	+ \frac{1}{4!}\lambda \phi^4,
+
+where we have defined the effective tadpole coefficient and effective mass as 
+
+.. math::
+	\sigma_\text{eff} =
+	\sigma + \frac{1}{24}(g + 4y m_f)T^2,
+
+	m^2_\text{eff} =
+	m^2 + \frac{1}{24}(\lambda + 4y^2)T^2.
+
+The implementation in WallGo is as follows: one defines a class, here called :py:data:`WallGo.EffectivePotentialYukawa` which inherits from the base class :py:data:`WallGo.EffectivePotential`. This definition must contain a member function called :py:data:`evaluate` which evaluates the potential as a function of the scalar fields and temperature.
 
 .. literalinclude:: ../../Models/Yukawa/Yukawa.py
    :language: py
    :lines: 72-109
+
+The initialisation of an :py:data:`WallGo.EffectivePotential` object takes the model parameters and the number of background scalar fields as arguments and stores them for use in evaluating the potential. It is possible to override other member functions when defining :py:data:`WallGo.EffectivePotentialYukawa`, such as the initialisation function, or to add additional member functions and variables, though we haven't done so in this simple example.
 
 **********
 References

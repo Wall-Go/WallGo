@@ -19,12 +19,10 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 
 project = "WallGo"
-copyright = "2023, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
-Benoit Laurent, Lauri Niemi, Philipp Schicho, Tuomas Tenkanen, and \
-Jorinde van de Vis"
+copyright = "2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
+Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis"
 author = "Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
-Benoit Laurent, Lauri Niemi, Philipp Schicho, Tuomas Tenkanen, and \
-Jorinde van de Vis"
+Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis"
 
 
 # -- General configuration ---------------------------------------------------
