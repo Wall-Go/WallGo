@@ -64,6 +64,21 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(topQuarkR)
 
+        ## === SU(2) gauge boson ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        WMsqDerivative = lambda fields: np.zeros_like(fields)
+
+        W = Particle("W", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = lambda fields: 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 9
+        )
+        self.addParticle(W)
+
         ## === SU(3) gluon ===
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
         # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
@@ -79,21 +94,6 @@ class InertDoubletModel(GenericModel):
                             totalDOFs = 16
         )
         self.addParticle(gluon)
-
-        ## === SU(2) gauge boson ===
-        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
-        WMsqDerivative = lambda fields: np.zeros_like(fields)
-
-        W = Particle("W", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = lambda fields: 0.0,
-                            msqThermal = WMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 9
-        )
-        self.addParticle(W)
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0

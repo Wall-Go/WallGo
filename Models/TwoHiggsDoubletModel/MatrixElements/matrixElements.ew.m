@@ -97,7 +97,7 @@ RepGluon=CreateOutOfEq[{1},"V"];
 RepW=CreateOutOfEq[{2},"V"];
 
 
-ParticleList={ReptL,ReptR,RepGluon,RepW,RepLight};
+ParticleList={ReptL,ReptR,RepW,RepGluon,RepLight};
 (*
 These particles do not have out-of-eq contributions
 *)
@@ -115,7 +115,7 @@ FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
 (*
 up to the user to make sure that the same order is given in the python code
 *)
-UserMasses={mq2,mq2,mg2,mw2}; 
+UserMasses={mq2,mq2,mw2,mg2}; 
 UserCouplings=CouplingName;
 
 
@@ -125,7 +125,7 @@ UserCouplings=CouplingName;
 OutputFile="MatrixElements";
 SetDirectory[DirectoryName[$InputFileName]];
 RepOptional={c[1]->0};
-ParticleName={"TopL","TopR","Gluon","W"};
+ParticleName={"TopL","TopR","W","Gluon"};
 MatrixElements=ExportMatrixElements[OutputFile,ParticleList,EqParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
 
 
