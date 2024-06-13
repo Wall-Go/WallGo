@@ -165,7 +165,7 @@ class CollisionArray:
             If there is a grid size mismatch and bInterpolate is set to False.
 
         """
-        directoryname = collision.getOutputDirectory()
+        directoryname = collision.outputDirectory
         collisionFileArray = None
         basisSizeFile = grid.N 
         basisTypeFile = None
