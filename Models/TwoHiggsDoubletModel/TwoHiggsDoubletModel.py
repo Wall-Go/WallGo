@@ -69,11 +69,11 @@ class InertDoubletModel(GenericModel):
         WMsqDerivative = lambda fields: np.zeros_like(fields)
 
         W = Particle("W", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = lambda fields: 0.0,
+                            msqVacuum = lambda fields: fields.GetField(0),
+                            msqDerivative = lambda fields: fields.GetField(0),
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
-                            inEquilibrium = True,
+                            inEquilibrium = False,
                             ultrarelativistic = True,
                             totalDOFs = 9
         )
