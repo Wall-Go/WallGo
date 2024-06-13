@@ -353,12 +353,17 @@ def main():
     """
     manager.registerModel(model)
 
+    ## Create Collision singleton which automatically loads the collision module
+    # Use help(Collision.manager) for info about what functionality is available
+    collision = WallGo.Collision(model)
+
     ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
     collisionDirectory = scriptLocation / "CollisionOutput/"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
+    collision.setOutputDirectory(collisionDirectory)
 
-    manager.loadCollisionFiles(collisionDirectory)
+    manager.loadCollisionFiles(collision)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----

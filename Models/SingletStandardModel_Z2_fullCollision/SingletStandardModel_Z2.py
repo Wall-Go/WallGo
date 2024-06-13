@@ -490,6 +490,9 @@ def main():
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    collision.generateCollisionIntegrals = True
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
     collision.setSeed(0)
@@ -505,9 +508,10 @@ def main():
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
     collisionDirectory = scriptLocation / "CollisionOutput/"
+
     collisionDirectory.mkdir(parents=True, exist_ok=True)
     
-    collision.manager.setOutputDirectory(str(collisionDirectory))
+    collision.setOutputDirectory(collisionDirectory)
     collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
 
     ## Configure integration. Can skip this step if you're happy with the defaults
@@ -523,12 +527,8 @@ def main():
     ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
     collision.manager.setMatrixElementVerbosity(True)
 
-    ## Computes collisions for all out-of-eq particles specified above.
-    ## The last argument is optional and mainly useful for debugging
-    ## comment this line if collision integrals already exist
-    collision.calculateCollisionIntegrals(bVerbose = False)
 
-    manager.loadCollisionFiles(collisionDirectory)
+    manager.loadCollisionFiles(collision)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
