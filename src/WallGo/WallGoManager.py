@@ -273,8 +273,18 @@ class WallGoManager:
             self.grid, basisM="Cardinal", basisN="Chebyshev"
         )
 
-    def loadCollisionFiles(self, fileName: str) -> None:
-        self.boltzmannSolver.readCollisions(fileName)
+    # TODO type hinting
+    def loadCollisionFiles(self, collision) -> None:
+        """
+        Loads collision files and reads them using the Boltzmann solver.
+
+        Args:
+            fileName (str): The name of the collision file to be loaded.
+
+        Returns:
+            None
+        """
+        self.boltzmannSolver.readCollisions(collision)
 
     def wallSpeedLTE(self) -> float:
       

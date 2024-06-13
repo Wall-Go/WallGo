@@ -9,6 +9,7 @@ from pathlib import Path
 from .Particle import Particle
 from .Polynomial import Polynomial
 from .Grid import Grid
+import tempfile
 
 class CollisionArray:
     """
@@ -129,7 +130,7 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromDirectory(directoryname: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(collision, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
         Create a new CollisionArray object from a directory containing collision files.
 
@@ -164,6 +165,7 @@ class CollisionArray:
             If there is a grid size mismatch and bInterpolate is set to False.
 
         """
+        directoryname = collision.getOutputDirectory()
         collisionFileArray = None
         basisSizeFile = grid.N 
         basisTypeFile = None
@@ -178,6 +180,18 @@ class CollisionArray:
 
                         metadata = file["metadata"]
                         size = metadata.attrs["Basis Size"]
+
+                        ## TODO error handling, what happens if the dataset is not found?
+                        # assert basisSizeFile <= size, "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
+                        if basisSizeFile > size and collision.generateCollisionIntegrals:
+                            print(f"CollisionArray warning: target grid size ({basisSizeFile}) must be smaller than or equal the source grid size ({size}). Interpolation will be performed.")
+                            # Generate temporary directory
+                            directoryname = tempfile.mkdtemp(dir=directoryname)
+                            print("Changing output directory to: ", directoryname)
+                            collision.setOutputDirectory(directoryname)
+                            collision.calculateCollisionIntegrals(bVerbose=False)
+                            return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
+
                         btype = codecs.decode(
                             metadata.attrs["Basis Type"], 'unicode_escape',
                         )
@@ -185,14 +199,12 @@ class CollisionArray:
 
                         # Dataset names are hardcoded, eg. "top, top"
                         datasetName = particle1.name + ", " + particle2.name
-                        collision = np.array(file[datasetName][:])
+                        collisionDataset = np.array(file[datasetName][:])
 
-                        ## TODO error handling, what happens if the dataset is not found?
 
                         if collisionFileArray is None:
                             collisionFileArray = np.zeros((len(particles),size-1,size-1,len(particles),size-1,size-1))
                             basisSizeFile = size
-                            # assert size == basisSizeFile, "CollisionArray error: Collision file has different basis size than initial value."
                             basisTypeFile = btype
                         else:
                             ## TODO throw WallGo error?
@@ -201,12 +213,17 @@ class CollisionArray:
 
                         # HACK. converting between conventions because collision file was computed with different index ordering
                         collisionFileArray[i,:,:,j,:,:] = np.transpose(
-                            np.flip(collision, (2, 3)),
+                            np.flip(collisionDataset, (2, 3)),
                             (2, 3, 0, 1),
                         )
                 except FileNotFoundError:
                     print("CollisionArray error: %s not found" % filename)
-                    raise
+                    if collision.generateCollisionIntegrals:
+                        print("Generating collision integrals for %s" % filename) 
+                        collision.calculateCollisionIntegrals(bVerbose = False)
+                        return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
+                    else:
+                        raise
 
         collisionFileArray = collisionFileArray.reshape((len(particles), basisSizeFile-1,
                                                          basisSizeFile-1,len(particles),basisSizeFile-1,basisSizeFile-1))
@@ -301,7 +318,7 @@ class CollisionArray:
         >>> interpolatedCollision = interpolateCollisionArray(srcCollision, targetGrid)
         """
 
-        assert targetGrid.N <= srcCollision.getBasisSize(), "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
+        assert targetGrid.N <= srcCollision.getBasisSize(), f"CollisionArray interpolation error: target grid size ({targetGrid.N}) must be smaller than or equal to the source grid size ({srcCollision.getBasisSize()+1})."
         
         ## Take deepcopy to avoid modifying the input
         source = copy.deepcopy(srcCollision)

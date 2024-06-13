@@ -48,6 +48,9 @@ class Collision():
             self.module: ModuleType = None
             self._loadCollisionModule()
             self.bInitialized = True
+            self.outputDirectory = None
+            # automatic generation of collision integrals is disabled by default
+            self.generateCollisionIntegrals = False 
 
             ## Construct a "control" object for collision integrations
             # Use help(Collision.manager) for info about what functionality is available
@@ -175,3 +178,27 @@ class Collision():
         ## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
         basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
         self.manager.calculateCollisionIntegrals(basisSize, bVerbose=False)
+
+    def setOutputDirectory(self, outputDirectory: str) -> None:
+        """
+        Sets the output directory for the collision integrals.
+
+        Args:
+            outputDirectory (str): The output directory to set.
+
+        Returns:
+            None
+        """
+        self._assertLoaded()
+        self.outputDirectory = outputDirectory
+        self.manager.setOutputDirectory(str(outputDirectory))
+
+    def getOutputDirectory(self) -> str:
+        """
+        Gets the output directory for the collision integrals.
+
+        Returns:
+            str: The output directory.
+        """
+        self._assertLoaded()
+        return self.outputDirectory
