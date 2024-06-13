@@ -455,6 +455,7 @@ def main():
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
     # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
     collision.generateCollisionIntegrals = True 
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
@@ -487,10 +488,7 @@ def main():
     ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
     collision.manager.setMatrixElementVerbosity(True)
 
-    ## Computes collisions for all out-of-eq particles specified above.
-    ## The last argument is optional and mainly useful for debugging
-    ## comment this line if collision integrals already exist
-    # collision.calculateCollisionIntegrals(bVerbose = False)
+
 
     manager.loadCollisionFiles(collision)
 

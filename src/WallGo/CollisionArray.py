@@ -189,6 +189,8 @@ class CollisionArray:
                             directoryname = tempfile.mkdtemp(dir=directoryname)
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
+                            ## Computes collisions for all out-of-eq particles specified.
+                            ## The last argument is optional and mainly useful for debugging
                             collision.calculateCollisionIntegrals(bVerbose=False)
                             return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
 
@@ -220,6 +222,8 @@ class CollisionArray:
                     print("CollisionArray error: %s not found" % filename)
                     if collision.generateCollisionIntegrals:
                         print("Generating collision integrals for %s" % filename) 
+                        ## Computes collisions for all out-of-eq particles specified.
+                        ## The last argument is optional and mainly useful for debugging
                         collision.calculateCollisionIntegrals(bVerbose = False)
                         return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
                     else:
