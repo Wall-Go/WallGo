@@ -162,20 +162,30 @@ class EOM:
 
         self.pressAbsErrTol = 1e-8  # why 1e-8?
         ## HACK! LN: Return values here need to be consistent. Can't sometimes have 1 number, sometimes tuple etc
-        pressureMax, wallParamsMax, _, _, _ = self.wallPressure(
-            wallVelocityMax, wallParamsGuess, True
-        )
+        pressureMax, wallParamsMax, boltzmannResultsMax, boltzmannBackgroundMax, hydroResultsMax = self.wallPressure(wallVelocityMax, wallParamsGuess, True)
+        
+        # also getting the LTE results
+        wallVelocityLTE = self.hydro.findvwLTE()
+        
         if pressureMax < 0:
             print('Maximum pressure on wall is negative!')
             print(f"{pressureMax=} {wallParamsMax=}")
-            #return 1
-            return 1, wallParamsMax
+            results.setWallVelocities(1, 0, wallVelocityLTE)
+            results.setWallParams(wallParamsMax)
+            results.setHydroResults(hydroResultsMax)
+            results.setBoltzmannBackground(boltzmannBackgroundMax)
+            results.setBoltzmannResults(boltzmannResultsMax)
+            return results
     
-        pressureMin, wallParamsMin, _, _, _ = self.wallPressure(wallVelocityMin, wallParamsGuess, True)
+        pressureMin, wallParamsMin, boltzmannResultsMin, boltzmannBackgroundMin, hydroResultsMin = self.wallPressure(wallVelocityMin, wallParamsGuess, True)
         if pressureMin > 0:
             ## If this is a bad outcome then we should warn about it. TODO
-            #return 0
-            return 0, wallParamsMin
+            results.setWallVelocities(0, 0, wallVelocityLTE)
+            results.setWallParams(wallParamsMin)
+            results.setHydroResults(hydroResultsMin)
+            results.setBoltzmannBackground(boltzmannBackgroundMin)
+            results.setBoltzmannResults(boltzmannResultsMin)
+            return results
         
         self.pressAbsErrTol = 0.01 * self.errTol * (1 - self.pressRelErrTol) * np.minimum(np.abs(pressureMin), np.abs(pressureMax)) / 4
 
@@ -209,8 +219,6 @@ class EOM:
         )
         wallVelocity = optimizeResult.root
 
-        # also getting the LTE results
-        wallVelocityLTE = self.hydro.findvwLTE()
 
         # Get wall params, and other results
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
