@@ -539,8 +539,15 @@ class Hydro:
                     bounds=[vpmin, vpmax],
                     method='Bounded',
                 )
+                
                 if extremum.fun > 0:
-                    return self.template.findMatching(vwTry)
+                    # In this case, use the template model to compute the matching.
+                    # Because the Jouguet velocity can be slightly different in the template
+                    # model, we make sure that vwTemplate corresponds to the appropriate
+                    # type of solution.
+                    vwTemplate = min(vwTry, self.template.vJ-1e-6) if vwTry <= self.vJ else max(vwTry, self.template.vJ+1e-6)
+                    return self.template.findMatching(vwTemplate)
+                
                 sol = root_scalar(
                     func,
                     bracket=[vpmin, extremum.x],
