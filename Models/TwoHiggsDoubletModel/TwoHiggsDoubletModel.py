@@ -66,11 +66,13 @@ class InertDoubletModel(GenericModel):
 
         ## === SU(2) gauge boson ===
         WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
-        WMsqDerivative = lambda fields: np.zeros_like(fields)
+        WMsqVacuum = lambda fields: fields.GetField(0)
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        WMsqDerivative = lambda fields: fields.GetField(0)
 
         W = Particle("W", 
-                            msqVacuum = lambda fields: fields.GetField(0),
-                            msqDerivative = lambda fields: fields.GetField(0),
+                            msqVacuum = WMsqVacuum,
+                            msqDerivative = WMsqDerivative,
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = False,
@@ -81,12 +83,13 @@ class InertDoubletModel(GenericModel):
 
         ## === SU(3) gluon ===
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+        gluonMsqVacuum = lambda fields: fields.GetField(0)
         # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
+        gluonMsqDerivative = lambda fields: fields.GetField(0)
 
         gluon = Particle("gluon", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = lambda fields: 0.0,
+                            msqVacuum = gluonMsqVacuum,
+                            msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
                             inEquilibrium = True,
