@@ -525,7 +525,8 @@ class Hydro:
 
             fmin, fmax = func(vpmin), func(vpmax)
             
-            # If using Tn to find vpmax didn't work, solve 'vpmax = cs(Tp(vpmax))^2/vwTry' for vpmax
+            # If no solution was found between vpmin and vpmax, it might be because vpmax was evaluated at Tn instead of Tp.
+            # We thus reevaluate vpmax by solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
             if fmin * fmax > 0:
                 def solveVpmax(vpTry):
                     _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
@@ -553,7 +554,10 @@ class Hydro:
                     # Because the Jouguet velocity can be slightly different in the template
                     # model, we make sure that vwTemplate corresponds to the appropriate
                     # type of solution.
-                    vwTemplate = min(vwTry, self.template.vJ-1e-6) if vwTry <= self.vJ else max(vwTry, self.template.vJ+1e-6)
+                    if vwTry <= self.vJ:
+                        vwTemplate = min(vwTry, self.template.vJ-1e-6)
+                    else:
+                        vwTemplate = max(vwTry, self.template.vJ+1e-6)
                     return self.template.findMatching(vwTemplate)
                 
                 sol = root_scalar(
