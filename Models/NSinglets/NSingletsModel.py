@@ -125,6 +125,7 @@ class NSinglets(GenericModel):
         
         modelParameters["cH"] = (6*modelParameters["lHH"]+sum(modelParameters["lHS"])+6*modelParameters["yt"]**2+(9/4)*modelParameters["g2"]**2+(3/4)*modelParameters["g1"]**2)/12
         modelParameters["cS"] = (3*modelParameters["lSS"]+4*modelParameters["lHS"])/12
+        print(modelParameters["cH"],modelParameters["cS"])
 
         return modelParameters
 
@@ -284,6 +285,7 @@ def main():
 
     ## Modify the config, we use N=11 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "51")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -293,7 +295,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1
+    meanFreePath = 0
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -302,7 +304,7 @@ def main():
     temperatureScale = 10.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
-    fieldScale = [10.,10.,10.]
+    fieldScale = [10.,10.]
     manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
@@ -320,12 +322,12 @@ def main():
         "g3" : 1.2279920495357861,
         # scalar specific
         "mh" : 125.0,
-        "muSsq" : [-10000,-6000],
-        "lHS" : [1,0.85],
-        "lSS" : [1.5,2]
+        "muSsq" : [-16000],
+        "lHS" : [3.2],
+        "lSS" : [3]
     }
 
-    model = NSinglets(inputParameters, 2)
+    model = NSinglets(inputParameters, 1)
     print(model.effectivePotential.canTunnel())
     Tc = model.effectivePotential.findTc()
     Tn = 0.9*Tc
@@ -348,7 +350,7 @@ def main():
     modelParameters = model.calculateModelParameters(inputParameters)
     
     phase1, phase2 = model.effectivePotential.findPhases(Tn)
-    print(phase1, phase2)
+    print(phase1, phase2,Tn)
     print(model.effectivePotential.evaluate(phase1[None,:], Tn), model.effectivePotential.evaluate(phase2[None,:], Tn))
 
     phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
@@ -376,35 +378,64 @@ def main():
     ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
     ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-    wallParams: WallGo.WallParams
+    wallParams = WallGo.WallParams(np.array(2*[5/Tn]), np.array(2*[0]))
+    
+    manager.eom.includeOffEq = False
+    # print(manager.eom.wallPressure(manager.hydro.vJ-1e-4, wallParams, True, 0, 1e-3))
+    print(manager.hydro.vJ,manager.hydro.template.vJ)
+    # vs, ps, wallParamsList,_,_,hydroResultsList = manager.eom.gridPressure(0.01, manager.hydro.vJ-1e-4, 50)
+    
+    
+    import matplotlib.pyplot as plt
+    vs = np.linspace(0.01, manager.hydro.vJ-1e-4,50)
+    plt.plot(vs,[manager.hydro.findMatching(v)[2] for v in vs])
+    plt.plot(vs,[manager.hydro.template.findMatching(v)[2] for v in vs])
+    plt.grid()
+    plt.show()
+    
+    # plt.plot(vs,ps)
+    # plt.grid()
+    # plt.show()
+    # for i in range(2):
+    #     plt.plot(vs,[wallP.widths[i] for wallP in wallParamsList])
+    # plt.grid()
+    # plt.show()
+    # for i in range(2):
+    #     plt.plot(vs,[wallP.offsets[i] for wallP in wallParamsList])
+    # plt.grid()
+    # plt.show()
+    # plt.plot(vs,[hydroR.temperaturePlus for hydroR in hydroResultsList],vs,[hydroR.temperatureMinus for hydroR in hydroResultsList])
+    # plt.grid()
+    # plt.show()
+    
 
-    bIncludeOffEq = False
-    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    # bIncludeOffEq = False
+    # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    results = manager.solveWall(bIncludeOffEq)
-    print(f"results=")
-    wallVelocity = results.wallVelocity
-    widths = results.wallWidths
-    offsets = results.wallOffsets
+    # results = manager.solveWall(bIncludeOffEq)
+    # print(f"results=")
+    # wallVelocity = results.wallVelocity
+    # widths = results.wallWidths
+    # offsets = results.wallOffsets
 
-    print(f"{wallVelocity=}")
-    print(f"{widths=}")
-    print(f"{offsets=}")
+    # print(f"{wallVelocity=}")
+    # print(f"{widths=}")
+    # print(f"{offsets=}")
 
-    ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-    bIncludeOffEq = True
-    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+    # ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+    # bIncludeOffEq = True
+    # print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    results = manager.solveWall(bIncludeOffEq)
-    wallVelocity = results.wallVelocity
-    wallVelocityError = results.wallVelocityError
-    widths = results.wallWidths
-    offsets = results.wallOffsets
+    # results = manager.solveWall(bIncludeOffEq)
+    # wallVelocity = results.wallVelocity
+    # wallVelocityError = results.wallVelocityError
+    # widths = results.wallWidths
+    # offsets = results.wallOffsets
 
-    print(f"{wallVelocity=}")
-    print(f"{wallVelocityError=}")
-    print(f"{widths=}")
-    print(f"{offsets=}")
+    # print(f"{wallVelocity=}")
+    # print(f"{wallVelocityError=}")
+    # print(f"{widths=}")
+    # print(f"{offsets=}")
     
 
 
