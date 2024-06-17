@@ -167,7 +167,7 @@ class CollisionArray:
         """
         directoryname = collision.outputDirectory
         collisionFileArray = None
-        basisSizeFile = grid.N 
+        basisSizeFile = None
         basisTypeFile = None
         
         for i, particle1 in enumerate(particles):
@@ -183,10 +183,10 @@ class CollisionArray:
 
                         ## TODO error handling, what happens if the dataset is not found?
                         # assert basisSizeFile <= size, "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
-                        if basisSizeFile > size and collision.generateCollisionIntegrals:
-                            print(f"CollisionArray warning: target grid size ({basisSizeFile}) must be smaller than or equal the source grid size ({size}). Interpolation will be performed.")
+                        if grid.N > size and collision.generateCollisionIntegrals:
                             # Generate temporary directory
                             directoryname = tempfile.mkdtemp(dir=directoryname)
+                            print(f"CollisionArray warning: target collison grid size ({basisSizeFile}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}.")
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
                             ## Computes collisions for all out-of-eq particles specified.
