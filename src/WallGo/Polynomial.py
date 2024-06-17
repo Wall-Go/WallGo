@@ -95,7 +95,7 @@ class Polynomial:
         if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial(self.coefficients*poly.coefficients)
+            return Polynomial(self.coefficients*poly.coefficients, self.grid, self.basis, self.direction, self.endpoints)
         else:
             newCoeff = poly*self.coefficients
             assert len(newCoeff.shape) == self.rank, 'Polynomial error: the rank of the resulting Polynomial object must be the same as the original one.'
@@ -105,7 +105,7 @@ class Polynomial:
         if isinstance(poly, Polynomial):
             assert self.__is_broadcastable(self.coefficients, poly.coefficients), 'Polynomial error: the two Polynomial objects are not broadcastable.'
             basis,direction,endpoints = self.__findContraction(poly)
-            return Polynomial(self.coefficients+poly.coefficients)
+            return Polynomial(self.coefficients+poly.coefficients, self.grid, self.basis, self.direction, self.endpoints)
         else:
             newCoeff = poly+self.coefficients
 

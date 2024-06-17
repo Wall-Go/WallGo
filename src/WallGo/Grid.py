@@ -120,18 +120,34 @@ class Grid:
 
 
     def _cacheCoordinates(self) -> None:
-        """Compute physical coordinates and store them internally.
+        """
+        Compute physical coordinates and store them internally.
         """
         (self.xiValues, self.pzValues, self.ppValues) = self.decompactify(self.chiValues, self.rzValues, self.rpValues)
         (self.dxidchi, self.dpzdrz, self.dppdrp) = self.compactificationDerivatives(self.chiValues, self.rzValues, self.rpValues)
     
 
     def changeMomentumFalloffScale(self, newScale: float) -> None:
-        """"""
+        """
+        Change the momentum falloff scale.
+
+        Parameters
+        ----------
+        newScale : float
+            New momentum falloff scale.
+        """
         self.momentumFalloffT = newScale
         self._cacheCoordinates()
         
     def changePositionFalloffScale(self, newScale: float) -> None:
+        """
+        Change the position falloff scale.
+
+        Parameters
+        ----------
+        newScale : float
+            New position falloff scale.
+        """
         self.L_xi = newScale
         self._cacheCoordinates()
 
@@ -228,20 +244,58 @@ class Grid:
             return self.dxidchi, self.dpzdrz, self.dppdrp
 
     def compactify(self, z, pz, pp):
-        r"""
-        Transforms coordinates to [-1, 1] interval
         """
-        #shouldn't you call this xi instead of z?
+        Transforms coordinates to [-1, 1] interval
+
+        Parameters
+        ----------
+        z : array-like
+            Physical z (or xi) coordinate.
+        pz : array-like
+            Physical pz coordinate.
+        pp : array-like
+            Physical p_par coordinate.
+
+        Returns
+        -------
+        z_compact : array-like
+            Compact z coordinate (chi).
+        pz_compact : array-like
+            Compact pz coordinate (rho_z).
+        pp_compact : array-like
+            Compact p_par coordinate (rho_par).
+
+        """
+        
         z_compact = z / np.sqrt(self.L_xi**2 + z**2)
         pz_compact = np.tanh(pz / 2 / self.momentumFalloffT)
         pp_compact = 1 - 2 * np.exp(-pp / self.momentumFalloffT)
         return z_compact, pz_compact, pp_compact
 
     def decompactify(self, z_compact, pz_compact, pp_compact):
-        r"""
-        Transforms coordinates from [-1, 1] interval (inverse of compactify).
         """
-        #shouldn't you call this xi instead of z?
+        Transforms coordinates to [-1, 1] interval
+
+        Parameters
+        ----------
+        z_compact : array-like
+            Compact z coordinate (chi).
+        pz_compact : array-like
+            Compact pz coordinate (rho_z).
+        pp_compact : array-like
+            Compact p_par coordinate (rho_par).
+
+        Returns
+        -------
+        z : array-like
+            Physical z (or xi) coordinate.
+        pz : array-like
+            Physical pz coordinate.
+        pp : array-like
+            Physical p_par coordinate.
+
+        """
+        
         z = self.L_xi * z_compact / np.sqrt(1 - z_compact**2)
         pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
         pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
@@ -250,8 +304,26 @@ class Grid:
     def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
         r"""
         Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
+        
+        Parameters
+        ----------
+        z_compact : array-like
+            Compact z coordinate (chi).
+        pz_compact : array-like
+            Compact pz coordinate (rho_z).
+        pp_compact : array-like
+            Compact p_par coordinate (rho_par).
+            
+        Returns
+        -------
+        dzdzCompact : array-like
+            Derivative d(z)/d(chi).
+        dpzdpzCompact : array-like
+            PDerivative d(p_z)/d(rho_z).
+        dppdppCompact : array-like
+            Derivative d(p_par)/d(rho_par).
         """
-        #shouldn't you call this xi instead of z?
+        
         dzdzCompact = self.L_xi / (1 - z_compact**2)**1.5
         dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
         dppdppCompact = self.momentumFalloffT / (1-pp_compact)
