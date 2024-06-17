@@ -170,8 +170,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         self.num_boson_dof = 32
         self.num_fermion_dof = 90 
 
-
-        #JvdV: TODO figure out which integrals to use!
         """For this benchmark model we do NOT use the default integrals from WallGo.
         This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
         In real applications we recommend using the WallGo default implementations.
@@ -228,7 +226,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4
 
-        # From Philipp. @todo should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields)
         fermionStuff = self.fermion_massSq(fields)
 
@@ -278,8 +275,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         v = fields.GetField(0) 
         v0 = self.modelParameters["v0"]
 
-        # TODO: numerical determination of scalar masses from V0
-
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
@@ -321,8 +316,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
 
         v = fields.GetField(0) 
         
-        # TODO: numerical determination of scalar masses from V0
-
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
@@ -407,7 +400,7 @@ def main():
     meanFreePath = 1
 
     ## Create WallGo control object
-        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # The following 2 parameters are used to estimate the optimal value of dT used 
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
     temperatureScale = 1.
