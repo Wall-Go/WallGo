@@ -475,8 +475,8 @@ class EOM:
             boltzmannResults1: BoltzmannResults,
             Tplus: float,
             Tminus: float,
-            Tprofile: np.ndarray=None,
-            velocityProfile: np.ndarray=None,
+            Tprofile: npt.ArrayLike=None,
+            velocityProfile: npt.ArrayLike=None,
             multiplier: float=1.0
             ) -> tuple:
         """
@@ -521,8 +521,8 @@ class EOM:
             boltzmannResults: BoltzmannResults,
             Tplus: float,
             Tminus: float,
-            Tprofile: np.ndarray=None,
-            velocityProfile: np.ndarray=None,
+            Tprofile: npt.ArrayLike=None,
+            velocityProfile: npt.ArrayLike=None,
             multiplier: float=1.0,
             ) -> tuple:
         """
@@ -541,10 +541,6 @@ class EOM:
                 c1, c2, velocityMid, fields, dPhidz, boltzmannResults.Deltas, Tplus, Tminus
             )
 
-        """LN: If I'm reading this right, for Boltzmann we have to append endpoints to our field,T,velocity profile arrays.
-        Doing this reshaping here every time seems not very performant => consider getting correct shape already from wallProfile(), findPlasmaProfile().
-        TODO also BoltzmannSolver seems to drop the endpoints internally anyway!!
-        """
         ## Prepare a new background for Boltzmann
         TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
         fieldsWithEndpoints = np.concatenate((vevLowT, fields, vevHighT), axis=fields.overFieldPoints).view(Fields)
@@ -554,9 +550,6 @@ class EOM:
         ) 
         if self.includeOffEq:
               ## ---- Solve Boltzmann equation to get out-of-equilibrium contributions
-            """TODO I suggest handling background-related logic inside BoltzmannSolver. Here we could just pass necessary input
-                and let BoltzmannSolver create/manage the actual BoltzmannBackground object
-                """
             self.boltzmannSolver.setBackground(boltzmannBackground)
             boltzmannResults = multiplier*self.boltzmannSolver.getDeltas() + (1-multiplier)*boltzmannResults
 
@@ -564,14 +557,13 @@ class EOM:
         ## NOT including the first offset which we keep at 0.
         wallArray = np.concatenate( (wallParams.widths, wallParams.offsets[1:]) ) ## should work even if offsets is just 1 element
 
-        ## LN: Where do these bounds come from!?
         ## first width, then offset
         lowerBounds = np.concatenate((self.nbrFields * [0.1 / self.Tnucl] , (self.nbrFields-1) * [-10.] ))
         upperBounds = np.concatenate((self.nbrFields * [100. / self.Tnucl] , (self.nbrFields-1) * [10.] ))
         bounds = scipy.optimize.Bounds(lb = lowerBounds, ub = upperBounds)
 
-        ## And then a wrapper that puts the inputs back in WallParams (could maybe bypass this somehow...?)
-        def actionWrapper(wallArray: np.ndarray, *args) -> float:
+        ## And then a wrapper that puts the inputs back in WallParams 
+        def actionWrapper(wallArray: npt.ArrayLike, *args) -> float:
             return self.action( self.__toWallParams(wallArray), *args )
         
         Delta00 = boltzmannResults.Deltas.Delta00
@@ -596,21 +588,12 @@ class EOM:
         ## EOM for field i is d^2 phi_i + dVfull == 0, the latter term is dVdPhi + dVout
         dVfull: Fields = dVdPhi + dVout
 
-        """
-        In principle, the following should be sumed over all the particles, but it turns 
-        out that only the first particle has a nonzero contribution. This is 
-        because the other particles have a wall offset over which the action is
-        minimized. This sets their pressure to 0. The first field doesn't have 
-        an offset, so its pressure is nonzero.
-        """
         dVdz = np.sum(np.array(dVfull * dPhidz), axis=1)
 
         EOMPoly = Polynomial(dVdz, self.grid)
 
         dzdchi,_,_ = self.grid.getCompactificationDerivatives()
         pressure = EOMPoly.integrate(w=-dzdchi)
-
-        ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
     
@@ -768,11 +751,11 @@ class EOM:
 
         
 
-    def __toWallParams(self, wallArray: np.ndarray) -> WallParams:
+    def __toWallParams(self, wallArray: npt.ArrayLike) -> WallParams:
         offsets = np.concatenate( ([0], wallArray[self.nbrFields:]) )
         return WallParams(widths = wallArray[:self.nbrFields], offsets = offsets)
 
-    def action(self, wallParams: WallParams, vevLowT: Fields, vevHighT: Fields, Tprofile: np.ndarray, offEquilDelta00: np.ndarray) -> float:
+    def action(self, wallParams: WallParams, vevLowT: Fields, vevHighT: Fields, Tprofile: npt.ArrayLike, offEquilDelta00: npt.ArrayLike) -> float:
         r"""
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
 
@@ -864,7 +847,7 @@ class EOM:
 
 
     def findPlasmaProfile(self, c1: float , c2: float, velocityMid: float, fields: Fields, dPhidz: Fields, 
-                          offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[np.ndarray, np.ndarray]:
+                          offEquilDeltas: list, Tplus: float, Tminus: float) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of LHS.
 
@@ -898,7 +881,6 @@ class EOM:
         temperatureProfile = np.zeros(len(self.grid.xiValues))
         velocityProfile = np.zeros(len(self.grid.xiValues))
 
-        ## TODO can this loop be numpified?
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(
                 index,
@@ -960,23 +942,26 @@ class EOM:
 
         """
 
-        ## What's going on in this function? Please explain your logic. TODO issue #114
-
+        # Computing the out-of-equilibrium part of the energy-momentum tensor
         Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
         s1 = c1 - Tout30
         s2 = c2 - Tout33
-
-        ## TODO figure out better bounds
+        
+        """
+        The function we want to solve look in general like a parabola. In particular,
+        it has two solutions, one deflagration and one detonation. To solve it,
+        we first find the parabola's minimum, and then select the desired 
+        solution on either side of the minimum.
+        """
         minRes = scipy.optimize.minimize_scalar(lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2), method='Bounded', bounds=[0,2*max(Tplus,Tminus)])
-        # TODO: A fail safe
-
-        ## Whats this? shouldn't we check that LHS == 0 ?
+        
+        # If the minimum is positive, there are no roots and we return the minimum's position
         if self.temperatureProfileEqLHS(fields, dPhidz, minRes.x, s1, s2) >= 0:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
             return T, vPlasma
 
-
+        # Bracketing the root
         T1 = minRes.x
         TMultiplier = max(Tplus/T1, 1.2)
         if Tplus < Tminus: # If this is a detonation solution, finds a solution below TLowerBound
@@ -987,7 +972,7 @@ class EOM:
             T1 *= TMultiplier
             T2 *= TMultiplier
 
-
+        # Solving for the root
         res = scipy.optimize.brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
             T1,
@@ -995,7 +980,6 @@ class EOM:
             xtol=1e-9,
             rtol=1e-9, ## really???
         )
-        # TODO: Can the function have multiple zeros?
 
         T = res
         vPlasma = self.plasmaVelocity(fields, T, s1)
@@ -1020,7 +1004,7 @@ class EOM:
             Plasma velocity.
 
         """
-        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
+        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. 
         w = -T * self.thermo.effectivePotential.derivT(fields, T)
 
         return (-w  + np.sqrt(4*s1**2 + w**2)) / (2 * s1)
@@ -1048,10 +1032,9 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
-        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. So hack it here
+        ## Need "enthalpy" but ouside a free-energy minimum! More precisely, eq (12) in the ref. 
         w = -T * self.thermo.effectivePotential.derivT(fields, T)
 
-        ## TODO probably force axis here. But need to guarantee correct field type first, so need some refactoring
         kineticTerm = 0.5*np.sum(dPhidz**2).view(np.ndarray)
 
         ## eff potential at this field point and temperature. NEEDS the T-dep constant
@@ -1104,8 +1087,7 @@ class EOM:
         ubar0 = u3
         ubar3 = u0
 
-        ## Where do these come from?
-        ## LN: needs rewrite, what happens with many out-of-eq particles?
+        # Computing the out-of-equilibrium part of the energy-momentum tensor
         T30 = np.sum([particle.totalDOFs*(
             + (3*delta20[i] - delta02[i] - particle.msqVacuum(fields)*delta00[i])*u3*u0
             + (3*delta02[i] - delta20[i] + particle.msqVacuum(fields)*delta00[i])*ubar3*ubar0
