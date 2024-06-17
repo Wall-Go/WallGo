@@ -88,7 +88,7 @@ class FreeEnergy(InterpolatableFunction):
         # Lowest possible temperature so that the phase is still (meta)stable
         self.minPossibleTemperature = 0.
         # Highest possible temperature so that the phase is still (meta)stable
-        self.maxPossibleTemperature = np.Inf
+        self.maxPossibleTemperature = np.inf
 
 
     def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> FreeEnergyValueType:
