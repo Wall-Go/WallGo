@@ -186,7 +186,7 @@ class CollisionArray:
                         if grid.N > size and collision.generateCollisionIntegrals:
                             # Generate temporary directory
                             directoryname = tempfile.mkdtemp(dir=directoryname)
-                            print(f"CollisionArray warning: target collison grid size ({basisSizeFile}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}.")
+                            print(f"CollisionArray generation warning: target collison grid size ({basisSizeFile}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}.")
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
                             ## Computes collisions for all out-of-eq particles specified.
