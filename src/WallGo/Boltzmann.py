@@ -518,9 +518,10 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
     
-    def readCollisions(self, directoryName: str) -> None:
+    # TODO type hinting
+    def readCollisions(self, collision) -> None:
         self.collisionArray = CollisionArray.newFromDirectory(
-            directoryName, self.grid, self.basisN, self.offEqParticles,
+            collision, self.grid, self.basisN, self.offEqParticles,
         )
 
     def __checkBasis(basis):

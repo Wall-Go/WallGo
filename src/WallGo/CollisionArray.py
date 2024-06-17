@@ -9,6 +9,7 @@ from pathlib import Path
 from .Particle import Particle
 from .Polynomial import Polynomial
 from .Grid import Grid
+import tempfile
 
 class CollisionArray:
     """
@@ -27,7 +28,7 @@ class CollisionArray:
 
     def __init__(self, grid: Grid, basisType: str, particles: list):
         """
-        Initializes a CollisionArray for given grid and basis. Collision data will be set to zero.
+        Initializes a CollisionArray for a given grid and basis. Collision data will be set to zero.
 
         Parameters
         ----------
@@ -64,27 +65,61 @@ class CollisionArray:
 
 
     def __getitem__(self, key):
+        """
+        Retrieve the value at the specified key.
+
+        Parameters:
+            key (int): The index of the value to retrieve.
+
+        Returns:
+            Any: The value at the specified key.
+
+        Raises:
+            IndexError: If the key is out of range.
+        """
         return self.polynomialData.coefficients[key]
     
     def getBasisSize(self) -> int:
-        return self.size
+            """
+            Returns the size of the basis.
+
+            Returns:
+                int: The size of the basis.
+            """
+            return self.size
     
     def getBasisType(self) -> str:
-        return self.basisType
+            """
+            Returns the basis type of the CollisionArray.
+
+            Returns:
+                str: The basis type of the CollisionArray.
+            """
+            return self.basisType
     
     @staticmethod
     def newFromPolynomial(inputPolynomial: Polynomial, particles: list) -> 'CollisionArray':
         """Creates a new CollisionArray object from polynomial data (which contains a grid reference).
         This only makes sense if the polynomial is already in correct shape.
-        """
 
+        Args:
+            inputPolynomial (Polynomial): The input polynomial data.
+            particles (list): The list of particles.
+
+        Returns:
+            CollisionArray: The newly created CollisionArray object.
+
+        Raises:
+            AssertionError: If the input polynomial does not meet the required conditions.
+
+        """
         bases = inputPolynomial.basis
 
         assert inputPolynomial.rank == 6
         assert bases[1] == "Cardinal" and bases[2] == "Cardinal"
         assert bases[0] == "Array" and bases[3] == "Array"
         assert bases[4] == bases[5] ## polynomial axes need to be in same basis   
-        
+
         basisType = bases[4]
 
         newCollision = CollisionArray(inputPolynomial.grid, basisType, particles)
@@ -95,27 +130,43 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromDirectory(directoryname: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(collision, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
-        Create a new CollisionArray object from 
+        Create a new CollisionArray object from a directory containing collision files.
 
         Parameters
         ----------
         directoryname : str
-            Path of the directory containing the collision files. 
-            The contained collision files must have name with the form 
-            "collisions_particle1_particle2.hdf5".
+            Path of the directory containing the collision files. The collision files must have names with the form "collisions_particle1_particle2.hdf5".
 
-        bInterpolate : bool = True
-            Interpolate the data to match our grid size? Extrapolation is not possible.    
-        
+        grid : Grid
+            The grid object representing the computational grid.
+
+        basisType : str
+            The basis type for the CollisionArray object.
+
+        particles : list
+            The list of particles involved in the collisions.
+
+        bInterpolate : bool, optional
+            Interpolate the data to match the grid size. Extrapolation is not possible. Default is True.
+
         Returns
         -------
         CollisionArray
+            The new CollisionArray object created from the collision files.
+
+        Raises
+        ------
+        FileNotFoundError
+            If any of the collision files are not found.
+
+        RuntimeError
+            If there is a grid size mismatch and bInterpolate is set to False.
 
         """
+        directoryname = collision.outputDirectory
         collisionFileArray = None
-        # basisSizeFile = None
         basisSizeFile = grid.N 
         basisTypeFile = None
         
@@ -129,36 +180,55 @@ class CollisionArray:
 
                         metadata = file["metadata"]
                         size = metadata.attrs["Basis Size"]
+
+                        ## TODO error handling, what happens if the dataset is not found?
+                        # assert basisSizeFile <= size, "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
+                        if basisSizeFile > size and collision.generateCollisionIntegrals:
+                            print(f"CollisionArray warning: target grid size ({basisSizeFile}) must be smaller than or equal the source grid size ({size}). Interpolation will be performed.")
+                            # Generate temporary directory
+                            directoryname = tempfile.mkdtemp(dir=directoryname)
+                            print("Changing output directory to: ", directoryname)
+                            collision.setOutputDirectory(directoryname)
+                            ## Computes collisions for all out-of-eq particles specified.
+                            ## The last argument is optional and mainly useful for debugging
+                            collision.calculateCollisionIntegrals(bVerbose=False)
+                            return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
+
                         btype = codecs.decode(
                             metadata.attrs["Basis Type"], 'unicode_escape',
                         )
                         CollisionArray.__checkBasis(btype)
-        
+
                         # Dataset names are hardcoded, eg. "top, top"
                         datasetName = particle1.name + ", " + particle2.name
-                        collision = np.array(file[datasetName][:])
+                        collisionDataset = np.array(file[datasetName][:])
 
-                        ## TODO error handling, what happens if the dataset is not found?
-                        
+
                         if collisionFileArray is None:
                             collisionFileArray = np.zeros((len(particles),size-1,size-1,len(particles),size-1,size-1))
                             basisSizeFile = size
-                            # assert size == basisSizeFile, "CollisionArray error: Collision file has different basis size than initial value."
                             basisTypeFile = btype
                         else:
                             ## TODO throw WallGo error?
                             assert size == basisSizeFile, "CollisionArray error: All the collision files must have the same basis size."
                             assert btype == basisTypeFile, "CollisionArray error: All the collision files must have the same basis type."
-                        
+
                         # HACK. converting between conventions because collision file was computed with different index ordering
                         collisionFileArray[i,:,:,j,:,:] = np.transpose(
-                            np.flip(collision, (2, 3)),
+                            np.flip(collisionDataset, (2, 3)),
                             (2, 3, 0, 1),
                         )
                 except FileNotFoundError:
                     print("CollisionArray error: %s not found" % filename)
-                    raise
-        
+                    if collision.generateCollisionIntegrals:
+                        print("Generating collision integrals for %s" % filename) 
+                        ## Computes collisions for all out-of-eq particles specified.
+                        ## The last argument is optional and mainly useful for debugging
+                        collision.calculateCollisionIntegrals(bVerbose = False)
+                        return CollisionArray.newFromDirectory(collision, grid, basisType, particles, bInterpolate)
+                    else:
+                        raise
+
         collisionFileArray = collisionFileArray.reshape((len(particles), basisSizeFile-1,
                                                          basisSizeFile-1,len(particles),basisSizeFile-1,basisSizeFile-1))
 
@@ -172,17 +242,17 @@ class CollisionArray:
             polynomialData = Polynomial(collisionFileArray, grid, ("Array", "Cardinal", "Cardinal", "Array", basisTypeFile, basisTypeFile),
                                         CollisionArray.AXIS_TYPES, endpoints=False)
             newCollision = CollisionArray.newFromPolynomial(polynomialData, particles)
-            
+
         else:   
             ## Grid sizes don't match, attempt interpolation
             if (not bInterpolate):
                 raise RuntimeError("Grid size mismatch when loading collision directory: ", directoryname, \
                                    "Consider using bInterpolate=True in CollisionArray.loadFromFile()." )
-            
+
             dummyGrid = Grid(grid.M, basisSizeFile, grid.L_xi, grid.momentumFalloffT, grid.spacing)
             dummyPolynomial = Polynomial(collisionFileArray, dummyGrid, ("Array", "Cardinal", "Cardinal", "Array", basisTypeFile, basisTypeFile),
                                          CollisionArray.AXIS_TYPES, endpoints=False)
-            
+
             dummyCollision = CollisionArray.newFromPolynomial(dummyPolynomial, particles)
             newCollision = CollisionArray.interpolateCollisionArray(dummyCollision, grid)
 
@@ -191,17 +261,26 @@ class CollisionArray:
 
 
     def changeBasis(self, newBasisType: str) -> 'CollisionArray':
-        """Changes basis in our polynomial indices. Momentum indices always use Cardinal. 
-        This modifies the object in place"""
+        """Changes the basis in our polynomial indices.
 
-        if (self.basisType == newBasisType): 
+        Args:
+            newBasisType (str): The new basis type to be used.
+
+        Returns:
+            CollisionArray: The modified CollisionArray object.
+
+        Notes:
+            - Momentum indices always use the Cardinal basis.
+            - This method modifies the object in place.
+        """
+
+        if self.basisType == newBasisType:
             return self
-
 
         CollisionArray.__checkBasis(newBasisType)
 
-        ## NEEDS to take inverse transpose because of magic
-        self.polynomialData.changeBasis( ("Array", "Cardinal", "Cardinal", "Array", newBasisType, newBasisType), inverseTranspose=True)
+        # NEEDS to take inverse transpose because of magic
+        self.polynomialData.changeBasis(("Array", "Cardinal", "Cardinal", "Array", newBasisType, newBasisType), inverseTranspose=True)
         self.basisType = newBasisType
         return self
 
@@ -209,20 +288,41 @@ class CollisionArray:
     @staticmethod
     def interpolateCollisionArray(srcCollision: 'CollisionArray', targetGrid: Grid) -> 'CollisionArray':
         """
-        Interpolate collision array to match a target grid.
-        size.
+        Interpolate collision array to match a target grid size.
 
         Parameters
         ----------
-        collisionArray :
-            Basis size of the desired collision array.
+        srcCollision : CollisionArray
+            The source collision array to be interpolated.
+        targetGrid : Grid
+            The target grid to match the size of the interpolated collision array.
 
         Returns
         -------
-        None.
+        CollisionArray
+            The interpolated collision array.
+
+        Raises
+        ------
+        AssertionError
+            If the target grid size is larger than or equal to the source grid size.
+
+        Notes
+        -----
+        This function interpolates a collision array to match the size of a target grid. It takes the source collision array and the target grid as input, and returns the interpolated collision array.
+
+        The interpolation is performed by evaluating the original collisions on the interpolated grid points. The resulting data is used to create a new polynomial, which is then used to create a new CollisionArray object.
+
+        The source collision array must be in the Chebyshev basis for interpolation. The target grid should have a size smaller than the source grid size.
+
+        Example
+        -------
+        >>> srcCollision = CollisionArray(...)
+        >>> targetGrid = Grid(...)
+        >>> interpolatedCollision = interpolateCollisionArray(srcCollision, targetGrid)
         """
 
-        assert targetGrid.N <= srcCollision.getBasisSize(), "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
+        assert targetGrid.N <= srcCollision.getBasisSize(), f"CollisionArray interpolation error: target grid size ({targetGrid.N}) must be smaller than or equal to the source grid size ({srcCollision.getBasisSize()+1})."
         
         ## Take deepcopy to avoid modifying the input
         source = copy.deepcopy(srcCollision)
@@ -283,7 +383,7 @@ class CollisionArray:
         gamma = 1 / np.sqrt(1 - v**2)
         PWall1 = gamma * (pz - v * E1)
         PWall2 = gamma * (pz - v * E2)
-    
+
         # Compute the eigenvalues
         size = self.grid.N-1
         eigvals1 = np.linalg.eigvals(T1**2*((self.polynomialData.coefficients / PWall1[:,:,None,None]).reshape((size,size,size**2))).reshape((size**2,size**2)))
@@ -295,7 +395,14 @@ class CollisionArray:
     @staticmethod
     def __checkBasis(basis: str):
         """
-        Check that basis is reckognised
+        Check that basis is recognized.
+
+        Parameters:
+        basis (str): The basis to be checked.
+
+        Raises:
+        AssertionError: If the basis is unknown.
+
         """
         bases = ["Cardinal", "Chebyshev"]
-        assert basis in bases, "CollisionArray error: unkown basis %s" % basis
+        assert basis in bases, "CollisionArray error: unknown basis %s" % basis

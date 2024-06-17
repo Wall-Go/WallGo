@@ -209,7 +209,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
-        # From Philipp. @todo should probably use the list of defined particles here?
+        # TODO should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
@@ -358,10 +358,17 @@ def main():
     """
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionFileName = pathlib.Path(__file__).parent.resolve() / "CollisionOutput/"
+    ## Create Collision singleton which automatically loads the collision module
+    # Use help(Collision.manager) for info about what functionality is available
+    collision = WallGo.Collision(model)
 
-    manager.loadCollisionFiles(collisionFileName)
+    ## ---- Directory name for collisions integrals. Currently we just load these
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+    collisionDirectory = scriptLocation / "CollisionOutput/"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+    collision.setOutputDirectory(collisionDirectory)
+
+    manager.loadCollisionFiles(collision)
 
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----

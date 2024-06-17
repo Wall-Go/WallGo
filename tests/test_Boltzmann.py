@@ -9,6 +9,10 @@ from WallGo.Boltzmann import BoltzmannSolver
 real_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(real_path)
 
+class DummyCollisionPath:
+        def __init__(self, path):
+            self.outputDirectory = path
+
 
 @pytest.mark.parametrize(
     "M, N, a, b, c, d, e, f",
@@ -29,7 +33,8 @@ def test_Delta00(boltzmannTestBackground, particle, M, N, a, b, c, d, e, f):
 
     boltzmann.updateParticleList( [particle] )
     boltzmann.setBackground(bg)
-    boltzmann.readCollisions(collisionPath)
+    collision = DummyCollisionPath(collisionPath)
+    boltzmann.readCollisions(collision)
 
     # coordinates
     chi, rz, rp = grid.getCompactCoordinates() # compact
@@ -73,9 +78,10 @@ def test_solution(boltzmannTestBackground, particle, M, N):
     collisionPath = dir_path + "/Testdata/N11" 
     boltzmann = BoltzmannSolver(grid)
     boltzmann.updateParticleList( [particle] )
-    boltzmann.setBackground(bg)
-    boltzmann.readCollisions(collisionPath)
-
+    boltzmann.setBackground(bg) 
+    collision = DummyCollisionPath(collisionPath)
+    boltzmann.readCollisions(collision)
+    
     # solving Boltzmann equations
     deltaF = boltzmann.solveBoltzmannEquations()
 

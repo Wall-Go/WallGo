@@ -45,17 +45,26 @@ class SingletSM_Z2(GenericModel):
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
-        topQuark = Particle("top", 
+        topQuarkL = Particle("topL", 
                             msqVacuum = topMsqVacuum,
                             msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 12
+                            totalDOFs = 6 
         )
-        self.addParticle(topQuark)
-
+        self.addParticle(topQuarkL)
+        topQuarkR = Particle("topR", 
+                            msqVacuum = topMsqVacuum,
+                            msqDerivative = topMsqDerivative,
+                            msqThermal = topMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = False,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(topQuarkR)
 
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
@@ -74,6 +83,31 @@ class SingletSM_Z2(GenericModel):
                             totalDOFs = 16
         )
         self.addParticle(gluon)
+
+        ## === SU(2) gauge bosons ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        W = Particle("W", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(W)
+
+        ZMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 * 11./6.
+        Z = Particle("Z", 
+                            msqVacuum = lambda fields: 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = ZMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 3
+        )
+        self.addParticle(Z)
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
@@ -399,18 +433,15 @@ def main():
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
-    ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    ## Modify the config, we use N=5 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness
-    wallThicknessIni = 0.05
-    
-    # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1
+    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
+    Lxi = 0.05
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -420,7 +451,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
+    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
@@ -435,6 +466,8 @@ def main():
         "MW" : 80.379,
         "MZ" : 91.1876,
         "Mt" : 173.0,
+        "g1" : 0.35,
+        "g2" : 0.65,
         "g3" : 1.2279920495357861,
         # scalar specific, choose Benoit benchmark values
         "mh1" : 125.0,
@@ -459,20 +492,23 @@ def main():
     collision = WallGo.Collision(model)
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
-    collision.generateCollisionIntegrals = True 
+    collision.generateCollisionIntegrals = True
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
     collision.setSeed(0)
-
+    
     """
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
     collision.manager.addCoupling(inputParameters["g3"])
+    collision.manager.addCoupling(inputParameters["g2"])
+    collision.manager.addCoupling(inputParameters["g1"])
 
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
     collisionDirectory = scriptLocation / "CollisionOutput/"
+
     collisionDirectory.mkdir(parents=True, exist_ok=True)
     
     collision.setOutputDirectory(collisionDirectory)
@@ -492,11 +528,9 @@ def main():
     collision.manager.setMatrixElementVerbosity(True)
 
 
-
     manager.loadCollisionFiles(collision)
 
 
-    print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
@@ -567,7 +601,6 @@ def main():
         print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
-        
 
 
     # end parameter-space loop
