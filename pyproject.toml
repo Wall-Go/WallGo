@@ -29,22 +29,6 @@ dependencies = [
 ]
 readme = "README.rst"
 
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["WallGo"]
-#exclude = [ ... ]
-
-[tool.setuptools.package-data]
-# specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
-WallGo = ["Config/*.ini", "Data/*"]
-
-
-[tool.setuptools_scm]
-
 [project.optional-dependencies]
 collisions = [
     "pybind11[global]>=0.1.35"
@@ -58,7 +42,54 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-automodapi",
 ]
+lint = [
+    "black",
+    "mypy",
+    "pylint",
+]
 
 [project.urls]
 "Homepage" = "https://wallspeed.readthedocs.io/"
 "Repository" = "https://github.com/Wall-Go/WallGo"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["WallGo"]
+#exclude = [ ... ]
+
+[tool.setuptools.package-data]
+# specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
+WallGo = ["Config/*.ini", "Data/*"]
+
+[tool.setuptools_scm]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.pylint.main]
+max-line-length = 88
+indent-string = "    "
+
+[tool.pylint.basic]
+# naming styles: PEP8 except camelCase instead of snake_case
+argument-naming-style = "camelCase"
+attr-naming-style = "camelCase"
+class-naming-style = "PascalCase"
+class-attribute-naming-style = "camelCase"
+class-const-naming-style = "UPPER_CASE"
+const-naming-style = "UPPER_CASE"
+function-naming-style = "camelCase"
+inlinevar-naming-style = "camelCase"
+method-naming-style = "camelCase"
+module-naming-style = "camelCase"
+variable-naming-style = "camelCase"
+
+[tool.mypy]
+warn_return_any = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+disable_error_code = "import-untyped"
