@@ -790,7 +790,9 @@ class EOM:
             z_L = z[:,None] / wallParams.widths[None,:]
 
         fields = vevLowT + 0.5*(vevHighT - vevLowT) * (1 + np.tanh( z_L + wallParams.offsets ))
-        dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="overflow encountered")
+            dPhidz = 0.5*(vevHighT-vevLowT) / ( wallParams.widths * np.cosh(z_L + wallParams.offsets)**2 )
 
         return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
 
