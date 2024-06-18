@@ -245,7 +245,12 @@ def singletBenchmarkCollisionArray(
     fileDir = pathlib.Path(__file__).parent.resolve()
 
     collisionPath = fileDir / "../../Testdata/N11/"
-    return WallGo.CollisionArray.newFromDirectory(collisionPath, singletBenchmarkGrid, "Chebyshev", 
+    class DummyCollisionPath:
+        def __init__(self, path):
+            self.outputDirectory = path
+    collision = DummyCollisionPath(collisionPath)
+
+    return WallGo.CollisionArray.newFromDirectory(collision, singletBenchmarkGrid, "Chebyshev", 
                                       particles, bInterpolate=False)
 
 

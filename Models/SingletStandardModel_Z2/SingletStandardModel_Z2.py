@@ -206,7 +206,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
-        # From Philipp. @todo should probably use the list of defined particles here?
+        # TODO should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
@@ -437,22 +437,59 @@ def main():
 
     model = SingletSM_Z2(inputParameters)
 
+
+    print("=== WallGo collision generation ===")
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
+    ## collision stuff
 
-    ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
+    ## Create Collision singleton which automatically loads the collision module
+    # Use help(Collision.manager) for info about what functionality is available
+    collision = WallGo.Collision(model)
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    collision.generateCollisionIntegrals = True 
+
+    ## Optional: set the seed used by Monte Carlo integration. Default is 0
+    collision.setSeed(0)
+
+    """
+    Define couplings (Lagrangian parameters)
+    list as they appear in the MatrixElements file
+    """
+    collision.manager.addCoupling(inputParameters["g3"])
+
+   ## ---- Directory name for collisions integrals. Currently we just load these
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+    collisionDirectory = scriptLocation / "CollisionOutput/"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
-
-
-    manager.loadCollisionFiles(collisionDirectory)
-
-
-    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
     
+    collision.setOutputDirectory(collisionDirectory)
+    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
+
+    ## Configure integration. Can skip this step if you're happy with the defaults
+    integrationOptions = collision.module.IntegrationOptions()
+    integrationOptions.bVerbose = True
+    integrationOptions.maxTries = 50
+    integrationOptions.calls = 50000
+    integrationOptions.relativeErrorGoal = 1e-1
+    integrationOptions.absoluteErrorGoal = 1e-8
+
+    collision.manager.configureIntegration(integrationOptions)
+
+    ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+    collision.manager.setMatrixElementVerbosity(True)
+
+
+
+    manager.loadCollisionFiles(collision)
+
+
+    print("=== WallGo parameter scan ===")
+    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
