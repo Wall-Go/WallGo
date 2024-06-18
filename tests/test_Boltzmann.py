@@ -81,14 +81,14 @@ def test_Delta00(
 
     # doing computation
     boltzmannResults = boltzmann.getDeltas(integrandAnalytic[None, ...])
-    deltas = boltzmannResults.Deltas
+    Deltas = boltzmannResults.Deltas  # pylint: disable=invalid-name
 
     # comparing to analytic result
-    delta00Analytic = (4 * a + c) * (4 * d + f) * bg.temperatureProfile**3 / 64
+    Delta00Analytic = (4 * a + c) * (4 * d + f) * bg.temperatureProfile**3 / 64  # pylint: disable=invalid-name
 
     # asserting result
     np.testing.assert_allclose(
-        deltas.Delta00.coefficients[0], delta00Analytic[1:-1], rtol=1e-14, atol=0
+        Deltas.Delta00.coefficients[0], Delta00Analytic[1:-1], rtol=1e-14, atol=0
     )
 
 
