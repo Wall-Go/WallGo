@@ -8,17 +8,15 @@ import copy  # for deepcopy
 import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
-from .Boltzmann import (
-    BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
-)
+from .Boltzmann import BoltzmannSolver
+from .containers import BoltzmannBackground, BoltzmannDeltas
 from .Fields import Fields, FieldPoint
-from .GenericModel import GenericModel
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
+from .results import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
 
 
 class EOM:

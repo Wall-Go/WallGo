@@ -8,7 +8,8 @@ from .exceptions import WallGoError
 from .HydroTemplateModel import HydroTemplateModel
 from .Thermodynamics import ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
-from .WallGoTypes import HydroResults
+from .results import HydroResults
+
 
 class Hydro:
     """

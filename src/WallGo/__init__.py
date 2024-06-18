@@ -4,7 +4,8 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .Boltzmann import BoltzmannSolver
+from .containers import PhaseInfo, BoltzmannBackground
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
 from .Hydro import Hydro
@@ -13,7 +14,6 @@ from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM, WallGoResults
 from .EOM import WallParams
-from .WallGoTypes import PhaseInfo
 
 
 from .Particle import Particle

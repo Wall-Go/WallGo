@@ -6,10 +6,12 @@ from .Grid import Grid
 from .Polynomial import Polynomial
 from .Particle import Particle
 from .CollisionArray import CollisionArray
-from .WallGoTypes import (
+from .results import (
+    BoltzmannResults,
+)
+from .containers import (
     BoltzmannBackground,
     BoltzmannDeltas,
-    BoltzmannResults,
 )
 
 

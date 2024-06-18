@@ -1,66 +1,11 @@
 """
-Simple data classes to hold WallGo results
+Data classes for compiling and returning results
 """
-
-import typing
 from dataclasses import dataclass
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 from .Fields import Fields
-from .Polynomial import Polynomial
-
-
-@dataclass
-class BoltzmannDeltas:
-    """
-    Integrals of the out-of-equilibrium particle densities,
-    defined in equation (15) of arXiv:2204.13120.
-    """
-
-    Delta00: Polynomial  # pylint: disable=invalid-name
-    Delta02: Polynomial  # pylint: disable=invalid-name
-    Delta20: Polynomial  # pylint: disable=invalid-name
-    Delta11: Polynomial  # pylint: disable=invalid-name
-
-    # string literal type hints as not defined yet
-    def __mul__(self, other: "BoltzmannDeltas") -> "BoltzmannDeltas":
-        """
-        Multiply a BoltzmannDeltas object with a scalar.
-        """
-        return BoltzmannDeltas(
-            Delta00=other * self.Delta00,
-            Delta02=other * self.Delta02,
-            Delta20=other * self.Delta20,
-            Delta11=other * self.Delta11,
-        )
-
-    def __rmul__(self, other: "BoltzmannDeltas") -> "BoltzmannDeltas":
-        """
-        Multiply a BoltzmannDeltas object with a scalar.
-        """
-        return BoltzmannDeltas(
-            Delta00=other * self.Delta00,
-            Delta02=other * self.Delta02,
-            Delta20=other * self.Delta20,
-            Delta11=other * self.Delta11,
-        )
-
-    def __add__(self, other: "BoltzmannDeltas") -> "BoltzmannDeltas":
-        """
-        Add two BoltzmannDeltas objects.
-        """
-        return BoltzmannDeltas(
-            Delta00=other.Delta00 + self.Delta00,
-            Delta02=other.Delta02 + self.Delta02,
-            Delta20=other.Delta20 + self.Delta20,
-            Delta11=other.Delta11 + self.Delta11,
-        )
-
-    def __sub__(self, other: "BoltzmannDeltas") -> "BoltzmannDeltas":
-        """
-        Substract two BoltzmannDeltas objects.
-        """
-        return self.__add__((-1) * other)
+from .containers import BoltzmannBackground, BoltzmannDeltas
 
 
 @dataclass
@@ -70,7 +15,7 @@ class BoltzmannResults:
     """
 
     deltaF: np.ndarray
-    Deltas: BoltzmannDeltas
+    Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     truncationError: float
 
     # These two criteria are to evaluate the validity of the linearization of the
@@ -79,21 +24,21 @@ class BoltzmannResults:
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
 
-    def __mul__(self, other: "BoltzmannResults") -> "BoltzmannResults":
+    def __mul__(self, number: float) -> "BoltzmannResults":
         return BoltzmannResults(
-            deltaF=other * self.deltaF,
-            Deltas=other * self.Deltas,
-            truncationError=abs(other) * self.truncationError,
-            linearizationCriterion1=abs(other) * self.linearizationCriterion1,
+            deltaF=number * self.deltaF,
+            Deltas=number * self.Deltas,
+            truncationError=abs(number) * self.truncationError,
+            linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
 
-    def __rmul__(self, other: "BoltzmannResults") -> "BoltzmannResults":
+    def __rmul__(self, number: float) -> "BoltzmannResults":
         return BoltzmannResults(
-            deltaF=other * self.deltaF,
-            Deltas=other * self.Deltas,
-            truncationError=abs(other) * self.truncationError,
-            linearizationCriterion1=abs(other) * self.linearizationCriterion1,
+            deltaF=number * self.deltaF,
+            Deltas=number * self.Deltas,
+            truncationError=abs(number) * self.truncationError,
+            linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
 
@@ -150,22 +95,20 @@ class WallParams:
             widths=(self.widths - other.widths), offsets=(self.offsets - other.offsets)
         )
 
-    def __mul__(self, other: "WallParams") -> "WallParams":
+    def __mul__(self, number: float) -> "WallParams":
         ## does not work if other = WallParams type
-        return WallParams(widths=self.widths * other, offsets=self.offsets * other)
+        return WallParams(widths=self.widths * number, offsets=self.offsets * number)
 
-    def __rmul__(self, other: "WallParams") -> "WallParams":
-        return self.__mul__(other)
+    def __rmul__(self, number: float) -> "WallParams":
+        return self.__mul__(number)
 
-    def __truediv__(self, other: "WallParams") -> "WallParams":
+    def __truediv__(self, number: float) -> "WallParams":
         ## does not work if other = WallParams type
-        return WallParams(widths=self.widths / other, offsets=self.offsets / other)
+        return WallParams(widths=self.widths / number, offsets=self.offsets / number)
 
 
 @dataclass
 class WallGoResults:
-    # HACK! This should probably go in its own file, Results.py,
-    # but I was getting circular import errors, so hacked it here.
     # bubble wall speed, and error
     wallVelocity: float
     wallVelocityError: float

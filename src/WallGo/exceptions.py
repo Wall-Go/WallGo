@@ -2,7 +2,8 @@
 Specific Exception types used in WallGo
 """
 import typing
-from .WallGoTypes import PhaseInfo
+from .containers import PhaseInfo
+
 
 class WallGoError(Exception):
     """
