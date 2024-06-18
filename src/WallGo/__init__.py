@@ -4,7 +4,7 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel

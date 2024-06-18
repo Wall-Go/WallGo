@@ -1,24 +1,30 @@
+"""
+Module with Particle class to hold particle information
+"""
+import typing
+import numpy as np
+from .Fields import Fields
 
 
-class Particle:
+class Particle:  # pylint: disable=too-few-public-methods
     """Particle configuration
 
     A simple class holding attributes of an out-of-equilibrium particle as
     relevant for calculations of Boltzmann equations.
     """
-    STATISTICS_OPTIONS = ["Fermion", "Boson"]
+    STATISTICS_OPTIONS: typing.Final[list[str]] = ["Fermion", "Boson"]
 
     def __init__(
         self,
-        name,
-        msqVacuum,
-        msqDerivative,
-        msqThermal,
-        statistics,
-        inEquilibrium,
-        ultrarelativistic,
-        totalDOFs
-    ):
+        name: str,
+        msqVacuum: typing.Callable[[Fields], np.ndarray],
+        msqDerivative: typing.Callable[[Fields], np.ndarray],
+        msqThermal: typing.Callable[[float], float],
+        statistics: str,
+        inEquilibrium: bool,
+        ultrarelativistic: bool,
+        totalDOFs: int
+    ) -> None:
         r"""Initialisation
 
         Parameters
@@ -49,7 +55,7 @@ class Particle:
         cls : Particle
             An object of the Particle class.
         """
-        Particle.__validateInput(
+        Particle._validateInput(
             name,
             msqVacuum,
             msqDerivative,
@@ -69,16 +75,16 @@ class Particle:
         self.totalDOFs = totalDOFs
 
     @staticmethod
-    def __validateInput(
-        name,
-        msqVacuum,
-        msqDerivative,
-        msqThermal,
-        statistics,
-        inEquilibrium,
-        ultrarelativistic,
-        totalDOFs
-    ):
+    def _validateInput(  # pylint: disable=unused-argument
+        name: str,
+        msqVacuum: typing.Callable[[Fields], np.ndarray],
+        msqDerivative: typing.Callable[[Fields], np.ndarray],
+        msqThermal: typing.Callable[[float], float],
+        statistics: str,
+        inEquilibrium: bool,
+        ultrarelativistic: bool,
+        totalDOFs: int
+    ) -> None:
         """
         Checks that the input fits expectations
         """

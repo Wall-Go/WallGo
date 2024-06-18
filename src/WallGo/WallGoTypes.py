@@ -15,7 +15,6 @@ class PhaseInfo:
     temperature: float
 
 
-
 """LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
 it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
 that just removes the endspoints.
@@ -32,7 +31,7 @@ class BoltzmannBackground:
         # assumes input is in the wall frame
         self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfiles = fieldProfiles.view(Fields) ## NEEDS to be Fields object
+        self.fieldProfiles = fieldProfiles.view(Fields) # NEEDS to be Fields object
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
         self.vMid = velocityMid
@@ -95,7 +94,7 @@ class BoltzmannResults:
     Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     truncationError: float
 
-    # These two criteria are to evaluate the validity of the linearization of the 
+    # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
