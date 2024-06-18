@@ -6,7 +6,7 @@ from typing import Tuple
 import copy ## for deepcopy
 from pathlib import Path
 
-from .Particle import Particle
+from .particle import Particle
 from .Polynomial import Polynomial
 from .Grid import Grid
 import tempfile

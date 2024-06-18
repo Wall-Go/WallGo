@@ -9,7 +9,7 @@ import numpy as np
 import findiff  # finite difference methods
 from .Grid import Grid
 from .Polynomial import Polynomial
-from .Particle import Particle
+from .particle import Particle
 from .CollisionArray import CollisionArray
 from .WallGoTypes import (
     BoltzmannBackground,
@@ -631,7 +631,7 @@ class BoltzmannSolver:
         """
         x = np.asarray(x)
         return np.where(
-            x > MAX_EXPONENT,
+            x > BoltzmannSolver.MAX_EXPONENT,
             0,
             1 / (np.exp(x) - statistics),
         )
@@ -643,7 +643,7 @@ class BoltzmannSolver:
         """
         x = np.asarray(x)
         return np.where(
-            x > MAX_EXPONENT,
+            x > BoltzmannSolver.MAX_EXPONENT,
             -0,
             -1 / (np.exp(x) - 2 * statistics + np.exp(-x)),
         )

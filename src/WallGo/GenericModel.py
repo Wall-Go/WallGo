@@ -2,7 +2,7 @@ from typing import Protocol
 from abc import ABC, abstractmethod  # Abstract Base Class
 
 ## WallGo imports
-from .Particle import Particle
+from .particle import Particle
 from .EffectivePotential import EffectivePotential
 
 

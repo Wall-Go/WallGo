@@ -16,14 +16,13 @@ from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo
 
 
-from .Particle import Particle
+from .particle import Particle
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
-from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionArray import CollisionArray
