@@ -31,7 +31,7 @@ class BoltzmannBackground:
     temperatureProfile: np.ndarray
     polynomialBasis: str
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
         velocityMid: float,
         velocityProfile: np.ndarray,
