@@ -1,6 +1,7 @@
 """
 Data classes for compiling and returning results
 """
+
 from dataclasses import dataclass
 import numpy as np
 from scipy.interpolate import UnivariateSpline
@@ -81,7 +82,9 @@ class HydroResults:
 
 @dataclass
 class WallParams:
-    ## Holds wall widths and wall offsets for all fields
+    """
+    Holds wall widths and wall offsets for all fields
+    """
     widths: np.ndarray  ## 1D array
     offsets: np.ndarray  ## 1D array
 
@@ -109,6 +112,9 @@ class WallParams:
 
 @dataclass
 class WallGoResults:
+    """
+    Compiles output results for users of WallGo
+    """
     # bubble wall speed, and error
     wallVelocity: float
     wallVelocityError: float
@@ -197,6 +203,9 @@ class WallGoResults:
 
 @dataclass
 class WallGoInterpolationResults:
+    """
+    Used when interpolating the pressure. Like WallGoResults but expanded to lists.
+    """
     ## List of stable solutions
     wallVelocities: list[float]
     ## List of unstable solutions

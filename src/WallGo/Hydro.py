@@ -621,7 +621,7 @@ class Hydro:
 
         Returns
         -------
-        c1,c2,Tp,Tm,vMid : double
+        c1,c2,Tp,Tm,velocityMid : double
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
@@ -637,8 +637,8 @@ class Hydro:
         wHighT = self.thermodynamicsExtrapolate.wHighT(Tp)
         c1 = -wHighT*gammaSq(vp)*vp
         c2 = self.thermodynamicsExtrapolate.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
-        vMid = -0.5*(vm+vp)  # minus sign for convention change
-        return (c1, c2, Tp, Tm, vMid)
+        velocityMid = -0.5*(vm+vp)  # minus sign for convention change
+        return (c1, c2, Tp, Tm, velocityMid)
 
 
     def findvwLTE(self) -> float:

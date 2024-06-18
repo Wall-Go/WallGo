@@ -403,8 +403,8 @@ class HydroTemplateModel:
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = -wHighT*vp/(1-vp**2)
         c2 = pHighT+wHighT*vp**2/(1-vp**2)
-        vMid = -0.5*(vm+vp)  # minus sign for convention change
-        return (c1, c2, Tp, Tm, vMid)
+        velocityMid = -0.5*(vm+vp)  # minus sign for convention change
+        return (c1, c2, Tp, Tm, velocityMid)
 
     def max_al(self,upper_limit=100):
         r"""

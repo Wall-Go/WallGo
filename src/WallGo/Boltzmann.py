@@ -14,6 +14,12 @@ from .containers import (
     BoltzmannDeltas,
 )
 
+"""
+LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
+it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
+that just removes the endspoints.
+"""
+
 
 class BoltzmannSolver:
     """
@@ -371,7 +377,7 @@ class BoltzmannSolver:
             particle.msqVacuum(self.background.fieldProfiles)
             for particle in particles
         ])
-        vw = self.background.vw
+        velocityWall = self.background.velocityWall
 
         # expanding to be rank 3 arrays, like deltaF
         T = TFull[None, 1:-1, None, None]
@@ -435,8 +441,8 @@ class BoltzmannSolver:
 
 
         # dot products with wall velocity
-        gammaWall = 1 / np.sqrt(1 - vw**2)
-        PWall = gammaWall * (pz - vw * E)
+        gammaWall = 1 / np.sqrt(1 - velocityWall**2)
+        PWall = gammaWall * (pz - velocityWall * E)
 
         # dot products with plasma profile velocity
         gammaPlasma = 1 / np.sqrt(1 - v**2)
@@ -444,7 +450,7 @@ class BoltzmannSolver:
         PPlasma = gammaPlasma * (pz - v * E)
 
         # dot product of velocities
-        uwBaruPl = gammaWall * gammaPlasma * (vw - v)
+        uwBaruPl = gammaWall * gammaPlasma * (velocityWall - v)
 
         # (exact) derivatives of compactified coordinates
         dxidchi, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
