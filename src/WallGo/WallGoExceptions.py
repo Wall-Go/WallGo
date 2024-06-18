@@ -1,13 +1,26 @@
+"""
+Specific Exception types used in WallGo
+"""
+import typing
 from .WallGoTypes import PhaseInfo
 
 class WallGoError(Exception):
-
-    def __init__(self, message: str, data: dict[str, any] = None):
-        ## Use the data dict for reporting arbitrary data with the error message
+    """
+    Generic Exception type for WallGo errors.
+    """
+    def __init__(
+        self,
+        message: str,
+        data: typing.Optional[dict[str, typing.Any]] = None
+    ) -> None:
+        # Use the data dict for reporting arbitrary data with the error message
         self.message = message
         self.data = data
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Conversion of WallGoError to str
+        """
         msg = str(self.message)
         if self.data:
             msg += "\nAdditional info:\n" + str(self.data)
@@ -15,16 +28,21 @@ class WallGoError(Exception):
         return msg
 
 class WallGoPhaseValidationError(WallGoError):
-    """Exception raised when WallGo fails to operate with the user specified phase input.
+    """
+    Exception for failures related to phase input.
     """
 
-    def __init__(self, message: str, phaseInfo: 'PhaseInfo', data: dict[str, any] = None):
-        ## Use the data dict for reporting arbitrary data with the error message
-        self.message = message
+    def __init__(
+        self,
+        message: str,
+        phaseInfo: 'PhaseInfo',
+        data: typing.Optional[dict[str, typing.Any]] = None
+    ) -> None:
+        # Additional phaseInfo
+        super().__init__(message, data)
         self.phaseInfo = phaseInfo
-        self.data = data
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = str(self.message) + "\nPhase was: \n" + str(self.phaseInfo)
         if self.data:
             msg += "\nAdditional info:\n" + str(self.data)
