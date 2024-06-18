@@ -1,3 +1,6 @@
+"""
+Classes for solving the Boltzmann equations for out-of-equilibrium particles.
+"""
 import sys
 from copy import deepcopy
 import numpy as np
@@ -12,13 +15,14 @@ from .WallGoTypes import (
     BoltzmannResults,
 )
 
+# Static value holding of natural log of the maximum expressible float
+MAX_EXPONENT = sys.float_info.max_exp * np.log(2)
+
 
 class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
     """
-    # Static value holding of natural log of the maximum expressible float
-    MAX_EXPONENT = sys.float_info.max_exp * np.log(2)
 
     # Member variables
     grid: Grid
@@ -26,10 +30,6 @@ class BoltzmannSolver:
     background: BoltzmannBackground
     collisionArray: CollisionArray
 
-    """ LN: I've changed the constructor so that neither the background nor particle is required here. This way we can 
-    have a persistent BoltzmannSolver object (in WallGoManager) that does not need to re-read collision integrals all the time.
-    Particles can also be stored in a persistent list. 
-    """
     def __init__(
         self,
         grid: Grid,
@@ -75,20 +75,29 @@ class BoltzmannSolver:
         ## Momentum polynomial type
         self.basisN = basisN
 
-        ## These are set, and can be updated, by our member functions (to be called externally)
+        # These are set, and can be updated, by our member functions (to be called externally)
         self.background = None
         self.collisionArray = None
         self.offEqParticles = []
 
     ## LN: Use this instead of requiring the background already in constructor
     def setBackground(self, background: BoltzmannBackground) -> None:
+        """
+        Setter for the BoltzmannBackground
+        """
         self.background = deepcopy(background) ## do we need a deepcopy? Does this even work generally?
         self.background.boostToPlasmaFrame()
         
     def setCollisionArray(self, collisionArray: CollisionArray) -> None:
+        """
+        Setter for the CollisionArray
+        """
         self.collisionArray = collisionArray
 
     def updateParticleList(self, offEqParticles: list[Particle]) -> None:
+        """
+        Setter for the list of out-of-equilibrium Particle objects
+        """
         # TODO: update the collision array as well when one updates the particle list
         for p in offEqParticles:
             assert isinstance(p, Particle)
@@ -176,7 +185,7 @@ class BoltzmannSolver:
             linearizationCriterion2=criterion2,
         )
 
-    def solveBoltzmannEquations(self):
+    def solveBoltzmannEquations(self) -> np.ndarray:
         r"""
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
 
@@ -223,7 +232,7 @@ class BoltzmannSolver:
 
         return deltaF
 
-    def estimateTruncationError(self, deltaF):
+    def estimateTruncationError(self, deltaF: np.ndarray) -> float:
         r"""
         Quick estimate of the polynomial truncation error using
         John Boyd's Rule-of-thumb-2:
@@ -271,8 +280,8 @@ class BoltzmannSolver:
             np.max(truncationErrorPz / deltaFMeanAbs),
             np.max(truncationErrorPp / deltaFMeanAbs),
         )
-    
-    def checkLinearization(self, deltaF=None):
+
+    def checkLinearization(self, deltaF: np.ndarray = None) -> tuple[float, float]:
         r"""
         Compute two criteria to verify the validity of the linearization of the
         Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
@@ -342,7 +351,7 @@ class BoltzmannSolver:
 
         return deltaFCriterion, collCriterion
 
-    def buildLinearEquations(self):
+    def buildLinearEquations(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Constructs matrix and source for Boltzmann equation.
 
@@ -445,7 +454,7 @@ class BoltzmannSolver:
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
 
         # (exact) derivatives of compactified coordinates
-        dxidchi, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
+        dxidchi, dpzdrz, _ = self.grid.getCompactificationDerivatives()
         dchidxi = 1/dxidchi[None, :, None, None]
         drzdpz = 1/dpzdrz[None, None, :, None]
 
@@ -464,7 +473,7 @@ class BoltzmannSolver:
         ##### liouville operator #####
         # Given in the LHS of Eq. (5) in 2204.13120, with further details given
         # by the second line of Eq. (32).
-        liouville = np.identity(len(particles))[:, None, None, None, :, None, None, None]*(
+        liouville = np.identity(len(particles))[:, None, None, None, :, None, None, None] * (
             dchidxi[:, :, :, :, None, None, None, None]
                 * PWall[:, :, :, :, None, None, None, None]
                 * derivMatrixChi[None, :, None, None, None, :, None, None]
@@ -499,7 +508,7 @@ class BoltzmannSolver:
             )
         )
         """
-       
+
         # including factored-out T^2 in collision integrals
         collision = (
             (T ** 2)[:, :, :, :, None, None, None, None]
@@ -523,14 +532,16 @@ class BoltzmannSolver:
             collision, self.grid, self.basisN, self.offEqParticles,
         )
 
-    def __checkBasis(basis):
+    @staticmethod
+    def __checkBasis(basis: str) -> None:
         """
         Check that basis is recognised
         """
         bases = ["Cardinal", "Chebyshev"]
-        assert basis in bases, "BoltzmannSolver error: unkown basis %s" % basis
+        assert basis in bases, f"BoltzmannSolver error: unkown basis {basis}"
 
-    def __checkDerivatives(derivatives):
+    @staticmethod
+    def __checkDerivatives(derivatives: str) -> None:
         """
         Check that derivative option is recognised
         """
@@ -539,25 +550,25 @@ class BoltzmannSolver:
             f"BoltzmannSolver error: unkown derivatives option {derivatives}"
 
     @staticmethod
-    def __feq(x, statistics):
+    def __feq(x: np.ndarray, statistics: int) -> np.ndarray:
         """
         Thermal distribution functions, Bose-Einstein and Fermi-Dirac
         """
         x = np.asarray(x)
         return np.where(
-            x > BoltzmannSolver.MAX_EXPONENT,
+            x > MAX_EXPONENT,
             0,
             1 / (np.exp(x) - statistics),
         )
 
     @staticmethod
-    def __dfeq(x, statistics):
+    def __dfeq(x: np.ndarray, statistics: int) -> np.ndarray:
         """
         Temperature derivative of thermal distribution functions
         """
         x = np.asarray(x)
         return np.where(
-            x > BoltzmannSolver.MAX_EXPONENT,
+            x > MAX_EXPONENT,
             -0,
             -1 / (np.exp(x) - 2*statistics + np.exp(-x)),
         )
