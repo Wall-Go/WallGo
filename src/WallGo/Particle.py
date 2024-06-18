@@ -1,6 +1,7 @@
 """
 Module with Particle class to hold particle information
 """
+
 import typing
 import numpy as np
 from .Fields import Fields
@@ -12,6 +13,7 @@ class Particle:  # pylint: disable=too-few-public-methods
     A simple class holding attributes of an out-of-equilibrium particle as
     relevant for calculations of Boltzmann equations.
     """
+
     STATISTICS_OPTIONS: typing.Final[list[str]] = ["Fermion", "Boson"]
 
     def __init__(
@@ -23,7 +25,7 @@ class Particle:  # pylint: disable=too-few-public-methods
         statistics: str,
         inEquilibrium: bool,
         ultrarelativistic: bool,
-        totalDOFs: int
+        totalDOFs: int,
     ) -> None:
         r"""Initialisation
 
@@ -32,10 +34,10 @@ class Particle:  # pylint: disable=too-few-public-methods
         name : string
             A string naming the particle.
         msqVacuum : function
-            Function :math:`m^2_0(\phi)`, should take a Fields object and 
+            Function :math:`m^2_0(\phi)`, should take a Fields object and
             return an array of length Fields.NumPoints().
         msqDerivative : function
-            Function :math:`d(m_0^2)/d(\phi)`, should take a Fields object and 
+            Function :math:`d(m_0^2)/d(\phi)`, should take a Fields object and
             return an array of shape Fields.shape.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
@@ -46,9 +48,9 @@ class Particle:  # pylint: disable=too-few-public-methods
         ultrarelativistic : bool
             True if particle is treated as ultrarelativistic.
         totalDOFs : int
-            Total number of degrees of freedom (should include the multiplicity 
+            Total number of degrees of freedom (should include the multiplicity
             factor).
-        
+
 
         Returns
         -------
@@ -63,7 +65,7 @@ class Particle:  # pylint: disable=too-few-public-methods
             statistics,
             inEquilibrium,
             ultrarelativistic,
-            totalDOFs
+            totalDOFs,
         )
         self.name = name
         self.msqVacuum = msqVacuum
@@ -83,24 +85,20 @@ class Particle:  # pylint: disable=too-few-public-methods
         statistics: str,
         inEquilibrium: bool,
         ultrarelativistic: bool,
-        totalDOFs: int
+        totalDOFs: int,
     ) -> None:
         """
         Checks that the input fits expectations
         """
-        #fields = np.array([1, 1])
-        #assert isinstance(msqVacuum(fields), float), \
+        # fields = np.array([1, 1])
+        # assert isinstance(msqVacuum(fields), float), \
         #    f"msqVacuum({fields}) must return float"
-        T = 100
-        assert isinstance(msqThermal(T), float), \
-            f"msqThermal({T}) must return float"
+        temperature = 100
+        assert isinstance(
+            msqThermal(temperature), float
+        ), f"msqThermal({temperature}) must return float"
         if statistics not in Particle.STATISTICS_OPTIONS:
-            raise ValueError(
-                f"{statistics=} not in {Particle.STATISTICS_OPTIONS}"
-            )
-        assert isinstance(inEquilibrium, bool), \
-            "inEquilibrium must be a bool"
-        assert isinstance(ultrarelativistic, bool), \
-            "ultrarelativistic must be a bool"
-        assert isinstance(totalDOFs, int) , \
-            "totalDOFs must be an integer"
+            raise ValueError(f"{statistics=} not in {Particle.STATISTICS_OPTIONS}")
+        assert isinstance(inEquilibrium, bool), "inEquilibrium must be a bool"
+        assert isinstance(ultrarelativistic, bool), "ultrarelativistic must be a bool"
+        assert isinstance(totalDOFs, int), "totalDOFs must be an integer"

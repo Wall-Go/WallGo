@@ -402,12 +402,12 @@ class BoltzmannSolver:
             ("z", "z", "pz", "pp"),
             False,
         )
-        collisionDeltaFIntegrated = (
-            collisionDeltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        )
-        liovilleDeltaFIntegrated = (
-            lioviilleDeltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        )
+        collisionDeltaFIntegrated = collisionDeltaFPoly.integrate(
+            (1, 2, 3), integrand
+        ).coefficients
+        liovilleDeltaFIntegrated = lioviilleDeltaFPoly.integrate(
+            (1, 2, 3), integrand
+        ).coefficients
         collCriterion = collisionDeltaFIntegrated / liovilleDeltaFIntegrated
 
         return deltaFCriterion, collCriterion
@@ -460,7 +460,11 @@ class BoltzmannSolver:
         if self.derivatives == "Spectral":
             # fit the background profiles to polynomials
             temperaturePoly = Polynomial(
-                temperatureFull, self.grid, "Cardinal", "z", True,
+                temperatureFull,
+                self.grid,
+                "Cardinal",
+                "z",
+                True,
             )
             vPoly = Polynomial(vFull, self.grid, "Cardinal", "z", True)
             msqPoly = Polynomial(
@@ -474,7 +478,9 @@ class BoltzmannSolver:
             derivMatrixChi = temperaturePoly.derivMatrix(self.basisM, "z")[1:-1]
             derivMatrixRz = temperaturePoly.derivMatrix(self.basisN, "pz")[1:-1]
             # spatial derivatives of profiles
-            dTdChi = temperaturePoly.derivative(0).coefficients[None, 1:-1, None, None]
+            dTemperaturedChi = temperaturePoly.derivative(0).coefficients[
+                None, 1:-1, None, None
+            ]
             dvdChi = vPoly.derivative(0).coefficients[None, 1:-1, None, None]
             dMsqdChi = msqPoly.derivative(1).coefficients[:, 1:-1, None, None]
         else:  # self.derivatives == "Finite Difference"
@@ -491,7 +497,9 @@ class BoltzmannSolver:
             derivMatrixRz = derivOperatorRz.matrix((self.grid.N + 1,))
             # spatial derivatives of profiles, endpoints used for taking
             # derivatives but then dropped as deltaF fixed at 0 at endpoints
-            dTdChi = (derivMatrixChi @ temperatureFull)[None, 1:-1, None, None]
+            dTemperaturedChi = (derivMatrixChi @ temperatureFull)[
+                None, 1:-1, None, None
+            ]
             dvdChi = (derivMatrixChi @ temperatureFull)[None, 1:-1, None, None]
             # the following is equivalent to:
             # dMsqdChiEinsum = np.einsum(
@@ -534,7 +542,7 @@ class BoltzmannSolver:
             * dchidxi
             * (
                 momentumWall * momentumPlasma * gammaPlasma**2 * dvdChi
-                + momentumWall * energyPlasma * dTdChi / temperature
+                + momentumWall * energyPlasma * dTemperaturedChi / temperature
                 + 1 / 2 * dMsqdChi * uwBaruPl
             )
         )
