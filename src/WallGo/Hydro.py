@@ -4,11 +4,11 @@ import numpy.typing as npt
 from typing import Tuple
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
+from .exceptions import WallGoError
 from .HydroTemplateModel import HydroTemplateModel
 from .Thermodynamics import ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
 from .WallGoTypes import HydroResults
-from .WallGoExceptions import WallGoError
 
 class Hydro:
     """

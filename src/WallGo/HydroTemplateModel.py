@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar,minimize_scalar
+from .exceptions import WallGoError
 from .helpers import gammaSq
 
-from .WallGoExceptions import WallGoError
 
 class HydroTemplateModel:
     """
