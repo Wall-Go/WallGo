@@ -1,6 +1,10 @@
+"""
+Classes for solving the hydrodynamic equations for the fluid velocity and temperature.
+"""
+
+from typing import Tuple
 import numpy as np
 import numpy.typing as npt
-from typing import Tuple
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
@@ -12,12 +16,12 @@ from .WallGoExceptions import WallGoError
 
 class Hydro:
     """
-    Class for solving the hydrodynamic equations of the plasma, at distances far enough 
+    Class for solving the hydrodynamic equations of the plasma, at distances far enough
     from the wall such that the wall can be treated as infinitesimally thin.
 
-    NOTE: We use the conventions that the velocities are always positive, even in the 
-    wall frame (vp and vm). These conventions are consistent with the literature, e.g. 
-    with arxiv:1004.4187. These conventions differ from the conventions used in the 
+    NOTE: We use the conventions that the velocities are always positive, even in the
+    wall frame (vp and vm). These conventions are consistent with the literature, e.g.
+    with arxiv:1004.4187. These conventions differ from the conventions used in the
     EOM and Boltzmann part of the code. The conversion is made in findHydroBoundaries.
     """
 
@@ -70,7 +74,7 @@ class Hydro:
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by
         thermodynamics, and at the model's nucleation temperature, using that the
-        derivative of :math:`v_+` with respect to :math:`T_-` is zero at the 
+        derivative of :math:`v_+` with respect to :math:`T_-` is zero at the
         Jouguet velocity.
 
         Returns
@@ -106,7 +110,7 @@ class Hydro:
         # We increase Tmax until we find a value that brackets our root.
 
         # LN: I guess we need to ensure that Tmax does not start from a too
-        #large value though
+        # large value though
         Tmin = self.Tnucl
         Tmax = 2 * self.Tnucl  # HACK (factor 2 is some arbitrary number larger than 1)
 
@@ -149,8 +153,8 @@ class Hydro:
 
     def fastestDeflag(self) -> float:
         r"""
-        Finds the largest wall velocity for which the temperature of the plasma is 
-        within the allowed regime, by finding the velocity for which 
+        Finds the largest wall velocity for which the temperature of the plasma is
+        within the allowed regime, by finding the velocity for which
         Tm = TMaxLowT or Tp = TMaxHighT.
         Returns the Jouguet velocity if no solution can be found.
 
@@ -201,10 +205,10 @@ class Hydro:
 
     def slowestDeton(self) -> float:
         r"""
-        Finds the smallest detonation wall velocity for which the temperature of the 
-        plasma is within the allowed range, by finding the velocity for which 
+        Finds the smallest detonation wall velocity for which the temperature of the
+        plasma is within the allowed range, by finding the velocity for which
         Tm = TMaxLowT. For detonations, Tp = Tn, so always in the allowed range.
-        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity 
+        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity
         if no solution can be found.
 
         Returns
@@ -237,7 +241,7 @@ class Hydro:
 
     def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
         r"""
-        Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`, 
+        Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`,
         from the matching conditions.
 
         Parameters
@@ -269,7 +273,7 @@ class Hydro:
 
     def matchDeton(self, vw) -> Tuple[float, float, float, float]:
         r"""
-        Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+` 
+        Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+`
         and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
 
         Parameters
@@ -280,7 +284,7 @@ class Hydro:
         Returns
         -------
         vp,vm,Tp,Tm : double
-            The value of the fluid velocities in the wall frame and the temperature 
+            The value of the fluid velocities in the wall frame and the temperature
             right in front of the wall and right behind the wall.
 
         """
@@ -326,7 +330,7 @@ class Hydro:
 
     def matchDeflagOrHyb(self, vw, vp=None) -> Tuple[float, float, float, float]:
         r"""
-        Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration 
+        Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration
         or hybrid by solving the matching relations.
 
         Parameters
@@ -334,13 +338,13 @@ class Hydro:
         vw : double
             Wall velocity.
         vp : double or None, optional
-            Plasma velocity in front of the wall :math:`v_-`. If None, vp is 
+            Plasma velocity in front of the wall :math:`v_-`. If None, vp is
             determined from conservation of entropy. Default is None.
 
         Returns
         -------
         vp,vm,Tp,Tm : double
-            The value of the fluid velocities in the wall frame and the temperature 
+            The value of the fluid velocities in the wall frame and the temperature
             right in front of the wall and right behind the wall.
 
         """
@@ -423,7 +427,7 @@ class Hydro:
 
     def shockDE(self, v, xiAndT) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
-        Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and 
+        Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
 
         Parameters
@@ -431,13 +435,13 @@ class Hydro:
         v : array
             Fluid velocities.
         xiAndT : array
-            Values of the self-similar coordinate :math:`\xi = r/t` and 
+            Values of the self-similar coordinate :math:`\xi = r/t` and
             the temperature :math:`T`
 
         Returns
         -------
         eq1, eq2 : array
-            The expressions for :math:`\frac{\partial v}{\partial \xi}` 
+            The expressions for :math:`\frac{\partial v}{\partial \xi}`
             and :math:`\frac{\partial v}{\partial T}`
         """
         xi, T = xiAndT
@@ -462,9 +466,9 @@ class Hydro:
 
     def solveHydroShock(self, vw, vp, Tp) -> float:
         r"""
-        Solves the hydrodynamic equations in the shock for a given wall 
+        Solves the hydrodynamic equations in the shock for a given wall
         velocity :math:`v_w` and matching parameters :math:`v_+,T_+`
-        and returns the corresponding nucleation temperature :math:`T_n`, 
+        and returns the corresponding nucleation temperature :math:`T_n`,
         which is the temperature of the plasma in front of the shock.
 
         Parameters
@@ -493,13 +497,13 @@ class Hydro:
         xi0T0 = [vw, Tp]
         vpcent = boostVelocity(vw, vp)
         if shock(vpcent, xi0T0) > 0:
-            vm_sh = vpcent
-            xi_sh = vw
-            Tm_sh = Tp
+            vmShock = vpcent
+            xiShock = vw
+            TmShock = Tp
         elif vw == vp:
-            vm_sh = 0
-            xi_sh = self.thermodynamicsExtrapolate.csqHighT(Tp) ** 0.5
-            Tm_sh = Tp
+            vmShock = 0
+            xiShock = self.thermodynamicsExtrapolate.csqHighT(Tp) ** 0.5
+            TmShock = Tp
         else:
             solshock = solve_ivp(
                 self.shockDE,
@@ -509,19 +513,19 @@ class Hydro:
                 rtol=self.rtol,
                 atol=0,
             )  # solve differential equation all the way from v = v+ to v = 0
-            vm_sh = solshock.t[-1]
-            xi_sh, Tm_sh = solshock.y[:, -1]
+            vmShock = solshock.t[-1]
+            xiShock, TmShock = solshock.y[:, -1]
 
         def TiiShock(tn):  # continuity of Tii
-            return self.thermodynamicsExtrapolate.wHighT(tn) * xi_sh / (
-                1 - xi_sh**2
-            ) - self.thermodynamicsExtrapolate.wHighT(Tm_sh) * boostVelocity(
-                xi_sh, vm_sh
+            return self.thermodynamicsExtrapolate.wHighT(tn) * xiShock / (
+                1 - xiShock**2
+            ) - self.thermodynamicsExtrapolate.wHighT(TmShock) * boostVelocity(
+                xiShock, vmShock
             ) * gammaSq(
-                boostVelocity(xi_sh, vm_sh)
+                boostVelocity(xiShock, vmShock)
             )
 
-        Tmin, Tmax = self.Tnucl / 2, Tm_sh  # HACK why Tnucl/2?
+        Tmin, Tmax = self.Tnucl / 2, TmShock  # HACK why Tnucl/2?
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
         while bracket1 * bracket2 > 0 and Tmin > self.TMinHydro:
             Tmax = Tmin
@@ -544,7 +548,7 @@ class Hydro:
                 TiiShock,
                 method="secant",
                 x0=self.Tnucl,
-                x1=Tm_sh,
+                x1=TmShock,
                 xtol=self.atol,
                 rtol=self.rtol,
             )
@@ -556,8 +560,8 @@ class Hydro:
     def strongestShock(self, vw) -> float:
         r"""
         Finds the smallest nucleation temperature possible for a given wall velocity vw.
-        The strongest shock is found by finding the value of Tp for which vp = 0 and 
-        Tm is TMinHydro (very small). The correspdoning nucleation temperature is 
+        The strongest shock is found by finding the value of Tp for which vp = 0 and
+        Tm is TMinHydro (very small). The correspdoning nucleation temperature is
         obtained from solveHydroShock at this value of Tp and vp=0.
 
         Parameters
@@ -594,7 +598,7 @@ class Hydro:
 
     def minVelocity(self) -> float:
         r"""
-        Finds the smallest velocity for which a deflagration/hybrid is possible for the 
+        Finds the smallest velocity for which a deflagration/hybrid is possible for the
         given nucleation temperature. Returns 0 if no solution can be found.
 
         Returns
@@ -647,7 +651,7 @@ class Hydro:
 
             vpmin = self.vBracketLow
             # The speed of sound below should really be evaluated at Tp, but we use Tn
-            #here to save time. We will use Tp later if it doesn't work.
+            # here to save time. We will use Tp later if it doesn't work.
             vpmax = min(
                 vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
@@ -717,13 +721,13 @@ class Hydro:
 
     def findHydroBoundaries(self, vwTry) -> Tuple[float, float, float, float, float]:
         r"""
-        Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid 
-        velocity in right in front of the wall) for the scalar and plasma equations of 
+        Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid
+        velocity in right in front of the wall) for the scalar and plasma equations of
         motion for a given wall velocity and the model's nucletion temperature.
 
-        NOTE: the sign of :math:`c_1` is chosen to match the convention for the 
-        fluid velocity used in EOM and Hydro. In those conventions, 
-        math:`v_+` would be negative, and therefore :math:`c_1` has to 
+        NOTE: the sign of :math:`c_1` is chosen to match the convention for the
+        fluid velocity used in EOM and Hydro. In those conventions,
+        math:`v_+` would be negative, and therefore :math:`c_1` has to
         be negative as well.
 
         Parameters
@@ -756,12 +760,12 @@ class Hydro:
 
     def findvwLTE(self) -> float:
         r"""
-        Returns the wall velocity in local thermal equilibrium for the model's 
+        Returns the wall velocity in local thermal equilibrium for the model's
         nucleation temperature. The wall velocity is determined by solving the
-        matching condition :math:`T_+ \gamma_+= T_-\gamma_-`. For small wall 
-        velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists -- 
-        :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity. If the phase 
-        transition is too weak for a solution to exist, returns 0. If it is too 
+        matching condition :math:`T_+ \gamma_+= T_-\gamma_-`. For small wall
+        velocity :math:`T_+ \gamma_+> T_-\gamma_-`, and -- if a solution exists --
+        :math:`T_+ \gamma_+< T_-\gamma_-` for large wall velocity. If the phase
+        transition is too weak for a solution to exist, returns 0. If it is too
         strong, returns 1. The solution is always a deflagration or hybrid.
 
         Parameters
@@ -777,7 +781,7 @@ class Hydro:
         def func(
             vw,
         ):
-            vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
+            vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
             Tntry = self.solveHydroShock(vw, vp, Tp)
             return Tntry - self.Tnucl
 
@@ -786,7 +790,7 @@ class Hydro:
         def shock(
             vw,
         ):
-            vp, vm, Tp, Tm = self.matchDeflagOrHyb(vw)
+            vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
             return vp * vw - self.thermodynamicsExtrapolate.csqHighT(Tp)
 
         self.success = True
@@ -809,7 +813,7 @@ class Hydro:
                 vmax = vmax - 1e-6  # HACK! why?
             except:
                 return 1  # No shock can be found, e.g. when the PT is too strong --
-            #is there a risk here of returning 1 when it should be 0?
+            # is there a risk here of returning 1 when it should be 0?
 
         fmax = func(vmax)
         if (
@@ -831,9 +835,9 @@ class Hydro:
 
     def __mappingT(self, TpTm):
         """
-        Maps the variables Tp and Tm, which are constrained to 
-        TMinHydro < Tm,Tp < TMaxHydro to the interval (-inf,inf) to allow root 
-        finding algorithms to explore different values of (Tp,Tm), without going 
+        Maps the variables Tp and Tm, which are constrained to
+        TMinHydro < Tm,Tp < TMaxHydro to the interval (-inf,inf) to allow root
+        finding algorithms to explore different values of (Tp,Tm), without going
         outside of the bounds above.
 
         Parameters
