@@ -130,7 +130,7 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromDirectory(collision, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(collision: str, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
         Create a new CollisionArray object from a directory containing collision files.
 

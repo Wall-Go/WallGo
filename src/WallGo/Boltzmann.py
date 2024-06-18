@@ -73,14 +73,15 @@ class BoltzmannSolver:
                 basisM == "Cardinal" and basisN == "Cardinal"
             ), "Must use Cardinal basis for Finite Difference method"
 
-        ## Position polynomial type
+        # Position polynomial type
         self.basisM = basisM
-        ## Momentum polynomial type
+        # Momentum polynomial type
         self.basisN = basisN
 
-        # These are set, and can be updated, by our member functions (to be called externally)
-        self.background = None
-        self.collisionArray = None
+        # These are set, and can be updated, by our member functions
+        # TODO: are these None types the best way to go?
+        self.background = None  # type: ignore[assignment]
+        self.collisionArray = None  # type: ignore[assignment]
         self.offEqParticles = []
 
     def setBackground(self, background: BoltzmannBackground) -> None:
@@ -108,7 +109,7 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles
 
-    def getDeltas(self, deltaF: np.ndarray = None) -> BoltzmannResults:
+    def getDeltas(self, deltaF: typing.Optional[np.ndarray] = None) -> BoltzmannResults:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -149,7 +150,7 @@ class BoltzmannSolver:
         deltaFPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
 
         # Take all field-space points, but throw the boundary points away
-        # TODO: (LN: why? see comment at top of this file)
+        # TODO: LN: why throw away boundary points?
         field = self.background.fieldProfiles.TakeSlice(
             1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
@@ -171,18 +172,18 @@ class BoltzmannSolver:
         # base integrand, for '00'
         integrand = dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
 
-        Delta00 = deltaFPoly.integrate(
+        Delta00 = deltaFPoly.integrate(  # pylint: disable=invalid-name
             (2, 3), integrand
-        )  # pylint: disable=invalid-name
-        Delta02 = deltaFPoly.integrate(
+        )
+        Delta02 = deltaFPoly.integrate(  # pylint: disable=invalid-name
             (2, 3), pz**2 * integrand
-        )  # pylint: disable=invalid-name
-        Delta20 = deltaFPoly.integrate(
+        )
+        Delta20 = deltaFPoly.integrate(  # pylint: disable=invalid-name
             (2, 3), energy**2 * integrand
-        )  # pylint: disable=invalid-name
-        Delta11 = deltaFPoly.integrate(
+        )
+        Delta11 = deltaFPoly.integrate(  # pylint: disable=invalid-name
             (2, 3), energy * pz * integrand
-        )  # pylint: disable=invalid-name
+        )
 
         Deltas = BoltzmannDeltas(  # pylint: disable=invalid-name
             Delta00=Delta00, Delta02=Delta02, Delta20=Delta20, Delta11=Delta11
@@ -228,7 +229,7 @@ class BoltzmannSolver:
         """
 
         # contructing the various terms in the Boltzmann equation
-        operator, source, liouville, collision = self.buildLinearEquations()
+        operator, source, _, _ = self.buildLinearEquations()
 
         # solving the linear system: operator.deltaF = source
         deltaF = np.linalg.solve(operator, source)
@@ -296,7 +297,7 @@ class BoltzmannSolver:
         )
 
     def checkLinearization(
-        self, deltaF: np.ndarray = None
+        self, deltaF: typing.Optional[np.ndarray] = None
     ) -> tuple[np.ndarray, np.ndarray]:
         r"""
         Compute two criteria to verify the validity of the linearization of the
@@ -374,36 +375,40 @@ class BoltzmannSolver:
         # base integrand, for '00'
         integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
 
-        # The first criterion is to require that POut/PEq is small
-        POut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        PEq = fEqPoly.integrate((1, 2, 3), integrand).coefficients
-        deltaFCriterion = POut / PEq
+        # The first criterion is to require that pressureOut/pressureEq is small
+        pressureOut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
+        pressureEq = fEqPoly.integrate((1, 2, 3), integrand).coefficients
+        deltaFCriterion = pressureOut / pressureEq
 
         # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
         _, _, liouville, collision = self.buildLinearEquations()
-        CdeltaF = np.sum(
+        collisionDeltaF = np.sum(
             collision * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
         )
-        LdeltaF = np.sum(
+        liouvilleDeltaF = np.sum(
             liouville * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
         )
-        CdeltaFPoly = Polynomial(
-            CdeltaF,
+        collisionDeltaFPoly = Polynomial(
+            collisionDeltaF,
             self.grid,
             ("Array", "Cardinal", "Cardinal", "Cardinal"),
             ("z", "z", "pz", "pp"),
             False,
         )
-        LdeltaFPoly = Polynomial(
-            LdeltaF,
+        lioviilleDeltaFPoly = Polynomial(
+            liouvilleDeltaF,
             self.grid,
             ("Array", "Cardinal", "Cardinal", "Cardinal"),
             ("z", "z", "pz", "pp"),
             False,
         )
-        CdeltaFIntegrated = CdeltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        LdeltaFIntegrated = LdeltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        collCriterion = CdeltaFIntegrated / LdeltaFIntegrated
+        collisionDeltaFIntegrated = (
+            collisionDeltaFPoly.integrate((1, 2, 3), integrand).coefficients
+        )
+        liovilleDeltaFIntegrated = (
+            lioviilleDeltaFPoly.integrate((1, 2, 3), integrand).coefficients
+        )
+        collCriterion = collisionDeltaFIntegrated / liovilleDeltaFIntegrated
 
         return deltaFCriterion, collCriterion
 
@@ -454,30 +459,32 @@ class BoltzmannSolver:
         # building parts which depend on the 'derivatives' argument
         if self.derivatives == "Spectral":
             # fit the background profiles to polynomials
-            TPoly = Polynomial(temperatureFull, self.grid, "Cardinal", "z", True)
+            temperaturePoly = Polynomial(
+                temperatureFull, self.grid, "Cardinal", "z", True,
+            )
             vPoly = Polynomial(vFull, self.grid, "Cardinal", "z", True)
             msqPoly = Polynomial(
                 msqFull, self.grid, ("Array", "Cardinal"), ("Array", "z"), True
             )
             # intertwiner matrices
-            TChiMat = TPoly.matrix(self.basisM, "z")
-            TRzMat = TPoly.matrix(self.basisN, "pz")
-            TRpMat = TPoly.matrix(self.basisN, "pp")
+            intertwinerChiMat = temperaturePoly.matrix(self.basisM, "z")
+            intertwinerRzMat = temperaturePoly.matrix(self.basisN, "pz")
+            intertwinerRpMat = temperaturePoly.matrix(self.basisN, "pp")
             # derivative matrices
-            derivMatrixChi = TPoly.derivMatrix(self.basisM, "z")[1:-1]
-            derivMatrixRz = TPoly.derivMatrix(self.basisN, "pz")[1:-1]
+            derivMatrixChi = temperaturePoly.derivMatrix(self.basisM, "z")[1:-1]
+            derivMatrixRz = temperaturePoly.derivMatrix(self.basisN, "pz")[1:-1]
             # spatial derivatives of profiles
-            dTdChi = TPoly.derivative(0).coefficients[None, 1:-1, None, None]
+            dTdChi = temperaturePoly.derivative(0).coefficients[None, 1:-1, None, None]
             dvdChi = vPoly.derivative(0).coefficients[None, 1:-1, None, None]
             dMsqdChi = msqPoly.derivative(1).coefficients[:, 1:-1, None, None]
-        elif self.derivatives == "Finite Difference":
+        else:  # self.derivatives == "Finite Difference"
             # intertwiner matrices are simply unit matrices
             # as we are in the (Cardinal, Cardinal) basis
-            TChiMat = np.identity(self.grid.M - 1)
-            TRzMat = np.identity(self.grid.N - 1)
-            TRpMat = np.identity(self.grid.N - 1)
+            intertwinerChiMat = np.identity(self.grid.M - 1)
+            intertwinerRzMat = np.identity(self.grid.N - 1)
+            intertwinerRpMat = np.identity(self.grid.N - 1)
             # derivative matrices
-            chiFull, rzFull, rpFull = self.grid.getCompactCoordinates(endpoints=True)
+            chiFull, rzFull, _ = self.grid.getCompactCoordinates(endpoints=True)
             derivOperatorChi = findiff.FinDiff((0, chiFull, 1), acc=2)
             derivMatrixChi = derivOperatorChi.matrix((self.grid.M + 1,))
             derivOperatorRz = findiff.FinDiff((0, rzFull, 1), acc=2)
@@ -501,12 +508,12 @@ class BoltzmannSolver:
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - vw**2)
-        PWall = gammaWall * (pz - vw * energy)
+        momentumWall = gammaWall * (pz - vw * energy)
 
         # dot products with plasma profile velocity
         gammaPlasma = 1 / np.sqrt(1 - v**2)
-        EPlasma = gammaPlasma * (energy - v * pz)
-        PPlasma = gammaPlasma * (pz - v * energy)
+        energyPlasma = gammaPlasma * (energy - v * pz)
+        momentumPlasma = gammaPlasma * (pz - v * energy)
 
         # dot product of velocities
         uwBaruPl = gammaWall * gammaPlasma * (vw - v)
@@ -517,7 +524,7 @@ class BoltzmannSolver:
         drzdpz = 1 / dpzdrz[None, None, :, None]
 
         # derivative of equilibrium distribution
-        dfEq = BoltzmannSolver._dfeq(EPlasma / temperature, statistics)
+        dfEq = BoltzmannSolver._dfeq(energyPlasma / temperature, statistics)
 
         ##### source term #####
         # Given by S_i on the RHS of Eq. (5) in 2204.13120, with further details
@@ -526,8 +533,8 @@ class BoltzmannSolver:
             (dfEq / temperature)
             * dchidxi
             * (
-                PWall * PPlasma * gammaPlasma**2 * dvdChi
-                + PWall * EPlasma * dTdChi / temperature
+                momentumWall * momentumPlasma * gammaPlasma**2 * dvdChi
+                + momentumWall * energyPlasma * dTdChi / temperature
                 + 1 / 2 * dMsqdChi * uwBaruPl
             )
         )
@@ -540,18 +547,17 @@ class BoltzmannSolver:
         ]
         liouville = identityParticles * (
             dchidxi[:, :, :, :, None, None, None, None]
-            * PWall[:, :, :, :, None, None, None, None]
+            * momentumWall[:, :, :, :, None, None, None, None]
             * derivMatrixChi[None, :, None, None, None, :, None, None]
-            * TRzMat[None, None, :, None, None, None, :, None]
-            * TRpMat[None, None, None, :, None, None, None, :]
+            * intertwinerRzMat[None, None, :, None, None, None, :, None]
+            * intertwinerRpMat[None, None, None, :, None, None, None, :]
             - dchidxi[:, :, :, :, None, None, None, None]
             * drzdpz[:, :, :, :, None, None, None, None]
-            * gammaWall
-            / 2
+            * (gammaWall / 2)
             * dMsqdChi[:, :, :, :, None, None, None, None]
-            * TChiMat[None, :, None, None, None, :, None, None]
+            * intertwinerChiMat[None, :, None, None, None, :, None, None]
             * derivMatrixRz[None, None, :, None, None, None, :, None]
-            * TRpMat[None, None, None, :, None, None, None, :]
+            * intertwinerRpMat[None, None, None, :, None, None, None, :]
         )
         """
         An alternative, but slower, implementation is given by the following:
@@ -578,23 +584,22 @@ class BoltzmannSolver:
         # including factored-out T^2 in collision integrals
         collision = (
             (temperature**2)[:, :, :, :, None, None, None, None]
-            * TChiMat[None, :, None, None, None, :, None, None]
+            * intertwinerChiMat[None, :, None, None, None, :, None, None]
             * self.collisionArray[:, None, :, :, :, None, :, :]
         )
         ##### total operator #####
         operator = liouville + collision
 
         # reshaping indices
-        N_new = (
+        totalSize = (
             len(particles) * (self.grid.M - 1) * (self.grid.N - 1) * (self.grid.N - 1)
         )
-        source = np.reshape(source, N_new, order="C")
-        operator = np.reshape(operator, (N_new, N_new), order="C")
+        source = np.reshape(source, totalSize, order="C")
+        operator = np.reshape(operator, (totalSize, totalSize), order="C")
 
         # returning results
         return operator, source, liouville, collision
 
-    # TODO: type hinting
     def readCollisions(self, collision: str) -> None:
         """
         Reads collision integrals from file
