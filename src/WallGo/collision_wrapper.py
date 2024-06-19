@@ -17,7 +17,7 @@ class Collision():
 
     _instance = None
     
-    def __new__(cls, modelCls: GenericModel):
+    def __new__(cls, modelCls: GenericModel) -> 'Collision':
         """
         Implement singleton pattern
         Create a new instance of the class if it doesn't already exist.
@@ -67,7 +67,7 @@ class Collision():
         self.module.setSeed(seed)
 
 
-    def _loadCollisionModule(self,modelCls) -> None:
+    def _loadCollisionModule(self,modelCls: GenericModel) -> None:
         """Load the collision module.
 
         Raises:
@@ -86,7 +86,7 @@ class Collision():
             moduleName = "WallGoCollisionPy"
             
             self.module = importlib.import_module(moduleName)
-            print("Loaded module [%s]" % moduleName)
+            print(f"Loaded module [{moduleName}]")
 
             ## Construct a "control" object for collision integrations
             # Use help(Collision.manager) for info about what functionality is available
@@ -95,7 +95,7 @@ class Collision():
             self.addParticles(modelCls)
 
         except ImportError:
-            print("Warning: Failed to load [%s]. Using read-only mode for collision integrals." % moduleName)
+            print(f"Warning: Failed to load [{moduleName}]. Using read-only mode for collision integrals.")
             print("Computation of new collision integrals will NOT be possible.")
         ## Should we assert that the load succeeds? If the user creates this class in the first place, they presumably want to use the module
 
@@ -108,17 +108,17 @@ class Collision():
         """
         assert self.module is not None, "Collision module has not been loaded!"
 
-    def addParticles(self, model: GenericModel, T = 1.0) -> None:
+    def addParticles(self, model: 'WallGo.GenericModel', T: float = 1.0) -> None:
         """
         Adds particles to the collision module.
-
+    
         Args:
-            model (GenericModel): The model containing the particles.
+            model (WallGo.GenericModel): The model containing the particles.
             T (float, optional): The temperature in GeV units. Defaults to 1.0.
-
+    
         Returns:
             None
-
+    
         Notes:
             - Particles need masses in GeV units, i.e., T dependent.
             - Thermal masses are rescaled by the temperature and the default argument of T = 1.
@@ -129,12 +129,12 @@ class Collision():
               should be the same as in MatrixElements.txt.
         """
         fieldHack = Fields([0]*model.fieldCount)
-
+    
         for particle in model.particles:
             self.manager.addParticle(self.constructPybindParticle(particle, T, fieldHack))
 
 
-    def constructPybindParticle(self, particle: Particle, T: float, fields: Fields):
+    def constructPybindParticle(self, particle: Particle, T: float, fields: Fields) -> 'CollisionModule.ParticleSpecies':
         """
         Converts python 'Particle' object to pybind-bound ParticleSpecies object that the Collision module can understand.
         'Particle' uses masses in GeV^2 units while CollisionModule operates with dimensionless (m/T)^2 etc,
@@ -170,7 +170,7 @@ class Collision():
                                     particle.msqThermal(T) / T**2.0,
                                     particle.ultrarelativistic)
 
-    def calculateCollisionIntegrals(self, bVerbose=False):
+    def calculateCollisionIntegrals(self, bVerbose: bool = False) -> None:
         """
         Calculates the collision integrals.
 
@@ -179,9 +179,9 @@ class Collision():
         """
         ## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
         basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-        self.manager.calculateCollisionIntegrals(basisSize, bVerbose=False)
+        self.manager.calculateCollisionIntegrals(basisSize, bVerbose)
 
-    def setOutputDirectory(self, outputDirectory) -> None:
+    def setOutputDirectory(self, outputDirectory: str) -> None:
         """
         Sets the output directory for the collision integrals.
 

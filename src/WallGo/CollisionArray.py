@@ -1,15 +1,15 @@
+from typing import Tuple
+import codecs # for decoding unicode string from hdf5 file
+import copy ## for deepcopy
+from pathlib import Path
+import tempfile
 import numpy as np
 from scipy.special import eval_chebyt
 import h5py # read/write hdf5 structured binary data file format
-import codecs # for decoding unicode string from hdf5 file
-from typing import Tuple
-import copy ## for deepcopy
-from pathlib import Path
 
-from .Particle import Particle
+# from .Particle import Particle
 from .Polynomial import Polynomial
 from .Grid import Grid
-import tempfile
 
 class CollisionArray:
     """
@@ -64,7 +64,7 @@ class CollisionArray:
 
 
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: int) -> any:
         """
         Retrieve the value at the specified key.
 
@@ -130,14 +130,15 @@ class CollisionArray:
 
     ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
-    def newFromDirectory(collision, grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
+    def newFromDirectory(collision: 'Collision', grid: Grid, basisType: str, particles: list, bInterpolate: bool = True) -> 'CollisionArray':
         """
         Create a new CollisionArray object from a directory containing collision files.
 
         Parameters
         ----------
-        directoryname : str
-            Path of the directory containing the collision files. The collision files must have names with the form "collisions_particle1_particle2.hdf5".
+        collision : Collision 
+            Collision class that holds path of the directory containing the collision files.
+            The collision files must have names with the form "collisions_particle1_particle2.hdf5".
 
         grid : Grid
             The grid object representing the computational grid.
@@ -393,7 +394,7 @@ class CollisionArray:
         return np.max(-1/np.real(eigvals1)),np.max(1/np.real(eigvals2))
         
     @staticmethod
-    def __checkBasis(basis: str):
+    def __checkBasis(basis: str) -> None:
         """
         Check that basis is recognized.
 
@@ -405,4 +406,4 @@ class CollisionArray:
 
         """
         bases = ["Cardinal", "Chebyshev"]
-        assert basis in bases, "CollisionArray error: unknown basis %s" % basis
+        assert basis in bases, f"collisionarray error: unknown basis {basis}"
