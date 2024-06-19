@@ -185,8 +185,8 @@ class CollisionArray:
                         # assert basisSizeFile <= size, "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
                         if grid.N > size and collision.generateCollisionIntegrals:
                             # Generate temporary directory
-                            directoryname = tempfile.mkdtemp(dir=directoryname)
-                            print(f"CollisionArray generation warning: target collison grid size ({basisSizeFile}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}.")
+                            directoryname = tempfile.mkdtemp(prefix=f"N{grid.N}.",dir=directoryname)
+                            print(f"CollisionArray generation warning: target collison grid size ({grid.N}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}.")
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
                             ## Computes collisions for all out-of-eq particles specified.
