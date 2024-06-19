@@ -2,12 +2,11 @@
 Class for solving the EOM and the hydrodynamic equations.
 """
 
-import numpy as np
-import numpy.typing as npt
 import warnings
 from typing import Tuple
 import copy  # for deepcopy
-
+import numpy as np
+import numpy.typing as npt
 
 import scipy.optimize
 from scipy.interpolate import UnivariateSpline
@@ -239,7 +238,7 @@ class EOM:
             """
             if np.abs(vw - wallVelocityMin) < 1e-10 or vw < wallVelocityMin:
                 return pressureMin
-            elif np.abs(vw - wallVelocityMax) < 1e-10 or vw > wallVelocityMax:
+            if np.abs(vw - wallVelocityMax) < 1e-10 or vw > wallVelocityMax:
                 return pressureMax
 
             # Use linear interpolation to get a better first guess for the initial wall
@@ -591,8 +590,7 @@ class EOM:
                 boltzmannBackground,
                 hydroResults,
             )
-        else:
-            return pressure
+        return pressure
 
     def __getNextPressure(
         self,
@@ -1001,19 +999,18 @@ class EOM:
             )
             return wallGoInterpolationResults
 
-        else:
-            wallGoInterpolationResults = WallGoInterpolationResults(
-                wallVelocities=[],
-                unstableWallVelocities=[],
-                velocityGrid=[],
-                pressures=[],
-                pressureSpline=[],
-                wallParams=[],
-                boltzmannResults=[],
-                boltzmannBackgrounds=[],
-                hydroResults=[],
-            )
-            return wallGoInterpolationResults
+        wallGoInterpolationResults = WallGoInterpolationResults(
+            wallVelocities=[],
+            unstableWallVelocities=[],
+            velocityGrid=[],
+            pressures=[],
+            pressureSpline=[],
+            wallParams=[],
+            boltzmannResults=[],
+            boltzmannBackgrounds=[],
+            hydroResults=[],
+        )
+        return wallGoInterpolationResults
 
     def __toWallParams(self, wallArray: npt.ArrayLike) -> WallParams:
         offsets = np.concatenate(([0], wallArray[self.nbrFields :]))
@@ -1053,9 +1050,9 @@ class EOM:
         wallWidths = wallParams.widths
 
         # Computing the field profiles
-        fields, dPhidz = self.wallProfile(
+        fields = self.wallProfile(
             self.grid.xiValues, vevLowT, vevHighT, wallParams
-        )
+        )[0]
 
         # Computing the potential
         V = self.thermo.effectivePotential.evaluate(fields, Tprofile)
@@ -1119,18 +1116,18 @@ class EOM:
         """
 
         if np.isscalar(z):
-            z_L = z / wallParams.widths
+            zL = z / wallParams.widths
         else:
             ## Broadcast mess needed
-            z_L = z[:, None] / wallParams.widths[None, :]
+            zL = z[:, None] / wallParams.widths[None, :]
 
         fields = vevLowT + 0.5 * (vevHighT - vevLowT) * (
-            1 + np.tanh(z_L + wallParams.offsets)
+            1 + np.tanh(zL + wallParams.offsets)
         )
         dPhidz = (
             0.5
             * (vevHighT - vevLowT)
-            / (wallParams.widths * np.cosh(z_L + wallParams.offsets) ** 2)
+            / (wallParams.widths * np.cosh(zL + wallParams.offsets) ** 2)
         )
 
         return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
