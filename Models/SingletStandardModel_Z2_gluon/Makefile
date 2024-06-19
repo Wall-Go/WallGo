@@ -1,4 +1,4 @@
-.PHONY=clean, run_collisionGenerator
+.PHONY=clean, collisions
 
 PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
@@ -25,9 +25,9 @@ ${MATRIX_DATA}: ${MATRIX_SCRIPT}
 	@echo "Running ${MATRIX_SCRIPT}"
 	${WOLFRAMSCRIPT} ${MATRIX_SCRIPT}
 
-run_collisionGenerator: ${COLLISION_FILES} | generate_collisions
+collisions: ${COLLISION_FILES} | generate_collisions
 
-model: run_collisionGenerator
+model:
 	@echo "Running model file"
 	${PYTHON} ${MAIN}.py
 
