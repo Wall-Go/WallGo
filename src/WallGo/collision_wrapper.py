@@ -1,23 +1,24 @@
-
 import os, sys
 import importlib
 from types import ModuleType
 
 # TODO here only need the current config instead of whole wallgo package
-import WallGo ## Whole package, in particular we get WallGo.initialize()
+import WallGo  ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import Fields
+
 # from .Particle import Particle
 
-class Collision():
+
+class Collision:
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
     This class is a singleton.
     """
 
     _instance = None
-    
-    def __new__(cls, modelCls: GenericModel) -> 'Collision':
+
+    def __new__(cls, modelCls: GenericModel) -> "Collision":
         """
         Implement singleton pattern
         Create a new instance of the class if it doesn't already exist.
@@ -32,8 +33,7 @@ class Collision():
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
-    
+
     def __init__(self, modelCls: GenericModel):
         """
         Initializes the CollisionWrapper object.
@@ -50,10 +50,8 @@ class Collision():
             self.bInitialized = True
             self.outputDirectory = None
             # automatic generation of collision integrals is disabled by default
-            self.generateCollisionIntegrals = False 
+            self.generateCollisionIntegrals = False
 
-
-    
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
 
@@ -66,14 +64,13 @@ class Collision():
         self._assertLoaded()
         self.module.setSeed(seed)
 
-
-    def _loadCollisionModule(self,modelCls: GenericModel) -> None:
+    def _loadCollisionModule(self, modelCls: GenericModel) -> None:
         """Load the collision module.
 
         Raises:
             ImportError: If the module fails to load.
         """
-        try: 
+        try:
             currentDirectory = os.path.dirname(__file__)
 
             ## path relative to the above
@@ -84,7 +81,7 @@ class Collision():
             sys.path.append(collisionModulePath)
 
             moduleName = "WallGoCollisionPy"
-            
+
             self.module = importlib.import_module(moduleName)
             print(f"Loaded module [{moduleName}]")
 
@@ -95,30 +92,31 @@ class Collision():
             self.addParticles(modelCls)
 
         except ImportError:
-            print(f"Warning: Failed to load [{moduleName}]. Using read-only mode for collision integrals.")
+            print(
+                f"Warning: Failed to load [{moduleName}]. Using read-only mode for collision integrals."
+            )
             print("Computation of new collision integrals will NOT be possible.")
         ## Should we assert that the load succeeds? If the user creates this class in the first place, they presumably want to use the module
 
-
     def _assertLoaded(self) -> None:
         """Assert that the collision module has been loaded.
-        
+
         Raises:
             AssertionError: If the collision module has not been loaded.
         """
         assert self.module is not None, "Collision module has not been loaded!"
 
-    def addParticles(self, model: 'WallGo.GenericModel', T: float = 1.0) -> None:
+    def addParticles(self, model: "WallGo.GenericModel", T: float = 1.0) -> None:
         """
         Adds particles to the collision module.
-    
+
         Args:
             model (WallGo.GenericModel): The model containing the particles.
             T (float, optional): The temperature in GeV units. Defaults to 1.0.
-    
+
         Returns:
             None
-    
+
         Notes:
             - Particles need masses in GeV units, i.e., T dependent.
             - Thermal masses are rescaled by the temperature and the default argument of T = 1.
@@ -128,13 +126,16 @@ class Collision():
             - The order of registration is the same as the particles are defined in model.particles which
               should be the same as in MatrixElements.txt.
         """
-        fieldHack = Fields([0]*model.fieldCount)
-    
+        fieldHack = Fields([0] * model.fieldCount)
+
         for particle in model.particles:
-            self.manager.addParticle(self.constructPybindParticle(particle, T, fieldHack))
+            self.manager.addParticle(
+                self.constructPybindParticle(particle, T, fieldHack)
+            )
 
-
-    def constructPybindParticle(self, particle: Particle, T: float, fields: Fields) -> 'CollisionModule.ParticleSpecies':
+    def constructPybindParticle(
+        self, particle: Particle, T: float, fields: Fields
+    ) -> "CollisionModule.ParticleSpecies":
         """
         Converts python 'Particle' object to pybind-bound ParticleSpecies object that the Collision module can understand.
         'Particle' uses masses in GeV^2 units while CollisionModule operates with dimensionless (m/T)^2 etc,
@@ -161,14 +162,17 @@ class Collision():
         if particle.statistics == "Boson":
             particleType = self.module.EParticleType.BOSON
         elif particle.statistics == "Fermion":
-            particleType =  self.module.EParticleType.FERMION
+            particleType = self.module.EParticleType.FERMION
 
         ## Hack vacuum masses are ignored
-        return self.module.ParticleSpecies(particle.name, particleType,
-                                    particle.inEquilibrium, 
-                                    particle.msqVacuum(fields) / T**2.0,
-                                    particle.msqThermal(T) / T**2.0,
-                                    particle.ultrarelativistic)
+        return self.module.ParticleSpecies(
+            particle.name,
+            particleType,
+            particle.inEquilibrium,
+            particle.msqVacuum(fields) / T**2.0,
+            particle.msqThermal(T) / T**2.0,
+            particle.ultrarelativistic,
+        )
 
     def calculateCollisionIntegrals(self, bVerbose: bool = False) -> None:
         """
