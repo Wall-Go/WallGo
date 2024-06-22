@@ -1,7 +1,7 @@
-import numpy as np
-import numpy.typing as npt
 import os
 import pathlib
+import numpy as np
+import numpy.typing as npt
 
 ## WallGo imports
 import WallGo  ## Whole package, in particular we get WallGo.initialize()
@@ -28,17 +28,19 @@ class InertDoubletModel(GenericModel):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
-        # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
+        # Initialize internal Veff with our params dict.
         self.effectivePotential = EffectivePotentialIDM(
             self.modelParameters, self.fieldCount
         )
 
-        ## Define particles. this is a lot of clutter, especially if the mass expressions are long,
-        ## so @todo define these in a separate file?
+        ## Define particles. this is a lot of clutter, especially if the mass
+        ## expressions are long, so @todo define these in a separate file?
 
-        # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
+        # NB: particle multiplicity is pretty confusing because some internal
+        # DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom
+        # But we nevertheless need something like this to avoid having to separately
+        # define up, down, charm, strange, bottom
 
         ## === Top quark ===
         topMsqVacuum = (
@@ -144,7 +146,6 @@ class InertDoubletModel(GenericModel):
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
 
         ## Then the Yukawa sector
-
         Mt = inputParameters["Mt"]
         modelParameters["yt"] = np.sqrt(2.0) * Mt / v0
 
@@ -174,17 +175,20 @@ class InertDoubletModel(GenericModel):
         return modelParameters
 
 
-## For this benchmark model we use the 4D potential, implemented as in 2211.13142. We use interpolation tables for Jb/Jf
+## For this benchmark model we use the 4D potential, implemented as in 2211.13142. 
+## We use interpolation tables for Jb/Jf
 class EffectivePotentialIDM(EffectivePotential_NoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
+        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions 
+        ## to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
+        This is because the benchmark points we're comparing with were originally done 
+        with integrals from CosmoTransitions. 
         In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
@@ -192,7 +196,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
     def _configureBenchmarkIntegrals(self):
 
         ## Load custom interpolation tables for Jb/Jf.
-        # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
+        # These should be the same as what CosmoTransitions version 2.0.2 
+        # provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
         self.integrals.Jb.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
@@ -206,10 +211,10 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
 
-        """And force out-of-bounds constant extrapolation because this is what CosmoTransitions does
-        => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a constant extrapolation is OK since the integral is very small 
-        at the upper limit.
+        """And force out-of-bounds constant extrapolation because this is what 
+        CosmoTransitions does => not really reliable for very negative (m/T)^2 ! 
+        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a 
+        constant extrapolation is OK since the integral is very small at the upper limit.
         """
 
         from WallGo.InterpolatableFunction import EExtrapolationType
@@ -225,8 +230,10 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         )
 
     ## ---------- EffectivePotential overrides.
-    # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair.
-    # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
+    # The user needs to define evaluate(), which has to return value of the effective
+    # potential when evaluated at a given field configuration, temperature pair.
+    # Remember to include full T-dependence, including eg. the free energy contribution
+    # from photons (which is field-independent!)
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
@@ -363,30 +370,30 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         g1 = self.modelParameters["g1"]
         g2 = self.modelParameters["g2"]
 
-        PiPhi = (
+        piPhi = (
             temperature**2
             / 12.0
             * (6 * lam + 2 * lam3 + lam4 + 3 / 4 * (3 * g2**2 + g1**2) + 3 * yt**2)
         )  # Eq. (15) of  2211.13142 (note the different normalization of lam)
-        PiEta = (
+        piEta = (
             temperature**2
             / 12.0
             * (6 * lam2 + 2 * lam3 + lam4 + 3 / 4 * (3 * g2**2 + g1**2))
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
-        mhsq = np.abs(msq + 3 * lam * v**2 + PiPhi)
-        mGsq = np.abs(msq + lam * v**2 + PiPhi)  # Goldstone bosons
-        mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + PiEta
-        mAsq = msq2 + (lam3 + lam4 - lam5) / 2 * v**2 + PiEta
-        mHpmsq = msq2 + lam3 / 2 * v**2 + PiEta
+        mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
+        mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
+        mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
+        mAsq = msq2 + (lam3 + lam4 - lam5) / 2 * v**2 + piEta
+        mHpmsq = msq2 + lam3 / 2 * v**2 + piEta
 
         mWsq = g2**2 * v**2 / 4.0
         mWsqL = g2**2 * v**2 / 4.0 + 2 * g2**2 * temperature**2
         mZsq = (g1**2 + g2**2) * v**2 / 4.0
 
         # Eigenvalues of the Z&B-boson mass matrix
-        PiB = 2 * g1**2 * temperature**2
-        PiW = 2 * g2**2 * temperature**2
+        piB = 2 * g1**2 * temperature**2
+        piW = 2 * g2**2 * temperature**2
         m1sq = g1**2 * v**2 / 4
         m2sq = g2**2 * v**2 / 4
         m12sq = -g1 * g2 * v**2 / 4
@@ -394,16 +401,16 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msqEig1 = (
             m1sq
             + m2sq
-            + PiB
-            + PiW
-            - np.sqrt(4 * m12sq**2 + (m2sq - m1sq - PiB + PiW) ** 2)
+            + piB
+            + piW
+            - np.sqrt(4 * m12sq**2 + (m2sq - m1sq - piB + piW) ** 2)
         ) / 2
         msqEig2 = (
             m1sq
             + m2sq
-            + PiB
-            + PiW
-            + np.sqrt(4 * m12sq**2 + (m2sq - m1sq - PiB + PiW) ** 2)
+            + piB
+            + piW
+            + np.sqrt(4 * m12sq**2 + (m2sq - m1sq - piB + piW) ** 2)
         ) / 2
 
         # HACK This is probably not the optimal solution
@@ -529,8 +536,6 @@ def main():
 
         inputParameters["mH"] = mH
 
-        modelParameters = model.calculateModelParameters(inputParameters)
-
         """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
         Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
         """
@@ -563,9 +568,6 @@ def main():
             ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions.
             ## The resulting wall speed should match the LTE result:
 
-            ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-            wallParams: WallGo.WallParams
-
             bIncludeOffEq = False
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
@@ -579,7 +581,8 @@ def main():
             print(f"{widths=}")
             print(f"{offsets=}")
 
-            ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()
+            ## Repeat with out-of-equilibrium parts included. 
+            # This requires solving Boltzmann equations, invoked automatically by solveWall()
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
