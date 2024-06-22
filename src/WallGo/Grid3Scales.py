@@ -142,3 +142,4 @@ class Grid3Scales(Grid):
         dppdppCompact = self.momentumFalloffT / (1-pp_compact)
 
         return dzdzCompact, dpzdpzCompact, dppdppCompact
+      
