@@ -439,7 +439,7 @@ def main():
     ## collision stuff
 
     ## Create Collision singleton which automatically loads the collision module
-    # Use help(Collision.manager) for info about what functionality is available
+    ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
@@ -483,15 +483,14 @@ def main():
         Tn = 117.1 ## nucleation temperature
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0] ), 
+                                        phaseLocation1 = WallGo.Fields( [0.0] ),
                                         phaseLocation2 = WallGo.Fields( [246.0] ))
-        
+
 
         """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
-        #print(f"{model.effectivePotential.evaluate(Fields(10.),100.)=} {model.effectivePotential.evaluate(Fields(10.),10.)=} {model.effectivePotential.evaluate(Fields(1.),0.1)=} ")
 
         ## Wrap everything in a try-except block to check for WallGo specific errors
         try:
@@ -505,7 +504,8 @@ def main():
 
             print(f"LTE wall speed: {vwLTE}")
 
-            ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+            ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. 
+            ## The resulting wall speed should match the LTE result:
 
             ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
             wallParams: WallGo.WallParams
