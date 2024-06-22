@@ -58,7 +58,7 @@ class StandardModel(GenericModel):
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         lightQuark = Particle("lightQuark", 
-                            msqVacuum = 0.0,
+                            msqVacuum = lambda fields: 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
@@ -72,7 +72,7 @@ class StandardModel(GenericModel):
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle("gluon", 
-                            msqVacuum = 0.0,
+                            msqVacuum = lambda fields: 0.0,
                             msqDerivative = 0.0,
                             msqThermal = gluonMsqThermal,
                             statistics = "Boson",
@@ -226,7 +226,7 @@ def main():
     wallThicknessIni = 0.05
     
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 0.2
+    meanFreePath = 1
 
     # The following 2 parameters are used to estimate the optimal value of dT used 
     
@@ -263,10 +263,20 @@ def main():
 
     manager.registerModel(model)
 
-    ## ---- File name for collisions integrals. Currently we just load this
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
-    manager.loadCollisionFiles(collisionDirectory)
+    ## collision stuff
 
+    ## Create Collision singleton which automatically loads the collision module
+    ## here it will be only invoked in read-only mode if the module is not found
+    collision = WallGo.Collision(model)
+
+   ## ---- Directory name for collisions integrals. Currently we just load these
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+    collisionDirectory = scriptLocation / "collisions_N11/"
+    collisionDirectory.mkdir(parents=True, exist_ok=True)
+    
+    collision.setOutputDirectory(collisionDirectory)
+
+    manager.loadCollisionFiles(collision)
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
@@ -314,6 +324,10 @@ def main():
         print(f"LTE wall speed: {vwLTE}")
 
         ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
+
+        ## Computes the detonation solutions
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print(wallGoInterpolationResults.wallVelocities)
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams

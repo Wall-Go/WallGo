@@ -394,14 +394,6 @@ def main():
 
     WallGo.initialize()
 
-    # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
-
-    ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -455,20 +447,8 @@ def main():
     ## collision stuff
 
     ## Create Collision singleton which automatically loads the collision module
-    # Use help(Collision.manager) for info about what functionality is available
+    ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)
-    # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
-    collision.generateCollisionIntegrals = True 
-
-    ## Optional: set the seed used by Monte Carlo integration. Default is 0
-    collision.setSeed(0)
-
-    """
-    Define couplings (Lagrangian parameters)
-    list as they appear in the MatrixElements file
-    """
-    collision.manager.addCoupling(inputParameters["g3"])
 
    ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
@@ -476,22 +456,6 @@ def main():
     collisionDirectory.mkdir(parents=True, exist_ok=True)
     
     collision.setOutputDirectory(collisionDirectory)
-    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
-
-    ## Configure integration. Can skip this step if you're happy with the defaults
-    integrationOptions = collision.module.IntegrationOptions()
-    integrationOptions.bVerbose = True
-    integrationOptions.maxTries = 50
-    integrationOptions.calls = 50000
-    integrationOptions.relativeErrorGoal = 1e-1
-    integrationOptions.absoluteErrorGoal = 1e-8
-
-    collision.manager.configureIntegration(integrationOptions)
-
-    ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
-    collision.manager.setMatrixElementVerbosity(True)
-
-
 
     manager.loadCollisionFiles(collision)
 
@@ -539,12 +503,16 @@ def main():
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
+        
+        ## Computes the detonation solutions
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print(wallGoInterpolationResults.wallVelocities)
+        
 
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -559,15 +527,20 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
         
+
+        # some estimate of deviation from O(dz^2) finite difference method
+        delta00 = results.Deltas.Delta00.coefficients[0]
+        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
+        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
+        print(f"finite difference error = {errorFD}")
+
 
 
     # end parameter-space loop

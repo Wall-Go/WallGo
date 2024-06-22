@@ -10,8 +10,8 @@ real_path = os.path.realpath(__file__)
 dir_path = os.path.dirname(real_path)
 
 class DummyCollisionPath:
-        def __init__(self, path):
-            self.outputDirectory = path
+    def __init__(self, path):
+        self.outputDirectory = path
 
 
 @pytest.mark.parametrize(

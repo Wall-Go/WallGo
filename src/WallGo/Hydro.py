@@ -63,7 +63,7 @@ class Hydro:
             self.vJ = self.template.vJ
 
         self.vBracketLow = 1e-3 #JvdV: this is not a good name - it is supposed to be the smallest velocity that we allow
-        self.vMin = max(self.vBracketLow, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature 
+        self.vMin = max(self.vBracketLow, self.minVelocity()) # Minimum velocity that allows a shock with the given nucleation temperature
 
 
     def findJouguetVelocity(self) -> float:
@@ -184,7 +184,39 @@ class Hydro:
                 vmax2 = self.vJ
 
             return min(vmax1,vmax2) 
+        
+    def slowestDeton(self) -> float:
+        r"""
+        Finds the smallest detonation wall velocity for which the temperature of the plasma is withint the allowed range,
+        by finding the velocity for which Tm = TMaxLowT. For detonations, Tp = Tn, so always in the allowed range.
+        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity if no solution can be found.
+
+        Returns
+        -------
+        vmin: double
+            The value of the slowest detonation solution for this model
+        """
+        def TpTm(vw):
+            _, _, Tp, Tm = self.findMatching(vw)
+            return [Tp,Tm]
+        
+        if TpTm(1)[1] > self.TMaxLowT:
+            return 1
+        
+        else:
+            TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+            try:
+                vmin = root_scalar(
+                    TmMax,
+                    bracket=[self.vJ, 1],
+                    method='brentq',
+                    xtol=self.atol,
+                    rtol=self.rtol,
+                    ).root
+                return vmin
             
+            except ValueError:  
+                return self.vJ          
 
     def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
         r"""
@@ -514,6 +546,8 @@ class Hydro:
             # the nucleation temperature. 
 
             vpmin = self.vBracketLow
+            # The speed of sound below should really be evaluated at Tp, but we use Tn here to save time
+            # Will use Tp later if it doesn't work.
             vpmax = min(vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry)
 
             def func(vpTry):
@@ -522,14 +556,21 @@ class Hydro:
                 return self.solveHydroShock(vwTry, vpTry, Tp) - self.Tnucl
 
             fmin, fmax = func(vpmin), func(vpmax)
-
-            vpguess, _, _, _ = self.template.findMatching(vwTry)
+            
+            # If no solution was found between vpmin and vpmax, it might be because vpmax was evaluated at Tn instead of Tp.
+            # We thus reevaluate vpmax by solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
+            if fmin * fmax > 0:
+                def solveVpmax(vpTry):
+                    _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
+                    return vpTry - self.thermodynamicsExtrapolate.csqHighT(Tp) / vwTry
+                if solveVpmax(vwTry) * solveVpmax(vpmax) <= 0:
+                    vpmax = root_scalar(solveVpmax, bracket=[vpmax, vwTry], xtol=self.atol, rtol=self.rtol).root
+                    fmax = func(vpmax)
 
             if fmin * fmax <= 0:
                 sol = root_scalar(
                     func,
                     bracket=[vpmin, vpmax],
-                    x0=vpguess,
                     xtol=self.atol,
                     rtol=self.rtol,
                 )
@@ -539,12 +580,21 @@ class Hydro:
                     bounds=[vpmin, vpmax],
                     method='Bounded',
                 )
+                
                 if extremum.fun > 0:
-                    return self.template.findMatching(vwTry)
+                    # In this case, use the template model to compute the matching.
+                    # Because the Jouguet velocity can be slightly different in the template
+                    # model, we make sure that vwTemplate corresponds to the appropriate
+                    # type of solution.
+                    if vwTry <= self.vJ:
+                        vwTemplate = min(vwTry, self.template.vJ-1e-6)
+                    else:
+                        vwTemplate = max(vwTry, self.template.vJ+1e-6)
+                    return self.template.findMatching(vwTemplate)
+                
                 sol = root_scalar(
                     func,
                     bracket=[vpmin, extremum.x],
-                    x0=vpguess,
                     xtol=self.atol,
                     rtol=self.rtol,
                 )

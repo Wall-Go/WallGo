@@ -140,35 +140,6 @@ class Grid3Scales(Grid):
         
         dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
         dppdppCompact = self.momentumFalloffT / (1-pp_compact)
+
         return dzdzCompact, dpzdpzCompact, dppdppCompact
-
-    # def decompactify(self, z_compact, pz_compact, pp_compact):
-    #     r"""
-    #     Transforms coordinates from [-1, 1] interval (inverse of compactify).
-    #     """
-    #     z = (1-2*self.smoothness)*self.wallThickness/self.ratioPointsWall # Center of the wall
-    #     z += (self.tailLengthInside-self.wallThickness/self.ratioPointsWall)*(1-np.tanh(self.aIn*(z_compact+self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))/2 # Tail inside the wall
-    #     z += (self.tailLengthOutside-self.wallThickness/self.ratioPointsWall)*(1+np.tanh(self.aOut*(z_compact-self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))/2 # Tail outside the wall
-    #     z *= np.arctanh(z_compact)
-        
-    #     pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
-    #     pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
-    #     return z, pz, pp
-
-    # def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
-    #     r"""
-    #     Derivative of transforms coordinates to [-1, 1] interval
-    #     """
-    #     dz1 = (1-2*self.smoothness)*self.wallThickness/self.ratioPointsWall # Center of the wall
-    #     dz1 += (self.tailLengthInside-self.wallThickness/self.ratioPointsWall)*(1-np.tanh(self.aIn*(z_compact+self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))/2 # Tail inside the wall
-    #     dz1 += (self.tailLengthOutside-self.wallThickness/self.ratioPointsWall)*(1+np.tanh(self.aOut*(z_compact-self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))/2 # Tail outside the wall
-    #     dz1 /= 1-z_compact**2
-        
-    #     dz2 = (1+2*self.ratioPointsWall*z_compact+z_compact**2)*self.aIn*(self.wallThickness-self.ratioPointsWall*self.tailLengthInside)/2/(self.ratioPointsWall*(1-z_compact**2)*np.cosh(self.aIn*(z_compact+self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))**2
-    #     dz2 += (-1+2*self.ratioPointsWall*z_compact-z_compact**2)*self.aOut*(self.wallThickness-self.ratioPointsWall*self.tailLengthOutside)/2/(self.ratioPointsWall*(1-z_compact**2)*np.cosh(self.aOut*(z_compact-self.ratioPointsWall)/self.ratioPointsWall/(1-z_compact**2)))**2
-    #     dz2 *= np.arctanh(z_compact)
-        
-    #     dzdzCompact = dz1 + dz2
-    #     dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
-    #     dppdppCompact = self.momentumFalloffT / (1-pp_compact)
-    #     return dzdzCompact, dpzdpzCompact, dppdppCompact
+      

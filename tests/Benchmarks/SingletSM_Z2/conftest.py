@@ -223,9 +223,12 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
 
     M, N = 22, 11
 
-    # The magic numbers here are falloff scales in position and momentum directions.
-    # Hardcoded for main singlet benchmark point. Would need a different grid for each benchmark point tbh
-    grid = WallGo.Grid3Scales.Grid3Scales(M, N, 0.2, 0.2, 0.05, 100)
+    tailInside = 0.2
+    tailOutside = 0.2
+    wallThickness = 0.05
+    momentumFalloffT = 100
+
+    grid = WallGo.Grid3Scales.Grid3Scales(M, N, tailInside, tailOutside, wallThickness, momentumFalloffT)
 
     return grid
 

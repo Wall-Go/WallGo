@@ -300,11 +300,6 @@ def main():
 
     WallGo.initialize()
 
-    # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
-
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
@@ -312,8 +307,11 @@ def main():
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Length scale determining transform in the xi-direction. See eq (26) in the paper
-    Lxi = 0.05
+    ## Guess of the wall thickness
+    wallThicknessIni = 0.05
+    
+    # Estimate of the mean free path of the particles in the plasma
+    meanFreePath = 1
 
     ## Create WallGo control object
         # The following 2 parameters are used to estimate the optimal value of dT used 
@@ -323,12 +321,7 @@ def main():
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-<<<<<<< HEAD:Models/SingletStandardModel_Z2_gluon/SingletStandardModel_Z2_gluon.py
-=======
-
-    ## Create WallGo control object
->>>>>>> 43036c0 (updated SingletStandardModel_Z2 and SingletStandardModel_Z2_gluon corresponding to WallGoManager modifications):Models/SingletStandardModel_Z2/SingletStandardModel_Z2_gluon.py
-    manager = WallGoManager(Lxi, temperatureScale, fieldScale)
+    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
 
     """Initialize your GenericModel instance. 
