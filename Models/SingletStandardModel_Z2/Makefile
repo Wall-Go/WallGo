@@ -1,6 +1,6 @@
 .PHONY=clean, collisions
 
-PYTHON=python3.11
+PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
 MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.qcd.m
