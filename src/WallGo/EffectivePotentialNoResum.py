@@ -1,15 +1,20 @@
+"""
+Class for the one-loop effective potential without high-temperature expansion
+"""
+
+from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
-from abc import ABC, abstractmethod
 
 from .EffectivePotential import EffectivePotential
 from .Integrals import Integrals
 
 
-class EffectivePotential_NoResum(EffectivePotential, ABC):
-    """Class EffectivePotential_NoResum -- Specialization of the abstract EffectivePotential class
-    that implements common functions for computing the 1-loop potential at finite temperature, without
-    any assumptions regarding the temperature (no high- or low-T approximations).
+class EffectivePotentialNoResum(EffectivePotential, ABC):
+    """Class EffectivePotential_NoResum -- Specialization of the abstract
+    EffectivePotential class that implements common functions for computing
+    the 1-loop potential at finite temperature, without any
+    assumptions regarding the temperature (no high- or low-T approximations).
     In some literature this would be the ``4D effective potential''.
 
     """
@@ -25,7 +30,8 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         ##
         super().__init__(modelParameters, fieldCount)
 
-        ## Use the passed Integrals object if provided, otherwise create a new one with default settings
+        ## Use the passed Integrals object if provided,
+        ## otherwise create a new one with default settings
         if integrals:
             self.integrals = integrals
         else:
@@ -46,9 +52,10 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             Either a single point (with length `Ndim`), or an array of points.
         temperature : float or array_like
             The temperature at which to calculate the boson masses. Can be used
-            for including thermal mass corrrections. The shapes of `fields` and `temperature`
-            should be such that ``fields.shape[:-1]`` and ``temperature.shape`` are
-            broadcastable (that is, ``fields[0,...]*T`` is a valid operation).
+            for including thermal mass corrrections. The shapes of `fields` and
+            `temperature` should be such that ``fields.shape[:-1]`` and 
+            ``temperature.shape`` are broadcastable 
+            (that is, ``fields[0,...]*T`` is a valid operation).
 
         Returns
         -------
@@ -58,7 +65,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             ``massSq.shape == (X[...,0]*T).shape + (Nbosons,)``.
             That is, the particle index is the *last* index in the output array
             if the input array(s) are multidimensional.
-        degrees_of_freedom : float or array_like
+        degreesOfFreedom : float or array_like
             The number of degrees of freedom for each particle. If an array
             (i.e., different particles have different d.o.f.), it should have
             length `Ndim`.
@@ -73,9 +80,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             takes the same rgScale for all particles, but different scales
             for each particle are possible.
         """
-        pass
 
-    # LN: I included temperature here since it's confusing that the boson version takes T but this one doesn't
     @abstractmethod
     def fermionMassSq(self, fields, temperature):
         """
@@ -110,10 +115,9 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             takes the same rgScale for all particles, but different scales
             for each particle are possible.
         """
-        pass
 
     @staticmethod
-    def Jcw(msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+    def Jcw(msq: float, degreesOfFreedom: int, c: float, rgScale: float):
         """
         Coleman-Weinberg potential
 
@@ -121,7 +125,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         ----------
         msq : array_like
             A list of the boson particle masses at each input point `X`.
-        degrees_of_freedom : float or array_like
+        degreesOfFreedom : float or array_like
             The number of degrees of freedom for each particle. If an array
             (i.e., different particles have different d.o.f.), it should have
             length `Ndim`.
@@ -143,7 +147,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         """
         # do we want to take abs of the mass??
         return (
-            degrees_of_freedom
+            degreesOfFreedom
             * msq
             * msq
             * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
@@ -194,7 +198,8 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         checkForImaginary: bool = False,
     ):
         """
-        One-loop thermal correction to the effective potential without any temperature expansions.
+        One-loop thermal correction to the effective potential without any 
+        temperature expansions.
 
         Parameters
         ----------
@@ -209,8 +214,9 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         V1T : 4d 1loop thermal potential
         """
 
-        ## m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
-        # But make sure we don't modify the input temperature array here.
+        ## m2 is shape (len(T), 5), so to divide by T we need to transpose T,
+        ## or add new axis in this case.
+        ## But make sure we don't modify the input temperature array here.
         T = np.asanyarray(temperature)
 
         T2 = T * T + 1e-100
@@ -220,10 +226,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             T2 = T2[:, np.newaxis]
 
         ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
-        ## Do note that for negative m^2 the integrals become wild and convergence is both slow and bad,
-        ## so you may want to consider taking the absolute value of m^2. We will not enforce this however
+        ## Do note that for negative m^2 the integrals become wild and convergence
+        ## is both slow and bad, so you may want to consider taking the absolute
+        ## value of m^2. We will not enforce this however
 
-        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong with array T input.
+        ## Careful with the sum, it needs to be column-wise.
+        ## Otherwise things go horribly wrong with array T input.
         ## TODO really not a fan of hardcoded axis index
 
         m2, nb, _, _ = bosons

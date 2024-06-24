@@ -10,7 +10,7 @@ from WallGo import Particle
 from WallGo import WallGoManager
 
 ## To compare to 2211.13142 we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotential_NoResum
+from WallGo import EffectivePotentialNoResum
 from WallGo import Fields
 
 
@@ -177,7 +177,7 @@ class InertDoubletModel(GenericModel):
 
 ## For this benchmark model we use the 4D potential, implemented as in 2211.13142. 
 ## We use interpolation tables for Jb/Jf
-class EffectivePotentialIDM(EffectivePotential_NoResum):
+class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
