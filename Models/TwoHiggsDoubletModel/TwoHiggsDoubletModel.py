@@ -245,13 +245,6 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
-
         # tree level potential
         V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
@@ -265,7 +258,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         VTotal = (
             V0
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff)
+            + self.V1(bosonStuff, fermionStuff, checkForImaginary)
             + self.V1T(
                 bosonStuffResummed, fermionStuffT, temperature, checkForImaginary
             )
@@ -408,6 +401,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         )
         degreesOfFreedom = np.array([4, 2, 2, 1, 1, 1, 3, 1, 1, 2])
 
+        # As c and the RG-scale don't enter in V1T, we just set them to 0
         return massSq, degreesOfFreedom, 0, 0
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
