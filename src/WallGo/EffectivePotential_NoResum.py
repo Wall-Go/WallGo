@@ -5,28 +5,33 @@ from abc import ABC, abstractmethod
 from .EffectivePotential import EffectivePotential
 from .Integrals import Integrals
 
+
 class EffectivePotential_NoResum(EffectivePotential, ABC):
     """Class EffectivePotential_NoResum -- Specialization of the abstract EffectivePotential class
-    that implements common functions for computing the 1-loop potential at finite temperature, without 
-    any assumptions regarding the temperature (no high- or low-T approximations). 
-    In some literature this would be the ``4D effective potential''. 
+    that implements common functions for computing the 1-loop potential at finite temperature, without
+    any assumptions regarding the temperature (no high- or low-T approximations).
+    In some literature this would be the ``4D effective potential''.
 
     """
 
     integrals: Integrals
 
-
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int, integrals: Integrals = None):
+    def __init__(
+        self,
+        modelParameters: dict[str, float],
+        fieldCount: int,
+        integrals: Integrals = None,
+    ):
         ##
         super().__init__(modelParameters, fieldCount)
-        
+
         ## Use the passed Integrals object if provided, otherwise create a new one with default settings
         if integrals:
-            self.integrals = integrals 
+            self.integrals = integrals
         else:
             self.integrals = Integrals()
 
-    ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps  
+    ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps
     ## define a separate helper class for the output (holds mass squares, dofs etc)
     @abstractmethod
     def boson_massSq(self, fields, temperature):
@@ -67,10 +72,9 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             potential. If an array, it should have length `Ndim`. Typically, one
             takes the same rgScale for all particles, but different scales
             for each particle are possible.
-        """ 
+        """
         pass
 
-    
     # LN: I included temperature here since it's confusing that the boson version takes T but this one doesn't
     @abstractmethod
     def fermion_massSq(self, fields, temperature):
@@ -138,9 +142,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
         # do we want to take abs of the mass??
-        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c)
-    
-
+        return (
+            degrees_of_freedom
+            * msq
+            * msq
+            * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
+        )
 
     ## LN: Why is this separate from Jcw?
     def V1(self, bosons, fermions, checkForImaginary: bool = False):
@@ -159,7 +166,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         Returns
         -------
-        V1 : float 
+        V1 : float
         """
 
         ## LN: should the return value actually be complex in general?
@@ -172,59 +179,64 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         if checkForImaginary and np.any(m2 < 0):
             try:
-                VI = V.imag/(64*np.pi*np.pi)[np.any(m2 < 0, axis=0)]
+                VI = V.imag / (64 * np.pi * np.pi)[np.any(m2 < 0, axis=0)]
             except:
-                VI = V.imag/(64*np.pi*np.pi)
+                VI = V.imag / (64 * np.pi * np.pi)
             print(f"Im(V1)={VI}")
 
-        return V/(64*np.pi*np.pi)
+        return V / (64 * np.pi * np.pi)
 
-
-    def V1T(self, bosons, fermions, temperature: npt.ArrayLike, checkForImaginary: bool = False):
+    def V1T(
+        self,
+        bosons,
+        fermions,
+        temperature: npt.ArrayLike,
+        checkForImaginary: bool = False,
+    ):
         """
         One-loop thermal correction to the effective potential without any temperature expansions.
 
         Parameters
         ----------
-        bosons : ArrayLike 
+        bosons : ArrayLike
             bosonic particle spectrum (here: masses, number of dofs, ci)
-        fermions : ArrayLike 
+        fermions : ArrayLike
             fermionic particle spectrum (here: masses, number of dofs)
-        temperature: ArrayLike 
+        temperature: ArrayLike
 
         Returns
         -------
-        V1T : 4d 1loop thermal potential 
-        """ 
+        V1T : 4d 1loop thermal potential
+        """
 
         ## m2 is shape (len(T), 5), so to divide by T we need to transpose T, or add new axis in this case.
-        # But make sure we don't modify the input temperature array here. 
+        # But make sure we don't modify the input temperature array here.
         T = np.asanyarray(temperature)
-        
-        T2 = T*T + 1e-100
+
+        T2 = T * T + 1e-100
 
         ## Need reshaping mess for numpy broadcasting to work
-        if (T2.ndim > 0): 
+        if T2.ndim > 0:
             T2 = T2[:, np.newaxis]
 
         ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
         ## Do note that for negative m^2 the integrals become wild and convergence is both slow and bad,
         ## so you may want to consider taking the absolute value of m^2. We will not enforce this however
-            
-        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong with array T input. 
-        ## TODO really not a fan of hardcoded axis index 
-         
+
+        ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong with array T input.
+        ## TODO really not a fan of hardcoded axis index
+
         m2, nb, _, _ = bosons
-        V = np.sum(nb* self.integrals.Jb(m2 / T2), axis=-1)
+        V = np.sum(nb * self.integrals.Jb(m2 / T2), axis=-1)
 
         m2, nf, _, _ = fermions
-        V += np.sum(nf* self.integrals.Jf(m2 / T2), axis=-1)
+        V += np.sum(nf * self.integrals.Jf(m2 / T2), axis=-1)
 
         if checkForImaginary and np.any(m2 < 0):
             try:
-                VI = V.imag*T**4 / (2*np.pi*np.pi)[np.any(m2 < 0, axis=-1)]
+                VI = V.imag * T**4 / (2 * np.pi * np.pi)[np.any(m2 < 0, axis=-1)]
             except:
-                VI = V.imag*T**4 / (2*np.pi*np.pi)
+                VI = V.imag * T**4 / (2 * np.pi * np.pi)
             print(f"Im(VT)={VI}")
-        
-        return V*T**4 / (2*np.pi*np.pi)
+
+        return V * T**4 / (2 * np.pi * np.pi)
