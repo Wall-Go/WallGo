@@ -194,8 +194,6 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         b4 = self.modelParameters["b4"]
         a2 = self.modelParameters["a2"]
 
-        RGScale = self.modelParameters["RGScale"]
-
         """
         # Get thermal masses
         thermalParams = self.getThermalParameters(temperature)
@@ -369,7 +367,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
-        rgScale = np.array([125.,125.,125., 125.,125. ])
+        rgScale = self.modelParameters["RGScale"]*np.ones(5)
 
         return massSq, degreesOfFreedom, c, rgScale
     
@@ -389,7 +387,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         c = np.array([3/2])
         rgScale = np.array([125.])
-        
+
         return massSq, degreesOfFreedom, c, rgScale
 
 
@@ -404,7 +402,7 @@ def main():
 
     ## Guess of the wall thickness
     wallThicknessIni = 0.05
-    
+
     # Estimate of the mean free path of the particles in the plasma
     meanFreePath = 1
 

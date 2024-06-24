@@ -100,12 +100,6 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         """
         pass
 
-    ## @todo do we want this, or use Philipp's version Jcw below?
-    @staticmethod
-    def ColemanWeinberg(massSquared: float, rgScale: float, c: float) -> complex:
-        return massSquared**2 / (64.*np.pi**2) * (np.log(massSquared / rgScale**2 + 0j) - c)
-
-
     @staticmethod
     def Jcw(msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         """
