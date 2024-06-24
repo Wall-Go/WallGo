@@ -108,8 +108,8 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         """
         pass
 
-    @staticmethod
-    def Jcw(msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+    @abstractmethod
+    def Jcw(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         """
         Coleman-Weinberg potential
 

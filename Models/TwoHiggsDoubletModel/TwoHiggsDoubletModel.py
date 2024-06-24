@@ -259,41 +259,22 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         fermionStuff = self.fermion_massSq(fields)
 
         bosonStuffResummed = self.boson_massSqResummed(fields, temperature)
-        fermionMass, _, fermionDOF = fermionStuff
+        fermionMass, fermionDOF,_ ,_ = fermionStuff
         fermionStuffT = fermionMass, fermionDOF, 3/2, 1
 
         VTotal = (
             V0
             + self.constantTerms(temperature)
-            + self.ColemanWeinberg(bosonStuff, fermionStuff)
+            + self.V1(bosonStuff, fermionStuff)
             + self.V1T(
                 bosonStuffResummed, fermionStuffT, temperature, checkForImaginary
             )
         )
 
         return VTotal
-
-    def ColemanWeinberg(self, bosons, fermions) -> float:
-        c = 3.0 / 2.0
-        m2, m20T, nb = bosons
-        Vboson = (
-            1.0
-            / (64.0 * np.pi**2)
-            * np.sum(
-                nb * (m2**2 * (np.log(np.abs(m2) / m20T) - c) + 2 * m2 * m20T), axis=-1
-            )
-        )
-
-        m2, m20T, nf = fermions
-        Vfermion = (
-            -1.0
-            / (64.0 * np.pi**2)
-            * np.sum(
-                nf * (m2**2 * (np.log(np.abs(m2) / m20T) - c) + 2 * m2 * m20T), axis=-1
-            )
-        )
-
-        return Vboson + Vfermion
+    
+    def Jcw(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+        return degrees_of_freedom*(msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c) + 2 * msq * rgScale**2)
 
     def fermion_massSq(self, fields: Fields):
 
@@ -310,7 +291,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         massSq0T = np.stack((mtsq0T,), axis=-1)
         degreesOfFreedom = np.array([12])
 
-        return massSq, massSq0T, degreesOfFreedom
+        return massSq, degreesOfFreedom, 3/2, np.sqrt(massSq0T)
 
     def boson_massSq(self, fields: Fields):
 
@@ -350,8 +331,9 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         massSq = np.column_stack((mWsq, mZsq, mhsq, mHsq, mAsq, mHpmsq))
         massSq0 = np.column_stack((mWsq0T, mZsq0T, mhsq0T, mHsq0T, mAsq0T, mHpmsq0T))
         degreesOfFreedom = np.array([6, 3, 1, 1, 1, 2])
+        c = 3/2*np.ones(6)
 
-        return massSq, massSq0, degreesOfFreedom
+        return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
     def boson_massSqResummed(self, fields: Fields, temperature):
 
