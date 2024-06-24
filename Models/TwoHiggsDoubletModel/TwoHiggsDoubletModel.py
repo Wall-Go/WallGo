@@ -260,7 +260,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
 
         bosonStuffResummed = self.boson_massSqResummed(fields, temperature)
         fermionMass, _, fermionDOF = fermionStuff
-        fermionStuffT = fermionMass, fermionDOF
+        fermionStuffT = fermionMass, fermionDOF, 3/2, 1
 
         VTotal = (
             V0
@@ -426,7 +426,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         )
         degreesOfFreedom = np.array([4, 2, 2, 1, 1, 1, 3, 1, 1, 2])
 
-        return massSq, degreesOfFreedom, 0
+        return massSq, degreesOfFreedom, 0, 0
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -582,7 +582,7 @@ def main():
             print(f"{offsets=}")
 
             ## Repeat with out-of-equilibrium parts included. 
-            # This requires solving Boltzmann equations, invoked automatically by solveWall()
+            #This requires solving Boltzmann equations, invoked automatically by solveWall()
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 

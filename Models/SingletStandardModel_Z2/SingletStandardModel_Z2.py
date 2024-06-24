@@ -386,7 +386,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         degreesOfFreedom = np.array([12])
 
         c = np.array([3/2])
-        rgScale = np.array([125.])
+        rgScale = np.array([self.modelParameters["RGScale"]])
 
         return massSq, degreesOfFreedom, c, rgScale
 
