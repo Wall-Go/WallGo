@@ -117,7 +117,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         """
 
     @staticmethod
-    def Jcw(msq: float, degreesOfFreedom: int, c: float, rgScale: float):
+    def jCW(massSq: float, degreesOfFreedom: int, c: float, rgScale: float):
         """
         Coleman-Weinberg potential
 
@@ -142,15 +142,15 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         Returns
         -------
-        Jcw : float or array_like
+        jCW : float or array_like
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
         # do we want to take abs of the mass??
         return (
             degreesOfFreedom
-            * msq
-            * msq
-            * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
+            * massSq
+            * massSq
+            * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
         )
 
     ## LN: Why is this separate from Jcw?
@@ -175,20 +175,20 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         ## LN: should the return value actually be complex in general?
 
-        m2, nb, c, rgScale = bosons
-        V = np.sum(self.Jcw(m2, nb, c, rgScale), axis=-1)
+        massSq, nb, c, rgScale = bosons
+        potential = np.sum(self.jCW(massSq, nb, c, rgScale), axis=-1)
 
-        m2, nf, c, rgScale = fermions
-        V -= np.sum(self.Jcw(m2, nf, c, rgScale), axis=-1)
+        massSq, nf, c, rgScale = fermions
+        potential -= np.sum(self.jCW(massSq, nf, c, rgScale), axis=-1)
 
-        if checkForImaginary and np.any(m2 < 0):
+        if checkForImaginary and np.any(massSq < 0):
             try:
-                VI = V.imag / (64 * np.pi * np.pi)[np.any(m2 < 0, axis=0)]
+                potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0, axis=0)]
             except:
-                VI = V.imag / (64 * np.pi * np.pi)
-            print(f"Im(V1)={VI}")
+                potentialImag = potential.imag / (64 * np.pi * np.pi)
+            print(f"Im(V1)={potentialImag}")
 
-        return V / (64 * np.pi * np.pi)
+        return potential / (64 * np.pi * np.pi)
 
     def V1T(
         self,
@@ -217,13 +217,13 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         ## m2 is shape (len(T), 5), so to divide by T we need to transpose T,
         ## or add new axis in this case.
         ## But make sure we don't modify the input temperature array here.
-        T = np.asanyarray(temperature)
+        temperature = np.asanyarray(temperature)
 
-        T2 = T * T + 1e-100
+        temperatureSq = temperature * temperature + 1e-100
 
         ## Need reshaping mess for numpy broadcasting to work
-        if T2.ndim > 0:
-            T2 = T2[:, np.newaxis]
+        if temperatureSq.ndim > 0:
+            temperatureSq = temperatureSq[:, np.newaxis]
 
         ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
         ## Do note that for negative m^2 the integrals become wild and convergence
@@ -234,17 +234,17 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         ## Otherwise things go horribly wrong with array T input.
         ## TODO really not a fan of hardcoded axis index
 
-        m2, nb, _, _ = bosons
-        V = np.sum(nb * self.integrals.Jb(m2 / T2), axis=-1)
+        massSq, nb, _, _ = bosons
+        potential = np.sum(nb * self.integrals.Jb(massSq / temperatureSq), axis=-1)
 
-        m2, nf, _, _ = fermions
-        V += np.sum(nf * self.integrals.Jf(m2 / T2), axis=-1)
+        massSq, nf, _, _ = fermions
+        potential += np.sum(nf * self.integrals.Jf(massSq / temperatureSq), axis=-1)
 
-        if checkForImaginary and np.any(m2 < 0):
+        if checkForImaginary and np.any(massSq < 0):
             try:
-                VI = V.imag * T**4 / (2 * np.pi * np.pi)[np.any(m2 < 0, axis=-1)]
+                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)[np.any(massSq < 0, axis=-1)]
             except:
-                VI = V.imag * T**4 / (2 * np.pi * np.pi)
-            print(f"Im(VT)={VI}")
+                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
+            print(f"Im(V1T)={potentialImag}")
 
-        return V * T**4 / (2 * np.pi * np.pi)
+        return potential * temperature**4 / (2 * np.pi * np.pi)

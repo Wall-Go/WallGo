@@ -266,7 +266,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return VTotal
     
-    def Jcw(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+    def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         return degrees_of_freedom*(msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c) + 2 * msq * rgScale**2)
 
     def fermionMassSq(self, fields: Fields):
