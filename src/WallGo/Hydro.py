@@ -177,34 +177,34 @@ class Hydro:
             and TpTm(self.vJ - self.vBracketLow)[0] < self.TMaxHighT
         ):
             return self.vJ
-        else:
-            TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
 
-            try:
-                vmax1 = root_scalar(
-                    TmMax,
-                    bracket=[self.vMin + self.vBracketLow, self.vJ - self.vBracketLow],
-                    method="brentq",
-                    xtol=self.atol,
-                    rtol=self.rtol,
-                ).root
+        TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
 
-            except:
-                vmax1 = self.vJ
+        try:
+            vmax1 = root_scalar(
+                TmMax,
+                bracket=[self.vMin + self.vBracketLow, self.vJ - self.vBracketLow],
+                method="brentq",
+                xtol=self.atol,
+                rtol=self.rtol,
+            ).root
 
-            TpMax = lambda vw: TpTm(vw)[0] - self.TMaxHighT
-            try:
-                vmax2 = root_scalar(
-                    TpMax,
-                    bracket=[self.vMin + self.vBracketLow, self.vJ - self.vBracketLow],
-                    method="brentq",
-                    xtol=self.atol,
-                    rtol=self.rtol,
-                ).root
-            except:
-                vmax2 = self.vJ
+        except ValueError:
+            vmax1 = self.vJ
 
-            return min(vmax1, vmax2)
+        TpMax = lambda vw: TpTm(vw)[0] - self.TMaxHighT
+        try:
+            vmax2 = root_scalar(
+                TpMax,
+                bracket=[self.vMin + self.vBracketLow, self.vJ - self.vBracketLow],
+                method="brentq",
+                xtol=self.atol,
+                rtol=self.rtol,
+            ).root
+        except ValueError:
+            vmax2 = self.vJ
+
+        return min(vmax1, vmax2)
 
     def slowestDeton(self) -> float:
         r"""
@@ -383,7 +383,7 @@ class Hydro:
                 )
             else:
                 Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]
-        except:
+        except WallGoError:
             Tpm0 = [
                 1.1 * self.Tnucl,
                 self.Tnucl,
@@ -596,7 +596,7 @@ class Hydro:
                 )
             Tpstrongest = TpStrongestRootResult.root
             return self.solveHydroShock(vw, 0, Tpstrongest)
-        except:
+        except ValueError:
             return 0
 
     def minVelocity(self) -> float:
@@ -621,7 +621,7 @@ class Hydro:
             if not vMinRootResult.converged:
                 raise WallGoError(vMinRootResult.flag, vMinRootResult)
             return vMinRootResult.root
-        except:
+        except ValueError:
             return 0
 
     def findMatching(self, vwTry) -> Tuple[float, float, float, float]:
@@ -814,7 +814,7 @@ class Hydro:
                     rtol=self.rtol,
                 ).root
                 vmax = vmax - 1e-6  # HACK! why?
-            except:
+            except ValueError:
                 return 1  # No shock can be found, e.g. when the PT is too strong --
             # is there a risk here of returning 1 when it should be 0?
 
