@@ -213,7 +213,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
+            + self.V1(bosonStuff, fermionStuff, checkForImaginary) 
             + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
@@ -369,8 +369,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
+        rgScale = np.array([125.,125.,125., 125.,125. ])
 
-        return massSq, degreesOfFreedom, c
+        return massSq, degreesOfFreedom, c, rgScale
     
 
     def fermion_massSq(self, fields: Fields, temperature):
@@ -385,8 +386,11 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
+
+        c = np.array([3/2])
+        rgScale = np.array([125.])
         
-        return massSq, degreesOfFreedom
+        return massSq, degreesOfFreedom, c, rgScale
 
 
 

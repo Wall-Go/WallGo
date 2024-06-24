@@ -62,6 +62,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             potential. If an array, it should have length `Ndim`. Generally
             `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
             other bosons.
+        rgScale :
         """ 
         pass
 
@@ -91,17 +92,22 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             The number of degrees of freedom for each particle. If an array
             (i.e., different particles have different d.o.f.), it should have
             len
+        c : float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 3/2` for all fermions.
+        rgScale : 
         """
         pass
 
     ## @todo do we want this, or use Philipp's version Jcw below?
     @staticmethod
-    def ColemanWeinberg(massSquared: float, RGScale: float, c: float) -> complex:
-        return massSquared**2 / (64.*np.pi**2) * (np.log(massSquared / RGScale**2 + 0j) - c)
+    def ColemanWeinberg(massSquared: float, rgScale: float, c: float) -> complex:
+        return massSquared**2 / (64.*np.pi**2) * (np.log(massSquared / rgScale**2 + 0j) - c)
 
 
     @staticmethod
-    def Jcw(msq: float, degrees_of_freedom: int, c: float, RGScale: float):
+    def Jcw(msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         """
         Coleman-Weinberg potential
 
@@ -118,7 +124,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             potential. If an array, it should have length `Ndim`. Generally
             `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
             other bosons.
-        RGScale: float
+        rgScale: float
             Renormalization scale to use. Should not be an array.
 
         Returns
@@ -127,12 +133,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
         # do we want to take abs of the mass??
-        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/RGScale**2) + 1e-100) - c)
+        return degrees_of_freedom*msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c)
     
 
 
     ## LN: Why is this separate from Jcw?
-    def V1(self, bosons, fermions, RGScale: float, checkForImaginary: bool = False):
+    def V1(self, bosons, fermions, rgScale: float, checkForImaginary: bool = False):
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -153,12 +159,12 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
         ## LN: should the return value actually be complex in general?
 
-        m2, nb, c = bosons
-        V = np.sum(self.Jcw(m2, nb, c, RGScale), axis=-1)
+        m2, nb, c, rgScale = bosons
+        V = np.sum(self.Jcw(m2, nb, c, rgScale), axis=-1)
 
-        m2, nf = fermions
-        c = 1.5
-        V -= np.sum(self.Jcw(m2, nf, c, RGScale), axis=-1)
+        m2, nf, c, rgScale = fermions
+#        c = 1.5
+        V -= np.sum(self.Jcw(m2, nf, c, rgScale), axis=-1)
 
         if checkForImaginary and np.any(m2 < 0):
             try:
@@ -204,10 +210,10 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         ## Careful with the sum, it needs to be column-wise. Otherwise things go horribly wrong with array T input. 
         ## TODO really not a fan of hardcoded axis index 
          
-        m2, nb, _ = bosons
+        m2, nb, _, _ = bosons
         V = np.sum(nb* self.integrals.Jb(m2 / T2), axis=-1)
 
-        m2, nf = fermions
+        m2, nf, _, _ = fermions
         V += np.sum(nf* self.integrals.Jf(m2 / T2), axis=-1)
 
         if checkForImaginary and np.any(m2 < 0):
