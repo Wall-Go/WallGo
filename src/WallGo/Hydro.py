@@ -109,10 +109,8 @@ class Hydro:
             )
 
         # For detonations, Tm has a lower bound of Tn, but no upper bound.
-        # We increase Tmax until we find a value that brackets our root.
+        # We make a guess for Tmax, and if it does not work we use the secant method
 
-        # LN: I guess we need to ensure that Tmax does not start from a too
-        # large value though
         Tmin = self.Tnucl
         Tmax = 2 * self.Tnucl  # HACK (factor 2 is some arbitrary number larger than 1)
 
@@ -130,7 +128,6 @@ class Hydro:
             )
         else:
             # If we cannot bracket the root, use the 'secant' method instead.
-            # This may call thermodynamics outside of its interpolation range?
             rootResult = root_scalar(
                 vpDerivNum,
                 method="secant",
