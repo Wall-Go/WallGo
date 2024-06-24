@@ -34,7 +34,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
     ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps
     ## define a separate helper class for the output (holds mass squares, dofs etc)
     @abstractmethod
-    def boson_massSq(self, fields, temperature):
+    def bosonMassSq(self, fields, temperature):
         """
         Calculate the boson particle spectrum. Should be overridden by
         subclasses.
@@ -77,7 +77,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
     # LN: I included temperature here since it's confusing that the boson version takes T but this one doesn't
     @abstractmethod
-    def fermion_massSq(self, fields, temperature):
+    def fermionMassSq(self, fields, temperature):
         """
         Calculate the fermion particle spectrum. Should be overridden by
         subclasses.
@@ -112,8 +112,8 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         """
         pass
 
-    @abstractmethod
-    def Jcw(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+    @staticmethod
+    def Jcw(msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         """
         Coleman-Weinberg potential
 

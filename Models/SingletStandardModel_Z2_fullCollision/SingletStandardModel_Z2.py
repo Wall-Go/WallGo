@@ -228,26 +228,17 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         b4 = self.modelParameters["b4"]
         a2 = self.modelParameters["a2"]
 
-        RGScale = self.modelParameters["RGScale"]
-
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
-
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
+        bosonStuff = self.bosonMassSq(fields, temperature)
+        fermionStuff = self.fermionMassSq(fields, temperature)
 
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
+            + self.V1(bosonStuff, fermionStuff, checkForImaginary)
             + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
@@ -367,7 +358,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return thermalParameters
     """
 
-    def boson_massSq(self, fields: Fields, temperature):
+    def bosonMassSq(self, fields: Fields, temperature):
 
         v, x = fields.GetField(0), fields.GetField(1)
 
@@ -403,11 +394,12 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
+        rgScale = self.modelParameters["RGScale"]*np.ones(5)
 
-        return massSq, degreesOfFreedom, c
+        return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermion_massSq(self, fields: Fields, temperature):
+    def fermionMassSq(self, fields: Fields, temperature):
 
         v = fields.GetField(0)
 
@@ -419,8 +411,10 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
-        
-        return massSq, degreesOfFreedom
+        c = np.array([3/2])
+        rgScale = np.array([self.modelParameters["RGScale"]])
+
+        return massSq, degreesOfFreedom, c, rgScale
 
 
 
