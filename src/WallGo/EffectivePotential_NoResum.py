@@ -62,7 +62,11 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             potential. If an array, it should have length `Ndim`. Generally
             `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
             other bosons.
-        rgScale :
+        rgScale : float or array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Typically, one
+            takes the same rgScale for all particles, but different scales
+            for each particle are possible.
         """ 
         pass
 
@@ -96,7 +100,11 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             A constant used in the one-loop zero-temperature effective
             potential. If an array, it should have length `Ndim`. Generally
             `c = 3/2` for all fermions.
-        rgScale : 
+        rgScale : float or array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Typically, one
+            takes the same rgScale for all particles, but different scales
+            for each particle are possible.
         """
         pass
 
@@ -118,8 +126,11 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
             potential. If an array, it should have length `Ndim`. Generally
             `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
             other bosons.
-        rgScale: float
-            Renormalization scale to use. Should not be an array.
+        rgScale : float or array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Typically, one
+            takes the same rgScale for all particles, but different scales
+            for each particle are possible.
 
         Returns
         -------
@@ -132,7 +143,7 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
 
 
     ## LN: Why is this separate from Jcw?
-    def V1(self, bosons, fermions, rgScale: float, checkForImaginary: bool = False):
+    def V1(self, bosons, fermions, checkForImaginary: bool = False):
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -157,7 +168,6 @@ class EffectivePotential_NoResum(EffectivePotential, ABC):
         V = np.sum(self.Jcw(m2, nb, c, rgScale), axis=-1)
 
         m2, nf, c, rgScale = fermions
-#        c = 1.5
         V -= np.sum(self.Jcw(m2, nf, c, rgScale), axis=-1)
 
         if checkForImaginary and np.any(m2 < 0):
