@@ -62,7 +62,9 @@ class Hydro:
 
         try:
             self.vJ = self.findJouguetVelocity()
-        except:
+        except WallGoError:
+            print("Couldn't find Jouguet velocity, we continute\
+                   with the Jouguet velocity of the template model")
             self.vJ = self.template.vJ
 
         self.vBracketLow = 1e-3
@@ -141,7 +143,8 @@ class Hydro:
         if rootResult.converged:
             tmSol = rootResult.root
         else:
-            raise WallGoError(rootResult.flag, rootResult)
+            raise WallGoError("Failed to solve Jouguet velocity at \
+                              input temperature!", data = {rootResult.flag, rootResult})
 
         vp = np.sqrt(
             (pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))
@@ -224,20 +227,20 @@ class Hydro:
         if TpTm(1)[1] > self.TMaxLowT:
             return 1
 
-        else:
-            TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
-            try:
-                vmin = root_scalar(
-                    TmMax,
-                    bracket=[self.vJ, 1],
-                    method="brentq",
-                    xtol=self.atol,
-                    rtol=self.rtol,
-                ).root
-                return vmin
 
-            except ValueError:
-                return self.vJ
+        TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+        try:
+            vmin = root_scalar(
+                TmMax,
+                bracket=[self.vJ, 1],
+                method="brentq",
+                xtol=self.atol,
+                rtol=self.rtol,
+            ).root
+            return vmin
+
+        except ValueError:
+            return self.vJ
 
     def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
         r"""
@@ -824,14 +827,14 @@ class Hydro:
         fmin = func(vmin)
         if fmin < 0:  # vw is smaller than vmin, we return 0.
             return 0
-        else:
-            sol = root_scalar(
-                func,
-                bracket=(vmin, vmax),
-                xtol=self.atol,
-                rtol=self.rtol,
-            )
-            return sol.root
+
+        sol = root_scalar(
+            func,
+            bracket=(vmin, vmax),
+            xtol=self.atol,
+            rtol=self.rtol,
+        )
+        return sol.root
 
     def __mappingT(self, TpTm):
         """

@@ -86,6 +86,7 @@ inlinevar-naming-style = "camelCase"
 method-naming-style = "camelCase"
 module-naming-style = "camelCase"
 variable-naming-style = "camelCase"
+good-names-rgx='(?:(?P<TCase>T([A-Z][a-z]*)*)|(?P<camelCase>[a-z]+([A-Z][a-z]*)*))$'
 
 [tool.mypy]
 warn_return_any = true
