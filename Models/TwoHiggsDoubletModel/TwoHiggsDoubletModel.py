@@ -248,19 +248,17 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # tree level potential
         V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
-        bosonStuff = self.bosonMassSq(fields)
-        fermionStuff = self.fermionMassSq(fields)
+        bosonStuff = self.bosonStuff(fields)
+        fermionStuff = self.fermionStuff(fields)
 
-        bosonStuffResummed = self.bosonMassSqResummed(fields, temperature)
-        fermionMass, fermionDOF,_ ,_ = fermionStuff
-        fermionStuffT = fermionMass, fermionDOF, 3/2, 1
+        bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
 
         VTotal = (
             V0
             + self.constantTerms(temperature)
             + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuffResummed, fermionStuffT, temperature, checkForImaginary
+                bosonStuffResummed, fermionStuff, temperature, checkForImaginary
             )
         )
 
@@ -269,7 +267,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
     def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         return degrees_of_freedom*(msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c) + 2 * msq * rgScale**2)
 
-    def fermionMassSq(self, fields: Fields):
+    def fermionStuff(self, fields: Fields):
 
         v = fields.GetField(0)
 
@@ -284,7 +282,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, 3/2, np.sqrt(massSq0T)
 
-    def bosonMassSq(self, fields: Fields):
+    def bosonStuff(self, fields: Fields):
 
         v = fields.GetField(0)
         v0 = self.modelParameters["v0"]
@@ -326,7 +324,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def bosonMassSqResummed(self, fields: Fields, temperature):
+    def bosonStuffResummed(self, fields: Fields, temperature):
 
         v = fields.GetField(0)
 

@@ -205,8 +205,8 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.bosonMassSq(fields, temperature)
-        fermionStuff = self.fermionMassSq(fields, temperature)
+        bosonStuff = self.bosonStuff(fields, temperature)
+        fermionStuff = self.fermionStuff(fields, temperature)
 
         VTotal = (
             V0 
@@ -331,7 +331,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return thermalParameters
     """
 
-    def bosonMassSq(self, fields: Fields, temperature):
+    def bosonStuff(self, fields: Fields, temperature):
 
         v, x = fields.GetField(0), fields.GetField(1)
 
@@ -372,7 +372,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermionMassSq(self, fields: Fields, temperature):
+    def fermionStuff(self, fields: Fields, temperature):
 
         v = fields.GetField(0)
 

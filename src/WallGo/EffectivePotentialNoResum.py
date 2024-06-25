@@ -37,10 +37,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         else:
             self.integrals = Integrals()
 
-    ## LN: Use of this and fermion_massSq seem to be very tied to the Coleman-Weinberg part so I would call these something else, and perhaps
-    ## define a separate helper class for the output (holds mass squares, dofs etc)
     @abstractmethod
-    def bosonMassSq(self, fields, temperature):
+    def bosonStuff(self, fields, temperature):
         """
         Calculate the boson particle spectrum. Should be overridden by
         subclasses.
@@ -82,7 +80,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         """
 
     @abstractmethod
-    def fermionMassSq(self, fields, temperature):
+    def fermionStuff(self, fields, temperature):
         """
         Calculate the fermion particle spectrum. Should be overridden by
         subclasses.
@@ -182,7 +180,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         if checkForImaginary and np.any(massSq < 0):
             try:
-                potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0, axis=0)]
+                potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0,
+                                                                             axis=0)]
             except:
                 potentialImag = potential.imag / (64 * np.pi * np.pi)
             print(f"Im(potentialOneLoop)={potentialImag}")
@@ -241,7 +240,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         if checkForImaginary and np.any(massSq < 0):
             try:
-                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)[np.any(massSq < 0, axis=-1)]
+                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)[
+                    np.any(massSq < 0, axis=-1)]
             except:
                 potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
             print(f"Im(V1T)={potentialImag}")
