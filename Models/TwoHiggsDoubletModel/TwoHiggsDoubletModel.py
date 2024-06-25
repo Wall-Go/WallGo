@@ -499,29 +499,24 @@ def main():
     """
     manager.registerModel(model)
 
+    print("=== Loading the collisions ===")
+    """ Register the model with WallGo. This needs to be done only once. 
+    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
+
     ## collision stuff
 
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)
-    # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
-    collision.generateCollisionIntegrals = True
 
-    """
-    Define couplings (Lagrangian parameters)
-    list as they appear in the MatrixElements file
-    """
-    collision.manager.addCoupling(inputParameters["g3"])
-    collision.manager.addCoupling(inputParameters["g2"])
-
-    ## ---- Directory name for collisions integrals. Currently we just load these
+   ## ---- Directory name for collisions integrals. Currently we just load these
     scriptLocation = pathlib.Path(__file__).parent.resolve()
     collisionDirectory = scriptLocation / "CollisionOutput/"
     collisionDirectory.mkdir(parents=True, exist_ok=True)
 
     collision.setOutputDirectory(collisionDirectory)
-    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
 
     manager.loadCollisionFiles(collision)
 
