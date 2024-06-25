@@ -39,7 +39,8 @@ class Collision:
         Initializes the CollisionWrapper object.
 
         Args:
-            modelCls (GenericModel): The model class to be used for collision integrations.
+            modelCls (GenericModel):
+            The model class to be used for collision integrations.
 
         Returns:
             None
@@ -48,7 +49,7 @@ class Collision:
             self.module: ModuleType = None
             self._loadCollisionModule(modelCls)
             self.bInitialized = True
-            self.outputDirectory = None
+            self.outputDirectory = ""
             # automatic generation of collision integrals is disabled by default
             self.generateCollisionIntegrals = False
 
@@ -93,10 +94,12 @@ class Collision:
 
         except ImportError:
             print(
-                f"Warning: Failed to load [{moduleName}]. Using read-only mode for collision integrals."
+                f"Warning: Failed to load [{moduleName}]. "
+                "Using read-only mode for collision integrals."
             )
             print("Computation of new collision integrals will NOT be possible.")
-        ## Should we assert that the load succeeds? If the user creates this class in the first place, they presumably want to use the module
+        ## Should we assert that the load succeeds?
+        # If the user creates this class in the first place, they presumably want to use the module
 
     def _assertLoaded(self) -> None:
         """Assert that the collision module has been loaded.
@@ -179,9 +182,11 @@ class Collision:
         Calculates the collision integrals.
 
         Args:
-            bVerbose (bool, optional): If True, prints verbose output. Defaults to False.
+            bVerbose (bool, optional):
+            If True, prints verbose output. Defaults to False.
         """
-        ## Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+        ## Make sure this is >= 0.
+        # The C++ code requires uint so pybind11 will throw TypeError otherwise
         basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
         self.manager.calculateCollisionIntegrals(basisSize, bVerbose)
 

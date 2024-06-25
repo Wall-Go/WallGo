@@ -104,7 +104,8 @@ class CollisionArray:
     def newFromPolynomial(
         inputPolynomial: Polynomial, particles: list
     ) -> "CollisionArray":
-        """Creates a new CollisionArray object from polynomial data (which contains a grid reference).
+        """
+        Creates a new CollisionArray object from polynomial data (which contains a grid reference).
         This only makes sense if the polynomial is already in correct shape.
 
         Args:
@@ -115,7 +116,8 @@ class CollisionArray:
             CollisionArray: The newly created CollisionArray object.
 
         Raises:
-            AssertionError: If the input polynomial does not meet the required conditions.
+            AssertionError:
+            If the input polynomial does not meet the required conditions.
 
         """
         bases = inputPolynomial.basis
@@ -131,7 +133,8 @@ class CollisionArray:
         newCollision.polynomialData = inputPolynomial
         return newCollision
 
-    ## This will fail with assert or exception if something goes wrong. If we don't want to abort, consider denoting failure by return value instead
+    ## This will fail with assert or exception if something goes wrong.
+    # If we don't want to abort, consider denoting failure by return value instead
     @staticmethod
     def newFromDirectory(
         collision: "Collision",
@@ -202,7 +205,10 @@ class CollisionArray:
                                 prefix=f"N{grid.N}.", dir=directoryname
                             )
                             print(
-                                f"CollisionArray generation warning: target collison grid size ({grid.N}) must be smaller than or equal the exisiting collision grid size ({size}). New collisons are generated now at grid size ({basisSizeFile}) in directory {directoryname}."
+                                "CollisionArray generation warning: "
+                                f"target collison grid size ({grid.N}) must be smaller than or equal to "
+                                f"the exisiting collision grid size ({size}). "
+                                f"New collisons are generated now at grid size ({grid.N}) in directory {directoryname}."
                             )
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
@@ -251,9 +257,9 @@ class CollisionArray:
                             (2, 3, 0, 1),
                         )
                 except FileNotFoundError:
-                    print("CollisionArray error: %s not found" % filename)
+                    print(f"CollisionArray error: {filename} not found")
                     if collision.generateCollisionIntegrals:
-                        print("Generating collision integrals for %s" % filename)
+                        print(f"Generating collision integrals for {filename}")
                         ## Computes collisions for all out-of-eq particles specified.
                         ## The last argument is optional and mainly useful for debugging
                         collision.calculateCollisionIntegrals(bVerbose=False)
@@ -387,11 +393,14 @@ class CollisionArray:
 
         Notes
         -----
-        This function interpolates a collision array to match the size of a target grid. It takes the source collision array and the target grid as input, and returns the interpolated collision array.
+        This function interpolates a collision array to match the size of a target grid.
+        It takes the source collision array and the target grid as input, and returns the interpolated collision array.
 
-        The interpolation is performed by evaluating the original collisions on the interpolated grid points. The resulting data is used to create a new polynomial, which is then used to create a new CollisionArray object.
+        The interpolation is performed by evaluating the original collisions on the interpolated grid points.
+        The resulting data is used to create a new polynomial, which is then used to create a new CollisionArray object.
 
-        The source collision array must be in the Chebyshev basis for interpolation. The target grid should have a size smaller than the source grid size.
+        The source collision array must be in the Chebyshev basis for interpolation.
+        The target grid should have a size smaller than the source grid size.
 
         Example
         -------
@@ -415,7 +424,8 @@ class CollisionArray:
             np.meshgrid(targetGrid.rzValues, targetGrid.rpValues, indexing="ij")
         ).reshape((2, (targetGrid.N - 1) ** 2))
 
-        # Evaluate the original collisions on the interpolated grid, create a new polynomial from the result and finally a new CollisionArray from the polynomial data
+        # Evaluate the original collisions on the interpolated grid,
+        # create a new polynomial from the result and finally a new CollisionArray from the polynomial data
         newShape = 2 * (
             len(source.particles),
             targetGrid.N - 1,
