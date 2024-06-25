@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 
-import WallGo
 from WallGo import EffectivePotential
 from WallGo import Integrals
 
@@ -183,7 +182,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             try:
                 potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0,
                                                                              axis=0)]
-            except:
+            except IndexError:
                 potentialImag = potential.imag / (64 * np.pi * np.pi)
             print(f"Im(potentialOneLoop)={potentialImag}")
 
@@ -243,7 +242,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             try:
                 potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)[
                     np.any(massSq < 0, axis=-1)]
-            except:
+            except IndexError:
                 potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
             print(f"Im(V1T)={potentialImag}")
 
