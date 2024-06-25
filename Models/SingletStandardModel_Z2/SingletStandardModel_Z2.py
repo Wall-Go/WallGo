@@ -9,7 +9,11 @@ from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
 ## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotentialNoResum
+# adding the Models folder
+#sys.path.insert(0, '/Users/vi00017/Documents/Projects/WallSpeed/Models')
+
+from hello import hello
+
 from WallGo import Fields, WallGoResults
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
@@ -132,7 +136,7 @@ class SingletSM_Z2(GenericModel):
 
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
-class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
+class EffectivePotentialxSM_Z2(hello):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
