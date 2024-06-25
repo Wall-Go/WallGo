@@ -20,7 +20,6 @@ from .Particle import Particle
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
-from .effectivePotentialNoResum import EffectivePotentialNoResum
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .WallGoManager import PhaseInfo

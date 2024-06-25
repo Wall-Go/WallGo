@@ -1,5 +1,6 @@
 import os
 import pathlib
+import sys
 import numpy as np
 import numpy.typing as npt
 
@@ -9,10 +10,12 @@ from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
 
-## To compare to 2211.13142 we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotentialNoResum
 from WallGo import Fields
 
+## To compare to 2211.13142 we need the unresummed, non-high-T potential:
+modelsPath = pathlib.Path(__file__).parents[1]
+sys.path.insert(0, str(modelsPath))
+from effectivePotentialNoResum import EffectivePotentialNoResum
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):

@@ -2,15 +2,19 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
+import sys
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotentialNoResum
 from WallGo import Fields
+
+## Adding the Models folder to the path and import effectivePotentialNoResum
+modelsPath = pathlib.Path(__file__).parents[1]
+sys.path.insert(0, str(modelsPath))
+from effectivePotentialNoResum import EffectivePotentialNoResum
 
 """NOTE: the only difference between this file and SingletStandardModel_Z2.py is that we take the gluon to be out-of-eq, and use N=5 instead of N=11.
 So this is mostly copy pasted. 

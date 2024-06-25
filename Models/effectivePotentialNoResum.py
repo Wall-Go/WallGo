@@ -6,8 +6,9 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 
-from .EffectivePotential import EffectivePotential
-from .Integrals import Integrals
+import WallGo
+from WallGo import EffectivePotential
+from WallGo import Integrals
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
