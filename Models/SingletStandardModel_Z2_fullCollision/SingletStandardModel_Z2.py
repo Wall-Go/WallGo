@@ -238,8 +238,8 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, checkForImaginary)
-            + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
+            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoopThermal(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
         return VTotal

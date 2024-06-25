@@ -153,8 +153,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
         )
 
-    ## LN: Why is this separate from Jcw?
-    def V1(self, bosons, fermions, checkForImaginary: bool = False):
+    def potentialOneLoop(self, bosons, fermions, checkForImaginary: bool = False):
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -170,7 +169,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         Returns
         -------
-        V1 : float
+        potential : float
         """
 
         ## LN: should the return value actually be complex in general?
@@ -186,11 +185,11 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0, axis=0)]
             except:
                 potentialImag = potential.imag / (64 * np.pi * np.pi)
-            print(f"Im(V1)={potentialImag}")
+            print(f"Im(potentialOneLoop)={potentialImag}")
 
         return potential / (64 * np.pi * np.pi)
 
-    def V1T(
+    def potentialOneLoopThermal(
         self,
         bosons,
         fermions,
@@ -211,7 +210,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         Returns
         -------
-        V1T : 4d 1loop thermal potential
+        potential : 4d 1loop thermal potential
         """
 
         ## m2 is shape (len(T), 5), so to divide by T we need to transpose T,

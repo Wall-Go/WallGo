@@ -258,8 +258,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         VTotal = (
             V0
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, checkForImaginary)
-            + self.V1T(
+            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoopThermal(
                 bosonStuffResummed, fermionStuffT, temperature, checkForImaginary
             )
         )
