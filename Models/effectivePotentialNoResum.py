@@ -38,7 +38,14 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             self.integrals = Integrals()
 
     @abstractmethod
-    def bosonStuff(self, fields, temperature):
+    def bosonStuff(
+        self, fields: npt.ArrayLike, temperature: float | npt.ArrayLike
+    ) -> tuple[
+        npt.ArrayLike,
+        float | npt.ArrayLike,
+        float | npt.ArrayLike,
+        float | npt.ArrayLike,
+    ]:
         """
         Calculate the boson particle spectrum. Should be overridden by
         subclasses.
@@ -51,8 +58,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         temperature : float or array_like
             The temperature at which to calculate the boson masses. Can be used
             for including thermal mass corrrections. The shapes of `fields` and
-            `temperature` should be such that ``fields.shape[:-1]`` and 
-            ``temperature.shape`` are broadcastable 
+            `temperature` should be such that ``fields.shape[:-1]`` and
+            ``temperature.shape`` are broadcastable
             (that is, ``fields[0,...]*T`` is a valid operation).
 
         Returns
@@ -80,7 +87,14 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         """
 
     @abstractmethod
-    def fermionStuff(self, fields, temperature):
+    def fermionStuff(
+        self, fields: npt.ArrayLike, temperature: float | npt.ArrayLike
+    ) -> tuple[
+        npt.ArrayLike,
+        float | npt.ArrayLike,
+        float | npt.ArrayLike,
+        float | npt.ArrayLike,
+    ]:
         """
         Calculate the fermion particle spectrum. Should be overridden by
         subclasses.
@@ -115,7 +129,9 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         """
 
     @staticmethod
-    def jCW(massSq: float, degreesOfFreedom: int, c: float, rgScale: float):
+    def jCW(
+        massSq: float, degreesOfFreedom: int, c: float, rgScale: float
+    ) -> float | npt.ArrayLike:
         """
         Coleman-Weinberg potential
 
@@ -151,7 +167,9 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
         )
 
-    def potentialOneLoop(self, bosons, fermions, checkForImaginary: bool = False):
+    def potentialOneLoop(
+        self, bosons: tuple, fermions: tuple, checkForImaginary: bool = False
+    ) -> float:
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -180,23 +198,24 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         if checkForImaginary and np.any(massSq < 0):
             try:
-                potentialImag = potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0,
-                                                                             axis=0)]
+                potentialImag = (
+                    potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0, axis=0)]
+                )
             except IndexError:
                 potentialImag = potential.imag / (64 * np.pi * np.pi)
             print(f"Im(potentialOneLoop)={potentialImag}")
 
-        return potential / (64 * np.pi * np.pi)
+        return float(potential / (64 * np.pi * np.pi))
 
     def potentialOneLoopThermal(
         self,
-        bosons,
-        fermions,
+        bosons: tuple,
+        fermions: tuple,
         temperature: npt.ArrayLike,
         checkForImaginary: bool = False,
-    ):
+    ) -> float:
         """
-        One-loop thermal correction to the effective potential without any 
+        One-loop thermal correction to the effective potential without any
         temperature expansions.
 
         Parameters
@@ -240,10 +259,13 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         if checkForImaginary and np.any(massSq < 0):
             try:
-                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)[
-                    np.any(massSq < 0, axis=-1)]
+                potentialImag = (
+                    potential.imag
+                    * temperature**4
+                    / (2 * np.pi * np.pi)[np.any(massSq < 0, axis=-1)]
+                )
             except IndexError:
                 potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
             print(f"Im(V1T)={potentialImag}")
 
-        return potential * temperature**4 / (2 * np.pi * np.pi)
+        return float(potential * temperature**4 / (2 * np.pi * np.pi))
