@@ -1,4 +1,6 @@
-import os, sys
+import os
+import sys
+from pathlib import Path
 import importlib
 from types import ModuleType
 
@@ -49,9 +51,14 @@ class Collision:
             self.module: ModuleType = None
             self._loadCollisionModule(modelCls)
             self.bInitialized = True
-            self.outputDirectory = ""
-            # automatic generation of collision integrals is disabled by default
-            self.generateCollisionIntegrals = False
+            self.generateCollisionIntegrals = WallGo.config.getboolean("Collisions", "generateCollisionIntegrals")
+            print(self.generateCollisionIntegrals)
+
+            scriptLocation = Path(sys.argv[0]).parent.resolve()
+            collisionDirectory = scriptLocation / WallGo.config.get("Collisions", "pathName")
+            collisionDirectory.mkdir(parents=True, exist_ok=True)
+
+            self.setOutputDirectory(str(collisionDirectory))
 
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
@@ -62,8 +69,12 @@ class Collision:
         Returns:
             None
         """
-        self._assertLoaded()
-        self.module.setSeed(seed)
+        # TODO do not need assert here
+        if self.generateCollisionIntegrals:
+            self._assertLoaded()
+            self.module.setSeed(seed)
+        else:
+            pass
 
     def _loadCollisionModule(self, modelCls: GenericModel) -> None:
         """Load the collision module.
@@ -202,4 +213,20 @@ class Collision:
         """
         self.outputDirectory = outputDirectory
         if self.module is not None:
-            self.manager.setOutputDirectory(str(outputDirectory))
+            self.manager.setOutputDirectory(str(self.outputDirectory))
+    
+    def addCoupling(self, coupling: float) -> None:
+        """
+        Adds a coupling to the collision module.
+
+        Args:
+            coupling (float): The coupling to add.
+
+        Returns:
+            None
+        """
+        if self.generateCollisionIntegrals:
+            self._assertLoaded()
+            self.manager.addCoupling(coupling)
+        else:
+            pass

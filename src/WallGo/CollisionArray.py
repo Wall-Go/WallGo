@@ -179,6 +179,7 @@ class CollisionArray:
 
         """
         directoryname = collision.outputDirectory
+        print(directoryname)
         collisionFileArray = None
         basisSizeFile = None
         basisTypeFile = None

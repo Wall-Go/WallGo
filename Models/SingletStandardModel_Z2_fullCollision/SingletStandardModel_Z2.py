@@ -1,7 +1,7 @@
+import pathlib
+import os
 import numpy as np
 import numpy.typing as npt
-import os
-import pathlib
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()

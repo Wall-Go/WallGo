@@ -390,9 +390,12 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
+
+    ## Modify the config, we use N=5 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -448,17 +451,19 @@ def main():
 
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
+    ## default path assumed to be in the same directory as this script in CollisionOutput/
     collision = WallGo.Collision(model)
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    collision.generateCollisionIntegrals = False
 
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    
-    collision.setOutputDirectory(collisionDirectory)
+    """
+    Define couplings (Lagrangian parameters)
+    list as they appear in the MatrixElements file
+    """
+    collision.addCoupling(inputParameters["g3"])
 
     manager.loadCollisionFiles(collision)
-
 
     print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
