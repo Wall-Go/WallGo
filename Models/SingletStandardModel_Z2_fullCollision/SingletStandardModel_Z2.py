@@ -385,50 +385,50 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         # TODO: numerical determination of scalar masses from V0
 
-        msq: float = self.modelParameters["msq"]
-        lam: float = self.modelParameters["lambda"]
-        g1: float = self.modelParameters["g1"]
-        g2: float = self.modelParameters["g2"]
+        msq = self.modelParameters["msq"]
+        lam = self.modelParameters["lambda"]
+        g1 = self.modelParameters["g1"]
+        g2 = self.modelParameters["g2"]
 
-        b2: float = self.modelParameters["b2"]
-        a2: float = self.modelParameters["a2"]
-        b4: float = self.modelParameters["b4"]
+        b2 = self.modelParameters["b2"]
+        a2 = self.modelParameters["a2"]
+        b4 = self.modelParameters["b4"]
 
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A: float = msq + 0.5*a2*x**2 + 3.*v**2*lam
-        B: float = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C: float = a2 *v*x
-        thingUnderSqrt: float = A**2 + B**2 - 2.*A*B + 4.*C**2
+        A = msq + 0.5*a2*x**2 + 3.*v**2*lam
+        B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
+        C = a2 *v*x
+        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
 
-        msqEig1: float = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2: float = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
+        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
+        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
 
-        mWsq: float = g2**2 * v**2 / 4.
-        mZsq: float = (g1**2 + g2**2) * v**2 / 4.
+        mWsq = g2**2 * v**2 / 4.
+        mZsq = (g1**2 + g2**2) * v**2 / 4.
         # "Goldstones"
-        mGsq: float = msq + lam*v**2 + 0.5*a2*x**2
+        mGsq = msq + lam*v**2 + 0.5*a2*x**2
 
         # this feels error prone:
 
         # h, s, chi, W, Z
-        massSq: np.ndarray = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom: np.ndarray = np.array([1,1,3,6,3])
-        c: np.ndarray = np.array([3/2,3/2,3/2,5/6,5/6])
+        massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
+        degreesOfFreedom = np.array([1,1,3,6,3])
+        c = np.array([3/2,3/2,3/2,5/6,5/6])
 
         return massSq, degreesOfFreedom, c
 
     def fermion_massSq(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray]:
-        v: float = fields.GetField(0)
+        v = fields.GetField(0)
 
         # Just top quark, others are taken massless
-        yt: float = self.modelParameters["yt"]
-        mtsq: float = yt**2 * v**2 / 2
+        yt = self.modelParameters["yt"]
+        mtsq = yt**2 * v**2 / 2
 
         # @todo include spins for each particle
 
-        massSq: np.ndarray = np.stack((mtsq,), axis=-1)
-        degreesOfFreedom: np.ndarray = np.array([12])
+        massSq = np.stack((mtsq,), axis=-1)
+        degreesOfFreedom = np.array([12])
 
         return massSq, degreesOfFreedom
 
