@@ -449,13 +449,14 @@ def main() -> None:
 
     ## collision stuff
 
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
     ## default path assumed to be in the same directory as this script in CollisionOutput/
     collision = WallGo.Collision(model)
-    # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
-    collision.generateCollisionIntegrals = False
 
     """
     Define couplings (Lagrangian parameters)

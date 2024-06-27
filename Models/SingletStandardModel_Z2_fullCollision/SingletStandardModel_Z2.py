@@ -500,12 +500,29 @@ def main() -> None:
 
     ## collision stuff
 
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
+    ## Configure integration. Can skip this step if you're happy with the defaults
+    WallGo.config.config.set("Integration", "verbose", "True")
+    WallGo.config.config.set("Integration", "maxTries", "50")
+    WallGo.config.config.set("Integration", "calls", "50000")
+    WallGo.config.config.set("Integration", "relativeErrorGoal", "1e-1")
+    WallGo.config.config.set("Integration", "absoluteErrorGoal", "1e-8")
+
+    # set matrix elements initial specs
+    WallGo.config.config.set("MatrixElements", "fileName", "MatrixElements.txt")
+    ## Instruct the collision manager to print out
+    # symbolic matrix elements as it parses them. Can be useful for debugging
+    WallGo.config.config.set("MatrixElements", "verbose", "True")
+
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
-    # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
-    collision.generateCollisionIntegrals = True
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
     collision.setSeed(0)
@@ -514,31 +531,9 @@ def main() -> None:
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
-    collision.manager.addCoupling(inputParameters["g3"])
-    collision.manager.addCoupling(inputParameters["g2"])
-    collision.manager.addCoupling(inputParameters["g1"])
-
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    collision.setOutputDirectory(collisionDirectory)
-    collision.manager.setMatrixElementFile(str(scriptLocation / "MatrixElements.txt"))
-
-    ## Configure integration. Can skip this step if you're happy with the defaults
-    integrationOptions = collision.module.IntegrationOptions()
-    integrationOptions.bVerbose = True
-    integrationOptions.maxTries = 50
-    integrationOptions.calls = 50000
-    integrationOptions.relativeErrorGoal = 1e-1
-    integrationOptions.absoluteErrorGoal = 1e-8
-
-    collision.manager.configureIntegration(integrationOptions)
-
-    ## Instruct the collision manager to print out
-    # symbolic matrix elements as it parses them. Can be useful for debugging
-    collision.manager.setMatrixElementVerbosity(True)
-
+    collision.addCoupling(inputParameters["g3"])
+    collision.addCoupling(inputParameters["g2"])
+    collision.addCoupling(inputParameters["g1"])
 
     manager.loadCollisionFiles(collision)
 

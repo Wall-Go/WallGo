@@ -51,14 +51,19 @@ class Collision:
             self.module: ModuleType = None
             self._loadCollisionModule(modelCls)
             self.bInitialized = True
+
             self.generateCollisionIntegrals = WallGo.config.getboolean("Collisions", "generateCollisionIntegrals")
-            print(self.generateCollisionIntegrals)
 
             scriptLocation = Path(sys.argv[0]).parent.resolve()
             collisionDirectory = scriptLocation / WallGo.config.get("Collisions", "pathName")
             collisionDirectory.mkdir(parents=True, exist_ok=True)
+            matrixElementFile = scriptLocation / WallGo.config.get("MatrixElements", "fileName")
+            print(matrixElementFile)
 
             self.setOutputDirectory(str(collisionDirectory))
+            self.setMatrixElementFile(str(matrixElementFile))
+
+            self.configureIntegration()
 
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
@@ -69,7 +74,6 @@ class Collision:
         Returns:
             None
         """
-        # TODO do not need assert here
         if self.generateCollisionIntegrals:
             self._assertLoaded()
             self.module.setSeed(seed)
@@ -100,6 +104,7 @@ class Collision:
             ## Construct a "control" object for collision integrations
             # Use help(Collision.manager) for info about what functionality is available
             self.manager = self.module.CollisionManager()
+            self.manager.setMatrixElementVerbosity(WallGo.config.getboolean("MatrixElements", "verbose"))
 
             self.addParticles(modelCls)
 
@@ -214,7 +219,25 @@ class Collision:
         self.outputDirectory = outputDirectory
         if self.module is not None:
             self.manager.setOutputDirectory(str(self.outputDirectory))
+        else:
+            pass
     
+    def setMatrixElementFile(self, matrixElementFile: str) -> None:
+        """
+        Sets the matrix element file for the collision integrals.
+
+        Args:
+            matrixElementFile (str): The matrix element file to set.
+
+        Returns:
+            None
+        """
+        self.matrixElementFile = matrixElementFile
+        if self.module is not None:
+            self.manager.setMatrixElementFile(str(self.matrixElementFile))
+        else:
+            pass
+
     def addCoupling(self, coupling: float) -> None:
         """
         Adds a coupling to the collision module.
@@ -228,5 +251,28 @@ class Collision:
         if self.generateCollisionIntegrals:
             self._assertLoaded()
             self.manager.addCoupling(coupling)
+        else:
+            pass
+
+    def configureIntegration(self) -> None:
+        """
+        Configures the integration.
+
+        Args:
+            integrationOptions (CollisionModule.IntegrationOptions): The integration options to set.
+
+        Returns:
+            None
+        """
+        if self.generateCollisionIntegrals:
+            self._assertLoaded()
+            integrationOptions = self.module.IntegrationOptions()
+
+            integrationOptions.bVerbose = WallGo.config.getboolean("Integration", "verbose")
+            integrationOptions.maxTries = WallGo.config.getint("Integration", "maxTries")
+            integrationOptions.relativeErrorGoal = WallGo.config.getfloat("Integration", "relativeErrorGoal")
+            integrationOptions.absoluteErrorGoal = WallGo.config.getfloat("Integration", "absoluteErrorGoal")
+
+            self.manager.configureIntegration(integrationOptions)
         else:
             pass
