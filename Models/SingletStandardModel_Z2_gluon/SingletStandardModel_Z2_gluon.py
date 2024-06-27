@@ -296,7 +296,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
 
@@ -354,13 +354,6 @@ def main():
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
-
-    ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    collision.setOutputDirectory(collisionDirectory)
-
     manager.loadCollisionFiles(collision)
 
 

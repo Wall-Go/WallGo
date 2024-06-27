@@ -4,16 +4,11 @@ WallGo.Collision, which handles dynamic loading of the module and provides compl
 Note that WallGo.Collision is a singleton class, ie. only one instance of it can exist.
 Loading of the module happens when the instance is first created."""
 
-import os
 import pathlib
-
-import WallGo
-from WallGo import Particle
-from WallGo import Fields
-
 from SingletStandardModel_Z2_gluon import (
     SingletSM_Z2,
 )
+import WallGo
 
 WallGo.initialize()
 
@@ -21,7 +16,8 @@ WallGo.initialize()
 ## Modify the config, we use N=5 for this example
 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
-## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+## QFT model input. Some of these are probably not intended to change, like gauge masses.
+# Could hardcode those directly in the class.
 inputParameters = {
     #"RGScale" : 91.1876,
     "RGScale" : 125., # <- Benoit benchmark
@@ -67,13 +63,14 @@ integrationOptions.absoluteErrorGoal = 1e-8
 
 collision.manager.configureIntegration(integrationOptions)
 
-## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+## Instruct the collision manager to print out symbolic matrix elements as it parses them.
+# Can be useful for debugging
 collision.manager.setMatrixElementVerbosity(True)
 
-## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-# basisSize = 5
+## "N". Make sure this is >= 0.
+# The C++ code requires uint so pybind11 will throw TypeError otherwise
 basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-# print(WallGo.config)
 
-## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
+## Computes collisions for all out-of-eq particles specified above.
+# The last argument is optional and mainly useful for debugging
 collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)
