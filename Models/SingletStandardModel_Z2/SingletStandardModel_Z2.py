@@ -15,9 +15,9 @@ from WallGo import Fields, WallGoResults
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
@@ -546,6 +546,7 @@ def main() -> None:
         delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
         errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
         print(f"finite difference error = {errorFD}")
+
 
 
     # end parameter-space loop
