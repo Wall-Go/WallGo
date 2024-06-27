@@ -13,7 +13,7 @@ from scipy.interpolate import UnivariateSpline
 
 from .Boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
-from .Grid import Grid
+from .Grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
@@ -41,14 +41,14 @@ class EOM:
         boltzmannSolver: BoltzmannSolver,
         thermodynamics: Thermodynamics,
         hydro: Hydro,
-        grid: Grid,
+        grid: Grid3Scales,
         nbrFields: int,
         meanFreePath: float,
         includeOffEq: bool = False,
         forceImproveConvergence: bool = False,
-        errTol=1e-3,
-        maxIterations=10,
-        pressRelErrTol=0.3679,
+        errTol: float=1e-3,
+        maxIterations: float=10,
+        pressRelErrTol: float=0.3679,
     ):
         """
         Initialization
@@ -89,7 +89,7 @@ class EOM:
         assert isinstance(boltzmannSolver, BoltzmannSolver)
         assert isinstance(thermodynamics, Thermodynamics)
         assert isinstance(hydro, Hydro)
-        assert isinstance(grid, Grid)
+        assert isinstance(grid, Grid3Scales)
         assert (
             grid is boltzmannSolver.grid
         ), "EOM and BoltzmannSolver must have the same instance of the Grid object."
@@ -113,10 +113,10 @@ class EOM:
         self.errTol = errTol
         self.maxIterations = maxIterations
         self.pressRelErrTol = pressRelErrTol
-        self.pressAbsErrTol = 0
+        self.pressAbsErrTol = 0.
 
     def findWallVelocityMinimizeAction(
-        self, wallThicknessIni: float = None
+        self, wallThicknessIni: float|None = None
     ) -> WallGoResults:
         """
         Finds the wall velocity by minimizing the action and solving for the
@@ -185,7 +185,7 @@ class EOM:
             boltzmannResultsMax,
             boltzmannBackgroundMax,
             hydroResultsMax,
-        ) = self.wallPressure(wallVelocityMax, wallParamsGuess, True)
+        ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
 
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
@@ -208,7 +208,7 @@ class EOM:
             boltzmannResultsMin,
             boltzmannBackgroundMin,
             hydroResultsMin,
-        ) = self.wallPressure(wallVelocityMin, wallParamsGuess, True)
+        ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
         if pressureMin > 0:
             print(
                 """EOM warning: the pressure at vw = 0 is positive which indicates the 
@@ -231,7 +231,7 @@ class EOM:
         )
 
         ## This computes pressure on the wall with a given wall speed and WallParams
-        def pressureWrapper(vw: float):
+        def pressureWrapper(vw: float) -> float:
             """Small optimization here: the root finder below calls this first at the 
             bracket endpoints, for which we already computed the pressure above. 
             So make use of those.
@@ -245,7 +245,7 @@ class EOM:
             # parameters
             fractionVw = (vw - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
             newWallParams = wallParamsMin + (wallParamsMax - wallParamsMin) * fractionVw
-            return self.wallPressure(vw, newWallParams, False)
+            return self.wallPressure(vw, newWallParams)[0]
 
         optimizeResult = scipy.optimize.root_scalar(
             pressureWrapper,
@@ -271,7 +271,6 @@ class EOM:
         ) = self.wallPressure(
             wallVelocity,
             newWallParams,
-            returnExtras=True,
         )
 
         # minimum possible error in the wall speed
@@ -328,11 +327,10 @@ class EOM:
         self,
         wallVelocity: float,
         wallParams: WallParams,
-        returnExtras: bool = False,
-        atol: float = None,
-        rtol: float = None,
-        boltzmannResults: BoltzmannResults = None,
-    ) -> tuple:
+        atol: float|None = None,
+        rtol: float|None = None,
+        boltzmannResults: BoltzmannResults | None = None,
+    ) -> tuple[float, WallParams, BoltzmannResults, BoltzmannBackground, HydroResults]:
         """
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action. Can use two different iteration algorithms
@@ -347,10 +345,6 @@ class EOM:
             Wall velocity at which the pressure is computed.
         wallParams : WallParams
             Contains a guess of the wall thicknesses and wall offsets.
-        returnExtras : bool, optional
-            If False, only the pressure is returned. If True, the pressure,
-            and WallParams, BoltzmannResults and HydroResults, objects are
-            returned. The default is False.
         atol : float or None
             Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.
         rtol : float or None
@@ -362,7 +356,7 @@ class EOM:
 
         Returns
         -------
-        pressure : double
+        pressure : float
             Total pressure on the wall.
         wallParams : WallParams
             WallParams object containing the wall thicknesses and wall offsets
@@ -424,9 +418,9 @@ class EOM:
             boltzmannResults = BoltzmannResults(
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
-                truncationError=0,
-                linearizationCriterion1=0,
-                linearizationCriterion2=0,
+                truncationError=0.0,
+                linearizationCriterion1=0.0,
+                linearizationCriterion2=0.0,
             )
 
         # Find the boundary conditions of the hydrodynamic equations
@@ -503,7 +497,7 @@ class EOM:
         true solution. For small enough values, we should always be able to converge.
         The value will be reduced if the algorithm doesn't converge.
         """
-        multiplier = 1
+        multiplier = 1.0
 
         i = 0
         while True:
@@ -566,7 +560,7 @@ class EOM:
                 value of 'multiplier'.
                 """
                 if errorSolver > errTol:
-                    multiplier /= 2
+                    multiplier /= 2.0
                 else:
                     break
             elif i >= self.maxIterations - 1:
@@ -582,15 +576,13 @@ class EOM:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
 
-        if returnExtras:
-            return (
-                pressure,
-                wallParams,
-                boltzmannResults,
-                boltzmannBackground,
-                hydroResults,
-            )
-        return pressure
+        return (
+            pressure,
+            wallParams,
+            boltzmannResults,
+            boltzmannBackground,
+            hydroResults,
+        )
 
     def __getNextPressure(
         self,
@@ -604,8 +596,8 @@ class EOM:
         boltzmannResults1: BoltzmannResults,
         Tplus: float,
         Tminus: float,
-        Tprofile: npt.ArrayLike = None,
-        velocityProfile: npt.ArrayLike = None,
+        Tprofile: npt.ArrayLike | None = None,
+        velocityProfile: npt.ArrayLike | None = None,
         multiplier: float = 1.0,
     ) -> tuple:
         """
@@ -696,8 +688,8 @@ class EOM:
         boltzmannResults: BoltzmannResults,
         Tplus: float,
         Tminus: float,
-        Tprofile: npt.ArrayLike = None,
-        velocityProfile: npt.ArrayLike = None,
+        Tprofile: npt.ArrayLike | None = None,
+        velocityProfile: npt.ArrayLike | None = None,
         multiplier: float = 1.0,
     ) -> tuple:
         """
@@ -724,11 +716,11 @@ class EOM:
             )
 
         ## Prepare a new background for Boltzmann
-        TWithEndpoints = np.concatenate(([Tminus], Tprofile, [Tplus]))
-        fieldsWithEndpoints = np.concatenate(
+        TWithEndpoints: np.ndarray = np.concatenate(([Tminus], Tprofile, [Tplus]))
+        fieldsWithEndpoints: Fields = np.concatenate(
             (vevLowT, fields, vevHighT), axis=fields.overFieldPoints
         ).view(Fields)
-        vWithEndpoints = np.concatenate(
+        vWithEndpoints: np.ndarray = np.concatenate(
             ([velocityProfile[0]], velocityProfile, [velocityProfile[-1]])
         )
         boltzmannBackground = BoltzmannBackground(
@@ -747,21 +739,21 @@ class EOM:
 
         # Need to solve wallWidth and wallOffset. For this, put wallParams in a 1D array
         # NOT including the first offset which we keep at 0.
-        wallArray = np.concatenate(
+        wallArray: np.ndarray = np.concatenate(
             (wallParams.widths, wallParams.offsets[1:])
         )  ## should work even if offsets is just 1 element
 
         ## first width, then offset
-        lowerBounds = np.concatenate(
+        lowerBounds: np.ndarray = np.concatenate(
             (self.nbrFields * [0.1 / self.Tnucl], (self.nbrFields - 1) * [-10.0])
         )
-        upperBounds = np.concatenate(
+        upperBounds: np.ndarray = np.concatenate(
             (self.nbrFields * [100.0 / self.Tnucl], (self.nbrFields - 1) * [10.0])
         )
         bounds = scipy.optimize.Bounds(lb=lowerBounds, ub=upperBounds)
 
         ## And then a wrapper that puts the inputs back in WallParams
-        def actionWrapper(wallArray: npt.ArrayLike, *args) -> float:
+        def actionWrapper(wallArray: npt.ArrayLike, *args: Fields | npt.ArrayLike) -> float:
             return self.action(self.__toWallParams(wallArray), *args)
 
         Delta00 = boltzmannResults.Deltas.Delta00
@@ -802,10 +794,10 @@ class EOM:
 
         dVdz = np.sum(np.array(dVfull * dPhidz), axis=1)
 
-        EOMPoly = Polynomial(dVdz, self.grid)
+        eomPoly = Polynomial(dVdz, self.grid)
 
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
-        pressure = EOMPoly.integrate(w=-dzdchi)
+        pressure = eomPoly.integrate(w=-dzdchi)
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
 
@@ -814,9 +806,10 @@ class EOM:
         vmin: float,
         vmax: float,
         nbrPoints: int,
-        wallThicknessIni: float = None,
+        wallThicknessIni: float | None = None,
         rtol: float = 1e-3,
-    ) -> tuple:
+    ) -> tuple[np.ndarray, np.ndarray, list[WallParams], list[BoltzmannResults], 
+               list[BoltzmannBackground], list[HydroResults]]:
         """
         Computes the pressure on a linearly spaced grid of velocities between
         vmin and vmax.
@@ -866,14 +859,14 @@ class EOM:
         boltzmannResults = None
 
         pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(
-            vmin, wallParams, True, 0, rtol, boltzmannResults
+            vmin, wallParams, 0, rtol, boltzmannResults
         )
 
-        pressures = []
-        boltzmannBackgroundList = []
-        boltzmannResultsList = []
-        hydroResultsList = []
-        wallParamsList = []
+        pressures: list[float] = []
+        boltzmannBackgroundList: list[BoltzmannBackground] = []
+        boltzmannResultsList: list[BoltzmannResults] = []
+        hydroResultsList: list[HydroResults] = []
+        wallParamsList: list[WallParams] = []
         # Computing the pressure on the velocity grid
         for i, wallVelocity in enumerate(wallVelocities):
             if i > 1:
@@ -901,7 +894,7 @@ class EOM:
                 boltzmannBackground,
                 hydroResults,
             ) = self.wallPressure(
-                wallVelocity, wallParamsTry, True, 0, rtol, boltzmannResultsTry
+                wallVelocity, wallParamsTry, 0, rtol, boltzmannResultsTry
             )
 
             pressures.append(pressure)
@@ -923,8 +916,8 @@ class EOM:
         self,
         vmin: float,
         vmax: float,
-        wallThicknessIni: float = None,
-        desiredPressure: float = 0,
+        wallThicknessIni: float | None = None,
+        desiredPressure: float = 0.0,
         rtol: float = 1e-3,
         dvMin: float = 0.02,
     ) -> WallGoInterpolationResults:
@@ -972,7 +965,7 @@ class EOM:
             ) = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
             # Splining the result
             pressuresSpline = UnivariateSpline(
-                wallVelocities, pressures - desiredPressure, s=0
+                wallVelocities, pressures - desiredPressure, s=0.0
             )
 
             # Finding the roots of the spline and classifying the result as stable or
@@ -1012,8 +1005,8 @@ class EOM:
         )
         return wallGoInterpolationResults
 
-    def __toWallParams(self, wallArray: npt.ArrayLike) -> WallParams:
-        offsets = np.concatenate(([0], wallArray[self.nbrFields :]))
+    def __toWallParams(self, wallArray: np.ndarray) -> WallParams:
+        offsets: np.ndarray = np.concatenate(([0], wallArray[self.nbrFields :]))
         return WallParams(widths=wallArray[: self.nbrFields], offsets=offsets)
 
     def action(
@@ -1021,8 +1014,8 @@ class EOM:
         wallParams: WallParams,
         vevLowT: Fields,
         vevHighT: Fields,
-        Tprofile: npt.ArrayLike,
-        offEquilDelta00: npt.ArrayLike,
+        Tprofile: np.ndarray,
+        offEquilDelta00: Polynomial,
     ) -> float:
         r"""
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
@@ -1037,12 +1030,12 @@ class EOM:
             Field values in the high-T phase.
         Tprofile : array-like
             Temperature profile on the grid.
-        offEquilDelta00 : array-like
+        offEquilDelta00 : Polynomial
             Off-equilibrium function Delta00.
 
         Returns
         -------
-        action : double
+        action : float
             Action spent by the scalar field configuration.
 
         """
@@ -1074,7 +1067,7 @@ class EOM:
         VLowT = self.thermo.effectivePotential.evaluate(vevLowT, Tprofile[0])
         VHighT = self.thermo.effectivePotential.evaluate(vevHighT, Tprofile[-1])
 
-        Vref = (VLowT + VHighT) / 2
+        Vref = (np.array(VLowT) + np.array(VHighT)) / 2.0
 
         # Integrating the potential to get the action
         # We substract Vref (which has no effect on the EOM) to make the integral finite
@@ -1084,10 +1077,10 @@ class EOM:
         # Kinetic part of the action
         K = np.sum((vevHighT - vevLowT) ** 2 / (6 * wallWidths))
 
-        return U + K
+        return float(U + K)
 
     def wallProfile(
-        self, z, vevLowT: Fields, vevHighT: Fields, wallParams: WallParams
+        self, z: np.ndarray, vevLowT: Fields, vevHighT: Fields, wallParams: WallParams
     ) -> Tuple[Fields, Fields]:
         """
         Computes the scalar field profile and its derivative with respect to
@@ -1139,7 +1132,7 @@ class EOM:
         velocityMid: float,
         fields: Fields,
         dPhidz: Fields,
-        offEquilDeltas: list,
+        offEquilDeltas: BoltzmannDeltas,
         Tplus: float,
         Tminus: float,
     ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
@@ -1159,8 +1152,8 @@ class EOM:
             Scalar field profiles.
         dPhidz : array-like
             Derivative with respect to the position of the scalar field profiles.
-        offEquilDeltas : list
-            List of dictionaries containing the off-equilibrium Delta functions
+        offEquilDeltas : BoltzmannDeltas
+            BoltzmannDeltas object containing the off-equilibrium Delta functions
         Tplus : double
             Plasma temperature in front of the wall.
         Tminus : double
@@ -1190,19 +1183,8 @@ class EOM:
                 Tminus,
             )
 
-            """Ensure that we got only one one (T, vPlasma) value from the above.
-            Particularly the vPlasma tends to be in len=1 array format because our Veff 
-            is intended to work with arrays
-            """
-            T = np.asanyarray(T)
-            vPlasma = np.asanyarray(vPlasma)
-            assert (
-                T.size == 1 and vPlasma.size == 1
-            ), """Invalid output from findPlasmaProfilePoint()!
-            In EOM.findPlasmaProfile(), grid loop."""
-            # convert to float, this is OK because we checked the size above
-            temperatureProfile[index] = T.item()
-            velocityProfile[index] = vPlasma.item()
+            temperatureProfile[index] = T
+            velocityProfile[index] = vPlasma
 
         return temperatureProfile, velocityProfile
 
@@ -1212,9 +1194,9 @@ class EOM:
         c1: float,
         c2: float,
         velocityMid: float,
-        fields: Fields,
-        dPhidz: Fields,
-        offEquilDeltas: list,
+        fields: FieldPoint,
+        dPhidz: FieldPoint,
+        offEquilDeltas: BoltzmannDeltas,
         Tplus: float,
         Tminus: float,
     ) -> Tuple[float, float]:
@@ -1277,23 +1259,23 @@ class EOM:
             return T, vPlasma
 
         # Bracketing the root
-        T1 = minRes.x
-        TMultiplier = max(Tplus / T1, 1.2)
+        minTemp = minRes.x
+        TMultiplier = max(Tplus / minTemp, 1.2)
         if (
             Tplus < Tminus
         ):  # If this is a detonation solution, finds a solution below TLowerBound
-            TMultiplier = min(Tminus / T1, 0.8)
+            TMultiplier = min(Tminus / minTemp, 0.8)
 
-        T2 = T1 * TMultiplier
-        while self.temperatureProfileEqLHS(fields, dPhidz, T2, s1, s2) < 0:
-            T1 *= TMultiplier
-            T2 *= TMultiplier
+        testTemp = minTemp * TMultiplier
+        while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
+            minTemp *= TMultiplier
+            testTemp *= TMultiplier
 
         # Solving for the root
         res = scipy.optimize.brentq(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            T1,
-            T2,
+            minTemp,
+            testTemp,
             xtol=1e-9,
             rtol=1e-9,  ## really???
         )

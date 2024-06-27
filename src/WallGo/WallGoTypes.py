@@ -23,7 +23,7 @@ that just removes the endspoints.
 class BoltzmannBackground:
     def __init__(
         self,
-        velocityMid: np.ndarray,
+        velocityMid: float,
         velocityProfile: np.ndarray,
         fieldProfiles: Fields,
         temperatureProfile: np.ndarray,
@@ -91,15 +91,15 @@ class BoltzmannResults:
     """
     Holds results to be returned by BoltzmannSolver
     """
-    deltaF: np.ndarray
+    deltaF: Polynomial
     Deltas: BoltzmannDeltas
     truncationError: float
     
     # These two criteria are to evaluate the validity of the linearization of the 
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
-    linearizationCriterion1: np.ndarray
-    linearizationCriterion2: np.ndarray
+    linearizationCriterion1: np.ndarray | float
+    linearizationCriterion2: np.ndarray | float
     
     def __mul__(self, other):
         return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
