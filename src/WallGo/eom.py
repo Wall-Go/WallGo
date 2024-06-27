@@ -47,7 +47,7 @@ class EOM:
         includeOffEq: bool = False,
         forceImproveConvergence: bool = False,
         errTol: float=1e-3,
-        maxIterations: float=10,
+        maxIterations: int=10,
         pressRelErrTol: float=0.3679,
     ):
         """
@@ -57,10 +57,12 @@ class EOM:
         ----------
         boltzmannSolver : BoltzmannSolver
             BoltzmannSolver instance.
-        model : GenericModel
-            Object of model class that implements the GenericModel interface.
-        grid : Grid
-            Object of the class Grid.
+        thermodynamics : Thermodynamics
+            Thermodynamics object
+        hydro : Hydro
+            Hydro object
+        grid : Grid3Scales
+            Object of the class Grid3Scales.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
         meanFreePath : float
@@ -72,9 +74,9 @@ class EOM:
             If True, uses a slower algorithm that improves the convergence when
             computing the pressure. The improved algorithm is automatically used
             for detonation. Default is False.
-        errTol : double, optional
+        errTol : float, optional
             Absolute error tolerance. The default is 1e-3.
-        maxIterations : integer, optional
+        maxIterations : int, optional
             Maximum number of iterations for the convergence of pressure. 
             The default is 10.
         pressRelErrTol : float, optional
@@ -124,10 +126,17 @@ class EOM:
         deflagration or hybrid solutions. Returns a velocity of 1 if the pressure
         peak at vw = vJ is not large enough to stop the wall.
         For detonation solutions, use solveInterpolation().
+        
+        Parameters
+        ----------
+        wallThicknessIni : float or None, optional
+            Initial thickness used for all the walls. If None, uses 5/Tnucl. 
+            Default is None.
 
         Returns
         -------
-        WallGoResults object containing the solution of the EOM.
+        WallGoResults
+            WallGoResults object containing the solution of the EOM.
 
         """
 
@@ -157,11 +166,11 @@ class EOM:
 
         Parameters
         ----------
-        wallVelocityMin : double
+        wallVelocityMin : float
             Lower bound of the bracket in which the root finder will look for a
             solution. Should satisfy
             :math:`0<{\rm wallVelocityMin}<{\rm wallVelocityMax}`.
-        wallVelocityMax : double
+        wallVelocityMax : float
             Upper bound of the bracket in which the root finder will look for a
             solution. Should satisfy
             :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
@@ -341,15 +350,15 @@ class EOM:
 
         Parameters
         ----------
-        wallVelocity : double
+        wallVelocity : float
             Wall velocity at which the pressure is computed.
         wallParams : WallParams
             Contains a guess of the wall thicknesses and wall offsets.
-        atol : float or None
+        atol : float or None, optional
             Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.
-        rtol : float or None
+        rtol : float or None, optional
             Relative tolerance. If None, uses self.pressRelErrTol. Default is None.
-        boltzmannResults : BoltzmannResults or None
+        boltzmannResults : BoltzmannResults or None, optional
             Object of the BoltzmannResults class containing the initial solution
             of the Boltzmann equation. If None, sets the initial deltaF to 0.
             Default is None.
@@ -654,20 +663,20 @@ class EOM:
 
         ## If the last iteration overshot, uses linear interpolation to find a
         ## better estimate of the true solution.
-        x = (pressure1 - pressure2) / (pressure1 - 2 * pressure2 + pressure3)
+        interpPoint = (pressure1 - pressure2) / (pressure1 - 2 * pressure2 + pressure3)
         (
             pressure4,
             wallParams4,
             boltzmannResults4,
             boltzmannBackground4,
         ) = self.__intermediatePressureResults(
-            wallParams1 + (wallParams2 - wallParams1) * x,
+            wallParams1 + (wallParams2 - wallParams1) * interpPoint,
             vevLowT,
             vevHighT,
             c1,
             c2,
             velocityMid,
-            boltzmannResults1 + (boltzmannResults2 - boltzmannResults1) * x,
+            boltzmannResults1 + (boltzmannResults2 - boltzmannResults1) * interpPoint,
             Tplus,
             Tminus,
             Tprofile,
@@ -753,7 +762,8 @@ class EOM:
         bounds = scipy.optimize.Bounds(lb=lowerBounds, ub=upperBounds)
 
         ## And then a wrapper that puts the inputs back in WallParams
-        def actionWrapper(wallArray: npt.ArrayLike, *args: Fields | npt.ArrayLike) -> float:
+        def actionWrapper(wallArray: npt.ArrayLike, 
+                          *args: Fields | npt.ArrayLike | Polynomial) -> float:
             return self.action(self.__toWallParams(wallArray), *args)
 
         Delta00 = boltzmannResults.Deltas.Delta00
@@ -808,7 +818,7 @@ class EOM:
         nbrPoints: int,
         wallThicknessIni: float | None = None,
         rtol: float = 1e-3,
-    ) -> tuple[np.ndarray, np.ndarray, list[WallParams], list[BoltzmannResults], 
+    ) -> tuple[np.ndarray, np.ndarray, list[WallParams], list[BoltzmannResults],
                list[BoltzmannBackground], list[HydroResults]]:
         """
         Computes the pressure on a linearly spaced grid of velocities between
@@ -822,15 +832,15 @@ class EOM:
             Upper bound of the interpolation interval.
         nbrPoints : int
             Number of points on the grid.
-        wallThicknessIni : float, optional
-            Initial wall thickness used to compute the first pressure at vmin.
-            The default is None.
+        wallThicknessIni : float or None, optional
+            Initial wall thickness used to compute the first pressure at vmin. If None,
+            uses 5/Tnucl. The default is None.
         rtol : float, optional
             Relative tolerance. The default is 1e-3.
 
         Returns
         -------
-        wallVelocities : list[float]
+        wallVelocities : ndarray
             Velocity grid.
         pressures: ndarray
             Pressure evaluated on the grid.
@@ -931,9 +941,9 @@ class EOM:
             Lower bound of the interpolation interval.
         vmax : float
             Upper bound of the interpolation interval.
-        wallThicknessIni : float, optional
-            Initial wall thickness used to compute the first pressure at vmin.
-            The default is None.
+        wallThicknessIni : float or None, optional
+            Initial wall thickness used to compute the first pressure at vmin. If None,
+            uses 5/Tnucl. The default is None.
         desiredPressure : float, optional
             The solver finds the velocities for which the pressure is equal to
             desiredPressure. The default is 0.
@@ -1006,7 +1016,7 @@ class EOM:
         return wallGoInterpolationResults
 
     def __toWallParams(self, wallArray: np.ndarray) -> WallParams:
-        offsets: np.ndarray = np.concatenate(([0], wallArray[self.nbrFields :]))
+        offsets: np.ndarray = np.concatenate((np.array([0.0]), wallArray[self.nbrFields :]))
         return WallParams(widths=wallArray[: self.nbrFields], offsets=offsets)
 
     def action(
@@ -1017,18 +1027,18 @@ class EOM:
         Tprofile: np.ndarray,
         offEquilDelta00: Polynomial,
     ) -> float:
-        r"""
+        """
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
 
         Parameters
         ----------
-        wallParams : array-like
-            Array of size 2*N-1 containing :math:`(L_0,L_i,\delta_i)`.
-        vevLowT : array-like
+        wallParams : WallParams
+            WallParams object.
+        vevLowT : Fields
             Field values in the low-T phase.
-        vevHighT : array-like
+        vevHighT : Fields
             Field values in the high-T phase.
-        Tprofile : array-like
+        Tprofile : ndarray
             Temperature profile on the grid.
         offEquilDelta00 : Polynomial
             Off-equilibrium function Delta00.
@@ -1088,22 +1098,20 @@ class EOM:
 
         Parameters
         ----------
-        z : array-like
+        z : ndarray
             Position grid on which to compute the scalar field profile.
-        vevLowT : array-like
+        vevLowT : Fields
             Scalar field VEVs in the low-T phase.
-        vevHighT : array-like
+        vevHighT : Fields
             Scalar field VEVs in the high-T phase.
-        wallWidths : array-like
-            Array containing the wall widths.
-        wallOffsets : array-like
-            Array containing the wall offsets.
+        wallParams : WallParams
+            WallParams object.
 
         Returns
         -------
-        fields : array-like
+        fields : Fields
             Scalar field profile.
-        dPhidz : array-like
+        dPhidz : Fields
             Derivative with respect to the position of the scalar field profile.
 
         """
@@ -1142,21 +1150,21 @@ class EOM:
 
         Parameters
         ----------
-        c1 : double
+        c1 : float
             Value of the :math:`T^{30}` component of the energy-momentum tensor.
-        c2 : double
+        c2 : float
             Value of the :math:`T^{33}` component of the energy-momentum tensor.
-        velocityMid : double
+        velocityMid : float
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
-        fields : array-like
+        fields : Fields
             Scalar field profiles.
-        dPhidz : array-like
+        dPhidz : Fields
             Derivative with respect to the position of the scalar field profiles.
         offEquilDeltas : BoltzmannDeltas
             BoltzmannDeltas object containing the off-equilibrium Delta functions
-        Tplus : double
+        Tplus : float
             Plasma temperature in front of the wall.
-        Tminus : double
+        Tminus : float
             Plasma temperature behind the wall.
 
         Returns
@@ -1208,28 +1216,28 @@ class EOM:
         ----------
         index : int
             Index of the grid point on which to find the plasma profile.
-        c1 : double
+        c1 : float
             Value of the :math:`T^{30}` component of the energy-momentum tensor.
-        c2 : double
+        c2 : float
             Value of the :math:`T^{33}` component of the energy-momentum tensor.
-        velocityMid : double
+        velocityMid : float
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
-        fields : Fields
+        fields : FieldPoint
             Scalar field profile.
-        dPhidz : Fields
+        dPhidz : FieldPoint
             Derivative with respect to the position of the scalar field profile.
-        offEquilDeltas : list
-            List of dictionaries containing the off-equilibrium Delta functions
-        Tplus : double
+        offEquilDeltas : BoltzmannDeltas
+            BoltzmannDeltas object containing the off-equilibrium Delta functions
+        Tplus : float
             Plasma temperature in front of the wall.
-        Tminus : double
+        Tminus : float
             Plasma temperature behind the wall.
 
         Returns
         -------
-        T : double
+        T : float
             Temperature at the point grid.xiValues[index].
-        vPlasma : double
+        vPlasma : float
             Plasma velocity at the point grid.xiValues[index].
 
         """
@@ -1285,76 +1293,76 @@ class EOM:
         return T, vPlasma
 
     def plasmaVelocity(
-        self, fields: Fields, T: npt.ArrayLike, s1: float
-    ) -> npt.ArrayLike:
+        self, fields: FieldPoint, T: float, s1: float
+    ) -> float:
         r"""
         Computes the plasma velocity as a function of the temperature.
 
         Parameters
         ----------
-        fields : Fields
+        fields : FieldPoint
             Scalar field profiles.
-        T : npt.ArrayLike
-            Temparature.
-        s1 : double
+        T : float
+            Temperature.
+        s1 : float
             Value of :math:`T^{30}-T_{\rm out}^{30}`.
 
         Returns
         -------
-        double
+        float
             Plasma velocity.
 
         """
         # Need enthalpy ouside a free-energy minimum (eq (12) in the ref.)
-        w = -T * self.thermo.effectivePotential.derivT(fields, T)
+        enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
 
-        return (-w + np.sqrt(4 * s1**2 + w**2)) / (2 * s1)
+        return float((-enthalpy + np.sqrt(4 * s1**2 + enthalpy**2)) / (2 * s1))
 
     def temperatureProfileEqLHS(
         self, fields: FieldPoint, dPhidz: FieldPoint, T: float, s1: float, s2: float
-    ):
+    ) -> float:
         r"""
         The LHS of Eq. (20) of arXiv:2204.13120v1.
 
         Parameters
         ----------
-        fields : array-like
+        fields : FieldPoint
             Scalar field profile.
-        dPhidz : array-like
+        dPhidz : FieldPoint
             Derivative with respect to the position of the scalar field profile.
-        T : double
+        T : float
             Temperature.
-        s1 : double
+        s1 : float
             Value of :math:`T^{30}-T_{\rm out}^{30}`.
-        s2 : double
+        s2 : float
             Value of :math:`T^{33}-T_{\rm out}^{33}`.
 
         Returns
         -------
-        double
+        float
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
         # Need enthalpy ouside a free-energy minimum (eq (12) in the ref.)
-        w = -T * self.thermo.effectivePotential.derivT(fields, T)
+        enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
 
         kineticTerm = 0.5 * np.sum(dPhidz**2).view(np.ndarray)
 
         ## eff potential at this field point and temperature. NEEDS the T-dep constant
         veff = self.thermo.effectivePotential.evaluate(fields, T)
 
-        result = kineticTerm - veff - 0.5 * w + 0.5 * np.sqrt(4 * s1**2 + w**2) - s2
+        result = (kineticTerm - veff - 0.5 * enthalpy 
+                  + 0.5 * np.sqrt(4 * s1**2 + enthalpy**2) - s2)
 
         result = np.asarray(result)
         if result.shape == (1,) and len(result) == 1:
-            return result[0]
-        elif result.shape == ():
-            return result
-        else:
-            raise TypeError(f"LHS has wrong type, {result.shape=}")
+            return float(result[0])
+        if result.shape == ():
+            return float(result)
+        raise TypeError(f"LHS has wrong type, {result.shape=}")
 
     def deltaToTmunu(
-        self, index: int, fields: Fields, velocityMid: float, offEquilDeltas: list
+        self, index: int, fields: FieldPoint, velocityMid: float, offEquilDeltas: BoltzmannDeltas
     ) -> Tuple[float, float]:
         r"""
         Computes the out-of-equilibrium part of the energy-momentum tensor.
@@ -1363,18 +1371,18 @@ class EOM:
         ----------
         index : int
             Index of the grid point on which to find the plasma profile.
-        fields : Fields
+        fields : FieldPoint
             Scalar field profile.
-        velocityMid : double
+        velocityMid : float
             Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
-        offEquilDeltas : list
-            List of dictionaries containing the off-equilibrium Delta functions
+        offEquilDeltas : BoltzmannDeltas
+            BoltzmannDeltas object containing the off-equilibrium Delta functions
 
         Returns
         -------
-        T30 : double
+        T30 : float
             Out-of-equilibrium part of :math:`T^{30}`.
-        T33 : double
+        T33 : float
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
