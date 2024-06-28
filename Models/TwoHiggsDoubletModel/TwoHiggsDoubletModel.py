@@ -17,6 +17,7 @@ modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
 from effectivePotentialNoResum import EffectivePotentialNoResum
 
+
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
 
@@ -178,59 +179,18 @@ class InertDoubletModel(GenericModel):
         return modelParameters
 
 
-## For this benchmark model we use the 4D potential, implemented as in 2211.13142. 
+## For this benchmark model we use the 4D potential, implemented as in 2211.13142.
 ## We use interpolation tables for Jb/Jf
 class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        super().__init__(modelParameters, fieldCount)
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions 
+        super().__init__(
+            modelParameters, fieldCount, integrals=None, useDefaultInterpolation=True
+        )
+        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions
         ## to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90
-
-        """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done 
-        with integrals from CosmoTransitions. 
-        In real applications we recommend using the WallGo default implementations.
-        """
-        self._configureBenchmarkIntegrals()
-
-    def _configureBenchmarkIntegrals(self):
-
-        ## Load custom interpolation tables for Jb/Jf.
-        # These should be the same as what CosmoTransitions version 2.0.2 
-        # provides by default.
-        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            bVerbose=False,
-        )
-        self.integrals.Jf.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            bVerbose=False,
-        )
-
-        self.integrals.Jb.disableAdaptiveInterpolation()
-        self.integrals.Jf.disableAdaptiveInterpolation()
-
-        """And force out-of-bounds constant extrapolation because this is what 
-        CosmoTransitions does => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a 
-        constant extrapolation is OK since the integral is very small at the upper limit.
-        """
-
-        from WallGo.InterpolatableFunction import EExtrapolationType
-
-        self.integrals.Jb.setExtrapolationType(
-            extrapolationTypeLower=EExtrapolationType.CONSTANT,
-            extrapolationTypeUpper=EExtrapolationType.CONSTANT,
-        )
-
-        self.integrals.Jf.setExtrapolationType(
-            extrapolationTypeLower=EExtrapolationType.CONSTANT,
-            extrapolationTypeUpper=EExtrapolationType.CONSTANT,
-        )
 
     ## ---------- EffectivePotential overrides.
     # The user needs to define evaluate(), which has to return value of the effective
@@ -266,9 +226,12 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )
 
         return VTotal
-    
+
     def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
-        return degrees_of_freedom*(msq*msq * (np.log(np.abs(msq/rgScale**2) + 1e-100) - c) + 2 * msq * rgScale**2)
+        return degrees_of_freedom * (
+            msq * msq * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
+            + 2 * msq * rgScale**2
+        )
 
     def fermionStuff(self, fields: Fields):
 
@@ -283,7 +246,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         massSq0T = np.stack((mtsq0T,), axis=-1)
         degreesOfFreedom = np.array([12])
 
-        return massSq, degreesOfFreedom, 3/2, np.sqrt(massSq0T)
+        return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
     def bosonStuff(self, fields: Fields):
 
@@ -323,7 +286,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         massSq = np.column_stack((mWsq, mZsq, mhsq, mHsq, mAsq, mHpmsq))
         massSq0 = np.column_stack((mWsq0T, mZsq0T, mhsq0T, mHsq0T, mAsq0T, mHpmsq0T))
         degreesOfFreedom = np.array([6, 3, 1, 1, 1, 2])
-        c = 3/2*np.ones(6)
+        c = 3 / 2 * np.ones(6)
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
@@ -556,8 +519,8 @@ def main():
             print(f"{widths=}")
             print(f"{offsets=}")
 
-            ## Repeat with out-of-equilibrium parts included. 
-            #This requires solving Boltzmann equations, invoked automatically by solveWall()
+            ## Repeat with out-of-equilibrium parts included.
+            # This requires solving Boltzmann equations, invoked automatically by solveWall()
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 

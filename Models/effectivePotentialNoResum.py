@@ -6,8 +6,11 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 
+import WallGo
 from WallGo import EffectivePotential
 from WallGo import Integrals
+from WallGo.InterpolatableFunction import EExtrapolationType
+from WallGo.WallGoUtils import getSafePathToResource
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
@@ -26,16 +29,50 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         modelParameters: dict[str, float],
         fieldCount: int,
         integrals: Integrals = None,
+        useDefaultInterpolation: bool = False
     ):
         ##
         super().__init__(modelParameters, fieldCount)
 
         ## Use the passed Integrals object if provided,
-        ## otherwise create a new one with default settings
+        ## otherwise create a new one
         if integrals:
             self.integrals = integrals
         else:
+            ## The default is an integral object without interpolation
             self.integrals = Integrals()
+
+            ## For the sake of speed, one can use interpolated integrals.
+            ## By setting useDefaultInterpolation to True, the default
+            ## interpolation tables provided by WallGo are used.
+            if useDefaultInterpolation:
+                ## Load interpolation tables for Jb/Jf.
+                self.integrals.Jb.readInterpolationTable(
+                    getSafePathToResource(
+                        WallGo.config.get("DataFiles", "InterpolationTable_Jb")
+                    ),
+                    bVerbose=False,
+                )
+
+                self.integrals.Jf.readInterpolationTable(
+                    getSafePathToResource(
+                        WallGo.config.get("DataFiles", "InterpolationTable_Jf")
+                    ),
+                    bVerbose=False,
+                )
+
+                self.integrals.Jb.disableAdaptiveInterpolation()
+                self.integrals.Jf.disableAdaptiveInterpolation()
+
+                self.integrals.Jb.setExtrapolationType(
+                    extrapolationTypeLower=EExtrapolationType.CONSTANT,
+                    extrapolationTypeUpper=EExtrapolationType.CONSTANT,
+                )
+
+                self.integrals.Jf.setExtrapolationType(
+                    extrapolationTypeLower=EExtrapolationType.CONSTANT,
+                    extrapolationTypeUpper=EExtrapolationType.CONSTANT,
+                )
 
     @abstractmethod
     def bosonStuff(
@@ -205,7 +242,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 potentialImag = potential.imag / (64 * np.pi * np.pi)
             print(f"Im(potentialOneLoop)={potentialImag}")
 
-        return float(potential / (64 * np.pi * np.pi))
+        return potential / (64 * np.pi * np.pi)
 
     def potentialOneLoopThermal(
         self,
@@ -268,4 +305,4 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
             print(f"Im(V1T)={potentialImag}")
 
-        return float(potential * temperature**4 / (2 * np.pi * np.pi))
+        return potential * temperature**4 / (2 * np.pi * np.pi)
