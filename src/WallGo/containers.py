@@ -10,13 +10,49 @@ from .Polynomial import Polynomial
 
 @dataclass
 class PhaseInfo:
-    """
-    Field values at the two phases at a given temperature (we go from 1 to 2)
+    """ Object describing coexisting phases.
+
+    :var phaseLocation1: Fields
+        Field value of the starting phase.
+    :var phaseLocation2: Fields
+        Field value of the ending phase.
+    :var temperature: float
+        Temperature of the transition.
     """
 
     phaseLocation1: Fields
     phaseLocation2: Fields
     temperature: float
+
+
+@dataclass
+class WallParams:
+    """
+    Holds wall widths and wall offsets for all fields
+    """
+    widths: np.ndarray  ## 1D array
+    offsets: np.ndarray  ## 1D array
+
+    def __add__(self, other: "WallParams") -> "WallParams":
+        return WallParams(
+            widths=(self.widths + other.widths), offsets=(self.offsets + other.offsets)
+        )
+
+    def __sub__(self, other: "WallParams") -> "WallParams":
+        return WallParams(
+            widths=(self.widths - other.widths), offsets=(self.offsets - other.offsets)
+        )
+
+    def __mul__(self, number: float) -> "WallParams":
+        ## does not work if other = WallParams type
+        return WallParams(widths=self.widths * number, offsets=self.offsets * number)
+
+    def __rmul__(self, number: float) -> "WallParams":
+        return self.__mul__(number)
+
+    def __truediv__(self, number: float) -> "WallParams":
+        ## does not work if other = WallParams type
+        return WallParams(widths=self.widths / number, offsets=self.offsets / number)
 
 
 class BoltzmannBackground:

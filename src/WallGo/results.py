@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 from .Fields import Fields
-from .containers import BoltzmannBackground, BoltzmannDeltas
+from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
 
 @dataclass
@@ -78,36 +78,6 @@ class HydroResults:
         self.temperaturePlus = temperaturePlus
         self.temperatureMinus = temperatureMinus
         self.velocityJouget = velocityJouget
-
-
-@dataclass
-class WallParams:
-    """
-    Holds wall widths and wall offsets for all fields
-    """
-    widths: np.ndarray  ## 1D array
-    offsets: np.ndarray  ## 1D array
-
-    def __add__(self, other: "WallParams") -> "WallParams":
-        return WallParams(
-            widths=(self.widths + other.widths), offsets=(self.offsets + other.offsets)
-        )
-
-    def __sub__(self, other: "WallParams") -> "WallParams":
-        return WallParams(
-            widths=(self.widths - other.widths), offsets=(self.offsets - other.offsets)
-        )
-
-    def __mul__(self, number: float) -> "WallParams":
-        ## does not work if other = WallParams type
-        return WallParams(widths=self.widths * number, offsets=self.offsets * number)
-
-    def __rmul__(self, number: float) -> "WallParams":
-        return self.__mul__(number)
-
-    def __truediv__(self, number: float) -> "WallParams":
-        ## does not work if other = WallParams type
-        return WallParams(widths=self.widths / number, offsets=self.offsets / number)
 
 
 @dataclass
