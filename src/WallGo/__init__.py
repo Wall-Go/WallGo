@@ -4,7 +4,7 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .Boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
@@ -16,14 +16,13 @@ from .EOM import EOM, WallGoResults
 from .EOM import WallParams
 
 
-from .Particle import Particle
+from .particle import Particle
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
-from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionArray import CollisionArray
