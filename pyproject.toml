@@ -76,7 +76,7 @@ indent-string = "    "
 [tool.pylint.basic]
 # naming styles: PEP8 except camelCase instead of snake_case
 argument-rgx='^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
-attr-naming-style = "camelCase"
+attr-rgx = '^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 class-naming-style = "PascalCase"
 class-attribute-naming-style = "camelCase"
 class-const-naming-style = "UPPER_CASE"

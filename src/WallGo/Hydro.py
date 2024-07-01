@@ -367,9 +367,9 @@ class Hydro:
             vwMapping = vw
 
         def matching(
-            XpXm: list[float],
+            mappedTpTm: list[float],
         ) -> Tuple[float, float]:  # Matching relations at the wall interface
-            Tpm = self.__inverseMappingT(XpXm)
+            Tpm = self._inverseMappingT(mappedTpTm)
             vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm[1]))
             if vp is None:
                 vpsq = (Tpm[1] ** 2 - Tpm[0] ** 2 * (1 - vmsq)) / Tpm[1] ** 2
@@ -425,13 +425,13 @@ class Hydro:
         # We map Tm and Tp, which we assume to lie between TMinHydro and TMaxHydro,
         # to the interval (-inf,inf) which is used by the solver.
         sol = root(
-            matching, self.__mappingT(Tpm0), method="hybr", options={"xtol": self.atol}
+            matching, self._mappingT(Tpm0), method="hybr", options={"xtol": self.atol}
         )
         self.success = (
             sol.success or np.sum(sol.fun**2) < 1e-6
         )  # If the error is small enough,
         # we consider that root has converged even if it returns False.
-        [Tp, Tm] = self.__inverseMappingT(sol.x)
+        [Tp, Tm] = self._inverseMappingT(sol.x)
 
         vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
@@ -856,7 +856,7 @@ class Hydro:
         )
         return sol.root
 
-    def __mappingT(self, TpTm: list[float]) -> list[float]:
+    def _mappingT(self, TpTm: list[float]) -> list[float]:
         """
         Maps the variables Tp and Tm, which are constrained to
         TMinHydro < Tm,Tp < TMaxHydro to the interval (-inf,inf) to allow root
@@ -870,30 +870,30 @@ class Hydro:
         """
 
         Tp, Tm = TpTm
-        Xm = np.tan(
+        mappedTm = np.tan(
             np.pi
             / (self.TMaxHydro - self.TMinHydro)
             * (Tm - (self.TMaxHydro + self.TMinHydro) / 2)
         )  # Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf
-        Xp = np.tan(
+        mappedTp = np.tan(
             np.pi
             / (self.TMaxHydro - self.TMinHydro)
             * (Tp - (self.TMaxHydro + self.TMinHydro) / 2)
         )  # Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
-        return [Xp, Xm]
+        return [mappedTp, mappedTm]
 
-    def __inverseMappingT(self, XpXm: list[float]) -> list[float]:
+    def _inverseMappingT(self, mappedTpTm: list[float]) -> list[float]:
         """
-        Inverse of __mappingT.
+        Inverse of _mappingT.
         """
 
-        Xp, Xm = XpXm
+        mappedTp, mappedTm = mappedTpTm
         Tp = (
-            np.arctan(Xp) * (self.TMaxHydro - self.TMinHydro) / np.pi
+            np.arctan(mappedTp) * (self.TMaxHydro - self.TMinHydro) / np.pi
             + (self.TMaxHydro + self.TMinHydro) / 2
         )
         Tm = (
-            np.arctan(Xm) * (self.TMaxHydro - self.TMinHydro) / np.pi
+            np.arctan(mappedTm) * (self.TMaxHydro - self.TMinHydro) / np.pi
             + (self.TMaxHydro + self.TMinHydro) / 2
         )
         return [Tp, Tm]
