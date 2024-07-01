@@ -20,7 +20,7 @@ class WallGoError(Exception):
 
     def __str__(self) -> str:
         """
-        Conversion of WallGoError to str
+        Conversion of WallGoError to str, includes any data.
         """
         msg = str(self.message)
         if self.data:

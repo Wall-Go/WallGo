@@ -11,18 +11,16 @@ from .Polynomial import Polynomial
 @dataclass
 class PhaseInfo:
     """ Object describing coexisting phases.
-
-    :var phaseLocation1: Fields
-        Field value of the starting phase.
-    :var phaseLocation2: Fields
-        Field value of the ending phase.
-    :var temperature: float
-        Temperature of the transition.
     """
 
     phaseLocation1: Fields
+    """Field value of the starting phase."""
+
     phaseLocation2: Fields
+    """Field value of the ending phase."""
+
     temperature: float
+    """Temperature of transition."""
 
 
 @dataclass
@@ -30,8 +28,12 @@ class WallParams:
     """
     Holds wall widths and wall offsets for all fields
     """
-    widths: np.ndarray  ## 1D array
-    offsets: np.ndarray  ## 1D array
+
+    widths: np.ndarray  # 1D array
+    """Bubble wall widths in each field direction."""
+
+    offsets: np.ndarray  # 1D array
+    """Bubble wall offsets in each field direction."""
 
     def __add__(self, other: "WallParams") -> "WallParams":
         return WallParams(
@@ -60,12 +62,24 @@ class BoltzmannBackground:
     Container for holding velocity, temperature and field backgrounds on which
     out-of-equilibrium fluctuations live.
     """
+
     velocityWall: float
+    """Bubble wall velocity."""
+
     velocityMid: float
+    """The average between the asymptotic velocities inside and outside the bubble."""
+
     velocityProfile: np.ndarray
+    """Fluid velocity as a function of position."""
+
     fieldProfiles: Fields
+    """Field profile as a function of position."""
+
     temperatureProfile: np.ndarray
+    """Temperarture profile as a function of position."""
+
     polynomialBasis: str
+    """Type of polynomial basis used, e.g. Chebyshev, Cardinal."""
 
     def __init__(
         self,
@@ -106,9 +120,19 @@ class BoltzmannDeltas:
     """
 
     Delta00: Polynomial  # pylint: disable=invalid-name
+    r"""Relativistically invariant integral over :math:`\delta f`."""
+
     Delta02: Polynomial  # pylint: disable=invalid-name
+    r"""Relativistically invariant integral over
+    :math:`\mathcal{P}^2_\text{pl}\delta f`."""
+
     Delta20: Polynomial  # pylint: disable=invalid-name
+    r"""Relativistically invariant integral over
+    :math:`\mathcal{E}^2_\text{pl}\delta f`."""
+
     Delta11: Polynomial  # pylint: disable=invalid-name
+    r"""Relativistically invariant integral over
+    :math:`\mathcal{E}_\text{pl}\mathcal{P}_\text{pl}\delta f`."""
 
     # string literal type hints as class not defined yet
     def __mul__(self, number: float) -> "BoltzmannDeltas":

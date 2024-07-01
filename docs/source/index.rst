@@ -28,13 +28,15 @@ If you use WallGo, please cite arXiv:....
     :hidden:
 
     Boltzmann
+    containers
     Collision
     EoM
+    exceptions
     Grid
     Hydro
     HydroTemplateModel
     Polynomial
-    Model
+    results
     Thermodynamics
 
 .. toctree::

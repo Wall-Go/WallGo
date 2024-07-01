@@ -16,14 +16,29 @@ class BoltzmannResults:
     """
 
     deltaF: np.ndarray
+    r"""Deviation of probability density function from equilibrium,
+    :math:`\delta f(z, p_z, p_\parallel)`."""
+
     Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
+    r"""Relativistically invariant integrals over
+    :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`."""
+
     truncationError: float
+    r"""Estimated relative error in :math:`\delta f` due to truncation
+    of spectral expansion."""
 
     # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
+    r"""Ratio of out-of-equilibrium and equilibrium pressures,
+    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. One element for each
+    out-of-equilibrium particle."""
+
     linearizationCriterion2: np.ndarray
+    r"""Ratio of collision and Liouville operators in Boltzmann equation,
+    :math:`|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|`. One element for each
+    out-of-equilibrium particle."""
 
     def __mul__(self, number: float) -> "BoltzmannResults":
         return BoltzmannResults(
@@ -64,20 +79,26 @@ class HydroResults:
     Holds results to be returned by Hydro
     """
 
-    # hydrodynamic results
     temperaturePlus: float
+    r"""Temperature in front of the bubble, :math:`T_+`,
+    from hydrodynamic matching conditions."""
+
     temperatureMinus: float
-    velocityJouget: float
+    r"""Temperature behind the bubble, :math:`T_-`,
+    from hydrodynamic matching conditions."""
+
+    velocityJouguet: float
+    r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
 
     def __init__(
         self,
         temperaturePlus: float,
         temperatureMinus: float,
-        velocityJouget: float,
+        velocityJouguet: float,
     ):
         self.temperaturePlus = temperaturePlus
         self.temperatureMinus = temperatureMinus
-        self.velocityJouget = velocityJouget
+        self.velocityJouguet = velocityJouguet
 
 
 @dataclass
@@ -85,32 +106,72 @@ class WallGoResults:
     """
     Compiles output results for users of WallGo
     """
-    # bubble wall speed, and error
     wallVelocity: float
+    """Bubble wall velocity."""
+
     wallVelocityError: float
-    # local thermal equilibrium result
+    """Estimated error in bubble wall velocity."""
+
     wallVelocityLTE: float
-    # hydrodynamic results
+    """Bubble wall velocity in local thermal equilibrium."""
+
     temperaturePlus: float
+    r"""Temperature in front of the bubble, :math:`T_+`,
+    from hydrodynamic matching conditions."""
+
     temperatureMinus: float
-    velocityJouget: float
-    # quantities from WallParams
-    wallWidths: np.ndarray
-    wallOffsets: np.ndarray
-    # quantities from BoltzmannBackground
+    r"""Temperature behind the bubble, :math:`T_-`,
+    from hydrodynamic matching conditions."""
+
+    velocityJouguet: float
+    r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
+
+    widths: np.ndarray  # 1D array
+    """Bubble wall widths in each field direction."""
+
+    offsets: np.ndarray  # 1D array
+    """Bubble wall offsets in each field direction."""
+
     velocityProfile: np.ndarray
+    """Fluid velocity as a function of position."""
+
     fieldProfiles: Fields
+    """Field profile as a function of position."""
+
     temperatureProfile: np.ndarray
-    # quantities from BoltzmannResults
-    deltaF: np.ndarray
-    Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
-    truncationError: float
-    # finite difference results
-    deltaFFiniteDifference: np.ndarray
-    DeltasFiniteDifference: BoltzmannDeltas  # pylint: disable=invalid-name
-    # measures of nonlinearity
+    """Temperarture profile as a function of position."""
+
     linearizationCriterion1: np.ndarray
+    r"""Ratio of out-of-equilibrium and equilibrium pressures,
+    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. One element for each
+    out-of-equilibrium particle."""
+
     linearizationCriterion2: np.ndarray
+    r"""Ratio of collision and Liouville operators in Boltzmann equation,
+    :math:`|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|`. One element for each
+    out-of-equilibrium particle."""
+
+    deltaF: np.ndarray
+    r"""Deviation of probability density function from equilibrium,
+    :math:`\delta f(z, p_z, p_\parallel)`."""
+
+    Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
+    r"""Relativistically invariant integrals over
+    :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`."""
+
+    truncationError: float
+    r"""Estimated relative error in :math:`\delta f` due to truncation
+    of spectral expansion."""
+
+    deltaFFiniteDifference: np.ndarray
+    r"""Deviation of probability density function from equilibrium,
+    :math:`\delta f(z, p_z, p_\parallel)`, using finite differences instead
+    of spectral expansion."""
+
+    DeltasFiniteDifference: BoltzmannDeltas  # pylint: disable=invalid-name
+    r"""Relativistically invariant integrals over
+    :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
+    using finite differences instead of spectral expansion."""
 
     def __init__(self) -> None:
         pass
@@ -134,7 +195,7 @@ class WallGoResults:
         """
         self.temperaturePlus = hydroResults.temperaturePlus
         self.temperatureMinus = hydroResults.temperatureMinus
-        self.velocityJouget = hydroResults.velocityJouget
+        self.velocityJouguet = hydroResults.velocityJouguet
 
     def setWallParams(self, wallParams: WallParams) -> None:
         """
@@ -176,23 +237,29 @@ class WallGoInterpolationResults:
     """
     Used when interpolating the pressure. Like WallGoResults but expanded to lists.
     """
-    ## List of stable solutions
     wallVelocities: list[float]
-    ## List of unstable solutions
+    """List of stable wall velocities."""
+
     unstableWallVelocities: list[float]
+    """List of unstable wall velocities."""
 
-    ## Velocity grid on which the pressures were computed
     velocityGrid: list[float]
-    ## Pressures evaluated at velocityGrid
-    pressures: list[float]
-    ## Spline of the pressure
-    pressureSpline: UnivariateSpline
+    """Velocity grid on which the pressures were computed."""
 
-    ## WallParams evaluated at velocityGrid
+    pressures: list[float]
+    """Pressures evaluated at velocityGrid."""
+
+    pressureSpline: UnivariateSpline
+    """Spline of the pressure."""
+
     wallParams: list[WallParams]
-    ## BoltzmannResults evaluated at velocityGrid
+    """WallParams objects evaluated at velocityGrid."""
+
     boltzmannResults: list[BoltzmannResults]
-    ## BoltzmannBackground evaluated at velocityGrid
+    """BoltzmannResults objects evaluated at velocityGrid."""
+
     boltzmannBackgrounds: list[BoltzmannBackground]
-    ## HydroResults evaluated at velocityGrid
+    """BoltzmannBackground objects evaluated at velocityGrid."""
+
     hydroResults: list[HydroResults]
+    """HydroResults objects evaluated at velocityGrid."""
