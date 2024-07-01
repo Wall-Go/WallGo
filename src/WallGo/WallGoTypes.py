@@ -15,7 +15,6 @@ class PhaseInfo:
     temperature: float
 
 
-
 """LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
 it explicitly reshapes the input fieldProfiles to include endpoints (VEVs). But then in this class there is a lot of slicing in range 1:-1
 that just removes the endspoints.
@@ -32,7 +31,7 @@ class BoltzmannBackground:
         # assumes input is in the wall frame
         self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfiles = fieldProfiles.view(Fields) ## NEEDS to be Fields object
+        self.fieldProfiles = fieldProfiles.view(Fields) # NEEDS to be Fields object
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
         self.vMid = velocityMid
@@ -59,10 +58,10 @@ class BoltzmannDeltas:
     Integrals of the out-of-equilibrium particle densities,
     defined in equation (15) of arXiv:2204.13120.
     """
-    Delta00: Polynomial
-    Delta02: Polynomial
-    Delta20: Polynomial
-    Delta11: Polynomial
+    Delta00: Polynomial  # pylint: disable=invalid-name
+    Delta02: Polynomial  # pylint: disable=invalid-name
+    Delta20: Polynomial  # pylint: disable=invalid-name
+    Delta11: Polynomial  # pylint: disable=invalid-name
     
     def __mul__(self, other):
         """ 
@@ -92,10 +91,10 @@ class BoltzmannResults:
     Holds results to be returned by BoltzmannSolver
     """
     deltaF: np.ndarray
-    Deltas: BoltzmannDeltas
+    Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     truncationError: float
-    
-    # These two criteria are to evaluate the validity of the linearization of the 
+
+    # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
@@ -186,7 +185,7 @@ class WallGoResults:
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def setWallVelocities(
@@ -194,30 +193,30 @@ class WallGoResults:
         wallVelocity: float,
         wallVelocityError: float,
         wallVelocityLTE: float,
-    ):
+    ) -> None:
         # main results
         self.wallVelocity = wallVelocity
         self.wallVelocityError = wallVelocityError
         self.wallVelocityLTE = wallVelocityLTE
 
-    def setHydroResults(self, hydroResults: HydroResults):
+    def setHydroResults(self, hydroResults: HydroResults) -> None:
         # hydrodynamics results
         self.temperaturePlus = hydroResults.temperaturePlus
         self.temperatureMinus = hydroResults.temperatureMinus
         self.velocityJouget = hydroResults.velocityJouget
 
-    def setWallParams(self, wallParams: WallParams):
+    def setWallParams(self, wallParams: WallParams) -> None:
         # quantities from WallParams
         self.wallWidths = wallParams.widths
         self.wallOffsets = wallParams.offsets
 
-    def setBoltzmannBackground(self, boltzmannBackground: BoltzmannBackground):
+    def setBoltzmannBackground(self, boltzmannBackground: BoltzmannBackground) -> None:
         # quantities from BoltzmannBackground
         self.velocityProfile = boltzmannBackground.velocityProfile
         self.fieldProfiles = boltzmannBackground.fieldProfiles
         self.temperatureProfile = boltzmannBackground.temperatureProfile
 
-    def setBoltzmannResults(self, boltzmannResults: BoltzmannResults):
+    def setBoltzmannResults(self, boltzmannResults: BoltzmannResults) -> None:
         # quantities from BoltzmannResults
         self.deltaF = boltzmannResults.deltaF
         self.Deltas = boltzmannResults.Deltas
@@ -227,7 +226,7 @@ class WallGoResults:
 
     def setFiniteDifferenceBoltzmannResults(
         self, boltzmannResults: BoltzmannResults
-    ):
+    ) -> None:
         # quantities from finite difference versino of BoltzmannResults
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
@@ -238,14 +237,14 @@ class WallGoInterpolationResults:
     wallVelocities: list[float]
     ## List of unstable solutions
     unstableWallVelocities: list[float]
-    
+
     ## Velocity grid on which the pressures were computed
     velocityGrid: list[float]
     ## Pressures evaluated at velocityGrid
     pressures: list[float]
     ## Spline of the pressure
     pressureSpline: UnivariateSpline
-    
+
     ## WallParams evaluated at velocityGrid
     wallParams: list[WallParams]
     ## BoltzmannResults evaluated at velocityGrid

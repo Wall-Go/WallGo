@@ -266,7 +266,7 @@ class Grid:
             Compact p_par coordinate (rho_par).
 
         """
-        
+
         z_compact = z / np.sqrt(self.L_xi**2 + z**2)
         pz_compact = np.tanh(pz / 2 / self.momentumFalloffT)
         pp_compact = 1 - 2 * np.exp(-pp / self.momentumFalloffT)

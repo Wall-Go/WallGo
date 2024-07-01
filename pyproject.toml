@@ -87,6 +87,13 @@ method-naming-style = "camelCase"
 module-naming-style = "camelCase"
 variable-rgx = '^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 
+[tool.pylint."messages control"]
+disable = ["raw-checker-failed",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "pointless-string-statement"]
+
 [tool.mypy]
 warn_return_any = true
 disallow_incomplete_defs = true

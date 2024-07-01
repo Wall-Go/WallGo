@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 # WallGo imports
-from .Boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver
 from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .GenericModel import GenericModel
@@ -355,6 +355,7 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
 
         vmin = max(self.hydrodynamics.vJ+1e-4, self.hydrodynamics.slowestDeton())
+
         return self.eom.solveInterpolation(vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation)
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:

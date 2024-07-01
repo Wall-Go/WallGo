@@ -5,10 +5,7 @@ from types import ModuleType
 
 # TODO here only need the current config instead of whole wallgo package
 import WallGo ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import Fields
-# from .Particle import Particle
+from WallGo import Fields, GenericModel, Particle
 
 class Collision():
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
@@ -46,17 +43,13 @@ class Collision():
         """
         if not hasattr(self, "bInitialized"):
             self.module: ModuleType = None
-            self._loadCollisionModule()
+            self._loadCollisionModule(modelCls)
             self.bInitialized = True
             self.outputDirectory = None
             # automatic generation of collision integrals is disabled by default
             self.generateCollisionIntegrals = False 
 
-            ## Construct a "control" object for collision integrations
-            # Use help(Collision.manager) for info about what functionality is available
-            self.manager = self.module.CollisionManager()
 
-            self.addParticles(modelCls)
     
     def setSeed(self, seed: int) -> None:
         """Set seed for the Monte Carlo integration. Default is 0.
@@ -71,7 +64,7 @@ class Collision():
         self.module.setSeed(seed)
 
 
-    def _loadCollisionModule(self) -> None:
+    def _loadCollisionModule(self,modelCls) -> None:
         """Load the collision module.
 
         Raises:
@@ -91,6 +84,12 @@ class Collision():
             
             self.module = importlib.import_module(moduleName)
             print("Loaded module [%s]" % moduleName)
+
+            ## Construct a "control" object for collision integrations
+            # Use help(Collision.manager) for info about what functionality is available
+            self.manager = self.module.CollisionManager()
+
+            self.addParticles(modelCls)
 
         except ImportError:
             print("Warning: Failed to load [%s]. Using read-only mode for collision integrals." % moduleName)
@@ -189,6 +188,6 @@ class Collision():
         Returns:
             None
         """
-        self._assertLoaded()
         self.outputDirectory = outputDirectory
-        self.manager.setOutputDirectory(str(outputDirectory))
+        if self.module is not None:
+            self.manager.setOutputDirectory(str(outputDirectory))
