@@ -245,9 +245,9 @@ class BoltzmannSolver:
     def estimateTruncationError(self, deltaF: np.ndarray) -> float:
         r"""
         Quick estimate of the polynomial truncation error using
-        John Boyd's Rule-of-thumb-2:
-            the last coefficient of a Chebyshev polynomial expansion
-            is the same order-of-magnitude as the truncation error.
+        John Boyd's Rule-of-thumb-2: the last coefficient of a Chebyshev
+        polynomial expansion is the same order-of-magnitude as the truncation
+        error.
 
         Parameters
         ----------
