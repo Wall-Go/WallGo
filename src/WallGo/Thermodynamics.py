@@ -40,7 +40,7 @@ class Thermodynamics:
         nucleationTemperature: float,
         phaseLowT: Fields,
         phaseHighT: Fields,
-        criticalTemperature: float = None,
+        criticalTemperature: float | None = None,
     ):
         """Initialisation
 

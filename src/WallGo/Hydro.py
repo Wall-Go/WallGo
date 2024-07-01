@@ -8,7 +8,7 @@ import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .HydroTemplateModel import HydroTemplateModel
-from .Thermodynamics import ThermodynamicsExtrapolate
+from .Thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
 from .WallGoTypes import HydroResults
 from .WallGoExceptions import WallGoError
@@ -25,7 +25,9 @@ class Hydro:
     EOM and Boltzmann part of the code. The conversion is made in findHydroBoundaries.
     """
 
-    def __init__(self, thermodynamics, rtol=1e-6, atol=1e-6):
+    def __init__(
+        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-6
+    ) -> None:
         """Initialisation
 
         Parameters
@@ -63,8 +65,10 @@ class Hydro:
         try:
             self.vJ = self.findJouguetVelocity()
         except WallGoError:
-            print("Couldn't find Jouguet velocity, we continute\
-                   with the Jouguet velocity of the template model")
+            print(
+                "Couldn't find Jouguet velocity, we continute\
+                   with the Jouguet velocity of the template model"
+            )
             self.vJ = self.template.vJ
 
         self.vBracketLow = 1e-3
@@ -88,7 +92,7 @@ class Hydro:
         pHighT = self.thermodynamicsExtrapolate.pHighT(self.Tnucl)
         eHighT = self.thermodynamicsExtrapolate.eHighT(self.Tnucl)
 
-        def vpDerivNum(tm):  # The numerator of the derivative of v+^2
+        def vpDerivNum(tm: float) -> float:  # The numerator of the derivative of v+^2
             pLowT = self.thermodynamicsExtrapolate.pLowT(tm)
             eLowT = self.thermodynamicsExtrapolate.eLowT(tm)
             num1 = pHighT - pLowT  # First factor in the numerator of v+^2
@@ -140,8 +144,11 @@ class Hydro:
         if rootResult.converged:
             tmSol = rootResult.root
         else:
-            raise WallGoError("Failed to solve Jouguet velocity at \
-                              input temperature!", data = {rootResult.flag, rootResult})
+            raise WallGoError(
+                "Failed to solve Jouguet velocity at \
+                              input temperature!",
+                data={rootResult.flag, rootResult},
+            )
 
         vp = np.sqrt(
             (pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))
@@ -165,7 +172,7 @@ class Hydro:
 
         """
 
-        def TpTm(vw):
+        def TpTm(vw: float) -> list[float]:
             _, _, Tp, Tm = self.findMatching(vw)
             return [Tp, Tm]
 
@@ -175,7 +182,8 @@ class Hydro:
         ):
             return self.vJ
 
-        TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
+        def TmMax(vw: float) -> float:
+            return TpTm(vw)[1] - self.TMaxLowT
 
         try:
             vmax1 = root_scalar(
@@ -189,7 +197,9 @@ class Hydro:
         except ValueError:
             vmax1 = self.vJ
 
-        TpMax = lambda vw: TpTm(vw)[0] - self.TMaxHighT
+        def TpMax(vw: float) -> float:
+            return TpTm(vw)[0] - self.TMaxHighT
+
         try:
             vmax2 = root_scalar(
                 TpMax,
@@ -217,15 +227,16 @@ class Hydro:
             The value of the slowest detonation solution for this model
         """
 
-        def TpTm(vw):
+        def TpTm(vw: float) -> list[float]:
             _, _, Tp, Tm = self.findMatching(vw)
             return [Tp, Tm]
 
         if TpTm(1)[1] > self.TMaxLowT:
             return 1
 
+        def TmMax(vw: float) -> float:
+            return TpTm(vw)[1] - self.TMaxLowT
 
-        TmMax = lambda vw: TpTm(vw)[1] - self.TMaxLowT
         try:
             vmin = root_scalar(
                 TmMax,
@@ -239,21 +250,21 @@ class Hydro:
         except ValueError:
             return self.vJ
 
-    def vpvmAndvpovm(self, Tp, Tm) -> Tuple[float, float]:
+    def vpvmAndvpovm(self, Tp: float, Tm: float) -> Tuple[float, float]:
         r"""
         Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`,
         from the matching conditions.
 
         Parameters
         ----------
-        Tp : double
+        Tp : float
             Plasma temperature right in front of the bubble wall
-        Tm : double
+        Tm : float
             Plasma temperature right behind the bubble wall
 
         Returns
         -------
-        vpvm, vpovm: double
+        vpvm, vpovm: float
             `v_+v_-` and :math:`v_+/v_-`
         """
 
@@ -295,7 +306,7 @@ class Hydro:
         ), self.thermodynamicsExtrapolate.wHighT(Tp)
         eHighT = wHighT - pHighT
 
-        def tmFromvpsq(tm):
+        def tmFromvpsq(tm: float) -> float:
             pLowT, wLowT = self.thermodynamicsExtrapolate.pLowT(
                 tm
             ), self.thermodynamicsExtrapolate.wLowT(tm)
@@ -328,7 +339,9 @@ class Hydro:
         vm = np.sqrt(vpvm / vpovm)
         return (vp, vm, Tp, Tm)
 
-    def matchDeflagOrHyb(self, vw, vp=None) -> Tuple[float, float, float, float]:
+    def matchDeflagOrHyb(
+        self, vw: float, vp: float | None = None
+    ) -> Tuple[float, float, float, float]:
         r"""
         Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration
         or hybrid by solving the matching relations.
@@ -353,7 +366,9 @@ class Hydro:
         if vp is None:
             vwMapping = vw
 
-        def matching(XpXm):  # Matching relations at the wall interface
+        def matching(
+            XpXm: list[float],
+        ) -> Tuple[float, float]:  # Matching relations at the wall interface
             Tpm = self.__inverseMappingT(XpXm)
             vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm[1]))
             if vp is None:
@@ -464,7 +479,7 @@ class Hydro:
         )
         return [eq1, eq2]
 
-    def solveHydroShock(self, vw, vp, Tp) -> float:
+    def solveHydroShock(self, vw: float, vp: float, Tp: float) -> float:
         r"""
         Solves the hydrodynamic equations in the shock for a given wall
         velocity :math:`v_w` and matching parameters :math:`v_+,T_+`
@@ -487,13 +502,13 @@ class Hydro:
 
         """
 
-        def shock(v, xiAndT):
+        def shock(v, xiAndT) -> float:
             xi, T = xiAndT
             return boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(
                 T
             )
 
-        shock.terminal = True
+        shock.terminal = True  # What's happening here?
         xi0T0 = [vw, Tp]
         vpcent = boostVelocity(vw, vp)
         if shock(vpcent, xi0T0) > 0:
@@ -516,7 +531,7 @@ class Hydro:
             vmShock = solshock.t[-1]
             xiShock, TmShock = solshock.y[:, -1]
 
-        def TiiShock(tn):  # continuity of Tii
+        def TiiShock(tn: float) -> float:  # continuity of Tii
             return self.thermodynamicsExtrapolate.wHighT(tn) * xiShock / (
                 1 - xiShock**2
             ) - self.thermodynamicsExtrapolate.wHighT(TmShock) * boostVelocity(
@@ -557,7 +572,7 @@ class Hydro:
             raise WallGoError(TnRootResult.flag, TnRootResult)
         return TnRootResult.root
 
-    def strongestShock(self, vw) -> float:
+    def strongestShock(self, vw: float) -> float:
         r"""
         Finds the smallest nucleation temperature possible for a given wall velocity vw.
         The strongest shock is found by finding the value of Tp for which vp = 0 and
@@ -575,9 +590,11 @@ class Hydro:
             The nucleation temperature corresponding to the strongest shock.
 
         """
-        matchingStrongest = lambda Tp: self.thermodynamicsExtrapolate.pHighT(
-            Tp
-        ) - self.thermodynamicsExtrapolate.pLowT(self.TMinHydro)
+
+        def matchingStrongest(Tp: float) -> float:
+            return self.thermodynamicsExtrapolate.pHighT(
+                Tp
+            ) - self.thermodynamicsExtrapolate.pLowT(self.TMinHydro)
 
         try:
             TpStrongestRootResult = root_scalar(
@@ -607,7 +624,10 @@ class Hydro:
             The smallest velocity that allows for a deflagration/hybrid.
 
         """
-        strongestshockTn = lambda vw: self.strongestShock(vw) - self.Tnucl
+
+        def strongestshockTn(vw: float) -> float:
+            return self.strongestShock(vw) - self.Tnucl
+
         try:
             vMinRootResult = root_scalar(
                 strongestshockTn,
@@ -621,7 +641,7 @@ class Hydro:
         except ValueError:
             return 0
 
-    def findMatching(self, vwTry) -> Tuple[float, float, float, float]:
+    def findMatching(self, vwTry: float) -> Tuple[float, float, float, float]:
         r"""
         Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function
         of the wall velocity and for the nucleation temperature of the model.
@@ -656,7 +676,7 @@ class Hydro:
                 vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
 
-            def func(vpTry):
+            def func(vpTry: float) -> float:
                 # HACK! This function needs renaming
                 _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
                 return self.solveHydroShock(vwTry, vpTry, Tp) - self.Tnucl
@@ -668,7 +688,7 @@ class Hydro:
             # solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
             if fmin * fmax > 0:
 
-                def solveVpmax(vpTry):
+                def solveVpmax(vpTry: float) -> float:
                     _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
                     return vpTry - self.thermodynamicsExtrapolate.csqHighT(Tp) / vwTry
 
@@ -719,7 +739,9 @@ class Hydro:
 
         return (vp, vm, Tp, Tm)
 
-    def findHydroBoundaries(self, vwTry) -> Tuple[float, float, float, float, float]:
+    def findHydroBoundaries(
+        self, vwTry: float
+    ) -> Tuple[float, float, float, float, float]:
         r"""
         Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid
         velocity in right in front of the wall) for the scalar and plasma equations of
@@ -743,7 +765,8 @@ class Hydro:
         """
         if vwTry < self.vMin:
             print(
-                "This wall velocity is too small for the chosen nucleation temperature. findHydroBoundaries will return zero."
+                "This wall velocity is too small for the chosen nucleation temperature,"
+                " findHydroBoundaries will return zero."
             )
             return (0, 0, 0, 0, 0)
 
@@ -779,8 +802,8 @@ class Hydro:
 
         # Function given to the root finder. # LN: yea but please use descriptive names
         def func(
-            vw,
-        ):
+            vw: float,
+        ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
             Tntry = self.solveHydroShock(vw, vp, Tp)
             return Tntry - self.Tnucl
@@ -788,8 +811,8 @@ class Hydro:
         # Equation to find the position of the shock front.
         # If shock(vw) < 0, the front is ahead of vw.
         def shock(
-            vw,
-        ):
+            vw: float,
+        ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
             return vp * vw - self.thermodynamicsExtrapolate.csqHighT(Tp)
 
@@ -833,7 +856,7 @@ class Hydro:
         )
         return sol.root
 
-    def __mappingT(self, TpTm):
+    def __mappingT(self, TpTm: list[float]) -> list[float]:
         """
         Maps the variables Tp and Tm, which are constrained to
         TMinHydro < Tm,Tp < TMaxHydro to the interval (-inf,inf) to allow root
@@ -859,7 +882,7 @@ class Hydro:
         )  # Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf
         return [Xp, Xm]
 
-    def __inverseMappingT(self, XpXm):
+    def __inverseMappingT(self, XpXm: list[float]) -> list[float]:
         """
         Inverse of __mappingT.
         """

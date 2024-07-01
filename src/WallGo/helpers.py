@@ -311,13 +311,13 @@ def hessian(f, x, order=4, epsilon=1e-16, scale=1.0, dx=None, xAxis=None, yAxis=
     
 
 
-def gammaSq(v):
+def gammaSq(v : float) -> float:
     r"""
     Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`
     """
     return 1./(1. - v*v)
 
-def boostVelocity(xi, v):
+def boostVelocity(xi : float, v : float) -> float:
     """
     Lorentz-transformed velocity
     """
