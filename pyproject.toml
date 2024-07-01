@@ -88,6 +88,13 @@ method-naming-style = "camelCase"
 module-naming-style = "camelCase"
 variable-naming-style = "camelCase"
 
+[tool.pylint."messages control"]
+disable = ["raw-checker-failed",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "pointless-string-statement"]
+
 [tool.mypy]
 warn_return_any = true
 disallow_incomplete_defs = true

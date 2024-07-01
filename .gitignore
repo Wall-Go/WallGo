@@ -18,3 +18,9 @@ Collision/examples/bin/
 Collision/run/
 Collision/testrun/
 data/
+old/
+*.eps
+*.pdf
+*.txt
+out*
+.ropeproject/

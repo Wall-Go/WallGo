@@ -1,60 +1,61 @@
+"""
+A collection of fixtures for tests not using real model
+"""
 import pytest
 import numpy as np
 import WallGo
 
 ## should clean these imports...
-
-from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2 # Benoit benchmark model
-
+from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2
+from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 from .BenchmarkPoint import BenchmarkPoint
 
-# Ugly directory structure:
-from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 
-## This is a parametrized fixture so argument name needs to be 'request'
+# This is a parametrized fixture so argument name needs to be 'request'
 @pytest.fixture
-def boltzmannTestBackground(M):
+def boltzmannTestBackground(spatialGridSize: int) -> WallGo.BoltzmannBackground:
+    """
+    BoltzmannBackground with simple analytic v(z), T(z) and field(z) profiles
+    """
 
-    vw = 0 #1 / np.sqrt(3)
-    v = - np.ones(M + 1) / np.sqrt(3)
-    v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(M + 1))
+    v = - np.ones(spatialGridSize + 1) / np.sqrt(3)
+    v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(spatialGridSize + 1))
     velocityMid = 0.5 * (v[0] + v[-1])
 
-    ## Test background field in WallGo.Fields format. Need to give it a list of field-space points,
-    ## but a 1D list is interpreted as one such point (with many independent background fields).
-    ## So give a 2D list.
+    # Test background field in WallGo.Fields format. Need to give it a list of field-space points,
+    # but a 1D list is interpreted as one such point (with many independent background fields).
+    # So give a 2D list.
 
-    field = np.ones((M + 1,))
-    field[M // 2:]  = 0
-    field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(M + 1) + 6)
+    field = np.ones((spatialGridSize + 1,))
+    field[spatialGridSize // 2:]  = 0
+    field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(spatialGridSize + 1) + 6)
     field = WallGo.Fields( field[:, np.newaxis] )
-    T = 100 * np.ones(M + 1)
+    temperature = 100 * np.ones(spatialGridSize + 1)
 
-    # T += 1 * np.sin(11 * 2 * np.pi * np.arange(M + 1) + 6)
     return WallGo.BoltzmannBackground(
         velocityMid=velocityMid,
         velocityProfile=v,
         fieldProfiles=field,
-        temperatureProfile=T,
+        temperatureProfile=temperature,
         polynomialBasis="Cardinal",
     )
 
 
 @pytest.fixture
-def particle():
-    topMsqDerivative = lambda fields:  np.transpose([fields.GetField(0),0*fields.GetField(1)])
+def particle() -> WallGo.Particle:
+    """
+    A "top" example Particle object for tests
+    """
     return WallGo.Particle(
         name="top",
         msqVacuum=lambda phi: 0.5 * phi.GetField(0)**2,
-        msqDerivative = topMsqDerivative,
+        msqDerivative = lambda fields: np.transpose([fields.GetField(0),0*fields.GetField(1)]),
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
         inEquilibrium=False,
         ultrarelativistic=False,
         totalDOFs = 12
     )
-
-
 
 
 ##------- Old stuff, for newer fixtures see conftest.py in Benchmarks/SingletSM_Z2

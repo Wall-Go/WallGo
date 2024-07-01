@@ -8,7 +8,7 @@ import copy  # for deepcopy
 import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
-from .Boltzmann import (
+from .boltzmann import (
     BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
 )
 from .Fields import Fields, FieldPoint
