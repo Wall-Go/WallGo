@@ -6,7 +6,7 @@ TODO Is there a better way of doing all this?!
 
 from .Boltzmann import BoltzmannBackground, BoltzmannSolver
 from .Grid import Grid
-from .Hydro import Hydro
+from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics

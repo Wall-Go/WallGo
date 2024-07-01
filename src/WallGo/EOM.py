@@ -15,7 +15,7 @@ from .Fields import Fields, FieldPoint
 from .GenericModel import GenericModel
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
-from .Hydro import Hydro
+from .hydrodynamics import Hydrodynamics
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
@@ -30,7 +30,7 @@ class EOM:
         self,
         boltzmannSolver: BoltzmannSolver,
         thermodynamics: Thermodynamics,
-        hydro: Hydro,
+        hydrodynamics: Hydrodynamics,
         grid: Grid,
         nbrFields: int,
         meanFreePath: float,
@@ -77,7 +77,7 @@ class EOM:
 
         assert isinstance(boltzmannSolver, BoltzmannSolver)
         assert isinstance(thermodynamics, Thermodynamics)
-        assert isinstance(hydro, Hydro)
+        assert isinstance(hydrodynamics, Hydrodynamics)
         assert isinstance(grid, Grid)
 
         self.boltzmannSolver = boltzmannSolver
@@ -89,7 +89,7 @@ class EOM:
         self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
-        self.hydro = hydro
+        self.hydrodynamics = hydrodynamics
         ## LN: Dunno if we want to store this here tbh
         self.Tnucl = self.thermo.Tnucl
         
@@ -129,8 +129,8 @@ class EOM:
             offsets=np.zeros(self.nbrFields),
         )
 
-        vmin = self.hydro.vMin
-        vmax = min(self.hydro.vJ,self.hydro.fastestDeflag())
+        vmin = self.hydrodynamics.vMin
+        vmax = min(self.hydrodynamics.vJ,self.hydrodynamics.fastestDeflag())
         return self.solveWall(vmin, vmax, wallParams)
     
 
@@ -210,7 +210,7 @@ class EOM:
         wallVelocity = optimizeResult.root
 
         # also getting the LTE results
-        wallVelocityLTE = self.hydro.findvwLTE()
+        wallVelocityLTE = self.hydrodynamics.findvwLTE()
 
         # Get wall params, and other results
         fractionWallVelocity = (wallVelocity - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
@@ -285,7 +285,7 @@ class EOM:
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action. Can use two different iteration algorithms 
         to find the pressure. If self.forceImproveConvergence=False and 
-        wallVelocity<self.hydro.vJ, uses a fast algorithm that sometimes fails 
+        wallVelocity<self.hydrodynamics.vJ, uses a fast algorithm that sometimes fails 
         to converge. Otherwise, or if the previous algorithm converges slowly,
         uses a slower, but more robust algorithm.
 
@@ -325,7 +325,7 @@ class EOM:
             rtol = self.pressRelErrTol
             
         improveConvergence = self.forceImproveConvergence
-        if wallVelocity > self.hydro.vJ:
+        if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
         print(f"\nTrying {wallVelocity=}")
@@ -359,11 +359,11 @@ class EOM:
                 linearizationCriterion2=0,
             )
 
-        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydrodynamics.findHydroBoundaries(wallVelocity)
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
-            velocityJouget=self.hydro.vJ,
+            velocityJouget=self.hydrodynamics.vJ,
         )
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
@@ -1080,7 +1080,7 @@ class EOM:
         the field equation of motion iteratively.
         '''
 
-        # Initial conditions for velocity, hydro boundaries, wall parameters and
+        # Initial conditions for velocity, hydrodynamics boundaries, wall parameters and
         # temperature profile
 
         if self.wallVelocityLTE < 1:
@@ -1088,9 +1088,9 @@ class EOM:
             maxWallVelocity = self.wallVelocityLTE
         else:
             wallVelocity = np.sqrt(1 / 3)
-            maxWallVelocity = self.hydro.vJ
+            maxWallVelocity = self.hydrodynamics.vJ
 
-        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydrodynamics.findHydroBoundaries(wallVelocity)
 
         wallWidthsGuess = (5/self.Tnucl)*np.ones(self.nbrFields)
         wallOffsetsGuess = np.zeros(self.nbrFields-1)
@@ -1120,7 +1120,7 @@ class EOM:
             wallWidths = wallParameters[1:self.nbrFields+1]
             wallOffsets = wallParameters[self.nbrFields+1:]
 
-            c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+            c1, c2, Tplus, Tminus, velocityMid = self.hydrodynamics.findHydroBoundaries(wallVelocity)
 
             vevLowT = self.thermo.freeEnergyLow(Tminus)[:-1]
             vevHighT = self.thermo.freeEnergyHigh(Tplus)[:-1]
@@ -1138,7 +1138,7 @@ class EOM:
             offEquilDeltas = boltzmannSolver.getDeltas()
 
             # for i in range(2): # Can run this loop several times to increase the accuracy of the approximation
-            #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydro, particle, grid)
+            #     wallParameters = initialEOMSolution(wallParameters, offEquilDeltas, freeEnergy, hydrodynamics, particle, grid)
             #     print(f'Intermediate result: {wallParameters=}')
 
             intermediateRes = root(self.momentsOfWallEoM, wallParameters, args=(offEquilDeltas,))
@@ -1155,7 +1155,7 @@ class EOM:
         wallVelocity = wallParameters[0]
         wallWidths = wallParameters[1:self.nbrFields+1]
         wallOffsets = wallParameters[self.nbrFields+1:]
-        c1, c2, Tplus, Tminus, velocityMid = self.hydro.findHydroBoundaries(wallVelocity)
+        c1, c2, Tplus, Tminus, velocityMid = self.hydrodynamics.findHydroBoundaries(wallVelocity)
 
         vevLowT = self.thermo.freeEnergyLow(Tminus)[:-1]
         vevHighT = self.thermo.freeEnergyHigh(Tplus)[:-1]

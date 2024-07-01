@@ -14,7 +14,7 @@ from .WallGoTypes import HydroResults
 from .WallGoExceptions import WallGoError
 
 
-class Hydro:
+class Hydrodynamics:
     """
     Class for solving the hydrodynamic equations of the plasma, at distances far enough
     from the wall such that the wall can be treated as infinitesimally thin.
