@@ -1,4 +1,25 @@
-import pathlib
+"""
+This Python script, SingletStandardModel_Z2.py,
+implements a minimal Standard Model extension via
+a scalar singlet and incorporating a Z2 symmetry.
+Intended for W, Z and right handed top (tR) to be out of equilibirium
+Currently: Only tR out of equilibrium
+
+Features:
+- Definition of the extended model parameters including the singlet scalar field.
+- Implementation of the Z2 symmetry and its effects on particle interactions.
+
+Usage:
+This script is intended to compute the wallspeed of the model.
+
+Dependencies:
+- NumPy for numerical calculations
+- WallGo for the WallGo package
+- collision module (if generateCollisionIntegrals = True)
+- Otherwise: CollisionIntegrals in read-only mode using the default path for the collision integrals as the "CollisonOutput" directory
+
+Note:
+"""
 import os
 import numpy as np
 import numpy.typing as npt
@@ -490,7 +511,6 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-    print("=== WallGo collision generation ===")
     """
     Register the model with WallGo. This needs to be done only once.
     If you need to use multiple models during a single run,
@@ -498,7 +518,7 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    ## collision stuff
+    ## collision integration and path specifications 
 
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
@@ -520,6 +540,7 @@ def main() -> None:
     # symbolic matrix elements as it parses them. Can be useful for debugging
     WallGo.config.config.set("MatrixElements", "verbose", "True")
 
+    print("=== WallGo collision generation ===")
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
