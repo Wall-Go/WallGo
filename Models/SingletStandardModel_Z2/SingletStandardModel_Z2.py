@@ -528,7 +528,7 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    ## collision integration and path specifications
+    ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist

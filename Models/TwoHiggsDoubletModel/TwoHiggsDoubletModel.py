@@ -494,18 +494,18 @@ def main() -> None:
 
     model = InertDoubletModel(inputParameters)
 
-    print("=== Loading the collisions ===")
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
-    ## collision stuff
+    ## ---- collision integration and path specifications
 
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
     WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
 
+    print("=== Loading the collisions ===")
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)

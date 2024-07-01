@@ -263,7 +263,7 @@ def main() -> None:
 
     manager.registerModel(model)
 
-    ## collision stuff
+    ## ---- collision integration and path specifications
 
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"

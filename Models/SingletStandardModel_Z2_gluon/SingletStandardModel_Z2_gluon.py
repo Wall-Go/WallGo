@@ -372,6 +372,8 @@ def main() -> None:
     """
     manager.registerModel(model)
 
+    ## ---- collision integration and path specifications
+
     ## Create Collision singleton which automatically loads the collision module
     # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
