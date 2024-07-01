@@ -449,6 +449,7 @@ class Hydrodynamics:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
+        See e.g. eq. (B.10, B.11) of 1909.10040
 
         Parameters
         ----------
@@ -547,7 +548,7 @@ class Hydrodynamics:
             )
 
         # Make an initial guess for the temperature range in which Tn will be found
-        Tmin, Tmax = max(self.Tnucl / 2, self.TMinHydro), TmShock    
+        Tmin, Tmax = max(self.Tnucl / 2, self.TMinHydro), TmShock
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
 
         # If the range does not capture the shock, we lower Tmin
@@ -685,17 +686,16 @@ class Hydrodynamics:
                 vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
 
-            def func(vpTry: float) -> float:
-                # HACK! This function needs renaming
+            def shockTnDiff(vpTry: float) -> float:
                 _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
                 return self.solveHydroShock(vwTry, vpTry, Tp) - self.Tnucl
 
-            fmin, fmax = func(vpmin), func(vpmax)
+            shockTnDiffMin, shockTnDiffMax = shockTnDiff(vpmin), shockTnDiff(vpmax)
 
             # If no solution was found between vpmin and vpmax, it might be because
             # vpmax was evaluated at Tn instead of Tp.  We thus reevaluate vpmax by
             # solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
-            if fmin * fmax > 0:
+            if shockTnDiffMin * shockTnDiffMax > 0:
 
                 def solveVpmax(vpTry: float) -> float:
                     _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
@@ -708,18 +708,18 @@ class Hydrodynamics:
                         xtol=self.atol,
                         rtol=self.rtol,
                     ).root
-                    fmax = func(vpmax)
+                    shockTnDiffMax = shockTnDiff(vpmax)
 
-            if fmin * fmax <= 0:
+            if shockTnDiffMin * shockTnDiffMax <= 0:
                 sol = root_scalar(
-                    func,
+                    shockTnDiff,
                     bracket=[vpmin, vpmax],
                     xtol=self.atol,
                     rtol=self.rtol,
                 )
             else:
                 extremum = minimize_scalar(
-                    lambda x: np.sign(fmax) * func(x),
+                    lambda x: np.sign(shockTnDiffMax) * shockTnDiff(x),
                     bounds=[vpmin, vpmax],
                     method="Bounded",
                 )
@@ -736,15 +736,12 @@ class Hydrodynamics:
                     return self.template.findMatching(vwTemplate)
 
                 sol = root_scalar(
-                    func,
+                    shockTnDiff,
                     bracket=[vpmin, extremum.x],
                     xtol=self.atol,
                     rtol=self.rtol,
                 )
             vp, vm, Tp, Tm = self.matchDeflagOrHyb(vwTry, sol.root)
-
-        #            if self.vpvmAndvpovm(Tp,Tm)[0] < 0:
-        #                return None, None, None, None
 
         return (vp, vm, Tp, Tm)
 
@@ -781,13 +778,11 @@ class Hydrodynamics:
 
         vp, vm, Tp, Tm = self.findMatching(vwTry)
         if vp is None:
-            # not sure what is going on here
-            # return (vp,vm,Tp,Tm,boostVelocity(vwTry,vp))
             return (vp, vm, Tp, Tm, None)
         wHighT = self.thermodynamicsExtrapolate.wHighT(Tp)
         c1 = -wHighT * gammaSq(vp) * vp
         c2 = self.thermodynamicsExtrapolate.pHighT(Tp) + wHighT * gammaSq(vp) * vp**2
-        vMid = -0.5 * (vm + vp)  # minus sign for convention change
+        vMid = -0.5 * (vm + vp)  # NOTE: minus sign for convention change
         return (c1, c2, Tp, Tm, vMid)
 
     def findvwLTE(self) -> float:
@@ -809,8 +804,8 @@ class Hydrodynamics:
             The value of the wall velocity for this model in local thermal equilibrium.
         """
 
-        # Function given to the root finder. # LN: yea but please use descriptive names
-        def func(
+        # Function given to the root finder.
+        def shockTnDiff(
             vw: float,
         ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
@@ -847,18 +842,18 @@ class Hydrodynamics:
                 return 1  # No shock can be found, e.g. when the PT is too strong --
             # is there a risk here of returning 1 when it should be 0?
 
-        fmax = func(vmax)
+        shockTnDiffMax = shockTnDiff(vmax)
         if (
-            fmax > 0 or not self.success
+            shockTnDiffMax > 0 or not self.success
         ):  # There is no deflagration or hybrid solution, we return 1.
             return 1
 
-        fmin = func(vmin)
-        if fmin < 0:  # vw is smaller than vmin, we return 0.
+        shockTnDiffMin = shockTnDiff(vmin)
+        if shockTnDiffMin < 0:  # vw is smaller than vmin, we return 0.
             return 0
 
         sol = root_scalar(
-            func,
+            shockTnDiff,
             bracket=(vmin, vmax),
             xtol=self.atol,
             rtol=self.rtol,
