@@ -1,9 +1,8 @@
-import numpy as np
-import numpy.typing as npt
-from abc import ABC, abstractmethod ## Abstract Base Class
+from typing import Protocol
+from abc import ABC, abstractmethod  # Abstract Base Class
 
 ## WallGo imports
-from .Particle import Particle
+from .particle import Particle
 from .EffectivePotential import EffectivePotential
 
 

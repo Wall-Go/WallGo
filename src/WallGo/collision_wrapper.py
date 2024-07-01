@@ -5,12 +5,8 @@ import importlib
 from types import ModuleType
 
 # TODO here only need the current config instead of whole wallgo package
-import WallGo  ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import Fields
-
-# from .Particle import Particle
+import WallGo ## Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle
 
 
 class Collision:

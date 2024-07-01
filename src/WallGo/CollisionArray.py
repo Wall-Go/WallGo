@@ -7,7 +7,7 @@ import numpy as np
 from scipy.special import eval_chebyt
 import h5py  # read/write hdf5 structured binary data file format
 
-# from .Particle import Particle
+from .particle import Particle
 from .Polynomial import Polynomial
 from .Grid import Grid
 
