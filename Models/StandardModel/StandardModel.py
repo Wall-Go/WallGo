@@ -13,9 +13,9 @@ from WallGo import Fields, WallGoResults
 
 class StandardModel(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 1
@@ -214,7 +214,7 @@ class EffectivePotentialSM(EffectivePotential):
         return thermalParameters
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
 
@@ -263,18 +263,15 @@ def main():
 
     manager.registerModel(model)
 
-    ## collision stuff
+    ## ---- collision integration and path specifications
+
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "collisions_N11/")
 
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)
-
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "collisions_N11/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    
-    collision.setOutputDirectory(collisionDirectory)
 
     manager.loadCollisionFiles(collision)
 

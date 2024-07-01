@@ -69,6 +69,7 @@ def initialize() -> None:
 
         ## read default config
         config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
+        config.readINI( getSafePathToResource("Config/CollisionDefaults.ini") )
         
         #print(config)
 
