@@ -78,7 +78,7 @@ class SingletSM_Z2(GenericModel):
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
         lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",

@@ -87,7 +87,7 @@ class SingletSM_Z2(GenericModel):
         ## === SU(2) gauge bosons ===
         WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
         W = Particle("W",
-                            msqVacuum = lambda fields: 0.0,
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = WMsqThermal,
                             statistics = "Boson",
@@ -99,7 +99,7 @@ class SingletSM_Z2(GenericModel):
 
         ZMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 * 11./6.
         Z = Particle("Z",
-                            msqVacuum = lambda fields: 0.0,
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = ZMsqThermal,
                             statistics = "Boson",
@@ -112,7 +112,7 @@ class SingletSM_Z2(GenericModel):
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
         lightQuark = Particle("lightQuark",
-                            msqVacuum = lambda fields: 0.0,
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",

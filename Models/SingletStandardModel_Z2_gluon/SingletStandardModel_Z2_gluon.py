@@ -20,9 +20,9 @@ TODO make this smarter with less copy/paste
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
@@ -50,7 +50,7 @@ class SingletSM_Z2(GenericModel):
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
-        topQuark = Particle("top", 
+        topQuark = Particle("top",
                             msqVacuum = topMsqVacuum,
                             msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
@@ -68,7 +68,7 @@ class SingletSM_Z2(GenericModel):
         gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
-        gluon = Particle("gluon", 
+        gluon = Particle("gluon",
                             msqVacuum = gluonMsqVacuum,
                             msqDerivative = gluonMsqDerivative,
                             msqThermal = gluonMsqThermal,
@@ -81,8 +81,8 @@ class SingletSM_Z2(GenericModel):
 
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
+        lightQuark = Particle("lightQuark",
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",

@@ -183,12 +183,17 @@ class Collision:
         elif particle.statistics == "Fermion":
             particleType = self.module.EParticleType.FERMION
 
+        if callable(particle.msqVacuum):
+            msqVacuum = particle.msqVacuum(fields)
+        else:
+            msqVacuum = particle.msqVacuum
+
         ## Hack vacuum masses are ignored
         return self.module.ParticleSpecies(
             particle.name,
             particleType,
             particle.inEquilibrium,
-            particle.msqVacuum(fields) / T**2.0,
+            msqVacuum / T**2.0,
             particle.msqThermal(T) / T**2.0,
             particle.ultrarelativistic,
         )
