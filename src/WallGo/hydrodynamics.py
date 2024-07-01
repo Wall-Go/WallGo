@@ -33,13 +33,13 @@ class Hydrodynamics:
         Parameters
         ----------
         thermodynamics : class
-        rtol :
-        atol:
+        rtol : float
+        atol : float
 
         Returns
         -------
-        cls: Hydro
-            An object of the Hydro class.
+        cls: Hydrodynamics
+            An object of the Hydrodynamics class.
 
         """
 
@@ -72,9 +72,10 @@ class Hydrodynamics:
             self.vJ = self.template.vJ
 
         self.vBracketLow = 1e-3
+        # Minimum velocity that allows a shock with the given nucleation temperature
         self.vMin = max(
             self.vBracketLow, self.minVelocity()
-        )  # Minimum velocity that allows a shock with the given nucleation temperature
+        )
 
         self.success = None
 
@@ -87,7 +88,7 @@ class Hydrodynamics:
 
         Returns
         -------
-        vJ: double
+        vJ: float
             The value of the Jouguet velocity for this model.
 
         """
@@ -169,7 +170,7 @@ class Hydrodynamics:
 
         Returns
         -------
-        vmax: double
+        vmax: float
             The value of the fastest deflagration/hybrid solution for this model
 
         """
@@ -225,7 +226,7 @@ class Hydrodynamics:
 
         Returns
         -------
-        vmin: double
+        vmin: float
             The value of the slowest detonation solution for this model
         """
 
@@ -291,12 +292,12 @@ class Hydrodynamics:
 
         Parameters
         ---------
-        vw : double
+        vw : float
             Wall velocity
 
         Returns
         -------
-        vp,vm,Tp,Tm : double
+        vp,vm,Tp,Tm : float
             The value of the fluid velocities in the wall frame and the temperature
             right in front of the wall and right behind the wall.
 
@@ -350,15 +351,15 @@ class Hydrodynamics:
 
         Parameters
         ----------
-        vw : double
+        vw : float
             Wall velocity.
-        vp : double or None, optional
+        vp : float or None, optional
             Plasma velocity in front of the wall :math:`v_-`. If None, vp is
             determined from conservation of entropy. Default is None.
 
         Returns
         -------
-        vp,vm,Tp,Tm : double
+        vp,vm,Tp,Tm : float
             The value of the fluid velocities in the wall frame and the temperature
             right in front of the wall and right behind the wall.
 
@@ -373,7 +374,9 @@ class Hydrodynamics:
         ) -> Tuple[float, float]:  # Matching relations at the wall interface
             Tpm = self._inverseMappingT(mappedTpTm)
             vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm[1]))
+
             if vp is None:
+                # Determine vp from entropy conservation, e.g. eq. (15) of 2303.10171
                 vpsq = (Tpm[1] ** 2 - Tpm[0] ** 2 * (1 - vmsq)) / Tpm[1] ** 2
             else:
                 vpsq = vp**2
@@ -382,7 +385,7 @@ class Hydrodynamics:
             eq2 = vpvm / vpovm - vmsq
 
             # We multiply the equations by c to make sure the solver
-            # do not explore arbitrarly small or large values of Tm and Tp.
+            # does not explore arbitrarly small or large values of Tm and Tp.
             c = (2**2 + (Tpm[0] / Tpm0[0]) ** 2 + (Tpm[1] / Tpm0[1]) ** 2) * (
                 2**2 + (Tpm0[0] / Tpm[0]) ** 2 + (Tpm0[1] / Tpm[1]) ** 2
             )
@@ -458,8 +461,8 @@ class Hydrodynamics:
         Returns
         -------
         eq1, eq2 : array
-            The expressions for :math:`\frac{\partial v}{\partial \xi}`
-            and :math:`\frac{\partial v}{\partial T}`
+            The expressions for :math:`\frac{\partial \xi}{\partial v}`
+            and :math:`\frac{\partial T}{\partial v}`
         """
         xi, T = xiAndT
         eq1 = (
@@ -490,16 +493,16 @@ class Hydrodynamics:
 
         Parameters
         ----------
-        vw : double
+        vw : float
             Wall velocity
-        vp : double
+        vp : float
             Value of the fluid velocity in the wall frame, right in front of the bubble
-        Tp : double
+        Tp : float
             Value of the fluid temperature right in front of the bubble
 
         Returns
         -------
-        Tn : double
+        Tn : float
             Nucleation temperature
 
         """
@@ -533,7 +536,8 @@ class Hydrodynamics:
             vmShock = solshock.t[-1]
             xiShock, TmShock = solshock.y[:, -1]
 
-        def TiiShock(tn: float) -> float:  # continuity of Tii
+        # continuity of the ii-compontent of the energy-momentum tensor
+        def TiiShock(tn: float) -> float:
             return self.thermodynamicsExtrapolate.wHighT(tn) * xiShock / (
                 1 - xiShock**2
             ) - self.thermodynamicsExtrapolate.wHighT(TmShock) * boostVelocity(
@@ -542,8 +546,11 @@ class Hydrodynamics:
                 boostVelocity(xiShock, vmShock)
             )
 
-        Tmin, Tmax = self.Tnucl / 2, TmShock  # HACK why Tnucl/2?
+        # Make an initial guess for the temperature range in which Tn will be found
+        Tmin, Tmax = max(self.Tnucl / 2, self.TMinHydro), TmShock    
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
+
+        # If the range does not capture the shock, we lower Tmin
         while bracket1 * bracket2 > 0 and Tmin > self.TMinHydro:
             Tmax = Tmin
             bracket2 = bracket1
@@ -583,12 +590,12 @@ class Hydrodynamics:
 
         Parameters
         ----------
-        vw: double
+        vw: float
             Value of the wall velocity.
 
         Returns
         -------
-        Tn: double
+        Tn: float
             The nucleation temperature corresponding to the strongest shock.
 
         """
@@ -622,7 +629,7 @@ class Hydrodynamics:
 
         Returns
         -------
-        vMin: double
+        vMin: float
             The smallest velocity that allows for a deflagration/hybrid.
 
         """
@@ -653,12 +660,12 @@ class Hydrodynamics:
 
         Parameters
         ----------
-        vwTry : double
+        vwTry : float
             The value of the wall velocity
 
         Returns
         -------
-        vp,vm,Tp,Tm : double
+        vp,vm,Tp,Tm : float
             The value of the fluid velocities in the wall frame and the
             temperature right in front of the wall and right behind the wall.
 
@@ -756,12 +763,12 @@ class Hydrodynamics:
 
         Parameters
         ----------
-        vwTry : double
+        vwTry : float
             The value of the wall velocity
 
         Returns
         -------
-        c1,c2,Tp,Tm,vMid : double
+        c1,c2,Tp,Tm,vMid : float
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
