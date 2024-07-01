@@ -76,6 +76,8 @@ class Hydro:
             self.vBracketLow, self.minVelocity()
         )  # Minimum velocity that allows a shock with the given nucleation temperature
 
+        self.success = None
+
     def findJouguetVelocity(self) -> float:
         r"""
         Finds the Jouguet velocity for a thermal effective potential, defined by
