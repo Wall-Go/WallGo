@@ -361,7 +361,7 @@ class EOM:
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
-            velocityJouget=self.hydro.vJ,
+            velocityJouguet=self.hydro.vJ,
         )
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
