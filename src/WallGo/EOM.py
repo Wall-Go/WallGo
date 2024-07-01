@@ -165,7 +165,7 @@ class EOM:
         pressureMax, wallParamsMax, boltzmannResultsMax, boltzmannBackgroundMax, hydroResultsMax = self.wallPressure(wallVelocityMax, wallParamsGuess, True)
         
         # also getting the LTE results
-        wallVelocityLTE = self.hydro.findvwLTE()
+        wallVelocityLTE = self.hydrodynamics.findvwLTE()
         
         if pressureMax < 0:
             print('Maximum pressure on wall is negative!')
