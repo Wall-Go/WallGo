@@ -18,7 +18,7 @@ The definition of the Model starts by inheriting from the :py:data:`WallGo.Gener
 
 .. literalinclude:: ../../Models/Yukawa/Yukawa.py
    :language: py
-   :lines: 5-75
+   :lines: 5-76
 
 The scalar potential is used both for determining the free energy of homogeneous phases and for the shape and width of the bubble wall. In principle the potentials determining these two phenomena are different, as the former is coarse grained all the way to infinite length scales, while the latter can only consistenly be coarse grained on length scales shorter than the bubble wall width. :footcite:p:`Langer:1974cpa` Nervertheless, at high temperatures and to leading order in powers of the coupling, these two potentials agree.
 
