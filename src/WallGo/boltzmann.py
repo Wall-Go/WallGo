@@ -610,7 +610,12 @@ class BoltzmannSolver:
 
     def readCollisions(self, collision: "Collision") -> None:
         """
-        Reads collision integrals from file
+        Reads collision integrals from file.
+
+        Args:
+            collision (Collision): The collision object containing the collision integrals.
+        Returns:
+            None
         """
         self.collisionArray = CollisionArray.newFromDirectory(
             collision,
