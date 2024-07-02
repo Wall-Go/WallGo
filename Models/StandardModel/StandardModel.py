@@ -96,8 +96,6 @@ class StandardModel(GenericModel):
         modelParameters["RGScale"] = inputParameters["RGScale"]
         
         modelParameters["lambda"] = 0.5 * mH**2 / v0**2
-        #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
-        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
 
         ## Then the gauge/Yukawa sector
         
@@ -109,10 +107,13 @@ class StandardModel(GenericModel):
         g0 = 2.*MW / v0
         modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
         modelParameters["g2"] = g0
+
         # Just take QCD coupling as input
         modelParameters["g3"] = inputParameters["g3"]
 
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
+
+        modelParameters["msq"] = -modelParameters["lambda"] * v0**2 + v0**2 / (64*np.pi**2) * (3./2. * modelParameters["g2"]**4 + 3./4.*(modelParameters["g1"]**2 +modelParameters["g2"]**2)**2 - 12*modelParameters["yt"] )
 
         return modelParameters
         
@@ -252,7 +253,7 @@ def main():
         "MZ" : 91.1876,
         "Mt" : 173.0,
         "g3" : 1.2279920495357861,
-        "mH" : 35.0
+        "mH" : 34.0
     }
 
     model = StandardModel(inputParameters)
@@ -284,8 +285,8 @@ def main():
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
     
-    values_mH = [45.0, 35.0]
-    values_Tn = [56.8,44.6]
+    values_mH = [34.0, 50.0]
+    values_Tn = [73.5, 85.9]
 
     for i in range(len(values_mH)):
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
