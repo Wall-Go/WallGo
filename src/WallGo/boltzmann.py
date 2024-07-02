@@ -608,7 +608,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
 
-    def readCollisions(self, collision: str) -> None:
+    def readCollisions(self, collision: "Collision") -> None:
         """
         Reads collision integrals from file
         """
