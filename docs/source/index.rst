@@ -45,12 +45,12 @@ If you use WallGo, please cite arXiv:....
     modules/exceptions
     modules/Fields
     modules/FreeEnergy
+    modules/GenericModel
     modules/Grid
     modules/Hydro
     modules/HydroTemplateModel
     modules/Integrals
     modules/InterpolatableFunction
-    modules/Model
     modules/particle
     modules/Polynomial
     modules/results

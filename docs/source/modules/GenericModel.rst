@@ -1,5 +1,5 @@
 ======================================
-Model
+GenericModel
 ======================================
 
 .. automodule:: WallGo.GenericModel
