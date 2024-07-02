@@ -3,13 +3,13 @@ import numpy.typing as npt
 
 # WallGo imports
 import WallGo
-from .collision_wrapper import Collision
+from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
-from .GenericModel import GenericModel
+from .genericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales
 from .Hydro import (

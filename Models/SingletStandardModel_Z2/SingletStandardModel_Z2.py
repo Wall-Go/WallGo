@@ -62,6 +62,7 @@ class SingletSM_Z2(GenericModel):
         """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
@@ -178,6 +179,19 @@ class SingletSM_Z2(GenericModel):
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
         return modelParameters
+
+    def calculateCollisionParameters(self, modelParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculate the collision couplings (Lagrangian parameters) from the input parameters.
+        List as they appear in the MatrixElements file
+        """
+        super().calculateCollisionParameters(modelParameters)
+
+        collisionParameters = {}
+
+        collisionParameters["g3"] = modelParameters["g3"]
+
+        return collisionParameters
 
 # end model
 
@@ -477,7 +491,7 @@ def main() -> None:
     WallGo.initialize()
 
     ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -526,7 +540,7 @@ def main() -> None:
 
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
 
     """
     Register the model with WallGo. This needs to be done only once.
@@ -534,12 +548,6 @@ def main() -> None:
     we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
-
-    """
-    Define couplings (Lagrangian parameters)
-    list as they appear in the MatrixElements file
-    """
-    manager.collision.addCoupling(inputParameters["g3"])
 
     ## Generates or reads collision integrals
     manager.generateCollisionFiles()

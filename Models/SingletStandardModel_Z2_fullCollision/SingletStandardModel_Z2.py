@@ -47,6 +47,7 @@ class SingletSM_Z2(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
@@ -181,6 +182,22 @@ class SingletSM_Z2(GenericModel):
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
         return modelParameters
+    
+    def calculateCollisionParameters(self, modelParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculate the collision couplings (Lagrangian parameters) from the input parameters.
+        List as they appear in the MatrixElements file
+        """
+        super().calculateCollisionParameters(modelParameters)
+
+        collisionParameters = {}
+
+        collisionParameters["g3"] = modelParameters["g3"]
+        collisionParameters["g2"] = modelParameters["g2"]
+        collisionParameters["g1"] = modelParameters["g1"]
+
+        return collisionParameters
+
 
 # end model
 
@@ -539,14 +556,6 @@ def main() -> None:
     we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
-
-    """
-    Define couplings (Lagrangian parameters)
-    list as they appear in the MatrixElements file
-    """
-    manager.collision.addCoupling(inputParameters["g3"])
-    manager.collision.addCoupling(inputParameters["g2"])
-    manager.collision.addCoupling(inputParameters["g1"])
 
     ## Optional: set the seed used by Monte Carlo integration. Default is 0
     manager.collision.setSeed(0)

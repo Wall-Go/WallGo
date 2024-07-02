@@ -52,6 +52,7 @@ class SingletSM_Z2(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)

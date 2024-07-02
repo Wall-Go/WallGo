@@ -57,7 +57,6 @@ class Collision:
             collisionDirectory = scriptLocation / WallGo.config.get("Collisions", "pathName")
             collisionDirectory.mkdir(parents=True, exist_ok=True)
             matrixElementFile = scriptLocation / WallGo.config.get("MatrixElements", "fileName")
-            print(matrixElementFile)
 
             self.setOutputDirectory(str(collisionDirectory))
             self.setMatrixElementFile(str(matrixElementFile))
@@ -106,6 +105,7 @@ class Collision:
             self.manager.setMatrixElementVerbosity(WallGo.config.getboolean("MatrixElements", "verbose"))
 
             self.addParticles(modelCls)
+            self.addCouplings(modelCls)
 
         except ImportError:
             print(
@@ -123,6 +123,7 @@ class Collision:
             AssertionError: If the collision module has not been loaded.
         """
         assert self.module is not None, "Collision module has not been loaded!"
+
 
     def addParticles(self, model: "WallGo.GenericModel", T: float = 1.0) -> None:
         """
@@ -150,6 +151,20 @@ class Collision:
             self.manager.addParticle(
                 self.constructPybindParticle(particle, T, fieldHack)
             )
+    
+    def addCouplings(self, model: "WallGo.GenericModel") -> None:
+        """
+        Adds couplings (Lagrangian parameters) to the collision module
+        list as they appear in the MatrixElements file
+
+        Args:
+            model (WallGo.GenericModel): The model containing the collision parameters.
+
+        Returns:
+            None
+        """
+        for _, couplingValue in model.collisionParameters.items():
+            self.manager.addCoupling(couplingValue)
 
     def constructPybindParticle(
         self, particle: Particle, T: float, fields: Fields
