@@ -200,6 +200,8 @@ class Hydro:
             _, _, Tp, Tm = self.findMatching(vw)
             return [Tp,Tm]
         
+        print(f"{self.TMaxLowT=}")
+
         if TpTm(1)[1] > self.TMaxLowT:
             return 1
         
@@ -208,7 +210,7 @@ class Hydro:
             try:
                 vmin = root_scalar(
                     TmMax,
-                    bracket=[self.vJ, 1],
+                    bracket=[self.vJ+1e-4, 1],
                     method='brentq',
                     xtol=self.atol,
                     rtol=self.rtol,
