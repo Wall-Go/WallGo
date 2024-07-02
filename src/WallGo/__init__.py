@@ -5,6 +5,8 @@ TODO Is there a better way of doing all this?!
 """
 
 from .boltzmann import BoltzmannBackground, BoltzmannSolver
+from .containers import PhaseInfo, BoltzmannBackground
+from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
@@ -12,8 +14,6 @@ from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM, WallGoResults
 from .EOM import WallParams
-from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo
 
 
 from .particle import Particle

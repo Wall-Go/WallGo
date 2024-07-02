@@ -4,11 +4,12 @@ import numpy.typing as npt
 from typing import Tuple
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
+from .exceptions import WallGoError
 from .HydroTemplateModel import HydroTemplateModel
 from .Thermodynamics import ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
-from .WallGoTypes import HydroResults
-from .WallGoExceptions import WallGoError
+from .results import HydroResults
+
 
 class Hydro:
     """
@@ -620,7 +621,7 @@ class Hydro:
 
         Returns
         -------
-        c1,c2,Tp,Tm,vMid : double
+        c1,c2,Tp,Tm,velocityMid : double
             The boundary conditions for the scalar field and plasma equation of motion
 
         """
@@ -636,8 +637,8 @@ class Hydro:
         wHighT = self.thermodynamicsExtrapolate.wHighT(Tp)
         c1 = -wHighT*gammaSq(vp)*vp
         c2 = self.thermodynamicsExtrapolate.pHighT(Tp)+wHighT*gammaSq(vp)*vp**2
-        vMid = -0.5*(vm+vp)  # minus sign for convention change
-        return (c1, c2, Tp, Tm, vMid)
+        velocityMid = -0.5*(vm+vp)  # minus sign for convention change
+        return (c1, c2, Tp, Tm, velocityMid)
 
 
     def findvwLTE(self) -> float:

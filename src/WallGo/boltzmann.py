@@ -7,15 +7,12 @@ import typing
 from copy import deepcopy
 import numpy as np
 import findiff  # finite difference methods
+from .containers import BoltzmannBackground, BoltzmannDeltas
 from .Grid import Grid
 from .Polynomial import Polynomial
 from .particle import Particle
 from .CollisionArray import CollisionArray
-from .WallGoTypes import (
-    BoltzmannBackground,
-    BoltzmannDeltas,
-    BoltzmannResults,
-)
+from .results import BoltzmannResults
 
 
 class BoltzmannSolver:
@@ -248,9 +245,9 @@ class BoltzmannSolver:
     def estimateTruncationError(self, deltaF: np.ndarray) -> float:
         r"""
         Quick estimate of the polynomial truncation error using
-        John Boyd's Rule-of-thumb-2:
-            the last coefficient of a Chebyshev polynomial expansion
-            is the same order-of-magnitude as the truncation error.
+        John Boyd's Rule-of-thumb-2: the last coefficient of a Chebyshev
+        polynomial expansion is the same order-of-magnitude as the truncation
+        error.
 
         Parameters
         ----------
@@ -443,7 +440,7 @@ class BoltzmannSolver:
                 for particle in particles
             ]
         )
-        vw = self.background.vw
+        velocityWall = self.background.velocityWall
 
         # expanding to be rank 3 arrays, like deltaF
         temperature = self.background.temperatureProfile[None, 1:-1, None, None]
@@ -515,8 +512,8 @@ class BoltzmannSolver:
             derivMatrixRz = derivMatrixRz.toarray()[1:-1, 1:-1]
 
         # dot products with wall velocity
-        gammaWall = 1 / np.sqrt(1 - vw**2)
-        momentumWall = gammaWall * (pz - vw * energy)
+        gammaWall = 1 / np.sqrt(1 - velocityWall**2)
+        momentumWall = gammaWall * (pz - velocityWall * energy)
 
         # dot products with plasma profile velocity
         gammaPlasma = 1 / np.sqrt(1 - v**2)
@@ -524,7 +521,7 @@ class BoltzmannSolver:
         momentumPlasma = gammaPlasma * (pz - v * energy)
 
         # dot product of velocities
-        uwBaruPl = gammaWall * gammaPlasma * (vw - v)
+        uwBaruPl = gammaWall * gammaPlasma * (velocityWall - v)
 
         # (exact) derivatives of compactified coordinates
         dxidchi, dpzdrz, _ = self.grid.getCompactificationDerivatives()

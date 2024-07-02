@@ -2,8 +2,10 @@ import numpy as np
 import numpy.typing as npt
 # WallGo imports
 from .boltzmann import BoltzmannSolver
+from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
 from .EOM import EOM
+from .exceptions import WallGoError, WallGoPhaseValidationError
 from .GenericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales
@@ -11,8 +13,7 @@ from .Hydro import Hydro  # TODO why is this not Hydrodynamics? compare with The
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
-from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo, WallGoResults, WallParams
+from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
 import WallGo

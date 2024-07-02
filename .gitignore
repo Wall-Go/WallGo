@@ -12,6 +12,7 @@ dist/
 *.hdf5
 .vscode/
 *.code-workspace
+.ropeproject/
 Collision/bin/
 Collision/pybind/lib/
 Collision/examples/bin/
@@ -24,3 +25,5 @@ old/
 *.txt
 out*
 .ropeproject/
+run/
+old/
