@@ -164,7 +164,7 @@ class EffectivePotential(ABC):
         """Calculate derivative of (real part of) the effective potential with
         respect to temperature.
 
-         Parameters
+        Parameters
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
@@ -176,7 +176,6 @@ class EffectivePotential(ABC):
         dVdT : array_like
             Temperature derivative of the potential, evaluated at each
             point of the input temperature array.
-
         """
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
