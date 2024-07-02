@@ -51,6 +51,7 @@ class GenericModel(ABC):
     effectivePotential: EffectivePotential
     
     inputParameters: dict[str, float]
+    collisionParameters: dict[str, float]
 
     
 
@@ -70,8 +71,12 @@ class GenericModel(ABC):
         self.outOfEquilibriumParticles = []
 
 
-    ## Go from whatever input parameters to renormalized Lagrangian parameters. Override this if your inputs are something else than Lagrangian parameters
+    ## Go from whatever input parameters to renormalized Lagrangian parameters.
+    # Override this if your inputs are something else than Lagrangian parameters
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         self.inputParameters = inputParameters
         return {}
 
+    def calculateCollisionParameters(self, collisionParameters: dict[str, float]) -> dict[str, float]:
+        self.collisionParameters = collisionParameters
+        return {}
