@@ -39,8 +39,10 @@ If you use WallGo, please cite arXiv:....
     modules/Collision
     modules/CollisionArray
     modules/Config
+    modules/containers
     modules/EffectivePotential
     modules/EoM
+    modules/exceptions
     modules/Fields
     modules/FreeEnergy
     modules/Grid
@@ -51,7 +53,7 @@ If you use WallGo, please cite arXiv:....
     modules/Model
     modules/particle
     modules/Polynomial
+    modules/results
     modules/Thermodynamics
-    modules/WallGoExceptions
     modules/WallGoManager
     modules/WallGoUtils
