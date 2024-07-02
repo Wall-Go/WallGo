@@ -2,4 +2,4 @@
 Collision
 ======================================
 
-.. include:: ../../Collision/README.md
+.. include:: ../../../Collision/README.md

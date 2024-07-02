@@ -1,12 +1,13 @@
+"""
+Polynomial, for expanding functions in bases of polynomials.
+"""
 import numpy as np
-from scipy.special import eval_chebyt,eval_chebyu
-
+from scipy.special import eval_chebyt, eval_chebyu
 from .Grid import Grid
 
 
 class Polynomial:
-    def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
-        """
+    """
         Initialization of Polynomial object. 
 
         Parameters
@@ -39,7 +40,7 @@ class Polynomial:
         -------
         None.
         """
-        
+    def __init__(self, coefficients, grid, basis='Cardinal', direction='z', endpoints=False):
         self.coefficients = np.asanyarray(coefficients)
         self.rank = len(self.coefficients.shape)
         self.grid = grid

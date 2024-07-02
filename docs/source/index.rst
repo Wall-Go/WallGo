@@ -38,6 +38,7 @@ If you use WallGo, please cite arXiv:....
     modules/boltzmann
     modules/Collision
     modules/CollisionArray
+    modules/collision_wrapper
     modules/Config
     modules/containers
     modules/EffectivePotential
