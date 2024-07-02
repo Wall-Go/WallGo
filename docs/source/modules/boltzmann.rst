@@ -1,8 +1,8 @@
 ======================================
-Particle
+Boltzmann
 ======================================
 
-.. automodule:: WallGo.Particle
+.. automodule:: WallGo.boltzmann
     :members:
     :inherited-members:
     :special-members: __init__
