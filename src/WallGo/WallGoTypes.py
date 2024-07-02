@@ -3,6 +3,7 @@ import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
 from .Polynomial import Polynomial
+from scipy.interpolate import UnivariateSpline
 # Put common data classes etc here
 
 
@@ -12,7 +13,6 @@ class PhaseInfo:
     phaseLocation1: Fields
     phaseLocation2: Fields
     temperature: float
-
 
 
 """LN: What's going on with the fieldProfiles array here? When constructing a background in EOM.wallPressure(), 
@@ -31,7 +31,7 @@ class BoltzmannBackground:
         # assumes input is in the wall frame
         self.vw = 0
         self.velocityProfile = np.asarray(velocityProfile)
-        self.fieldProfiles = fieldProfiles.view(Fields) ## NEEDS to be Fields object
+        self.fieldProfiles = fieldProfiles.view(Fields) # NEEDS to be Fields object
         self.temperatureProfile = np.asarray(temperatureProfile)
         self.polynomialBasis = polynomialBasis
         self.vMid = velocityMid
@@ -58,10 +58,31 @@ class BoltzmannDeltas:
     Integrals of the out-of-equilibrium particle densities,
     defined in equation (15) of arXiv:2204.13120.
     """
-    Delta00: Polynomial
-    Delta02: Polynomial
-    Delta20: Polynomial
-    Delta11: Polynomial
+    Delta00: Polynomial  # pylint: disable=invalid-name
+    Delta02: Polynomial  # pylint: disable=invalid-name
+    Delta20: Polynomial  # pylint: disable=invalid-name
+    Delta11: Polynomial  # pylint: disable=invalid-name
+    
+    def __mul__(self, other):
+        """ 
+        Multiply a BoltzmannDeltas object with a scalar.
+        """
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __rmul__(self, other):
+        """ 
+        Multiply a BoltzmannDeltas object with a scalar.
+        """
+        return BoltzmannDeltas(Delta00=other*self.Delta00, Delta02=other*self.Delta02, Delta20=other*self.Delta20, Delta11=other*self.Delta11)
+    def __add__(self, other):
+        """ 
+        Add two BoltzmannDeltas objects.
+        """
+        return BoltzmannDeltas(Delta00=other.Delta00+self.Delta00, Delta02=other.Delta02+self.Delta02, Delta20=other.Delta20+self.Delta20, Delta11=other.Delta11+self.Delta11)
+    def __sub__(self, other):
+        """ 
+        Substract two BoltzmannDeltas objects.
+        """
+        return self.__add__((-1)*other)
 
 
 @dataclass
@@ -70,14 +91,23 @@ class BoltzmannResults:
     Holds results to be returned by BoltzmannSolver
     """
     deltaF: np.ndarray
-    Deltas: BoltzmannDeltas
+    Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     truncationError: float
-    
-    # These two criteria are to evaluate the validity of the linearization of the 
+
+    # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
+    
+    def __mul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __rmul__(self, other):
+        return BoltzmannResults(deltaF=other*self.deltaF, Deltas=other*self.Deltas, truncationError=abs(other)*self.truncationError, linearizationCriterion1=abs(other)*self.linearizationCriterion1, linearizationCriterion2=self.linearizationCriterion2)
+    def __add__(self, other):
+        return BoltzmannResults(deltaF=other.deltaF+self.deltaF, Deltas=other.Deltas+self.Deltas, truncationError=other.truncationError+self.truncationError, linearizationCriterion1=other.linearizationCriterion1+self.linearizationCriterion1, linearizationCriterion2=other.linearizationCriterion2+self.linearizationCriterion2)
+    def __sub__(self, other):
+        return self.__add__((-1)*other)
 
 
 @dataclass
@@ -116,6 +146,8 @@ class WallParams():
     def __mul__(self, other):
         ## does not work if other = WallParams type
         return WallParams(widths = self.widths * other, offsets = self.offsets * other)
+    def __rmul__(self, other):
+        return self.__mul__(other)
 
     def __truediv__(self, other):
         ## does not work if other = WallParams type
@@ -153,7 +185,7 @@ class WallGoResults:
     linearizationCriterion1: np.ndarray
     linearizationCriterion2: np.ndarray
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def setWallVelocities(
@@ -161,30 +193,30 @@ class WallGoResults:
         wallVelocity: float,
         wallVelocityError: float,
         wallVelocityLTE: float,
-    ):
+    ) -> None:
         # main results
         self.wallVelocity = wallVelocity
         self.wallVelocityError = wallVelocityError
         self.wallVelocityLTE = wallVelocityLTE
 
-    def setHydroResults(self, hydroResults: HydroResults):
+    def setHydroResults(self, hydroResults: HydroResults) -> None:
         # hydrodynamics results
         self.temperaturePlus = hydroResults.temperaturePlus
         self.temperatureMinus = hydroResults.temperatureMinus
         self.velocityJouget = hydroResults.velocityJouget
 
-    def setWallParams(self, wallParams: WallParams):
+    def setWallParams(self, wallParams: WallParams) -> None:
         # quantities from WallParams
         self.wallWidths = wallParams.widths
         self.wallOffsets = wallParams.offsets
 
-    def setBoltzmannBackground(self, boltzmannBackground: BoltzmannBackground):
+    def setBoltzmannBackground(self, boltzmannBackground: BoltzmannBackground) -> None:
         # quantities from BoltzmannBackground
         self.velocityProfile = boltzmannBackground.velocityProfile
         self.fieldProfiles = boltzmannBackground.fieldProfiles
         self.temperatureProfile = boltzmannBackground.temperatureProfile
 
-    def setBoltzmannResults(self, boltzmannResults: BoltzmannResults):
+    def setBoltzmannResults(self, boltzmannResults: BoltzmannResults) -> None:
         # quantities from BoltzmannResults
         self.deltaF = boltzmannResults.deltaF
         self.Deltas = boltzmannResults.Deltas
@@ -194,8 +226,30 @@ class WallGoResults:
 
     def setFiniteDifferenceBoltzmannResults(
         self, boltzmannResults: BoltzmannResults
-    ):
+    ) -> None:
         # quantities from finite difference versino of BoltzmannResults
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
+        
+@dataclass
+class WallGoInterpolationResults:
+    ## List of stable solutions
+    wallVelocities: list[float]
+    ## List of unstable solutions
+    unstableWallVelocities: list[float]
 
+    ## Velocity grid on which the pressures were computed
+    velocityGrid: list[float]
+    ## Pressures evaluated at velocityGrid
+    pressures: list[float]
+    ## Spline of the pressure
+    pressureSpline: UnivariateSpline
+
+    ## WallParams evaluated at velocityGrid
+    wallParams: list[WallParams]
+    ## BoltzmannResults evaluated at velocityGrid
+    boltzmannResults: list[BoltzmannResults]
+    ## BoltzmannBackground evaluated at velocityGrid
+    boltzmannBackgrounds: list[BoltzmannBackground]
+    ## HydroResults evaluated at velocityGrid
+    hydroResults: list[HydroResults]

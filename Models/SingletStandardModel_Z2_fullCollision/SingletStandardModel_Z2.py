@@ -2,7 +2,8 @@
 This Python script, SingletStandardModel_Z2.py,
 implements a minimal Standard Model extension via
 a scalar singlet and incorporating a Z2 symmetry.
-Only QCD top quark is out of equilibrium.
+Intended for W, Z and right handed top (tR) to be out of equilibirium
+Currently: Only tR out of equilibrium
 
 Features:
 - Definition of the extended model parameters including the singlet scalar field.
@@ -14,7 +15,8 @@ This script is intended to compute the wallspeed of the model.
 Dependencies:
 - NumPy for numerical calculations
 - WallGo for the WallGo package
-- CollisionIntegrals in read-only mode using the default path for the collision integrals as the "CollisonOutput" directory
+- collision module (if generateCollisionIntegrals = True)
+- Otherwise: CollisionIntegrals in read-only mode using the default path for the collision integrals as the "CollisonOutput" directory
 
 Note:
 """
@@ -33,14 +35,6 @@ from WallGo import Fields, WallGoResults
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
-    """
-    Z2 symmetric SM + singlet model.
-
-    The potential is given by:
-    V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-
-    This class inherits from the GenericModel class and implements the necessary methods for the WallGo package.
-    """
 
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
@@ -51,15 +45,6 @@ class SingletSM_Z2(GenericModel):
 
 
     def __init__(self, initialInputParameters: dict[str, float]):
-        """
-        Initialize the SingletSM_Z2 model.
-
-        Args:
-        - initialInputParameters: A dictionary of initial input parameters for the model.
-
-        Returns:
-        None
-        """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
@@ -70,12 +55,6 @@ class SingletSM_Z2(GenericModel):
 
 
     def defineParticles(self) -> None:
-        """
-        Define the particles for the model.
-
-        Returns:
-        None
-        """
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
@@ -87,17 +66,26 @@ class SingletSM_Z2(GenericModel):
         topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
-        topQuark = Particle("top", 
+        topQuarkL = Particle("topL",
                             msqVacuum = topMsqVacuum,
                             msqDerivative = topMsqDerivative,
                             msqThermal = topMsqThermal,
                             statistics = "Fermion",
                             inEquilibrium = False,
                             ultrarelativistic = True,
-                            totalDOFs = 12
+                            totalDOFs = 6
         )
-        self.addParticle(topQuark)
-
+        self.addParticle(topQuarkL)
+        topQuarkR = Particle("topR",
+                            msqVacuum = topMsqVacuum,
+                            msqDerivative = topMsqDerivative,
+                            msqThermal = topMsqThermal,
+                            statistics = "Fermion",
+                            inEquilibrium = False,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(topQuarkR)
 
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
@@ -117,9 +105,34 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(gluon)
 
+        ## === SU(2) gauge bosons ===
+        WMsqThermal = lambda T: self.modelParameters["g2"]**2 * T**2 * 11./6.
+        W = Particle("W",
+                            msqVacuum = 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = WMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 6
+        )
+        self.addParticle(W)
+
+        ZMsqThermal = lambda T: self.modelParameters["g1"]**2 * T**2 * 11./6.
+        Z = Particle("Z",
+                            msqVacuum = 0.0,
+                            msqDerivative = 0.0,
+                            msqThermal = ZMsqThermal,
+                            statistics = "Boson",
+                            inEquilibrium = True,
+                            ultrarelativistic = True,
+                            totalDOFs = 3
+        )
+        self.addParticle(Z)
+
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-        lightQuark = Particle("lightQuark", 
+        lightQuark = Particle("lightQuark",
                             msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
@@ -133,15 +146,6 @@ class SingletSM_Z2(GenericModel):
 
     ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
-        """
-        Calculate the model parameters based on the input parameters.
-
-        Args:
-        - inputParameters: A dictionary of input parameters for the model.
-
-        Returns:
-        A dictionary of calculated model parameters.
-        """
         super().calculateModelParameters(inputParameters)
     
         modelParameters = {}
@@ -155,7 +159,7 @@ class SingletSM_Z2(GenericModel):
         modelParameters["RGScale"] = inputParameters["RGScale"]
         modelParameters["a2"] = inputParameters["a2"]
         modelParameters["b4"] = inputParameters["b4"]
-        
+
 
         modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
         #modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
@@ -163,8 +167,7 @@ class SingletSM_Z2(GenericModel):
         modelParameters["b2"] = mh2**2 - 0.5 * v0**2 * inputParameters["a2"]
 
         ## Then the gauge/Yukawa sector
-        
-        Mt = inputParameters["Mt"] 
+        Mt = inputParameters["Mt"]
         MW = inputParameters["MW"]
         MZ = inputParameters["MZ"]
 
@@ -184,45 +187,28 @@ class SingletSM_Z2(GenericModel):
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
 class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
-    """
-    Effective potential for the SingletSM_Z2 model.
-
-    This class inherits from the EffectivePotential_NoResum class and provides the necessary methods for calculating the effective potential.
-    """
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        """
-        Initialize the EffectivePotentialxSM_Z2.
-
-        Args:
-        - modelParameters: A dictionary of model parameters.
-        - fieldCount: The number of fields in the model.
-
-        Returns:
-        None
-        """
         super().__init__(modelParameters, fieldCount)
-        ## ... do singlet+SM specific initialization here. The super call already gave us the model params
+        ## ... do singlet+SM specific initialization here.
+        # The super call already gave us the model params
 
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 29 
-        self.num_fermion_dof = 90 
+        ## Count particle degrees-of-freedom to facilitate inclusion of
+        # light particle contributions to ideal gas pressure
+        self.num_boson_dof = 29
+        self.num_fermion_dof = 90
 
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done with integrals from CosmoTransitions. 
+        This is because the benchmark points we are comparing with
+        were originally done with integrals from CosmoTransitions. 
         In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
 
 
-    def _configureBenchmarkIntegrals(self):
-        """
-        Configure the benchmark integrals.
+    def _configureBenchmarkIntegrals(self) -> None:
 
-        Returns:
-        None
-        """
         ## Load custom interpolation tables for Jb/Jf. 
         # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
@@ -252,19 +238,9 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
     def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
-        """
-        Evaluate the effective potential.
 
-        Args:
-        - fields: The field configuration.
-        - temperature: The temperature.
-        - checkForImaginary: Whether to check for imaginary parts.
-
-        Returns:
-        The value of the effective potential.
-        """
-
-        # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
+        # for Benoit benchmark we don't use high-T approx and no resummation:
+        # just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
@@ -286,35 +262,45 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         """
 
         # tree level potential
-        V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
+        V0 = (
+            + 0.5*msq*v**2
+            + 0.25*lam*v**4 
+            + 0.5*b2*x**2
+            + 0.25*b4*x**4
+            + 0.25*a2*v**2 *x**2)
 
         # TODO should probably use the list of defined particles here?
         bosonStuff = self.boson_massSq(fields, temperature)
         fermionStuff = self.fermion_massSq(fields, temperature)
 
         VTotal = (
-            V0 
+            + V0
             + self.constantTerms(temperature)
             + self.V1(bosonStuff, fermionStuff, RGScale, checkForImaginary) 
             + self.V1T(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
-        return VTotal
-    
+        return VTotal   
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
-        """Need to explicitly compute field-independent but T-dependent parts
-        that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
-        (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
+        """
+        Need to explicitly compute field-independent but T-dependent parts
+        that we don't already get from field-dependent loops.
+        At leading order in high-T expansion these are just
+        (minus) the ideal gas pressure of light particles
+        that were not integrated over in the one-loop part.
         """
 
         ## See Eq. (39) in hep-ph/0510375 for general LO formula
 
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
+        ## How many degrees of freedom we have left.
+        # I'm hardcoding the number of DOFs that were done in evaluate(),
+        # could be better to pass it from there though
         dofsBoson = self.num_boson_dof - 14
         dofsFermion = self.num_fermion_dof - 12 ## we only did top quark loops
 
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
+        ## Fermions contribute with a magic 7/8 prefactor as usual.
+        # Overall minus sign since Veff(min) = -pressure
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
 
 
@@ -415,8 +401,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         return thermalParameters
     """
 
-    def boson_massSq(self, fields: Fields, temperature):
-
+    def boson_massSq(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         v, x = fields.GetField(0), fields.GetField(1)
 
         # TODO: numerical determination of scalar masses from V0
@@ -425,16 +410,16 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         lam = self.modelParameters["lambda"]
         g1 = self.modelParameters["g1"]
         g2 = self.modelParameters["g2"]
-        
+
         b2 = self.modelParameters["b2"]
         a2 = self.modelParameters["a2"]
         b4 = self.modelParameters["b4"]
 
-        
+
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
         A = msq + 0.5*a2*x**2 + 3.*v**2*lam
         B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
-        C = a2 *v*x 
+        C = a2 *v*x
         thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
 
         msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
@@ -449,25 +434,23 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         # h, s, chi, W, Z
         massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
-        degreesOfFreedom = np.array([1,1,3,6,3]) 
+        degreesOfFreedom = np.array([1,1,3,6,3])
         c = np.array([3/2,3/2,3/2,5/6,5/6])
 
         return massSq, degreesOfFreedom, c
-    
 
-    def fermion_massSq(self, fields: Fields, temperature):
-
+    def fermion_massSq(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray]:
         v = fields.GetField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
         mtsq = yt**2 * v**2 / 2
-    
+
         # @todo include spins for each particle
 
         massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
-        
+
         return massSq, degreesOfFreedom
 
 
@@ -477,7 +460,7 @@ def main() -> None:
     WallGo.initialize()
 
     ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -485,23 +468,27 @@ def main() -> None:
 
     ## Guess of the wall thickness
     wallThicknessIni = 0.05
-    
+
     # Estimate of the mean free path of the particles in the plasma
     meanFreePath = 1
 
     ## Create WallGo control object
-        # The following 2 parameters are used to estimate the optimal value of dT used 
+    # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    # Temperature scale over which the potential changes by O(1).
+    # A good value would be of order Tc-Tn.
     temperatureScale = 10.
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    # Field scale over which the potential changes by O(1).
+    # A good value would be similar to the field VEV.
+    # Can either be a single float, in which case all
+    # the fields have the same scale, or an array.
     fieldScale = [10.,10.]
-    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
-
+    manager = WallGoManager(
+        wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
 
     """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input, but this is likely to change in the future
+    The constructor currently requires an initial parameter input,
+    but this is likely to change in the future
     """
 
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
@@ -512,6 +499,8 @@ def main() -> None:
         "MW" : 80.379,
         "MZ" : 91.1876,
         "Mt" : 173.0,
+        "g1" : 0.35,
+        "g2" : 0.65,
         "g3" : 1.2279920495357861,
         # scalar specific, choose Benoit benchmark values
         "mh1" : 125.0,
@@ -522,9 +511,10 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
@@ -532,45 +522,72 @@ def main() -> None:
 
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
+    ## Configure integration. Can skip this step if you're happy with the defaults
+    WallGo.config.config.set("Integration", "verbose", "True")
+    WallGo.config.config.set("Integration", "maxTries", "50")
+    WallGo.config.config.set("Integration", "calls", "50000")
+    WallGo.config.config.set("Integration", "relativeErrorGoal", "1e-1")
+    WallGo.config.config.set("Integration", "absoluteErrorGoal", "1e-8")
+
+    # set matrix elements initial specs
+    WallGo.config.config.set("MatrixElements", "fileName", "MatrixElements.txt")
+    ## Instruct the collision manager to print out
+    # symbolic matrix elements as it parses them. Can be useful for debugging
+    WallGo.config.config.set("MatrixElements", "verbose", "True")
 
     print("=== WallGo collision generation ===")
     ## Create Collision singleton which automatically loads the collision module
-    ## here it will be only invoked in read-only mode if the module is not found
-    ## default path assumed to be in the same directory as this script in CollisionOutput/
+    # Use help(Collision.manager) for info about what functionality is available
     collision = WallGo.Collision(model)
+
+    ## Optional: set the seed used by Monte Carlo integration. Default is 0
+    collision.setSeed(0)
 
     """
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
     collision.addCoupling(inputParameters["g3"])
+    collision.addCoupling(inputParameters["g2"])
+    collision.addCoupling(inputParameters["g1"])
 
     manager.loadCollisionFiles(collision)
 
-    print("=== WallGo parameter scan ===")
+
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
-    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
-    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
-    """  
     values_mh2 = [ 120.0 ]
     for mh2 in values_mh2:
+        """
+        Example mass loop that just does one value of mh2.
+        Note that the WallGoManager class is NOT thread safe internally, 
+        so it is NOT safe to parallelize this loop eg. with OpenMP.
+        We recommend ``embarrassingly parallel`` runs for large-scale parameter scans.
+        """  
 
         inputParameters["mh2"] = mh2
 
         modelParameters = model.calculateModelParameters(inputParameters)
 
-        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        """
+        In addition to model parameters,
+        WallGo needs info about the phases at nucleation temperature.
+        Use the WallGo.PhaseInfo dataclass for this purpose.
+        Transition goes from phase1 to phase2.
         """
         Tn = 100. ## nucleation temperature
-        phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
+        phaseInfo = WallGo.PhaseInfo(temperature = Tn,
+                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ),
                                         phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
-        
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+        """
+        Give the input to WallGo.
+        It is NOT enough to change parameters directly in the GenericModel instance because
             1) WallGo needs the PhaseInfo 
             2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
         """ 
@@ -591,16 +608,12 @@ def main() -> None:
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
-        
-        ## Computes the detonation solutions
-        wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
-        
 
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
         results = manager.solveWall(bIncludeOffEq)
+        print(f"results=")
         wallVelocity = results.wallVelocity
         widths = results.wallWidths
         offsets = results.wallOffsets
@@ -615,20 +628,14 @@ def main() -> None:
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
         offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
         print(f"{widths=}")
         print(f"{offsets=}")
-        
-
-        # some estimate of deviation from O(dz^2) finite difference method
-        delta00 = results.Deltas.Delta00.coefficients[0]
-        delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
-        errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-        print(f"finite difference error = {errorFD}")
-
 
 
     # end parameter-space loop
