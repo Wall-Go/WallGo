@@ -11,7 +11,7 @@ import numpy.typing as npt
 import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
-from .Boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
 from .Grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
