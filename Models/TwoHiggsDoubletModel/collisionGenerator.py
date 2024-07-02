@@ -5,15 +5,13 @@ Note that WallGo.Collision is a singleton class, ie. only one instance of it can
 Loading of the module happens when the instance is first created."""
 
 import pathlib
-
-import WallGo
-
 from TwoHiggsDoubletModel import (
     InertDoubletModel,
 ) 
 
-WallGo.initialize()
+import WallGo
 
+WallGo.initialize()
 
 ## Modify the config, we use N=5 for this example
 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "7")
@@ -70,9 +68,7 @@ collision.manager.configureIntegration(integrationOptions)
 collision.manager.setMatrixElementVerbosity(True)
 
 ## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-# basisSize = 5
 basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-# print(WallGo.config)
 
 ## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
 collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)

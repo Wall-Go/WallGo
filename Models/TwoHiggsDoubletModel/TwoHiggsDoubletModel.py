@@ -17,9 +17,9 @@ from WallGo import Fields
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 1
@@ -444,7 +444,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
 
@@ -499,24 +499,16 @@ def main():
     """
     manager.registerModel(model)
 
+    ## ---- collision integration and path specifications
+
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
     print("=== Loading the collisions ===")
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    ## collision stuff
-
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
     collision = WallGo.Collision(model)
-
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-
-    collision.setOutputDirectory(collisionDirectory)
 
     manager.loadCollisionFiles(collision)
 
