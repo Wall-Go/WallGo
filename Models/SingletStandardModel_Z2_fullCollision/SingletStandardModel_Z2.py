@@ -511,13 +511,6 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-    """
-    Register the model with WallGo. This needs to be done only once.
-    If you need to use multiple models during a single run,
-    we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
     ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
@@ -540,24 +533,26 @@ def main() -> None:
     # symbolic matrix elements as it parses them. Can be useful for debugging
     WallGo.config.config.set("MatrixElements", "verbose", "True")
 
-    print("=== WallGo collision generation ===")
-    ## Create Collision singleton which automatically loads the collision module
-    # Use help(Collision.manager) for info about what functionality is available
-    collision = WallGo.Collision(model)
-
-    ## Optional: set the seed used by Monte Carlo integration. Default is 0
-    collision.setSeed(0)
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
 
     """
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
-    collision.addCoupling(inputParameters["g3"])
-    collision.addCoupling(inputParameters["g2"])
-    collision.addCoupling(inputParameters["g1"])
+    manager.collision.addCoupling(inputParameters["g3"])
+    manager.collision.addCoupling(inputParameters["g2"])
+    manager.collision.addCoupling(inputParameters["g1"])
 
-    manager.loadCollisionFiles(collision)
+    ## Optional: set the seed used by Monte Carlo integration. Default is 0
+    manager.collision.setSeed(0)
 
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 

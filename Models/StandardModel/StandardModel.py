@@ -257,23 +257,21 @@ def main() -> None:
 
     model = StandardModel(inputParameters)
 
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-    """
-
-    manager.registerModel(model)
-
     ## ---- collision integration and path specifications
 
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
     WallGo.config.config.set("Collisions", "pathName", "collisions_N11/")
 
-    ## Create Collision singleton which automatically loads the collision module
-    ## here it will be only invoked in read-only mode if the module is not found
-    collision = WallGo.Collision(model)
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
 
-    manager.loadCollisionFiles(collision)
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 

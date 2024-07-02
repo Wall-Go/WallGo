@@ -522,31 +522,27 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
     ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
     # comment this line if collision integrals already exist
     WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
 
-    print("=== WallGo collision generation ===")
-    ## Create Collision singleton which automatically loads the collision module
-    ## here it will be only invoked in read-only mode if the module is not found
-    ## default path assumed to be in the same directory as this script in CollisionOutput/
-    collision = WallGo.Collision(model)
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
+    """
+    manager.registerModel(model)
 
     """
     Define couplings (Lagrangian parameters)
     list as they appear in the MatrixElements file
     """
-    collision.addCoupling(inputParameters["g3"])
+    manager.collision.addCoupling(inputParameters["g3"])
 
-    manager.loadCollisionFiles(collision)
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
     print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
