@@ -18,7 +18,7 @@ from .WallGoTypes import PhaseInfo
 
 from .particle import Particle
 from .Fields import Fields
-from .GenericModel import GenericModel
+from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy
@@ -30,7 +30,7 @@ from .CollisionArray import CollisionArray
 from .Integrals import Integrals
 from .Config import Config
 
-from .collision_wrapper import Collision
+from .collisionWrapper import Collision
 from .WallGoUtils import getSafePathToResource
 
 

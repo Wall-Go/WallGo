@@ -12,7 +12,7 @@ from .boltzmann import (
     BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
 )
 from .Fields import Fields, FieldPoint
-from .GenericModel import GenericModel
+from .genericModel import GenericModel
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
