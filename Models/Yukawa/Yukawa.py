@@ -16,7 +16,7 @@ class YukawaModel(WallGo.GenericModel):
     fieldCount: int = 1
     particles: list[WallGo.Particle] = []
     outOfEquilibriumParticles: list[WallGo.Particle] = []
-    modelParameters: dict[str, int] = {}
+    modelParameters: dict[str, float] = {}
 
     def __init__(self, inputParameters: dict[str, float]):
         """
@@ -37,16 +37,13 @@ class YukawaModel(WallGo.GenericModel):
         # constructing the list of particles, starting with psi
         # taking its fluctuations out of equilibrium
         y = self.modelParameters["y"]
-        psiMsqVacuum = lambda fields: self.modelParameters["mf"] + y * fields.GetField(
-            0
-        )
-        psiMsqDerivative = lambda fields: y
-        psiMsqThermal = lambda T: 1 / 16 * y**2 * T**2
         psi = WallGo.Particle(
             "top",  # HACK! should be psi, but just rehashing old collision integrals
-            msqVacuum=psiMsqVacuum,
-            msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
+            msqVacuum=lambda fields: (
+                self.modelParameters["mf"] + y * fields.GetField(0)
+            ),
+            msqDerivative=lambda fields: y,
+            msqThermal=lambda T: 1 / 16 * y**2 * T**2,
             statistics="Fermion",
             inEquilibrium=False,
             ultrarelativistic=True,
@@ -58,16 +55,13 @@ class YukawaModel(WallGo.GenericModel):
         msq = self.modelParameters["msq"]
         g = self.modelParameters["g"]
         lam = self.modelParameters["lam"]
-        phiMsqVacuum = lambda fields: (
-            msq + g * fields.GetField(0) + lam / 2 * fields.GetField(0) ** 2
-        )
-        phiMsqDerivative = lambda fields: g + lam * fields.GetField(0)
-        phiMsqThermal = lambda T: 1 / 24 * (lam + 4 * y**2) * T**2
         phi = WallGo.Particle(
             "phi",
-            msqVacuum=phiMsqVacuum,
-            msqDerivative=phiMsqDerivative,
-            msqThermal=phiMsqThermal,
+            msqVacuum=lambda fields: (
+            msq + g * fields.GetField(0) + lam / 2 * fields.GetField(0) ** 2
+            ),
+            msqDerivative=lambda fields: g + lam * fields.GetField(0),
+            msqThermal=lambda T: 1 / 24 * (lam + 4 * y**2) * T**2,
             statistics="Boson",
             inEquilibrium=True,
             ultrarelativistic=True,
@@ -119,7 +113,8 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         )
 
 
-def main():
+def main() -> int:
+    """ The main function, run with `python3 Yukawa.py` """
 
     # Initialise WallGo, including loading the default config.
     WallGo.initialize()
@@ -171,8 +166,7 @@ def main():
     results = manager.solveWall(bIncludeOffEq=True)
     print(f"Wall speed: {results.wallVelocity}")
 
-
-# end main()
+    return 0  # return value: success
 
 
 # Don't run the main function if imported to another file
