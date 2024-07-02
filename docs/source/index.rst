@@ -35,7 +35,7 @@ If you use WallGo, please cite arXiv:....
     :maxdepth: 4
     :hidden:
 
-    modules/Boltzmann
+    modules/boltzmann
     modules/Collision
     modules/CollisionArray
     modules/Config
@@ -49,10 +49,9 @@ If you use WallGo, please cite arXiv:....
     modules/Integrals
     modules/InterpolatableFunction
     modules/Model
-    modules/Particle
+    modules/particle
     modules/Polynomial
     modules/Thermodynamics
     modules/WallGoExceptions
     modules/WallGoManager
-    modules/WallGoTypes
     modules/WallGoUtils

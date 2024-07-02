@@ -1,8 +1,8 @@
 ======================================
-WallGoTypes
+Results
 ======================================
 
-.. automodule:: WallGo.WallGoTypes
+.. automodule:: WallGo.results
     :members:
     :inherited-members:
     :special-members: __init__
