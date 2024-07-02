@@ -365,10 +365,6 @@ class Hydrodynamics:
 
         """
 
-        vwMapping = None  # JvdV: Why is this called vwMapping?
-        if vp is None:
-            vwMapping = vw
-
         def matching(
             mappedTpTm: list[float],
         ) -> Tuple[float, float]:  # Matching relations at the wall interface
@@ -407,9 +403,9 @@ class Hydrodynamics:
             ]  # The temperature in front of the wall Tp will be above Tnucl,
             # so we use 1.1 Tnucl as initial guess, unless that is above the maximum
             # allowed temperature
-        if (vwMapping is None) and (Tpm0[0] <= Tpm0[1]):
+        if (vp is not None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01 * Tpm0[1]
-        if (vwMapping is not None) and (
+        if (vp is None) and (
             Tpm0[0] <= Tpm0[1]
             or Tpm0[0]
             > Tpm0[1]
