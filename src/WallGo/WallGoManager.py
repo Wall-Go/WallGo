@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 # WallGo imports
-from .Boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver
 from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .GenericModel import GenericModel

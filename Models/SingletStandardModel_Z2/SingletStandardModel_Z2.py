@@ -1,6 +1,26 @@
+"""
+This Python script, SingletStandardModel_Z2.py,
+implements a minimal Standard Model extension via
+a scalar singlet and incorporating a Z2 symmetry.
+Only QCD top quark is out of equilibrium.
+
+Features:
+- Definition of the extended model parameters including the singlet scalar field.
+- Implementation of the Z2 symmetry and its effects on particle interactions.
+
+Usage:
+This script is intended to compute the wallspeed of the model.
+
+Dependencies:
+- NumPy for numerical calculations
+- WallGo for the WallGo package
+- CollisionIntegrals in read-only mode using the default path for the collision integrals as the "CollisonOutput" directory
+
+Note:
+"""
+import os
 import numpy as np
 import numpy.typing as npt
-import os
 import pathlib
 import sys
 
@@ -18,16 +38,33 @@ from effectivePotentialNoResum import EffectivePotentialNoResum
 
 ## Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSM_Z2(GenericModel):
+    """
+    Z2 symmetric SM + singlet model.
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    The potential is given by:
+    V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
+
+    This class inherits from the GenericModel class and implements the necessary methods for the WallGo package.
+    """
+
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
 
 
     def __init__(self, initialInputParameters: dict[str, float]):
+        """
+        Initialize the SingletSM_Z2 model.
+
+        Args:
+        - initialInputParameters: A dictionary of initial input parameters for the model.
+
+        Returns:
+        None
+        """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
@@ -38,6 +75,12 @@ class SingletSM_Z2(GenericModel):
 
 
     def defineParticles(self) -> None:
+        """
+        Define the particles for the model.
+
+        Returns:
+        None
+        """
         # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
         # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
@@ -82,7 +125,7 @@ class SingletSM_Z2(GenericModel):
         ## === Light quarks, 5 of them ===
         lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
         lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
+                            msqVacuum = 0.0,
                             msqDerivative = 0.0,
                             msqThermal = lightQuarkMsqThermal,
                             statistics = "Fermion",
@@ -95,6 +138,15 @@ class SingletSM_Z2(GenericModel):
 
     ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculate the model parameters based on the input parameters.
+
+        Args:
+        - inputParameters: A dictionary of input parameters for the model.
+
+        Returns:
+        A dictionary of calculated model parameters.
+        """
         super().calculateModelParameters(inputParameters)
     
         modelParameters = {}
@@ -137,8 +189,23 @@ class SingletSM_Z2(GenericModel):
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
 class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
+    """
+    Effective potential for the SingletSM_Z2 model.
+
+    This class inherits from the EffectivePotentialNoResum class and provides the necessary methods for calculating the effective potential.
+    """
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+        """
+        Initialize the EffectivePotentialxSM_Z2.
+
+        Args:
+        - modelParameters: A dictionary of model parameters.
+        - fieldCount: The number of fields in the model.
+
+        Returns:
+        None
+        """
         super().__init__(modelParameters, fieldCount)
         ## ... do singlet+SM specific initialization here. The super call already gave us the model params
 
@@ -155,7 +222,12 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
 
     def _configureBenchmarkIntegrals(self):
-        
+        """
+        Configure the benchmark integrals.
+
+        Returns:
+        None
+        """
         ## Load custom interpolation tables for Jb/Jf. 
         # These should be the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
@@ -185,6 +257,17 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
     def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
+        """
+        Evaluate the effective potential.
+
+        Args:
+        - fields: The field configuration.
+        - temperature: The temperature.
+        - checkForImaginary: Whether to check for imaginary parts.
+
+        Returns:
+        The value of the effective potential.
+        """
 
         # for Benoit benchmark we don't use high-T approx and no resummation: just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
@@ -396,9 +479,12 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
+
+    ## Modify the config, we use N=5 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -444,27 +530,30 @@ def main():
     model = SingletSM_Z2(inputParameters)
 
 
-    print("=== WallGo collision generation ===")
     """ Register the model with WallGo. This needs to be done only once. 
     If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
-    ## collision stuff
+    ## ---- collision integration and path specifications
 
+    # automatic generation of collision integrals is disabled by default
+    # comment this line if collision integrals already exist
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+
+    print("=== WallGo collision generation ===")
     ## Create Collision singleton which automatically loads the collision module
     ## here it will be only invoked in read-only mode if the module is not found
+    ## default path assumed to be in the same directory as this script in CollisionOutput/
     collision = WallGo.Collision(model)
 
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    
-    collision.setOutputDirectory(collisionDirectory)
+    """
+    Define couplings (Lagrangian parameters)
+    list as they appear in the MatrixElements file
+    """
+    collision.addCoupling(inputParameters["g3"])
 
     manager.loadCollisionFiles(collision)
-
 
     print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----

@@ -122,7 +122,7 @@ UserCouplings=CouplingName;
 (*
 	output of matrix elements
 *)
-OutputFile="MatrixElements";
+OutputFile="../MatrixElements";
 SetDirectory[DirectoryName[$InputFileName]];
 RepOptional={c[1]->c[1]};
 ParticleName={"TopL","TopR","W","Gluon"};

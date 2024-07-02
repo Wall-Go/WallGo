@@ -4,7 +4,7 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .Boltzmann import BoltzmannBackground, BoltzmannSolver
+from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
@@ -16,13 +16,12 @@ from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo
 
 
-from .Particle import Particle
+from .particle import Particle
 from .Fields import Fields
 from .GenericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
-from .WallGoManager import PhaseInfo
 from .InterpolatableFunction import InterpolatableFunction
 
 from .CollisionArray import CollisionArray
@@ -69,6 +68,7 @@ def initialize() -> None:
 
         ## read default config
         config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
+        config.readINI( getSafePathToResource("Config/CollisionDefaults.ini") )
         
         #print(config)
 

@@ -1,4 +1,4 @@
-.PHONY=clean
+.PHONY=clean, collisions
 
 PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
@@ -17,9 +17,15 @@ ${COLLISIONS}:
 	echo "${COLLISIONS} folder not found. Generating collisions..."; \
 	mkdir -p ${COLLISIONS} 
 
+generate_collisions: ${MATRIX_DATA} | ${COLLISIONS}
+	@echo "Running collision generator"
+	${PYTHON} collisionGenerator.py
+
 ${MATRIX_DATA}: ${MATRIX_SCRIPT}
 	@echo "Running ${MATRIX_SCRIPT}"
 	${WOLFRAMSCRIPT} ${MATRIX_SCRIPT}
+
+collisions: ${COLLISION_FILES} | generate_collisions
 
 model: ${MATRIX_DATA}
 	@echo "Running model file"
@@ -29,4 +35,4 @@ generateMatrixElements: ${MATRIX_DATA}
 
 clean:
 	rm -rf ${COLLISIONS}
-	rm -rf ${MATRIXELEMENTS}.*${MATRIX_DATA}
+	rm -rf ${MATRIXELEMENTS}.*
