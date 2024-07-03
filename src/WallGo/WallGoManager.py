@@ -5,8 +5,10 @@ import numpy.typing as npt
 import WallGo
 from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
+from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
 from .EOM import EOM
+from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales
@@ -16,8 +18,7 @@ from .Hydro import (
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
-from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo, WallGoResults, WallParams
+from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
 class WallGoManager:

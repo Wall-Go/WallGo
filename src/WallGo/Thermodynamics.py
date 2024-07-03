@@ -4,9 +4,9 @@ import scipy.optimize
 from typing import Tuple
 
 from .EffectivePotential import EffectivePotential
+from .exceptions import WallGoError
 from .Fields import Fields
 from .FreeEnergy import FreeEnergy
-from .WallGoExceptions import WallGoError
 import WallGo.helpers
 
 
