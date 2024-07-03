@@ -539,8 +539,9 @@ def main() -> None:
     ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
+    # set to "False" or comment if collision integrals already exist
+    # set to "True" to invoke automatic collision integral generation
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
 
     """
     Register the model with WallGo. This needs to be done only once.
