@@ -491,7 +491,7 @@ def main() -> None:
     WallGo.initialize()
 
     ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
