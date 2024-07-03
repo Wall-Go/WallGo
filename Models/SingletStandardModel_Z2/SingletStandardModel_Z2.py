@@ -45,10 +45,10 @@ class SingletSM_Z2(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
-
 
     def __init__(self, initialInputParameters: dict[str, float]):
         """
@@ -62,6 +62,7 @@ class SingletSM_Z2(GenericModel):
         """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialxSM_Z2(self.modelParameters, self.fieldCount)
@@ -178,6 +179,17 @@ class SingletSM_Z2(GenericModel):
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
 
         return modelParameters
+
+    def calculateCollisionParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculate collision couplings (Lagrangian parameters) from the input parameters.
+        List as they appear in the MatrixElements file
+        """
+        collisionParameters = {}
+
+        collisionParameters["g3"] = inputParameters["g3"]
+
+        return collisionParameters
 
 # end model
 
@@ -522,31 +534,22 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
     ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
+    # set to "False" or comment if collision integrals already exist
+    # set to "True" to invoke automatic collision integral generation
     WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
 
-    print("=== WallGo collision generation ===")
-    ## Create Collision singleton which automatically loads the collision module
-    ## here it will be only invoked in read-only mode if the module is not found
-    ## default path assumed to be in the same directory as this script in CollisionOutput/
-    collision = WallGo.Collision(model)
-
     """
-    Define couplings (Lagrangian parameters)
-    list as they appear in the MatrixElements file
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
     """
-    collision.addCoupling(inputParameters["g3"])
+    manager.registerModel(model)
 
-    manager.loadCollisionFiles(collision)
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
     print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
@@ -566,7 +569,7 @@ def main() -> None:
         """
         Tn = 100. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
+                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ),
                                         phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
         
 

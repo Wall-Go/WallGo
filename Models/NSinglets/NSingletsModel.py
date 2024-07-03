@@ -13,9 +13,10 @@ from WallGo import Fields
 ## Generalization of the Z2 symmetric SM + singlet model now including N singlets.
 class NSinglets(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
     
     fieldCount = 3
 
@@ -342,7 +343,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
 
 
-def main():
+def main() -> None:
     #########################################
     ## Example with 1 Higss and 2 singlets ##
     #########################################
@@ -413,17 +414,26 @@ def main():
         print('Tunneling impossible. Try with different parameters.')
         return 0
 
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    
+    ## ---- collision integration and path specifications
+
+    # automatic generation of collision integrals is disabled by default
+    # set to "False" or comment if collision integrals already exist
+    # set to "True" to invoke automatic collision integral generation
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
-
-    ## ---- Directory name for collisions integrals. Currently we just load these
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "CollisionOutput"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-    manager.loadCollisionFiles(collisionDirectory)
-    
+    ## Generates or reads collision integrals
+    # manager.generateCollisionFiles()
     
     phase1, phase2 = model.effectivePotential.findPhases(Tn)
 

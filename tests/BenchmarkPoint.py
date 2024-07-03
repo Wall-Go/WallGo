@@ -1,4 +1,4 @@
-import WallGo.GenericModel
+import WallGo.genericModel
 
 
 ## Collect input params + other benchmark-specific data for various things in one place.
