@@ -3,7 +3,7 @@ import numpy.typing as npt
 # WallGo imports
 from .boltzmann import BoltzmannSolver
 from .EffectivePotential import EffectivePotential
-from .eom import EOM
+from .equationOfMotion import EOM
 from .GenericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales

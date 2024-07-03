@@ -10,7 +10,7 @@ from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .eom import EOM, WallGoResults
+from .equationOfMotion import EOM, WallGoResults
 from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
 from .WallGoTypes import PhaseInfo
 
