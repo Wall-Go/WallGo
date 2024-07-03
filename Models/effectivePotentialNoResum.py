@@ -206,7 +206,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     def potentialOneLoop(
         self, bosons: tuple, fermions: tuple, checkForImaginary: bool = False
-    ) -> float:
+    ) -> float | npt.ArrayLike:
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -250,7 +250,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         fermions: tuple,
         temperature: npt.ArrayLike,
         checkForImaginary: bool = False,
-    ) -> float:
+    ) -> float | npt.ArrayLike:
         """
         One-loop thermal correction to the effective potential without any
         temperature expansions.
