@@ -44,6 +44,7 @@ class SingletSM_Z2(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2

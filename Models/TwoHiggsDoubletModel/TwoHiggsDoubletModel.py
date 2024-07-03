@@ -20,6 +20,7 @@ class InertDoubletModel(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 1
@@ -27,7 +28,6 @@ class InertDoubletModel(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
-        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict.
         self.effectivePotential = EffectivePotentialIDM(

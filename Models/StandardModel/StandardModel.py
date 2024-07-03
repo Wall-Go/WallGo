@@ -16,6 +16,7 @@ class StandardModel(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 1
@@ -23,7 +24,6 @@ class StandardModel(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
-        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
