@@ -1,8 +1,7 @@
 ======================================
-Model
+Containers
 ======================================
 
-.. automodule:: WallGo.model
+.. automodule:: WallGo.containers
     :members:
     :inherited-members:
-    :special-members: __init__

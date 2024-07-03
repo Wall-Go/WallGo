@@ -18,13 +18,15 @@ from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .WallGoTypes import (
-    BoltzmannResults,
+from .containers import (
     BoltzmannDeltas,
     BoltzmannBackground,
+    WallParams,
+)
+from .results import (
+    BoltzmannResults,
     HydroResults,
     WallGoResults,
-    WallParams,
     WallGoInterpolationResults,
 )
 
@@ -443,7 +445,7 @@ class EOM:
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
-            velocityJouget=self.hydro.vJ,
+            velocityJouguet=self.hydro.vJ,
         )
 
         # Positions of the phases

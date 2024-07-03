@@ -5,21 +5,23 @@ TODO Is there a better way of doing all this?!
 """
 
 from .boltzmann import BoltzmannBackground, BoltzmannSolver
+from .containers import PhaseInfo, BoltzmannBackground
+from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .equationOfMotion import EOM, WallGoResults
-from .WallGoExceptions import WallGoError, WallGoPhaseValidationError
-from .WallGoTypes import PhaseInfo
+from .equationOfMotion import EOM
+from .exceptions import WallGoError, WallGoPhaseValidationError
+from .containers import PhaseInfo, WallParams
+from .results import WallGoResults
 
 
 from .particle import Particle
 from .Fields import Fields
-from .GenericModel import GenericModel
+from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential
-from .EffectivePotential_NoResum import EffectivePotential_NoResum
 from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .InterpolatableFunction import InterpolatableFunction
@@ -29,7 +31,7 @@ from .CollisionArray import CollisionArray
 from .Integrals import Integrals
 from .Config import Config
 
-from .collision_wrapper import Collision
+from .collisionWrapper import Collision
 from .WallGoUtils import getSafePathToResource
 
 

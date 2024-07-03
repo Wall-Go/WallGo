@@ -27,14 +27,16 @@ If you use WallGo, please cite arXiv:....
     :maxdepth: 4
     :hidden:
 
-    Boltzmann
+    boltzmann
+    containers
     Collision
     EoM
+    exceptions
     Grid
     Hydro
     HydroTemplateModel
     Polynomial
-    Model
+    results
     Thermodynamics
 
 .. toctree::

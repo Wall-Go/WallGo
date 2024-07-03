@@ -23,15 +23,19 @@ import numpy as np
 import numpy.typing as npt
 import os
 import pathlib
+import sys
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-## For Benoit benchmarks we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
+
+## Adding the Models folder to the path and import effectivePotentialNoResum
+modelsPath = pathlib.Path(__file__).parents[1]
+sys.path.insert(0, str(modelsPath))
+from effectivePotentialNoResum import EffectivePotentialNoResum
 
 """NOTE: the only difference between this file and SingletStandardModel_Z2.py is that we take the gluon to be out-of-eq, and use N=5 instead of N=11.
 So this is mostly copy pasted. 
@@ -44,6 +48,7 @@ class SingletSM_Z2(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
@@ -157,7 +162,7 @@ class SingletSM_Z2(GenericModel):
 
 
 ## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
-class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
+class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         super().__init__(modelParameters, fieldCount)
@@ -218,28 +223,19 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         b4 = self.modelParameters["b4"]
         a2 = self.modelParameters["a2"]
 
-        RGScale = self.modelParameters["RGScale"]
-
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
-
         # tree level potential
         V0 = 0.5*msq*v**2 + 0.25*lam*v**4 + 0.5*b2*x**2 + 0.25*b4*x**4 + 0.25*a2*v**2 *x**2
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.boson_massSq(fields, temperature)
-        fermionStuff = self.fermion_massSq(fields, temperature)
+        bosonStuff = self.bosonStuff(fields, temperature)
+        fermionStuff = self.fermionStuff(fields, temperature)
 
 
         VTotal = (
             V0 
             + self.constantTerms(temperature)
-            + self.V1(bosonStuff, fermionStuff, RGScale) 
-            + self.V1T(bosonStuff, fermionStuff, temperature)
+            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary) 
+            + self.potentialOneLoopThermal(bosonStuff, fermionStuff, temperature, checkForImaginary)
         )
 
         return VTotal
@@ -260,7 +256,7 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
         return -(dofsBoson + 7./8. * dofsFermion) * np.pi**2 * temperature**4 / 90.
 
-    def boson_massSq(self, fields: Fields, temperature):
+    def bosonStuff(self, fields: Fields, temperature):
 
         v, x = fields.GetField(0), fields.GetField(1)
 
@@ -296,11 +292,12 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
         massSq = np.column_stack( (msqEig1, msqEig2, mGsq, mWsq, mZsq) )
         degreesOfFreedom = np.array([1,1,3,6,3]) 
         c = np.array([3/2,3/2,3/2,5/6,5/6])
+        rgScale = self.modelParameters["RGScale"]*np.ones(5)
 
-        return massSq, degreesOfFreedom, c
+        return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermion_massSq(self, fields: Fields, temperature):
+    def fermionStuff(self, fields: Fields, temperature):
 
         v = fields.GetField(0)
 
@@ -312,8 +309,10 @@ class EffectivePotentialxSM_Z2(EffectivePotential_NoResum):
 
         massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
-        
-        return massSq, degreesOfFreedom
+        c = np.array([3/2])
+        rgScale = np.array([self.modelParameters["RGScale"]])
+
+        return massSq, degreesOfFreedom, c, rgScale
 
 
 
@@ -367,18 +366,15 @@ def main() -> None:
 
     model = SingletSM_Z2(inputParameters)
 
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
-    ## ---- collision integration and path specifications
-
-    ## Create Collision singleton which automatically loads the collision module
-    # Use help(Collision.manager) for info about what functionality is available
-    collision = WallGo.Collision(model)
-    manager.loadCollisionFiles(collision)
-
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
     
