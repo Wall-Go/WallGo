@@ -8,7 +8,7 @@ from copy import deepcopy
 import numpy as np
 import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
-from .Grid import Grid
+from .grid import Grid
 from .Polynomial import Polynomial
 from .particle import Particle
 from .CollisionArray import CollisionArray

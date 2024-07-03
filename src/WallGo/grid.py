@@ -1,6 +1,9 @@
-import numpy as np
+"""
+Class for computing and storing the coordinates on the grid and other related 
+quantities.
+"""
 
-## TODO documentation about logic and limitations behind L_xi and the momentum falloff scale T
+import numpy as np
 
 
 class Grid:
@@ -41,9 +44,9 @@ class Grid:
 
     def __init__(
         self,
-        M: int,
-        N: int,
-        L_xi: float,
+        M: int, # pylint: disable=invalid-name
+        N: int, # pylint: disable=invalid-name
+        positionFalloff: float,
         momentumFalloffT: float,
         spacing: str = "Spectral",
     ):
@@ -87,19 +90,21 @@ class Grid:
         N : int
             Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
-        L_xi : float
+        positionFalloff : float
             Length scale determining transform in :math:`\xi` direction.
         momentumFalloffT : float
-            Temperature scale determining transform in momentum directions. Should be close to the plasma temperature.
+            Temperature scale determining transform in momentum directions. 
+            hould be close to the plasma temperature.
         spacing : {'Spectral', 'Uniform'}
             Choose 'Spectral' for the Gauss-Lobatto collocation points, as
             required for WallGo's spectral representation, or 'Uniform' for
             a uniform grid. Default is 'Spectral'.
 
         """
-        self.M = M
-        self.N = N  # This number has to be odd
-        self.L_xi = L_xi
+        self.M = M # pylint: disable=invalid-name
+        # This number has to be odd
+        self.N = N # pylint: disable=invalid-name
+        self.positionFalloff = positionFalloff
         assert spacing in [
             "Spectral",
             "Uniform",
@@ -123,9 +128,9 @@ class Grid:
                 num=self.M - 1,
                 endpoint=False,
             )
-            self.rzValues = np.arange(
-                -1 + drz,
-                1,
+            self.rzValues = np.linspace(
+                -1.0 + drz,
+                1.0,
                 num=self.N - 1,
                 endpoint=False,
             )
@@ -165,10 +170,14 @@ class Grid:
         newScale : float
             New position falloff scale.
         """
-        self.L_xi = newScale
+        self.positionFalloff = newScale
         self._cacheCoordinates()
 
-    def getCompactCoordinates(self, endpoints=False, direction=None):
+    def getCompactCoordinates(
+            self,
+            endpoints: bool=False,
+            direction: str | None=None,
+            ) -> tuple[np.ndarray, ...] | np.ndarray:
         r"""
         Return compact coordinates of grid.
 
@@ -192,21 +201,21 @@ class Grid:
         """
         if endpoints:
             chi = np.array([-1] + list(self.chiValues) + [1])
-            rz = np.array([-1] + list(self.rzValues) + [1])
-            rp = np.array(list(self.rpValues) + [1])
+            rz = np.array([-1]+list(self.rzValues)+[1]) # pylint: disable=invalid-name
+            rp = np.array(list(self.rpValues) + [1]) # pylint: disable=invalid-name
         else:
-            chi, rz, rp = self.chiValues, self.rzValues, self.rpValues
+            chi, rz, rp = ( # pylint: disable=invalid-name
+                self.chiValues, self.rzValues, self.rpValues)
 
         if direction == "z":
             return chi
-        elif direction == "pz":
+        if direction == "pz":
             return rz
-        elif direction == "pp":
+        if direction == "pp":
             return rp
-        else:
-            return chi, rz, rp
+        return chi, rz, rp
 
-    def getCoordinates(self, endpoints=False):
+    def getCoordinates(self, endpoints: bool=False) -> tuple[np.ndarray, ...]:
         r"""
         Return coordinates of grid, not compactified.
 
@@ -225,14 +234,19 @@ class Grid:
             Grid of the :math:`p_\Vert` direction.
         """
         if endpoints:
-            xi = np.array([-np.inf] + list(self.xiValues) + [np.inf])
-            pz = np.array([-np.inf] + list(self.pzValues) + [np.inf])
-            pp = np.array(list(self.ppValues) + [np.inf])
+            xi = np.array( # pylint: disable=invalid-name
+                          [-np.inf] + list(self.xiValues) + [np.inf])
+            pz = np.array( # pylint: disable=invalid-name
+                          [-np.inf] + list(self.pzValues) + [np.inf])
+            pp = np.array( # pylint: disable=invalid-name
+                          list(self.ppValues) + [np.inf])
             return xi, pz, pp
-        else:
-            return self.xiValues, self.pzValues, self.ppValues
+        return self.xiValues, self.pzValues, self.ppValues
 
-    def getCompactificationDerivatives(self, endpoints=False):
+    def getCompactificationDerivatives(
+            self,
+            endpoints: bool=False,
+            ) -> tuple[np.ndarray, ...]:
         r"""
         Return derivatives of compactified coordinates of grid, with respect to
         uncompactified derivatives.
@@ -256,10 +270,14 @@ class Grid:
             dpzdrz = np.array([np.inf] + list(self.dpzdrz) + [np.inf])
             dppdrp = np.array(list(self.dppdrp) + [np.inf])
             return dxidchi, dpzdrz, dppdrp
-        else:
-            return self.dxidchi, self.dpzdrz, self.dppdrp
+        return self.dxidchi, self.dpzdrz, self.dppdrp
 
-    def compactify(self, z, pz, pp):
+    def compactify(
+            self,
+            z: np.ndarray, # pylint: disable=invalid-name
+            pz: np.ndarray, # pylint: disable=invalid-name
+            pp: np.ndarray, # pylint: disable=invalid-name
+            ) -> tuple[np.ndarray, ...]:
         """
         Transforms coordinates to [-1, 1] interval
 
@@ -283,12 +301,17 @@ class Grid:
 
         """
 
-        z_compact = z / np.sqrt(self.L_xi**2 + z**2)
-        pz_compact = np.tanh(pz / 2 / self.momentumFalloffT)
-        pp_compact = 1 - 2 * np.exp(-pp / self.momentumFalloffT)
-        return z_compact, pz_compact, pp_compact
+        zCompact = z / np.sqrt(self.positionFalloff**2 + z**2)
+        pzCompact = np.tanh(pz / 2 / self.momentumFalloffT)
+        ppCompact = 1 - 2 * np.exp(-pp / self.momentumFalloffT)
+        return zCompact, pzCompact, ppCompact
 
-    def decompactify(self, z_compact, pz_compact, pp_compact):
+    def decompactify(
+            self,
+            zCompact: np.ndarray,
+            pzCompact: np.ndarray,
+            ppCompact: np.ndarray,
+            ) -> tuple[np.ndarray, ...]:
         """
         Transforms coordinates to [-1, 1] interval
 
@@ -312,12 +335,20 @@ class Grid:
 
         """
 
-        z = self.L_xi * z_compact / np.sqrt(1 - z_compact**2)
-        pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
-        pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
+        z = ( # pylint: disable=invalid-name
+            self.positionFalloff * zCompact / np.sqrt(1 - zCompact**2))
+        pz = ( # pylint: disable=invalid-name
+            2 * self.momentumFalloffT * np.arctanh(pzCompact))
+        pp = ( # pylint: disable=invalid-name
+              -self.momentumFalloffT * np.log((1 - ppCompact) / 2))
         return z, pz, pp
 
-    def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
+    def compactificationDerivatives(
+            self,
+            zCompact: np.ndarray,
+            pzCompact: np.ndarray,
+            ppCompact: np.ndarray,
+            ) -> tuple[np.ndarray, ...]:
         r"""
         Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
 
@@ -340,7 +371,7 @@ class Grid:
             Derivative d(p_par)/d(rho_par).
         """
 
-        dzdzCompact = self.L_xi / (1 - z_compact**2) ** 1.5
-        dpzdpzCompact = 2 * self.momentumFalloffT / (1 - pz_compact**2)
-        dppdppCompact = self.momentumFalloffT / (1 - pp_compact)
+        dzdzCompact = self.positionFalloff / (1 - zCompact**2) ** 1.5
+        dpzdpzCompact = 2 * self.momentumFalloffT / (1 - pzCompact**2)
+        dppdppCompact = self.momentumFalloffT / (1 - ppCompact)
         return dzdzCompact, dpzdpzCompact, dppdppCompact

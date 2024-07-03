@@ -1,5 +1,5 @@
 import numpy as np
-from .Grid import Grid
+from .grid import Grid
 
 class Grid3Scales(Grid):
     r"""

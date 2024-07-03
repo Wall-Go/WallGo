@@ -10,8 +10,8 @@ from .EffectivePotential import EffectivePotential
 from .EOM import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
-from .Grid import Grid
-from .Grid3Scales import Grid3Scales
+from .grid import Grid
+from .grid3Scales import Grid3Scales
 from .Hydro import (
     Hydro,
 )  # TODO why is this not Hydrodynamics? compare with Thermodynamics

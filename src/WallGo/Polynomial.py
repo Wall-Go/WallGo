@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import eval_chebyt,eval_chebyu
 
-from .Grid import Grid
+from .grid import Grid
 
 
 class Polynomial:
