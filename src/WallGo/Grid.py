@@ -39,7 +39,14 @@ class Grid:
         Grid of the :math:`p_\Vert` direction.
     """
 
-    def __init__(self, M: int, N: int, L_xi: float, momentumFalloffT: float, spacing: str="Spectral"):
+    def __init__(
+        self,
+        M: int,
+        N: int,
+        L_xi: float,
+        momentumFalloffT: float,
+        spacing: str = "Spectral",
+    ):
         r"""
         Initialises Grid object.
 
@@ -91,10 +98,12 @@ class Grid:
 
         """
         self.M = M
-        self.N = N #This number has to be odd
+        self.N = N  # This number has to be odd
         self.L_xi = L_xi
-        assert spacing in ["Spectral", "Uniform"], \
-            f"Unknown spacing {spacing}, not 'Spectral' or 'Uniform'"
+        assert spacing in [
+            "Spectral",
+            "Uniform",
+        ], f"Unknown spacing {spacing}, not 'Spectral' or 'Uniform'"
         self.spacing = spacing
         self.momentumFalloffT = momentumFalloffT
 
@@ -109,23 +118,31 @@ class Grid:
             dchi = 2 / self.M
             drz = 2 / self.N
             self.chiValues = np.linspace(
-                -1 + dchi, 1, num=self.M - 1, endpoint=False,
+                -1 + dchi,
+                1,
+                num=self.M - 1,
+                endpoint=False,
             )
             self.rzValues = np.arange(
-                -1 + drz, 1, num=self.N - 1, endpoint=False,
+                -1 + drz,
+                1,
+                num=self.N - 1,
+                endpoint=False,
             )
             self.rpValues = np.linspace(-1, 1, num=self.N - 1, endpoint=False)
 
         self._cacheCoordinates()
 
-
     def _cacheCoordinates(self) -> None:
         """
         Compute physical coordinates and store them internally.
         """
-        (self.xiValues, self.pzValues, self.ppValues) = self.decompactify(self.chiValues, self.rzValues, self.rpValues)
-        (self.dxidchi, self.dpzdrz, self.dppdrp) = self.compactificationDerivatives(self.chiValues, self.rzValues, self.rpValues)
-    
+        (self.xiValues, self.pzValues, self.ppValues) = self.decompactify(
+            self.chiValues, self.rzValues, self.rpValues
+        )
+        (self.dxidchi, self.dpzdrz, self.dppdrp) = self.compactificationDerivatives(
+            self.chiValues, self.rzValues, self.rpValues
+        )
 
     def changeMomentumFalloffScale(self, newScale: float) -> None:
         """
@@ -138,7 +155,7 @@ class Grid:
         """
         self.momentumFalloffT = newScale
         self._cacheCoordinates()
-        
+
     def changePositionFalloffScale(self, newScale: float) -> None:
         """
         Change the position falloff scale.
@@ -151,7 +168,6 @@ class Grid:
         self.L_xi = newScale
         self._cacheCoordinates()
 
-
     def getCompactCoordinates(self, endpoints=False, direction=None):
         r"""
         Return compact coordinates of grid.
@@ -161,7 +177,7 @@ class Grid:
         endpoints : Bool, optional
             If True, include endpoints of grid. Default is False.
         direction : string or None, optional
-            Specifies which coordinates to return. Can either be 'z', 'pz', 
+            Specifies which coordinates to return. Can either be 'z', 'pz',
             'pp' or None. If None, returns a tuple containing the 3 directions.
             Default is None.
 
@@ -180,12 +196,12 @@ class Grid:
             rp = np.array(list(self.rpValues) + [1])
         else:
             chi, rz, rp = self.chiValues, self.rzValues, self.rpValues
-            
-        if direction == 'z':
+
+        if direction == "z":
             return chi
-        elif direction == 'pz':
+        elif direction == "pz":
             return rz
-        elif direction == 'pp':
+        elif direction == "pp":
             return rp
         else:
             return chi, rz, rp
@@ -295,7 +311,7 @@ class Grid:
             Physical p_par coordinate.
 
         """
-        
+
         z = self.L_xi * z_compact / np.sqrt(1 - z_compact**2)
         pz = 2 * self.momentumFalloffT * np.arctanh(pz_compact)
         pp = -self.momentumFalloffT * np.log((1 - pp_compact) / 2)
@@ -304,7 +320,7 @@ class Grid:
     def compactificationDerivatives(self, z_compact, pz_compact, pp_compact):
         r"""
         Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
-        
+
         Parameters
         ----------
         z_compact : array-like
@@ -313,7 +329,7 @@ class Grid:
             Compact pz coordinate (rho_z).
         pp_compact : array-like
             Compact p_par coordinate (rho_par).
-            
+
         Returns
         -------
         dzdzCompact : array-like
@@ -323,8 +339,8 @@ class Grid:
         dppdppCompact : array-like
             Derivative d(p_par)/d(rho_par).
         """
-        
-        dzdzCompact = self.L_xi / (1 - z_compact**2)**1.5
-        dpzdpzCompact = 2 * self.momentumFalloffT / (1-pz_compact**2)
-        dppdppCompact = self.momentumFalloffT / (1-pp_compact)
+
+        dzdzCompact = self.L_xi / (1 - z_compact**2) ** 1.5
+        dpzdpzCompact = 2 * self.momentumFalloffT / (1 - pz_compact**2)
+        dppdppCompact = self.momentumFalloffT / (1 - pp_compact)
         return dzdzCompact, dpzdpzCompact, dppdppCompact
