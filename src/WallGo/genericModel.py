@@ -6,20 +6,18 @@ from .particle import Particle
 from .EffectivePotential import EffectivePotential
 
 
-
 class GenericModel(ABC):
-    '''
+    """
     Common interface for WallGo model definitions.
     This is basically input parameters + particle definitions + effective potential.
-    The user should implement this and the abstract methods below with their model-specific stuff. 
-    '''
+    The user should implement this and the abstract methods below with their model-specific stuff.
+    """
 
     ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones)
     @property
     @abstractmethod
     def particles(self) -> list[Particle]:
         pass
-
 
     ## Another particle array for holding just the out-of-equilibrium particles
     @property
@@ -54,14 +52,13 @@ class GenericModel(ABC):
     def fieldCount(self) -> int:
         pass
 
-
-    '''
+    """
     ## Effective potential
     @property
     @abstractmethod
     def Veff(self) -> EffectivePotential:
         pass
-    '''
+    """
     effectivePotential: EffectivePotential
     inputParameters: dict[str, float]
 
@@ -69,9 +66,9 @@ class GenericModel(ABC):
         ## Common routine for defining a new particle. Usually should not be overriden
 
         self.particles.append(particleToAdd)
-        
+
         # add to out-of-eq particles too if applicable
-        if (not particleToAdd.inEquilibrium):
+        if not particleToAdd.inEquilibrium:
             self.outOfEquilibriumParticles.append(particleToAdd)
 
     ## Empties the particle lists
@@ -79,24 +76,21 @@ class GenericModel(ABC):
         self.particles = []
         self.outOfEquilibriumParticles = []
 
-
     ## Go from whatever input parameters to renormalized Lagrangian parameters.
     # Override this if your inputs are something else than Lagrangian parameters
-    def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
-        self.inputParameters = inputParameters
-        return {}
-
-    def calculateCollisionParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+    def calculateModelParameters(
+        self, inputParameters: dict[str, float]
+    ) -> dict[str, float]:
         """
-        Calculates the collision parameters based on the given model parameters.
+        Calculates the model parameters based on the given input parameters.
 
         Args:
             inputParameters (dict[str, float]):
-            A dictionary containing the model parameters.
+            A dictionary containing the input parameters.
 
         Returns:
             dict[str, float]:
-            A dictionary containing the calculated collision parameters.
+            A dictionary containing the calculated model parameters.
         """
         self.inputParameters = inputParameters
         return {}
