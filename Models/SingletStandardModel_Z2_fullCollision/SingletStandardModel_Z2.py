@@ -454,7 +454,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermionStuff(self, fields: Fields, temperature: float): -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def fermionStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
         v = fields.GetField(0)
 
