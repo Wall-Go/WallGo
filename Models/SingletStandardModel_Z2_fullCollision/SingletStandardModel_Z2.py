@@ -532,7 +532,8 @@ def main() -> None:
     ## ---- collision integration and path specifications
 
     # automatic generation of collision integrals is disabled by default
-    # comment this line if collision integrals already exist
+    # set to "False" or comment if collision integrals already exist
+    # set to "True" to invoke automatic collision integral generation
     WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
