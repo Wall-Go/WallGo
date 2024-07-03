@@ -432,8 +432,8 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    ## Generates or reads collision integrals
-    # manager.generateCollisionFiles()
+    # Generates or reads collision integrals
+    manager.generateCollisionFiles()
     
     phase1, phase2 = model.effectivePotential.findPhases(Tn)
 
