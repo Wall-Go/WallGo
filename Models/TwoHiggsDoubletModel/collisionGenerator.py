@@ -67,7 +67,8 @@ collision.manager.configureIntegration(integrationOptions)
 ## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
 collision.manager.setMatrixElementVerbosity(True)
 
-## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
+## The C++ code requires basisSize to be uint. pybind11 will throw TypeError otherwise.
+# Therfore, ensure basisSize is >= 0.
 basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
 
 ## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging

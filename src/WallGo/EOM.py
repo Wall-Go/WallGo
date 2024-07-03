@@ -8,17 +8,15 @@ import copy  # for deepcopy
 import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
-from .boltzmann import (
-    BoltzmannBackground, BoltzmannDeltas, BoltzmannSolver
-)
+from .containers import BoltzmannBackground, BoltzmannDeltas
+from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
-from .GenericModel import GenericModel
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
 from .Hydro import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .WallGoTypes import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
+from .results import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults
 
 
 class EOM:
@@ -371,7 +369,7 @@ class EOM:
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
-            velocityJouget=self.hydro.vJ,
+            velocityJouguet=self.hydro.vJ,
         )
 
         vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
