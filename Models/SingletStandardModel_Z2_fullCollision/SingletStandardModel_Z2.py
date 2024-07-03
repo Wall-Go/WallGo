@@ -189,8 +189,6 @@ class SingletSM_Z2(GenericModel):
         Calculate the collision couplings (Lagrangian parameters) from the input parameters.
         List as they appear in the MatrixElements file
         """
-        super().calculateCollisionParameters(modelParameters)
-
         collisionParameters = {}
 
         collisionParameters["g3"] = modelParameters["g3"]
