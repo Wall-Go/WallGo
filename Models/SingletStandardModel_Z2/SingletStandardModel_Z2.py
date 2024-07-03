@@ -45,10 +45,10 @@ class SingletSM_Z2(GenericModel):
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
     modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 2
-
 
     def __init__(self, initialInputParameters: dict[str, float]):
         """
@@ -180,16 +180,16 @@ class SingletSM_Z2(GenericModel):
 
         return modelParameters
 
-    def calculateCollisionParameters(self, modelParameters: dict[str, float]) -> dict[str, float]:
+    def calculateCollisionParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
         """
-        Calculate the collision couplings (Lagrangian parameters) from the input parameters.
+        Calculate collision couplings (Lagrangian parameters) from the input parameters.
         List as they appear in the MatrixElements file
         """
-        super().calculateCollisionParameters(modelParameters)
+        super().calculateCollisionParameters(inputParameters)
 
         collisionParameters = {}
 
-        collisionParameters["g3"] = modelParameters["g3"]
+        collisionParameters["g3"] = inputParameters["g3"]
 
         return collisionParameters
 
@@ -571,7 +571,7 @@ def main() -> None:
         """
         Tn = 100. ## nucleation temperature
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ), 
+                                        phaseLocation1 = WallGo.Fields( [0.0, 200.0] ),
                                         phaseLocation2 = WallGo.Fields( [246.0, 0.0] ))
         
 

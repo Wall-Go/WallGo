@@ -9,12 +9,12 @@ from .EffectivePotential import EffectivePotential
 
 class GenericModel(ABC):
     '''
-    Common interface for WallGo model definitions. This is basically input parameters + particle definitions + effective potential.
+    Common interface for WallGo model definitions.
+    This is basically input parameters + particle definitions + effective potential.
     The user should implement this and the abstract methods below with their model-specific stuff. 
     '''
 
-
-    ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones) 
+    ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones)
     @property
     @abstractmethod
     def particles(self) -> list[Particle]:
@@ -27,11 +27,25 @@ class GenericModel(ABC):
     def outOfEquilibriumParticles(self) -> list[Particle]:
         pass
 
-    ## Model parameters (parameters in the action and RG scale, but not temperature) are expected to be a member dict.
-    ## Here is a property definition for it. Child classes can just do modelParameters = { ... } to define it
     @property
     @abstractmethod
     def modelParameters(self) -> dict[str, float]:
+        """
+        Returns the parameters of the model as a dictionary.
+        Model parameters (parameters in the action and RG scale, but not temperature)
+        are expected to be a member dict.
+        Here, is a property definition for it.
+        Child classes can just do modelParameters = { ... } to define it
+
+        Returns:
+            A dictionary containing the model parameters,
+            where the keys are strings and the values are floats.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def collisionParameters(self) -> dict[str, float]:
         pass
 
     ## How many classical fields
@@ -49,12 +63,7 @@ class GenericModel(ABC):
         pass
     '''
     effectivePotential: EffectivePotential
-    
     inputParameters: dict[str, float]
-    collisionParameters: dict[str, float]
-
-    
-
 
     def addParticle(self, particleToAdd: Particle) -> None:
         ## Common routine for defining a new particle. Usually should not be overriden
@@ -77,6 +86,17 @@ class GenericModel(ABC):
         self.inputParameters = inputParameters
         return {}
 
-    def calculateCollisionParameters(self, collisionParameters: dict[str, float]) -> dict[str, float]:
-        self.collisionParameters = collisionParameters
+    def calculateCollisionParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculates the collision parameters based on the given model parameters.
+
+        Args:
+            inputParameters (dict[str, float]):
+            A dictionary containing the model parameters.
+
+        Returns:
+            dict[str, float]:
+            A dictionary containing the calculated collision parameters.
+        """
+        self.inputParameters = inputParameters
         return {}

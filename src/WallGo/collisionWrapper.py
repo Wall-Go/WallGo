@@ -45,8 +45,6 @@ class Collision:
         """
         if not hasattr(self, "bInitialized"):
             self.module: ModuleType = None
-            self._loadCollisionModule(modelCls)
-            self.bInitialized = True
 
             self.generateCollisionIntegrals = WallGo.config.getboolean("Collisions", "generateCollisionIntegrals")
 
@@ -54,6 +52,9 @@ class Collision:
             collisionDirectory = scriptLocation / WallGo.config.get("Collisions", "pathName")
             collisionDirectory.mkdir(parents=True, exist_ok=True)
             matrixElementFile = scriptLocation / WallGo.config.get("MatrixElements", "fileName")
+
+            self._loadCollisionModule(modelCls)
+            self.bInitialized = True
 
             self.setOutputDirectory(str(collisionDirectory))
             self.setMatrixElementFile(str(matrixElementFile))
@@ -160,8 +161,15 @@ class Collision:
         Returns:
             None
         """
-        for _, couplingValue in model.collisionParameters.items():
-            self.manager.addCoupling(couplingValue)
+        if self.generateCollisionIntegrals:
+            self._assertLoaded()
+            # Assert that collisionParameters are not empty
+            assert model.collisionParameters, "Empty collisionParemeters: No collision parameters found in the model."
+
+            for _, couplingValue in model.collisionParameters.items():
+                self.manager.addCoupling(couplingValue)
+        else:
+            pass
 
     def constructPybindParticle(
         self, particle: Particle, T: float, fields: Fields
