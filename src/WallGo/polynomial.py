@@ -79,7 +79,7 @@ class Polynomial:
         self.direction = direction
         self.endpoints = endpoints
 
-        self._checkCoefficients(coefficients)
+        self._checkCoefficients(self.coefficients)
 
     def __getitem__(self, key: int | tuple[int,...]) -> Polynomial:
         basisList: list[str] = []

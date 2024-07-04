@@ -565,7 +565,7 @@ class EOM:
         EOMPoly = Polynomial(dVdz, self.grid)
 
         dzdchi,_,_ = self.grid.getCompactificationDerivatives()
-        pressure = EOMPoly.integrate(w=-dzdchi)
+        pressure = EOMPoly.integrate(weight=-dzdchi)
 
         ## Observation: dV/dPhi derivative can be EXTREMELY sensitive to small changes in T. So if comparing things manually, do keep this in mind
 
@@ -756,7 +756,7 @@ class EOM:
         
         VPoly = Polynomial(V+VOut-Vref, self.grid)
         dzdchi,_,_ = self.grid.getCompactificationDerivatives()
-        U = VPoly.integrate(w = dzdchi)
+        U = VPoly.integrate(weight=dzdchi)
         K = np.sum((vevHighT-vevLowT)**2/(6*wallWidths))
 
         return U + K  
