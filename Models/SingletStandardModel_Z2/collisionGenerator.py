@@ -4,22 +4,20 @@ WallGo.Collision, which handles dynamic loading of the module and provides compl
 Note that WallGo.Collision is a singleton class, ie. only one instance of it can exist.
 Loading of the module happens when the instance is first created."""
 
-import os
 import pathlib
-
-import WallGo
-
 from SingletStandardModel_Z2 import (
     SingletSM_Z2,
 )  # Benoit benchmark model
 
-WallGo.initialize()
+import WallGo
 
+WallGo.initialize()
 
 ## Modify the config, we use N=11 for this example
 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
-## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+## QFT model input. Some of these are probably not intended to change, like gauge masses.
+# Could hardcode those directly in the class.
 inputParameters = {
     #"RGScale" : 91.1876,
     "RGScale" : 125., # <- Benoit benchmark
@@ -67,13 +65,14 @@ integrationOptions.absoluteErrorGoal = 1e-8
 
 collision.manager.configureIntegration(integrationOptions)
 
-## Instruct the collision manager to print out symbolic matrix elements as it parses them. Can be useful for debugging
+## Instruct the collision manager to print out symbolic
+# matrix elements as it parses them. Can be useful for debugging
 collision.manager.setMatrixElementVerbosity(True)
 
-## "N". Make sure this is >= 0. The C++ code requires uint so pybind11 will throw TypeError otherwise
-# basisSize = 5
+## The C++ code requires basisSize to be uint. pybind11 will throw TypeError otherwise.
+# Therfore, ensure basisSize is >= 0.
 basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-# print(WallGo.config)
 
-## Computes collisions for all out-of-eq particles specified above. The last argument is optional and mainly useful for debugging
+## Computes collisions for all out-of-eq particles specified above.
+# The last argument is optional and mainly useful for debugging
 collision.manager.calculateCollisionIntegrals(basisSize, bVerbose = False)

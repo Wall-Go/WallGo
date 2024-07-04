@@ -1,5 +1,6 @@
 import os
 import pathlib
+import sys
 import numpy as np
 import numpy.typing as npt
 
@@ -9,17 +10,21 @@ from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
 
-## To compare to 2211.13142 we need the unresummed, non-high-T potential:
-from WallGo import EffectivePotential_NoResum
 from WallGo import Fields
+
+## To compare to 2211.13142 we need the unresummed, non-high-T potential:
+modelsPath = pathlib.Path(__file__).parents[1]
+sys.path.insert(0, str(modelsPath))
+from effectivePotentialNoResum import EffectivePotentialNoResum
 
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
 
-    particles = []
-    outOfEquilibriumParticles = []
-    modelParameters = {}
+    particles: list[Particle] = []
+    outOfEquilibriumParticles: list[Particle] = []
+    modelParameters: dict[str, float] = {}
+    collisionParameters: dict[str, float] = {}
 
     ## Specifying this is REQUIRED
     fieldCount = 1
@@ -175,59 +180,18 @@ class InertDoubletModel(GenericModel):
         return modelParameters
 
 
-## For this benchmark model we use the 4D potential, implemented as in 2211.13142. 
+## For this benchmark model we use the 4D potential, implemented as in 2211.13142.
 ## We use interpolation tables for Jb/Jf
-class EffectivePotentialIDM(EffectivePotential_NoResum):
+class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        super().__init__(modelParameters, fieldCount)
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions 
+        super().__init__(
+            modelParameters, fieldCount, integrals=None, useDefaultInterpolation=True
+        )
+        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions
         ## to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90
-
-        """For this benchmark model we do NOT use the default integrals from WallGo.
-        This is because the benchmark points we're comparing with were originally done 
-        with integrals from CosmoTransitions. 
-        In real applications we recommend using the WallGo default implementations.
-        """
-        self._configureBenchmarkIntegrals()
-
-    def _configureBenchmarkIntegrals(self):
-
-        ## Load custom interpolation tables for Jb/Jf.
-        # These should be the same as what CosmoTransitions version 2.0.2 
-        # provides by default.
-        thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            bVerbose=False,
-        )
-        self.integrals.Jf.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            bVerbose=False,
-        )
-
-        self.integrals.Jb.disableAdaptiveInterpolation()
-        self.integrals.Jf.disableAdaptiveInterpolation()
-
-        """And force out-of-bounds constant extrapolation because this is what 
-        CosmoTransitions does => not really reliable for very negative (m/T)^2 ! 
-        Strictly speaking: For x > xmax, CosmoTransitions just returns 0. But a 
-        constant extrapolation is OK since the integral is very small at the upper limit.
-        """
-
-        from WallGo.InterpolatableFunction import EExtrapolationType
-
-        self.integrals.Jb.setExtrapolationType(
-            extrapolationTypeLower=EExtrapolationType.CONSTANT,
-            extrapolationTypeUpper=EExtrapolationType.CONSTANT,
-        )
-
-        self.integrals.Jf.setExtrapolationType(
-            extrapolationTypeLower=EExtrapolationType.CONSTANT,
-            extrapolationTypeUpper=EExtrapolationType.CONSTANT,
-        )
 
     ## ---------- EffectivePotential overrides.
     # The user needs to define evaluate(), which has to return value of the effective
@@ -245,57 +209,32 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
-        """
-        # Get thermal masses
-        thermalParams = self.getThermalParameters(temperature)
-        mh1_thermal = msq - thermalParams["msq"] # need to subtract since msq in thermalParams is msq(T=0) + T^2 (...)
-        mh2_thermal = b2 - thermalParams["b2"]
-        """
-
         # tree level potential
         V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
-        bosonStuff = self.boson_massSq(fields)
-        fermionStuff = self.fermion_massSq(fields)
+        bosonStuff = self.bosonStuff(fields)
+        fermionStuff = self.fermionStuff(fields)
 
-        bosonStuffResummed = self.boson_massSqResummed(fields, temperature)
-        fermionMass, _, fermionDOF = fermionStuff
-        fermionStuffT = fermionMass, fermionDOF
+        bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
 
         VTotal = (
             V0
             + self.constantTerms(temperature)
-            + self.ColemanWeinberg(bosonStuff, fermionStuff)
-            + self.V1T(
-                bosonStuffResummed, fermionStuffT, temperature, checkForImaginary
+            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoopThermal(
+                bosonStuffResummed, fermionStuff, temperature, checkForImaginary
             )
         )
 
         return VTotal
 
-    def ColemanWeinberg(self, bosons, fermions) -> float:
-        c = 3.0 / 2.0
-        m2, m20T, nb = bosons
-        Vboson = (
-            1.0
-            / (64.0 * np.pi**2)
-            * np.sum(
-                nb * (m2**2 * (np.log(np.abs(m2) / m20T) - c) + 2 * m2 * m20T), axis=-1
-            )
+    def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
+        return degrees_of_freedom * (
+            msq * msq * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
+            + 2 * msq * rgScale**2
         )
 
-        m2, m20T, nf = fermions
-        Vfermion = (
-            -1.0
-            / (64.0 * np.pi**2)
-            * np.sum(
-                nf * (m2**2 * (np.log(np.abs(m2) / m20T) - c) + 2 * m2 * m20T), axis=-1
-            )
-        )
-
-        return Vboson + Vfermion
-
-    def fermion_massSq(self, fields: Fields):
+    def fermionStuff(self, fields: Fields):
 
         v = fields.GetField(0)
 
@@ -304,15 +243,13 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         mtsq = yt**2 * v**2 / 2 + 1e-100
         mtsq0T = yt**2 * self.modelParameters["v0"] ** 2 / 2
 
-        # @todo include spins for each particle
-
         massSq = np.stack((mtsq,), axis=-1)
         massSq0T = np.stack((mtsq0T,), axis=-1)
         degreesOfFreedom = np.array([12])
 
-        return massSq, massSq0T, degreesOfFreedom
+        return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
-    def boson_massSq(self, fields: Fields):
+    def bosonStuff(self, fields: Fields):
 
         v = fields.GetField(0)
         v0 = self.modelParameters["v0"]
@@ -350,10 +287,11 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         massSq = np.column_stack((mWsq, mZsq, mhsq, mHsq, mAsq, mHpmsq))
         massSq0 = np.column_stack((mWsq0T, mZsq0T, mhsq0T, mHsq0T, mAsq0T, mHpmsq0T))
         degreesOfFreedom = np.array([6, 3, 1, 1, 1, 2])
+        c = 3 / 2 * np.ones(6)
 
-        return massSq, massSq0, degreesOfFreedom
+        return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def boson_massSqResummed(self, fields: Fields, temperature):
+    def bosonStuffResummed(self, fields: Fields, temperature):
 
         v = fields.GetField(0)
 
@@ -426,7 +364,8 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         )
         degreesOfFreedom = np.array([4, 2, 2, 1, 1, 1, 3, 1, 1, 2])
 
-        return massSq, degreesOfFreedom, 0
+        # As c and the RG-scale don't enter in V1T, we just set them to 0
+        return massSq, degreesOfFreedom, 0, 0
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -444,7 +383,7 @@ class EffectivePotentialIDM(EffectivePotential_NoResum):
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
-def main():
+def main() -> None:
 
     WallGo.initialize()
 
@@ -494,31 +433,21 @@ def main():
 
     model = InertDoubletModel(inputParameters)
 
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
+    ## ---- collision integration and path specifications
+
+    # Directory name for collisions integrals defaults to "CollisionOutput/"
+    # these can be loaded or generated given the flag "generateCollisionIntegrals"
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
     """
     manager.registerModel(model)
 
-    print("=== Loading the collisions ===")
-    """ Register the model with WallGo. This needs to be done only once. 
-    If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    ## collision stuff
-
-    ## Create Collision singleton which automatically loads the collision module
-    ## here it will be only invoked in read-only mode if the module is not found
-    collision = WallGo.Collision(model)
-
-   ## ---- Directory name for collisions integrals. Currently we just load these
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    collisionDirectory = scriptLocation / "CollisionOutput/"
-    collisionDirectory.mkdir(parents=True, exist_ok=True)
-
-    collision.setOutputDirectory(collisionDirectory)
-
-    manager.loadCollisionFiles(collision)
+    ## Generates or reads collision integrals
+    manager.generateCollisionFiles()
 
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
@@ -576,7 +505,7 @@ def main():
             print(f"{widths=}")
             print(f"{offsets=}")
 
-            ## Repeat with out-of-equilibrium parts included. 
+            ## Repeat with out-of-equilibrium parts included.
             # This requires solving Boltzmann equations, invoked automatically by solveWall()
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
