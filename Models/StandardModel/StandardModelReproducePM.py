@@ -90,12 +90,17 @@ class StandardModel(GenericModel):
 
         # Zero-temperature vev
         v0 = inputParameters["v0"]
+        modelParameters["v0"] = v0
         
         # Zero-temperature masses
         mH = inputParameters["mH"]
         mW = inputParameters["mW"] 
         mZ = inputParameters["mZ"]
-        mt = inputParameters["mt"] 
+        mt = inputParameters["mt"]
+
+        modelParameters["mW"] = mW
+        modelParameters["mZ"] = mZ
+        modelParameters["mt"] = mt 
 
         # helper
         g0 = 2.*mW / v0
@@ -106,15 +111,15 @@ class StandardModel(GenericModel):
         modelParameters["g3"] = inputParameters["g3"]
         modelParameters["yt"] = np.sqrt(1./2.)*g0 * mt/mW
         
-        modelParameters["lambdaT"] = inputParameters["lambdaT"]
+        modelParameters["lambda"] = inputParameters["mH"]**2/(2*v0**2)
 
         bconst = 3/(64*np.pi**2*v0**4)*(2*mW**4 + mZ**4 - 4* mt**4)
 
         modelParameters["D"] = 1/(8*v0**2)*(2*mW**2 + mZ**2 + 2*mt**2)
-        modelParameters["E"] = 1/(12*np.pi*v0**3)*(4*mW**3 + 2*mZ**3 + (3 + 3**1.5)* modelParameters["lambdaT"]**1.5)  
+        modelParameters["E0"] = 1/(12*np.pi*v0**3)*(4*mW**3 + 2*mZ**3)  
 
         modelParameters["T0sq"] = 1/4/modelParameters["D"]*(mH**2 -8*bconst*v0**2)
-        modelParameters["C"] = 1/(16*np.pi**2)*(1.42*modelParameters["g2"]**4 + 4.8*modelParameters["g2"]**2*modelParameters["lambdaT"] - 6*modelParameters["lambdaT"]**2)
+        modelParameters["C0"] = 1/(16*np.pi**2)*(1.42*modelParameters["g2"]**4)
 
         return modelParameters
         
@@ -132,13 +137,24 @@ class EffectivePotentialSM(EffectivePotential):
     def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
         # phi ~ 1/sqrt(2) (0, v)
         fields = Fields(fields)
-        v = fields.GetField(0) + 0.00001
+        v = fields.GetField(0) + 0.0000001
 
-        T = temperature+ 0.00001
+        T = temperature+ 0.0000001
+
+        ab = 49.78019250 
+        af = 3.111262032
+
+        mW = self.modelParameters["mW"]
+        mZ = self.modelParameters["mZ"]
+        mt = self.modelParameters["mt"]
+
+        lambdaT = self.modelParameters["lambda"] - 3/(16*np.pi*np.pi*self.modelParameters["v0"]**4)*(2*mW**4*np.log(mW**2/(ab*T**2))+ mZ**4*np.log(mZ**2/(ab*T**2)) -4*mt**4*np.log(mt**2/(af*T**2)))
+
+        cT = self.modelParameters["C0"] + 1/(16* np.pi*np.pi)*(4.8*self.modelParameters["g2"]**2*lambdaT - 6*lambdaT**2)
+        eT = self.modelParameters["E0"] + 1/(12*np.pi)*(3 + 3**1.5)*lambdaT**1.5
 
     
-        # NLO 1-loop correction in Landau gauge, so g^3. Debyes are integrated out by getThermalParameters
-        VT = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - self.modelParameters["C"]*T**2*pow(v,2)*np.log(np.abs(v/T)) - self.modelParameters["E"]*T*pow(v,3) + self.modelParameters["lambdaT"]/4*pow(v,4)
+        VT = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - cT*T**2*pow(v,2)*np.log(np.abs(v/T)) - eT*T*pow(v,3) + lambdaT/4*pow(v,4)
 
         VTotal = np.real(VT + self.constantTerms(T))
 
@@ -179,10 +195,10 @@ def main():
     
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-    temperatureScale = 1.
+    temperatureScale = 0.1
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
-    fieldScale = 10.,
+    fieldScale = 50.,
     
     ## Create WallGo control object
     manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
@@ -194,12 +210,11 @@ def main():
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         "v0" : 246.0,
-        "mW" : 80.379,
-        "mZ" : 91.1876,
+        "mW" : 80.4,
+        "mZ" : 91.2,
         "mt" : 174.0,
         "g3" : 1.2279920495357861,
-        "mH" : 34.0,
-        "lambdaT" : 0.023
+        "mH" : 50.0
     }
 
     model = StandardModel(inputParameters)
@@ -231,15 +246,13 @@ def main():
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
     
-    values_mH = [34.0, 50.0]
-    values_lambdaT = [0.023, 0.03]
-    values_Tn = [70.6, 83.37]
+    values_mH = [50.0, 68.0]
+    values_Tn = [83.426, 100.352]
 
     for i in range(len(values_mH)):
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
 
         inputParameters["mH"] = values_mH[i]
-        inputParameters["lambdaT"] = values_lambdaT[i]
 
         """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
         If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
@@ -255,7 +268,7 @@ def main():
 
         phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
                                         phaseLocation1 = WallGo.Fields( [0.0] ), 
-                                        phaseLocation2 = WallGo.Fields( [70.0] ))
+                                        phaseLocation2 = WallGo.Fields( [Tn] ))
         
 
         """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because

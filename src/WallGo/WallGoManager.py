@@ -185,6 +185,7 @@ class WallGoManager:
         try:
             ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
             hydrotemplate = HydroTemplateModel(self.thermodynamics)
+            print(f"Jouguet velocity in the template model: {hydrotemplate.vJ}")
             print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
 
 
