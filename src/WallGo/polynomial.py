@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+import numpy.typing as npt
 from scipy.special import eval_chebyt, eval_chebyu
 
 from .Grid import Grid
@@ -6,7 +9,11 @@ from .Grid import Grid
 
 class Polynomial:
     def __init__(
-        self, coefficients, grid, basis="Cardinal", direction="z", endpoints=False
+        self,
+        coefficients: np.ndarray,
+        grid: Grid, basis: str | tuple[str,...]="Cardinal",
+        direction: str | tuple[str,...]="z",
+        endpoints: bool | tuple[bool,...]=False,
     ):
         """
         Initialization of Polynomial object.
@@ -51,24 +58,26 @@ class Polynomial:
 
         if isinstance(basis, str):
             basis = self.rank * (basis,)
-        self.__checkBasis(basis)
+        self._checkBasis(basis)
         self.basis = basis
 
         if isinstance(direction, str):
             direction = self.rank * (direction,)
-        self.__checkDirection(direction)
+        self._checkDirection(direction)
 
         if isinstance(endpoints, bool):
             endpoints = self.rank * (endpoints,)
-        self.__checkEndpoints(endpoints)
+        self._checkEndpoints(endpoints)
 
         self.direction = direction
         self.endpoints = endpoints
 
-        self.__checkCoefficients(coefficients)
+        self._checkCoefficients(coefficients)
 
-    def __getitem__(self, key):
-        basis, endpoints, direction = [], [], []
+    def __getitem__(self, key: int | tuple[int,...]) -> Polynomial:
+        basisList: list[str] = []
+        endpointsList: list[bool] = []
+        directionList: list[str] = []
         if not isinstance(key, tuple):
             key = (key,)
         n = 0
@@ -76,26 +85,26 @@ class Polynomial:
             if isinstance(k, int):
                 n += 1
             elif isinstance(k, slice):
-                basis.append(self.basis[i])
-                direction.append(self.direction[i])
-                endpoints.append(self.endpoints[i])
+                basisList.append(self.basis[i])
+                directionList.append(self.direction[i])
+                endpointsList.append(self.endpoints[i])
                 n += 1
             elif k is None:
-                basis.append("Array")
-                direction.append("z")
-                endpoints.append(False)
+                basisList.append("Array")
+                directionList.append("z")
+                endpointsList.append(False)
             else:
                 raise ValueError("Polynomial error: invalid key.")
-        basis = tuple(basis) + self.basis[n:]
-        direction = tuple(direction) + self.direction[n:]
-        endpoints = tuple(endpoints) + self.endpoints[n:]
+        basis = tuple(basisList) + self.basis[n:]
+        direction = tuple(directionList) + self.direction[n:]
+        endpoints = tuple(endpointsList) + self.endpoints[n:]
 
         coefficients = np.array(self.coefficients[key])
         return Polynomial(coefficients, self.grid, basis, direction, endpoints)
 
-    def __mul__(self, poly):
+    def __mul__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
         if isinstance(poly, Polynomial):
-            assert self.__is_broadcastable(
+            assert self._is_broadcastable(
                 self.coefficients, poly.coefficients
             ), "Polynomial error: the two Polynomial objects are not broadcastable."
             basis, direction, endpoints = self.__findContraction(poly)
@@ -107,7 +116,7 @@ class Polynomial:
                 self.endpoints,
             )
         else:
-            newCoeff = poly * self.coefficients
+            newCoeff = np.array(poly * self.coefficients)
             assert (
                 len(newCoeff.shape) == self.rank
             ), "Polynomial error: the rank of the resulting Polynomial object must be the same as the original one."
@@ -115,9 +124,9 @@ class Polynomial:
                 newCoeff, self.grid, self.basis, self.direction, self.endpoints
             )
 
-    def __add__(self, poly):
+    def __add__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
         if isinstance(poly, Polynomial):
-            assert self.__is_broadcastable(
+            assert self._is_broadcastable(
                 self.coefficients, poly.coefficients
             ), "Polynomial error: the two Polynomial objects are not broadcastable."
             basis, direction, endpoints = self.__findContraction(poly)
@@ -141,19 +150,22 @@ class Polynomial:
                 newCoeff, self.grid, self.basis, self.direction, self.endpoints
             )
 
-    def __sub__(self, poly):
-        return self.__add__((-1) * poly)
+    def __sub__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
+        return self.__add__((-1.0) * poly)
 
-    def __rmul__(self, poly):
+    def __rmul__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
         return self.__mul__(poly)
 
-    def __radd__(self, poly):
+    def __radd__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
         return self.__add__(poly)
 
-    def __rsub__(self, poly):
+    def __rsub__(self, poly: Polynomial | np.ndarray | float) -> Polynomial:
         return (-1) * self.__sub__(poly)
 
-    def __findContraction(self, poly):
+    def __findContraction(
+            self,
+            poly: Polynomial,
+            ) -> tuple[tuple[str,...], tuple[str,...], tuple[bool,...]]:
         """
         Find the tuples basis, direction and endpoints resulting from the
         contraction of self and poly
@@ -197,7 +209,11 @@ class Polynomial:
                 endpoints.append(poly.endpoints[i])
         return tuple(basis), tuple(direction), tuple(endpoints)
 
-    def changeBasis(self, newBasis, inverseTranspose=False):
+    def changeBasis(
+            self,
+            newBasis: str | tuple[str,...],
+            inverseTranspose: bool=False,
+            ) -> None:
         """
         Change the basis of the polynomial. Will change self.coefficients
         accordingly.
@@ -221,7 +237,7 @@ class Polynomial:
         """
         if isinstance(newBasis, str):
             newBasis = self.rank * (newBasis,)
-        self.__checkBasis(newBasis)
+        self._checkBasis(newBasis)
 
         for i in range(self.rank):
             if (
@@ -253,7 +269,7 @@ class Polynomial:
                         restriction = "partial"
 
                 # Computing the Tn matrix
-                M = self.chebyshev(x[:, None], n[None, :], restriction)
+                M = np.array(self.chebyshev(x[:, None], n[None, :], restriction))
                 if newBasis[i] == "Chebyshev":
                     M = np.linalg.inv(M)
 
@@ -270,7 +286,11 @@ class Polynomial:
                 )
         self.basis = newBasis
 
-    def evaluate(self, x, axes=None):
+    def evaluate(
+            self, 
+            x: np.ndarray,
+            axes: tuple[int,...] | None=None,
+            ) -> np.ndarray | float:
         """
         Evaluates the polynomial at the compact coordinates x.
 
@@ -324,9 +344,10 @@ class Polynomial:
                     n = np.arange(self.grid.N - 1)
 
             # Computing the polynomial basis in the i direction
-            pn = None
+            pn: np.ndarray
             if self.basis[i] == "Cardinal":
-                pn = self.cardinal(x[j, :, None], n[None, :], self.direction[i])
+                pn = np.array(
+                    self.cardinal(x[j, :, None], n[None, :],self.direction[i]))
 
             elif self.basis[i] == "Chebyshev":
                 restriction = None
@@ -338,7 +359,7 @@ class Polynomial:
                         restriction = "full"
                     else:
                         restriction = "partial"
-                pn = self.chebyshev(x[j, :, None], n[None, :], restriction)
+                pn = np.array(self.chebyshev(x[j, :, None], n[None, :], restriction))
 
             polynomials *= np.expand_dims(
                 pn, tuple(np.arange(1, i + 1)) + tuple(np.arange(i + 2, self.rank + 1))
@@ -348,11 +369,16 @@ class Polynomial:
             self.coefficients[None, ...] * polynomials, axis=tuple(np.array(axes) + 1)
         )
         if singlePoint:
-            return result[0]
+            return float(result[0])
         else:
-            return result
+            return np.array(result)
 
-    def cardinal(self, x, n, direction):
+    def cardinal(
+            self,
+            x: npt.ArrayLike, 
+            n: npt.ArrayLike,
+            direction: str,
+            ) -> np.ndarray:
         r"""
         Computes the cardinal polynomials :math:`C_n(x)` defined by grid.
 
@@ -377,7 +403,7 @@ class Polynomial:
         x = np.asarray(x)
         n = np.asarray(n)
 
-        assert self.__is_broadcastable(
+        assert self._is_broadcastable(
             x, n
         ), "Polynomial error: x and n are not broadcastable."
         assert direction in self.allowedDirection, (
@@ -397,9 +423,14 @@ class Polynomial:
         # Multiplying all the factors to get the cardinal functions
         cn = np.prod(np.where(nGrid - completeGrid == 0, 1, cn_partial), axis=0)
 
-        return cn
+        return np.array(cn)
 
-    def chebyshev(self, x, n, restriction=None):
+    def chebyshev(
+            self,
+            x: npt.ArrayLike,
+            n: npt.ArrayLike,
+            restriction: str | None=None
+            ) -> np.ndarray:
         r"""
         Computes the Chebyshev polynomial :math:`T_n(x)`.
 
@@ -426,7 +457,7 @@ class Polynomial:
         x = np.asarray(x)
         n = np.asarray(n)
 
-        assert self.__is_broadcastable(
+        assert self._is_broadcastable(
             x, n
         ), "Polynomial error: x and n are not broadcastable."
 
@@ -440,9 +471,13 @@ class Polynomial:
         elif restriction == "full":
             tn -= np.where(n % 2 == 0, 1, x)
 
-        return tn
+        return np.array(tn)
 
-    def integrate(self, axis=None, w=None):
+    def integrate(
+            self,
+            axis: int | tuple[int,...] | None=None,
+            w: npt.ArrayLike=1,
+            ) -> Polynomial | float:
         r"""
         Computes the integral of the polynomial :math:`\int_{-1}^1 dx P(x)w(x)`
         along some axis using Gauss-Chebyshev-Lobatto quadrature.
@@ -452,9 +487,9 @@ class Polynomial:
         axis : None, int or tuple
             axis along which the integral is taken. Can either be None, a int or a
             tuple of int. If None, integrate along all the axes.
-        w : array-like or None
-            Integration weight. Must be None or an array broadcastable with
-            self.coefficients. If None, w=1. Default is None.
+        w : array-like, optional
+            Integration weight. Must be an object broadcastable with
+            self.coefficients. Default is 1.
 
         Returns
         -------
@@ -471,7 +506,7 @@ class Polynomial:
             axis = tuple(np.arange(self.rank))
         if isinstance(axis, int):
             axis = (axis,)
-            self.__checkAxis(axis)
+            self._checkAxis(axis)
 
         # Express the integrated axes in the cardinal basis
         basis = []
@@ -522,7 +557,7 @@ class Polynomial:
         """
 
         if np.asanyarray(result).ndim == 0:
-            return result
+            return float(result)
         else:
             return Polynomial(
                 result,
@@ -532,7 +567,7 @@ class Polynomial:
                 tuple(newEndpoints),
             )
 
-    def derivative(self, axis):
+    def derivative(self, axis: int | tuple[int,...]) -> Polynomial:
         """
         Computes the derivative of the polynomial and returns it in a
         Polynomial object.
@@ -555,7 +590,7 @@ class Polynomial:
 
         if isinstance(axis, int):
             axis = (axis,)
-        self.__checkAxis(axis)
+        self._checkAxis(axis)
 
         coeffDeriv = np.array(self.coefficients)
         basis, endpoints = [], []
@@ -581,31 +616,39 @@ class Polynomial:
             coeffDeriv, self.grid, tuple(basis), self.direction, tuple(endpoints)
         )
 
-    def matrix(self, basis, direction, endpoints=False):
+    def matrix(self, basis: str, direction: str, endpoints: bool=False) -> np.ndarray:
         r"""
-        Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
+        Returns the matrix :math:`M_{ij}=T_j(x_i)` or :math:`M_{ij}=C_j(x_i)` computed 
+        in a specific direction.
 
         Parameters
         ----------
         basis : string
             Select the basis of polynomials. Can be 'Cardinal' or 'Chebyshev'
         direction : string
-            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz' 
+            or 'pp'
         endpoints : Bool, optional
             If True, include endpoints of grid. Default is False.
 
         """
 
         if basis == "Cardinal":
-            return self.__cardinalMatrix(direction, endpoints)
+            return self._cardinalMatrix(direction, endpoints)
         elif basis == "Chebyshev":
-            return self.__chebyshevMatrix(direction, endpoints)
+            return self._chebyshevMatrix(direction, endpoints)
         else:
             raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
 
-    def derivMatrix(self, basis, direction, endpoints=False):
+    def derivMatrix(
+            self, 
+            basis: str, 
+            direction: str,
+            endpoints: bool=False,
+            ) -> np.ndarray:
         """
-        Computes the derivative matrix of either the Chebyshev or cardinal polynomials in some direction.
+        Computes the derivative matrix of either the Chebyshev or cardinal polynomials 
+        in some direction.
 
         Parameters
         ----------
@@ -624,13 +667,12 @@ class Polynomial:
         """
 
         if basis == "Cardinal":
-            return self.__cardinalDeriv(direction, endpoints)
+            return self._cardinalDeriv(direction, endpoints)
         elif basis == "Chebyshev":
-            return self.__chebyshevDeriv(direction, endpoints)
-        else:
-            raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
+            return self._chebyshevDeriv(direction, endpoints)
+        raise ValueError("basis must be either 'Cardinal' or 'Chebyshev'.")
 
-    def __cardinalMatrix(self, direction, endpoints=False):
+    def _cardinalMatrix(self, direction: str, endpoints: bool=False) -> np.ndarray:
         r"""
         Returns the matrix :math:`M_{ij}=C_j(x_i)` computed in a specific direction.
 
@@ -650,7 +692,7 @@ class Polynomial:
         if direction == "pp":
             return np.identity(self.grid.N - 1 + endpoints)
 
-    def __chebyshevMatrix(self, direction, endpoints=False):
+    def _chebyshevMatrix(self, direction: str, endpoints: bool=False) -> np.ndarray:
         r"""
         Returns the matrix :math:`M_{ij}=T_j(x_i)` computed in a specific direction.
 
@@ -663,7 +705,9 @@ class Polynomial:
 
         """
 
-        grid, n, restriction = None, None, None
+        grid: np.ndarray
+        n: np.ndarray
+        restriction = None
         if direction == "z":
             grid = self.grid.getCompactCoordinates(endpoints)[0]
             n = np.arange(grid.size) + 2 - 2 * endpoints
@@ -681,7 +725,7 @@ class Polynomial:
 
         return self.chebyshev(grid[:, None], n[None, :], restriction)
 
-    def __cardinalDeriv(self, direction, endpoints=False):
+    def _cardinalDeriv(self, direction: str, endpoints: bool=False) -> np.ndarray:
         """
         Computes the derivative matrix of the cardinal functions in some direction.
 
@@ -742,7 +786,7 @@ class Polynomial:
             ),
         )
 
-        deriv = None
+        deriv: np.ndarray
         if not endpoints:
             if direction == "z" or direction == "pz":
                 deriv = derivWithEndpoints[1:-1, :]
@@ -753,14 +797,15 @@ class Polynomial:
 
         return np.transpose(deriv)
 
-    def __chebyshevDeriv(self, direction, endpoints=False):
+    def _chebyshevDeriv(self, direction: str, endpoints: bool=False) -> np.ndarray:
         """
         Computes the derivative matrix of the Chebyshev polynomials in some direction.
 
         Parameters
         ----------
         direction : string
-            Select the direction in which to compute the matrix. Can either be 'z', 'pz' or 'pp'.
+            Select the direction in which to compute the matrix. Can either be 'z', 'pz'
+            or 'pp'.
         endpoints : Bool, optional
             If True, include endpoints of grid. Default is False.
 
@@ -772,7 +817,8 @@ class Polynomial:
         """
 
         grid = self.grid.getCompactCoordinates(True, direction)
-        n, restriction = None, None
+        n: np.ndarray
+        restriction = None
         if direction == "z":
             n = np.arange(2 - 2 * endpoints, grid.size)
             restriction = "full"
@@ -788,9 +834,9 @@ class Polynomial:
         if restriction == "full" and not endpoints:
             deriv -= np.where(n[None, :] % 2 == 0, 0, 1)
 
-        return deriv
+        return np.array(deriv)
 
-    def __checkBasis(self, basis):
+    def _checkBasis(self, basis: tuple[str,...]) -> None:
         assert isinstance(
             basis, tuple
         ), "Polynomial error: basis must be a tuple or a string."
@@ -800,7 +846,7 @@ class Polynomial:
         for x in basis:
             assert x in self.allowedBasis, "Polynomial error: unkown basis %s" % x
 
-    def __checkDirection(self, direction):
+    def _checkDirection(self, direction: tuple[str,...]) -> None:
         assert isinstance(
             direction, tuple
         ), "Polynomial error: direction must be a tuple or a string."
@@ -814,9 +860,10 @@ class Polynomial:
             if x == "Array":
                 assert (
                     self.basis[i] == "Array"
-                ), "Polynomial error: if the direction is 'Array', the basis must be 'Array' too."
+                ), """Polynomial error: if the direction is 'Array', the basis must be 
+                'Array' too."""
 
-    def __checkEndpoints(self, endpoints):
+    def _checkEndpoints(self, endpoints: tuple[bool,...]) -> None:
         assert isinstance(
             endpoints, tuple
         ), "Polynomial error: endpoints must be a tuple or a bool."
@@ -828,23 +875,26 @@ class Polynomial:
                 x, bool
             ), "Polynomial error: endpoints can only contain bool."
 
-    def __checkCoefficients(self, coefficients):
+    def _checkCoefficients(self, coefficients: np.ndarray) -> None:
         for i, size in enumerate(self.coefficients.shape):
             if self.basis[i] != "Array":
                 if self.direction[i] == "z":
                     assert (
                         size + 2 * (1 - self.endpoints[i]) == self.grid.M + 1
-                    ), f"Polynomial error: coefficients with invalid size in dimension {i}."
+                    ), f"""Polynomial error: coefficients with invalid size in 
+                    dimension {i}."""
                 elif self.direction[i] == "pz":
                     assert (
                         size + 2 * (1 - self.endpoints[i]) == self.grid.N + 1
-                    ), f"Polynomial error: coefficients with invalid size in dimension {i}."
+                    ), f"""Polynomial error: coefficients with invalid size in 
+                    dimension {i}."""
                 else:
                     assert (
                         size + (1 - self.endpoints[i]) == self.grid.N
-                    ), f"Polynomial error: coefficients with invalid size in dimension {i}."
+                    ), f"""Polynomial error: coefficients with invalid size in 
+                    dimension {i}."""
 
-    def __checkAxis(self, axis):
+    def _checkAxis(self, axis: tuple[int,...]) -> None:
         assert isinstance(
             axis, tuple
         ), "Polynomial error: axis must be a tuple or a int."
@@ -852,7 +902,7 @@ class Polynomial:
             assert isinstance(x, int), "Polynomial error: axis must be a tuple of int."
             assert 0 <= x < self.rank, "Polynomial error: axis out of range."
 
-    def __is_broadcastable(self, array1, array2):
+    def _is_broadcastable(self, array1: np.ndarray, array2: np.ndarray) -> bool:
         """
         Verifies that array1 and array2 are broadcastable, which mean that they
         can be multiplied together.
