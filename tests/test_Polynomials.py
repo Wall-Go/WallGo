@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from WallGo.Polynomial import Polynomial
+from WallGo.polynomial import Polynomial
 from WallGo.Grid import Grid
 
 grid = Grid(4,4,1,1)

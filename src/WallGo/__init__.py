@@ -10,7 +10,7 @@ from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
 from .Hydro import Hydro
 from .HydroTemplateModel import HydroTemplateModel
-from .Polynomial import Polynomial
+from .polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .EOM import EOM, WallGoResults
 from .EOM import WallParams
