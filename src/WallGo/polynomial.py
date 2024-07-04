@@ -698,13 +698,14 @@ class Polynomial:
             If True, include endpoints of grid. Default is False.
 
         """
+        assert direction in ['z','pz','pp'], """direction must be either 'z',
+                                                        'pz' or 'pp'."""
 
         if direction == "z":
             return np.identity(self.grid.M - 1 + 2 * endpoints)
         if direction == "pz":
             return np.identity(self.grid.N - 1 + 2 * endpoints)
-        if direction == "pp":
-            return np.identity(self.grid.N - 1 + endpoints)
+        return np.identity(self.grid.N - 1 + endpoints)
 
     def _chebyshevMatrix(self, direction: str, endpoints: bool=False) -> np.ndarray:
         r"""
