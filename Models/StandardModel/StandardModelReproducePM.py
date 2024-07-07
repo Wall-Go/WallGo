@@ -24,6 +24,7 @@ class StandardModel(GenericModel):
     def __init__(self, initialInputParameters: dict[str, float]):
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.collisionParameters = self.calculateCollisionParameters(self.modelParameters)
 
         # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
         self.effectivePotential = EffectivePotentialSM(self.modelParameters, self.fieldCount)
@@ -34,54 +35,98 @@ class StandardModel(GenericModel):
     def defineParticles(self) -> None:
         self.clearParticles()
 
-        # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
+        # NB: particle multiplicity is pretty confusing because some internal
+        # DOF counting is handled internally already.
         # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
-    
+        # But we nevertheless need something like this to avoid having to separately
+        # define up, down, charm, strange, bottom
+
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * fields.GetField(0)
-        topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-
-        topQuark = Particle("top", 
-                            msqVacuum = topMsqVacuum,
-                            msqDerivative = topMsqDerivative,
-                            msqThermal = topMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = False,
-                            ultrarelativistic = True,
-                            totalDOFs = 12
+        topMsqVacuum = (
+            lambda fields: 0.5
+            * self.modelParameters["yt"] ** 2
+            * fields.GetField(0) ** 2
         )
-        self.addParticle(topQuark)
+        topMsqDerivative = lambda fields: self.modelParameters[
+            "yt"
+        ] ** 2 * fields.GetField(0)
+        topMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
+        topQuarkL = Particle(
+            "topL",
+            msqVacuum=topMsqVacuum,
+            msqDerivative=topMsqDerivative,
+            msqThermal=topMsqThermal,
+            statistics="Fermion",
+            inEquilibrium=False,
+            ultrarelativistic=True,
+            totalDOFs=6,
+        )
+        self.addParticle(topQuarkL)
+
+        topQuarkR = Particle(
+            "topR",
+            msqVacuum=topMsqVacuum,
+            msqDerivative=topMsqDerivative,
+            msqThermal=topMsqThermal,
+            statistics="Fermion",
+            inEquilibrium=False,
+            ultrarelativistic=True,
+            totalDOFs=6,
+        )
+        self.addParticle(topQuarkR)
+
+        ## === SU(2) gauge boson ===
+        WMsqThermal = lambda T: self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
+        WMsqVacuum = lambda fields: fields.GetField(0)
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        WMsqDerivative = lambda fields: fields.GetField(0)
+
+        W = Particle(
+            "W",
+            msqVacuum=WMsqVacuum,
+            msqDerivative=WMsqDerivative,
+            msqThermal=WMsqThermal,
+            statistics="Boson",
+            inEquilibrium=False,
+            ultrarelativistic=True,
+            totalDOFs=9,
+        )
+        self.addParticle(W)
+
+        ## === SU(3) gluon ===
+        gluonMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 * 2.0
+        gluonMsqVacuum = lambda fields: fields.GetField(0)
+        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+        gluonMsqDerivative = lambda fields: fields.GetField(0)
+
+        gluon = Particle(
+            "gluon",
+            msqVacuum=gluonMsqVacuum,
+            msqDerivative=gluonMsqDerivative,
+            msqThermal=gluonMsqThermal,
+            statistics="Boson",
+            inEquilibrium=True,
+            ultrarelativistic=True,
+            totalDOFs=16,
+        )
+        self.addParticle(gluon)
 
         ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
+        lightQuark = Particle(
+            "lightQuark",
+            msqVacuum=lambda fields: 0.0,
+            msqDerivative=lambda fields: 0.0,
+            msqThermal=lightQuarkMsqThermal,
+            statistics="Fermion",
+            inEquilibrium=True,
+            ultrarelativistic=True,
+            totalDOFs=60,
         )
         self.addParticle(lightQuark)
 
-        ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
-
-        gluon = Particle("gluon", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 16
-        )
-        self.addParticle(gluon)
 
         ## Go from whatever input params --> action params
     def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
@@ -124,6 +169,17 @@ class StandardModel(GenericModel):
 
         return modelParameters
         
+    def calculateCollisionParameters(self, modelParameters: dict[str, float]) -> dict[str, float]:
+        """
+        Calculate the collision couplings (Lagrangian parameters) from the input parameters.
+        List as they appear in the MatrixElements file
+        """
+        collisionParameters = {}
+
+        collisionParameters["g3"] = modelParameters["g3"]
+        collisionParameters["g2"] = modelParameters["g2"]
+
+        return collisionParameters
 
 class EffectivePotentialSM(EffectivePotential):
 
@@ -182,6 +238,10 @@ def main():
 
     WallGo.initialize()
 
+    ## Modify the config, we use N=11 for this example
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -220,9 +280,21 @@ def main():
 
     model = StandardModel(inputParameters)
 
+    ## ---- collision integration and path specifications
+
+    # automatic generation of collision integrals is disabled by default
+    # set to "False" or comment if collision integrals already exist
+    # set to "True" to invoke automatic collision integral generation
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.config.set("Collisions", "pathName", "collisions_N11/")
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+
+    # set matrix elements initial specs
+    WallGo.config.config.set("MatrixElements", "fileName", "MatrixElements.txt")
+    ## Instruct the collision manager to print out
+    # symbolic matrix elements as it parses them. Can be useful for debugging
+    WallGo.config.config.set("MatrixElements", "verbose", "True")
 
     """
     Register the model with WallGo. This needs to be done only once.
@@ -240,8 +312,10 @@ def main():
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
     
-    values_mH = [50.0, 68.0]
-    values_Tn = [83.426, 100.352]
+    values_mH = [0.,50.0, 68.0,79.0,88.0]
+    values_Tn = [57.192, 83.426, 100.352,111.480,120.934]
+
+    wallVelocitiesErrors = np.zeros((5,4))
 
     for i in range(len(values_mH)):
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
@@ -282,8 +356,8 @@ def main():
         ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
 
         ## Computes the detonation solutions
-        wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
+        #wallGoInterpolationResults = manager.solveWallDetonation()
+        #print(wallGoInterpolationResults.wallVelocities)
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
         wallParams: WallGo.WallParams
@@ -293,12 +367,12 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
-        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
         print(f"{widths=}")
-        print(f"{offsets=}")
 
         ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
         bIncludeOffEq = True
@@ -306,13 +380,16 @@ def main():
 
         results = manager.solveWall(bIncludeOffEq)
         wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
         widths = results.wallWidths
-        offsets = results.wallOffsets
 
         print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
         print(f"{widths=}")
-        print(f"{offsets=}")
 
+        wallVelocitiesErrors[i,:] = np.array([Tn,wallVelocity,wallVelocityError,widths[0]])
+
+    print(wallVelocitiesErrors)
 
 
     # end parameter-space loop
