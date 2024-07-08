@@ -278,12 +278,12 @@ def singletBenchmarkBoltzmannSolver(
 def singletBenchmarkEOM_equilibrium(
     singletBenchmarkBoltzmannSolver,
     singletBenchmarkThermo_interpolate,
-    singletBenchmarkHydro,
+    singletBenchmarkHydrodynamics,
     singletBenchmarkGrid: WallGo.Grid,
 ) -> Tuple[WallGo.EOM, BenchmarkPoint]:
 
     thermo, BM = singletBenchmarkThermo_interpolate
-    hydro, _ = singletBenchmarkHydro
+    hydrodynamics, _ = singletBenchmarkHydrodynamics
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
     meanFreePath = 0
@@ -292,7 +292,7 @@ def singletBenchmarkEOM_equilibrium(
 
     ## TODO fix error tolerance?
     eom = WallGo.EOM(
-        boltzmannSolver, thermo, hydro, grid, fieldCount, meanFreePath, includeOffEq=False
+        boltzmannSolver, thermo, hydrodynamics, grid, fieldCount, meanFreePath, includeOffEq=False
     )
 
     return eom, BM
