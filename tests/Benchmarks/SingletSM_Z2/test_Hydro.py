@@ -10,7 +10,7 @@ import WallGo
 ## This can be somewhat slow as this is often the first test that uses Hydro fixtures
 def test_Jouguet(singletBenchmarkHydrodynamics: Tuple[WallGo.Hydrodynamics, BenchmarkPoint]):
 
-    hydro, BM = singletBenchmarkHydrodynamics
+    hydrodynamics, BM = singletBenchmarkHydrodynamics
 
     vJ_expected = BM.expectedResults["vJ"]
     vJ_result = hydrodynamics.vJ

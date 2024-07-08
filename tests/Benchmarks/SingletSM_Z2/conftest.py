@@ -207,14 +207,14 @@ def singletSimpleBenchmarkThermodynamics(
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
 @pytest.fixture(scope="session")
-def singletBenchmarkHydro(
+def singletBenchmarkHydrodynamics(
     singletBenchmarkThermo_interpolate: Tuple[WallGo.Thermodynamics, BenchmarkPoint]
-) -> Tuple[WallGo.Hydro, BenchmarkPoint]:
+) -> Tuple[WallGo.Hydrodynamics, BenchmarkPoint]:
 
     thermo, BM = singletBenchmarkThermo_interpolate
 
     ## TODO Should fix rtol, atol here so that our tests don't magically change if the class defaults change !
-    yield WallGo.Hydro(thermo), BM
+    yield WallGo.Hydrodynamics(thermo), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now
