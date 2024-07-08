@@ -8,7 +8,7 @@ from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
-from .hydrodynamics import Hydro
+from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics

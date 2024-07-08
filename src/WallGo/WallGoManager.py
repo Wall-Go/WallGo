@@ -12,9 +12,7 @@ from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales
-from .hydrodynamics import (
-    Hydro,
-)  # TODO why is this not Hydrodynamics? compare with Thermodynamics
+from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
@@ -130,21 +128,21 @@ class WallGoManager:
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
-        self._initHydro(self.thermodynamics)
+        self._initHydrodynamics(self.thermodynamics)
         self._initEOM()
 
-        if not np.isfinite(self.hydro.vJ) or self.hydro.vJ > 1 or self.hydro.vJ < 0:
+        if not np.isfinite(self.hydrodynamics.vJ) or self.hydrodynamics.vJ > 1 or self.hydrodynamics.vJ < 0:
             raise WallGoError(
                 "Failed to solve Jouguet velocity at input temperature!",
                 data={
-                    "vJ": self.hydro.vJ,
+                    "vJ": self.hydrodynamics.vJ,
                     "temperature": phaseInput.temperature,
                     "TMin": self.TMin,
                     "TMax": self.TMax,
                 },
             )
 
-        print(f"Jouguet: {self.hydro.vJ}")
+        print(f"Jouguet: {self.hydrodynamics.vJ}")
 
     #  print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
 
@@ -290,10 +288,10 @@ class WallGoManager:
             )
         print(f"Found Tc = {self.Tc} GeV.")
 
-    def _initHydro(self, thermodynamics: Thermodynamics) -> None:
+    def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """"""
 
-        self.hydro = Hydro(thermodynamics)
+        self.hydrodynamics = Hydrodynamics(thermodynamics)
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""
@@ -359,7 +357,7 @@ class WallGoManager:
         self.eom = EOM(
             self.boltzmannSolver,
             self.thermodynamics,
-            self.hydro,
+            self.hydrodynamics,
             self.grid,
             numberOfFields,
             self.meanFreePath,
@@ -405,7 +403,7 @@ class WallGoManager:
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation."""
 
-        return self.hydro.findvwLTE()
+        return self.hydrodynamics.findvwLTE()
 
     # Call after initGrid. I guess this would be the main workload function
 
@@ -446,7 +444,7 @@ class WallGoManager:
         self.eom.includeOffEq = bIncludeOffEq
         errTol = self.config.getfloat("EOM", "errTol")
 
-        vmin = max(self.hydro.vJ + 1e-4, self.hydro.slowestDeton())
+        vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydro.slowestDeton())
         return self.eom.solveInterpolation(
             vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
         )
