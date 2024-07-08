@@ -159,7 +159,7 @@ class Hydrodynamics:
             / (eHighT - self.thermodynamicsExtrapolate.eLowT(tmSol))
             / (eHighT + self.thermodynamicsExtrapolate.pLowT(tmSol))
         )
-        return vp
+        return float(vp)
 
     def fastestDeflag(self) -> float:
         r"""
