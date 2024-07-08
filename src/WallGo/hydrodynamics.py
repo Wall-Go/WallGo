@@ -77,7 +77,7 @@ class Hydrodynamics:
             self.vBracketLow, self.minVelocity()
         )
 
-        self.success = None
+        self.success = False
 
     def findJouguetVelocity(self) -> float:
         r"""
@@ -214,7 +214,7 @@ class Hydrodynamics:
         except ValueError:
             vmax2 = self.vJ
 
-        return min(vmax1, vmax2)
+        return float(min(vmax1, vmax2))
 
     def slowestDeton(self) -> float:
         r"""
@@ -248,7 +248,7 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
-            return vmin
+            return float(vmin)
 
         except ValueError:
             return self.vJ
@@ -285,7 +285,7 @@ class Hydrodynamics:
         vpovm = (eLowT + pHighT) / (eHighT + pLowT)
         return (vpvm, vpovm)
 
-    def matchDeton(self, vw) -> Tuple[float, float, float, float]:
+    def matchDeton(self, vw : float) -> Tuple[float, float, float, float]:
         r"""
         Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+`
         and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
@@ -314,9 +314,9 @@ class Hydrodynamics:
                 tm
             ), self.thermodynamicsExtrapolate.wLowT(tm)
             eLowT = wLowT - pLowT
-            return vp**2 * (eHighT - eLowT) - (pHighT - pLowT) * (eLowT + pHighT) / (
+            return float(vp**2 * (eHighT - eLowT) - (pHighT - pLowT) * (eLowT + pHighT) / (
                 eHighT + pLowT
-            )
+            ))
 
         minimizeResult = minimize_scalar(
             tmFromvpsq,
@@ -506,9 +506,9 @@ class Hydrodynamics:
 
         def shock(v, xiAndT) -> float:
             xi, T = xiAndT
-            return boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(
+            return float(boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(
                 T
-            )
+            ))
 
         shock.terminal = True  # What's happening here?
         xi0T0 = [vw, Tp]
@@ -576,7 +576,7 @@ class Hydrodynamics:
 
         if not TnRootResult.converged:
             raise WallGoError(TnRootResult.flag, TnRootResult)
-        return TnRootResult.root
+        return float(TnRootResult.root)
 
     def strongestShock(self, vw: float) -> float:
         r"""
@@ -643,7 +643,7 @@ class Hydrodynamics:
             )
             if not vMinRootResult.converged:
                 raise WallGoError(vMinRootResult.flag, vMinRootResult)
-            return vMinRootResult.root
+            return float(vMinRootResult.root)
         except ValueError:
             return 0
 
@@ -854,7 +854,7 @@ class Hydrodynamics:
             xtol=self.atol,
             rtol=self.rtol,
         )
-        return sol.root
+        return float(sol.root)
 
     def _mappingT(self, TpTm: list[float]) -> list[float]:
         """
