@@ -355,6 +355,11 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+        
+        wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
+                               self.config.getfloat("EOM", "wallThicknessUpperBound"))
+        wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
+                               self.config.getfloat("EOM", "wallOffsetUpperBound"))
 
         self.eom = EOM(
             self.boltzmannSolver,
@@ -363,6 +368,8 @@ class WallGoManager:
             self.grid,
             numberOfFields,
             self.meanFreePath,
+            wallThicknessBounds,
+            wallOffsetBounds,
             includeOffEq=True,
             forceImproveConvergence=False,
             errTol=errTol,

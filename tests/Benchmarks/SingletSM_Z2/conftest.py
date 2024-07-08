@@ -292,7 +292,7 @@ def singletBenchmarkEOM_equilibrium(
 
     ## TODO fix error tolerance?
     eom = WallGo.EOM(
-        boltzmannSolver, thermo, hydro, grid, fieldCount, meanFreePath, includeOffEq=False
+        boltzmannSolver, thermo, hydro, grid, fieldCount, meanFreePath, (0.1,100.), (-10.,10.), includeOffEq=False
     )
 
     return eom, BM

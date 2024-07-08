@@ -34,7 +34,7 @@ from .results import (
 class EOM:
 
     """
-    Class that solves the energy-momentum conservation equations and the scalar 
+    Class that solves the energy-momentum conservation equations and the scalar
     EOMs to determine the wall velocity.
     """
 
@@ -46,11 +46,13 @@ class EOM:
         grid: Grid3Scales,
         nbrFields: int,
         meanFreePath: float,
+        wallThicknessBounds: tuple[float, float],
+        wallOffsetBounds: tuple[float, float],
         includeOffEq: bool = False,
         forceImproveConvergence: bool = False,
-        errTol: float=1e-3,
-        maxIterations: int=10,
-        pressRelErrTol: float=0.3679,
+        errTol: float = 1e-3,
+        maxIterations: int = 10,
+        pressRelErrTol: float = 0.3679,
     ):
         """
         Initialization
@@ -69,6 +71,12 @@ class EOM:
             Number of scalar fields on which the scalar potential depends.
         meanFreePath : float
             Estimate of the mean free path of the particles in the plasma.
+        wallThicknessBounds : tuple
+            Tuple containing the bounds the wall thickness (in units of 1/Tnucl).
+            The solver will never explore outside of this interval.
+        wallOffsetBounds : tuple
+            Tuple containing the bounds the wall offset. The solver will never
+            explore outside of this interval.
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
@@ -79,7 +87,7 @@ class EOM:
         errTol : float, optional
             Absolute error tolerance. The default is 1e-3.
         maxIterations : int, optional
-            Maximum number of iterations for the convergence of pressure. 
+            Maximum number of iterations for the convergence of pressure.
             The default is 10.
         pressRelErrTol : float, optional
             Relative tolerance in pressure when finding its root.
@@ -100,16 +108,15 @@ class EOM:
 
         self.boltzmannSolver = boltzmannSolver
         self.grid = grid
-        self.errTol = errTol
         self.nbrFields = nbrFields
         self.meanFreePath = meanFreePath
+        self.wallThicknessBounds = wallThicknessBounds
+        self.wallOffsetBounds = wallOffsetBounds
         self.includeOffEq = includeOffEq
         self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
         self.hydro = hydro
-        ## LN: Dunno if we want to store this here tbh
-        self.Tnucl = self.thermo.Tnucl # pylint: disable=invalid-name
 
         self.particles = self.boltzmannSolver.offEqParticles
 
@@ -117,10 +124,10 @@ class EOM:
         self.errTol = errTol
         self.maxIterations = maxIterations
         self.pressRelErrTol = pressRelErrTol
-        self.pressAbsErrTol = 0.
+        self.pressAbsErrTol = 0.0
 
     def findWallVelocityMinimizeAction(
-        self, wallThicknessIni: float|None = None
+        self, wallThicknessIni: float | None = None
     ) -> WallGoResults:
         """
         Finds the wall velocity by minimizing the action and solving for the
@@ -128,11 +135,11 @@ class EOM:
         deflagration or hybrid solutions. Returns a velocity of 1 if the pressure
         peak at vw = vJ is not large enough to stop the wall.
         For detonation solutions, use solveInterpolation().
-        
+
         Parameters
         ----------
         wallThicknessIni : float or None, optional
-            Initial thickness used for all the walls. If None, uses 5/Tnucl. 
+            Initial thickness used for all the walls. If None, uses 5/Tnucl.
             Default is None.
 
         Returns
@@ -144,13 +151,16 @@ class EOM:
 
         # If no initial wall thickness was provided, starts with a reasonable guess
         if wallThicknessIni is None:
-            wallThicknessIni = 5 / self.Tnucl
+            wallThicknessIni = 5 / self.thermo.Tnucl
 
         wallParams = WallParams(
             widths=wallThicknessIni * np.ones(self.nbrFields),
             offsets=np.zeros(self.nbrFields),
         )
 
+        # In some cases, no deflagration solution can exist below or above some
+        # velocity. That's why we need to look in the smaller interval [vmin,vmax]
+        # (which is computed by Hydrodynamics) instead of the naive interval [0,vJ].
         vmin = self.hydro.vMin
         vmax = min(self.hydro.vJ, self.hydro.fastestDeflag())
         return self.solveWall(vmin, vmax, wallParams)
@@ -189,7 +199,7 @@ class EOM:
 
         self.pressAbsErrTol = 1e-8
 
-        # Get the pressure at vw = vJ
+        # Get the pressure at vw = wallVelocityMax
         (
             pressureMax,
             wallParamsMax,
@@ -201,7 +211,8 @@ class EOM:
         # also getting the LTE results
         wallVelocityLTE = self.hydro.findvwLTE()
 
-        # The pressure peak is not enough to stop the wall: no defl/hybrid solution
+        # The pressure peak is not enough to stop the wall: no deflagration or
+        # hybrid solution
         if pressureMax < 0:
             print("Maximum pressure on wall is negative!")
             print(f"{pressureMax=} {wallParamsMax=}")
@@ -212,7 +223,7 @@ class EOM:
             results.setBoltzmannResults(boltzmannResultsMax)
             return results
 
-        # Get the pressure at vw = 0
+        # Get the pressure at vw = wallVelocityMin
         (
             pressureMin,
             wallParamsMin,
@@ -242,9 +253,9 @@ class EOM:
         )
 
         ## This computes pressure on the wall with a given wall speed and WallParams
-        def pressureWrapper(vw: float) -> float: # pylint: disable=invalid-name
-            """Small optimization here: the root finder below calls this first at the 
-            bracket endpoints, for which we already computed the pressure above. 
+        def pressureWrapper(vw: float) -> float:  # pylint: disable=invalid-name
+            """Small optimization here: the root finder below calls this first at the
+            bracket endpoints, for which we already computed the pressure above.
             So make use of those.
             """
             if np.abs(vw - wallVelocityMin) < 1e-10 or vw < wallVelocityMin:
@@ -338,8 +349,8 @@ class EOM:
         self,
         wallVelocity: float,
         wallParams: WallParams,
-        atol: float|None = None,
-        rtol: float|None = None,
+        atol: float | None = None,
+        rtol: float | None = None,
         boltzmannResultsInput: BoltzmannResults | None = None,
     ) -> tuple[float, WallParams, BoltzmannResults, BoltzmannBackground, HydroResults]:
         """
@@ -438,10 +449,15 @@ class EOM:
             boltzmannResults = boltzmannResultsInput
 
         # Find the boundary conditions of the hydrodynamic equations
-        c1, c2, Tplus, Tminus, velocityMid = ( # pylint: disable=invalid-name
-            self.hydro.findHydroBoundaries(
+        (
+            c1,
+            c2,
+            Tplus,
+            Tminus,
+            velocityMid,
+        ) = self.hydro.findHydroBoundaries(  # pylint: disable=invalid-name
             wallVelocity
-        ))
+        )
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
@@ -466,9 +482,9 @@ class EOM:
             np.max((1 - offsets) * widths) + np.min((-1 - offsets) * widths)
         ) / 2 - wallThicknessGrid * np.log(2) / 2
         gammaWall = 1 / np.sqrt(1 - velocityMid**2)
-        """ The tail inside typically scales like gamma, while the one outside like 
-        1/gamma. We take the max because the tail lengths must be larger than 
-        wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
+        """ The length of the tail inside typically scales like gamma, while the one
+        outside like 1/gamma. We take the max because the tail lengths must be larger
+        than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
         tailInside = max(
             self.meanFreePath * gammaWall * self.includeOffEq,
             wallThicknessGrid
@@ -566,11 +582,11 @@ class EOM:
 
             if error < errTol or (errorSolver < errTol and improveConvergence):
                 """
-                Even if two consecutive call to _getNextPressure() give similar 
-                pressures, it is possible that the internal calls made to 
+                Even if two consecutive call to _getNextPressure() give similar
+                pressures, it is possible that the internal calls made to
                 _intermediatePressureResults() do not converge. This is measured
-                by 'errorSolver'. If _getNextPressure() converges but not 
-                _intermediatePressureResults() doesn't, 'multiplier' is probably too 
+                by 'errorSolver'. If _getNextPressure() converges but
+                _intermediatePressureResults() doesn't, 'multiplier' is probably too
                 large. We therefore continue the iteration procedure with a smaller
                 value of 'multiplier'.
                 """
@@ -605,12 +621,12 @@ class EOM:
         wallParams1: WallParams,
         vevLowT: Fields,
         vevHighT: Fields,
-        c1: float, # pylint: disable=invalid-name
-        c2: float, # pylint: disable=invalid-name
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
         velocityMid: float,
         boltzmannResults1: BoltzmannResults,
-        Tplus: float, # pylint: disable=invalid-name
-        Tminus: float, # pylint: disable=invalid-name
+        Tplus: float,
+        Tminus: float,
         temperatureProfile: np.ndarray | None = None,
         velocityProfile: np.ndarray | None = None,
         multiplier: float = 1.0,
@@ -620,7 +636,8 @@ class EOM:
         First computes the pressure twice, updating the wall parameters and
         Boltzmann results each time. If the iterations overshot the true solution
         (the two pressure updates go in opposite directions), uses linear
-        interpolation to find a better estimate of the true solution.
+        interpolation to find a better estimate of the true solution. This function is
+        called only when improveConvergence=True in wallPressure().
         """
         (
             pressure2,
@@ -697,24 +714,24 @@ class EOM:
         wallParams: WallParams,
         vevLowT: Fields,
         vevHighT: Fields,
-        c1: float, # pylint: disable=invalid-name
-        c2: float, # pylint: disable=invalid-name
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
         velocityMid: float,
         boltzmannResults: BoltzmannResults,
-        Tplus: float, # pylint: disable=invalid-name
-        Tminus: float, # pylint: disable=invalid-name
+        Tplus: float,
+        Tminus: float,
         temperatureProfileInput: np.ndarray | None = None,
         velocityProfileInput: np.ndarray | None = None,
         multiplier: float = 1.0,
-    ) -> tuple:
+    ) -> tuple[float, WallParams, BoltzmannResults, BoltzmannBackground]:
         """
         Performs one step of the iteration procedure to update the pressure,
         wall parameters and Boltzmann solution. This is done by first solving
         the Boltzmann equation and then minimizing the action to solve the EOM.
         """
 
-        ## here dPhidz are z-derivatives of the fields
-        fields, dPhidz = self.wallProfile(
+        ## here dfieldsdz are z-derivatives of the fields
+        fields, dfieldsdz = self.wallProfile(
             self.grid.xiValues, vevLowT, vevHighT, wallParams
         )
 
@@ -726,7 +743,7 @@ class EOM:
                 c2,
                 velocityMid,
                 fields,
-                dPhidz,
+                dfieldsdz,
                 boltzmannResults.Deltas,
                 Tplus,
                 Tminus,
@@ -736,14 +753,18 @@ class EOM:
             velocityProfile = velocityProfileInput
 
         ## Prepare a new background for Boltzmann
-        TWithEndpoints: np.ndarray = np.concatenate( # pylint: disable=invalid-name
-            (np.array([Tminus]), np.array(temperatureProfile), np.array([Tplus])))
+        TWithEndpoints: np.ndarray = np.concatenate(
+            (np.array([Tminus]), np.array(temperatureProfile), np.array([Tplus]))
+        )
         fieldsWithEndpoints: Fields = np.concatenate(
             (vevLowT, fields, vevHighT), axis=fields.overFieldPoints
         ).view(Fields)
         vWithEndpoints: np.ndarray = np.concatenate(
-            (np.array([velocityProfile[0]]), np.array(velocityProfile),
-             np.array([velocityProfile[-1]]))
+            (
+                np.array([velocityProfile[0]]),
+                np.array(velocityProfile),
+                np.array([velocityProfile[-1]]),
+            )
         )
         boltzmannBackground = BoltzmannBackground(
             velocityMid,
@@ -767,19 +788,26 @@ class EOM:
 
         ## first width, then offset
         lowerBounds: np.ndarray = np.concatenate(
-            (self.nbrFields * [0.1 / self.Tnucl], (self.nbrFields - 1) * [-10.0])
+            (
+                self.nbrFields * [self.wallThicknessBounds[0] / self.thermo.Tnucl],
+                (self.nbrFields - 1) * [self.wallOffsetBounds[0]],
+            )
         )
         upperBounds: np.ndarray = np.concatenate(
-            (self.nbrFields * [100.0 / self.Tnucl], (self.nbrFields - 1) * [10.0])
+            (
+                self.nbrFields * [self.wallThicknessBounds[1] / self.thermo.Tnucl],
+                (self.nbrFields - 1) * [self.wallOffsetBounds[1]],
+            )
         )
         bounds = scipy.optimize.Bounds(lb=lowerBounds, ub=upperBounds)
 
         ## And then a wrapper that puts the inputs back in WallParams
-        def actionWrapper(wallArray: np.ndarray,
-                          *args: Fields | npt.ArrayLike | Polynomial) -> float:
+        def actionWrapper(
+            wallArray: np.ndarray, *args: Fields | npt.ArrayLike | Polynomial
+        ) -> float:
             return self.action(self._toWallParams(wallArray), *args)
 
-        Delta00 = boltzmannResults.Deltas.Delta00 # pylint: disable=invalid-name
+        Delta00 = boltzmannResults.Deltas.Delta00  # pylint: disable=invalid-name
         sol = scipy.optimize.minimize(
             actionWrapper,
             wallArray,
@@ -817,6 +845,7 @@ class EOM:
 
         dVdz = np.sum(np.array(dVfull * dPhidz), axis=1)
 
+        # Create a Polynomial object to represent dVdz. Will be used to integrate it.
         eomPoly = Polynomial(dVdz, self.grid)
 
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
@@ -831,11 +860,17 @@ class EOM:
         nbrPoints: int,
         wallThicknessIni: float | None = None,
         rtol: float = 1e-3,
-    ) -> tuple[np.ndarray, np.ndarray, list[WallParams], list[BoltzmannResults],
-               list[BoltzmannBackground], list[HydroResults]]:
+    ) -> tuple[
+        np.ndarray,
+        np.ndarray,
+        list[WallParams],
+        list[BoltzmannResults],
+        list[BoltzmannBackground],
+        list[HydroResults],
+    ]:
         """
         Computes the pressure on a linearly spaced grid of velocities between
-        vmin and vmax.
+        vmin and vmax. Typically used to find detonation solutions.
 
         Parameters
         ----------
@@ -872,7 +907,7 @@ class EOM:
 
         # Initializing the wall parameters
         if wallThicknessIni is None:
-            wallThicknessIni = 5 / self.Tnucl
+            wallThicknessIni = 5 / self.thermo.Tnucl
 
         wallParams = WallParams(
             widths=wallThicknessIni * np.ones(self.nbrFields),
@@ -1029,8 +1064,9 @@ class EOM:
         return wallGoInterpolationResults
 
     def _toWallParams(self, wallArray: np.ndarray) -> WallParams:
-        offsets: np.ndarray = np.concatenate((np.array([0.0]),
-                                              wallArray[self.nbrFields :]))
+        offsets: np.ndarray = np.concatenate(
+            (np.array([0.0]), wallArray[self.nbrFields :])
+        )
         return WallParams(widths=wallArray[: self.nbrFields], offsets=offsets)
 
     def action(
@@ -1067,16 +1103,13 @@ class EOM:
         wallWidths = wallParams.widths
 
         # Computing the field profiles
-        fields = self.wallProfile(
-            self.grid.xiValues, vevLowT, vevHighT, wallParams
-        )[0]
+        fields = self.wallProfile(self.grid.xiValues, vevLowT, vevHighT, wallParams)[0]
 
         # Computing the potential
-        V = self.thermo.effectivePotential.evaluate( # pylint: disable=invalid-name
-            fields, temperatureProfile)
+        potential = self.thermo.effectivePotential.evaluate(fields, temperatureProfile)
 
         # Computing the out-of-equilibrium term of the action
-        VOut = ( # pylint: disable=invalid-name
+        potentialOut = (
             sum(
                 [
                     particle.totalDOFs
@@ -1085,32 +1118,39 @@ class EOM:
                     for i, particle in enumerate(self.particles)
                 ]
             )
-            / 2)
+            / 2
+        )
 
         # Values of the potential at the boundaries
-        VLowT = self.thermo.effectivePotential.evaluate( # pylint: disable=invalid-name
-            vevLowT, temperatureProfile[0])
-        VHighT = self.thermo.effectivePotential.evaluate( # pylint: disable=invalid-name
-            vevHighT, temperatureProfile[-1])
+        potentialLowT = self.thermo.effectivePotential.evaluate(
+            vevLowT, temperatureProfile[0]
+        )
+        potentialHighT = self.thermo.effectivePotential.evaluate(
+            vevHighT, temperatureProfile[-1]
+        )
 
-        Vref = (np.array(VLowT) + np.array(VHighT)) / 2.0 # pylint: disable=invalid-name
+        potentialRef = (np.array(potentialLowT) + np.array(potentialHighT)) / 2.0
 
         # Integrating the potential to get the action
         # We substract Vref (which has no effect on the EOM) to make the integral finite
-        VPoly = Polynomial(V + VOut - Vref, self.grid) # pylint: disable=invalid-name
+        potentialPoly = Polynomial(potential + potentialOut - potentialRef, self.grid)
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
-        U = VPoly.integrate(w=dzdchi) # pylint: disable=invalid-name
+
+        # Potential energy part of the action
+        U = potentialPoly.integrate(w=dzdchi)  # pylint: disable=invalid-name
         # Kinetic part of the action
-        K = np.sum( # pylint: disable=invalid-name
-            (vevHighT - vevLowT) ** 2 / (6 * wallWidths))
+        K = np.sum(  # pylint: disable=invalid-name
+            (vevHighT - vevLowT) ** 2 / (6 * wallWidths)
+        )
 
         return float(U + K)
 
     def wallProfile(
-        self, z: np.ndarray, # pylint: disable=invalid-name
+        self,
+        z: np.ndarray,  # pylint: disable=invalid-name
         vevLowT: Fields,
         vevHighT: Fields,
-        wallParams: WallParams
+        wallParams: WallParams,
     ) -> Tuple[Fields, Fields]:
         """
         Computes the scalar field profile and its derivative with respect to
@@ -1137,10 +1177,10 @@ class EOM:
         """
 
         if np.isscalar(z):
-            zL = z / wallParams.widths # pylint: disable=invalid-name
+            zL = z / wallParams.widths  # pylint: disable=invalid-name
         else:
             ## Broadcast mess needed
-            zL = z[:, None] / wallParams.widths[None, :] # pylint: disable=invalid-name
+            zL = z[:, None] / wallParams.widths[None, :]  # pylint: disable=invalid-name
 
         fields = vevLowT + 0.5 * (vevHighT - vevLowT) * (
             1 + np.tanh(zL + wallParams.offsets)
@@ -1155,17 +1195,17 @@ class EOM:
 
     def findPlasmaProfile(
         self,
-        c1: float, # pylint: disable=invalid-name
-        c2: float, # pylint: disable=invalid-name
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
         velocityMid: float,
         fields: Fields,
         dPhidz: Fields,
         offEquilDeltas: BoltzmannDeltas,
-        Tplus: float, # pylint: disable=invalid-name
-        Tminus: float, # pylint: disable=invalid-name
+        Tplus: float,
+        Tminus: float,
     ) -> Tuple[np.ndarray, np.ndarray]:
         r"""
-        Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of 
+        Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of
         LHS.
 
         Parameters
@@ -1199,7 +1239,7 @@ class EOM:
         velocityProfile = np.zeros(len(self.grid.xiValues))
 
         for index in range(len(self.grid.xiValues)):
-            T, vPlasma = self.findPlasmaProfilePoint( # pylint: disable=invalid-name
+            T, vPlasma = self.findPlasmaProfilePoint(
                 index,
                 c1,
                 c2,
@@ -1219,17 +1259,17 @@ class EOM:
     def findPlasmaProfilePoint(
         self,
         index: int,
-        c1: float, # pylint: disable=invalid-name
-        c2: float, # pylint: disable=invalid-name
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
         velocityMid: float,
         fields: FieldPoint,
         dPhidz: FieldPoint,
         offEquilDeltas: BoltzmannDeltas,
-        Tplus: float, # pylint: disable=invalid-name
-        Tminus: float, # pylint: disable=invalid-name
+        Tplus: float,
+        Tminus: float,
     ) -> Tuple[float, float]:
         r"""
-        Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution, 
+        Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution,
         the minimum of LHS.
 
         Parameters
@@ -1263,10 +1303,9 @@ class EOM:
         """
 
         # Computing the out-of-equilibrium part of the energy-momentum tensor
-        Tout30, Tout33 = self.deltaToTmunu( # pylint: disable=invalid-name
-            index, fields, velocityMid, offEquilDeltas)
-        s1 = c1 - Tout30 # pylint: disable=invalid-name
-        s2 = c2 - Tout33 # pylint: disable=invalid-name
+        Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
+        s1 = c1 - Tout30  # pylint: disable=invalid-name
+        s2 = c2 - Tout33  # pylint: disable=invalid-name
 
         """
         The function we want to solve look in general like a parabola. In particular,
@@ -1283,17 +1322,17 @@ class EOM:
         # If the minimum is positive, there are no roots and we return the
         # minimum's position
         if self.temperatureProfileEqLHS(fields, dPhidz, minRes.x, s1, s2) >= 0:
-            T = minRes.x # pylint: disable=invalid-name
+            T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
             return T, vPlasma
 
         # Bracketing the root
         minTemp = minRes.x
-        TMultiplier = max(Tplus / minTemp, 1.2) # pylint: disable=invalid-name
+        TMultiplier = max(Tplus / minTemp, 1.2)
         if (
             Tplus < Tminus
         ):  # If this is a detonation solution, finds a solution below TLowerBound
-            TMultiplier = min(Tminus / minTemp, 0.8) # pylint: disable=invalid-name
+            TMultiplier = min(Tminus / minTemp, 0.8)
 
         testTemp = minTemp * TMultiplier
         while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
@@ -1301,20 +1340,19 @@ class EOM:
             testTemp *= TMultiplier
 
         # Solving for the root
-        res = scipy.optimize.brentq(
+        res = scipy.optimize.root_scalar(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            minTemp,
-            testTemp,
-            xtol=1e-9,
-            rtol=1e-9,  ## really???
-        )
+            bracket=(minTemp, testTemp),
+            xtol=1e-10,
+            rtol=self.errTol / 10,
+        ).root
 
-        T = res # pylint: disable=invalid-name
+        T = res
         vPlasma = self.plasmaVelocity(fields, T, s1)
         return T, vPlasma
 
     def plasmaVelocity(
-        self, fields: FieldPoint, T: float, s1: float # pylint: disable=invalid-name
+        self, fields: FieldPoint, T: float, s1: float  # pylint: disable=invalid-name
     ) -> float:
         r"""
         Computes the plasma velocity as a function of the temperature.
@@ -1334,14 +1372,18 @@ class EOM:
             Plasma velocity.
 
         """
-        # Need enthalpy ouside a free-energy minimum (eq (12) in the ref.)
+        # Need enthalpy ouside a free-energy minimum (eq .(12) in arXiv:2204.13120v1)
         enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
 
         return float((-enthalpy + np.sqrt(4 * s1**2 + enthalpy**2)) / (2 * s1))
 
     def temperatureProfileEqLHS(
-        self, fields: FieldPoint, dPhidz: FieldPoint,
-        T: float, s1: float, s2: float # pylint: disable=invalid-name
+        self,
+        fields: FieldPoint,
+        dPhidz: FieldPoint,
+        T: float,
+        s1: float,
+        s2: float,  # pylint: disable=invalid-name
     ) -> float:
         r"""
         The LHS of Eq. (20) of arXiv:2204.13120v1.
@@ -1373,8 +1415,13 @@ class EOM:
         ## eff potential at this field point and temperature. NEEDS the T-dep constant
         veff = self.thermo.effectivePotential.evaluate(fields, T)
 
-        result = (kineticTerm - veff - 0.5 * enthalpy
-                  + 0.5 * np.sqrt(4 * s1**2 + enthalpy**2) - s2)
+        result = (
+            kineticTerm
+            - veff
+            - 0.5 * enthalpy
+            + 0.5 * np.sqrt(4 * s1**2 + enthalpy**2)
+            - s2
+        )
 
         result = np.asarray(result)
         if result.shape == (1,) and len(result) == 1:
@@ -1384,11 +1431,15 @@ class EOM:
         raise TypeError(f"LHS has wrong type, {result.shape=}")
 
     def deltaToTmunu(
-        self, index: int, fields: FieldPoint, velocityMid: float,
-        offEquilDeltas: BoltzmannDeltas
+        self,
+        index: int,
+        fields: FieldPoint,
+        velocityMid: float,
+        offEquilDeltas: BoltzmannDeltas,
     ) -> Tuple[float, float]:
         r"""
-        Computes the out-of-equilibrium part of the energy-momentum tensor.
+        Computes the out-of-equilibrium part of the energy-momentum tensor. See eq. (14)
+        of arXiv:2204.13120v1.
 
         Parameters
         ----------
@@ -1409,67 +1460,75 @@ class EOM:
             Out-of-equilibrium part of :math:`T^{33}`.
 
         """
-        delta00 = offEquilDeltas.Delta00.coefficients[:, index]
-        delta02 = offEquilDeltas.Delta02.coefficients[:, index]
-        delta20 = offEquilDeltas.Delta20.coefficients[:, index]
-        delta11 = offEquilDeltas.Delta11.coefficients[:, index]
+        Delta00 = offEquilDeltas.Delta00.coefficients[  # pylint: disable=invalid-name
+            :, index
+        ]
+        Delta02 = offEquilDeltas.Delta02.coefficients[  # pylint: disable=invalid-name
+            :, index
+        ]
+        Delta20 = offEquilDeltas.Delta20.coefficients[  # pylint: disable=invalid-name
+            :, index
+        ]
+        Delta11 = offEquilDeltas.Delta11.coefficients[  # pylint: disable=invalid-name
+            :, index
+        ]
 
-        u0 = np.sqrt(gammaSq(velocityMid)) # pylint: disable=invalid-name
-        u3 = np.sqrt(gammaSq(velocityMid)) * velocityMid # pylint: disable=invalid-name
+        u0 = np.sqrt(gammaSq(velocityMid))  # pylint: disable=invalid-name
+        u3 = np.sqrt(gammaSq(velocityMid)) * velocityMid  # pylint: disable=invalid-name
         ubar0 = u3
         ubar3 = u0
 
         # Computing the out-of-equilibrium part of the energy-momentum tensor
-        T30 = np.sum( # pylint: disable=invalid-name
+        T30 = np.sum(
             [
                 particle.totalDOFs
                 * (
                     +(
-                        3 * delta20[i]
-                        - delta02[i]
-                        - particle.msqVacuum(fields) * delta00[i]
+                        3 * Delta20[i]
+                        - Delta02[i]
+                        - particle.msqVacuum(fields) * Delta00[i]
                     )
                     * u3
                     * u0
                     + (
-                        3 * delta02[i]
-                        - delta20[i]
-                        + particle.msqVacuum(fields) * delta00[i]
+                        3 * Delta02[i]
+                        - Delta20[i]
+                        + particle.msqVacuum(fields) * Delta00[i]
                     )
                     * ubar3
                     * ubar0
-                    + 2 * delta11[i] * (u3 * ubar0 + ubar3 * u0)
+                    + 2 * Delta11[i] * (u3 * ubar0 + ubar3 * u0)
                 )
                 / 2.0
                 for i, particle in enumerate(self.particles)
             ]
         )
-        T33 = np.sum( # pylint: disable=invalid-name
+        T33 = np.sum(
             [
                 particle.totalDOFs
                 * (
                     (
                         +(
-                            3 * delta20[i]
-                            - delta02[i]
-                            - particle.msqVacuum(fields) * delta00[i]
+                            3 * Delta20[i]
+                            - Delta02[i]
+                            - particle.msqVacuum(fields) * Delta00[i]
                         )
                         * u3
                         * u3
                         + (
-                            3 * delta02[i]
-                            - delta20[i]
-                            + particle.msqVacuum(fields) * delta00[i]
+                            3 * Delta02[i]
+                            - Delta20[i]
+                            + particle.msqVacuum(fields) * Delta00[i]
                         )
                         * ubar3
                         * ubar3
-                        + 4 * delta11[i] * u3 * ubar3
+                        + 4 * Delta11[i] * u3 * ubar3
                     )
                     / 2.0
                     - (
-                        particle.msqVacuum(fields) * delta00[i]
-                        + delta02[i]
-                        - delta20[i]
+                        particle.msqVacuum(fields) * Delta00[i]
+                        + Delta02[i]
+                        - Delta20[i]
                     )
                     / 2.0
                 )
