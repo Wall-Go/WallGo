@@ -13,7 +13,7 @@ from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
 from .Grid import Grid
 from .helpers import gammaSq  # derivatives for callable functions
-from .Hydro import Hydro
+from .hydrodynamics import Hydro
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .results import BoltzmannResults, HydroResults, WallGoResults, WallParams, WallGoInterpolationResults

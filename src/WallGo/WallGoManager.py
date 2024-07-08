@@ -12,7 +12,7 @@ from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
 from .Grid import Grid
 from .Grid3Scales import Grid3Scales
-from .Hydro import (
+from .hydrodynamics import (
     Hydro,
 )  # TODO why is this not Hydrodynamics? compare with Thermodynamics
 from .HydroTemplateModel import HydroTemplateModel
