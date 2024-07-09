@@ -56,6 +56,10 @@ class TestModelTemplate(WallGo.Thermodynamics):
         return self.nu*(self.nu-1)*self.am*T**(self.nu-2)/3
 
 
+# Maximum and minimum temperature used in Hydrodynamics, in units of Tnucl
+tmax = 10
+tmin = 0.01
+
 #These tests are all based on a comparison between the classes HydroTemplateModel and Hydrodynamics used with TestTemplateModel
 N = 10
 rng = np.random.default_rng(1)
@@ -68,7 +72,7 @@ def test_JouguetVelocity():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-6,1e-6)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydrodynamics.findJouguetVelocity()
         res2[i] = hydroTemplate.findJouguetVelocity()
@@ -83,7 +87,7 @@ def test_findMatching():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-6,1e-6)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         if vw[i] < hydrodynamics.minVelocity():
             res1[i] = [0,0,0,0]
@@ -103,7 +107,7 @@ def test_findvwLTE():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-6,1e-6)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydrodynamics.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
@@ -118,7 +122,7 @@ def test_findHydroBoundaries():
     vw = rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-10,1e-10)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
         res1[i] = hydrodynamics.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
@@ -136,7 +140,7 @@ def test_minVelocity():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-6,1e-6)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         hydroTemplate = WallGo.HydroTemplateModel(model)
         res1[i] = hydrodynamics.minVelocity()
         res2[i] = hydroTemplate.minVelocity()
@@ -160,7 +164,7 @@ def test_fastestDeflag():
             _,_,Tp,_ = hydroTemplate.findMatching(vw)
             model.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tp)
 
-        hydrodynamics = WallGo.Hydrodynamics(model,1e-10,1e-10)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         res2[i] = hydrodynamics.fastestDeflag()
 
     np.testing.assert_allclose(res1,res2,rtol = 10**-3,atol = 0)

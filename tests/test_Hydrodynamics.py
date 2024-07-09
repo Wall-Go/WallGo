@@ -101,41 +101,44 @@ class TestModelBag(WallGo.Thermodynamics):
 
 
 model1 = TestModel2Step(0.2,0.1,0.4,1)
-hydrodynamics = WallGo.Hydrodynamics(model1)
+# Maximum and minimum temperature used in Hydrodynamics, in units of Tnucl
+tmax = 10
+tmin = 0.01
+hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
 
 def test_JouguetVelocity():
     res = np.zeros(5)
     for i in range(5):
         model1.Tnucl = 0.5+i*0.1
-        hydrodynamics = WallGo.Hydrodynamics(model1)
+        hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
         res[i] = hydrodynamics.findJouguetVelocity()
     np.testing.assert_allclose(res,[0.840948,0.776119,0.7240,0.6836,0.651791],rtol = 10**-3,atol = 0)
 
 def test_matchDeton():
     model1 = TestModel2Step(0.2,0.1,0.4,0.5)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeton(1.1*hydrodynamics.vJ)
     np.testing.assert_allclose(res,(0.925043,0.848164,0.5,0.614381),rtol = 10**-3,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.6)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeton(1.1*hydrodynamics.vJ)
     np.testing.assert_allclose(res,(0.853731,0.777282,0.6,0.685916),rtol = 10**-3,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.7)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeton(1.1*hydrodynamics.vJ)
     np.testing.assert_allclose(res,(0.796415,0.737286,0.7,0.763685),rtol = 10**-3,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.8)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeton(1.1*hydrodynamics.vJ)
     np.testing.assert_allclose(res,(0.751924,0.710458,0.8,0.846123),rtol = 10**-3,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.9)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeton(1.1*hydrodynamics.vJ)
     np.testing.assert_allclose(res,(0.71697,0.690044,0.9,0.931932),rtol = 10**-3,atol = 0)
 
 def test_matchDeflagOrHyb():
     #This does not depend on the nucleation temperature, so no need to reinitialize model1
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     res = hydrodynamics.matchDeflagOrHyb(0.5,0.4)
     np.testing.assert_allclose(res,(0.4,0.5,0.825993,0.771703),rtol = 10**-3,atol = 0)
     res = hydrodynamics.matchDeflagOrHyb(0.6, 0.3)
@@ -176,7 +179,7 @@ def test_solveHydroShock():
 
 def test_findMatching():
     model1 = TestModel2Step(0.2,0.1,0.4,0.5)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     hydrodynamics.vJ = hydrodynamics.findJouguetVelocity()
     res = hydrodynamics.findMatching(0.3)
     np.testing.assert_allclose(res,(0.0308804,0.3,0.5419,0.361743),rtol = 10**-2,atol = 0)
@@ -185,7 +188,7 @@ def test_findMatching():
     res = hydrodynamics.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.789344,0.5,0.62322),rtol = 10**-2,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.8)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     hydrodynamics.vJ = hydrodynamics.findJouguetVelocity()
     res = hydrodynamics.findMatching(0.3)
     np.testing.assert_allclose(res,(0.265521,0.3,0.811487,0.793731),rtol = 10**-2,atol = 0)
@@ -194,7 +197,7 @@ def test_findMatching():
     res = hydrodynamics.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.889579,0.8,0.829928),rtol = 10**-2,atol = 0)
     model1 = TestModel2Step(0.2,0.1,0.4,0.9)
-    hydrodynamics = WallGo.Hydrodynamics(model1)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin)
     hydrodynamics.vJ = hydrodynamics.findJouguetVelocity()
     res = hydrodynamics.findMatching(0.3)
     np.testing.assert_allclose(res,(0.28306,0.3,0.90647,0.898604),rtol = 10**-2,atol = 0)
@@ -210,13 +213,13 @@ def test_LTE():
     res = np.zeros(5)
     for i in range(5):
         model2 = TestModelBag(0.9,0.5+i*0.1)
-        hydrodynamics2 = WallGo.Hydrodynamics(model2)
+        hydrodynamics2 = WallGo.Hydrodynamics(model2, tmax, tmin)
         res[i] = hydrodynamics2.findvwLTE()
     np.testing.assert_allclose(res,[1.,1.,1.,0.714738,0.6018],rtol = 10**-3,atol = 0)
 
     res2 = np.zeros(4)
     for i in range(4):
         model2 =     model2 = TestModelBag(0.8,0.6+i*0.1)
-        hydrodynamics2 = WallGo.Hydrodynamics(model2)
+        hydrodynamics2 = WallGo.Hydrodynamics(model2, tmax, tmin)
         res2[i] = hydrodynamics2.findvwLTE()
     np.testing.assert_allclose(res2,[0.87429,0.7902,0.6856,0.5619],rtol = 10**-3,atol = 0)

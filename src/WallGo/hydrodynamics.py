@@ -26,13 +26,20 @@ class Hydrodynamics:
     """
 
     def __init__(
-        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-6
+        self,
+        thermodynamics: Thermodynamics,
+        tmax: float,
+        tmin: float,
+        rtol: float = 1e-6,
+        atol: float = 1e-6,
     ) -> None:
         """Initialisation
 
         Parameters
         ----------
         thermodynamics : class
+        tmax : float
+        tmin : float
         rtol : float
         atol : float
 
@@ -51,10 +58,8 @@ class Hydrodynamics:
         self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
-        # HACK these factors 10 and 100 are somewhat arbitrary.
-        # It should be possible to adjust these.
-        self.TMaxHydro = 10.0 * self.Tnucl
-        self.TMinHydro = self.Tnucl / 100
+        self.TMaxHydro = tmax * self.Tnucl
+        self.TMinHydro = tmin * self.Tnucl
 
         self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
 

@@ -290,8 +290,9 @@ class WallGoManager:
 
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """"""
-
-        self.hydrodynamics = Hydrodynamics(thermodynamics)
+        tmax = self.config.getfloat("Hydrodynamics", "tmax")
+        tmin = self.config.getfloat("Hydrodynamics", "tmin")
+        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin)
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""
