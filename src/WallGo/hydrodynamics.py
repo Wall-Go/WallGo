@@ -73,9 +73,7 @@ class Hydrodynamics:
 
         self.vBracketLow = 1e-3
         # Minimum velocity that allows a shock with the given nucleation temperature
-        self.vMin = max(
-            self.vBracketLow, self.minVelocity()
-        )
+        self.vMin = max(self.vBracketLow, self.minVelocity())
 
         self.success = False
 
@@ -285,7 +283,7 @@ class Hydrodynamics:
         vpovm = (eLowT + pHighT) / (eHighT + pLowT)
         return (vpvm, vpovm)
 
-    def matchDeton(self, vw : float) -> Tuple[float, float, float, float]:
+    def matchDeton(self, vw: float) -> Tuple[float, float, float, float]:
         r"""
         Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+`
         and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.
@@ -314,9 +312,10 @@ class Hydrodynamics:
                 tm
             ), self.thermodynamicsExtrapolate.wLowT(tm)
             eLowT = wLowT - pLowT
-            return float(vp**2 * (eHighT - eLowT) - (pHighT - pLowT) * (eLowT + pHighT) / (
-                eHighT + pLowT
-            ))
+            return float(
+                vp**2 * (eHighT - eLowT)
+                - (pHighT - pLowT) * (eLowT + pHighT) / (eHighT + pLowT)
+            )
 
         minimizeResult = minimize_scalar(
             tmFromvpsq,
@@ -506,9 +505,9 @@ class Hydrodynamics:
 
         def shock(v, xiAndT) -> float:
             xi, T = xiAndT
-            return float(boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(
-                T
-            ))
+            return float(
+                boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(T)
+            )
 
         shock.terminal = True  # What's happening here?
         xi0T0 = [vw, Tp]
