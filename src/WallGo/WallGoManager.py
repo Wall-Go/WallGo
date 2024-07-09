@@ -422,7 +422,7 @@ class WallGoManager:
         """Returns wall speed and wall parameters (widths and offsets)."""
         self.eom.includeOffEq = bIncludeOffEq
         # returning results
-        return self.eom.findWallVelocityMinimizeAction(wallThicknessIni)
+        return self.eom.findWallVelocityDeflagrationHybrid(wallThicknessIni)
 
     def solveWallDetonation(
         self,

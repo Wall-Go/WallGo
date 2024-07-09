@@ -126,7 +126,7 @@ class EOM:
         self.pressRelErrTol = pressRelErrTol
         self.pressAbsErrTol = 0.0
 
-    def findWallVelocityMinimizeAction(
+    def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
     ) -> WallGoResults:
         """
@@ -1327,22 +1327,22 @@ class EOM:
             return T, vPlasma
 
         # Bracketing the root
-        minTemp = minRes.x
-        TMultiplier = max(Tplus / minTemp, 1.2)
+        tempAtMinimum = minRes.x
+        TMultiplier = max(Tplus / tempAtMinimum, 1.2)
         if (
             Tplus < Tminus
         ):  # If this is a detonation solution, finds a solution below TLowerBound
-            TMultiplier = min(Tminus / minTemp, 0.8)
+            TMultiplier = min(Tminus / tempAtMinimum, 0.8)
 
-        testTemp = minTemp * TMultiplier
+        testTemp = tempAtMinimum * TMultiplier
         while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
-            minTemp *= TMultiplier
+            tempAtMinimum *= TMultiplier
             testTemp *= TMultiplier
 
         # Solving for the root
         res = scipy.optimize.root_scalar(
             lambda T: self.temperatureProfileEqLHS(fields, dPhidz, T, s1, s2),
-            bracket=(minTemp, testTemp),
+            bracket=(tempAtMinimum, testTemp),
             xtol=1e-10,
             rtol=self.errTol / 10,
         ).root

@@ -16,7 +16,7 @@ def test_equilibriumEOM_singlet(
 
     eom, BM = singletBenchmarkEOM_equilibrium
 
-    results = eom.findWallVelocityMinimizeAction()
+    results = eom.findWallVelocityDeflagrationHybrid()
     vwEOM = results.wallVelocity
     vwLTE = BM.expectedResults["vwLTE"]
 
