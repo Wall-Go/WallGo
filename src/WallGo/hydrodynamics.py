@@ -445,7 +445,7 @@ class Hydrodynamics:
 
         return vp, vm, Tp, Tm
 
-    def shockDE(self, v, xiAndT) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    def shockDE(self, v: float, xiAndT: np.ndarray) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
@@ -508,7 +508,7 @@ class Hydrodynamics:
 
         """
 
-        def shock(v, xiAndT) -> float:
+        def shock(v: float, xiAndT: np.ndarray | list) -> float:
             xi, T = xiAndT
             return float(
                 boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(T)
