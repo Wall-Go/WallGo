@@ -7,7 +7,7 @@ from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
-from .EOM import EOM
+from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
 from .Grid import Grid
@@ -354,6 +354,11 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+        
+        wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
+                               self.config.getfloat("EOM", "wallThicknessUpperBound"))
+        wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
+                               self.config.getfloat("EOM", "wallOffsetUpperBound"))
 
         self.eom = EOM(
             self.boltzmannSolver,
@@ -362,6 +367,8 @@ class WallGoManager:
             self.grid,
             numberOfFields,
             self.meanFreePath,
+            wallThicknessBounds,
+            wallOffsetBounds,
             includeOffEq=True,
             forceImproveConvergence=False,
             errTol=errTol,
@@ -414,7 +421,7 @@ class WallGoManager:
         """Returns wall speed and wall parameters (widths and offsets)."""
         self.eom.includeOffEq = bIncludeOffEq
         # returning results
-        return self.eom.findWallVelocityMinimizeAction(wallThicknessIni)
+        return self.eom.findWallVelocityDeflagrationHybrid(wallThicknessIni)
 
     def solveWallDetonation(
         self,
