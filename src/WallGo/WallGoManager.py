@@ -10,10 +10,9 @@ from .EffectivePotential import EffectivePotential
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
-from .Grid import Grid
 from .Grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
-from .HydroTemplateModel import HydroTemplateModel
+from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals
 from .Thermodynamics import Thermodynamics
 from .results import WallGoResults
@@ -242,7 +241,7 @@ class WallGoManager:
 
         try:
             ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
-            hydrotemplate = HydroTemplateModel(self.thermodynamics)
+            hydrotemplate = HydrodynamicsTemplateModel(self.thermodynamics)
             print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
 
         except WallGoError as error:
