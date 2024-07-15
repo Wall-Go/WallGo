@@ -33,11 +33,11 @@ If you use WallGo, please cite arXiv:....
     EoM
     exceptions
     Grid
-    Hydro
+    hydrodynamics
     HydroTemplateModel
     Polynomial
     results
-    Thermodynamics
+    thermodynamics
 
 .. toctree::
     :caption: Getting Started:
