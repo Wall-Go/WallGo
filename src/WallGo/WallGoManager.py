@@ -15,7 +15,7 @@ from .Grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Integrals import Integrals
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 

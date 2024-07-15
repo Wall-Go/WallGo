@@ -17,7 +17,7 @@ from .Grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
 from .hydrodynamics import Hydrodynamics
 from .Polynomial import Polynomial
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .containers import (
     BoltzmannDeltas,
     BoltzmannBackground,

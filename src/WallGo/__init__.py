@@ -11,7 +11,7 @@ from .Grid import Grid
 from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .Polynomial import Polynomial
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .containers import PhaseInfo, WallParams

@@ -9,7 +9,7 @@ from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .exceptions import WallGoError
 from .HydroTemplateModel import HydroTemplateModel
-from .Thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
+from .thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
 from .helpers import gammaSq, boostVelocity
 from .results import HydroResults
 
