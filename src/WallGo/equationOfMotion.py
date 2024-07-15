@@ -15,7 +15,7 @@ from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
 from .Grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
-from .Hydro import Hydro
+from .hydrodynamics import Hydrodynamics
 from .Polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .containers import (
@@ -42,7 +42,7 @@ class EOM:
         self,
         boltzmannSolver: BoltzmannSolver,
         thermodynamics: Thermodynamics,
-        hydro: Hydro,
+        hydrodynamics: Hydrodynamics,
         grid: Grid3Scales,
         nbrFields: int,
         meanFreePath: float,
@@ -63,8 +63,8 @@ class EOM:
             BoltzmannSolver instance.
         thermodynamics : Thermodynamics
             Thermodynamics object
-        hydro : Hydro
-            Hydro object
+        hydrodynamics : Hydrodynamics
+            Hydrodynamics object
         grid : Grid3Scales
             Object of the class Grid3Scales.
         nbrFields : int
@@ -100,7 +100,7 @@ class EOM:
 
         assert isinstance(boltzmannSolver, BoltzmannSolver)
         assert isinstance(thermodynamics, Thermodynamics)
-        assert isinstance(hydro, Hydro)
+        assert isinstance(hydrodynamics, Hydrodynamics)
         assert isinstance(grid, Grid3Scales)
         assert (
             grid is boltzmannSolver.grid
@@ -116,7 +116,7 @@ class EOM:
         self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
-        self.hydro = hydro
+        self.hydrodynamics = hydrodynamics
 
         self.particles = self.boltzmannSolver.offEqParticles
 
@@ -161,8 +161,8 @@ class EOM:
         # In some cases, no deflagration solution can exist below or above some
         # velocity. That's why we need to look in the smaller interval [vmin,vmax]
         # (which is computed by Hydrodynamics) instead of the naive interval [0,vJ].
-        vmin = self.hydro.vMin
-        vmax = min(self.hydro.vJ, self.hydro.fastestDeflag())
+        vmin = self.hydrodynamics.vMin
+        vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
         return self.solveWall(vmin, vmax, wallParams)
 
     def solveWall(
@@ -209,7 +209,7 @@ class EOM:
         ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
 
         # also getting the LTE results
-        wallVelocityLTE = self.hydro.findvwLTE()
+        wallVelocityLTE = self.hydrodynamics.findvwLTE()
 
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
@@ -357,7 +357,7 @@ class EOM:
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action. Can use two different iteration algorithms
         to find the pressure. If self.forceImproveConvergence=False and
-        wallVelocity<self.hydro.vJ, uses a fast algorithm that sometimes fails
+        wallVelocity<self.hydrodynamics.vJ, uses a fast algorithm that sometimes fails
         to converge. Otherwise, or if the previous algorithm converges slowly,
         uses a slower, but more robust algorithm.
 
@@ -392,7 +392,7 @@ class EOM:
             equations and the scalar field profiles. Only returned if returnExtras
             is True.
         hydroResults : HydroResults
-            HydroResults object containing the solution obtained from Hydro.
+            HydroResults object containing the solution obtained from Hydrodynamics.
             Only returned if returnExtras is True
 
         """
@@ -403,7 +403,7 @@ class EOM:
             rtol = self.pressRelErrTol
 
         improveConvergence = self.forceImproveConvergence
-        if wallVelocity > self.hydro.vJ:
+        if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
         print(f"\nTrying {wallVelocity=}")
@@ -455,13 +455,13 @@ class EOM:
             Tplus,
             Tminus,
             velocityMid,
-        ) = self.hydro.findHydroBoundaries(  # pylint: disable=invalid-name
+        ) = self.hydrodynamics.findHydroBoundaries(  # pylint: disable=invalid-name
             wallVelocity
         )
         hydroResults = HydroResults(
             temperaturePlus=Tplus,
             temperatureMinus=Tminus,
-            velocityJouguet=self.hydro.vJ,
+            velocityJouguet=self.hydrodynamics.vJ,
         )
 
         # Positions of the phases

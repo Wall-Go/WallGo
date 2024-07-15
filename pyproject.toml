@@ -12,8 +12,7 @@ authors = [
     {name = "Benoit Laurent", email = "benoit.laurent@mail.mcgill.ca"},
     {name = "Lauri Niemi", email = "lauri.b.niemi@helsinki.fi"},
     {name = "Philipp Schicho", email = "schicho@itp.uni-frankfurt.de"},
-    {name = "Tuomas Tenkanen", email = "tuomas.tenkanen@su.se"},
-    {name = "Jorinde van de Vis", email = "j.m.vandevis@uu.nl"},
+    {name = "Jorinde van de Vis", email = "vandevis@lorentz.leidenuniv.nl"},
 ]
 description = "A package for computing the bubble wall speed"
 license = {text = "MIT"}
