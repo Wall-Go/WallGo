@@ -1,3 +1,7 @@
+"""
+Classes that contain thermodynamics quantities like pressure, enthalpy, energy density for both phases
+"""
+
 import numpy as np
 import numpy.typing as npt
 import scipy.optimize
@@ -7,7 +11,6 @@ from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .Fields import Fields
 from .FreeEnergy import FreeEnergy
-import WallGo.helpers
 
 
 """ LN: As far as I understand, this class is intended to work as an intermediator between the Veff and other parts of the code 
