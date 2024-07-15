@@ -1,11 +1,12 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import root_scalar,minimize_scalar
+from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
 from .helpers import gammaSq
+from .Thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
 
 
-class HydroTemplateModel:
+class HydrodynamicsTemplateModel:
     """
     Class for solving the matching equations and computing vw in LTE by fitting to the template model,
     where the speeds of sound are assumed to be constant. This generally offers a good approximation to realistic models,
@@ -28,16 +29,17 @@ class HydroTemplateModel:
 
     """
 
-    def __init__(self,thermodynamics,rtol=1e-6,atol=1e-6):
+    def __init__(self, thermodynamics: Thermodynamics, rtol: float=1e-6, atol: float=1e-6) -> None:
         r"""
         Initialize the HydroTemplateModel class. Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b`.
 
         Parameters
         ----------
-        model : Model
-            An object of the class Model.
-        Tnucl : double
-            Nucleation temperature.
+        thermodynamics : class
+        rtol : float, optional
+            Default value is 1e-6.
+        atol : float, optional
+            Default value is 1e-6.
 
         Returns
         -------
@@ -51,20 +53,20 @@ class HydroTemplateModel:
         eHighT,eLowT = wHighT-pHighT,wLowT-pLowT
 
         ## Calculate sound speed squared in both phases, needs to be > 0
-        self.cb2 = thermodynamics.csqLowT(thermodynamics.Tnucl)
-        self.cs2 = thermodynamics.csqHighT(thermodynamics.Tnucl)
+        self.cb2 = float(thermodynamics.csqLowT(thermodynamics.Tnucl))
+        self.cs2 = float(thermodynamics.csqHighT(thermodynamics.Tnucl))
 
         if (self.cb2 < 0 or self.cs2 < 0):
             raise WallGoError("Invalid sound speed at nucleation temperature",
                               data = {"csqLowT" : self.cb2, "csqHighT" : self.cs2})
 
 
-        self.alN = (eHighT-eLowT-(pHighT-pLowT)/self.cb2)/(3*wHighT)
-        self.psiN = wLowT/wHighT
+        self.alN = float((eHighT-eLowT-(pHighT-pLowT)/self.cb2)/(3*wHighT))
+        self.psiN = float(wLowT/wHighT)
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
-        self.wN = wHighT
-        self.pN = pHighT
+        self.wN = float(wHighT)
+        self.pN = float(pHighT)
         self.Tnucl = thermodynamics.Tnucl
 
         self.nu = 1+1/self.cb2
@@ -72,7 +74,7 @@ class HydroTemplateModel:
         self.vJ = self.findJouguetVelocity()
         self.vMin = self.minVelocity()
 
-    def findJouguetVelocity(self, alN=None):
+    def findJouguetVelocity(self, alN: float | None=None) -> float:
         r"""
         Finds the Jouguet velocity, corresponding to the phase transition strength :math:`\alpha_n`,
         using :math:`v_J = c_b \frac{1 + \sqrt{3 \alpha_n(1 - c_b^2 + 3 c_b^2 \alpha_n)}}{1+ 3 c_b^2 \alpha_n}`
@@ -80,22 +82,23 @@ class HydroTemplateModel:
 
         Parameters
         ----------
-        alN : double
+        alN : float or None
             phase transition strength at the nucleation temperature, :math:`\alpha_n`.
-            If :math:`\alpha_n` is not specified, the value defined by the model is used.
+            If :math:`\alpha_n` is not specified, the value defined by the model is 
+            used. Default is None.
 
         Returns
         -------
-        vJ: double
+        vJ: float
             The value of the Jouguet velocity.
 
         """
 
         if alN is None:
             alN = self.alN
-        return self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN)
+        return float(self.cb*(1+np.sqrt(3*alN*(1-self.cb2+3*self.cb2*alN)))/(1+3*self.cb2*alN))
         
-    def minVelocity(self):
+    def minVelocity(self) -> float:
         r"""
         Finds the minimum velocity that is possible for a given nucleation temeperature. 
         It is found by shooting in vp with :math:`\alpha_+ = 1/3` at the wall. This is the maximum value of :math:`\alpha_+` possible.
@@ -108,102 +111,109 @@ class HydroTemplateModel:
         ----------
 
         Returns
-            vmin: double
+            vmin: float
                 The minimum value of the wall velocity for which a solution can be found
         """
         shootingalphamax = lambda vw: self.__shooting(vw,0)
 
         if self.alN < 1/3:
-            return 0
+            return 0.0
         else:
-            return root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root
+            return float(root_scalar(shootingalphamax,bracket=(1e-6,self.vJ),rtol=self.rtol,xtol=self.atol).root)
         
 
-    def get_vp(self,vm,al,branch=-1):
+    def get_vp(self, vm: float, al: float, branch: int=-1) -> float:
         r"""
         Solves the matching equation for :math:`v_+`.
 
         Parameters
         ----------
-        vm : double
+        vm : float
             Plasma velocity in the wall frame right behind the wall :math:`v_-`.
-        al : double
+        al : float
             phase transition strength at the temperature right in front of the wall :math:`\alpha_+`.
         branch : int, optional
             Select the branch of the matching equation's solution. Can either be 1 for detonation or -1 for deflagration/hybrid.
-            The default is -1.
+            Default is -1.
 
         Returns
         -------
-        vp : double
-        double
+        vp : float
             Plasma velocity in the wall frame right in front of the the wall :math:`v_+`.
 
         """
         disc = max(0, vm**4-2*self.cb2*vm**2*(1-6*al)+self.cb2**2*(1-12*vm**2*al*(1-3*al)))
-        return 0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al)
+        return float(0.5*(self.cb2+vm**2+branch*np.sqrt(disc))/(vm+3*self.cb2*vm*al))
 
-    def w_from_alpha(self,al):
+    def w_from_alpha(self, al: float) -> float:
         r"""
         Finds the enthlapy :math:`\omega_+` corresponding to :math:`\alpha_+` using the equation of state of the template model.
 
         Parameters
         ----------
-        al : double
+        al : float
             alpha parameter at the temperature :math:`T_+` in front of the wall :math:`\alpha_+`.
 
         Returns
         -------
-        double
+        float
             :math:`\omega_+`.
 
         """
         return (abs((1-3*self.alN)*self.mu-self.nu)+1e-100)/(abs((1-3*al)*self.mu-self.nu)+1e-100)
 
-    def __find_Tm(self,vm,vp,Tp):
+    def __find_Tm(self, vm: float, vp: float, Tp: float) -> float:
         r"""
         Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+` using the matching equations.
 
         Parameters
         ----------
-        vm : double
+        vm : float
             Value of the fluid velocity in the wall frame, right behind the bubble wall
-        vp : double
+        vp : float
             Value of the fluid velocity in the wall frame, right in front of the bubble
-        Tp : double
+        Tp : float
             Plasma temperature right in front of the bubble wall
 
         Returns
         -------
-        Tm : double
+        Tm : float
             Plasma temperature right behind the bubble wall
         """
         ap = 3/(self.mu*self.Tnucl**self.mu)
         am = 3*self.psiN/(self.nu*self.Tnucl**self.nu)
-        return ((ap*vp*self.mu*(1-vm**2)*Tp**self.mu)/(am*vm*self.nu*(1-vp**2)))**(1/self.nu)
+        return float(((ap*vp*self.mu*(1-vm**2)*Tp**self.mu)/(am*vm*self.nu*(1-vp**2)))**(1/self.nu))
 
-    def __eqWall(self,al,vm,branch=-1):
+    def __eqWall(self, al: float, vm: float, branch: int=-1) -> float:
         """
         Matching equation at the bubble wall.
 
         Parameters
         ----------
-        al : double
+        al : float
             phase transition strength at the temperature right in front of the wall :math:`\alpha_+`.
-        vm : double
+        vm : float
             Value of the fluid velocity in the wall frame, right behind the bubble wall
+        branch : int, optional
+            Select the branch of the matching equation's solution. Can either be 1 for detonation or -1 for deflagration/hybrid.
+            Default is -1.
+            
+        Returns
+        -------
+        float
+            Residual of the matching equation
         """
         vp = self.get_vp(vm,al,branch)
         psi = self.psiN*self.w_from_alpha(al)**(self.nu/self.mu-1)
-        return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(gammaSq(vp)/gammaSq(vm))**(self.nu/2)*psi)/(3*self.nu)
+        return float(vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(gammaSq(vp)/gammaSq(vm))**(self.nu/2)*psi)/(3*self.nu))
 
-    def solve_alpha(self,vw, constraint=True):
+    def solve_alpha(self, vw: float, constraint: bool=True) -> float:
         r"""
         Finds the value of :math:`\alpha_+` that solves the matching equation at the wall by varying :math:`v_-`.
 
         Parameters
         ----------
-        vw : double
+        vw : float
             Wall velocity at which to solve the matching equation.
         constraint : bool, optional
             If True, imposes :math:`v_+<\min(c_s^2/v_w,v_w)` on the solution. Otherwise, the
@@ -211,7 +221,7 @@ class HydroTemplateModel:
 
         Returns
         -------
-        alp : double
+        alp : float
             Value of :math:`\alpha_+` that solves the matching equation.
 
         """
@@ -224,12 +234,12 @@ class HydroTemplateModel:
             branch = 1
         try:
             sol = root_scalar(self.__eqWall,(vm,branch),bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
-            return sol.root
+            return float(sol.root)
 
         except ValueError:
             raise WallGoError("alpha can not be found", data = {"vw" : vw} )
 
-    def __dfdv(self,v,X):
+    def __dfdv(self, v: float, X: np.ndarray) -> np.ndarray:
         """
         Fluid equations in the shock wave.
         """
@@ -237,19 +247,19 @@ class HydroTemplateModel:
         mu_xiv = (xi-v)/(1-xi*v)
         dwdv = w*(1+1/self.cs2)*mu_xiv/(1-v**2)
         dxidv = xi*(1-v*xi)*(mu_xiv**2/self.cs2-1)/(2*v*(1-v**2)) if v != 0  else 1e50 #If v = 0, dxidv is set to a very high value
-        return [dxidv,dwdv]
+        return np.array([dxidv,dwdv])
 
-    def integrate_plasma(self,v0,vw,wp):
+    def integrate_plasma(self, v0: float, vw: float, wp: float) -> OptimizeResult:
         """
         Integrates the fluid equations in the shock wave until it reaches the shock front.
 
         Parameters
         ----------
-        v0 : double
+        v0 : float
             Plasma velocity just in front of the wall (in the frame of the bubble's center).
-        vw : double
+        vw : float
             Wall velocity.
-        wp : double
+        wp : float
             Enthalpy just in front of the wall.
 
         Returns
@@ -257,14 +267,15 @@ class HydroTemplateModel:
         Bunch object returned by the scipy function integrate.solve_ivp containing the solution of the fluid equations.
 
         """
-        def event(v,X):
+        def event(v: float, X: np.ndarray) -> float:
             xi,w = X
-            return (xi*(xi-v)/(1-xi*v) - self.cs2)*v
+            return float((xi*(xi-v)/(1-xi*v) - self.cs2)*v)
+        
         event.terminal = True
         sol = solve_ivp(self.__dfdv,(v0,1e-10),[vw,wp],events=event,rtol=self.rtol,atol=0)
         return sol
     
-    def __shooting(self,vw,vp):
+    def __shooting(self, vw: float, vp: float) -> float:
         """
         Integrates through the shock wave and returns the residual of the matching equation at the shock front.
         """
@@ -291,7 +302,7 @@ class HydroTemplateModel:
         return vp_sw/vm_sw - ((self.mu-1)*wm_sw+1)/((self.mu-1)+wm_sw)
 
 
-    def findvwLTE(self):
+    def findvwLTE(self) -> float:
         """
         Computes the wall velocity for a deflagration or hybrid solution.
         TODO: Explain the logic
@@ -302,10 +313,10 @@ class HydroTemplateModel:
 
         Returns
         -------
-            vwLTE : double
+            vwLTE : float
         """
 
-        def shootingInLTE(vw):
+        def shootingInLTE(vw: float) -> float:
             vm = min(self.cb,vw)
             al = self.solve_alpha(vw)
             vp = self.get_vp(vm, al)
@@ -313,31 +324,31 @@ class HydroTemplateModel:
 
         if self.alN < (1-self.psiN)/3 or self.alN <= (self.mu-self.nu)/(3*self.mu):
             # print('alN too small')
-            return 0
+            return 0.0
         if self.alN > self.max_al(100) or shootingInLTE(self.vJ) < 0:
             # print('alN too large')
-            return 1
+            return 1.0
         sol = root_scalar(shootingInLTE,bracket=[1e-3,self.vJ],rtol=self.rtol,xtol=self.atol)
-        return sol.root
+        return float(sol.root)
 
-    def findMatching(self,vw):
+    def findMatching(self, vw: float) -> tuple[float,...] | tuple[None,...]:
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution when the wall velocity is vw.
         
         Parameters
         ----------
-        vw : double
+        vw : float
             Wall velocity at which to solve the matching equation.
 
         Returns
         -------
-        vp : double
+        vp : float
             Value of :math:`v_+` that solves the matching equation.
-        vm : double
+        vm : float
             Value of :math:`v_-` that solves the matching equation.
-        Tp : double
+        Tp : float
             Value of :math:`T_+` that solves the matching equation.
-        Tm : double
+        Tm : float
             Value of :math:`T_-` that solves the matching equation.
 
         """
@@ -359,10 +370,7 @@ class HydroTemplateModel:
         try:
             sol = root_scalar(shockIntegrator, bracket=(0,vp_max), rtol=self.rtol, xtol=self.atol)
 
-        except Exception as e:
-#            print("!!! Exception in HydroTemplateModel.findMatching():")
-#            print(e)
-#            print()
+        except:
             return (None,None,None,None) # If no deflagration solution exists, returns None.
         
         vp = sol.root
@@ -373,7 +381,7 @@ class HydroTemplateModel:
         return vp,vm,Tp,Tm
 
 
-    def matchDeflagOrHybInitial(self,vw,vp):
+    def matchDeflagOrHybInitial(self, vw: float, vp: float) -> tuple[float, float]:
         r"""
         Returns initial guess for the solver in the matchDeflagOrHyb function.
         """
@@ -392,9 +400,9 @@ class HydroTemplateModel:
         wp = self.w_from_alpha(al)
         Tp = self.Tnucl*wp**(1/self.mu)
         Tm = self.__find_Tm(vm, vp, Tp)
-        return [Tp, Tm]
+        return Tp, Tm
 
-    def findHydroBoundaries(self, vwTry):
+    def findHydroBoundaries(self, vwTry: float) -> tuple[float|None,...]:
         r"""
         Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation temperature.
 
@@ -406,8 +414,9 @@ class HydroTemplateModel:
             return (0,0,0,0,0)
 
         vp,vm,Tp,Tm = self.findMatching(vwTry)
-        if vp is None:
+        if vp is None or vm is None or Tp is None or Tm is None:
             return (vp,vm,Tp,Tm, None)
+        vp,vm,Tp,Tm = float(vp),float(vm),float(Tp),float(Tm)
         wHighT = self.wN*(Tp/self.Tnucl)**self.mu
         pHighT = self.pN+((Tp/self.Tnucl)**self.mu-1)*self.wN/self.mu
         c1 = -wHighT*vp/(1-vp**2)
@@ -415,33 +424,33 @@ class HydroTemplateModel:
         velocityMid = -0.5*(vm+vp)  # minus sign for convention change
         return (c1, c2, Tp, Tm, velocityMid)
 
-    def max_al(self,upper_limit=100):
+    def max_al(self, upper_limit: float=100.0) -> float:
         r"""
         Computes the highest value of :math:`\alpha_n` at which a hybrid solution can be found.
 
         Parameters
         ----------
-        upper_limit : double, optional
+        upper_limit : float, optional
             Largest value of :math:`\alpha_n` at which the solver will look. If the true value is above upper_limit,
         
                 
         Returns
         -------
-        upper_limit : double
+        upper_limit : float
             Upper limit for :math:`\alpha_n`. The default is 100.
 
 
         """
         vm = self.cb
         lower_limit = (1-self.psiN)/3
-        def func(alN):
+        def func(alN: float) -> float:
             vw = self.findJouguetVelocity(alN)
             vp = self.cs2/vw
             ga2p,ga2m = 1/(1-vp**2),1/(1-vm**2)
             wp = (vp+vw-vw*self.mu)/(vp+vw-vp*self.mu)
             psi = self.psiN*wp**(self.nu/self.mu-1)
             al = (self.mu-self.nu)/(3*self.mu)+(alN-(self.mu-self.nu)/(3*self.mu))/wp
-            return vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu)
+            return float(vp*vm*al/(1-(self.nu-1)*vp*vm)-(1-3*al-(ga2p/ga2m)**(self.nu/2)*psi)/(3*self.nu))
 
         if func(upper_limit) < 0:
             maximum = minimize_scalar(lambda x: -func(x),bounds=[(1-self.psiN)/3,upper_limit],method='Bounded')
@@ -457,24 +466,24 @@ class HydroTemplateModel:
                 upper_limit = minimum.x
 
         sol = root_scalar(func,bracket=(lower_limit,upper_limit),rtol=self.rtol,xtol=self.atol)
-        return sol.root
+        return float(sol.root)
 
-    def detonation_vw(self):
+    def detonation_vw(self) -> float:
         """
         Computes the wall velocity for a detonation solution.
         """
-        def matching_eq(vw):
+        def matching_eq(vw: float) -> float:
             A = vw**2+self.cb2*(1-3*self.alN*(1-vw**2))
             vm = (A+np.sqrt(A**2-4*vw**2*self.cb2))/(2*vw)
             ga2w,ga2m = 1/(1-vw**2),1/(1-vm**2)
-            return vw*vm*self.alN/(1-(self.nu-1)*vw*vm)-(1-3*self.alN-(ga2w/ga2m)**(self.nu/2)*self.psiN)/(3*self.nu)
+            return float(vw*vm*self.alN/(1-(self.nu-1)*vw*vm)-(1-3*self.alN-(ga2w/ga2m)**(self.nu/2)*self.psiN)/(3*self.nu))
         if matching_eq(self.vJ+1e-10)*matching_eq(1-1e-10) > 0:
             # print('No detonation solution')
             return 0
         sol = root_scalar(matching_eq,bracket=(self.vJ+1e-10,1-1e-10),rtol=self.rtol,xtol=self.atol)
-        return sol.root
+        return float(sol.root)
 
-    def detonation_vAndT(self,vw):
+    def detonation_vAndT(self, vw: float) -> tuple[float,...]:
         r"""
         Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a detonation solution.
         """
