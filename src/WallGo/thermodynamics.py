@@ -1,5 +1,6 @@
 """
-Classes that contain thermodynamics quantities like pressure, enthalpy, energy density for both phases
+Classes that contain thermodynamics quantities like pressure, enthalpy, energy density 
+for both phases
 """
 
 import numpy as np
@@ -29,9 +30,10 @@ Questions:
 # TODO should make most functions here non-public
 
 ## LN: I don't think this needs Tc tbh. It seems to be only accessed in Hydro, and used to set some upper bounds?
-## In which case I'd propose Hydro to use separate variables for its T-range for more flexibility, 
-## and so that we don't have to store Tc in many places. 
-  
+## In which case I'd propose Hydro to use separate variables for its T-range for more flexibility,
+## and so that we don't have to store Tc in many places.
+
+
 class Thermodynamics:
     """
     Thermodynamic functions corresponding to the potential
@@ -42,8 +44,7 @@ class Thermodynamics:
         effectivePotential: EffectivePotential,
         nucleationTemperature: float,
         phaseLowT: Fields,
-        phaseHighT: Fields,
-        criticalTemperature: float | None = None,
+        phaseHighT: Fields
     ):
         """Initialisation
 
@@ -61,9 +62,6 @@ class Thermodynamics:
             The location of the high temperature phase at the nucleation
             temperature. Does not need to be exact, as resolved internally
             with input as starting point.
-        criticalTemperature: float = None
-            Optional input critical temperature. If not given, will be
-            solved for numerically.
 
         Returns
         -------
@@ -72,15 +70,18 @@ class Thermodynamics:
         """
         self.effectivePotential = effectivePotential
         self.Tnucl = nucleationTemperature
-        self.Tc = criticalTemperature
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
 
         self.freeEnergyHigh = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseHighT, 
+            self.effectivePotential,
+            self.Tnucl,
+            self.phaseHighT,
         )
         self.freeEnergyLow = FreeEnergy(
-            self.effectivePotential, self.Tnucl, self.phaseLowT,
+            self.effectivePotential,
+            self.Tnucl,
+            self.phaseLowT,
         )
 
     def getCoexistenceRange(self) -> Tuple[float, float]:
@@ -144,13 +145,13 @@ class Thermodynamics:
         signAtStart = np.sign(freeEnergyDifference(T))
         bConverged = False
 
-        while (T > TMin):
+        while T > TMin:
             T -= TStep
-            if (np.sign(freeEnergyDifference(T)) != signAtStart):
+            if np.sign(freeEnergyDifference(T)) != signAtStart:
                 bConverged = True
                 break
 
-        if (not bConverged):
+        if not bConverged:
             raise WallGoError("Could not find critical temperature")
 
         # Improve Tc estimate by solving DeltaF = 0 in narrow range near T
@@ -237,12 +238,12 @@ class Thermodynamics:
         eHighT : array-like (float)
             Energy density in the high-temperature phase.
         """
-        return temperature*self.dpHighT(temperature) - self.pHighT(temperature)
+        return temperature * self.dpHighT(temperature) - self.pHighT(temperature)
 
     def deHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the energy density in the high-temperature phase.
-        
+
         Parameters
         ----------
         temperature : array-like
@@ -269,7 +270,7 @@ class Thermodynamics:
         wHighT : array-like (float)
             Enthalpy density in the high-temperature phase.
         """
-        return temperature*self.dpHighT(temperature)
+        return temperature * self.dpHighT(temperature)
 
     def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -351,12 +352,12 @@ class Thermodynamics:
         eLowT : array-like (float)
             Energy density in the low-temperature phase.
         """
-        return temperature*self.dpLowT(temperature) - self.pLowT(temperature)
+        return temperature * self.dpLowT(temperature) - self.pLowT(temperature)
 
     def deLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """
         Temperature derivative of the energy density in the low-temperature phase.
-        
+
         Parameters
         ----------
         temperature : array-like
@@ -367,7 +368,7 @@ class Thermodynamics:
         deLowT : array-like (float)
             Temperature derivative of the energy density in the low-temperature phase.
         """
-        return temperature*self.ddpLowT(temperature)
+        return temperature * self.ddpLowT(temperature)
 
     def wLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -383,7 +384,7 @@ class Thermodynamics:
         wLowT : array-like (float)
             Enthalpy density in the low-temperature phase.
         """
-        return temperature*self.dpLowT(temperature)
+        return temperature * self.dpLowT(temperature)
 
     def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         r"""
@@ -403,7 +404,7 @@ class Thermodynamics:
 
     def alpha(self, T: npt.ArrayLike) -> npt.ArrayLike:
         r"""
-        The phase transition strength at the temperature :math:`T`, computed via 
+        The phase transition strength at the temperature :math:`T`, computed via
         :math:`\alpha = \frac{(eHighT(T)-pHighT(T)/csqHighT(T))-(eLowT(T)-pLowT(T)/csqLowT(T))}{3wHighT(T)}`
 
         Parameters
@@ -418,10 +419,18 @@ class Thermodynamics:
         """
         # LN: keeping T instead of 'temperature' here since the expression is long
         # LN: Please add reference to a paper and eq number
-        return (self.eHighT(T) - self.eLowT(T) - (self.pHighT(T) - self.pLowT(T)) / self.csqLowT(T)) / 3 / self.wHighT(T)
-    
+        return (
+            (
+                self.eHighT(T)
+                - self.eLowT(T)
+                - (self.pHighT(T) - self.pLowT(T)) / self.csqLowT(T)
+            )
+            / 3
+            / self.wHighT(T)
+        )
 
-class ThermodynamicsExtrapolate():
+
+class ThermodynamicsExtrapolate:
 
     def __init__(
         self,
@@ -445,22 +454,46 @@ class ThermodynamicsExtrapolate():
         self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
-        #The following parameters are defined such that the thermodynamic quantities 
-        #can be extrapolated beyond the minimum and maximum temperatures by mapping onto the template model
-        self.muMinHighT = 1 + 1/self.thermodynamics.csqHighT(self.TMinHighT)
-        self.aMinHighT = 3*self.thermodynamics.wHighT(self.TMinHighT)/(self.muMinHighT*pow(self.TMinHighT,self.muMinHighT))
-        self.epsilonMinHighT = 1/3.*self.aMinHighT*pow(self.TMinHighT,self.muMinHighT) - thermodynamics.pHighT(self.TMinHighT)
-        self.muMaxHighT = 1 + 1/self.thermodynamics.csqHighT(self.TMaxHighT)
-        self.aMaxHighT = 3*self.thermodynamics.wHighT(self.TMaxHighT)/(self.muMaxHighT*pow(self.TMaxHighT,self.muMaxHighT))
-        self.epsilonMaxHighT = 1/3.*self.aMaxHighT*pow(self.TMaxHighT,self.muMaxHighT) - thermodynamics.pHighT(self.TMaxHighT)
+        # The following parameters are defined such that the thermodynamic quantities
+        # can be extrapolated beyond the minimum and maximum temperatures by mapping onto the template model
+        self.muMinHighT = 1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT)
+        self.aMinHighT = (
+            3
+            * self.thermodynamics.wHighT(self.TMinHighT)
+            / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
+        )
+        self.epsilonMinHighT = 1 / 3.0 * self.aMinHighT * pow(
+            self.TMinHighT, self.muMinHighT
+        ) - thermodynamics.pHighT(self.TMinHighT)
+        self.muMaxHighT = 1 + 1 / self.thermodynamics.csqHighT(self.TMaxHighT)
+        self.aMaxHighT = (
+            3
+            * self.thermodynamics.wHighT(self.TMaxHighT)
+            / (self.muMaxHighT * pow(self.TMaxHighT, self.muMaxHighT))
+        )
+        self.epsilonMaxHighT = 1 / 3.0 * self.aMaxHighT * pow(
+            self.TMaxHighT, self.muMaxHighT
+        ) - thermodynamics.pHighT(self.TMaxHighT)
 
-        self.muMinLowT = 1 + 1/self.thermodynamics.csqLowT(self.TMinLowT)
-        self.aMinLowT = 3*self.thermodynamics.wLowT(self.TMinLowT)/(self.muMinLowT*pow(self.TMinLowT,self.muMinLowT))
-        self.epsilonMinLowT = 1/3.*self.aMinLowT*pow(self.TMinLowT,self.muMinLowT) - thermodynamics.pLowT(self.TMinLowT)
-        self.muMaxLowT = 1 + 1/self.thermodynamics.csqLowT(self.TMaxLowT)
-        self.aMaxLowT = 3*self.thermodynamics.wLowT(self.TMaxLowT)/(self.muMaxLowT*pow(self.TMaxLowT,self.muMaxLowT))
-        self.epsilonMaxLowT = 1/3.*self.aMaxLowT*pow(self.TMaxLowT,self.muMaxLowT) - thermodynamics.pLowT(self.TMaxLowT)
-    
+        self.muMinLowT = 1 + 1 / self.thermodynamics.csqLowT(self.TMinLowT)
+        self.aMinLowT = (
+            3
+            * self.thermodynamics.wLowT(self.TMinLowT)
+            / (self.muMinLowT * pow(self.TMinLowT, self.muMinLowT))
+        )
+        self.epsilonMinLowT = 1 / 3.0 * self.aMinLowT * pow(
+            self.TMinLowT, self.muMinLowT
+        ) - thermodynamics.pLowT(self.TMinLowT)
+        self.muMaxLowT = 1 + 1 / self.thermodynamics.csqLowT(self.TMaxLowT)
+        self.aMaxLowT = (
+            3
+            * self.thermodynamics.wLowT(self.TMaxLowT)
+            / (self.muMaxLowT * pow(self.TMaxLowT, self.muMaxLowT))
+        )
+        self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
+            self.TMaxLowT, self.muMaxLowT
+        ) - thermodynamics.pLowT(self.TMaxLowT)
+
     def pHighT(self, temperature: float) -> float:
         r"""
         Pressure in the high-temperature phase, obtained from thermodynamics.pHighT for the allowed temperature range
@@ -477,12 +510,18 @@ class ThermodynamicsExtrapolate():
             Pressure in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return 1/3.*self.aMinHighT*pow(temperature,self.muMinHighT) - self.epsilonMinHighT
+            return (
+                1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
+                - self.epsilonMinHighT
+            )
         elif temperature > self.TMaxHighT:
-            return 1/3.*self.aMaxHighT*pow(temperature,self.muMaxHighT) - self.epsilonMaxHighT
+            return (
+                1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
+                - self.epsilonMaxHighT
+            )
         else:
             return self.thermodynamics.pHighT(temperature)
-        
+
     def dpHighT(self, temperature: float) -> float:
         r"""
         Temperature-derivative of the pressure in the high-temperature phase, obtained from thermodynamics.dpHighT for the allowed temperature range
@@ -499,12 +538,24 @@ class ThermodynamicsExtrapolate():
             Temperature-derivative of the pressure in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return 1/3.*self.muMinHighT*self.aMinHighT*pow(temperature,self.muMinHighT-1)
+            return (
+                1
+                / 3.0
+                * self.muMinHighT
+                * self.aMinHighT
+                * pow(temperature, self.muMinHighT - 1)
+            )
         elif temperature > self.TMaxHighT:
-            return 1/3.*self.muMaxHighT*self.aMaxHighT*pow(temperature,self.muMaxHighT-1)
+            return (
+                1
+                / 3.0
+                * self.muMaxHighT
+                * self.aMaxHighT
+                * pow(temperature, self.muMaxHighT - 1)
+            )
         else:
             return self.thermodynamics.dpHighT(temperature)
-        
+
     def ddpHighT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the high-temperature phase, obtained from thermodynamics.ddpHighT for the allowed temperature range
@@ -519,14 +570,28 @@ class ThermodynamicsExtrapolate():
         -------
         ddpHighT : array-like (float)
             Second temperature-derivative of the pressure in the high-temperature phase.
-        """        
+        """
         if temperature < self.TMinHighT:
-            return 1/3.*self.muMinHighT*(self.muMinHighT-1)*self.aMinHighT*pow(temperature,self.muMinHighT-2)
+            return (
+                1
+                / 3.0
+                * self.muMinHighT
+                * (self.muMinHighT - 1)
+                * self.aMinHighT
+                * pow(temperature, self.muMinHighT - 2)
+            )
         elif temperature > self.TMaxHighT:
-            return 1/3.*self.muMaxHighT*(self.muMaxHighT-1)*self.aMaxHighT*pow(temperature,self.muMaxHighT-2)
+            return (
+                1
+                / 3.0
+                * self.muMaxHighT
+                * (self.muMaxHighT - 1)
+                * self.aMaxHighT
+                * pow(temperature, self.muMaxHighT - 2)
+            )
         else:
             return self.thermodynamics.ddpHighT(temperature)
-        
+
     def eHighT(self, temperature: float) -> float:
         r"""
         Energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
@@ -542,13 +607,13 @@ class ThermodynamicsExtrapolate():
         eHighT : array-like (float)
             Energy density in the high-temperature phase.
         """
-        return temperature*self.dpHighT(temperature) - self.pHighT(temperature)
-    
+        return temperature * self.dpHighT(temperature) - self.pHighT(temperature)
+
     def deHighT(self, temperature: float) -> float:
         """
         Temperature derivative of the energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
-        
+
         Parameters
         ----------
         temperature : array-like
@@ -576,8 +641,8 @@ class ThermodynamicsExtrapolate():
         wHighT : array-like (float)
             Enthalpy density in the high-temperature phase.
         """
-        return temperature*self.dpHighT(temperature)
-    
+        return temperature * self.dpHighT(temperature)
+
     def csqHighT(self, temperature: float) -> float:
         r"""
         Sound speed squared in the high-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range
@@ -599,7 +664,7 @@ class ThermodynamicsExtrapolate():
             return self.thermodynamics.csqHighT(self.TMaxHighT)
         else:
             return self.thermodynamics.csqHighT(temperature)
-        
+
     def pLowT(self, temperature: float) -> float:
         r"""
         Pressure in the low-temperature phase, obtained from thermodynamics.pLowT for the allowed temperature range
@@ -616,12 +681,18 @@ class ThermodynamicsExtrapolate():
             Pressure in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return 1/3.*self.aMinLowT*pow(temperature,self.muMinLowT) - self.epsilonMinLowT
+            return (
+                1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
+                - self.epsilonMinLowT
+            )
         elif temperature > self.TMaxLowT:
-            return 1/3.*self.aMaxLowT*pow(temperature,self.muMaxLowT) - self.epsilonMaxLowT
+            return (
+                1 / 3.0 * self.aMaxLowT * pow(temperature, self.muMaxLowT)
+                - self.epsilonMaxLowT
+            )
         else:
             return self.thermodynamics.pLowT(temperature)
-        
+
     def dpLowT(self, temperature: float) -> float:
         r"""
         Temperature-derivative of the pressure in the low-temperature phase, obtained from thermodynamics.dpLowT for the allowed temperature range
@@ -638,12 +709,24 @@ class ThermodynamicsExtrapolate():
             Temperature-derivative of the pressure in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return 1/3.*self.muMinLowT*self.aMinLowT*pow(temperature,self.muMinLowT-1)
+            return (
+                1
+                / 3.0
+                * self.muMinLowT
+                * self.aMinLowT
+                * pow(temperature, self.muMinLowT - 1)
+            )
         elif temperature > self.TMaxLowT:
-            return 1/3.*self.muMaxLowT*self.aMaxLowT*pow(temperature,self.muMaxLowT-1)
+            return (
+                1
+                / 3.0
+                * self.muMaxLowT
+                * self.aMaxLowT
+                * pow(temperature, self.muMaxLowT - 1)
+            )
         else:
             return self.thermodynamics.dpLowT(temperature)
-        
+
     def ddpLowT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the low-temperature phase, obtained from thermodynamics.ddpLowT for the allowed temperature range
@@ -658,14 +741,28 @@ class ThermodynamicsExtrapolate():
         -------
         ddpLowT : array-like (float)
             Second temperature-derivative of the pressure in the low-temperature phase.
-        """        
+        """
         if temperature < self.TMinLowT:
-            return 1/3.*self.muMinLowT*(self.muMinLowT-1)*self.aMinLowT*pow(temperature,self.muMinLowT-2)
+            return (
+                1
+                / 3.0
+                * self.muMinLowT
+                * (self.muMinLowT - 1)
+                * self.aMinLowT
+                * pow(temperature, self.muMinLowT - 2)
+            )
         elif temperature > self.TMaxLowT:
-            return 1/3.*self.muMaxLowT*(self.muMaxLowT-1)*self.aMaxLowT*pow(temperature,self.muMaxLowT-2)
+            return (
+                1
+                / 3.0
+                * self.muMaxLowT
+                * (self.muMaxLowT - 1)
+                * self.aMaxLowT
+                * pow(temperature, self.muMaxLowT - 2)
+            )
         else:
             return self.thermodynamics.ddpLowT(temperature)
-        
+
     def eLowT(self, temperature: float) -> float:
         r"""
         Energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
@@ -681,13 +778,13 @@ class ThermodynamicsExtrapolate():
         eLowT : array-like (float)
             Energy density in the low-temperature phase.
         """
-        return temperature*self.dpLowT(temperature) - self.pLowT(temperature)
-    
+        return temperature * self.dpLowT(temperature) - self.pLowT(temperature)
+
     def deLowT(self, temperature: float) -> float:
         """
         Temperature derivative of the energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
-        
+
         Parameters
         ----------
         temperature : array-like
@@ -715,8 +812,8 @@ class ThermodynamicsExtrapolate():
         wLowT : array-like (float)
             Enthalpy density in the low-temperature phase.
         """
-        return temperature*self.dpLowT(temperature)
-    
+        return temperature * self.dpLowT(temperature)
+
     def csqLowT(self, temperature: float) -> float:
         r"""
         Sound speed squared in the low-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range
@@ -737,5 +834,4 @@ class ThermodynamicsExtrapolate():
         elif temperature > self.TMaxLowT:
             return self.thermodynamics.csqLowT(self.TMaxLowT)
         else:
-            return self.thermodynamics.csqLowT(temperature)        
-
+            return self.thermodynamics.csqLowT(temperature)
