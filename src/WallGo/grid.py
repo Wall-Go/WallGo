@@ -20,7 +20,7 @@ class Grid:
     interval [-1, 1],
 
     .. math::
-        \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L_xi^2}}, \qquad
+        \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L_{\xi}^2}}, \qquad
         \rho_{z} \equiv \tanh\left(\frac{p_z}{2 T_0}\right), \qquad
         \rho_{\Vert} \equiv 1 - 2 e^{-p_\Vert/T_0}.
 
@@ -94,7 +94,7 @@ class Grid:
             Length scale determining transform in :math:`\xi` direction.
         momentumFalloffT : float
             Temperature scale determining transform in momentum directions. 
-            hould be close to the plasma temperature.
+            Should be close to the plasma temperature.
         spacing : {'Spectral', 'Uniform'}
             Choose 'Spectral' for the Gauss-Lobatto collocation points, as
             required for WallGo's spectral representation, or 'Uniform' for
@@ -350,7 +350,7 @@ class Grid:
             ppCompact: np.ndarray,
             ) -> tuple[np.ndarray, ...]:
         r"""
-        Derivative d(X)/d(X_compact) of transforms coordinates to [-1, 1] interval
+        Derivative :math:`d(X)/d(X_\text{compact})` of coordinate transforms to [-1, 1] interval.
 
         Parameters
         ----------

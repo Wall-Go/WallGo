@@ -10,23 +10,44 @@ from .grid import Grid
 class Grid3Scales(Grid):
     r"""
     Redefinition of the Grid class to take into account the different scales present in
-    the z direction. More specifically, the z mapping function should scale as
-    :math:`\lambda_- \log(1+\chi)` when :math:`\chi\to -1` and
-    :math:`-\lambda_+ \log(1-\chi)` when :math:`\chi\to 1`,
+    the z direction. More specifically, the :math:`z` mapping function should scale as
+
+    .. math::
+        z(\chi \to -1) &= \lambda_- \log(1+\chi),\\
+        z(\chi \to 1) &= -\lambda_+ \log(1-\chi),
+    
     where :math:`\lambda_-` and :math:`\lambda_+` are the lengths of the solution's
     tails inside and outside the bubble, respectively. Furthermore, the mapping
     should be approximately linear in the region :math:`-r<\chi<r`, where :math:`r`
     is roughly the ratio of points that are used to resolve the wall's interior.
     The slope in that region should be :math:`L/R`, where :math:`L` is the wall
-    thickness.
+    thickness, so that
+
+    .. math::
+        z'(\chi) \approx \frac{L}{R}\chi, \quad \chi \in [-r, r].
 
     It is easier to find the derivative of a function that has these properties,
-    and then integrate it. We choose here :math:`z'(\chi)=\frac{f(\chi)}{1-\chi^2}`,
-    where :math:`f(\chi)` is a smoothed step function equal to :math:`\lambda_-`
-    when :math:`\chi<-r`, :math:`L/r` when :math:`-r<\chi<r` and :math:`\lambda_+`
-    when :math:`\chi>r`. We choose :math:`f(\chi)` to be a sum of functions like
+    and then integrate it. We choose here
+    
+    .. math::
+        z'(\chi)=\frac{f(\chi)}{1-\chi^2},
+
+    where :math:`f(\chi)` is a smoothed step function equal to
+    
+    .. math::
+        f(\chi) \approx \begin{cases}
+            \lambda_-,& \chi<-r,\\
+            L/r,& -r<\chi<r,\\
+            \lambda_+,& \chi>r.
+        \end{cases}
+    
+    We choose :math:`f(\chi)` to be a sum of functions like
     :math:`\frac{\chi-\chi_0}{\sqrt{a^2+(\chi-\chi_0)^2}}`, which allows us to find
-    analytically the mapping function with :math:`z(\chi)=\int d\chi\ z'(\chi)`.
+    analytically the mapping function with
+    
+    .. math::
+        z(\chi)=\int d\chi\ z'(\chi).
+
     The parameter :math:`a` can be adjusted to control the smoothness of the mapping
     function.
     """

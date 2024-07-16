@@ -33,6 +33,7 @@ If you use WallGo, please cite arXiv:....
     EoM
     exceptions
     Grid
+    Grid3Scales
     Hydro
     HydroTemplateModel
     Polynomial
