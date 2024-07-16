@@ -8,12 +8,14 @@ from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .Grid import Grid
-from .Hydro import Hydro
+from .hydrodynamics import Hydrodynamics
 from .HydroTemplateModel import HydroTemplateModel
 from .polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
-from .EOM import EOM, WallGoResults
-from .EOM import WallParams
+from .equationOfMotion import EOM
+from .exceptions import WallGoError, WallGoPhaseValidationError
+from .containers import PhaseInfo, WallParams
+from .results import WallGoResults
 
 
 from .particle import Particle

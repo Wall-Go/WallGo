@@ -3,7 +3,7 @@ Class that stores and perfom operation on the coefficients of a polynomial serie
 """
 
 from __future__ import annotations
-
+import typing
 import numpy as np
 import numpy.typing as npt
 from scipy.special import eval_chebyt, eval_chebyu
@@ -13,8 +13,13 @@ from .Grid import Grid
 
 class Polynomial:
     """
-    Class that stores and perfom operation on the coefficients of a polynomial series.
+    Class that stores and perfoms operations on the coefficients of a polynomial series.
     """
+
+    # Static tuples of allowed basis and direction strings
+    ALLOWED_BASES: typing.Final[tuple[str, ...]] = ("Cardinal", "Chebyshev", "Array")
+    ALLOWED_DIRECTIONS: typing.Final[tuple[str, ...]] = ("z", "pz", "pp", "Array")
+
     def __init__(
         self,
         coefficients: np.ndarray,
@@ -59,9 +64,6 @@ class Polynomial:
         self.coefficients = np.asanyarray(coefficients)
         self.rank = len(self.coefficients.shape)
         self.grid = grid
-
-        self.allowedBasis = ["Cardinal", "Chebyshev", "Array"]
-        self.allowedDirection = ["z", "pz", "pp", "Array"]
 
         if isinstance(basis, str):
             basis = self.rank * (basis,)
@@ -416,7 +418,7 @@ class Polynomial:
         assert self._isBroadcastable(
             compactCoord, n
         ), "Polynomial error: x and n are not broadcastable."
-        assert direction in self.allowedDirection, (
+        assert direction in self.ALLOWED_DIRECTIONS, (
             f"Polynomial error: unkown direction {direction}"
         )
 
@@ -861,7 +863,7 @@ class Polynomial:
             len(basis) == self.rank
         ), 'Polynomial error: basis must be a tuple of length "rank".'
         for x in basis: # pylint: disable=invalid-name
-            assert x in self.allowedBasis, f"Polynomial error: unkown basis {x}"
+            assert x in self.ALLOWED_BASES, f"Polynomial error: unkown basis {x}"
 
     def _checkDirection(self, direction: tuple[str,...]) -> None:
         assert isinstance(
@@ -871,7 +873,7 @@ class Polynomial:
             len(direction) == self.rank
         ), 'Polynomial error: direction must be a tuple of length "rank".'
         for i, x in enumerate(direction): # pylint: disable=invalid-name
-            assert x in self.allowedDirection, (
+            assert x in self.ALLOWED_DIRECTIONS, (
                 f"Polynomial error: unkown direction {x}"
             )
             if x == "Array":
