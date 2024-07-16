@@ -36,25 +36,27 @@ If you use WallGo, please cite arXiv:....
     :hidden:
 
     modules/boltzmann
-    modules/Collision
-    modules/CollisionArray
-    modules/collision_wrapper
-    modules/Config
+    modules/collision
+    modules/collisionArray
+    modules/collisionWrapper
+    modules/config
     modules/containers
-    modules/EffectivePotential
-    modules/EoM
+    modules/effectivePotential
+    modules/equationOfMotion
     modules/exceptions
-    modules/Fields
-    modules/FreeEnergy
-    modules/GenericModel
-    modules/Grid
-    modules/Hydro
-    modules/HydroTemplateModel
-    modules/Integrals
-    modules/InterpolatableFunction
+    modules/fields
+    modules/freeEnergy
+    modules/genericModel
+    modules/grid
+    modules/grid3Scales
+    modules/helpers
+    modules/hydrodynamics
+    modules/hydrodynamicsTemplateModel
+    modules/integrals
+    modules/interpolatableFunction
+    modules/manager
     modules/particle
-    modules/Polynomial
+    modules/polynomial
     modules/results
-    modules/Thermodynamics
-    modules/WallGoManager
-    modules/WallGoUtils
+    modules/thermodynamics
+    modules/utilities
