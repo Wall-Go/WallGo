@@ -222,8 +222,12 @@ class HydroTemplateModel:
         branch = -1
         if self.__eqWall(al_min,vm)*self.__eqWall(al_max,vm)>0:
             branch = 1
-        sol = root_scalar(self.__eqWall,(vm,branch),bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
-        return sol.root
+        try:
+            sol = root_scalar(self.__eqWall,(vm,branch),bracket=(al_min,al_max),rtol=self.rtol,xtol=self.atol)
+            return sol.root
+
+        except ValueError:
+            raise WallGoError("alpha can not be found", data = {"vw" : vw} )
 
     def __dfdv(self,v,X):
         """
@@ -378,7 +382,12 @@ class HydroTemplateModel:
         if vp is not None:
             al = ((vm-vp)*(self.cb2-vm*vp))/(3*self.cb2*vm*(1-vp**2))
         else:
-            al = self.solve_alpha(vw, False)
+            try:
+                al = self.solve_alpha(vw, False)
+            except WallGoError as exc:
+                raise WallGoError("Failed to find alpha!",
+                                  data = {"vw" : vw, "vm" : vm}) from exc
+
             vp = self.get_vp(vm, al)
         wp = self.w_from_alpha(al)
         Tp = self.Tnucl*wp**(1/self.mu)
