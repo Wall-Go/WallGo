@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 from .Fields import Fields
 from .helpers import boostVelocity
-from .Polynomial import Polynomial
+from .polynomial import Polynomial
 
 
 @dataclass
