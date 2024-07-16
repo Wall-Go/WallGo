@@ -8,8 +8,8 @@ from scipy.special import eval_chebyt
 import h5py  # read/write hdf5 structured binary data file format
 
 from .particle import Particle
+from .grid import Grid
 from .polynomial import Polynomial
-from .Grid import Grid
 
 
 class CollisionArray:
@@ -314,7 +314,7 @@ class CollisionArray:
                 )
 
             dummyGrid = Grid(
-                grid.M, basisSizeFile, grid.L_xi, grid.momentumFalloffT, grid.spacing
+                grid.M, basisSizeFile, grid.positionFalloff, grid.momentumFalloffT, grid.spacing
             )
             dummyPolynomial = Polynomial(
                 collisionFileArray,

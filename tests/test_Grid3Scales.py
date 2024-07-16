@@ -23,7 +23,7 @@ def test_integration(wallThickness, tails, ratio):
     """
     N = 101
     M = 101
-    grid = WallGo.Grid3Scales.Grid3Scales(M, N, tails, tails, wallThickness, 1, ratio)
+    grid = WallGo.grid3Scales.Grid3Scales(M, N, tails, tails, wallThickness, 1, ratio)
     
     m = lambda z: 1-np.tanh(z)
     dmdz = lambda z: -1/np.cosh(z)**2
@@ -51,7 +51,7 @@ def test_simpleIntegration(N=None):
     else:
         M = N
     
-    grid = WallGo.Grid3Scales.Grid3Scales(M, N, 1, 1, 0.1, 1, 0.5)
+    grid = WallGo.grid3Scales.Grid3Scales(M, N, 1, 1, 0.1, 1, 0.5)
     
     func = lambda pp: 1/(np.exp(pp)+1)
     

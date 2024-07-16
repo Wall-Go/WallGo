@@ -13,7 +13,7 @@ from scipy.interpolate import UnivariateSpline
 
 from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
-from .Grid3Scales import Grid3Scales
+from .grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
 from .hydrodynamics import Hydrodynamics
 from .polynomial import Polynomial
