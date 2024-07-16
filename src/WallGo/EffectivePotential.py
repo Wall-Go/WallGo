@@ -8,7 +8,7 @@ import scipy.interpolate
 
 from .helpers import derivative, gradient, hessian
 
-from .Fields import Fields
+from .Fields import Fields, FieldPoint
 
 
 class EffectivePotential(ABC):
@@ -60,7 +60,7 @@ class EffectivePotential(ABC):
 
 
     @abstractmethod
-    def evaluate(self, fields: Fields, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
+    def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
         at the input field configuration and temperature. 
         
@@ -160,7 +160,7 @@ class EffectivePotential(ABC):
         combinedInput[...,-1] = temperature
         return combinedInput
 
-    def derivT(self, fields: Fields, temperature: npt.ArrayLike):
+    def derivT(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
         """Calculate derivative of (real part of) the effective potential with
         respect to temperature.
 
@@ -188,7 +188,7 @@ class EffectivePotential(ABC):
         )
         return der
 
-    def derivField(self, fields: Fields, temperature: npt.ArrayLike):
+    def derivField(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
         """ Compute field-derivative of the effective potential with respect to
         all background fields, at given temperature.
 
@@ -209,7 +209,7 @@ class EffectivePotential(ABC):
         return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                         scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
 
-    def deriv2FieldT(self, fields: Fields, temperature: npt.ArrayLike):
+    def deriv2FieldT(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
         r""" Computes :math:`d^2V/(d\text{Field} dT)`.
 
         Parameters
@@ -231,7 +231,7 @@ class EffectivePotential(ABC):
         
         return res
 
-    def deriv2Field2(self, fields: Fields, temperature: npt.ArrayLike):
+    def deriv2Field2(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
         r""" Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
 
         Parameters
@@ -252,7 +252,7 @@ class EffectivePotential(ABC):
         return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                        scale=self.__combinedScales, xAxis=axis, yAxis=axis)
     
-    def allSecondDerivatives(self, fields: Fields, temperature: npt.ArrayLike):
+    def allSecondDerivatives(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
         r""" Computes :math:`d^2V/(d\text{Field}^2)`, :math:`d^2V/(d\text{Field} dT)` 
         and :math:`d^2V/(dT^2)` at the ssame time. This function is more efficient
         than calling the other functions one at a time.

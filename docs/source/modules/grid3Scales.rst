@@ -1,8 +1,8 @@
 ======================================
-Hydrodynamics
+Grid3Scales
 ======================================
 
-.. automodule:: WallGo.Hydrodynamics
+.. automodule:: WallGo.grid3Scales
     :members:
     :inherited-members:
     :special-members: __init__

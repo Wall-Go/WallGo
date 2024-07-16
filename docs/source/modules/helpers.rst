@@ -1,8 +1,8 @@
 ======================================
-Hydrodynamics
+Helpers
 ======================================
 
-.. automodule:: WallGo.Hydrodynamics
+.. automodule:: WallGo.helpers
     :members:
     :inherited-members:
     :special-members: __init__
