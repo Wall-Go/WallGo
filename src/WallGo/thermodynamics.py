@@ -17,7 +17,7 @@ from .FreeEnergy import FreeEnergy
 
 class Thermodynamics:
     """
-    Thermodynamic functions corresponding to the potential
+    Thermodynamic functions corresponding to the effectivePotential
     """
 
     def __init__(
@@ -67,7 +67,15 @@ class Thermodynamics:
 
     def getCoexistenceRange(self) -> Tuple[float, float]:
         """
-        Ensures that there is phase coexistence, by comparing the temperature ranges
+        Finds the temperature range where the two phases coexist
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        TMin, Tmax:
+            The minimum and maximum temperature of phase coexistence
         """
         TMin = max(
             self.freeEnergyHigh.minPossibleTemperature,
@@ -83,7 +91,24 @@ class Thermodynamics:
         self, dT: float, rTol: float = 1e-6, paranoid: bool = True
     ) -> float:
         """
-        Computes the critical temperature
+        Computes the critical temperature by finding the temperature for which the 
+        free energy of both phases is equal.
+
+        Parameters
+        ----------
+        dT: float
+            Temperature step size for the determination of Tc
+        rTol: float, optional 
+            Error tolerance for the phase tracing
+        paranoid: bool, optional
+            Setting for phase tracing. When True, recomputes minimum at every step
+
+        paranoid: bool
+        
+        Returns
+        -------
+        Tc:
+            The value of the critical temperature
         """
         # getting range over which both phases naively exist
         # (if we haven't traced the phases yet)
@@ -96,12 +121,12 @@ class Thermodynamics:
 
         # tracing phases and ensuring they are stable
         if not self.freeEnergyHigh.hasInterpolation():
-            print(f"Hi: tracing high-T phase: {TMin=}, {TMax=}, {dT=}, {rTol=}")
+            print(f"Tracing high-T phase: {TMin=}, {TMax=}, {dT=}, {rTol=}")
             self.freeEnergyHigh.tracePhase(
                 TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
             )
         if not self.freeEnergyLow.hasInterpolation():
-            print("Hi: tracing low-T phase")
+            print("Tracing low-T phase")
             self.freeEnergyLow.tracePhase(
                 TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
             )
@@ -172,7 +197,7 @@ class Thermodynamics:
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
-    def dpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def dpHighT(self, temperature: np.ndarray) -> np.ndarray:
         """
         Temperature derivative of the pressure in the high-temperature phase.
 
@@ -205,7 +230,7 @@ class Thermodynamics:
         """
         return -self.freeEnergyHigh.derivative(temperature, order=2).veffValue
 
-    def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def eHighT(self, temperature: np.ndarray) -> np.ndarray:
         r"""
         Energy density in the high-temperature phase, obtained via 
         :math:`e(T) = T \frac{dp}{dT}-p`.
@@ -392,8 +417,8 @@ class Thermodynamics:
     def alpha(self, T: npt.ArrayLike) -> npt.ArrayLike:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via
-        :math:`\alpha = \frac{(eHighT(T)-pHighT(T)/csqHighT(T))
-        -(eLowT(T)-pLowT(T)/csqLowT(T))}{3wHighT(T)}`
+        :math:`\alpha = \frac{eHighT(T)-eLowT(T) -(pHighT(T)-pLowT(T)) 
+        /csqLowT(T)}{3wHighT(T)}`
 
         Parameters
         ----------
@@ -419,6 +444,10 @@ class Thermodynamics:
 
 
 class ThermodynamicsExtrapolate:
+    """
+    Thermodynamics functions corresponding to the potential, extrapolated with the
+    template model [LM15]_ outside of the allowed temperture range of the potential
+    """
 
     def __init__(
         self,
@@ -436,6 +465,12 @@ class ThermodynamicsExtrapolate:
         -------
         cls: ThermodynamicsExtrapolate
             An object of the ThermodynamicsExtrapolate class.
+
+        References
+        ----------
+        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts and 
+            the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
+            doi:10.1016/j.nuclphysb.2014.12.008
         """
         self.thermodynamics = thermodynamics
         self.TMaxHighT = thermodynamics.freeEnergyHigh.maxPossibleTemperature
@@ -444,7 +479,7 @@ class ThermodynamicsExtrapolate:
         self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
 
         # The following parameters are defined such that the thermodynamic quantities
-        # can be extrapolated beyond the minimum and maximum temperatures 
+        # can be extrapolated beyond the minimum and maximum temperatures
         # by mapping onto the template model
         self.muMinHighT = 1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT)
         self.aMinHighT = (
@@ -604,7 +639,7 @@ class ThermodynamicsExtrapolate:
         return temperature * self.dpHighT(temperature) - self.pHighT(temperature)
 
     def deHighT(self, temperature: float) -> float:
-        """
+        r"""
         Temperature derivative of the energy density in the high-temperature phase,
         obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
@@ -781,7 +816,7 @@ class ThermodynamicsExtrapolate:
         return temperature * self.dpLowT(temperature) - self.pLowT(temperature)
 
     def deLowT(self, temperature: float) -> float:
-        """
+        r"""
         Temperature derivative of the energy density in the low-temperature phase, 
         obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
