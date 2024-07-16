@@ -20,11 +20,11 @@ class Grid3Scales(Grid):
     tails inside and outside the bubble, respectively. Furthermore, the mapping
     should be approximately linear in the region :math:`-r<\chi<r`, where :math:`r`
     is roughly the ratio of points that are used to resolve the wall's interior.
-    The slope in that region should be :math:`L/R`, where :math:`L` is the wall
+    The slope in that region should be :math:`L/r`, where :math:`L` is the wall
     thickness, so that
 
     .. math::
-        z'(\chi) \approx \frac{L}{R}\chi, \quad \chi \in [-r, r].
+        z'(\chi) \approx \frac{L}{r}\chi, \quad \chi \in [-r, r].
 
     It is easier to find the derivative of a function that has these properties,
     and then integrate it. We choose here

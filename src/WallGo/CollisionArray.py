@@ -8,8 +8,8 @@ from scipy.special import eval_chebyt
 import h5py  # read/write hdf5 structured binary data file format
 
 from .particle import Particle
-from .Polynomial import Polynomial
 from .grid import Grid
+from .polynomial import Polynomial
 
 
 class CollisionArray:

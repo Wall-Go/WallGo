@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from WallGo.Polynomial import Polynomial
 from WallGo.grid import Grid
+from WallGo.polynomial import Polynomial
 
 grid = Grid(4,4,1,1)
 
@@ -39,5 +39,5 @@ def test_integrate():
     polyCard = Polynomial([(1-np.sqrt(2))/4, 0.5, (1+np.sqrt(2))/4],grid,'Cardinal','z',False)
     polyCheb = Polynomial([-0.25,-0.25,0],grid,'Chebyshev','z',False)
     
-    assert np.isclose(polyCard.integrate(w=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)
-    assert np.isclose(polyCheb.integrate(w=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)
+    assert np.isclose(polyCard.integrate(weight=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)
+    assert np.isclose(polyCheb.integrate(weight=1/np.sqrt(1-grid.chiValues**2)), np.pi/4,rtol=1e-15,atol=1e-15)

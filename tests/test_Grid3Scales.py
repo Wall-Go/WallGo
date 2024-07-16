@@ -36,7 +36,7 @@ def test_integration(wallThickness, tails, ratio):
     
     integralExact = -0.6914545487096899
     dxidchi, dpzdrz, dppdrp = grid.getCompactificationDerivatives()
-    integralPoly = polynomial.integrate(w=dxidchi[:,None,None]*dpzdrz[None,:,None]*dppdrp[None,None,:]*grid.ppValues[None,None,:]/(grid.ppValues[None,None,:]**2+grid.pzValues[None,:,None]**2)/2)
+    integralPoly = polynomial.integrate(weight=dxidchi[:,None,None]*dpzdrz[None,:,None]*dppdrp[None,None,:]*grid.ppValues[None,None,:]/(grid.ppValues[None,None,:]**2+grid.pzValues[None,:,None]**2)/2)
     
     assert np.isclose(integralExact, integralPoly,rtol=0,atol=1e-3)
     
@@ -60,6 +60,6 @@ def test_simpleIntegration(N=None):
     
     integralExact = np.log(2)
     dxidchi, dpzdrz, dppdrp = grid.getCompactificationDerivatives()
-    integral = polynomial.integrate(w=dppdrp)
+    integral = polynomial.integrate(weight=dppdrp)
     
     assert np.isclose(integralExact, integral,rtol=0,atol=1e-4)
