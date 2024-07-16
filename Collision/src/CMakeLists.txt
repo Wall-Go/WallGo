@@ -1,19 +1,25 @@
 
-set(BINARY WallGoCollision)
-
-# source files for core lib (don't include the main function)
-set(SOURCES CollisionIntegral.cpp hdf5Interface.cpp gslWrapper.cpp MatrixElement.cpp CollisionManager.cpp Utils.cpp)
-
-if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(-fPIC)
-endif()
-
-add_library(${BINARY} STATIC ${SOURCES})
+set(LIB WallGoCollision)
 
 
-# main executable. Don't rebuild sources here
-#add_executable(${BINARY} main.cpp)
+file(GLOB_RECURSE SOURCES "*.cpp")
+file(GLOB_RECURSE HEADERS "*.h")
 
+add_library(${LIB} ${SOURCES} ${HEADERS})
+
+#target_compile_definitions(${LIB} PRIVATE EXPORTING_WALLGOCOLLISION)
+
+set_target_properties(${LIB} PROPERTIES
+    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+)
+
+# Generate export defs (shared lib visibility macros) in the default header dir (easier to #include)
+include(GenerateExportHeader)
+set(EXPORT_HEADER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/include/WallGoCollision/exports_generated.h")
+generate_export_header(${LIB}
+    EXPORT_FILE_NAME ${EXPORT_HEADER_FILE}
+)
+target_sources(${LIB} PRIVATE ${EXPORT_HEADER_FILE})
 
 ## External packages
 find_package(HDF5 REQUIRED CXX)
@@ -28,7 +34,7 @@ endif()
 
 
 #---- Link to external libraries
-target_link_libraries(${BINARY} PUBLIC
+target_link_libraries(${LIB} PUBLIC
     HDF5::HDF5
     GSL::gsl
     muparser::muparser
@@ -36,7 +42,7 @@ target_link_libraries(${BINARY} PUBLIC
 
 if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
-		target_link_libraries(${BINARY} PUBLIC OpenMP::OpenMP_CXX)
+		target_link_libraries(${LIB} PUBLIC OpenMP::OpenMP_CXX)
 		add_compile_definitions(WITH_OMP=1)
 	else()
 		message(WARNING "OpenMP installation not found, multithreading will be DISABLED. ")
@@ -47,16 +53,15 @@ endif()
 #---- Header includes
 
 # Public headers: user can #include "WallGoCollisions/someheader.h"
-target_include_directories(${BINARY} PUBLIC 
+target_include_directories(${LIB} PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# Internally, include directly from include/WallGoCollision because lazy
-target_include_directories(${BINARY} PRIVATE
+target_include_directories(${LIB} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/WallGoCollision
     HDF5::HDF5
     GSL::gsl
     muparser::muparser
 )
 
-install(TARGETS ${BINARY} DESTINATION ${INSTALL_DIR})
+install(TARGETS ${LIB} DESTINATION ${INSTALL_DIR})

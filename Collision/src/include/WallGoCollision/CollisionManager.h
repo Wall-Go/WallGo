@@ -8,11 +8,13 @@
 #include <filesystem>
 #include <utility> // std::pair
 #include <memory>
+#include <cstdint>
 
 #include "EnvironmentMacros.h"
 #include "CollElem.h"
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
+#include "CollisionTensor.h"
 #include "hdf5Interface.h"
 
 
@@ -20,16 +22,10 @@
  * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
  * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
  * we pass references to appropriate particles from our 'particles' list.
- * Using references instead of copies of ParticleSpecies objects in CollElems is beneficial because if the user needs to
- * modify any property of particles after creating the CollisionIntegral objects (eg. change mass), 
- * we can just make the change in our 'particles' list and it will automatically propagate to integrals stored in our 'integrals' list.
  *
- * I though about using raw pointers to dodge the overhead of std::shared_ptr, but:
- * 1) The overhead really doesn't seem to affect performance much, at least in my test run at N = 5 (runs at same speed)
- * 2) As usual, raw pointers are error prone. Concretely: If we store ParticleSpecies objects in 'particles' and give CollElems
- *  raw pointers to these objects, then the pointers get invalidated whenever 'particles' is resized. 
+ * I though about using raw pointers to avoid the overhead of std::shared_ptr, but at least in my test run at N = 5
+ * the overhead was completely negligible compared to raw pointers.
  */
-
 
 /** Handling of model parameters. The manager holds a map of [string, double] pairs that can be updated
  * through CollisionManager::setVariable(key, val). These need to be defined before parsing matrix elements,
@@ -37,23 +33,11 @@
  * of parameter values, so if they change at any point, it is up to the manager to sync all built CollisionIntegral objects
  * and their stored MatrixElement objects. 
  * 
- * I considered using a map of shared_ptrs to hold parameters, so that all MatrixElements constructed by the manager would 
- * automatically point to the same parameters. But this may lead to much overhead.
- * I did try using a shared_ptr<map<string, double>>: This was fast but seemed too unsafe, since MatrixElements would crash if anything is removed from the map.
- * 
+ * FIXME: Would it be better to pass the parameters to matrix elements as pointers too? 
 */
 
 namespace wallgo
 {
-
-// Results of collision integration for (particle1, particle2) pair
-struct WALLGO_API CollisionTensorResult
-{
-    CollisionTensorResult(size_t _basisSize);
-    size_t basisSize;
-    Array4D results;
-    Array4D errors;
-};
 
 /* Control class for carrying out the full computation of
 * 2 -> 2 collision terms */
@@ -115,20 +99,20 @@ public:
     */
 
     /* Calculate a CollisionIntegral4 everywhere on the grid. */ 
-    CollisionTensorResult evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions& options,
+    CollisionTensor evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions& options,
         bool bVerbose = false);
 
     /* Calculate a CollisionIntegral4 everywhere on the grid.
     Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration(). */ 
-    CollisionTensorResult evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose = false);
+    CollisionTensor evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose = false);
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
-    CollisionTensorResult evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
+    CollisionTensor evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
         const IntegrationOptions& options, bool bVerbose = false);
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
     Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration() */
-    CollisionTensorResult evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
+    CollisionTensor evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
         bool bVerbose = false);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals().

@@ -23,7 +23,7 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	// Thermal
 	const double mq2 = 0.251327; // quark, m^2 = gs^2 * T^2 / 6.0
 	const double mg2 = 3.01593; // SU(3) gluon, m^2 = 2*gs^2 T^2
-	// Set vacuum masses to 0 
+	// Set vacuum masses to 0
 	const double msqVacuum = 0.0;
 
     /* Approximate all particles as ultrarelativistic, allowing heavy optimizations.
@@ -53,10 +53,10 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	This function returns false if the file is not found, in which case we abort here. */
 	if (!manager.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt"))
 	{
-		std::cerr << "It looks like you may be running this example program from a nonstandard location.\n"
+		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
 			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
 			"Please run the example program inside the 'examples' directory.\n"
-			"In your own applications you can use wallgo::CollisionManager::setMatrixElementFile() to specify the file location as you prefer."
+			"In your own applications you can call wallgo::CollisionManager::setMatrixElementFile() to specify the file location as you prefer."
 			<< std::endl;
 		return false;
 	}
@@ -67,8 +67,7 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 
 int main() 
 {
-
-	std::cout << "Running WallGo collision example: QCD" << std::endl;
+	std::cout << "=== Running WallGo collision example: QCD" << std::endl;
 
 	// We use GSL for Monte Carlo integration. It needs to be initialized before use, with optional seed (default = 0)
     wallgo::initializeRNG();
@@ -92,7 +91,7 @@ int main()
 	manager.changePolynomialBasis(basisSizeN);
 
 	/* Initialize collision integrals for all off-equilibrium particles currently registered with the manager.
-	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form, can be useful for debugging. */
+	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form which can be useful for debugging. */
 	manager.setupCollisionIntegrals(/*verbose*/ true);
 
 	// Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
@@ -115,11 +114,11 @@ int main()
 
 	std::cout << "== Evaluating collision integrals for all particles combinations ==" << std::endl;
 	manager.calculateAllIntegrals(/*bVerbose*/ true);
+	// TODO how to get the output from this?
 
-	/* We can evaluate the integrals again at different parameters, without the need to re-define particles or matrix elements.
+	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	We can also request to compute integrals only for a specific off-equilibrium particle pair
-	Demonstration:
-	*/
+	Demonstration: */
 	std::map<std::string, double> newVars 
 	{
 		{"c[0]", 1},
@@ -130,10 +129,10 @@ int main()
 	manager.setVariable("msq[2]", 0.3);
 
 	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
-	wallgo::CollisionTensorResult result = manager.evaluateCollisionTensor("top", "gluon", /*bVerbose*/ true);
+	wallgo::CollisionTensor result = manager.evaluateCollisionTensor("top", "gluon", /*bVerbose*/ true);
 
-	// There is also an overloaded version of the above for passing a custom IntegrationOptions struct,
-	// instead of using the one cached in the manager:
+	/* There is also an overloaded version of the above for passing a custom IntegrationOptions struct
+	instead of using the one cached in the manager: */
 	options.calls = 10000;
 	result = manager.evaluateCollisionTensor("top", "gluon", options, /*bVerbose*/ false);
 

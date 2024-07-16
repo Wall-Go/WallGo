@@ -26,12 +26,12 @@ inline T clamp(T value, T lower, T upper)
 
 /* Recursive boilerplate for nested D-dimensional std::vectors. 
 * Note that this has a large memory overhead - ideally we would use genuine D-dimensional arrays. */
-template<int D, typename T>
+template<size_t D, typename T>
 struct Vec : public std::vector<Vec<D - 1, T>>
 {
 	static_assert(D >= 1, "Vector dimension needs to be > 0");
 	template<typename... Args>
-	Vec(int n = 0, Args... args) : std::vector<Vec<D - 1, T>>(n, Vec<D - 1, T>(args...)) {
+	Vec(size_t n = 0, Args... args) : std::vector<Vec<D - 1, T>>(n, Vec<D - 1, T>(args...)) {
 	}
 };
 

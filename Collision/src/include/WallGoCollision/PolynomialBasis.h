@@ -41,12 +41,12 @@ public:
     inline WG_CONSTEXPR20 double rhoParGrid(int k) const { return std::cos(k * constants::pi / (N-1)); }
 
     // Convert p_z and p_par to rho_z, rho_par
-    inline WG_CONSTEXPR20 double pZ_to_rhoZ(double pZ) const { return tanh(pZ / 2.0); }
-    inline WG_CONSTEXPR20 double pPar_to_rhoPar(double pPar) const { return 1.0 - 2.0 * exp(-pPar); }
+    inline WG_CONSTEXPR20 double pZ_to_rhoZ(double pZ) const { return std::tanh(pZ / 2.0); }
+    inline WG_CONSTEXPR20 double pPar_to_rhoPar(double pPar) const { return 1.0 - 2.0 * std::exp(-pPar); }
 
     // Calculate "physical" momentum components p_z and p_par, in units of T, by inverting definitions of rho_z and rho_par
-    inline WG_CONSTEXPR20 double rhoZ_to_pZ(double rho_z) const { return 2.0 * atanh(rho_z); }
-    inline WG_CONSTEXPR20 double rhoPar_to_pPar(double rho_par) const { return -log(0.5 * (1 - rho_par)); } 
+    inline WG_CONSTEXPR20 double rhoZ_to_pZ(double rho_z) const { return 2.0 * std::atanh(rho_z); }
+    inline WG_CONSTEXPR20 double rhoPar_to_pPar(double rho_par) const { return -std::log(0.5 * (1 - rho_par)); } 
 
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
     inline WG_CONSTEXPR20 double TmTn(int m, int n, double rhoZ, double rhoPar) const
@@ -54,7 +54,7 @@ public:
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
     
-    // Same as above but with FourVector input
+    // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
     inline WG_CONSTEXPR20 double TmTn(int m, int n, const FourVector &FV) const
     {
         double pZ = FV.zComp();

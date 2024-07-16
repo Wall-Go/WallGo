@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cassert>
 
+#include "EnvironmentMacros.h"
 #include "CollisionIntegral.h"
 #include "CollElem.h"
 #include "FourVector.h"
@@ -169,8 +170,6 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     // Roots of g(p3):
     const double discriminant = B * B - 4.0 * A * C;
 
-    // TODO looks like the discriminant can sometimes be negative... should this be possible?
-    //assert(discriminant >= 0);
     if (discriminant < 0)
     {
         return std::vector<Kinematics>();
@@ -179,7 +178,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4
     const double root1 = 0.5 * (-B - sqrt(discriminant)) / A;
     const double root2 = 0.5 * (-B + sqrt(discriminant)) / A;
 
-#ifndef NDEBUG
+#if WG_DEBUG
     // Check that g(p3) == 0 is reasonably satisfied 
     auto funcG = [&](double p3) {
         const double m3sq = massSquared[2];

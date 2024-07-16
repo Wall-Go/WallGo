@@ -78,7 +78,7 @@ void MatrixElement::setParameters(const std::map<std::string, double> &parameter
 
 void MatrixElement::setParameter(const std::string &name, double newValue)
 {
-    assert(parametersInternal.count(name) > 0 && "parameter \"" << name << "\" has not been defined");
+    assert(parametersInternal.count(name) > 0);
     
     // Change only keys that the MatrixElement already holds internally
     if (parametersInternal.count(name) > 0) 

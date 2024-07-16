@@ -8,22 +8,10 @@
 #include <chrono>
 #include <filesystem>
 
-#if WITH_OMP
-    #include <omp.h>
-#endif
-
 namespace wallgo
 {
 
-CollisionTensorResult::CollisionTensorResult(size_t _basisSize)
-: basisSize(_basisSize),
-results(_basisSize-1, _basisSize-1, _basisSize-1, _basisSize-1, 0.0),
-errors(_basisSize-1, _basisSize-1, _basisSize-1, _basisSize-1, 0.0)
-{
-}
-
-
-// Global function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
+// Function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
 void interpretMatrixElement(const std::string &inputString, std::vector<size_t> &indices, std::string &mathExpression)
 {
     // First split the string by "->""
@@ -227,12 +215,12 @@ void CollisionManager::clearCollisionIntegrals()
     integrals.clear();
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions &options, bool bVerbose)
+CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions &options, bool bVerbose)
 {
 
     const size_t N = collisionIntegral.getPolynomialBasisSize();
 
-    CollisionTensorResult result(collisionIntegral.getPolynomialBasisSize());
+    CollisionTensor result(collisionIntegral.getPolynomialBasisSize(), true);
 
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
@@ -280,8 +268,8 @@ CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegra
                     localResult = collisionIntegral.integrate(m, n, j, k, options);
                 }
 
-                result.results[m-2][n-1][j-1][k-1] = localResult.result;
-                result.errors[m-2][n-1][j-1][k-1] = localResult.error;
+                result.valueAt(m-2, n-1, j-1, k-1) = localResult.result;
+                result.errorAt(m-2, n-1, j-1, k-1) = localResult.error;
 
                 localIntegralCount++;
 
@@ -334,8 +322,8 @@ CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegra
 			const size_t jOther = N - j;
 			const int sign = (m % 2 == 0 ? 1 : -1);
             
-			result.results[m-2][n-1][j-1][k-1] = sign * result.results[m-2][n-1][jOther-1][k-1];
-			result.errors[m-2][n-1][j-1][k-1] = sign * result.errors[m-2][n-1][jOther-1][k-1];
+			result.valueAt(m-2, n-1, j-1, k-1) = sign * result.valueAt(m-2, n-1, jOther-1, k-1);
+			result.errorAt(m-2, n-1, j-1, k-1) = sign * result.errorAt(m-2, n-1, jOther-1, k-1);
 		}
 	}
 
@@ -346,12 +334,12 @@ CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegra
     return result;      
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose)
+CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose)
 {
     return evaluateCollisionTensor(collisionIntegral, integrationOptions, bVerbose);
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(const std::string &particle1,
+CollisionTensor CollisionManager::evaluateCollisionTensor(const std::string &particle1,
     const std::string &particle2, const IntegrationOptions &options, bool bVerbose)
 {
     const auto namePair = std::make_pair(particle1, particle2);
@@ -360,13 +348,13 @@ CollisionTensorResult CollisionManager::evaluateCollisionTensor(const std::strin
     {
         std::cerr << "Error: no collisions defined for particle pair ["
             << namePair.first << ", " << namePair.second << "]\n!";
-        return CollisionTensorResult(1);
+        return CollisionTensor(1, false);
     }
 
     return evaluateCollisionTensor(integrals.at(namePair), options, bVerbose);
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(const std::string &particle1,
+CollisionTensor CollisionManager::evaluateCollisionTensor(const std::string &particle1,
     const std::string &particle2, bool bVerbose)
 {
     return evaluateCollisionTensor(particle1, particle2, integrationOptions, bVerbose);
@@ -436,7 +424,7 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         const std::string name1 = namePair.first;
         const std::string name2 = namePair.second;
 
-        CollisionTensorResult result = evaluateCollisionTensor(integral, integrationOptions, bVerbose);
+        CollisionTensor result = evaluateCollisionTensor(integral, integrationOptions, bVerbose);
 
         // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
         const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
@@ -453,9 +441,11 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
 
         writeMetadata(h5File, metadata);
 
+// TODO FIXME
+/*
         writeDataSet(h5File, result.results, name1 + ", " + name2);
         writeDataSet(h5File, result.errors, name1 + ", " + name2 + " errors");
-        
+*/      
         h5File.close();
 
         // How long did this all take
