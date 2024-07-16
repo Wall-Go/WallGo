@@ -46,7 +46,7 @@ class Grid3Scales(Grid):
     analytically the mapping function with
     
     .. math::
-        z(\chi)=\int d\chi\ z'(\chi).
+        z(\chi) - z(\chi_0) =\int^\chi_{\chi_0} \frac{f(\chi')}{1-\chi'^2}  d\chi'.
 
     The parameter :math:`a` can be adjusted to control the smoothness of the mapping
     function.
