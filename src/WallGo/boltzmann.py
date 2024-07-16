@@ -9,7 +9,7 @@ import numpy as np
 import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
 from .Grid import Grid
-from .Polynomial import Polynomial
+from .polynomial import Polynomial
 from .particle import Particle
 from .CollisionArray import CollisionArray
 from .results import BoltzmannResults
