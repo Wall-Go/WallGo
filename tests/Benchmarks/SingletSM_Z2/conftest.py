@@ -207,14 +207,14 @@ def singletSimpleBenchmarkThermodynamics(
 
 ## Hydro fixture, use the interpolated Thermo fixture because otherwise things get SLOOOW
 @pytest.fixture(scope="session")
-def singletBenchmarkHydro(
+def singletBenchmarkHydrodynamics(
     singletBenchmarkThermo_interpolate: Tuple[WallGo.Thermodynamics, BenchmarkPoint]
-) -> Tuple[WallGo.Hydro, BenchmarkPoint]:
+) -> Tuple[WallGo.Hydrodynamics, BenchmarkPoint]:
 
     thermo, BM = singletBenchmarkThermo_interpolate
 
     ## TODO Should fix rtol, atol here so that our tests don't magically change if the class defaults change !
-    yield WallGo.Hydro(thermo), BM
+    yield WallGo.Hydrodynamics(thermo, 10., 0.01), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now
@@ -278,12 +278,12 @@ def singletBenchmarkBoltzmannSolver(
 def singletBenchmarkEOM_equilibrium(
     singletBenchmarkBoltzmannSolver,
     singletBenchmarkThermo_interpolate,
-    singletBenchmarkHydro,
+    singletBenchmarkHydrodynamics,
     singletBenchmarkGrid: WallGo.Grid,
 ) -> Tuple[WallGo.EOM, BenchmarkPoint]:
 
     thermo, BM = singletBenchmarkThermo_interpolate
-    hydro, _ = singletBenchmarkHydro
+    hydrodynamics, _ = singletBenchmarkHydrodynamics
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
     meanFreePath = 0
@@ -292,7 +292,7 @@ def singletBenchmarkEOM_equilibrium(
 
     ## TODO fix error tolerance?
     eom = WallGo.EOM(
-        boltzmannSolver, thermo, hydro, grid, fieldCount, meanFreePath, includeOffEq=False
+        boltzmannSolver, thermo, hydrodynamics, grid, fieldCount, meanFreePath, (0.1,100.), (-10.,10.), includeOffEq=False
     )
 
     return eom, BM
