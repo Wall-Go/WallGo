@@ -8,9 +8,9 @@
 #define WG_STRINGIFY(x) #x
 
 #ifdef _MSC_VER
-    #define PRAGMA(x) __pragma(x)
+    #define WG_PRAGMA(x) __pragma(x)
 #else
-    #define PRAGMA(x) _Pragma(STRINGIFY(x))
+    #define WG_PRAGMA(x) _Pragma(WG_STRINGIFY(x))
 #endif
 
 // Stuff that only works for C++20 and newer. For example: std::sin, std::cos were not constexpr until C++20 
@@ -47,7 +47,7 @@
 #else
     #define WG_THREADPRIVATE_EXTERN_VARIABLE(Type, varName) \
         extern Type varName; \
-        PRAGMA(omp threadprivate(varName))
+        WG_PRAGMA(omp threadprivate(varName))
 #endif
 
 #endif // header guard

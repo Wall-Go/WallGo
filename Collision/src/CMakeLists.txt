@@ -7,8 +7,6 @@ file(GLOB_RECURSE HEADERS "*.h")
 
 add_library(${LIB} ${SOURCES} ${HEADERS})
 
-#target_compile_definitions(${LIB} PRIVATE EXPORTING_WALLGOCOLLISION)
-
 set_target_properties(${LIB} PROPERTIES
     POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
 )

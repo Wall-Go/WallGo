@@ -17,7 +17,7 @@ namespace gslWrapper
      
     /* RNG: This needs to be alloc'd with gsl_rng_alloc. However the RNG is not thread safe, so all threads need their own RNG.
     This will point to a different RNG for each thread (using threadprivate) */
-    WG_THREADPRIVATE_EXTERN_VARIABLE(gsl_rng*, rng);
+    WG_THREADPRIVATE_EXTERN_VARIABLE(gsl_rng*, rng)
 
 
     /* Note that we cannot pass a member function by reference,
