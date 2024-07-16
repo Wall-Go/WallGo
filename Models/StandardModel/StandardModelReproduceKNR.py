@@ -146,7 +146,7 @@ class StandardModel(GenericModel):
 
         modelParameters["mW"] = mW
         modelParameters["mZ"] = mZ
-        modelParameters["mt"] = mt 
+        modelParameters["mt"] = mt
 
         # helper
         g0 = 2.*mW / v0
@@ -162,10 +162,9 @@ class StandardModel(GenericModel):
         bconst = 3/(64*np.pi**2*v0**4)*(2*mW**4 + mZ**4 - 4* mt**4)
 
         modelParameters["D"] = 1/(8*v0**2)*(2*mW**2 + mZ**2 + 2*mt**2)
-        modelParameters["E0"] = 1/(12*np.pi*v0**3)*(4*mW**3 + 2*mZ**3)  
+        modelParameters["E"] = 1/(4*np.pi*v0**3)*(2*mW**3 + mZ**3)  
 
         modelParameters["T0sq"] = 1/4/modelParameters["D"]*(mH**2 -8*bconst*v0**2)
-        modelParameters["C0"] = 1/(16*np.pi**2)*(1.42*modelParameters["g2"]**4)
 
         return modelParameters
         
@@ -198,7 +197,7 @@ class EffectivePotentialSM(EffectivePotential):
 
         T = temperature+ 0.0000001
 
-        ab = 49.78019250 
+        ab = 49.78019250
         af = 3.111262032
 
         mW = self.modelParameters["mW"]
@@ -207,11 +206,7 @@ class EffectivePotentialSM(EffectivePotential):
 
         lambdaT = self.modelParameters["lambda"] - 3/(16*np.pi*np.pi*self.modelParameters["v0"]**4)*(2*mW**4*np.log(mW**2/(ab*T**2))+ mZ**4*np.log(mZ**2/(ab*T**2)) -4*mt**4*np.log(mt**2/(af*T**2)))
 
-        cT = self.modelParameters["C0"] + 1/(16* np.pi*np.pi)*(4.8*self.modelParameters["g2"]**2*lambdaT - 6*lambdaT**2)
-        eT = self.modelParameters["E0"] + 1/(12*np.pi)*(3 + 3**1.5)*lambdaT**1.5
-
-    
-        VT = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - cT*T**2*pow(v,2)*np.log(np.abs(v/T)) - eT*T*pow(v,3) + lambdaT/4*pow(v,4)
+        VT = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - self.modelParameters["E"]*T*pow(v,3) + lambdaT/4*pow(v,4)
 
         VTotal = np.real(VT + self.constantTerms(T))
 
@@ -239,7 +234,7 @@ def main():
     WallGo.initialize()
 
     ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
 
     # Print WallGo config. This was read by WallGo.initialize()
@@ -312,10 +307,10 @@ def main():
     so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
     
-    values_mH = [0.,50.0, 68.0,79.0,88.0]
-    values_Tn = [57.192, 83.426, 100.352,111.480,120.934]
+    values_mH = [0.,25.0,50.0, 68.0]
+    values_Tn = [57.693, 65.342, 84.105, 101.135]
 
-    wallVelocitiesErrors = np.zeros((5,4))
+    wallVelocitiesErrors = np.zeros((4,4))
 
     for i in range(len(values_mH)):
         print(f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ====")
@@ -363,36 +358,36 @@ def main():
         #print(wallGoInterpolationResults.wallVelocities)
 
         ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-    #     wallParams: WallGo.WallParams
+        wallParams: WallGo.WallParams
 
-    #     bIncludeOffEq = False
-    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    #     results = manager.solveWall(bIncludeOffEq)
-    #     wallVelocity = results.wallVelocity
-    #     wallVelocityError = results.wallVelocityError
-    #     widths = results.wallWidths
+        #results = manager.solveWall(bIncludeOffEq)
+        #wallVelocity = results.wallVelocity
+        #wallVelocityError = results.wallVelocityError
+        #widths = results.wallWidths
 
-    #     print(f"{wallVelocity=}")
-    #     print(f"{wallVelocityError=}")
-    #     print(f"{widths=}")
+        #print(f"{wallVelocity=}")
+        #print(f"{wallVelocityError=}")
+        #print(f"{widths=}")
 
-    #     ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-    #     bIncludeOffEq = True
-    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
+        #bIncludeOffEq = True
+        #print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    #     results = manager.solveWall(bIncludeOffEq)
-    #     wallVelocity = results.wallVelocity
-    #     wallVelocityError = results.wallVelocityError
-    #     widths = results.wallWidths
+        #results = manager.solveWall(bIncludeOffEq)
+        #wallVelocity = results.wallVelocity
+        #wallVelocityError = results.wallVelocityError
+        #widths = results.wallWidths
 
-    #     print(f"{wallVelocity=}")
-    #     print(f"{wallVelocityError=}")
-    #     print(f"{widths=}")
+        #print(f"{wallVelocity=}")
+        #print(f"{wallVelocityError=}")
+        #print(f"{widths=}")
 
-    #     wallVelocitiesErrors[i,:] = np.array([Tn,wallVelocity,wallVelocityError,widths[0]])
+        #wallVelocitiesErrors[i,:] = np.array([Tn,wallVelocity,wallVelocityError,widths[0]])
 
-    # print(wallVelocitiesErrors)
+    print(wallVelocitiesErrors)
 
 
     # end parameter-space loop
