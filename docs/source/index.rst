@@ -29,14 +29,20 @@ If you use WallGo, please cite arXiv:....
     development
     license
 
+.. toctree::
+    :caption: C++ API Reference
+    :maxdepth: 4
+    :hidden:
+
+    modules/collision
+
 
 .. toctree::
-    :caption: API Reference
+    :caption: Python API Reference
     :maxdepth: 4
     :hidden:
 
     modules/boltzmann
-    modules/collision
     modules/collisionArray
     modules/collisionWrapper
     modules/config
