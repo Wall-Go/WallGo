@@ -34,7 +34,7 @@ set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
 # Set default built type
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
-	  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
@@ -52,8 +52,14 @@ option(USE_OMP "Build with OpenMP support" ON)
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 option(BUILD_EXAMPLES "Build WallGo/Collision C++ examples" ON)
 
+if(BUILD_PYTHON_MODULE)
+	add_compile_definitions(WITH_PYTHON=1)
+else()
+    add_compile_definitions(WITH_PYTHON=0)
+endif()
+
 ## For MacOS, may need to manually setup OpenMP
-if(APPLE AND USE_OMP)
+if(USE_OMP AND APPLE)
     if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
         set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
         set(OpenMP_C_LIB_NAMES "libomp")
@@ -66,14 +72,6 @@ if(APPLE AND USE_OMP)
         set(OpenMP_omp_LIBRARY omp)
     endif()
 endif()
-
-
-if(BUILD_PYTHON_MODULE)
-	add_compile_definitions(WITH_PYTHON=1)
-else()
-    add_compile_definitions(WITH_PYTHON=0)
-endif()
-
 
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -95,7 +93,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         # Allow compiler to become annoying
         add_compile_options(-Wpedantic)
     endif()
+endif()
 
+if (MSVC AND NOT CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(/W4)
 endif()
 
 add_subdirectory(src)

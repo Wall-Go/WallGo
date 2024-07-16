@@ -29,7 +29,7 @@ find_package(GSL REQUIRED CXX)
 find_package(muparser REQUIRED)
 
 if (USE_OMP)
-	find_package(OpenMP)
+    find_package(OpenMP)
 endif()
 
 
@@ -44,11 +44,12 @@ if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
 		target_link_libraries(${LIB} PUBLIC OpenMP::OpenMP_CXX)
 		add_compile_definitions(WITH_OMP=1)
+
 	else()
-		message(WARNING "OpenMP installation not found, multithreading will be DISABLED. ")
+		message(WARNING "OpenMP installation not found, multithreading will be DISABLED.")
+        add_compile_definitions(WITH_OMP=0)
 	endif()
 endif()
-
 
 #---- Header includes
 

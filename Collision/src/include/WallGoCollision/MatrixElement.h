@@ -40,7 +40,7 @@ public:
 
     // Need deep copying constructors/assignments because of the parser
     MatrixElement(const MatrixElement& other);
-    void operator=(const MatrixElement& another);
+    MatrixElement& operator=(const MatrixElement& other);
     
     void setExpression(const std::string& expressionIn);
 

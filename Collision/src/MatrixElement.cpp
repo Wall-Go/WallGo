@@ -34,8 +34,10 @@ MatrixElement::MatrixElement(const MatrixElement& other)
     parser->SetExpr(expression);
 }
 
-void MatrixElement::operator=(const MatrixElement &other)
+MatrixElement& MatrixElement::operator=(const MatrixElement &other)
 {
+    if (this == &other) return *this;
+
     const std::map<std::string, double> parameters = other.parametersInternal;
     expression = other.getExpression();
 
@@ -45,6 +47,7 @@ void MatrixElement::operator=(const MatrixElement &other)
     initParser();
     initSymbols(parameters);
     parser->SetExpr(expression);
+    return *this;
 }
 
 

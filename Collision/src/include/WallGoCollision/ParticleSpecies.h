@@ -20,7 +20,7 @@ enum class WALLGO_API EParticleType
 class WALLGO_API ParticleSpecies
 {
 
-public: 
+public:
 
 	ParticleSpecies(std::string speciesName, EParticleType particleType, bool speciesInEquilibrium, double msqVacuum, double msqThermal, bool ultrarelativistic)
 		: type(particleType),
@@ -67,15 +67,13 @@ public:
 		}
 	}
 
-private:
-
-	const EParticleType type;
-	const std::string name;
+	EParticleType type;
+	std::string name;
 	
 	// Is the particle assumed to be in thermal equilibrium?
-	const bool bInEquilibrium;
+	bool bInEquilibrium;
 	// Neglect mass in dispersion relations or not?
-	const bool bUltrarelativistic;
+	bool bUltrarelativistic;
 
 	double vacuumMassSquared;
 	double thermalMassSquared;

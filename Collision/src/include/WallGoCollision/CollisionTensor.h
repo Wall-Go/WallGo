@@ -58,10 +58,5 @@ private:
     const size_t elementsPerDimension;  // equals basisSize - 1
 };
 
-class WALLGO_API
-{
-
-};
-
 } // namespace
 #endif

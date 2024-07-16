@@ -14,7 +14,7 @@ namespace wallgo
 // Struct for holding metadata about collision tensor. Default values are set to prevent exceptions in HDF5 routines
 struct H5Metadata
 {
-	int basisSize = 1;
+	size_t basisSize = 1;
 	std::string basisName = "Unknown";
 	std::string integrator = "Unknown";
 };

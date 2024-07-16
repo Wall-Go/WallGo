@@ -70,7 +70,7 @@ struct WALLGO_API IntegrationOptions
     size_t calls;
     double relativeErrorGoal;
     double absoluteErrorGoal;
-    double maxTries;
+    int maxTries;
     // Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing
     bool bOptimizeUltrarelativistic;
 
@@ -119,10 +119,11 @@ public:
         double TmTn_p1; 
     };
 
-
-    CollisionIntegral4(size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {}
-
-    ~CollisionIntegral4() {}  
+    CollisionIntegral4() : polynomialBasis(1) {}
+    CollisionIntegral4(size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {} 
+    CollisionIntegral4(const CollisionIntegral4&) = default;
+    // Must be copy-assignable for OpenMP
+    CollisionIntegral4& operator=(const CollisionIntegral4&) = default;
 
     void changePolynomialBasis(size_t newBasisSize);
 
@@ -148,7 +149,7 @@ public:
 private:
 
     // For avoiding 1/0
-    const double SMALL_NUMBER = 1e-50;
+    static constexpr double SMALL_NUMBER = 1e-50;
 
     Chebyshev polynomialBasis;
 

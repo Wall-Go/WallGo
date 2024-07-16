@@ -76,7 +76,7 @@ public:
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
     CollisionIntegral4 setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
-        const std::string &matrixElementFile, size_t basisSize, bool bVerbose = false);
+        const std::string &inMatrixElementFile, size_t inBasisSize, bool bVerbose = false);
 
     /* Initializes and caches collision integrals for all registered particles. Basis size and matrix element file need to be set before calling this.
     Note that calling this will clear any previously stored collision integral objects.*/

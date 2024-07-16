@@ -32,8 +32,6 @@ public:
 	// which deltaF terms are nonzero
 	std::array<bool, NPARTICLES> bDeltaF;
 
-	/* Use initialization list here for setting the particle species, 
-	otherwise may run into compiler errors due to (lack of) copy constructors */
 	CollElem(const std::array<std::shared_ptr<ParticleSpecies>, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies)
 	{
 		bool bAllUltrarelativistic = true;

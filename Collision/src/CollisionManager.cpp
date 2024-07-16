@@ -39,7 +39,7 @@ void interpretMatrixElement(const std::string &inputString, std::vector<size_t> 
         std::istringstream ss(values);
         indices.clear();
         indices.reserve(4);
-        int num;
+        size_t num;
 
         while (ss >> num) 
         {
@@ -178,10 +178,10 @@ void CollisionManager::setVariables(const std::map<std::string, double> &newValu
 }
 
 CollisionIntegral4 CollisionManager::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
-    const std::string &matrixElementFile, size_t basisSize, bool bVerbose)
+    const std::string &inMatrixElementFile, size_t inBasisSize, bool bVerbose)
 {
-    CollisionIntegral4 collisionIntegral(basisSize);
-    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), matrixElementFile, bVerbose);
+    CollisionIntegral4 collisionIntegral(inBasisSize);
+    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), inMatrixElementFile, bVerbose);
     
     for (const CollElem<4> &elem : collisionElements)
     {
@@ -225,9 +225,15 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
 	// which means we only need j <= N/2
 
-    // each thread needs its collisionIntegral because the operations for computing the integrand are not thread safe!
-	#pragma omp parallel firstprivate(collisionIntegral)
+    /* Each thread needs its collisionIntegral because the operations for computing the integrand are not thread safe!
+    * Take copy here because using firstprivate(...) on a reference type */
+
+    CollisionIntegral4 workIntegral(collisionIntegral.getPolynomialBasisSize());
+
+	#pragma omp parallel private(workIntegral)
     {
+        workIntegral = collisionIntegral;
+
         int numThreads = 1;
         int threadID = 0;
     #if WITH_OMP
@@ -245,27 +251,33 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
 
         int progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
 
-        #pragma omp for collapse(4) 
+        // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
+
+    #if WG_OMP_SUPPORTS_COLLAPSE
+        #pragma omp parallel for collapse(4)
+    #else
+        #pragma omp parallel for
+    #endif
         // m,n = Polynomial indices
-        for (size_t m = 2; m <= N; ++m)
-        for (size_t n = 1; n <= N-1; ++n)
+        for (int64_t m = 2; m <= (int64_t)N; ++m)
+        for (int64_t n = 1; n <= (int64_t)(N-1); ++n)
         {
             // j,k = grid momentum indices 
-            for (size_t j = 1; j <= N/2; ++j)
-            for (size_t k = 1; k <= N-1; ++k)
+            for (int64_t j = 1; j <= (int64_t)(N/2); ++j)
+            for (int64_t k = 1; k <= (int64_t)(N-1); ++k)
             {
             
                 IntegrationResult localResult;
 
                 // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-                if (2*j == N && m % 2 != 0)
+                if (2*j == (int64_t)N && m % 2 != 0)
                 {
                     localResult.result = 0.0;
                     localResult.error = 0.0;
                 }
                 else
                 {
-                    localResult = collisionIntegral.integrate(m, n, j, k, options);
+                    localResult = workIntegral.integrate(m, n, j, k, options);
                 }
 
                 result.valueAt(m-2, n-1, j-1, k-1) = localResult.result;
@@ -311,15 +323,19 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
     } // end #pragma omp parallel 
 
 	// Fill in the j > N/2 elements
+#if WG_OMP_SUPPORTS_COLLAPSE
 	#pragma omp parallel for collapse(4)
-	for (size_t m = 2; m <= N; ++m) 
-	for (size_t n = 1; n <= N-1; ++n) 
+#else
+    #pragma omp parallel for
+#endif
+    for (int64_t m = 2; m <= (int64_t)N; ++m)
+	for (int64_t n = 1; n <= (int64_t)(N-1); ++n)
     {
-		for (size_t j = N/2+1; j <= N-1; ++j)
-		for (size_t k = 1; k <= N-1; ++k) 
+		for (int64_t j = N/2+1; j <= (int64_t)(N-1); ++j)
+		for (int64_t k = 1; k <= (int64_t)(N-1); ++k)
         {
 
-			const size_t jOther = N - j;
+			const int64_t jOther = N - j;
 			const int sign = (m % 2 == 0 ? 1 : -1);
             
 			result.valueAt(m-2, n-1, j-1, k-1) = sign * result.valueAt(m-2, n-1, jOther-1, k-1);
@@ -499,7 +515,7 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
 
 
 std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string &particleName1, const std::string &particleName2,
-                                                                 const std::string &matrixElementFile, bool bVerbose)
+                                                                 const std::string &inMatrixElementFile, bool bVerbose)
 {
     // Just for logging 
     const std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
@@ -513,7 +529,7 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
 
     if (bVerbose) std::cout << "\n" <<"Parsing matrix elements for off-equilibrium pair " << pairName << "\n";
     
-    std::ifstream file(matrixElementFile);
+    std::ifstream file(inMatrixElementFile);
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
     // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
@@ -523,7 +539,7 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
     std::vector<CollElem<4>> collisionElements;
 
     if (!file.is_open()) {
-        std::cerr << "!!! Error: Failed to open matrix element file " << matrixElementFile << std::endl;
+        std::cerr << "!!! Error: Failed to open matrix element file " << inMatrixElementFile << std::endl;
         return collisionElements;
     }
 

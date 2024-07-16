@@ -31,15 +31,13 @@ struct Vec : public std::vector<Vec<D - 1, T>>
 {
 	static_assert(D >= 1, "Vector dimension needs to be > 0");
 	template<typename... Args>
-	Vec(size_t n = 0, Args... args) : std::vector<Vec<D - 1, T>>(n, Vec<D - 1, T>(args...)) {
-	}
+	Vec(size_t n = 0, Args... args) : std::vector<Vec<D - 1, T>>(n, Vec<D - 1, T>(args...)) {}
 };
 
 template<typename T>
 struct Vec<1, T> : public std::vector<T>
 {
-	Vec(int n = 0, const T& val = T()) : std::vector<T>(n, val) {
-	}
+	Vec(int n = 0, const T& val = T()) : std::vector<T>(n, val) {}
 };
 
 using Array4D = Vec<4, double>;

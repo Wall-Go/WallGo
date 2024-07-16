@@ -17,7 +17,7 @@ class FourVector
 {
 	
 private:
-	const uint32_t NCOMPONENTS = 4;
+	static constexpr uint32_t NCOMPONENTS = 4;
 	std::array<double, 4> comp;
 
 public:
@@ -29,15 +29,6 @@ public:
     {
 		for (uint32_t i = 0; i < NCOMPONENTS; ++i) comp[i] = 0.0;
 	}
-
-	// Copy-constructor
-	FourVector(const FourVector& other)
-    {
-        for (uint32_t i = 0; i < NCOMPONENTS; ++i)
-        {
-            comp[i] = other.comp[i];
-        }
-    }
 
 	FourVector(double x0, double x1, double x2, double x3)
     {
@@ -62,19 +53,13 @@ public:
         comp[3] = vec3.getZ();
     }
 
+    // Copy-constructor
+    FourVector(const FourVector& other) = default;
+
 	//------------- Operator overloads
 
-    inline FourVector& operator=(const FourVector& other)
-    {
-        if (this != &other)
-        {
-            for (uint32_t i = 0; i < NCOMPONENTS; ++i)
-            {
-                comp[i] = other.comp[i];
-            }
-        }
-        return *this;
-    }
+    FourVector& operator=(const FourVector& other) = default;
+
 
     inline double& operator[](uint32_t index)
     {

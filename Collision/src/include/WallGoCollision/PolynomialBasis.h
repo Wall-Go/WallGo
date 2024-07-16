@@ -24,10 +24,9 @@ private:
     size_t N = 1;
 
 public:
-    Chebyshev(size_t basisSize) 
-    {
-        N = basisSize;
-    }
+
+    Chebyshev() : N(1) {}
+    Chebyshev(size_t basisSize) : N(basisSize) {}
 
     // Chebyshev polynomials of 1st kind (see eg. Wikipedia for the definition) 
     inline WG_CONSTEXPR20 double T(int n, double x) const { return std::cos(n* std::acos(x)); }
@@ -37,8 +36,8 @@ public:
     inline WG_CONSTEXPR20 double Ttilde(int n, double x) const { return T(n, x) - 1.0; }
     
     // Construct "rho" momenta on the grid
-    inline WG_CONSTEXPR20 double rhoZGrid(int j) const { return std::cos(j * constants::pi / N); }
-    inline WG_CONSTEXPR20 double rhoParGrid(int k) const { return std::cos(k * constants::pi / (N-1)); }
+    inline WG_CONSTEXPR20 double rhoZGrid(int j) const { return std::cos(j * constants::pi / static_cast<double>(N)); }
+    inline WG_CONSTEXPR20 double rhoParGrid(int k) const { return std::cos(k * constants::pi / static_cast<double>(N-1)); }
 
     // Convert p_z and p_par to rho_z, rho_par
     inline WG_CONSTEXPR20 double pZ_to_rhoZ(double pZ) const { return std::tanh(pZ / 2.0); }
