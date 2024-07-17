@@ -1,5 +1,4 @@
 
-================================================
 Installation
 ================================================
 
@@ -21,7 +20,7 @@ We compile with OpenMP support by default. Add ``-DUSE_OMP=Off`` in the ``-B`` s
 
 
 Installing dependenciens with Conan
-================================================
+------------------------------------------------
 
 Easiest way of handling the dependencies is with the Conan package manager (version > 2.0). The build proceeds as::
 
@@ -34,7 +33,7 @@ Easiest way of handling the dependencies is with the Conan package manager (vers
 
 
 Manually installing dependencies
-================================================
+------------------------------------------------
 
 Linux::
 
@@ -54,7 +53,7 @@ This installation needs to be global, otherwise pip doesn't install the required
 
 For Linux systems, muparser needs to be manually installed from source. Please follow the installation instructions at the `muparser GitHub page <https://github.com/beltoforion/muparser/>`_. **Note:** muparser can safely be installed without OpenMP support (``-DENABLE_OPENMP=OFF``) without affecting WallGo/Collision.
 
-================================================
+
 Debugging & Profiling [for developers!]
 ================================================
 
