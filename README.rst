@@ -38,8 +38,10 @@ Tests can be run with::
 Examples
 ===========================================
 
-A number of examples are collected in the directory `examples/`, include a
-.... After installing the package, these can be run directly with Python, as
+A number of example models are collected in the directory `Models/`, include the
+Standard Model with light Higgs, singlet and doublet scalar extensions of the
+Standard Model and a simple Yukawa model. After installing the package, these can
+be run directly with Python, as
 in::
 
-    python3 first_example.py
+    python3 Models/SingletStandardModel_Z2/SingletStandardModel_Z2.py
