@@ -36,8 +36,8 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     bOptimizeUltrarelativistic = options.bOptimizeUltrarelativistic;
 
     // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
-    double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.};                                                  // Lower limits
-    double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0 * constants::pi, 2.0 * constants::pi, 1., 1.}; // Upper limits
+    double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.};
+    double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0 * constants::pi, 2.0 * constants::pi, 1., 1.};
 
     // Construct parameter wrapper struct
     gslWrapper::gslFunctionParams gslWrapper;
@@ -56,7 +56,7 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     gsl_monte_vegas_state *gslState = gsl_monte_vegas_alloc(dim);
 
     // Start with a short warmup run. This is good for importance sampling
-    const size_t warmupCalls = 0.2 * calls;
+    const size_t warmupCalls = static_cast<size_t>(0.2 * calls);
     gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, gslWrapper::rng, gslState, &mean, &error);
 
     // Lambda to check if we've reached the accuracy goal. This requires chisq / dof to be consistent with 1,

@@ -67,7 +67,7 @@ public:
 	/* Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong.
 	delfaF[i] is the out-of-equilibrium part of distribution funct. of particle i */
 	double evaluatePopulationFactor(const std::array<FourVector, NPARTICLES> &momenta, 
-		const std::array<double, NPARTICLES> &deltaF)
+		const std::array<double, NPARTICLES> &deltaF) const
 	{
 
 		const double f1 = particles[0]->fEq( momenta[0].energy() );
@@ -88,7 +88,6 @@ public:
 	inline double evaluate(const std::array<FourVector, NPARTICLES> &momenta,
 		const std::array<double, NPARTICLES> &deltaF)
 	{
-
 		return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
 	}
 

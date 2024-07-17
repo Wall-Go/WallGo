@@ -121,7 +121,7 @@ public:
     void calculateAllIntegrals(bool bVerbose = false);
 
     // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
-    static long countIndependentIntegrals(size_t basisSize, size_t outOfEqCount);
+    static size_t countIndependentIntegrals(size_t basisSize, size_t outOfEqCount);
 
 protected:
 
@@ -150,10 +150,10 @@ private:
     size_t basisSize = 0;
 
     // Progress tracking 
-    int computedIntegralCount = 0;
-    int totalIntegralCount;
+    size_t computedIntegralCount = 0;
+    size_t totalIntegralCount;
     // Initial progress check and time estimate after this many integrals (in one thread)
-    int initialProgressInterval = 10;
+    size_t initialProgressInterval = 10;
     bool bFinishedInitialProgressCheck = false;
     std::chrono::steady_clock::time_point startTime;
     std::chrono::duration<double> elapsedTime;

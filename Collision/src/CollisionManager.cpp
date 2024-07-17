@@ -239,24 +239,25 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
     #if WITH_OMP
         numThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
-    #endif 
+    #endif
+        const int lastThreadID = numThreads - 1;
 
         // ---- Progress tracking
 
         // How many we've calculated inside this function only (so for this out-of-eq pair) 
-        int localIntegralCount = 0;
+        size_t localIntegralCount = 0;
         // Report when thread0 has computed this many integrals. NB: totalIntegralCount is the full count including all out-of-eq pairs
-        int standardProgressInterval = totalIntegralCount / 25 / numThreads; // every 25%
-        standardProgressInterval = wallgo::clamp<int>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
+        size_t standardProgressInterval = totalIntegralCount / 25 / numThreads; // every 25%
+        standardProgressInterval = wallgo::clamp<size_t>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
 
-        int progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
+        size_t progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
 
         // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
 
     #if WG_OMP_SUPPORTS_COLLAPSE
-        #pragma omp parallel for collapse(4)
+        #pragma omp for collapse(4)
     #else
-        #pragma omp parallel for
+        #pragma omp for
     #endif
         // m,n = Polynomial indices
         for (int64_t m = 2; m <= (int64_t)N; ++m)
@@ -291,7 +292,8 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
                         << localResult.result << " +/- " << localResult.error << "\n";
                 }
 
-                if (threadID == 0 && (localIntegralCount % progressReportInterval == 0)) 
+                // Report progress from a thread that is NOT the main thread, because that one tends to need less initialization and can be ahead
+                if (threadID == lastThreadID && (localIntegralCount % progressReportInterval == 0)) 
                 {
                     std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
                     elapsedTime = currentTime - startTime;
@@ -299,9 +301,9 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
                     // HACK: could not figure out how to nicely sync the counts from all threads to correctly update computedIntegralCount. 
                     // Here I extrapolate from thread0 to estimate the progress, then undo the change afterwards. 
                     // Correct count is calculated at the end of this function
-                    const int backupCount = computedIntegralCount;
+                    const size_t backupCount = computedIntegralCount;
                     computedIntegralCount += localIntegralCount * numThreads;
-                    computedIntegralCount = wallgo::clamp<int>(computedIntegralCount, localIntegralCount, totalIntegralCount);
+                    computedIntegralCount = wallgo::clamp<size_t>(computedIntegralCount, localIntegralCount, totalIntegralCount);
 
                     // TODO process tracking is not correct now
                     reportProgress();
@@ -324,9 +326,9 @@ CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &co
 
 	// Fill in the j > N/2 elements
 #if WG_OMP_SUPPORTS_COLLAPSE
-	#pragma omp parallel for collapse(4)
+	#pragma omp for collapse(4)
 #else
-    #pragma omp parallel for
+    #pragma omp for
 #endif
     for (int64_t m = 2; m <= (int64_t)N; ++m)
 	for (int64_t n = 1; n <= (int64_t)(N-1); ++n)
@@ -467,9 +469,9 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         // How long did this all take
         std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
         double seconds = duration.count();
-        int hours = seconds / 3600;
+        int hours = static_cast<int>(seconds / 3600);
         // leftover mins
-        int minutes = (seconds - hours * 3600) / 60;
+        int minutes = static_cast<int>(seconds - hours * 3600 / 60);
         std::cout << "[" << name1 << ", " << name2 << "] done in " << hours << "h " << minutes << "min." << std::endl;
 
     }
@@ -596,17 +598,20 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
     return collisionElements;
 }
 
-long CollisionManager::countIndependentIntegrals(size_t basisSize, size_t outOfEqCount)
+size_t CollisionManager::countIndependentIntegrals(size_t basisSize, size_t outOfEqCount)
 {
     const size_t N = basisSize;
     // How many independent integrals in each CollisionIntegral4
-    long count = (N-1)*(N-1)*(N-1)*(N-1);
+    size_t count = (N-1)*(N-1)*(N-1)*(N-1);
     // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
-    count = std::ceil(count / 2.0);
+    count = count / 2;
+    // Take ceiling (but this avoids type casts)
+    if (count % 2 != 0) count += 1;
+
     // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
     if (N % 2 == 0) {
         // how many odd m?
-        long mOdd = N / 2;
+        size_t mOdd = N / 2;
         count -= mOdd;
     } 
 
@@ -623,7 +628,7 @@ void CollisionManager::reportProgress()
         double timePerIntegral = elapsedSeconds / computedIntegralCount;
         double timeRemaining = timePerIntegral * (totalIntegralCount - computedIntegralCount);
 
-        int percentage = 100 * static_cast<double>(computedIntegralCount) / totalIntegralCount;
+        int percentage = int(100 * static_cast<double>(computedIntegralCount) / totalIntegralCount);
         std::cout << "Integral progress: " << computedIntegralCount << " / " << totalIntegralCount << " (" << percentage << "%). "; 
         std::cout << "Estimated time remaining: " << std::floor(timeRemaining / 3600) << "h " << (int(timeRemaining) % 3600 ) / 60 << "min" << std::endl;
     }

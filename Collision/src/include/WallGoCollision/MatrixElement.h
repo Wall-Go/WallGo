@@ -55,7 +55,8 @@ public:
 
     void setParameter(const std::string& name, double newValue);
 
-    // Evaluate the matrix element at s,t,u, using cached couplings and masses
+    /* Evaluate the matrix element at s, t, u, using cached couplings and masses.
+    NB: No easy way of making this const because evaluating the parsed expression requires we set internal variables. */
     double evaluate(double s, double t, double u);
 
     /* Math expression parser. Might as well make it a pointer - had issues with this breaking when passing MatrixElements around with default constructors */

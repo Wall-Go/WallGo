@@ -164,7 +164,8 @@ private:
     In UR limit the momentum-conserving delta function gives only one solution for p3, so this one does not return an array. */
     Kinematics calculateKinematics_ultrarelativistic(const InputsForKinematics& kinematicInput) const;
 
-    /* Evaluate |M^2|/N * P[TmTn] * (kinematics.prefactor). TmTn are the polynomial factors evaluated at each momenta. TODO make this so that collElem can be const...? */
+    /* Evaluate |M^2|/N * P[TmTn] * (kinematics.prefactor). TmTn are the polynomial factors evaluated at each momenta.
+    NB: No way of making this const as long as the matrix element evaluation is not const */
     double evaluateCollisionElement(CollElem<4> &collElem, const Kinematics& kinematics, const std::array<double, 4>& TmTn);
 
     /* We separate the collision elements into two subsets: ones with only ultrarelativistic (UR) external particles, and all others. 
