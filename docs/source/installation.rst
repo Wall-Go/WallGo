@@ -7,7 +7,7 @@ and a Python package for computing the bubble wall speed, which requires the col
 integrals as input.
 
 The instructions below assume that you have first cloned the
-`repository <https://github.com/Wall-Go/WallGo>`_
+`repository <https://github.com/Wall-Go/WallGo>`_.
 
 Collision integrals (C++)
 ===========================================
