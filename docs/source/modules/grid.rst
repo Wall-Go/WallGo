@@ -2,7 +2,7 @@
 Grid
 ======================================
 
-.. autoclass:: WallGo.grid
+.. autoclass:: WallGo.Grid
     :members:
     :inherited-members:
     :special-members: __init__
