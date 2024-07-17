@@ -42,7 +42,7 @@
 #if defined WITH_OMP && _MSC_VER
     /* VS implementation of OMP is ****ed and doesn't allow threadprivate on extern variables.
     See https://stackoverflow.com/questions/12560243/using-threadprivate-directive-in-visual-studio */
-    #define WG_THREADPRIVATE_EXTERN_VARIABLE(Type, varName) extern __declspec(thread) Type varName
+    #define WG_THREADPRIVATE_EXTERN_VARIABLE(Type, varName) extern __declspec(thread) Type varName;
 
 #else
     #define WG_THREADPRIVATE_EXTERN_VARIABLE(Type, varName) \

@@ -37,7 +37,7 @@ struct Vec : public std::vector<Vec<D - 1, T>>
 template<typename T>
 struct Vec<1, T> : public std::vector<T>
 {
-	Vec(int n = 0, const T& val = T()) : std::vector<T>(n, val) {}
+	Vec(size_t n = 0, const T& val = T()) : std::vector<T>(n, val) {}
 };
 
 using Array4D = Vec<4, double>;

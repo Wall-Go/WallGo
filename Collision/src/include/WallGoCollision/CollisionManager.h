@@ -39,8 +39,9 @@
 namespace wallgo
 {
 
-/* Control class for carrying out the full computation of
-* 2 -> 2 collision terms */
+/* CollisionManager is the main interface to computing WallGo collision integrals. 
+* Manages model-parameter and particle definitions, and construct collision integral objects
+* based on matrix element input. Used also to initiate collision integrations. */
 class WALLGO_API CollisionManager 
 {
 

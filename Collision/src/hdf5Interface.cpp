@@ -80,7 +80,7 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 	{
 
 		// Create dataspace
-		H5::DataSpace dataspace(arrayDimension, dims);
+		H5::DataSpace dataspace(static_cast<int>(arrayDimension), dims);
 
 		// Create dataset of doubles inside the file/dataspace. Should guarantee correct byte size on any platform
 		H5::DataSet dataset = h5File.createDataSet(datasetName, H5::PredType::NATIVE_DOUBLE, dataspace);
