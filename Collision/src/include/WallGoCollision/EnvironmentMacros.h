@@ -39,6 +39,22 @@
 #endif
 
 
+// OMP atomic read/write is 3.1 feature. If not available, we force a critical section
+#if !defined WITH_OMP
+    #define WG_PRAGMA_OMP_ATOMIC_READ
+    #define WG_PRAGMA_OMP_ATOMIC_WRITE
+
+#elif _OPENMP >= 201107 // OMP >= 3.1
+    #define WG_PRAGMA_OMP_ATOMIC_READ WG_PRAGMA(omp atomic read)
+    #define WG_PRAGMA_OMP_ATOMIC_WRITE WG_PRAGMA(omp atomic write)
+
+#else
+    #define WG_PRAGMA_OMP_ATOMIC_READ WG_PRAGMA(omp critical)
+    #define WG_PRAGMA_OMP_ATOMIC_WRITE WG_PRAGMA(omp critical)
+
+#endif
+
+
 #if defined WITH_OMP && _MSC_VER
     /* VS implementation of OMP is ****ed and doesn't allow threadprivate on extern variables.
     See https://stackoverflow.com/questions/12560243/using-threadprivate-directive-in-visual-studio */

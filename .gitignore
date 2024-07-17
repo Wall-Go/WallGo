@@ -30,3 +30,5 @@ old/
 Collision/CMakeUserPresets.json
 *generated.h
 data/
+CMakeCache.txt
+CMakeUserPresets.json

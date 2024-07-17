@@ -10,6 +10,7 @@
 #include "CollElem.h"
 #include "Utils.h"
 #include "PolynomialBasis.h"
+#include "CollisionTensorResult.h"
 
 
 namespace wallgo
@@ -74,6 +75,8 @@ struct WALLGO_API IntegrationOptions
     // Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing
     bool bOptimizeUltrarelativistic;
 
+    bool bIncludeStatisticalErrors;
+
     // Set sensible defaults
     IntegrationOptions()
     {
@@ -83,6 +86,7 @@ struct WALLGO_API IntegrationOptions
         absoluteErrorGoal = 1e-8;
         maxTries = 50;
         bOptimizeUltrarelativistic = true;
+        bIncludeStatisticalErrors = true;
     }
 };
 
@@ -92,6 +96,17 @@ struct IntegrationResult
     double error;
     // TODO add some error flags etc here
     //bool bConverged; // Did the integration converge to goal accuracy
+};
+
+struct CollisionTensorVerbosity
+{
+    /* Report to stdout when this many integrals have been computed.Value of 0 means no reporting.
+    Note that progress reporting has a small overhead particularly in multithreaded context (due to atomic operations) */
+    uint32_t progressReportInterval = 0;
+
+    /* If true, prints every element of the collision tensor to stdout.
+    Very high overhead, intended for debugging only. */
+    bool bPrintEveryElement = false;
 };
 
 /*
@@ -133,8 +148,11 @@ public:
     double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
         const IntegrandParameters &integrandParameters);
 
-    // Calculate the integral with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
+    // Calculate the integral C[m,n; j,k] with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
     IntegrationResult integrate(int m, int n, int j, int k, const IntegrationOptions& options);
+
+    /* Evaluates the integral everywhere on the (m,n,j,k) grid. */
+    CollisionTensorResult evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
@@ -145,6 +163,9 @@ public:
     void updateModelParameters(const std::map<std::string, double>& parameters);
 
     void updateModelParameter(const std::string& name, double newValue);
+
+    // How many integrals need to be computed with the current grid size
+    size_t countIndependentIntegrals() const;
 
 private:
 

@@ -58,29 +58,32 @@ CollisionManager::CollisionManager()
 {
     // Set default options
 
-    basisSize = 0;
+    mBasisSize = 0;
 
     outputDirectory = std::filesystem::current_path();
     matrixElementFile = std::filesystem::path("MatrixElements.txt");
 
-    integrationOptions.calls = 50000;
-    integrationOptions.maxIntegrationMomentum = 20;
-    integrationOptions.maxTries = 50;
-    integrationOptions.relativeErrorGoal = 1e-1;
-    integrationOptions.absoluteErrorGoal = 1e-8;
-    integrationOptions.bOptimizeUltrarelativistic = true;
+    mDefaultIntegrationOptions.calls = 50000;
+    mDefaultIntegrationOptions.maxIntegrationMomentum = 20;
+    mDefaultIntegrationOptions.maxTries = 50;
+    mDefaultIntegrationOptions.relativeErrorGoal = 1e-1;
+    mDefaultIntegrationOptions.absoluteErrorGoal = 1e-8;
+    mDefaultIntegrationOptions.bOptimizeUltrarelativistic = true;
+
+    mDefaultVerbosity = CollisionTensorVerbosity();
 }
 
-CollisionManager::CollisionManager(size_t basisSize) : CollisionManager()
+CollisionManager::CollisionManager(size_t basisSize)
+    : CollisionManager()
 {
-    changePolynomialBasis(basisSize);
+    changePolynomialBasisSize(basisSize);
 }
 
-void CollisionManager::addParticle(const ParticleSpecies &particle)
+void CollisionManager::defineParticle(const ParticleSpecies &particle)
 {
     const std::string name = particle.getName();
     
-    if (particleRegistered(particle))
+    if (isParticleRegistered(particle))
     {
         std::cout << "Particle " << name << " already registered with CollisionManager, doing nothing\n";
         return;
@@ -97,13 +100,15 @@ void CollisionManager::addParticle(const ParticleSpecies &particle)
     }
 }
 
-void CollisionManager::clear()
+
+void CollisionManager::setDefaultIntegrationOptions(const IntegrationOptions& options)
 {
-    clearCollisionIntegrals();
-    modelParameters.clear();
-    particleIndex.clear();
-    outOfEqParticles.clear();
-    particles.clear();
+    mDefaultIntegrationOptions = options;
+}
+
+void CollisionManager::setDefaultIntegrationVerbosity(const CollisionTensorVerbosity& verbosity)
+{
+    mDefaultVerbosity = verbosity;
 }
 
 
@@ -123,25 +128,25 @@ void CollisionManager::updateParticleMasses(const std::map<std::string, double> 
     }
 }
 
-
-void CollisionManager::changePolynomialBasis(size_t newBasisSize)
+void CollisionManager::changePolynomialBasisSize(size_t newBasisSize)
 {
-    basisSize = newBasisSize;
-    for (auto &[key, integral] : integrals)
+    mBasisSize = newBasisSize;
+    for (auto& [key, integral] : mCachedIntegrals)
     {
         integral.changePolynomialBasis(newBasisSize);
     }
 }
 
-void CollisionManager::defineVariable(const std::string &name, double value)
+
+void CollisionManager::defineVariable(const std::string &varName, double value)
 {
-    if (modelParameters.count(name) > 0)
+    if (mModelParameters.contains(varName))
     {
-        std::cerr << "Error: variable " << name << " has already been defined\n";
+        std::cerr << "Error: variable " << varName << " has already been defined for this CollisionManager instance" << std::endl;
     }
     else
     {
-        modelParameters[name] = value;
+        mModelParameters.addOrModifyParameter(varName, value);
     }
 }
 
@@ -153,19 +158,19 @@ void CollisionManager::defineVariables(const std::map<std::string, double> &vari
     }
 }
 
-void CollisionManager::setVariable(const std::string &name, double value)
+void CollisionManager::setVariable(const std::string &varName, double value)
 {
-    if (modelParameters.count(name) < 1)
+    if (!mModelParameters.contains(varName))
     {
-        std::cerr << "Error: can't change value of undefined variable " << name << "\n";
+        std::cerr << "Error: can't change value of undefined variable " << varName << "\n";
         return;
     }
-    modelParameters[name] = value;
+    mModelParameters.addOrModifyParameter(varName, value);
 
     // Sync collision elements    
-    for (auto& [_, integral] : integrals)
+    for (auto& [_, integral] : mCachedIntegrals)
     {
-        integral.updateModelParameter(name, value);
+        integral.updateModelParameter(varName, value);
     }
 }
 
@@ -193,7 +198,7 @@ CollisionIntegral4 CollisionManager::setupCollisionIntegral(const std::shared_pt
 
 void CollisionManager::setupCollisionIntegrals(bool bVerbose)
 {
-    clearCollisionIntegrals();
+    clearIntegralCache();
 
     for (const std::shared_ptr<ParticleSpecies>& particle1 : outOfEqParticles) 
     for (const std::shared_ptr<ParticleSpecies>& particle2 : outOfEqParticles)
@@ -203,184 +208,15 @@ void CollisionManager::setupCollisionIntegrals(bool bVerbose)
 
         const auto namePair = std::make_pair(name1, name2);
 
-        CollisionIntegral4 newIntegral = setupCollisionIntegral(particle1, particle2, matrixElementFile.string(), basisSize, bVerbose);
+        CollisionIntegral4 newIntegral = setupCollisionIntegral(particle1, particle2, matrixElementFile.string(), mBasisSize, bVerbose);
 
-        integrals.insert( {namePair, newIntegral} );
+        mCachedIntegrals.insert( {namePair, newIntegral} );
     }
-
 }
 
-void CollisionManager::clearCollisionIntegrals()
+void CollisionManager::clearIntegralCache()
 {
-    integrals.clear();
-}
-
-CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions &options, bool bVerbose)
-{
-
-    const size_t N = collisionIntegral.getPolynomialBasisSize();
-
-    CollisionTensor result(collisionIntegral.getPolynomialBasisSize(), true);
-
-    // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
-	// which means we only need j <= N/2
-
-    /* Each thread needs its collisionIntegral because the operations for computing the integrand are not thread safe!
-    * Take copy here because using firstprivate(...) on a reference type */
-
-    CollisionIntegral4 workIntegral(collisionIntegral.getPolynomialBasisSize());
-
-	#pragma omp parallel private(workIntegral)
-    {
-        workIntegral = collisionIntegral;
-
-        int numThreads = 1;
-        int threadID = 0;
-    #if WITH_OMP
-        numThreads = omp_get_num_threads();
-        threadID = omp_get_thread_num();
-    #endif
-        const int lastThreadID = numThreads - 1;
-
-        // ---- Progress tracking
-
-        // How many we've calculated inside this function only (so for this out-of-eq pair) 
-        size_t localIntegralCount = 0;
-        // Report when thread0 has computed this many integrals. NB: totalIntegralCount is the full count including all out-of-eq pairs
-        size_t standardProgressInterval = totalIntegralCount / 25 / numThreads; // every 25%
-        standardProgressInterval = wallgo::clamp<size_t>(standardProgressInterval, initialProgressInterval, totalIntegralCount); // but not more frequently than this
-
-        size_t progressReportInterval = ( bFinishedInitialProgressCheck ? standardProgressInterval : initialProgressInterval );
-
-        // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
-
-    #if WG_OMP_SUPPORTS_COLLAPSE
-        #pragma omp for collapse(4)
-    #else
-        #pragma omp for
-    #endif
-        // m,n = Polynomial indices
-        for (int64_t m = 2; m <= (int64_t)N; ++m)
-        for (int64_t n = 1; n <= (int64_t)(N-1); ++n)
-        {
-            // j,k = grid momentum indices 
-            for (int64_t j = 1; j <= (int64_t)(N/2); ++j)
-            for (int64_t k = 1; k <= (int64_t)(N-1); ++k)
-            {
-            
-                IntegrationResult localResult;
-
-                // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-                if (2*j == (int64_t)N && m % 2 != 0)
-                {
-                    localResult.result = 0.0;
-                    localResult.error = 0.0;
-                }
-                else
-                {
-                    localResult = workIntegral.integrate(m, n, j, k, options);
-                }
-
-                result.valueAt(m-2, n-1, j-1, k-1) = localResult.result;
-                result.errorAt(m-2, n-1, j-1, k-1) = localResult.error;
-
-                localIntegralCount++;
-
-                if (bVerbose)
-                {   
-                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
-                        << localResult.result << " +/- " << localResult.error << "\n";
-                }
-
-                // Report progress from a thread that is NOT the main thread, because that one tends to need less initialization and can be ahead
-                if (threadID == lastThreadID && (localIntegralCount % progressReportInterval == 0)) 
-                {
-                    std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
-                    elapsedTime = currentTime - startTime;
-
-                    // HACK: could not figure out how to nicely sync the counts from all threads to correctly update computedIntegralCount. 
-                    // Here I extrapolate from thread0 to estimate the progress, then undo the change afterwards. 
-                    // Correct count is calculated at the end of this function
-                    const size_t backupCount = computedIntegralCount;
-                    computedIntegralCount += localIntegralCount * numThreads;
-                    computedIntegralCount = wallgo::clamp<size_t>(computedIntegralCount, localIntegralCount, totalIntegralCount);
-
-                    // TODO process tracking is not correct now
-                    reportProgress();
-                    computedIntegralCount = backupCount;
-
-                    // Update report interval (it starts at initialProgressInterval)
-                    progressReportInterval = standardProgressInterval;
-                }
-
-                // Check if we received instructions to stop
-                if (!shouldContinueEvaluation())
-                {
-                    std::exit(20);
-                }
-
-            } // end j,k
-        } // end m,n
-        
-    } // end #pragma omp parallel 
-
-	// Fill in the j > N/2 elements
-#if WG_OMP_SUPPORTS_COLLAPSE
-	#pragma omp for collapse(4)
-#else
-    #pragma omp for
-#endif
-    for (int64_t m = 2; m <= (int64_t)N; ++m)
-	for (int64_t n = 1; n <= (int64_t)(N-1); ++n)
-    {
-		for (int64_t j = N/2+1; j <= (int64_t)(N-1); ++j)
-		for (int64_t k = 1; k <= (int64_t)(N-1); ++k)
-        {
-
-			const int64_t jOther = N - j;
-			const int sign = (m % 2 == 0 ? 1 : -1);
-            
-			result.valueAt(m-2, n-1, j-1, k-1) = sign * result.valueAt(m-2, n-1, jOther-1, k-1);
-			result.errorAt(m-2, n-1, j-1, k-1) = sign * result.errorAt(m-2, n-1, jOther-1, k-1);
-		}
-	}
-
-    // How many we calculated in this function. 
-    // Just recalculate this here instead of trying to combine counts from many threads and manually count j > N/2 cases etc
-    computedIntegralCount += countIndependentIntegrals(N, 1);  
-
-    return result;      
-}
-
-CollisionTensor CollisionManager::evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose)
-{
-    return evaluateCollisionTensor(collisionIntegral, integrationOptions, bVerbose);
-}
-
-CollisionTensor CollisionManager::evaluateCollisionTensor(const std::string &particle1,
-    const std::string &particle2, const IntegrationOptions &options, bool bVerbose)
-{
-    const auto namePair = std::make_pair(particle1, particle2);
-
-    if (integrals.count(namePair) < 1)
-    {
-        std::cerr << "Error: no collisions defined for particle pair ["
-            << namePair.first << ", " << namePair.second << "]\n!";
-        return CollisionTensor(1, false);
-    }
-
-    return evaluateCollisionTensor(integrals.at(namePair), options, bVerbose);
-}
-
-CollisionTensor CollisionManager::evaluateCollisionTensor(const std::string &particle1,
-    const std::string &particle2, bool bVerbose)
-{
-    return evaluateCollisionTensor(particle1, particle2, integrationOptions, bVerbose);
-}
-
-void CollisionManager::configureIntegration(const IntegrationOptions &options)
-{
-    integrationOptions = options;
+    mCachedIntegrals.clear();
 }
 
 void CollisionManager::setOutputDirectory(const std::string &directoryName)
@@ -418,31 +254,76 @@ bool CollisionManager::setMatrixElementFile(const std::string &filePath)
     return true;
 }
 
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+    const std::string& particle1,
+    const std::string& particle2,
+    const IntegrationOptions& options,
+    const CollisionTensorVerbosity& verbosity)
+{
+    const auto pairName = std::make_pair(particle1, particle2);
+    if (mCachedIntegrals.count(pairName) < 1)
+    {
+        std::cerr << "No cached collision integral found for particle pair: ("
+            << particle1 << ", " << particle2 << ")" << std::endl;
+        
+        assert(false && "Particle pair not found");
+        
+        return CollisionTensorResult(0, false);
+    }
+
+    return mCachedIntegrals.at(pairName).evaluateOnGrid(options, verbosity);
+}
+
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+    const std::string& particle1,
+    const std::string& particle2,
+    const CollisionTensorVerbosity& verbosity)
+{
+    return evaluateCollisionTensor(particle1, particle2, mDefaultIntegrationOptions, verbosity);
+}
+
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+    const std::string& particle1,
+    const std::string& particle2,
+    const IntegrationOptions& options)
+{
+    return evaluateCollisionTensor(particle1, particle2, options, mDefaultVerbosity);
+}
+
+CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+    const std::string& particle1,
+    const std::string& particle2)
+{
+    return evaluateCollisionTensor(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
+}
+
 void CollisionManager::calculateAllIntegrals(bool bVerbose)
 {
 
-    if (integrals.size() < 1)
+    if (mCachedIntegrals.size() < 1)
     {
         std::cout << "Warning: calculateCollisionIntegrals() called, but no integrals have been initialized." 
             << "Please call setupCollisionIntegrals() first." << std::endl;
     }
 
+    /*
     // Initialize progress tracking 
-    totalIntegralCount = countIndependentIntegrals(basisSize, outOfEqParticles.size());
+    totalIntegralCount = countIndependentIntegrals(mBasisSize, outOfEqParticles.size());
     computedIntegralCount = 0;
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
+    */
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
 
-    for (auto & [namePair, integral] : integrals)
+    for (auto & [namePair, integral] : mCachedIntegrals)
     {
         std::chrono::steady_clock::time_point pairStartTime = std::chrono::steady_clock::now();
 
         const std::string name1 = namePair.first;
         const std::string name2 = namePair.second;
 
-        CollisionTensor result = evaluateCollisionTensor(integral, integrationOptions, bVerbose);
+        CollisionTensorResult result = integral.evaluateOnGrid(mDefaultIntegrationOptions, mDefaultVerbosity);
 
         // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
         const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
@@ -450,21 +331,7 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         
         outputPath = outputPath / fileNameBase;
 
-        H5::H5File h5File(outputPath.string(), H5F_ACC_TRUNC);
-
-        H5Metadata metadata;
-        metadata.basisSize = basisSize;
-        metadata.basisName = "Chebyshev";
-        metadata.integrator = "Vegas Monte Carlo (GSL)";
-
-        writeMetadata(h5File, metadata);
-
-// TODO FIXME
-/*
-        writeDataSet(h5File, result.results, name1 + ", " + name2);
-        writeDataSet(h5File, result.errors, name1 + ", " + name2 + " errors");
-*/      
-        h5File.close();
+        /*
 
         // How long did this all take
         std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
@@ -473,9 +340,8 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         // leftover mins
         int minutes = static_cast<int>(seconds - hours * 3600 / 60);
         std::cout << "[" << name1 << ", " << name2 << "] done in " << hours << "h " << minutes << "min." << std::endl;
-
+        */
     }
-
 }
 
 
@@ -494,12 +360,12 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
     std::map<std::string, double> variables;
     for (const std::string& s : symbols)
     {
-        if (modelParameters.count(s) < 1)
+        if (!mModelParameters.contains(s))
         {
             std::cerr << "CollisionManager error: symbol " << s << " not found in modelParameters map, can't parse matrix element " << expr << "\n";
             return collisionElement;
         }
-        variables[s] = modelParameters.at(s);
+        variables[s] = mModelParameters.getParameterValue(s);
     }
 
     collisionElement.matrixElement.initSymbols(variables);
@@ -516,8 +382,11 @@ CollElem<4> CollisionManager::makeCollisionElement(const std::string &particleNa
 }
 
 
-std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string &particleName1, const std::string &particleName2,
-                                                                 const std::string &inMatrixElementFile, bool bVerbose)
+std::vector<CollElem<4>> CollisionManager::parseMatrixElements(
+    const std::string &particleName1,
+    const std::string &particleName2,
+    const std::string &inMatrixElementFile,
+    bool bVerbose)
 {
     // Just for logging 
     const std::string pairName = "[" + particleName1 + ", " + particleName2 + "]"; 
@@ -531,6 +400,12 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
 
     if (bVerbose) std::cout << "\n" <<"Parsing matrix elements for off-equilibrium pair " << pairName << "\n";
     
+
+    /* Since we don't have per-expression symbol lists implemented in the files,
+    here I just define each symbol in our modelParameters list as a variable. This wastes memory.
+    Alternatively, could try to implicitly find free symbols with the parser, but this seems complicated. */
+    std::vector<std::string> symbols = mModelParameters.getParameterNames();
+
     std::ifstream file(inMatrixElementFile);
 
     // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
@@ -568,18 +443,7 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
             
             if (indices[0] != particleIndex[particleName1]) continue;
             if ( std::find(indices.begin(), indices.end(), particleIndex[particleName2]) == indices.end() ) continue;
-            
-            /* Since we don't have per-expression symbol lists implemented in the files,
-            here I just define each symbol in our modelParameters list as a variable. This wastes memory.
-            Alternatively, could try to implicitly find free symbols with the parser, but this seems error prone. */ 
-
-            std::vector<std::string> symbols;
-            symbols.reserve(modelParameters.size());
-            for (const auto& [key, _] : modelParameters)
-            {
-                symbols.push_back(key);
-            }
-
+ 
             CollElem<4> newElem = makeCollisionElement(particleName2, indices, expr, symbols);
             collisionElements.push_back(newElem);
 
@@ -593,7 +457,7 @@ std::vector<CollElem<4>> CollisionManager::parseMatrixElements(const std::string
 
     file.close();
 
-    std::cout << "\n";
+    if (bVerbose) std::cout << std::endl;
 
     return collisionElements;
 }
@@ -620,6 +484,7 @@ size_t CollisionManager::countIndependentIntegrals(size_t basisSize, size_t outO
 }
 
 
+/*
 void CollisionManager::reportProgress()
 {
     if (totalIntegralCount > 0)
@@ -634,8 +499,9 @@ void CollisionManager::reportProgress()
     }
     bFinishedInitialProgressCheck = true;
 }
+*/
 
-bool CollisionManager::particleRegistered(const ParticleSpecies& particle)
+bool CollisionManager::isParticleRegistered(const ParticleSpecies& particle)
 {
     return particleIndex.count(particle.getName()) > 0;
 }

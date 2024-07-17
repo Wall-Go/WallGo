@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <chrono>
 
 #include "EnvironmentMacros.h"
 #include "CollisionIntegral.h"
@@ -13,10 +14,8 @@
 namespace wallgo
 {
 
-// This calculates the full collision integral C[m,n; j,k]. NOTE: has to be thread safe!!
 IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
 {
-
     IntegrandParameters integrandParameters = initializeIntegrandParameters(m, n, j, k);
 
     // Integral dimensions
@@ -107,6 +106,143 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     return result;
 }
 
+CollisionTensorResult CollisionIntegral4::evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity)
+{
+    CollisionTensorResult result(getPolynomialBasisSize(), options.bIncludeStatisticalErrors);
+
+    const bool bCanEverReportProgress = verbosity.progressReportInterval > 0;
+    const uint32_t reportInterval = verbosity.progressReportInterval;
+    uint32_t progressCounter = 0; // shared counter for all threads, resets every report interval
+
+    std::chrono::steady_clock::time_point startTime;
+
+    if (bCanEverReportProgress)
+    {
+        startTime = std::chrono::steady_clock::now();
+    }
+
+    // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
+    // which means we only need j <= N/2
+
+    // Each thread needs its collisionIntegral because evaluation of parsed matrix elements is not thread safe!
+    // Take manual copy inside the parallel region because using private(...) on a reference type is not supported by older OMP implementations
+
+    CollisionIntegral4 workIntegral(getPolynomialBasisSize());
+
+    #pragma omp parallel private(workIntegral)
+    {
+        workIntegral = *this;
+
+        int numThreads = 1;
+        int threadID = 0;
+        #if WITH_OMP
+        numThreads = omp_get_num_threads();
+        threadID = omp_get_thread_num();
+        #endif
+
+        // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
+        const int32_t N = static_cast<int32_t>(getPolynomialBasisSize());
+
+    #if WG_OMP_SUPPORTS_COLLAPSE
+        #pragma omp for collapse(4)
+    #else
+        #pragma omp for
+    #endif
+        // m,n = Polynomial indices
+        for (int32_t m = 2; m <= N; ++m)
+        for (int32_t n = 1; n <= (N - 1); ++n)
+        {
+            // j,k = grid momentum indices 
+            for (int32_t j = 1; j <= (N / 2); ++j)
+            for (int32_t k = 1; k <= (N - 1); ++k)
+            {
+
+                IntegrationResult localResult;
+
+                // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+                if (2 * j == N && m % 2 != 0)
+                {
+                    localResult.result = 0.0;
+                    localResult.error = 0.0;
+                }
+                else
+                {
+                    localResult = workIntegral.integrate(m, n, j, k, options);
+                }
+
+                result.updateValue(m - 2, n - 1, j - 1, k - 1, localResult.result, localResult.error);
+
+                if (verbosity.bPrintEveryElement)
+                {
+                    #pragma omp critical
+                    {
+                        std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
+                            << localResult.result << " +/- " << localResult.error << "\n";
+                    }
+                }
+
+                if (bCanEverReportProgress)
+                {
+                    #pragma omp atomic
+                    progressCounter++;
+                }
+
+                if (bCanEverReportProgress && threadID == 0)
+                {
+                    uint32_t progressCounter_atomic;
+                    WG_PRAGMA_OMP_ATOMIC_READ
+                    progressCounter_atomic = progressCounter;
+
+                    if (progressCounter_atomic >= reportInterval)
+                    {
+                        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+                        auto elapsedTime = currentTime - startTime;
+                        std::cout << "...\n"; // TODO
+
+                        WG_PRAGMA_OMP_ATOMIC_WRITE
+                        progressCounter = 0;
+                    }
+                }
+
+
+                /*
+                // Check if we received instructions to stop
+                if (!shouldContinueEvaluation())
+                {
+                    std::exit(20);
+                }
+                */
+
+                } // end j,k
+        } // end m,n
+
+        // Fill in the j > N/2 elements
+    #if WG_OMP_SUPPORTS_COLLAPSE
+        #pragma omp for collapse(4)
+    #else
+        #pragma omp for
+    #endif
+        for (int32_t m = 2; m <= N; ++m)
+        for (int32_t n = 1; n <= (N - 1); ++n)
+        {
+            for (int32_t j = N / 2 + 1; j <= (N - 1); ++j)
+            for (int32_t k = 1; k <= (N - 1); ++k)
+            {
+                const int32_t jOther = N - j;
+                const uint32_t sign = (m % 2 == 0 ? 1 : -1);
+
+                const double val = sign * result.valueAt(m - 2, n - 1, jOther - 1, k - 1);
+                const double err = options.bIncludeStatisticalErrors ? result.errorAt(m - 2, n - 1, jOther - 1, k - 1) : 0.0;
+
+                result.updateValue(m - 2, n - 1, j - 1, k - 1, val, err);
+            }
+        }
+
+     } // end #pragma omp parallel 
+
+    return result;
+}
+
 void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
 {
     // TODO should check here that the collision element makes sense: has correct p1 particle etc
@@ -137,6 +273,27 @@ void CollisionIntegral4::updateModelParameter(const std::string &name, double ne
 {
     for (auto &collElem : collisionElements_ultrarelativistic) collElem.matrixElement.setParameter(name, newValue);
     for (auto &collElem : collisionElements_nonUltrarelativistic) collElem.matrixElement.setParameter(name, newValue);
+}
+
+size_t CollisionIntegral4::countIndependentIntegrals() const
+{
+    const size_t N = getPolynomialBasisSize();
+    // How many elements in each CollisionIntegral4
+    size_t count = (N - 1) * (N - 1) * (N - 1) * (N - 1);
+
+    // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
+    count = count / 2;
+    // Take ceiling, avoiding type casts
+    if (count % 2 != 0) count += 1;
+
+    // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
+    if (N % 2 == 0)
+    {
+        // how many odd m?
+        size_t oddM= N / 2;
+        count -= oddM;
+    }
+    return count;
 }
 
 std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const

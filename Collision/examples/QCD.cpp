@@ -37,9 +37,9 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 	wallgo::ParticleSpecies lightQuark("quark", wallgo::EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Ordering NEEDS to match the order in which particles are defined in the matrix element file(s). TODO improve this
-	manager.addParticle(topQuark);
-	manager.addParticle(gluon);
-	manager.addParticle(lightQuark);
+	manager.defineParticle(topQuark);
+	manager.defineParticle(gluon);
+	manager.defineParticle(lightQuark);
 	
 
 	// Define all symbol that appear in matrix elements along with an initial value. The values can be changed later with manager.setVariable(name, value)
@@ -88,27 +88,38 @@ int main()
 
 	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
-	manager.changePolynomialBasis(basisSizeN);
+	manager.changePolynomialBasisSize(basisSizeN);
 
 	/* Initialize collision integrals for all off-equilibrium particles currently registered with the manager.
 	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form which can be useful for debugging. */
 	manager.setupCollisionIntegrals(/*verbose*/ true);
 
-	// Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
-	// Here we set everything manually to show how it's done
-	wallgo::IntegrationOptions options;
-	options.calls = 50000;
-	options.maxTries = 50;
-	options.maxIntegrationMomentum = 20;
-	options.absoluteErrorGoal = 1e-8;
-	options.relativeErrorGoal = 1e-1;
+	/* Configure integrator.The defaults should be reasonably OK so you can only modify what you need.
+	Here we set everything manually to show how it's done. */
+	wallgo::IntegrationOptions integrationOptions;
+	integrationOptions.calls = 50000;
+	integrationOptions.maxTries = 50;
+	integrationOptions.maxIntegrationMomentum = 20;
+	integrationOptions.absoluteErrorGoal = 1e-8;
+	integrationOptions.relativeErrorGoal = 1e-1;
 
 	/* The bOptimizeUltrarelativistic flag allows the program to use a more optimized expression for the integrals
 	when only particles with the ultrarelativistic flag appear as external particles.
 	You should not have any reason to disable this optimization. */
-	options.bOptimizeUltrarelativistic = true;
+	integrationOptions.bOptimizeUltrarelativistic = true;
 	
-	manager.configureIntegration(options);
+	// Override the built-in defaults with our new settings
+	manager.setDefaultIntegrationOptions(integrationOptions);
+
+	/* We can also configure various verbosity settings. These include progress reporting and time estimates
+	as well as a full result dump of each individual integral to stdout. By default these are all disabled.
+	Here we enable some for demonstration purposes */
+	wallgo::CollisionTensorVerbosity verbosity;
+	verbosity.bPrintEveryElement = true; // Very slow and verbose, intended only for debugging purposes
+	verbosity.progressReportInterval = 1000; // Progress check every this many integrals. Will not trigger in this short example
+
+	// Override the built-in defaults with our new settings
+	manager.setDefaultIntegrationVerbosity(verbosity);
 
 	// Evaluate all collision integrals that were prepared in the setupCollisionIntegrals() step
 
@@ -119,7 +130,7 @@ int main()
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	We can also request to compute integrals only for a specific off-equilibrium particle pair
 	Demonstration: */
-	std::map<std::string, double> newVars 
+	std::map<std::string, double> newVars
 	{
 		{"c[0]", 1},
 		{"msq[1]", 0.2},
@@ -129,12 +140,12 @@ int main()
 	manager.setVariable("msq[2]", 0.3);
 
 	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
-	wallgo::CollisionTensor result = manager.evaluateCollisionTensor("top", "gluon", /*bVerbose*/ true);
+	wallgo::CollisionTensorResult result = manager.evaluateCollisionTensor("top", "gluon");
 
 	/* There is also an overloaded version of the above for passing a custom IntegrationOptions struct
 	instead of using the one cached in the manager: */
-	options.calls = 10000;
-	result = manager.evaluateCollisionTensor("top", "gluon", options, /*bVerbose*/ false);
+	integrationOptions.calls = 10000;
+	result = manager.evaluateCollisionTensor("top", "gluon", integrationOptions);
 
 	// Perform clean exit
     wallgo::cleanup();

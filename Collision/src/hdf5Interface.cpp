@@ -4,15 +4,18 @@
 #include <vector>
 
 #include "hdf5Interface.h"
+#include "CollisionTensorResult.h"
 
 namespace wallgo
 {
 
-void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata)
+namespace utils
+{
+
+void writeMetadata(H5::H5File& h5File, const CollisionTensorDesc& metadata)
 {
 	try
 	{
-
 		// Create a group to hold metadata (keeping it separate from the actual data)
 		H5::Group metadataGroup = h5File.createGroup("metadata");
 
@@ -45,16 +48,14 @@ void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata)
 		std::cerr << "Caught exception when writing metadata: " << error.what() << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
-
 }
 
-
 // Turn Array4D into C-style array, then pass that to overloaded WriteToHDF5()
-void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetName) {
+void writeDataSet(H5::H5File& h5File, const Array4D& data, std::string datasetName) {
 
 	constexpr size_t arrayDimension = 4;
 	// 4D array dimensions
-	hsize_t dims[arrayDimension] = {data.size(), data[0].size(), data[0][0].size(), data[0][0][0].size()};
+	hsize_t dims[arrayDimension] = { data.size(), data[0].size(), data[0][0].size(), data[0][0][0].size() };
 
 	// For writing we need to pass the data as a contiguous block of memory. A nested std::vector is not
 	// guaranteed to be contiguous so need to flatten the data here
@@ -74,7 +75,7 @@ void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetNa
 	writeDataSet(h5File, &flattened_data[0], arrayDimension, dims, datasetName);
 }
 
-void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension, const hsize_t* dims, std::string datasetName)
+void writeDataSet(H5::H5File& h5File, const double* data, size_t arrayDimension, const hsize_t* dims, std::string datasetName)
 {
 	try
 	{
@@ -110,4 +111,6 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 
 }
 
-} // namespace
+} // namespace utils
+
+} // namespace wallgo

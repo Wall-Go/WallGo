@@ -14,8 +14,8 @@
 #include "CollElem.h"
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
-#include "CollisionTensor.h"
-#include "hdf5Interface.h"
+#include "CollisionTensorResult.h"
+#include "ModelParameters.h"
 
 
 /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionManager.
@@ -39,6 +39,7 @@
 namespace wallgo
 {
 
+
 /* CollisionManager is the main interface to computing WallGo collision integrals. 
 * Manages model-parameter and particle definitions, and construct collision integral objects
 * based on matrix element input. Used also to initiate collision integrations. */
@@ -49,28 +50,35 @@ public:
     CollisionManager();
     CollisionManager(size_t basisSize);
 
-    void addParticle(const ParticleSpecies& particle);
+    /* Configures default integration options that are used by evaluateCollisionTensor() and related functions
+    if no IntegrationOptions object is passed when calling them. */
+    void setDefaultIntegrationOptions(const IntegrationOptions& options);
 
-    /* Resets the manager to a mostly-default state. This means that defined parameters, particles and integral expression are all cleared.
-    Integration options and matrix element file are NOT reset. */
-    void clear();
+    /* Configures default integration verbosity that is used by evaluateCollisionTensor() and related functions
+    if no CollisionIntegralVerbosity object is passed when calling them. */
+    void setDefaultIntegrationVerbosity(const CollisionTensorVerbosity& verbosity);
 
     /* Sets vacuum and thermal mass squares of particles. Only particles whose names appear as keys in the maps are updated.
     The masses should be in units of the temperature.
     The particles have to be registered with the manager prior to using this, otherwise std::out_of_range is thrown. */
     void updateParticleMasses(const std::map<std::string, double>& msqVacuum, const std::map<std::string, double>& msqThermal);
 
-    // Change basis size used by the polynomial grid. Does not force rebuild of stored integral objects
-    void changePolynomialBasis(size_t newBasisSize);
+    // Change basis size used by the polynomial grid. This is a fast operation and does not require rebuild of stored integral objects
+    void changePolynomialBasisSize(size_t newBasisSize);
+
+    // Registers a new particle with the manager. Particle name must be unique
+    void defineParticle(const ParticleSpecies& particle);
+
+    // ---- Symbolic variables used in matrix elements
 
     // Defines a new symbolic variable that can appear in matrix elements and an initial value for it.
-    void defineVariable(const std::string& name, double value);
+    void defineVariable(const std::string& varName, double value);
 
     // Defines new symbolic variables that can appear in matrix elements and initial values for them.
     void defineVariables(const std::map<std::string, double>& variables);
 
     // Set numerical value to a previously defined variable
-    void setVariable(const std::string& name, double value);
+    void setVariable(const std::string& varName, double value);
 
     // Set numerical values to previously defined variables
     void setVariables(const std::map<std::string, double>& newValues);
@@ -83,9 +91,8 @@ public:
     Note that calling this will clear any previously stored collision integral objects.*/
     void setupCollisionIntegrals(bool bVerbose = false);
     
-    void clearCollisionIntegrals();
-    
-    void configureIntegration(const IntegrationOptions& options);
+    // Clears all stored collision integral objects
+    void clearIntegralCache();
 
     // Specify where to store output files, relative or absolute path. Defaults to current work directory.
     void setOutputDirectory(const std::string& directoryName);
@@ -94,27 +101,35 @@ public:
     Return value is false if the file was not found, true otherwise. */
     bool setMatrixElementFile(const std::string& filePath);
 
-    /* ----- Computing integrals everywhere on the grid. These are defined here instead of inside CollisionIntegral4
-    * because these can run for very long, and we want to allow periodic callbacks to pybind11 to check for termination etc.
-    * The manager gets pybind11 bindings, so the callbacks can be achieved easily. 
-    */
-
-    /* Calculate a CollisionIntegral4 everywhere on the grid. */ 
-    CollisionTensor evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, const IntegrationOptions& options,
-        bool bVerbose = false);
-
-    /* Calculate a CollisionIntegral4 everywhere on the grid.
-    Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration(). */ 
-    CollisionTensor evaluateCollisionTensor(CollisionIntegral4 &collisionIntegral, bool bVerbose = false);
+    // ---- Evaluating cached integrals
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
-    CollisionTensor evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
-        const IntegrationOptions& options, bool bVerbose = false);
+    CollisionTensorResult evaluateCollisionTensor(
+        const std::string& particle1,
+        const std::string& particle2,
+        const IntegrationOptions& options,
+        const CollisionTensorVerbosity& verbosity);
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
-    Uses the cached IntegrationOptions that can be set by CollisionManager::configureIntegration() */
-    CollisionTensor evaluateCollisionTensor(const std::string& particle1, const std::string& particle2,
-        bool bVerbose = false);
+    Uses default integration options. */
+    CollisionTensorResult evaluateCollisionTensor(
+        const std::string& particle1,
+        const std::string& particle2,
+        const CollisionTensorVerbosity& verbosity);
+
+    /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
+    Uses default verbosity settings */
+    CollisionTensorResult evaluateCollisionTensor(
+        const std::string& particle1,
+        const std::string& particle2,
+        const IntegrationOptions& options);
+
+
+    /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
+    Uses default integration options and verbosity settings. */
+    CollisionTensorResult evaluateCollisionTensor(
+        const std::string& particle1,
+        const std::string& particle2);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals().
     Options for the integration can be changed by with CollisionManager::configureIntegration().
@@ -126,13 +141,7 @@ public:
 
 protected:
 
-    // Used to interrupt long-running functions. The python module will override this with its own checks
-    virtual inline bool shouldContinueEvaluation() { return true; };
-
-    // Prints stuff about how many integrals we've computed and ETC
-    void reportProgress();
-
-    bool particleRegistered(const ParticleSpecies& particle);
+    bool isParticleRegistered(const ParticleSpecies& particle);
 
     /* Turns a symbolic string expression into usable CollElem<4>. 
     Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
@@ -148,23 +157,16 @@ protected:
 
 private:
 
-    size_t basisSize = 0;
+    size_t mBasisSize = 0;
 
-    // Progress tracking 
-    size_t computedIntegralCount = 0;
-    size_t totalIntegralCount;
-    // Initial progress check and time estimate after this many integrals (in one thread)
-    size_t initialProgressInterval = 10;
-    bool bFinishedInitialProgressCheck = false;
-    std::chrono::steady_clock::time_point startTime;
-    std::chrono::duration<double> elapsedTime;
+    IntegrationOptions mDefaultIntegrationOptions;
+    CollisionTensorVerbosity mDefaultVerbosity;
 
-    IntegrationOptions integrationOptions;
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 
     /* Holds collision integrals so that they can be reused. Keys are pairs of particle names. */
-    std::map<std::pair<std::string, std::string>, CollisionIntegral4> integrals;
+    std::map<std::pair<std::string, std::string>, CollisionIntegral4> mCachedIntegrals;
 
     // List of all particles that contribute to collisions
     std::vector<std::shared_ptr<ParticleSpecies>> particles;
@@ -176,7 +178,7 @@ private:
     std::map<std::string, size_t> particleIndex;
 
     // User defined parameters, can be anything. These get passed to matrix elements
-    std::map<std::string, double> modelParameters;
+    ModelParameters<double> mModelParameters;
 };
 
 } // namespace

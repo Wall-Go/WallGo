@@ -12,10 +12,11 @@ namespace wallgo
 namespace constants
 {
     constexpr double pi = 3.141592653589793;
-
 }
 
 // ---- Global functions etc
+
+extern bool gExitSignaled;
 
 // Clamp number between [min, max]
 template <typename T>

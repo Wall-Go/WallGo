@@ -11,14 +11,10 @@
 namespace wallgo
 {
 
-// Struct for holding metadata about collision tensor. Default values are set to prevent exceptions in HDF5 routines
-struct H5Metadata
-{
-	size_t basisSize = 1;
-	std::string basisName = "Unknown";
-	std::string integrator = "Unknown";
-};
+struct CollisionTensorDesc;
 
+namespace utils
+{
 
 /* Write C-style array (contiguous memory) to HDF5 file.
 arrayDimension = is the array 3D or 4D or etc. dims = data array dimensions. */
@@ -28,8 +24,10 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetName);
 
 // Write metadata struct to open H5 file. This is done using HDF5 attributes
-void writeMetadata(H5::H5File &h5File, const H5Metadata &metadata);
+void writeMetadata(H5::H5File &h5File, const CollisionTensorDesc& metadata);
 
-} // namespace
+
+} // namespace utils
+} // namespace wallgo
 
 #endif // header guard
