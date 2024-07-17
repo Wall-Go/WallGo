@@ -34,7 +34,7 @@ If you use WallGo, please cite arXiv:....
     :maxdepth: 4
     :hidden:
 
-    modules/collision
+    collision
 
 
 .. toctree::

@@ -4,8 +4,8 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .boltzmann import BoltzmannBackground, BoltzmannSolver
-from .containers import PhaseInfo, BoltzmannBackground
+from .boltzmann import BoltzmannSolver
+from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .grid import Grid
 from .grid3Scales import Grid3Scales
