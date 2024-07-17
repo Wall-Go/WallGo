@@ -1,8 +1,8 @@
 ======================================
-Boltzmann
+BoltzmannSolver
 ======================================
 
-.. automodule:: WallGo.boltzmann
+.. autoclass:: WallGo.BoltzmannSolver
     :members:
     :inherited-members:
     :special-members: __init__

@@ -2,7 +2,7 @@
 HydroTemplateModel
 ======================================
 
-.. automodule:: WallGo.HydroTemplateModel
+.. autoclass:: WallGo.HydroTemplateModel
     :members:
     :inherited-members:
     :special-members: __init__
