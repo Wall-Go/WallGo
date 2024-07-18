@@ -1,8 +1,8 @@
 ======================================
-EOM
+Helpers
 ======================================
 
-.. automodule:: WallGo.EOM
+.. automodule:: WallGo.helpers
     :members:
     :inherited-members:
     :special-members: __init__

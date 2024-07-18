@@ -1,8 +1,8 @@
 ======================================
-Polynomial
+Config
 ======================================
 
-.. automodule:: WallGo.polynomial
+.. autoclass:: WallGo.Config
     :members:
     :inherited-members:
     :special-members: __init__

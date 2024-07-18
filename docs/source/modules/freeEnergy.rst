@@ -1,8 +1,8 @@
 ======================================
-Exceptions
+FreeEnergy
 ======================================
 
-.. automodule:: WallGo.exceptions
+.. automodule:: WallGo.FreeEnergy
     :members:
     :inherited-members:
-    :special-members: __init__, __str__
+    :special-members: __init__

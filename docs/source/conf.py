@@ -19,12 +19,10 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 
 project = "WallGo"
-copyright = "2023, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
-Benoit Laurent, Lauri Niemi, Philipp Schicho, Tuomas Tenkanen, and \
-Jorinde van de Vis"
+copyright = "2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
+Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis"
 author = "Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, \
-Benoit Laurent, Lauri Niemi, Philipp Schicho, Tuomas Tenkanen, and \
-Jorinde van de Vis"
+Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis"
 
 
 # -- General configuration ---------------------------------------------------
@@ -37,6 +35,7 @@ extensions = [
     #"sphinx.ext.autosummary",
     #"sphinx_automodapi.automodapi",
     #"sphinx_automodapi.smart_resolver",
+    'sphinxcontrib.bibtex',
     "sphinx.ext.napoleon", # for numpy style docs
     "sphinx.ext.doctest", # test code snippets in docs
     "sphinx.ext.coverage", # collect doc coverage stats
@@ -46,6 +45,9 @@ extensions = [
 ]
 #numpydoc_show_class_members = True # automodapi
 #autosummary_generate = True
+
+# Options for sphinxcontrib.bibtex
+bibtex_bibfiles = ['refs.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -77,6 +79,16 @@ pygments_style = "default"
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'titles_only': True,
+    'style_nav_header_background': '#efefef'
+}
+
+html_logo = 'figures/wallgo.svg'
+html_favicon = 'figures/favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
