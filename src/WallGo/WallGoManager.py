@@ -241,15 +241,15 @@ class WallGoManager:
 
         try:
             ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
-            hydrotemplate = HydrodynamicsTemplateModel(self.thermodynamics)
-            print(f"vwLTE in the template model: {hydrotemplate.findvwLTE()}")
+            hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
+            print(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
 
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
 
-        _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrotemplate.findMatching(
-            0.99 * hydrotemplate.vJ
+        _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrodynamicsTemplate.findMatching(
+            0.99 * hydrodynamicsTemplate.vJ
         )
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")

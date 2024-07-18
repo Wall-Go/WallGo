@@ -19,11 +19,11 @@ class HydrodynamicsTemplateModel:
 
     References
     ----------
-    Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
+    [GKSvdV20] Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
     Model-independent energy budget for LISA
     arXiv:2010.09744 (2020)
 
-    Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
+    [ALvdV23] Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
     Model-independent bubble wall velocities in local thermal equilibrium.
     arXiv:2303.10171 (2023).
 
@@ -40,7 +40,8 @@ class HydrodynamicsTemplateModel:
     ) -> None:
         r"""
         Initialize the HydroTemplateModel class. 
-        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b`.
+        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics 
+        quantities (see [ALvdV23] for the definitions of these variables).
 
         Parameters
         ----------
@@ -52,7 +53,7 @@ class HydrodynamicsTemplateModel:
 
         Returns
         -------
-        None.
+        None
 
         """
         self.thermodynamics = thermodynamics
@@ -80,7 +81,9 @@ class HydrodynamicsTemplateModel:
         self.psiN = float(wLowT / wHighT)
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
+        ## Enthalpy outside the bubble at Tn
         self.wN = float(wHighT)
+        ## Pressure outside the bubble at Tn
         self.pN = float(pHighT)
         self.Tnucl = thermodynamics.Tnucl
 
@@ -95,7 +98,7 @@ class HydrodynamicsTemplateModel:
         :math:`\alpha_n`, using 
         :math:`v_J = c_b \frac{1 + \sqrt{3 \alpha_n(1 - c_b^2 + 3 c_b^2 \alpha_n)}}
         {1+ 3 c_b^2 \alpha_n}`
-        (eq. (25) of arXiv:2303.10171).
+        (eq. (25) of [ALvdV23]).
 
         Parameters
         ----------
@@ -182,7 +185,7 @@ class HydrodynamicsTemplateModel:
 
     def wFromAlpha(self, al: float) -> float:
         r"""
-        Finds the enthlapy :math:`\omega_+` corresponding to :math:`\alpha_+` using the
+        Finds the enthlapy :math:`w_+` corresponding to :math:`\alpha_+` using the
         equation of state of the template model.
 
         Parameters
@@ -194,7 +197,7 @@ class HydrodynamicsTemplateModel:
         Returns
         -------
         float
-            :math:`\omega_+`.
+            :math:`w_+`.
 
         """
         # Add 1e-100 to avoid having something like 0/0
@@ -234,7 +237,7 @@ class HydrodynamicsTemplateModel:
 
     def _eqWall(self, al: float, vm: float, branch: int = -1) -> float:
         """
-        Matching equation at the bubble wall.
+        Residual of the matching equation at the bubble wall.
 
         Parameters
         ----------
@@ -309,9 +312,9 @@ class HydrodynamicsTemplateModel:
         except ValueError as exc:
             raise WallGoError("alpha can not be found", data={"vw": vw}) from exc
 
-    def _dfdv(self, v: float, xiAndW: np.ndarray) -> np.ndarray:
+    def _dxiAndWdv(self, v: float, xiAndW: np.ndarray) -> np.ndarray:
         """
-        Fluid equations in the shock wave.
+        Fluid equations in the shock wave as a function of v.
         """
         xi, w = xiAndW
         muXiV = (xi - v) / (1 - xi * v)
@@ -355,7 +358,7 @@ class HydrodynamicsTemplateModel:
 
         event.terminal = True
         sol = solve_ivp(
-            self._dfdv, (v0, 1e-10), [vw, wp], events=event, rtol=self.rtol, atol=0
+            self._dxiAndWdv, (v0, 1e-10), [vw, wp], events=event, rtol=self.rtol, atol=0
         )
         return sol
 
@@ -389,7 +392,7 @@ class HydrodynamicsTemplateModel:
     def findvwLTE(self) -> float:
         """
         Computes the wall velocity for a deflagration or hybrid solution. Uses the 
-        method described in arXiv:2303.10171.
+        method described in [ALvdV23].
 
         Returns
         -------
@@ -428,14 +431,10 @@ class HydrodynamicsTemplateModel:
 
         Returns
         -------
-        vp : float
-            Value of :math:`v_+` that solves the matching equation.
-        vm : float
-            Value of :math:`v_-` that solves the matching equation.
-        Tp : float
-            Value of :math:`T_+` that solves the matching equation.
-        Tm : float
-            Value of :math:`T_-` that solves the matching equation.
+        tuple[float | None, ...]
+            Tuple containing :math:`v_+`, :math:`v_-`, :math:`T_+`, :math:`T_-` and 
+            velocityMid. If the solver wasn't able to find a solution, returns a tuple
+            of None.
 
         """
         if vw > self.vJ:
@@ -459,7 +458,7 @@ class HydrodynamicsTemplateModel:
                 xtol=self.atol,
             )
 
-        except:
+        except ValueError:
             return (
                 None,
                 None,
@@ -480,7 +479,10 @@ class HydrodynamicsTemplateModel:
 
     def matchDeflagOrHybInitial(self, vw: float, vp: float | None) -> list[float]:
         r"""
-        Returns initial guess [Tp, Tm] for the solver in the matchDeflagOrHyb function.
+        Returns initial guess [Tp, Tm] for the solver in the 
+        Hydrodynamics.matchDeflagOrHyb function by computing the corresponding 
+        quantities in the template models. See Refs. [GKSvdV20] and [ALvdV23] for
+        details.
 
         Parameters
         ----------
@@ -557,7 +559,7 @@ class HydrodynamicsTemplateModel:
     def maxAl(self, upperLimit: float = 100.0) -> float:
         r"""
         Computes the highest value of :math:`\alpha_n` at which a hybrid solution can be
-        found.
+        found by finding the value that gives a solution with :math:`v_w=v_J`.
 
         Parameters
         ----------
@@ -576,10 +578,12 @@ class HydrodynamicsTemplateModel:
         vm = self.cb
         lowerLimit = (1 - self.psiN) / 3
 
-        def func(alN: float) -> float:
+        ## This function returns the residual of the matching equation when vw=vJ for a
+        ## given value of alpha_n.
+        def matching(alN: float) -> float:
             vw = self.findJouguetVelocity(alN)
             vp = self.cs2 / vw
-            ga2p, ga2m = 1 / (1 - vp**2), 1 / (1 - vm**2)
+            ga2p, ga2m = gammaSq(vp), gammaSq(vm)
             wp = (vp + vw - vw * self.mu) / (vp + vw - vp * self.mu)
             psi = self.psiN * wp ** (self.nu / self.mu - 1)
             al = (self.mu - self.nu) / (3 * self.mu) + (
@@ -590,51 +594,28 @@ class HydrodynamicsTemplateModel:
                 - (1 - 3 * al - (ga2p / ga2m) ** (self.nu / 2) * psi) / (3 * self.nu)
             )
 
-        if func(upperLimit) < 0:
+        ## Finds the min or max of matching  to bracket the root in case it is not
+        ## monotonous.
+        if matching(upperLimit) < 0:
             maximum = minimize_scalar(
-                lambda x: -func(x),
+                lambda x: -matching(x),
                 bounds=[(1 - self.psiN) / 3, upperLimit],
                 method="Bounded",
             )
             if maximum.fun > 0:
                 return upperLimit
             upperLimit = maximum.x
-        if func(lowerLimit) > 0:
+        if matching(lowerLimit) > 0:
             minimum = minimize_scalar(
-                func, bounds=[lowerLimit, upperLimit], method="Bounded"
+                matching, bounds=[lowerLimit, upperLimit], method="Bounded"
             )
             if minimum.fun > 0:
                 return lowerLimit
             upperLimit = minimum.x
 
+        ## Finds the solution with 0 residual.
         sol = root_scalar(
-            func, bracket=(lowerLimit, upperLimit), rtol=self.rtol, xtol=self.atol
-        )
-        return float(sol.root)
-
-    def detonationVw(self) -> float:
-        """
-        Computes the wall velocity for a detonation solution.
-        """
-
-        def matchingEq(vw: float) -> float:
-            part = vw**2 + self.cb2 * (1 - 3 * self.alN * (1 - vw**2))
-            vm = (part + np.sqrt(part**2 - 4 * vw**2 * self.cb2)) / (2 * vw)
-            ga2w, ga2m = 1 / (1 - vw**2), 1 / (1 - vm**2)
-            return float(
-                vw * vm * self.alN / (1 - (self.nu - 1) * vw * vm)
-                - (1 - 3 * self.alN - (ga2w / ga2m) ** (self.nu / 2) * self.psiN)
-                / (3 * self.nu)
-            )
-
-        if matchingEq(self.vJ + 1e-10) * matchingEq(1 - 1e-10) > 0:
-            # print('No detonation solution')
-            return 0
-        sol = root_scalar(
-            matchingEq,
-            bracket=(self.vJ + 1e-10, 1 - 1e-10),
-            rtol=self.rtol,
-            xtol=self.atol,
+            matching, bracket=(lowerLimit, upperLimit), rtol=self.rtol, xtol=self.atol
         )
         return float(sol.root)
 
