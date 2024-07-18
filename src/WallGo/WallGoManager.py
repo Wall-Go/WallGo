@@ -10,7 +10,7 @@ from .EffectivePotential import EffectivePotential
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
-from .Grid3Scales import Grid3Scales
+from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals

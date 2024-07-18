@@ -7,10 +7,10 @@ TODO Is there a better way of doing all this?!
 from .boltzmann import BoltzmannBackground, BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground
 from .exceptions import WallGoError, WallGoPhaseValidationError
-from .Grid import Grid
+from .grid import Grid
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
-from .Polynomial import Polynomial
+from .polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
