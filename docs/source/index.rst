@@ -35,7 +35,7 @@ If you use WallGo, please cite arXiv:....
     Grid
     Grid3Scales
     Hydro
-    HydroTemplateModel
+    hydrodynamicsTemplateModel
     Polynomial
     results
     Thermodynamics
