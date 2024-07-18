@@ -1,8 +1,8 @@
 ======================================
-HydroTemplateModel
+HydrodynamicsTemplateModel
 ======================================
 
-.. automodule:: WallGo.HydroTemplateModel
+.. automodule:: WallGo.hydrodynamicsTemplateModel
     :members:
     :inherited-members:
     :special-members: __init__
