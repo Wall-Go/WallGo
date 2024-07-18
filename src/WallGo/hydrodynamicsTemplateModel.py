@@ -19,13 +19,13 @@ class HydrodynamicsTemplateModel:
 
     References
     ----------
-    [GKSvdV20] Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
-    Model-independent energy budget for LISA
-    arXiv:2010.09744 (2020)
+    .. [GKSvdV20] Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis
+        Model-independent energy budget for LISA
+        arXiv:2010.09744 (2020)
 
-    [ALvdV23] Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
-    Model-independent bubble wall velocities in local thermal equilibrium.
-    arXiv:2303.10171 (2023).
+    .. [ALvdV23] Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.
+        Model-independent bubble wall velocities in local thermal equilibrium.
+        arXiv:2303.10171 (2023).
 
     NOTE: We use the conventions that the velocities are always positive, even in the 
     wall frame (vp and vm).
@@ -41,7 +41,7 @@ class HydrodynamicsTemplateModel:
         r"""
         Initialize the HydroTemplateModel class. 
         Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics 
-        quantities (see [ALvdV23] for the definitions of these variables).
+        quantities (see [ALvdV23]_ for the definitions of these variables).
 
         Parameters
         ----------
@@ -98,7 +98,7 @@ class HydrodynamicsTemplateModel:
         :math:`\alpha_n`, using 
         :math:`v_J = c_b \frac{1 + \sqrt{3 \alpha_n(1 - c_b^2 + 3 c_b^2 \alpha_n)}}
         {1+ 3 c_b^2 \alpha_n}`
-        (eq. (25) of [ALvdV23]).
+        (eq. (25) of [ALvdV23]_).
 
         Parameters
         ----------
@@ -392,7 +392,7 @@ class HydrodynamicsTemplateModel:
     def findvwLTE(self) -> float:
         """
         Computes the wall velocity for a deflagration or hybrid solution. Uses the 
-        method described in [ALvdV23].
+        method described in [ALvdV23]_.
 
         Returns
         -------
@@ -481,7 +481,7 @@ class HydrodynamicsTemplateModel:
         r"""
         Returns initial guess [Tp, Tm] for the solver in the 
         Hydrodynamics.matchDeflagOrHyb function by computing the corresponding 
-        quantities in the template models. See Refs. [GKSvdV20] and [ALvdV23] for
+        quantities in the template models. See Refs. [GKSvdV20]_ and [ALvdV23]_ for
         details.
 
         Parameters
