@@ -99,9 +99,12 @@ struct IntegrationResult
 
 struct CollisionTensorVerbosity
 {
-    /* Report to stdout when this many integrals have been computed.Value of 0 means no reporting.
+    /* Print progress report and time estimate to stdout when this percantage of grid integrals have been computed.
+    Should be in range [0, 1]. Value of 0 means no reporting and values >= 1 mean we only report at end.
     Note that progress reporting has a small overhead particularly in multithreaded context (due to atomic operations) */
-    uint32_t progressReportInterval = 0;
+    double progressReportPercentage = 0;
+    // Print total time when done?
+    bool bPrintElapsedTime = false;
 
     /* If true, prints every element of the collision tensor to stdout.
     Very high overhead, intended for debugging only. */

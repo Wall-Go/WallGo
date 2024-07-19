@@ -263,12 +263,7 @@ CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     return computeIntegralsForPair(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
 }
 
-CollisionTensorResult CollisionTensor::computeIntegralsAll()
-{
-    return computeIntegralsAll(mDefaultIntegrationOptions);
-}
-
-CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOptions& options)
+CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity)
 {
     if (mCachedIntegrals.size() < 1)
     {
@@ -279,18 +274,49 @@ CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOpti
 
     CollisionTensorResult result(mCachedIntegrals.size());
 
+    std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
+    if (verbosity.bPrintElapsedTime)
+    {
+        startTime = std::chrono::steady_clock::now();
+    }
+
     size_t i = 0;
     for (auto& [namePair, integral] : mCachedIntegrals)
     {
-        result.mData[i] = integral.evaluateOnGrid(options, mDefaultVerbosity);
+        result.mData[i] = integral.evaluateOnGrid(options, verbosity);
 
         std::cout << particlePairToString(namePair) << " done\n";
 
         ++i;
     }
 
+    if (verbosity.bPrintElapsedTime)
+    {
+        auto endTime = std::chrono::steady_clock::now();
+        auto elapsedTime = endTime - startTime;
+        auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count();
+
+        std::cout << "\nAll done, took " << elapsedSeconds << " seconds.\n" << std::endl;
+    }
+
     return result;
 }
+
+CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOptions& options)
+{
+    return computeIntegralsAll(options, mDefaultVerbosity);
+}
+
+CollisionTensorResult CollisionTensor::computeIntegralsAll(const CollisionTensorVerbosity& verbosity)
+{
+    return computeIntegralsAll(mDefaultIntegrationOptions, verbosity);
+}
+
+CollisionTensorResult CollisionTensor::computeIntegralsAll()
+{
+    return computeIntegralsAll(mDefaultIntegrationOptions, mDefaultVerbosity);
+}
+
 
 /*
 CollisionTensorResult CollisionTensor::calculateAllIntegrals(bool bVerbose)

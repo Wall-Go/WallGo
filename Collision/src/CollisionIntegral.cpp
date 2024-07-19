@@ -116,13 +116,22 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
 
     CollisionResultsGrid result(mParticlePair, metadata);
 
-    const bool bCanEverReportProgress = verbosity.progressReportInterval > 0;
-    const uint32_t reportInterval = verbosity.progressReportInterval;
+    // ---- Setup progress reporting
+    const bool bCanEverReportProgress = (verbosity.progressReportPercentage > 0 && verbosity.progressReportPercentage < 1.f);;
     uint32_t progressCounter = 0; // shared counter for all threads, resets every report interval
+    const bool bNeedsTiming = verbosity.bPrintElapsedTime || bCanEverReportProgress;
+
+    uint32_t reportInterval = 0;
+    size_t totalIntegralCount = 0;
+    size_t currentCount = 0; // updated only at checkpoints
+    if (bCanEverReportProgress)
+    {
+        totalIntegralCount = countIndependentIntegrals();
+        reportInterval = static_cast<uint32_t>(verbosity.progressReportPercentage * totalIntegralCount);
+    }
 
     std::chrono::steady_clock::time_point startTime;
-
-    if (bCanEverReportProgress)
+    if (bNeedsTiming)
     {
         startTime = std::chrono::steady_clock::now();
     }
@@ -180,11 +189,9 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
 
                 if (verbosity.bPrintEveryElement)
                 {
-                    #pragma omp critical
-                    {
-                        std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
-                            << localResult.result << " +/- " << localResult.error << "\n";
-                    }
+                    // In principle this should be an OMP critical block, but probably not worth the slowdown
+                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
+                        << localResult.result << " +/- " << localResult.error << "\n";
                 }
 
                 if (bCanEverReportProgress)
@@ -203,13 +210,22 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                     {
                         std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
                         auto elapsedTime = currentTime - startTime;
-                        std::cout << "...\n"; // TODO
+                        auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count();
+
+                        currentCount += progressCounter_atomic;
+                        const double currentPercentage = static_cast<double>(currentCount) / static_cast<double>(totalIntegralCount);
+                        // Estimate remaining duration by assuming linear progress
+                        auto timeAtCompletion = (elapsedTime / currentPercentage);
+                        auto timeRemaining = timeAtCompletion - elapsedTime;
+                        auto secondsRemaining = std::chrono::duration_cast<std::chrono::seconds>(timeRemaining).count();
+                       
+                        std::cout << "Integral progress: " << currentCount << "/" << totalIntegralCount << " (" << 100.0 * currentPercentage << "%)." 
+                            << " Time: " << elapsedSeconds << "s, remaining " << secondsRemaining << "s.\n";
 
                         WG_PRAGMA_OMP_ATOMIC_WRITE
                         progressCounter = 0;
                     }
                 }
-
 
                 /*
                 // Check if we received instructions to stop
@@ -244,7 +260,16 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
             }
         }
 
-     } // end #pragma omp parallel 
+    } // end #pragma omp parallel
+
+    if (verbosity.bPrintElapsedTime)
+    {
+        std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+        auto elapsedTime = currentTime - startTime;
+        auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count();
+
+        std::cout << "Done, took " << elapsedSeconds << " seconds.\n\n";
+    }
 
     return result;
 }

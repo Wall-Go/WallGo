@@ -58,7 +58,7 @@ int main()
 	// We use GSL for Monte Carlo integration. It needs to be initialized before use, with optional seed (default = 0)
     wallgo::initializeRNG();
 
-	// Can also set the seed at any later time:
+	// Can also set the seed at any later time. Example:
 	//wallgo::setSeed(42);
 
     wallgo::CollisionTensor collTensor;
@@ -101,8 +101,16 @@ int main()
 	as well as a full result dump of each individual integral to stdout. By default these are all disabled.
 	Here we enable some for demonstration purposes */
 	wallgo::CollisionTensorVerbosity verbosity;
-	verbosity.bPrintEveryElement = true; // Very slow and verbose, intended only for debugging purposes
-	verbosity.progressReportInterval = 1000; // Progress check every this many integrals. Will not trigger in this short example
+	verbosity.bPrintElapsedTime = true; // report total time when finished with all integrals
+
+	/* Progress report when this percentage of total integrals (approximately) have been computed.
+	Our example has so few integrals that this is quite silly,
+	and in multithreaded context it can activate much less frequently than every 25% because the reporting is always done from the "main" thread.
+	Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done. */
+	verbosity.progressReportPercentage = 0.25;
+
+	// Very slow and verbose, intended only for debugging purposes
+	verbosity.bPrintEveryElement = true; 
 
 	// Override the built-in defaults with our new settings
 	collTensor.setDefaultIntegrationVerbosity(verbosity);
@@ -138,8 +146,9 @@ int main()
 	Can be used for more fine-grained evaluation. Demonstration: */
 	integrationOptions.calls = 10000;
 	verbosity.bPrintEveryElement = false;
-	verbosity.progressReportInterval = 0; // no progress reporting
-	resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon", integrationOptions);
+	verbosity.progressReportPercentage = 0; // no progress reporting
+	verbosity.bPrintElapsedTime = true;
+	resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon", integrationOptions, verbosity);
 
 	// Perform clean exit
     wallgo::cleanup();

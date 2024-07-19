@@ -35,7 +35,6 @@
 namespace wallgo
 {
 
-
 /* CollisionTensor is the main interface to computing WallGo collision integrals. 
 * Manages model-parameter and particle definitions, and construct collision integral objects
 * based on matrix element input. Used also to initiate collision integrations. */
@@ -94,10 +93,6 @@ public:
     // Clears all stored collision integral objects
     void clearIntegralCache();
 
-    /* Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt". 
-    Return value is false if the file was not found, true otherwise. */
-    bool setMatrixElementFile(const std::string& filePath);
-
     // ---- Evaluating cached integrals
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
@@ -129,10 +124,18 @@ public:
         const std::string& particle2);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals(). */
+    CollisionTensorResult computeIntegralsAll(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
+
+    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
+    Uses default verbosity. */
     CollisionTensorResult computeIntegralsAll(const IntegrationOptions& options);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals().
-    Uses default integration options.*/
+    Uses default options. */
+    CollisionTensorResult computeIntegralsAll(const CollisionTensorVerbosity& verbosity);
+
+    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
+    Uses default options and verbosity. */
     CollisionTensorResult computeIntegralsAll();
 
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
