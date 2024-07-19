@@ -11,7 +11,7 @@
 namespace wallgo
 {
 
-struct CollisionTensorDesc;
+struct CollisionMetadata;
 
 namespace utils
 {
@@ -24,7 +24,7 @@ void writeDataSet(H5::H5File &h5File, const double* data, size_t arrayDimension,
 void writeDataSet(H5::H5File &h5File, const Array4D &data, std::string datasetName);
 
 // Write metadata struct to open H5 file. This is done using HDF5 attributes
-void writeMetadata(H5::H5File &h5File, const CollisionTensorDesc& metadata);
+void writeMetadata(H5::H5File &h5File, const CollisionMetadata& metadata);
 
 
 } // namespace utils

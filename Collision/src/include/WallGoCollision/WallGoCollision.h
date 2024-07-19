@@ -10,7 +10,7 @@
 #include "FourVector.h"
 #include "Utils.h"
 
-#include "CollisionTensorResult.h"
+#include "ResultContainers.h"
 #include "CollisionIntegral.h"
 #include "CollElem.h"
 #include "MatrixElement.h"

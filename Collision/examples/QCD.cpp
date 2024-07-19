@@ -140,12 +140,12 @@ int main()
 	manager.setVariable("msq[2]", 0.3);
 
 	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
-	wallgo::CollisionTensorResult result = manager.evaluateCollisionTensor("top", "gluon");
+	wallgo::CollisionResultsGrid result = manager.evaluateCollisionsGrid("top", "gluon");
 
 	/* There is also an overloaded version of the above for passing a custom IntegrationOptions struct
 	instead of using the one cached in the manager: */
 	integrationOptions.calls = 10000;
-	result = manager.evaluateCollisionTensor("top", "gluon", integrationOptions);
+	result = manager.evaluateCollisionsGrid("top", "gluon", integrationOptions);
 
 	// Perform clean exit
     wallgo::cleanup();

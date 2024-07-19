@@ -11,6 +11,7 @@ docs/_build
 dist/
 *.hdf5
 .vscode/
+.vs/
 *.code-workspace
 .ropeproject/
 Collision/bin/

@@ -1,4 +1,4 @@
-#include "CollisionTensorResult.h"
+#include "ResultContainers.h"
 #include "hdf5Interface.h"
 
 #include <cassert>
@@ -6,32 +6,28 @@
 
 namespace wallgo
 {
-CollisionTensorResult::CollisionTensorResult(const CollisionTensorDesc& description)
-    : mDescription(description)
+
+
+CollisionResultsGrid::CollisionResultsGrid(const ParticleNamePair& particlePair, const CollisionMetadata& metadata)
+    : mParticlePair(particlePair),
+    mMetadata(metadata)
 {
     initData();
 }
 
-CollisionTensorResult::CollisionTensorResult(size_t basisSize, bool bIncludeStatisticalErrors)
-{
-    mDescription.basisSize = basisSize;
-    mDescription.bStatisticalErrors = bIncludeStatisticalErrors;
-    initData();
-}
-
-double CollisionTensorResult::valueAt(size_t m, size_t n, size_t j, size_t k) const
+double CollisionResultsGrid::valueAt(size_t m, size_t n, size_t j, size_t k) const
 {
     assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
     return mData[m][n][j][k];
 }
 
-double& CollisionTensorResult::valueAt(size_t m, size_t n, size_t j, size_t k)
+double& CollisionResultsGrid::valueAt(size_t m, size_t n, size_t j, size_t k)
 {
     assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
     return mData[m][n][j][k];
 }
 
-double CollisionTensorResult::errorAt(size_t m, size_t n, size_t j, size_t k) const
+double CollisionResultsGrid::errorAt(size_t m, size_t n, size_t j, size_t k) const
 {
     assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
 
@@ -45,7 +41,7 @@ double CollisionTensorResult::errorAt(size_t m, size_t n, size_t j, size_t k) co
     return (*mErrors.get())[m][n][j][k];
 }
 
-double& CollisionTensorResult::errorAt(size_t m, size_t n, size_t j, size_t k)
+double& CollisionResultsGrid::errorAt(size_t m, size_t n, size_t j, size_t k)
 {
     assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
 
@@ -61,7 +57,7 @@ double& CollisionTensorResult::errorAt(size_t m, size_t n, size_t j, size_t k)
     return (*mErrors.get())[m][n][j][k];
 }
 
-void CollisionTensorResult::updateValue(size_t m, size_t n, size_t j, size_t k, double newValue, double newError)
+void CollisionResultsGrid::updateValue(size_t m, size_t n, size_t j, size_t k, double newValue, double newError)
 {
     valueAt(m, n, j, k) = newValue;
     if (hasStatisticalErrors())
@@ -70,14 +66,14 @@ void CollisionTensorResult::updateValue(size_t m, size_t n, size_t j, size_t k, 
     }
 }
 
-bool CollisionTensorResult::writeToHDF5(const std::filesystem::path& filePath, bool bWriteErrors)
+bool CollisionResultsGrid::writeToHDF5(const std::filesystem::path& filePath, bool bWriteErrors)
 {
     // H5F_ACC_TRUNC = overwrite existing file
     H5::H5File h5File(filePath.string(), H5F_ACC_TRUNC);
 
-    utils::writeMetadata(h5File, mDescription);
+    utils::writeMetadata(h5File, mMetadata);
 
-    const std::string datasetName = mDescription.particle1 + ", " + mDescription.particle2;
+    const std::string datasetName = mParticlePair.first + ", " + mParticlePair.second;
     
     utils::writeDataSet(h5File, mData, datasetName);
     if (bWriteErrors && hasStatisticalErrors())
@@ -90,18 +86,36 @@ bool CollisionTensorResult::writeToHDF5(const std::filesystem::path& filePath, b
     return true;
 }
 
-void CollisionTensorResult::initData()
+void CollisionResultsGrid::initData()
 {
-    mElementsPerDimension = mDescription.basisSize - 1;
+    mElementsPerDimension = mMetadata.basisSize - 1;
     if (mElementsPerDimension > 0)
     {
         mData = Array4D(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
-        if (mDescription.bStatisticalErrors)
+        if (mMetadata.bStatisticalErrors)
         {
             mErrors = std::make_unique<Array4D>(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
         }
     }
 }
 
+
+CollisionResultsGrid* CollisionTensorResult::getResultsForParticlePair(const ParticleNamePair& particlePair)
+{
+    for (size_t i = 0; i < mData.size(); ++i)
+    {
+        if (mData[i].getParticleNamePair() == particlePair)
+        {
+            return &mData[i];
+        }
+    }
+
+    return nullptr;
+}
+
+CollisionResultsGrid* CollisionTensorResult::getResultsForParticlePair(const std::string& particleName1, const std::string& particleName2)
+{
+    return getResultsForParticlePair(ParticleNamePair(particleName1, particleName2));
+}
 
 } // namespace

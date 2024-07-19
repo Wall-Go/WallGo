@@ -69,6 +69,7 @@ CollisionManager::CollisionManager()
     mDefaultIntegrationOptions.relativeErrorGoal = 1e-1;
     mDefaultIntegrationOptions.absoluteErrorGoal = 1e-8;
     mDefaultIntegrationOptions.bOptimizeUltrarelativistic = true;
+    mDefaultIntegrationOptions.bIncludeStatisticalErrors = true;
 
     mDefaultVerbosity = CollisionTensorVerbosity();
 }
@@ -185,9 +186,11 @@ void CollisionManager::setVariables(const std::map<std::string, double> &newValu
 CollisionIntegral4 CollisionManager::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
     const std::string &inMatrixElementFile, size_t inBasisSize, bool bVerbose)
 {
-    CollisionIntegral4 collisionIntegral(inBasisSize);
     std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), inMatrixElementFile, bVerbose);
-    
+
+    ParticleNamePair namePair(particle1->name, particle2->name);
+    CollisionIntegral4 collisionIntegral(inBasisSize, namePair);
+
     for (const CollElem<4> &elem : collisionElements)
     {
         collisionIntegral.addCollisionElement(elem);
@@ -254,7 +257,7 @@ bool CollisionManager::setMatrixElementFile(const std::string &filePath)
     return true;
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+CollisionResultsGrid CollisionManager::evaluateCollisionsGrid(
     const std::string& particle1,
     const std::string& particle2,
     const IntegrationOptions& options,
@@ -268,43 +271,46 @@ CollisionTensorResult CollisionManager::evaluateCollisionTensor(
         
         assert(false && "Particle pair not found");
         
-        return CollisionTensorResult(0, false);
+        return CollisionResultsGrid(ParticleNamePair("Unknown", "Unknown"), CollisionMetadata());
     }
 
     return mCachedIntegrals.at(pairName).evaluateOnGrid(options, verbosity);
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+CollisionResultsGrid CollisionManager::evaluateCollisionsGrid(
     const std::string& particle1,
     const std::string& particle2,
     const CollisionTensorVerbosity& verbosity)
 {
-    return evaluateCollisionTensor(particle1, particle2, mDefaultIntegrationOptions, verbosity);
+    return evaluateCollisionsGrid(particle1, particle2, mDefaultIntegrationOptions, verbosity);
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+CollisionResultsGrid CollisionManager::evaluateCollisionsGrid(
     const std::string& particle1,
     const std::string& particle2,
     const IntegrationOptions& options)
 {
-    return evaluateCollisionTensor(particle1, particle2, options, mDefaultVerbosity);
+    return evaluateCollisionsGrid(particle1, particle2, options, mDefaultVerbosity);
 }
 
-CollisionTensorResult CollisionManager::evaluateCollisionTensor(
+CollisionResultsGrid CollisionManager::evaluateCollisionsGrid(
     const std::string& particle1,
     const std::string& particle2)
 {
-    return evaluateCollisionTensor(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
+    return evaluateCollisionsGrid(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
 }
 
-void CollisionManager::calculateAllIntegrals(bool bVerbose)
+CollisionTensorResult CollisionManager::calculateAllIntegrals(bool bVerbose)
 {
 
     if (mCachedIntegrals.size() < 1)
     {
-        std::cout << "Warning: calculateCollisionIntegrals() called, but no integrals have been initialized." 
-            << "Please call setupCollisionIntegrals() first." << std::endl;
+        std::cout << "Warning: calculateCollisionIntegrals() called, but no integrals have been initialized." << std::endl;
+        // return empty result
+        return CollisionTensorResult();
     }
+
+    CollisionTensorResult result(mCachedIntegrals.size());
 
     /*
     // Initialize progress tracking 
@@ -316,6 +322,7 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
 
+    size_t i = 0;
     for (auto & [namePair, integral] : mCachedIntegrals)
     {
         std::chrono::steady_clock::time_point pairStartTime = std::chrono::steady_clock::now();
@@ -323,7 +330,9 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         const std::string name1 = namePair.first;
         const std::string name2 = namePair.second;
 
-        CollisionTensorResult result = integral.evaluateOnGrid(mDefaultIntegrationOptions, mDefaultVerbosity);
+        result.mData[i] = integral.evaluateOnGrid(mDefaultIntegrationOptions, mDefaultVerbosity);
+
+        i++;
 
         // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
         const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
@@ -342,6 +351,8 @@ void CollisionManager::calculateAllIntegrals(bool bVerbose)
         std::cout << "[" << name1 << ", " << name2 << "] done in " << hours << "h " << minutes << "min." << std::endl;
         */
     }
+
+    return result;
 }
 
 

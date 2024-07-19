@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "hdf5Interface.h"
-#include "CollisionTensorResult.h"
+#include "ResultContainers.h"
 
 namespace wallgo
 {
@@ -12,7 +12,7 @@ namespace wallgo
 namespace utils
 {
 
-void writeMetadata(H5::H5File& h5File, const CollisionTensorDesc& metadata)
+void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 {
 	try
 	{

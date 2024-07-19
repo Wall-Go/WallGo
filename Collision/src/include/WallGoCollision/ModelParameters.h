@@ -3,6 +3,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <type_traits>
+#include <utility> // std::pair
 
 namespace wallgo
 {
@@ -10,7 +12,7 @@ namespace wallgo
 
 // Holds physics model specific parameters that enter matrix elements
 template<typename T>
-struct ModelParameters
+struct TModelParameters
 {
 public:
     /* Modifies value of specified parameter. If the parameter has not yet been defined, adds it with the specified value. */
@@ -31,13 +33,13 @@ private:
 };
 
 template<typename T>
-inline void ModelParameters<T>::addOrModifyParameter(const std::string& paramName, T newValue)
+inline void TModelParameters<T>::addOrModifyParameter(const std::string& paramName, T newValue)
 {
     params[paramName] = newValue;
 }
 
 template<typename T>
-inline T ModelParameters<T>::getParameterValue(const std::string& paramName) const
+inline T TModelParameters<T>::getParameterValue(const std::string& paramName) const
 {
     if (!contains(paramName))
     {
@@ -48,7 +50,7 @@ inline T ModelParameters<T>::getParameterValue(const std::string& paramName) con
 }
 
 template<typename T>
-inline std::vector<std::string> ModelParameters<T>::getParameterNames() const
+inline std::vector<std::string> TModelParameters<T>::getParameterNames() const
 {
     std::vector<std::string> outNames;
     if (getNumParams() > 0) outNames.reserve(getNumParams());
@@ -60,6 +62,15 @@ inline std::vector<std::string> ModelParameters<T>::getParameterNames() const
 
     return outNames;
 }
+
+template<typename Name_t, typename Index_t>
+using TParticleNameMap = std::unordered_map<Name_t, Index_t>;
+
+// Map particle name -> particle index
+using ParticleNameMap = TParticleNameMap<std::string, uint32_t>;
+using ParticleNamePair = std::pair<ParticleNameMap::key_type, ParticleNameMap::key_type>;
+
+using ModelParameters = TModelParameters<double>;
 
 } // namespace
 

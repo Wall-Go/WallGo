@@ -106,9 +106,15 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     return result;
 }
 
-CollisionTensorResult CollisionIntegral4::evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity)
+CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity)
 {
-    CollisionTensorResult result(getPolynomialBasisSize(), options.bIncludeStatisticalErrors);
+    CollisionMetadata metadata;
+    metadata.basisSize = getPolynomialBasisSize();
+    metadata.bStatisticalErrors = options.bIncludeStatisticalErrors;
+    metadata.integrator = "Vegas Monte Carlo";
+    metadata.basisName = "Chebyshev";
+
+    CollisionResultsGrid result(mParticlePair, metadata);
 
     const bool bCanEverReportProgress = verbosity.progressReportInterval > 0;
     const uint32_t reportInterval = verbosity.progressReportInterval;
@@ -127,7 +133,7 @@ CollisionTensorResult CollisionIntegral4::evaluateOnGrid(const IntegrationOption
     // Each thread needs its collisionIntegral because evaluation of parsed matrix elements is not thread safe!
     // Take manual copy inside the parallel region because using private(...) on a reference type is not supported by older OMP implementations
 
-    CollisionIntegral4 workIntegral(getPolynomialBasisSize());
+    CollisionIntegral4 workIntegral(getPolynomialBasisSize(), mParticlePair);
 
     #pragma omp parallel private(workIntegral)
     {
@@ -135,10 +141,10 @@ CollisionTensorResult CollisionIntegral4::evaluateOnGrid(const IntegrationOption
 
         int numThreads = 1;
         int threadID = 0;
-        #if WITH_OMP
+    #if WITH_OMP
         numThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
-        #endif
+    #endif
 
         // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
         const int32_t N = static_cast<int32_t>(getPolynomialBasisSize());
@@ -434,6 +440,12 @@ double CollisionIntegral4::evaluateCollisionElement(CollElem<4> &collElem, const
     res *= kinematics.prefactor;
 
     return res;
+}
+
+CollisionIntegral4::CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair)
+    : polynomialBasis(polynomialBasisSize),
+    mParticlePair(particlePair)
+{
 }
 
 void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)

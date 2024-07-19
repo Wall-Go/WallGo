@@ -10,7 +10,7 @@
 #include "CollElem.h"
 #include "Utils.h"
 #include "PolynomialBasis.h"
-#include "CollisionTensorResult.h"
+#include "ResultContainers.h"
 
 
 namespace wallgo
@@ -135,8 +135,9 @@ public:
     };
 
     CollisionIntegral4() : polynomialBasis(1) {}
-    CollisionIntegral4(size_t polynomialBasisSize) : polynomialBasis(polynomialBasisSize) {} 
+    CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair);
     CollisionIntegral4(const CollisionIntegral4&) = default;
+
     // Must be copy-assignable for OpenMP
     CollisionIntegral4& operator=(const CollisionIntegral4&) = default;
 
@@ -152,7 +153,7 @@ public:
     IntegrationResult integrate(int m, int n, int j, int k, const IntegrationOptions& options);
 
     /* Evaluates the integral everywhere on the (m,n,j,k) grid. */
-    CollisionTensorResult evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
+    CollisionResultsGrid evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
@@ -173,6 +174,7 @@ private:
     static constexpr double SMALL_NUMBER = 1e-50;
 
     Chebyshev polynomialBasis;
+    ParticleNamePair mParticlePair;
 
     // mn = polynomial indices, jk = momentum indices
     IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const;

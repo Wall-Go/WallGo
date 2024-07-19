@@ -4,9 +4,11 @@
 #include "EnvironmentMacros.h"
 #include "Utils.h"
 #include "hdf5Interface.h"
+#include "ModelParameters.h"
 
 #include <filesystem>
 #include <memory>
+#include <unordered_map>
 
 namespace wallgo
 {
@@ -29,32 +31,32 @@ Here we describe this as a 2D array of 4D objects so that particle indices are s
 
 
 // Holds metadata about collision integrations
-struct CollisionTensorDesc
+struct CollisionMetadata
 {
     size_t basisSize = 1;
-    bool bStatisticalErrors = true;
-    std::string particle1 = "Unknown";
-    std::string particle2 = "Unknown";
+    bool bStatisticalErrors = false;
     std::string basisName = "Unknown";
     std::string integrator = "Unknown";
 };
 
-// Rank-4 tensor that collects numerical collision data for (particle1, particle2) pair
-class WALLGO_API CollisionTensorResult
+// Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair
+class WALLGO_API CollisionResultsGrid
 {
 public:
-    CollisionTensorResult(const CollisionTensorDesc& description);
-    CollisionTensorResult(size_t basisSize, bool bIncludeStatisticalErrors);
+
+    CollisionResultsGrid() : mParticlePair("Unknown", "Unknown"), mElementsPerDimension(0) {}
+    CollisionResultsGrid(const ParticleNamePair& particlePair, const CollisionMetadata& metadata);
 
     // Move semantics needed to handle the dynamic errors array
-    CollisionTensorResult(const CollisionTensorResult& other) = delete;
-    CollisionTensorResult& operator=(const CollisionTensorResult& other) = delete;
-    CollisionTensorResult(CollisionTensorResult&& other) noexcept = default;
-    CollisionTensorResult& operator=(CollisionTensorResult&& other) noexcept = default;
+    CollisionResultsGrid(const CollisionResultsGrid& other) = delete;
+    CollisionResultsGrid& operator=(const CollisionResultsGrid& other) = delete;
+    CollisionResultsGrid(CollisionResultsGrid&& other) noexcept = default;
+    CollisionResultsGrid& operator=(CollisionResultsGrid&& other) noexcept = default;
 
     inline bool hasStatisticalErrors() const { return mErrors != nullptr; }
     
-    size_t getBasisSize() const { return mDescription.basisSize; }
+    size_t getBasisSize() const { return mMetadata.basisSize; }
+    ParticleNamePair getParticleNamePair() const { return mParticlePair; }
 
     // ---- Read-write accessors
 
@@ -64,7 +66,7 @@ public:
     double errorAt(size_t m, size_t n, size_t j, size_t k) const;
     double& errorAt(size_t m, size_t n, size_t j, size_t k);
 
-    // Write (value, error) pair. Error will only be written if the CollisionTensorResult object was created with bIncludeStatisticalErrors = true
+    // Write (value, error) pair. Error will only be written if the CollisionResultsGrid object was created with bIncludeStatisticalErrors = true
     void updateValue(size_t m, size_t n, size_t j, size_t k, double newValue, double newError);
 
     /* Write array contents to a HDF5 file. This always overrides file if it exists.
@@ -80,10 +82,40 @@ private:
     // Optional: statistical errors of integrations. Has large memory cost, so we allocate this only if needed
     std::unique_ptr<Array4D> mErrors = nullptr;
 
-    CollisionTensorDesc mDescription;
+    CollisionMetadata mMetadata;
     size_t mElementsPerDimension;  // equals basisSize - 1
 
+    ParticleNamePair mParticlePair;
+
     void initData();
+};
+
+// TODO replace the manager with CollisionTensor
+
+struct WALLGO_API CollisionTensorResult
+{
+public:
+
+    CollisionTensorResult() {}
+    CollisionTensorResult(size_t numParticlePairs) : mData(numParticlePairs) {}
+
+    // Returns pointer to collision integration results of the specified particle pair. Can be nullptr if the pair is not found
+    CollisionResultsGrid* getResultsForParticlePair(const ParticleNamePair& particlePair);
+
+    // Returns pointer to collision integration results of the specified particle pair. Can be nullptr if the pair is not found
+    CollisionResultsGrid* getResultsForParticlePair(const std::string& particleName1, const std::string& particleName2);
+
+    // CollisionResultsGrid is not copyable, so use std::vector
+    std::vector<CollisionResultsGrid> mData;
+};
+
+class WALLGO_API CollisionTensor
+{
+
+
+private:
+
+    //std::unordered_map<std::pair<std::string, std::string>, CollisionResultsGrid> particlePairResults;
 };
 
 } // namespace
