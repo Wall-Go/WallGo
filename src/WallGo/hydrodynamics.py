@@ -549,7 +549,7 @@ class Hydrodynamics:
                 boostVelocity(xiShock, vmShock)
             )
 
-        # Make an initial guess for the temperature range in which Tn will be found
+        # Make an initial guess for the temperature range in which Tnucl will be found
         Tmin, Tmax = max(self.Tnucl / 2, self.TMinHydro), TmShock
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
 
@@ -598,7 +598,7 @@ class Hydrodynamics:
 
         Returns
         -------
-        Tn: float
+        Tnucl: float
             The nucleation temperature corresponding to the strongest shock.
 
         """
@@ -637,12 +637,12 @@ class Hydrodynamics:
 
         """
 
-        def strongestshockTn(vw: float) -> float:
+        def strongestshockTnucl(vw: float) -> float:
             return self.strongestShock(vw) - self.Tnucl
 
         try:
             vMinRootResult = root_scalar(
-                strongestshockTn,
+                strongestshockTnucl,
                 bracket=(self.vBracketLow, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
@@ -688,16 +688,16 @@ class Hydrodynamics:
                 vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
 
-            def shockTnDiff(vpTry: float) -> float:
+            def shockTnuclDiff(vpTry: float) -> float:
                 _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
                 return self.solveHydroShock(vwTry, vpTry, Tp) - self.Tnucl
 
-            shockTnDiffMin, shockTnDiffMax = shockTnDiff(vpmin), shockTnDiff(vpmax)
+            shockTnuclDiffMin, shockTnuclDiffMax = shockTnuclDiff(vpmin), shockTnuclDiff(vpmax)
 
             # If no solution was found between vpmin and vpmax, it might be because
             # vpmax was evaluated at Tn instead of Tp.  We thus reevaluate vpmax by
             # solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
-            if shockTnDiffMin * shockTnDiffMax > 0:
+            if shockTnuclDiffMin * shockTnuclDiffMax > 0:
 
                 def solveVpmax(vpTry: float) -> float:
                     _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
@@ -710,18 +710,18 @@ class Hydrodynamics:
                         xtol=self.atol,
                         rtol=self.rtol,
                     ).root
-                    shockTnDiffMax = shockTnDiff(vpmax)
+                    shockTnuclDiffMax = shockTnuclDiff(vpmax)
 
-            if shockTnDiffMin * shockTnDiffMax <= 0:
+            if shockTnuclDiffMin * shockTnuclDiffMax <= 0:
                 sol = root_scalar(
-                    shockTnDiff,
+                    shockTnuclDiff,
                     bracket=[vpmin, vpmax],
                     xtol=self.atol,
                     rtol=self.rtol,
                 )
             else:
                 extremum = minimize_scalar(
-                    lambda x: np.sign(shockTnDiffMax) * shockTnDiff(x),
+                    lambda x: np.sign(shockTnuclDiffMax) * shockTnuclDiff(x),
                     bounds=[vpmin, vpmax],
                     method="Bounded",
                 )
@@ -738,7 +738,7 @@ class Hydrodynamics:
                     return self.template.findMatching(vwTemplate)
 
                 sol = root_scalar(
-                    shockTnDiff,
+                    shockTnuclDiff,
                     bracket=[vpmin, extremum.x],
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -807,7 +807,7 @@ class Hydrodynamics:
         """
 
         # Function given to the root finder.
-        def shockTnDiff(
+        def shockTnuclDiff(
             vw: float,
         ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
@@ -844,18 +844,18 @@ class Hydrodynamics:
                 return 1  # No shock can be found, e.g. when the PT is too strong --
             # is there a risk here of returning 1 when it should be 0?
 
-        shockTnDiffMax = shockTnDiff(vmax)
+        shockTnuclDiffMax = shockTnuclDiff(vmax)
         if (
-            shockTnDiffMax > 0 or not self.success
+            shockTnuclDiffMax > 0 or not self.success
         ):  # There is no deflagration or hybrid solution, we return 1.
             return 1
 
-        shockTnDiffMin = shockTnDiff(vmin)
-        if shockTnDiffMin < 0:  # vw is smaller than vmin, we return 0.
+        shockTnuclDiffMin = shockTnuclDiff(vmin)
+        if shockTnuclDiffMin < 0:  # vw is smaller than vmin, we return 0.
             return 0
 
         sol = root_scalar(
-            shockTnDiff,
+            shockTnuclDiff,
             bracket=(vmin, vmax),
             xtol=self.atol,
             rtol=self.rtol,

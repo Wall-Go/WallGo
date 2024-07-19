@@ -14,7 +14,7 @@ from .FreeEnergy import FreeEnergy
 
 class Thermodynamics:
     """
-    Thermodynamic functions corresponding to the effectivePotential
+    Thermodynamic functions corresponding to the effective potential
     """
 
     def __init__(
@@ -99,12 +99,10 @@ class Thermodynamics:
             Error tolerance for the phase tracing
         paranoid: bool, optional
             Setting for phase tracing. When True, recomputes minimum at every step
-
-        paranoid: bool
         
         Returns
         -------
-        Tc:
+        Tc: float
             The value of the critical temperature
         """
         # getting range over which both phases naively exist
@@ -414,8 +412,8 @@ class Thermodynamics:
     def alpha(self, T: np.ndarray | float) -> np.ndarray | float:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via
-        :math:`\alpha = \frac{eHighT(T)-eLowT(T) -(pHighT(T)-pLowT(T)) 
-        /csqLowT(T)}{3wHighT(T)}`
+        :math:`\alpha = \frac{e_{\rm HighT}(T)-e_{\rm LowT}(T) -(p_{\rm HighT}(T)-p_{\rm LowT}(T)) 
+        /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}`
 
         Parameters
         ----------
@@ -638,7 +636,7 @@ class ThermodynamicsExtrapolate:
     def deHighT(self, temperature: float) -> float:
         r"""
         Temperature derivative of the energy density in the high-temperature phase,
-        obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
+        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,
         valid outside of the allowed temperature range.
 
         Parameters
@@ -761,7 +759,7 @@ class ThermodynamicsExtrapolate:
     def ddpLowT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the low-temperature phase, 
-        obtained from thermodynamics.ddpLowT for the allowed temperature range
+        obtained from :py:data:`WallGo.Thermodynamics`.ddpLowT for the allowed temperature range
         and extrapolated to the template model outside of the allowed temperature range
 
         Parameters
@@ -815,7 +813,7 @@ class ThermodynamicsExtrapolate:
     def deLowT(self, temperature: float) -> float:
         r"""
         Temperature derivative of the energy density in the low-temperature phase, 
-        obtained via :math:`e(T) = T \frac{d^2p}{dT^2}`,
+        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,,
         valid outside of the allowed temperature range.
 
         Parameters
