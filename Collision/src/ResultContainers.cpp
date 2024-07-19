@@ -66,7 +66,7 @@ void CollisionResultsGrid::updateValue(size_t m, size_t n, size_t j, size_t k, d
     }
 }
 
-bool CollisionResultsGrid::writeToHDF5(const std::filesystem::path& filePath, bool bWriteErrors)
+bool CollisionResultsGrid::writeToHDF5(const std::filesystem::path& filePath, bool bWriteErrors) const
 {
     // H5F_ACC_TRUNC = overwrite existing file
     H5::H5File h5File(filePath.string(), H5F_ACC_TRUNC);
@@ -99,6 +99,44 @@ void CollisionResultsGrid::initData()
     }
 }
 
+
+bool CollisionTensorResult::writeToIndividualHDF5(const std::filesystem::path& outDirectory, bool bWriteErrors) const
+{
+    namespace fs = std::filesystem;
+
+    // Create the directory if it doesn't exist
+    fs::path dir(outDirectory);
+    if (!fs::exists(dir))
+    {
+        try
+        {
+            fs::create_directory(dir);
+        }
+        catch (const fs::filesystem_error& e)
+        {
+            std::cerr << "Failed to create collision output dir: " << dir.string()
+                << ". Error was: " << e.what() << std::endl;
+            return false;
+        }
+    }
+
+    bool bAllOK = true;
+
+    for (const CollisionResultsGrid& resultsForPair : mData)
+    {
+        const ParticleNamePair pair = resultsForPair.getParticleNamePair();
+        const std::string fnameBase = "collisions_" + pair.first + "_" + pair.second + ".hdf5";
+        const fs::path outFile = outDirectory / fnameBase;
+        bAllOK &= resultsForPair.writeToHDF5(outFile, bWriteErrors);
+    }
+
+    return bAllOK;
+}
+
+bool CollisionTensorResult::writeToIndividualHDF5(bool bWriteErrors) const
+{
+    return writeToIndividualHDF5(std::filesystem::current_path(), bWriteErrors);
+}
 
 CollisionResultsGrid* CollisionTensorResult::getResultsForParticlePair(const ParticleNamePair& particlePair)
 {

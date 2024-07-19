@@ -257,7 +257,7 @@ bool CollisionTensor::setMatrixElementFile(const std::string &filePath)
     return true;
 }
 
-CollisionResultsGrid CollisionTensor::evaluateCollisionsGrid(
+CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
     const std::string& particle2,
     const IntegrationOptions& options,
@@ -277,48 +277,64 @@ CollisionResultsGrid CollisionTensor::evaluateCollisionsGrid(
     return mCachedIntegrals.at(pairName).evaluateOnGrid(options, verbosity);
 }
 
-CollisionResultsGrid CollisionTensor::evaluateCollisionsGrid(
+CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
     const std::string& particle2,
     const CollisionTensorVerbosity& verbosity)
 {
-    return evaluateCollisionsGrid(particle1, particle2, mDefaultIntegrationOptions, verbosity);
+    return computeIntegralsForPair(particle1, particle2, mDefaultIntegrationOptions, verbosity);
 }
 
-CollisionResultsGrid CollisionTensor::evaluateCollisionsGrid(
+CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
     const std::string& particle2,
     const IntegrationOptions& options)
 {
-    return evaluateCollisionsGrid(particle1, particle2, options, mDefaultVerbosity);
+    return computeIntegralsForPair(particle1, particle2, options, mDefaultVerbosity);
 }
 
-CollisionResultsGrid CollisionTensor::evaluateCollisionsGrid(
+CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
     const std::string& particle2)
 {
-    return evaluateCollisionsGrid(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
+    return computeIntegralsForPair(particle1, particle2, mDefaultIntegrationOptions, mDefaultVerbosity);
 }
 
-CollisionTensorResult CollisionTensor::calculateAllIntegrals(bool bVerbose)
+CollisionTensorResult CollisionTensor::computeIntegralsAll()
 {
-
     if (mCachedIntegrals.size() < 1)
     {
-        std::cout << "Warning: calculateCollisionIntegrals() called, but no integrals have been initialized." << std::endl;
+        std::cerr << "Warning: computeIntegralsAll() called on empty CollisionTensor object" << std::endl;
         // return empty result
         return CollisionTensorResult();
     }
 
     CollisionTensorResult result(mCachedIntegrals.size());
 
-    /*
+    size_t i = 0;
+    for (auto& [namePair, integral] : mCachedIntegrals)
+    {
+        result.mData[i] = integral.evaluateOnGrid(mDefaultIntegrationOptions, mDefaultVerbosity);
+
+        std::cout << particlePairToString(namePair) << " done\n";
+
+        ++i;
+    }
+
+    return result;
+}
+
+/*
+CollisionTensorResult CollisionTensor::calculateAllIntegrals(bool bVerbose)
+{
+    CollisionTensorResult result(mCachedIntegrals.size());
+
     // Initialize progress tracking 
     totalIntegralCount = countIndependentIntegrals(mBasisSize, outOfEqParticles.size());
     computedIntegralCount = 0;
     bFinishedInitialProgressCheck = false;
     startTime = std::chrono::steady_clock::now();
-    */
+
 
     // make rank 2 tensor that mixes out-of-eq particles (each element is a collision integral, so actually rank 6, but the grid indices are irrelevant here)
 
@@ -334,13 +350,13 @@ CollisionTensorResult CollisionTensor::calculateAllIntegrals(bool bVerbose)
 
         i++;
 
+        std::cout << particlePairToString(namePair) << " done\n";
+
         // Create a new HDF5 file. H5F_ACC_TRUNC means we overwrite the file if it exists
         const std::string fileNameBase = "collisions_" + name1 + "_" + name2 + ".hdf5";
         std::filesystem::path outputPath(outputDirectory);
         
         outputPath = outputPath / fileNameBase;
-
-        /*
 
         // How long did this all take
         std::chrono::duration<double> duration = std::chrono::steady_clock::now() - pairStartTime;
@@ -349,10 +365,20 @@ CollisionTensorResult CollisionTensor::calculateAllIntegrals(bool bVerbose)
         // leftover mins
         int minutes = static_cast<int>(seconds - hours * 3600 / 60);
         std::cout << "[" << name1 << ", " << name2 << "] done in " << hours << "h " << minutes << "min." << std::endl;
-        */
     }
 
     return result;
+}
+*/
+
+size_t CollisionTensor::countIndependentIntegrals() const
+{
+    size_t res = 0;
+    for (const auto& [_, integral] : mCachedIntegrals)
+    {
+        res += integral.countIndependentIntegrals();
+    }
+    return res;
 }
 
 
@@ -472,28 +498,6 @@ std::vector<CollElem<4>> CollisionTensor::parseMatrixElements(
 
     return collisionElements;
 }
-
-size_t CollisionTensor::countIndependentIntegrals(size_t basisSize, size_t outOfEqCount)
-{
-    const size_t N = basisSize;
-    // How many independent integrals in each CollisionIntegral4
-    size_t count = (N-1)*(N-1)*(N-1)*(N-1);
-    // C[Tm(-x), Tn(y)] = (-1)^m C[Tm(x), Tn(y)]
-    count = count / 2;
-    // Take ceiling (but this avoids type casts)
-    if (count % 2 != 0) count += 1;
-
-    // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
-    if (N % 2 == 0) {
-        // how many odd m?
-        size_t mOdd = N / 2;
-        count -= mOdd;
-    } 
-
-    // this was for 1 deltaF particle, for more than one we have mixing terms
-    return count * outOfEqCount*outOfEqCount;
-}
-
 
 /*
 void CollisionTensor::reportProgress()

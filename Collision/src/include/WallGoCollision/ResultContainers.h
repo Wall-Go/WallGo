@@ -75,7 +75,7 @@ public:
     Return value is false if something goes wrong. */
     bool writeToHDF5(
         const std::filesystem::path& filePath,
-        bool bWriteErrors = true);
+        bool bWriteErrors = true) const;
 
 private:
     Array4D mData;
@@ -98,6 +98,18 @@ public:
 
     CollisionTensorResult() {}
     CollisionTensorResult(size_t numParticlePairs) : mData(numParticlePairs) {}
+
+    /* Writes the contents to disk, so that each particle pair is written into a separate HDF5 file.
+    * In practice this just calls CollisionResultsGrid::writeToHDF5 for each particle pair.
+    * Return value is false if something went wrong. */
+    bool writeToIndividualHDF5(
+        const std::filesystem::path& outDirectory,
+        bool bWriteErrors = true) const;
+
+    /* Writes the contents to current working directory, so that each particle pair is written into a separate HDF5 file.
+    * In practice this just calls CollisionResultsGrid::writeToHDF5 for each particle pair.
+    * Return value is false if something went wrong. */
+    bool writeToIndividualHDF5(bool bWriteErrors = true) const;
 
     // Returns pointer to collision integration results of the specified particle pair. Can be nullptr if the pair is not found
     CollisionResultsGrid* getResultsForParticlePair(const ParticleNamePair& particlePair);

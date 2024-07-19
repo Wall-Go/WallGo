@@ -2,8 +2,11 @@
 #define UTILS_H
 
 #include <vector>
+#include <string>
+
 
 #include "EnvironmentMacros.h"
+#include "ModelParameters.h"
 
 namespace wallgo
 {
@@ -17,6 +20,11 @@ namespace constants
 // ---- Global functions etc
 
 extern bool gExitSignaled;
+
+inline std::string particlePairToString(const ParticleNamePair& pair)
+{
+	return "(" + pair.first + ", " + pair.second + ")";
+}
 
 // Clamp number between [min, max]
 template <typename T>

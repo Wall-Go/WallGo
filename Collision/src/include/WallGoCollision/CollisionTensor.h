@@ -50,11 +50,11 @@ public:
     CollisionTensor();
     CollisionTensor(size_t basisSize);
 
-    /* Configures default integration options that are used by evaluateCollisionsGrid() and related functions
+    /* Configures default integration options that are used by computeIntegralsForPair() and related functions
     if no IntegrationOptions object is passed when calling them. */
     void setDefaultIntegrationOptions(const IntegrationOptions& options);
 
-    /* Configures default integration verbosity that is used by evaluateCollisionsGrid() and related functions
+    /* Configures default integration verbosity that is used by computeIntegralsForPair() and related functions
     if no CollisionIntegralVerbosity object is passed when calling them. */
     void setDefaultIntegrationVerbosity(const CollisionTensorVerbosity& verbosity);
 
@@ -104,7 +104,7 @@ public:
     // ---- Evaluating cached integrals
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
-    CollisionResultsGrid evaluateCollisionsGrid(
+    CollisionResultsGrid computeIntegralsForPair(
         const std::string& particle1,
         const std::string& particle2,
         const IntegrationOptions& options,
@@ -112,14 +112,14 @@ public:
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
     Uses default integration options. */
-    CollisionResultsGrid evaluateCollisionsGrid(
+    CollisionResultsGrid computeIntegralsForPair(
         const std::string& particle1,
         const std::string& particle2,
         const CollisionTensorVerbosity& verbosity);
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
     Uses default verbosity settings */
-    CollisionResultsGrid evaluateCollisionsGrid(
+    CollisionResultsGrid computeIntegralsForPair(
         const std::string& particle1,
         const std::string& particle2,
         const IntegrationOptions& options);
@@ -127,17 +127,15 @@ public:
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid.
     Uses default integration options and verbosity settings. */
-    CollisionResultsGrid evaluateCollisionsGrid(
+    CollisionResultsGrid computeIntegralsForPair(
         const std::string& particle1,
         const std::string& particle2);
 
-    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
-    Options for the integration can be changed by with CollisionTensor::configureIntegration().
-    If bVerbose is true, will print each result to stdout. */
-    CollisionTensorResult calculateAllIntegrals(bool bVerbose = false);
+    /* Calculates all integrals previously initialized with setupCollisionIntegrals(). */
+    CollisionTensorResult computeIntegralsAll();
 
-    // Count how many independent collision integrals we have for N basis polynomials and M out-of-equilibrium particles. Will be of order N^4 * M^2
-    static size_t countIndependentIntegrals(size_t basisSize, size_t outOfEqCount);
+    // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
+    size_t countIndependentIntegrals() const;
 
 protected:
 
@@ -166,7 +164,7 @@ private:
     std::filesystem::path matrixElementFile;
 
     // Holds collision integrals so that they can be reused
-    std::map<std::pair<std::string, std::string>, CollisionIntegral4> mCachedIntegrals;
+    std::map<ParticleNamePair, CollisionIntegral4> mCachedIntegrals;
 
     // List of all particles that contribute to collisions
     std::vector<std::shared_ptr<ParticleSpecies>> particles;

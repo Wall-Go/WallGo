@@ -15,7 +15,7 @@
 #include "WallGoCollision/WallGoCollision.h"
 
 // Configures QCD-like particle content
-bool setupQCD(wallgo::CollisionTensor& manager) {
+bool setupQCD(wallgo::CollisionTensor& collTensor) {
 
 	const double gs = 1.2279920495357861;
 
@@ -37,21 +37,20 @@ bool setupQCD(wallgo::CollisionTensor& manager) {
 	wallgo::ParticleSpecies lightQuark("quark", wallgo::EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
 
 	// Ordering NEEDS to match the order in which particles are defined in the matrix element file(s). TODO improve this
-	manager.defineParticle(topQuark);
-	manager.defineParticle(gluon);
-	manager.defineParticle(lightQuark);
+	collTensor.defineParticle(topQuark);
+	collTensor.defineParticle(gluon);
+	collTensor.defineParticle(lightQuark);
 	
 
 	// Define all symbol that appear in matrix elements along with an initial value. The values can be changed later with manager.setVariable(name, value)
-	//manager.defineVariable("gs", gs);
-	manager.defineVariable("c[0]", gs);
-	manager.defineVariable("msq[0]", mq2);
-	manager.defineVariable("msq[1]", mg2);
-	manager.defineVariable("msq[2]", mq2);
+	collTensor.defineVariable("gs", gs);
+	collTensor.defineVariable("msq[0]", mq2);
+	collTensor.defineVariable("msq[1]", mg2);
+	collTensor.defineVariable("msq[2]", mq2);
 
 	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
 	This function returns false if the file is not found, in which case we abort here. */
-	if (!manager.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt"))
+	if (!collTensor.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt"))
 	{
 		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
 			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
@@ -75,24 +74,24 @@ int main()
 	// Can also set the seed at any later time:
 	//wallgo::setSeed(42);
 
-    wallgo::CollisionTensor manager;
+    wallgo::CollisionTensor collTensor;
 
 	// Specify output directory (relative or absolute path). Defaults to current directory
-	manager.setOutputDirectory("output");
+	collTensor.setOutputDirectory("output");
 
 	// Setup the particle content and specify matrix element file. If the setup fails we just abort
-    if (!setupQCD(manager))
+    if (!setupQCD(collTensor))
 	{
 		return 1;
 	}
 
 	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
-	manager.changePolynomialBasisSize(basisSizeN);
+	collTensor.changePolynomialBasisSize(basisSizeN);
 
 	/* Initialize collision integrals for all off-equilibrium particles currently registered with the manager.
 	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form which can be useful for debugging. */
-	manager.setupCollisionIntegrals(/*verbose*/ true);
+	collTensor.setupCollisionIntegrals(/*verbose*/ true);
 
 	/* Configure integrator.The defaults should be reasonably OK so you can only modify what you need.
 	Here we set everything manually to show how it's done. */
@@ -109,7 +108,7 @@ int main()
 	integrationOptions.bOptimizeUltrarelativistic = true;
 	
 	// Override the built-in defaults with our new settings
-	manager.setDefaultIntegrationOptions(integrationOptions);
+	collTensor.setDefaultIntegrationOptions(integrationOptions);
 
 	/* We can also configure various verbosity settings. These include progress reporting and time estimates
 	as well as a full result dump of each individual integral to stdout. By default these are all disabled.
@@ -119,33 +118,37 @@ int main()
 	verbosity.progressReportInterval = 1000; // Progress check every this many integrals. Will not trigger in this short example
 
 	// Override the built-in defaults with our new settings
-	manager.setDefaultIntegrationVerbosity(verbosity);
+	collTensor.setDefaultIntegrationVerbosity(verbosity);
 
 	// Evaluate all collision integrals that were prepared in the setupCollisionIntegrals() step
 
 	std::cout << "== Evaluating collision integrals for all particles combinations ==" << std::endl;
-	manager.calculateAllIntegrals(/*bVerbose*/ true);
-	// TODO how to get the output from this?
+	wallgo::CollisionTensorResult results = collTensor.computeIntegralsAll();
+
+	/* Write results to disk using HDF5 format. Each particle pair gets its own HDF5 file.
+	The bool argument specifies whether statistical errors should be written as well;
+	they will go to a separate dataset in the HDF5 file. */
+	results.writeToIndividualHDF5(/*output directory*/ "output", /*bWriteErrors*/ true);
 
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	We can also request to compute integrals only for a specific off-equilibrium particle pair
 	Demonstration: */
 	std::map<std::string, double> newVars
 	{
-		{"c[0]", 1},
+		{"gs", 1},
 		{"msq[1]", 0.2},
 	};
 
-	manager.setVariables(newVars);
-	manager.setVariable("msq[2]", 0.3);
+	collTensor.setVariables(newVars);
+	collTensor.setVariable("msq[2]", 0.3);
 
 	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
-	wallgo::CollisionResultsGrid result = manager.evaluateCollisionsGrid("top", "gluon");
+	wallgo::CollisionResultsGrid resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon");
 
 	/* There is also an overloaded version of the above for passing a custom IntegrationOptions struct
 	instead of using the one cached in the manager: */
 	integrationOptions.calls = 10000;
-	result = manager.evaluateCollisionsGrid("top", "gluon", integrationOptions);
+	resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon", integrationOptions);
 
 	// Perform clean exit
     wallgo::cleanup();
