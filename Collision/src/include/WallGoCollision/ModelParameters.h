@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <type_traits>
 #include <utility> // std::pair
+#include <cassert>
 
 namespace wallgo
 {
