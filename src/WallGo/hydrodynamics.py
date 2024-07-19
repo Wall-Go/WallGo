@@ -8,8 +8,8 @@ import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .exceptions import WallGoError
-from .HydroTemplateModel import HydroTemplateModel
 from .thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
+from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .helpers import gammaSq, boostVelocity
 from .results import HydroResults
 
@@ -67,7 +67,7 @@ class Hydrodynamics:
 
         self.rtol, self.atol = rtol, atol
 
-        self.template = HydroTemplateModel(thermodynamics, rtol=rtol, atol=atol)
+        self.template = HydrodynamicsTemplateModel(thermodynamics, rtol=rtol, atol=atol)
 
         try:
             self.vJ = self.findJouguetVelocity()
@@ -360,7 +360,7 @@ class Hydrodynamics:
         vw : float
             Wall velocity.
         vp : float or None, optional
-            Plasma velocity in front of the wall :math:`v_-`. If None, vp is
+            Plasma velocity in front of the wall :math:`v_+`. If None, vp is
             determined from conservation of entropy. Default is None.
 
         Returns

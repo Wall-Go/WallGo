@@ -29,7 +29,7 @@ import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
-from WallGo import Fields, WallGoResults
+from WallGo import Fields
 
 ## Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]

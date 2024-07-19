@@ -1,8 +1,8 @@
 ======================================
-Hydrodynamics
+Integrals
 ======================================
 
-.. automodule:: WallGo.hydrodynamics
+.. automodule:: WallGo.Integrals
     :members:
     :inherited-members:
     :special-members: __init__

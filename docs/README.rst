@@ -13,7 +13,7 @@ MacOS::
 Next, to install the necessary Python libraries, from the root directory of the
 repository, run::
 
-    pip install -r docs/requirements.txt
+    pip install -e '.[docs]'
 
 Then, make the html version of the docs with::
 

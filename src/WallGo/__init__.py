@@ -4,17 +4,16 @@ and would cause hard-to-diagnoze crashes.
 TODO Is there a better way of doing all this?! 
 """
 
-from .boltzmann import BoltzmannBackground, BoltzmannSolver
-from .containers import PhaseInfo, BoltzmannBackground
+from .boltzmann import BoltzmannSolver
+from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
 from .exceptions import WallGoError, WallGoPhaseValidationError
-from .Grid import Grid
+from .grid import Grid
+from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
-from .HydroTemplateModel import HydroTemplateModel
-from .Polynomial import Polynomial
+from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
+from .polynomial import Polynomial
 from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
-from .exceptions import WallGoError, WallGoPhaseValidationError
-from .containers import PhaseInfo, WallParams
 from .results import WallGoResults
 
 

@@ -73,7 +73,7 @@ def test_JouguetVelocity():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
-        hydroTemplate = WallGo.HydroTemplateModel(model)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model)
         res1[i] = hydrodynamics.findJouguetVelocity()
         res2[i] = hydroTemplate.findJouguetVelocity()
     np.testing.assert_allclose(res1,res2,rtol = 10**-6,atol = 0)
@@ -88,7 +88,7 @@ def test_findMatching():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
-        hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model,1e-6,1e-6)
         if vw[i] < hydrodynamics.minVelocity():
             res1[i] = [0,0,0,0]
         else:    
@@ -108,7 +108,7 @@ def test_findvwLTE():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
-        hydroTemplate = WallGo.HydroTemplateModel(model)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model)
         res1[i] = hydrodynamics.findvwLTE()
         res2[i] = hydroTemplate.findvwLTE()
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
@@ -123,7 +123,7 @@ def test_findHydroBoundaries():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
-        hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model,1e-6,1e-6)
         res1[i] = hydrodynamics.findHydroBoundaries(vw[i])
         res2[i] = hydroTemplate.findHydroBoundaries(vw[i])
         if np.isnan(res1[i,0]):
@@ -141,7 +141,7 @@ def test_minVelocity():
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
-        hydroTemplate = WallGo.HydroTemplateModel(model)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model)
         res1[i] = hydrodynamics.minVelocity()
         res2[i] = hydroTemplate.minVelocity()
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
@@ -154,7 +154,7 @@ def test_fastestDeflag():
     cb2 = cs2-(1/3-1/4)*rng.random(N)
     for i in range(N):
         model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
-        hydroTemplate = WallGo.HydroTemplateModel(model,1e-6,1e-6)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model,1e-6,1e-6)
         vw = hydroTemplate.vMin + rng.random()*(hydroTemplate.vJ-hydroTemplate.vMin)
         res1[i] = vw
         if i%2 == 0:

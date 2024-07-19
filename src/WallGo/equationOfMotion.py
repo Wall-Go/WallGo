@@ -13,10 +13,10 @@ from scipy.interpolate import UnivariateSpline
 
 from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
-from .Grid3Scales import Grid3Scales
+from .grid3Scales import Grid3Scales
 from .helpers import gammaSq  # derivatives for callable functions
 from .hydrodynamics import Hydrodynamics
-from .Polynomial import Polynomial
+from .polynomial import Polynomial
 from .thermodynamics import Thermodynamics
 from .containers import (
     BoltzmannDeltas,
@@ -849,7 +849,7 @@ class EOM:
         eomPoly = Polynomial(dVdz, self.grid)
 
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
-        pressure = eomPoly.integrate(w=-dzdchi)
+        pressure = eomPoly.integrate(weight=-dzdchi)
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
 
@@ -1137,7 +1137,7 @@ class EOM:
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
 
         # Potential energy part of the action
-        U = potentialPoly.integrate(w=dzdchi)  # pylint: disable=invalid-name
+        U = potentialPoly.integrate(weight=dzdchi)  # pylint: disable=invalid-name
         # Kinetic part of the action
         K = np.sum(  # pylint: disable=invalid-name
             (vevHighT - vevLowT) ** 2 / (6 * wallWidths)

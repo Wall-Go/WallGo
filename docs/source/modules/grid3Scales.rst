@@ -1,8 +1,8 @@
 ======================================
-Exceptions
+Grid3Scales
 ======================================
 
-.. automodule:: WallGo.exceptions
+.. autoclass:: WallGo.Grid3Scales
     :members:
     :inherited-members:
-    :special-members: __init__, __str__
+    :special-members: __init__
