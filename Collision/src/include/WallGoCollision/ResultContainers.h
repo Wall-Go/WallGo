@@ -109,14 +109,5 @@ public:
     std::vector<CollisionResultsGrid> mData;
 };
 
-class WALLGO_API CollisionTensor
-{
-
-
-private:
-
-    //std::unordered_map<std::pair<std::string, std::string>, CollisionResultsGrid> particlePairResults;
-};
-
 } // namespace
 #endif

@@ -71,7 +71,7 @@ private:
     std::map<std::string, double> parametersInternal;
 
     /* LN: In principle it may be better to use a map of shared_ptrs to describe the parameters.
-    That way we could automatically sync parameter values with eg. those contained in CollisionManager.
+    That way we could automatically sync parameter values with eg. those contained in CollisionTensor.
     But this probably introduces too much overhead to be worth it - it's easy to enough to update the map here
     by calling MatrixElement::setParameters() from the manager. */
 

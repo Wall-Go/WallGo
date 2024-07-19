@@ -1,5 +1,5 @@
-#ifndef COLLISION_H
-#define COLLISION_H
+#ifndef COLLISIONTENSOR_H
+#define COLLISIONTENSOR_H
 
 #include <vector>
 #include <map>
@@ -18,7 +18,7 @@
 #include "ModelParameters.h"
 
 
-/** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionManager.
+/** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionTensor.
  * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
  * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
  * we pass references to appropriate particles from our 'particles' list.
@@ -28,7 +28,7 @@
  */
 
 /** Handling of model parameters. The manager holds a map of [string, double] pairs that can be updated
- * through CollisionManager::setVariable(key, val). These need to be defined before parsing matrix elements,
+ * through CollisionTensor::setVariable(key, val). These need to be defined before parsing matrix elements,
  * otherwise the parsing will error out due to undefined symbols. Each matrix element will hold their own internal map
  * of parameter values, so if they change at any point, it is up to the manager to sync all built CollisionIntegral objects
  * and their stored MatrixElement objects. 
@@ -40,15 +40,15 @@ namespace wallgo
 {
 
 
-/* CollisionManager is the main interface to computing WallGo collision integrals. 
+/* CollisionTensor is the main interface to computing WallGo collision integrals. 
 * Manages model-parameter and particle definitions, and construct collision integral objects
 * based on matrix element input. Used also to initiate collision integrations. */
-class WALLGO_API CollisionManager 
+class WALLGO_API CollisionTensor 
 {
 
 public: 
-    CollisionManager();
-    CollisionManager(size_t basisSize);
+    CollisionTensor();
+    CollisionTensor(size_t basisSize);
 
     /* Configures default integration options that are used by evaluateCollisionsGrid() and related functions
     if no IntegrationOptions object is passed when calling them. */
@@ -132,7 +132,7 @@ public:
         const std::string& particle2);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals().
-    Options for the integration can be changed by with CollisionManager::configureIntegration().
+    Options for the integration can be changed by with CollisionTensor::configureIntegration().
     If bVerbose is true, will print each result to stdout. */
     CollisionTensorResult calculateAllIntegrals(bool bVerbose = false);
 
@@ -165,7 +165,7 @@ private:
     std::filesystem::path outputDirectory;
     std::filesystem::path matrixElementFile;
 
-    /* Holds collision integrals so that they can be reused. Keys are pairs of particle names. */
+    // Holds collision integrals so that they can be reused
     std::map<std::pair<std::string, std::string>, CollisionIntegral4> mCachedIntegrals;
 
     // List of all particles that contribute to collisions

@@ -8,7 +8,7 @@
 
 #include "WallGoCollision/CollisionIntegral.h"
 #include "WallGoCollision/ParticleSpecies.h"
-#include "WallGoCollision/CollisionManager.h"
+#include "WallGoCollision/CollisionTensor.h"
 #include "WallGoCollision/Utils.h"
 
 // Python bindings
@@ -19,15 +19,15 @@
 namespace wallgo
 {
 
-/* We bind a subclass of the CollisionManager "control" class. 
+/* We bind a subclass of the CollisionTensor "control" class. 
 This way we can override some functions with python-specific functionality.
 Marking this as final prevents some non-virtual destructor warnings from clang. */
-class CollisionPython final : public CollisionManager
+class CollisionPython final : public CollisionTensor
 {
 
 public: 
 
-    CollisionPython() : CollisionManager() {}
+    CollisionPython() : CollisionTensor() {}
 
 protected:
 
@@ -100,7 +100,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
 
     // READMEs for the functions
     std::string usage_CollisionManager = 
-        "Constructor for CollisionManager class.\n";
+        "Constructor for CollisionTensor class.\n";
 
     std::string usage_addParticle =
         "Add a new particle species \n\n"
@@ -136,7 +136,7 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         "   options (IntegrationOptions)";
 
     // For functions with default args we need to explicity define the arguments
-    py::class_<CollisionPython>(m, "CollisionManager")
+    py::class_<CollisionPython>(m, "CollisionTensor")
         .def(py::init<>(), usage_CollisionManager.c_str())
         .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
         .def("setVariable", &CollisionPython::setVariable, usage_setVariable.c_str())

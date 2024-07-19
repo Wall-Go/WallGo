@@ -3,7 +3,7 @@
 
 // This just exposes our headers, so that user programs can simply #include "WallGoCollision.h"
 
-#include "CollisionManager.h"
+#include "CollisionTensor.h"
 
 #include "PolynomialBasis.h"
 #include "ThreeVector.h"

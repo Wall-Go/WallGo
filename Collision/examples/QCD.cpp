@@ -15,7 +15,7 @@
 #include "WallGoCollision/WallGoCollision.h"
 
 // Configures QCD-like particle content
-bool setupQCD(wallgo::CollisionManager& manager) {
+bool setupQCD(wallgo::CollisionTensor& manager) {
 
 	const double gs = 1.2279920495357861;
 
@@ -56,7 +56,7 @@ bool setupQCD(wallgo::CollisionManager& manager) {
 		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
 			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
 			"Please run the example program inside the 'examples' directory.\n"
-			"In your own applications you can call wallgo::CollisionManager::setMatrixElementFile() to specify the file location as you prefer."
+			"In your own applications you can call wallgo::CollisionTensor::setMatrixElementFile() to specify the file location as you prefer."
 			<< std::endl;
 		return false;
 	}
@@ -75,7 +75,7 @@ int main()
 	// Can also set the seed at any later time:
 	//wallgo::setSeed(42);
 
-    wallgo::CollisionManager manager;
+    wallgo::CollisionTensor manager;
 
 	// Specify output directory (relative or absolute path). Defaults to current directory
 	manager.setOutputDirectory("output");
