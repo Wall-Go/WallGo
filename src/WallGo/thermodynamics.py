@@ -2,18 +2,15 @@
 Classes that contain thermodynamics quantities like pressure, enthalpy, energy density 
 for both phases
 """
+from typing import Tuple
 
 import numpy as np
-import numpy.typing as npt
 import scipy.optimize
-from typing import Tuple
 
 from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .Fields import Fields
 from .FreeEnergy import FreeEnergy
-
-# TODO should make most functions here non-public
 
 class Thermodynamics:
     """
@@ -65,7 +62,7 @@ class Thermodynamics:
             self.phaseLowT,
         )
 
-    def getCoexistenceRange(self) -> Tuple[float, float]:
+    def _getCoexistenceRange(self) -> Tuple[float, float]:
         """
         Finds the temperature range where the two phases coexist
 
@@ -112,7 +109,7 @@ class Thermodynamics:
         """
         # getting range over which both phases naively exist
         # (if we haven't traced the phases yet)
-        TMin, TMax = self.getCoexistenceRange()
+        TMin, TMax = self._getCoexistenceRange()
         if TMin > TMax:
             raise WallGoError(
                 "findCriticalTemperature needs TMin < TMax",
@@ -132,7 +129,7 @@ class Thermodynamics:
             )
 
         # getting range over which both phases are stable
-        TMin, TMax = self.getCoexistenceRange()
+        TMin, TMax = self._getCoexistenceRange()
 
         # Wrapper that computes free-energy difference between our phases.
         # This goes into scipy so scalar in, scalar out
@@ -312,8 +309,8 @@ class Thermodynamics:
             Pressure in the low-temperature phase.
         """
 
-        VeffValue = self.freeEnergyLow(temperature).veffValue
-        return -VeffValue
+        veffValue = self.freeEnergyLow(temperature).veffValue
+        return -veffValue
 
     def dpLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
@@ -468,8 +465,8 @@ class ThermodynamicsExtrapolate:
 
         References
         ----------
-        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts and 
-            the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
+        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
+            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
             doi:10.1016/j.nuclphysb.2014.12.008
         """
         self.thermodynamics : Thermodynamics = thermodynamics
