@@ -537,13 +537,13 @@ class ThermodynamicsExtrapolate:
                 float(1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
                 - self.epsilonMinHighT)
             )
-        elif temperature > self.TMaxHighT:
+        if temperature > self.TMaxHighT:
             return (
                 float(1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
                 - self.epsilonMaxHighT)
             )
-        else:
-            return float(self.thermodynamics.pHighT(temperature))
+
+        return float(self.thermodynamics.pHighT(temperature))
 
     def dpHighT(self, temperature: float) -> float:
         r"""
@@ -569,7 +569,7 @@ class ThermodynamicsExtrapolate:
                 * self.aMinHighT
                 * pow(temperature, self.muMinHighT - 1)
             )
-        elif temperature > self.TMaxHighT:
+        if temperature > self.TMaxHighT:
             return float(
                 1
                 / 3.0
@@ -577,8 +577,8 @@ class ThermodynamicsExtrapolate:
                 * self.aMaxHighT
                 * pow(temperature, self.muMaxHighT - 1)
             )
-        else:
-            return float(self.thermodynamics.dpHighT(temperature))
+
+        return float(self.thermodynamics.dpHighT(temperature))
 
     def ddpHighT(self, temperature: float) -> float:
         r"""
@@ -605,7 +605,7 @@ class ThermodynamicsExtrapolate:
                 * self.aMinHighT
                 * pow(temperature, self.muMinHighT - 2)
             )
-        elif temperature > self.TMaxHighT:
+        if temperature > self.TMaxHighT:
             return float(
                 1
                 / 3.0
@@ -614,8 +614,8 @@ class ThermodynamicsExtrapolate:
                 * self.aMaxHighT
                 * pow(temperature, self.muMaxHighT - 2)
             )
-        else:
-            return float(self.thermodynamics.ddpHighT(temperature))
+
+        return float(self.thermodynamics.ddpHighT(temperature))
 
     def eHighT(self, temperature: float) -> float:
         r"""
@@ -689,10 +689,10 @@ class ThermodynamicsExtrapolate:
         """
         if temperature < self.TMinHighT:
             return float(self.thermodynamics.csqHighT(self.TMinHighT))
-        elif temperature > self.TMaxHighT:
+        if temperature > self.TMaxHighT:
             return float(self.thermodynamics.csqHighT(self.TMaxHighT))
-        else:
-            return float(self.thermodynamics.csqHighT(temperature))
+
+        return float(self.thermodynamics.csqHighT(temperature))
 
     def pLowT(self, temperature: float) -> float:
         r"""
@@ -715,13 +715,13 @@ class ThermodynamicsExtrapolate:
                 1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
                 - self.epsilonMinLowT
             )
-        elif temperature > self.TMaxLowT:
+        if temperature > self.TMaxLowT:
             return float(
                 1 / 3.0 * self.aMaxLowT * pow(temperature, self.muMaxLowT)
                 - self.epsilonMaxLowT
             )
-        else:
-            return float(self.thermodynamics.pLowT(temperature))
+
+        return float(self.thermodynamics.pLowT(temperature))
 
     def dpLowT(self, temperature: float) -> float:
         r"""
@@ -747,7 +747,7 @@ class ThermodynamicsExtrapolate:
                 * self.aMinLowT
                 * pow(temperature, self.muMinLowT - 1)
             )
-        elif temperature > self.TMaxLowT:
+        if temperature > self.TMaxLowT:
             return float(
                 1
                 / 3.0
@@ -755,8 +755,8 @@ class ThermodynamicsExtrapolate:
                 * self.aMaxLowT
                 * pow(temperature, self.muMaxLowT - 1)
             )
-        else:
-            return float(self.thermodynamics.dpLowT(temperature))
+
+        return float(self.thermodynamics.dpLowT(temperature))
 
     def ddpLowT(self, temperature: float) -> float:
         r"""
@@ -783,7 +783,7 @@ class ThermodynamicsExtrapolate:
                 * self.aMinLowT
                 * pow(temperature, self.muMinLowT - 2)
             )
-        elif temperature > self.TMaxLowT:
+        if temperature > self.TMaxLowT:
             return float(
                 1
                 / 3.0
@@ -792,8 +792,8 @@ class ThermodynamicsExtrapolate:
                 * self.aMaxLowT
                 * pow(temperature, self.muMaxLowT - 2)
             )
-        else:
-            return float(self.thermodynamics.ddpLowT(temperature))
+
+        return float(self.thermodynamics.ddpLowT(temperature))
 
     def eLowT(self, temperature: float) -> float:
         r"""
@@ -865,7 +865,7 @@ class ThermodynamicsExtrapolate:
         """
         if temperature < self.TMinLowT:
             return float(self.thermodynamics.csqLowT(self.TMinLowT))
-        elif temperature > self.TMaxLowT:
+        if temperature > self.TMaxLowT:
             return float(self.thermodynamics.csqLowT(self.TMaxLowT))
-        else:
-            return float(self.thermodynamics.csqLowT(temperature))
+
+        return float(self.thermodynamics.csqLowT(temperature))
