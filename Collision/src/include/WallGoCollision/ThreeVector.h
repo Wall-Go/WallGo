@@ -1,5 +1,4 @@
-#ifndef THREEVECTOR_H
-#define THREEVECTOR_H
+#pragma once
 
 #include <cassert>
 #include <cmath>
@@ -67,5 +66,3 @@ public:
 };
 
 } // namespace
-
-#endif

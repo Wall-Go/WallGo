@@ -1,5 +1,4 @@
-#ifndef HDF5_INTERFACE_H_
-#define HDF5_INTERFACE_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -29,5 +28,3 @@ void writeMetadata(H5::H5File &h5File, const CollisionMetadata& metadata);
 
 } // namespace utils
 } // namespace wallgo
-
-#endif // header guard

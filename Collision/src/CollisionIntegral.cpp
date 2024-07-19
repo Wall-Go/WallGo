@@ -302,6 +302,12 @@ size_t CollisionIntegral4::countIndependentIntegrals() const
     return count;
 }
 
+bool CollisionIntegral4::isEmpty() const
+{
+    return collisionElements_nonUltrarelativistic.size() == 0
+        && collisionElements_ultrarelativistic.size() == 0;
+}
+
 std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const
 {
     // Vacuum masses squared

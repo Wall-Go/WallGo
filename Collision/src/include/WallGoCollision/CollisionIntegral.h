@@ -1,5 +1,4 @@
-#ifndef COLLISIONINTEGRAL_H
-#define COLLISIONINTEGRAL_H
+#pragma once
 
 #include <cmath>
 #include <vector>
@@ -168,6 +167,9 @@ public:
     // How many integrals need to be computed with the current grid size
     size_t countIndependentIntegrals() const;
 
+    // True if our collision elements lists are empty
+    bool isEmpty() const;
+
 private:
 
     // For avoiding 1/0
@@ -202,6 +204,3 @@ private:
 
 
 } // namespace
-
-
-#endif // header guard

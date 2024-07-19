@@ -56,7 +56,7 @@ void MatrixElement::setExpression(const std::string &expressionIn)
     expression = expressionIn;
     parser->SetExpr(expression);
 
-    /* Do checks here so that we don't need to have slow try...catch in evaluate() function */
+    // Do sensibility checks here so that we can skip them in performance critical sections
     testExpression();
 }
 

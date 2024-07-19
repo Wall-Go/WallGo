@@ -1,5 +1,4 @@
-#ifndef COLLISIONTENSORRESULT_H
-#define COLLISIONTENSORRESULT_H
+#pragma once
 
 #include "EnvironmentMacros.h"
 #include "Utils.h"
@@ -122,4 +121,3 @@ public:
 };
 
 } // namespace
-#endif

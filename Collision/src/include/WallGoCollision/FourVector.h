@@ -1,5 +1,4 @@
-#ifndef FOURVECTOR_H_
-#define FOURVECTOR_H_
+#pragma once
 
 #include <cmath>
 #include <array>
@@ -209,6 +208,3 @@ public:
 };
 
 } // namespace
-
-#endif // header guard
-

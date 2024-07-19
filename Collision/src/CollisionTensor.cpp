@@ -58,10 +58,7 @@ CollisionTensor::CollisionTensor()
 {
     // Set default options
 
-    mBasisSize = 0;
-
-    outputDirectory = std::filesystem::current_path();
-    matrixElementFile = std::filesystem::path("MatrixElements.txt");
+    mBasisSize = 1;
 
     mDefaultIntegrationOptions.calls = 50000;
     mDefaultIntegrationOptions.maxIntegrationMomentum = 20;
@@ -184,9 +181,9 @@ void CollisionTensor::setVariables(const std::map<std::string, double> &newValue
 }
 
 CollisionIntegral4 CollisionTensor::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
-    const std::string &inMatrixElementFile, size_t inBasisSize, bool bVerbose)
+    const std::string &matrixElementFile, size_t inBasisSize, bool bVerbose)
 {
-    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), inMatrixElementFile, bVerbose);
+    std::vector<CollElem<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), matrixElementFile, bVerbose);
 
     ParticleNamePair namePair(particle1->name, particle2->name);
     CollisionIntegral4 collisionIntegral(inBasisSize, namePair);
@@ -199,11 +196,12 @@ CollisionIntegral4 CollisionTensor::setupCollisionIntegral(const std::shared_ptr
     return collisionIntegral;
 }
 
-void CollisionTensor::setupCollisionIntegrals(bool bVerbose)
+
+void CollisionTensor::setupCollisionIntegrals(const std::filesystem::path& matrixElementFile, bool bVerbose)
 {
     clearIntegralCache();
 
-    for (const std::shared_ptr<ParticleSpecies>& particle1 : outOfEqParticles) 
+    for (const std::shared_ptr<ParticleSpecies>& particle1 : outOfEqParticles)
     for (const std::shared_ptr<ParticleSpecies>& particle2 : outOfEqParticles)
     {
         const std::string name1 = particle1->getName();
@@ -213,48 +211,13 @@ void CollisionTensor::setupCollisionIntegrals(bool bVerbose)
 
         CollisionIntegral4 newIntegral = setupCollisionIntegral(particle1, particle2, matrixElementFile.string(), mBasisSize, bVerbose);
 
-        mCachedIntegrals.insert( {namePair, newIntegral} );
+        mCachedIntegrals.insert({ namePair, newIntegral });
     }
 }
 
 void CollisionTensor::clearIntegralCache()
 {
     mCachedIntegrals.clear();
-}
-
-void CollisionTensor::setOutputDirectory(const std::string &directoryName)
-{
-    namespace fs = std::filesystem;
-
-    // Create the directory if it doesn't exist
-    fs::path dir(directoryName);
-    if (!fs::exists(dir))
-    {
-        try
-        {
-            fs::create_directory(dir);
-        }
-        catch (const fs::filesystem_error& e)
-        {
-            std::cerr << "Failed to create collision output dir: " << dir.string() 
-                << ". Error was: " << e.what() << std::endl;
-            return;
-        }
-    }
-
-    outputDirectory = dir;
-}
-
-bool CollisionTensor::setMatrixElementFile(const std::string &filePath)
-{
-    matrixElementFile = std::filesystem::path(filePath);
-    // Check that the file exists
-    if (!std::filesystem::exists(matrixElementFile))
-    {
-        std::cerr << "Error: Can't find matrix element file " << matrixElementFile.string() << std::endl;
-        return false;
-    }
-    return true;
 }
 
 CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
@@ -302,6 +265,11 @@ CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
 
 CollisionTensorResult CollisionTensor::computeIntegralsAll()
 {
+    return computeIntegralsAll(mDefaultIntegrationOptions);
+}
+
+CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOptions& options)
+{
     if (mCachedIntegrals.size() < 1)
     {
         std::cerr << "Warning: computeIntegralsAll() called on empty CollisionTensor object" << std::endl;
@@ -314,7 +282,7 @@ CollisionTensorResult CollisionTensor::computeIntegralsAll()
     size_t i = 0;
     for (auto& [namePair, integral] : mCachedIntegrals)
     {
-        result.mData[i] = integral.evaluateOnGrid(mDefaultIntegrationOptions, mDefaultVerbosity);
+        result.mData[i] = integral.evaluateOnGrid(options, mDefaultVerbosity);
 
         std::cout << particlePairToString(namePair) << " done\n";
 
@@ -445,10 +413,10 @@ std::vector<CollElem<4>> CollisionTensor::parseMatrixElements(
 
     std::ifstream file(inMatrixElementFile);
 
-    // M_ab -> cd, with a = particle1 and at least one of bcd is particle2. Suppose that for each out-of-eq pair, Mathematica gives these in form 
-    // M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
-    // Here we parse the lhs to extract indices, then parse the rhs as a math expression (function of s,t,u and other symbols that we infer).
-    // For each of these we make a CollElem<4> object with correct deltaF structure which we infer from the indices 
+    /*M_ab->cd, with a = particle1 and at least one of bcd is particle2.Suppose that for each out - of - eq pair, Mathematica gives these in form
+    M[a, b, c, d] -> (some symbolic expression), where abcd are integer indices that need to match our ordering in particleIndex map
+    Here we parse the lhs to extract indices, then parse the rhs as a math expression (function of s,t,u and other symbols that we infer).
+    For each of these we make a CollElem<4> object with correct deltaF structure which we infer from the indices */
 
     std::vector<CollElem<4>> collisionElements;
 

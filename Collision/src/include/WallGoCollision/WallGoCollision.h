@@ -1,5 +1,4 @@
-#ifndef WALLGOCOLLISION_H
-#define WALLGOCOLLISION_H
+#pragma once
 
 // This just exposes our headers, so that user programs can simply #include "WallGoCollision.h"
 
@@ -17,5 +16,3 @@
 #include "ModelParameters.h"
 
 #include "hdf5Interface.h"
-
-#endif

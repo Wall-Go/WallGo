@@ -1,5 +1,4 @@
-#ifndef MATRIXELEMENTPARSER_H
-#define MATRIXELEMENTPARSER_H
+#pragma once
 
 #include "EnvironmentMacros.h"
 
@@ -17,7 +16,7 @@ namespace wallgo
 {
 
 /* Class MatrixElement - Describes a single symbolic matrix element (abs value squared). Uses muparser as the math parsing backend.
-Logic here is that the default constructor just constructs a dummy element with expression equal to 0, 
+Logic here is that the default constructor just constructs a dummy element with expression equal to 0
 and defines the Mandelstam variables s,t,u as symbols whose numerical values are tied to our private variables. 
 Calling initSymbols(parameters) defines a symbol for each string key in the 'parameters' map and fills an internal parameters map
 for setting numerical values for these symbols. Note that it is currently NOT possible to define a symbol without specifying also an initial value.
@@ -25,7 +24,7 @@ Here 'parameters' refers to model-dependent variables like couplings, masses etc
 
 Therefore, once you have a math expression in string format to describe a matrix element, usage should be: 
     1. Call initSymbols(parameters) with a std::map that has all symbols (apart from s,t,u) needed to evaluate the wanted expression, with some initial values.
-    Does not matter if it contains "extra" symbols that the expression does not actually depend on, but this wastes memory.
+    It is safe to pass a map containing "extra" symbols that the expression does not actually depend on, but this wastes memory as we still reserve memory for the unused symbols.
     2. Call setExpression(expr) with your string expression. This does the parsing and tests that the expression can be computed numerically.
     3. Evaluate with evaluate(s, t, u) with Mandelstam variables of your choice.
     4. Can change parameter values with the setParameters function without having to redefine or re-parse anything.
@@ -84,5 +83,3 @@ private:
 };
 
 } // namespace
-
-#endif // header guard

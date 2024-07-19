@@ -1,5 +1,4 @@
-#ifndef PARTICLESPECIES_H
-#define PARTICLESPECIES_H
+#pragma once
 
 #include <string>
 #include <cmath>
@@ -80,5 +79,3 @@ public:
 };
 
 } // namespace
-
-#endif

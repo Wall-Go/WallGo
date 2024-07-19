@@ -1,5 +1,4 @@
-#ifndef POLYNOMIAL_H
-#define POLYNOMIAL_H
+#pragma once
 
 #include <cmath>
 
@@ -67,5 +66,3 @@ public:
 };
 
 } // namespace
-
-#endif // header guard

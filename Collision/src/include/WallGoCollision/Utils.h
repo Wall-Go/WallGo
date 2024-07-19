@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -67,6 +66,3 @@ void WALLGO_API cleanup();
 void WALLGO_API clearRNG();
 
 } // namespace
-
-
-#endif // Header guard

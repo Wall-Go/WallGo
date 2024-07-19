@@ -15,7 +15,7 @@
 #include "WallGoCollision/WallGoCollision.h"
 
 // Configures QCD-like particle content
-bool setupQCD(wallgo::CollisionTensor& collTensor) {
+void setupQCD(wallgo::CollisionTensor& collTensor) {
 
 	const double gs = 1.2279920495357861;
 
@@ -48,19 +48,6 @@ bool setupQCD(wallgo::CollisionTensor& collTensor) {
 	collTensor.defineVariable("msq[1]", mg2);
 	collTensor.defineVariable("msq[2]", mq2);
 
-	/* Where to load matrix elements from. If not specified, defaults to MatrixElements.txt in working dir. 
-	This function returns false if the file is not found, in which case we abort here. */
-	if (!collTensor.setMatrixElementFile("MatrixElements/MatrixElements_QCD.txt"))
-	{
-		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
-			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
-			"Please run the example program inside the 'examples' directory.\n"
-			"In your own applications you can call wallgo::CollisionTensor::setMatrixElementFile() to specify the file location as you prefer."
-			<< std::endl;
-		return false;
-	}
-
-	return true;
 }
 
 
@@ -76,22 +63,27 @@ int main()
 
     wallgo::CollisionTensor collTensor;
 
-	// Specify output directory (relative or absolute path). Defaults to current directory
-	collTensor.setOutputDirectory("output");
-
-	// Setup the particle content and specify matrix element file. If the setup fails we just abort
-    if (!setupQCD(collTensor))
-	{
-		return 1;
-	}
+	// Helper function for setting the particle content and model parameters
+	setupQCD(collTensor);
 
 	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
 	collTensor.changePolynomialBasisSize(basisSizeN);
 
+	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
+	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
+	
+	if (!std::filesystem::exists(matrixElementFile))
+	{
+		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
+			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
+			"Please run the example program inside the 'examples' directory.\n"
+			<< std::endl;
+	}
+
 	/* Initialize collision integrals for all off-equilibrium particles currently registered with the manager.
 	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form which can be useful for debugging. */
-	collTensor.setupCollisionIntegrals(/*verbose*/ true);
+	collTensor.setupCollisionIntegrals(matrixElementFile, /*verbose*/ true);
 
 	/* Configure integrator.The defaults should be reasonably OK so you can only modify what you need.
 	Here we set everything manually to show how it's done. */
@@ -101,11 +93,6 @@ int main()
 	integrationOptions.maxIntegrationMomentum = 20;
 	integrationOptions.absoluteErrorGoal = 1e-8;
 	integrationOptions.relativeErrorGoal = 1e-1;
-
-	/* The bOptimizeUltrarelativistic flag allows the program to use a more optimized expression for the integrals
-	when only particles with the ultrarelativistic flag appear as external particles.
-	You should not have any reason to disable this optimization. */
-	integrationOptions.bOptimizeUltrarelativistic = true;
 	
 	// Override the built-in defaults with our new settings
 	collTensor.setDefaultIntegrationOptions(integrationOptions);
@@ -121,14 +108,15 @@ int main()
 	collTensor.setDefaultIntegrationVerbosity(verbosity);
 
 	// Evaluate all collision integrals that were prepared in the setupCollisionIntegrals() step
-
 	std::cout << "== Evaluating collision integrals for all particles combinations ==" << std::endl;
 	wallgo::CollisionTensorResult results = collTensor.computeIntegralsAll();
 
 	/* Write results to disk using HDF5 format. Each particle pair gets its own HDF5 file.
-	The bool argument specifies whether statistical errors should be written as well;
-	they will go to a separate dataset in the HDF5 file. */
+	The bool argument specifies whether statistical errors should be written as well.
+	Statistical errors will go to a separate dataset in the HDF5 file. */
 	results.writeToIndividualHDF5(/*output directory*/ "output", /*bWriteErrors*/ true);
+	
+
 
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	We can also request to compute integrals only for a specific off-equilibrium particle pair
@@ -142,12 +130,15 @@ int main()
 	collTensor.setVariables(newVars);
 	collTensor.setVariable("msq[2]", 0.3);
 
-	std::cout << "== Evaluating (top, gluon) only ==" << std::endl;
+	std::cout << "== Evaluating (top, gluon) only with modified parameters ==" << std::endl;
 	wallgo::CollisionResultsGrid resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon");
 
-	/* There is also an overloaded version of the above for passing a custom IntegrationOptions struct
-	instead of using the one cached in the manager: */
+	/* CollisionTensor also defines overloaded versions of the main "compute" functions for specifying custom
+	IntegrationOptions and CollisionTensorVerbosity objects on a per-call basis, instead defaulting to the ones cached inside the CollisionTensor instance.
+	Can be used for more fine-grained evaluation. Demonstration: */
 	integrationOptions.calls = 10000;
+	verbosity.bPrintEveryElement = false;
+	verbosity.progressReportInterval = 0; // no progress reporting
 	resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon", integrationOptions);
 
 	// Perform clean exit

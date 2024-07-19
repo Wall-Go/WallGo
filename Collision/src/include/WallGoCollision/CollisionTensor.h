@@ -1,5 +1,4 @@
-#ifndef COLLISIONTENSOR_H
-#define COLLISIONTENSOR_H
+#pragma once
 
 #include <vector>
 #include <map>
@@ -19,12 +18,9 @@
 
 
 /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionTensor.
- * We store them as shared pointers in our 'particles' list, and have a separate list for off-eq particles only.
- * Each CollElem needs shared pointers to its external particles, so when new CollElems are created through the manager
+ * We take a copy of the particle struct and store them as unique pointers in our 'particles' list.
+ * Each CollElem needs raw pointers to its external particles, so when new CollElems are created through the manager
  * we pass references to appropriate particles from our 'particles' list.
- *
- * I though about using raw pointers to avoid the overhead of std::shared_ptr, but at least in my test run at N = 5
- * the overhead was completely negligible compared to raw pointers.
  */
 
 /** Handling of model parameters. The manager holds a map of [string, double] pairs that can be updated
@@ -63,10 +59,10 @@ public:
     The particles have to be registered with the manager prior to using this, otherwise std::out_of_range is thrown. */
     void updateParticleMasses(const std::map<std::string, double>& msqVacuum, const std::map<std::string, double>& msqThermal);
 
-    // Change basis size used by the polynomial grid. This is a fast operation and does not require rebuild of stored integral objects
+    // Change basis size used by the polynomial grid. This is a fast operation, does not require rebuild of stored integral objects
     void changePolynomialBasisSize(size_t newBasisSize);
 
-    // Registers a new particle with the manager. Particle name must be unique
+    // Registers a new particle with this tensor. Particle name must be unique
     void defineParticle(const ParticleSpecies& particle);
 
     // ---- Symbolic variables used in matrix elements
@@ -84,18 +80,19 @@ public:
     void setVariables(const std::map<std::string, double>& newValues);
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
-    CollisionIntegral4 setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
-        const std::string &inMatrixElementFile, size_t inBasisSize, bool bVerbose = false);
+    CollisionIntegral4 setupCollisionIntegral(
+        const std::shared_ptr<ParticleSpecies>& particle1,
+        const std::shared_ptr<ParticleSpecies>& particle2, 
+        const std::string &matrixElementFile,
+        size_t inBasisSize,
+        bool bVerbose = false);
 
     /* Initializes and caches collision integrals for all registered particles. Basis size and matrix element file need to be set before calling this.
-    Note that calling this will clear any previously stored collision integral objects.*/
-    void setupCollisionIntegrals(bool bVerbose = false);
+    Note that calling this will clear any previously stored collision integral objects. */
+    void setupCollisionIntegrals(const std::filesystem::path& matrixElementFile, bool bVerbose = false);
     
     // Clears all stored collision integral objects
     void clearIntegralCache();
-
-    // Specify where to store output files, relative or absolute path. Defaults to current work directory.
-    void setOutputDirectory(const std::string& directoryName);
 
     /* Specify file to read matrix elements from, relative or absolute path. Default is "MatrixElements.txt". 
     Return value is false if the file was not found, true otherwise. */
@@ -132,6 +129,10 @@ public:
         const std::string& particle2);
 
     /* Calculates all integrals previously initialized with setupCollisionIntegrals(). */
+    CollisionTensorResult computeIntegralsAll(const IntegrationOptions& options);
+
+    /* Calculates all integrals previously initialized with setupCollisionIntegrals().
+    Uses default integration options.*/
     CollisionTensorResult computeIntegralsAll();
 
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
@@ -155,13 +156,10 @@ protected:
 
 private:
 
-    size_t mBasisSize = 0;
+    size_t mBasisSize = 1;
 
     IntegrationOptions mDefaultIntegrationOptions;
     CollisionTensorVerbosity mDefaultVerbosity;
-
-    std::filesystem::path outputDirectory;
-    std::filesystem::path matrixElementFile;
 
     // Holds collision integrals so that they can be reused
     std::map<ParticleNamePair, CollisionIntegral4> mCachedIntegrals;
@@ -180,6 +178,3 @@ private:
 };
 
 } // namespace
-
-
-#endif // header guard

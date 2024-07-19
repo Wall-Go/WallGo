@@ -1,5 +1,4 @@
-#ifndef GSLWRAPPER_H
-#define GSLWRAPPER_H
+#pragma once
 
 // Monte Carlo integration
 #include <gsl/gsl_math.h>
@@ -46,5 +45,3 @@ namespace gslWrapper
 }
 
 } // namespace
-
-#endif

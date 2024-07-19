@@ -1,5 +1,4 @@
-#ifndef COLLELEM_H_
-#define COLLELEM_H_
+#pragma once
 
 #include <cmath>
 #include <array>
@@ -106,5 +105,3 @@ public:
 };
 
 } // namespace
-
-#endif // header guard

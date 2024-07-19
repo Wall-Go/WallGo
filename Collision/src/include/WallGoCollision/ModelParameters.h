@@ -1,5 +1,4 @@
-#ifndef MODELPARAMETERS_H_
-#define MODELPARAMETERS_H_
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -74,5 +73,3 @@ using ParticleNamePair = std::pair<ParticleNameMap::key_type, ParticleNameMap::k
 using ModelParameters = TModelParameters<double>;
 
 } // namespace
-
-#endif // header guard
