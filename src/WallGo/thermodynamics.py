@@ -136,13 +136,13 @@ class Thermodynamics:
 
         # Wrapper that computes free-energy difference between our phases.
         # This goes into scipy so scalar in, scalar out
-        def freeEnergyDifference(inputT: np.double) -> np.double:
+        def freeEnergyDifference(inputT: float) -> float:
             f1 = self.freeEnergyHigh(inputT).veffValue
             f2 = self.freeEnergyLow(inputT).veffValue
             diff = f2 - f1
             # Force into scalar type. This errors out if the size is not 1;
             # no failsafes to avoid overhead
-            return diff.item()
+            return float(diff.item())
 
         # start from TMax and decrease temperature in small steps until
         # the free energy difference changes sign
@@ -177,7 +177,7 @@ class Thermodynamics:
                 rootResults,
             )
 
-        return rootResults.root
+        return float(rootResults.root)
 
     def pHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
@@ -472,25 +472,25 @@ class ThermodynamicsExtrapolate:
             the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
             doi:10.1016/j.nuclphysb.2014.12.008
         """
-        self.thermodynamics = thermodynamics
-        self.TMaxHighT = thermodynamics.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT = thermodynamics.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
+        self.thermodynamics : Thermodynamics = thermodynamics
+        self.TMaxHighT : float = thermodynamics.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT : float = thermodynamics.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT : float = thermodynamics.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT : float = thermodynamics.freeEnergyLow.minPossibleTemperature
 
         # The following parameters are defined such that the thermodynamic quantities
         # can be extrapolated beyond the minimum and maximum temperatures
         # by mapping onto the template model
-        self.muMinHighT = 1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT)
-        self.aMinHighT = (
+        self.muMinHighT = float(1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT))
+        self.aMinHighT = float((
             3
             * self.thermodynamics.wHighT(self.TMinHighT)
             / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
-        )
-        self.epsilonMinHighT = 1 / 3.0 * self.aMinHighT * pow(
+        ))
+        self.epsilonMinHighT = float(1 / 3.0 * self.aMinHighT * pow(
             self.TMinHighT, self.muMinHighT
-        ) - thermodynamics.pHighT(self.TMinHighT)
-        self.muMaxHighT = 1 + 1 / self.thermodynamics.csqHighT(self.TMaxHighT)
+        ) - thermodynamics.pHighT(self.TMinHighT))
+        self.muMaxHighT = 1 + 1 / float(self.thermodynamics.csqHighT(self.TMaxHighT))
         self.aMaxHighT = (
             3
             * self.thermodynamics.wHighT(self.TMaxHighT)
@@ -500,7 +500,7 @@ class ThermodynamicsExtrapolate:
             self.TMaxHighT, self.muMaxHighT
         ) - thermodynamics.pHighT(self.TMaxHighT)
 
-        self.muMinLowT = 1 + 1 / self.thermodynamics.csqLowT(self.TMinLowT)
+        self.muMinLowT = 1 + 1 / float(self.thermodynamics.csqLowT(self.TMinLowT))
         self.aMinLowT = (
             3
             * self.thermodynamics.wLowT(self.TMinLowT)
@@ -509,7 +509,7 @@ class ThermodynamicsExtrapolate:
         self.epsilonMinLowT = 1 / 3.0 * self.aMinLowT * pow(
             self.TMinLowT, self.muMinLowT
         ) - thermodynamics.pLowT(self.TMinLowT)
-        self.muMaxLowT = 1 + 1 / self.thermodynamics.csqLowT(self.TMaxLowT)
+        self.muMaxLowT = 1 + 1 / float(self.thermodynamics.csqLowT(self.TMaxLowT))
         self.aMaxLowT = (
             3
             * self.thermodynamics.wLowT(self.TMaxLowT)
@@ -537,16 +537,16 @@ class ThermodynamicsExtrapolate:
         """
         if temperature < self.TMinHighT:
             return (
-                1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
-                - self.epsilonMinHighT
+                float(1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
+                - self.epsilonMinHighT)
             )
         elif temperature > self.TMaxHighT:
             return (
-                1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
-                - self.epsilonMaxHighT
+                float(1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
+                - self.epsilonMaxHighT)
             )
         else:
-            return self.thermodynamics.pHighT(temperature)
+            return float(self.thermodynamics.pHighT(temperature))
 
     def dpHighT(self, temperature: float) -> float:
         r"""
@@ -565,7 +565,7 @@ class ThermodynamicsExtrapolate:
             Temperature-derivative of the pressure in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMinHighT
@@ -573,7 +573,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMinHighT - 1)
             )
         elif temperature > self.TMaxHighT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMaxHighT
@@ -581,7 +581,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMaxHighT - 1)
             )
         else:
-            return self.thermodynamics.dpHighT(temperature)
+            return float(self.thermodynamics.dpHighT(temperature))
 
     def ddpHighT(self, temperature: float) -> float:
         r"""
@@ -600,7 +600,7 @@ class ThermodynamicsExtrapolate:
             Second temperature-derivative of the pressure in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMinHighT
@@ -609,7 +609,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMinHighT - 2)
             )
         elif temperature > self.TMaxHighT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMaxHighT
@@ -618,7 +618,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMaxHighT - 2)
             )
         else:
-            return self.thermodynamics.ddpHighT(temperature)
+            return float(self.thermodynamics.ddpHighT(temperature))
 
     def eHighT(self, temperature: float) -> float:
         r"""
@@ -691,11 +691,11 @@ class ThermodynamicsExtrapolate:
             Sound speed squared in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return self.thermodynamics.csqHighT(self.TMinHighT)
+            return float(self.thermodynamics.csqHighT(self.TMinHighT))
         elif temperature > self.TMaxHighT:
-            return self.thermodynamics.csqHighT(self.TMaxHighT)
+            return float(self.thermodynamics.csqHighT(self.TMaxHighT))
         else:
-            return self.thermodynamics.csqHighT(temperature)
+            return float(self.thermodynamics.csqHighT(temperature))
 
     def pLowT(self, temperature: float) -> float:
         r"""
@@ -714,17 +714,17 @@ class ThermodynamicsExtrapolate:
             Pressure in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return (
+            return float(
                 1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
                 - self.epsilonMinLowT
             )
         elif temperature > self.TMaxLowT:
-            return (
+            return float(
                 1 / 3.0 * self.aMaxLowT * pow(temperature, self.muMaxLowT)
                 - self.epsilonMaxLowT
             )
         else:
-            return self.thermodynamics.pLowT(temperature)
+            return float(self.thermodynamics.pLowT(temperature))
 
     def dpLowT(self, temperature: float) -> float:
         r"""
@@ -743,7 +743,7 @@ class ThermodynamicsExtrapolate:
             Temperature-derivative of the pressure in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMinLowT
@@ -751,7 +751,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMinLowT - 1)
             )
         elif temperature > self.TMaxLowT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMaxLowT
@@ -759,7 +759,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMaxLowT - 1)
             )
         else:
-            return self.thermodynamics.dpLowT(temperature)
+            return float(self.thermodynamics.dpLowT(temperature))
 
     def ddpLowT(self, temperature: float) -> float:
         r"""
@@ -778,7 +778,7 @@ class ThermodynamicsExtrapolate:
             Second temperature-derivative of the pressure in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMinLowT
@@ -787,7 +787,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMinLowT - 2)
             )
         elif temperature > self.TMaxLowT:
-            return (
+            return float(
                 1
                 / 3.0
                 * self.muMaxLowT
@@ -796,7 +796,7 @@ class ThermodynamicsExtrapolate:
                 * pow(temperature, self.muMaxLowT - 2)
             )
         else:
-            return self.thermodynamics.ddpLowT(temperature)
+            return float(self.thermodynamics.ddpLowT(temperature))
 
     def eLowT(self, temperature: float) -> float:
         r"""
@@ -867,8 +867,8 @@ class ThermodynamicsExtrapolate:
             Sound speed squared in the low-temperature phase.
         """
         if temperature < self.TMinLowT:
-            return self.thermodynamics.csqLowT(self.TMinLowT)
+            return float(self.thermodynamics.csqLowT(self.TMinLowT))
         elif temperature > self.TMaxLowT:
-            return self.thermodynamics.csqLowT(self.TMaxLowT)
+            return float(self.thermodynamics.csqLowT(self.TMaxLowT))
         else:
-            return self.thermodynamics.csqLowT(temperature)
+            return float(self.thermodynamics.csqLowT(temperature))
