@@ -3,7 +3,7 @@
 #include "EnvironmentMacros.h"
 #include "Utils.h"
 #include "hdf5Interface.h"
-#include "ModelParameters.h"
+#include "ModelDefinitions.h"
 
 #include <filesystem>
 #include <memory>

@@ -14,7 +14,7 @@
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
 #include "ResultContainers.h"
-#include "ModelParameters.h"
+#include "ModelDefinitions.h"
 
 
 /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionTensor.

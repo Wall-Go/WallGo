@@ -5,7 +5,7 @@
 
 
 #include "EnvironmentMacros.h"
-#include "ModelParameters.h"
+#include "ModelDefinitions.h"
 
 namespace wallgo
 {

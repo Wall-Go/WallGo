@@ -13,6 +13,6 @@
 #include "CollisionIntegral.h"
 #include "CollElem.h"
 #include "MatrixElement.h"
-#include "ModelParameters.h"
+#include "ModelDefinitions.h"
 
 #include "hdf5Interface.h"

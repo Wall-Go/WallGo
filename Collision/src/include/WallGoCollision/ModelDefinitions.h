@@ -6,6 +6,8 @@
 #include <utility> // std::pair
 #include <cassert>
 
+#include "CollElem.h"
+
 namespace wallgo
 {
 
@@ -64,12 +66,33 @@ inline std::vector<std::string> TModelParameters<T>::getParameterNames() const
 }
 
 template<typename Name_t, typename Index_t>
-using TParticleNameMap = std::unordered_map<Name_t, Index_t>;
+using TNameMap = std::unordered_map<Name_t, Index_t>;
 
 // Map particle name -> particle index
-using ParticleNameMap = TParticleNameMap<std::string, uint32_t>;
+using ParticleNameMap = TNameMap<std::string, uint32_t>;
 using ParticleNamePair = std::pair<ParticleNameMap::key_type, ParticleNameMap::key_type>;
 
 using ModelParameters = TModelParameters<double>;
+
+class ParticleList
+{
+private:
+    ParticleNameMap nameMap;
+    
+
+
+};
+
+class PhysicsModel
+{
+public:
+
+    ModelParameters parameters;
+    
+
+private:
+
+};
+
 
 } // namespace
