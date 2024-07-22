@@ -37,7 +37,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+if (CMAKE_TOOLCHAIN_FILE)
+    message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
+
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 ## Compile with profiler support?

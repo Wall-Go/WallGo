@@ -23,15 +23,14 @@ MatrixElement::~MatrixElement()
     clearParser();
 }
 
-
 MatrixElement::MatrixElement(const MatrixElement& other)
 {
     const std::map<std::string, double> parameters = other.parametersInternal;
-    expression = other.getExpression();
+    expression = other.expression;
 
     initParser();
     initSymbols(parameters);
-    parser->SetExpr(expression);
+    parser.SetExpr(expression);
 }
 
 MatrixElement& MatrixElement::operator=(const MatrixElement &other)
@@ -39,22 +38,21 @@ MatrixElement& MatrixElement::operator=(const MatrixElement &other)
     if (this == &other) return *this;
 
     const std::map<std::string, double> parameters = other.parametersInternal;
-    expression = other.getExpression();
+    expression = other.expression;
 
     // Reset the parser just in case
     clearParser();
 
     initParser();
     initSymbols(parameters);
-    parser->SetExpr(expression);
+    parser.SetExpr(expression);
     return *this;
 }
-
 
 void MatrixElement::setExpression(const std::string &expressionIn)
 {
     expression = expressionIn;
-    parser->SetExpr(expression);
+    parser.SetExpr(expression);
 
     // Do sensibility checks here so that we can skip them in performance critical sections
     testExpression();
@@ -96,7 +94,7 @@ double MatrixElement::evaluate(double s, double t, double u)
     t_internal = t;
     u_internal = u;
 
-    return parser->Eval();
+    return parser.Eval();
 }
 
 
@@ -105,7 +103,7 @@ void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
     try
     {
         parametersInternal[symbol] = initValue;
-        parser->DefineVar(symbol, &parametersInternal.at(symbol));
+        parser.DefineVar(symbol, &parametersInternal.at(symbol));
     }
     catch (mu::Parser::exception_type &parserException) 
     {
@@ -116,26 +114,19 @@ void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
 
 void MatrixElement::initParser()
 {
-    if (parser != nullptr)
-    {
-        clearParser();
-    }
+    parser.SetExpr("0");
 
-    parser = new mu::Parser;
-    parser->SetExpr("0");
-
-    parser->DefineVar("s", &s_internal);
-    parser->DefineVar("t", &t_internal);
-    parser->DefineVar("u", &u_internal);
+    parser.DefineVar("s", &s_internal);
+    parser.DefineVar("t", &t_internal);
+    parser.DefineVar("u", &u_internal);
 
     // To allow variable names like msq[2] we need to add [] to parser's character list
-    parser->DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+    parser.DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
 }
 
 void MatrixElement::clearParser()
 {
-    delete parser;
-    parser = nullptr;
+    parser.SetExpr("0");
 }
 
 void MatrixElement::testExpression() 

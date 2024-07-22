@@ -2,9 +2,12 @@
 
 #include "EnvironmentMacros.h"
 
+#include "muParser.h" // math expression parser
+
 #include <map>
 #include <vector>
 #include <string>
+
 
 // Forward declare things from muparser
 namespace mu
@@ -37,7 +40,7 @@ public:
     MatrixElement();
     ~MatrixElement();
 
-    // Need deep copying constructors/assignments because of the parser
+    // Need custom copy and assignment operators to properly handle parser symbol bindings
     MatrixElement(const MatrixElement& other);
     MatrixElement& operator=(const MatrixElement& other);
     
@@ -58,12 +61,15 @@ public:
     NB: No easy way of making this const because evaluating the parsed expression requires we set internal variables. */
     double evaluate(double s, double t, double u);
 
-    /* Math expression parser. Might as well make it a pointer - had issues with this breaking when passing MatrixElements around with default constructors */
-    mu::Parser *parser = nullptr;
     std::string expression;
 
 private:
+    /* Math expression parser. Might as well make it a pointer - had issues with this breaking when passing MatrixElements around with default constructors */
+    //mu::Parser* parser = nullptr;
 
+    mu::Parser parser;
+
+    // Binds Mandelstam variables to the parser
     double s_internal, t_internal, u_internal;
 
     // Internal map of model-specific symbols that are not (s,t,u), and their current values
