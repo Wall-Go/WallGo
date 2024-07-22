@@ -148,14 +148,12 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     {
         workIntegral = *this;
 
-        int numThreads = 1;
         int threadID = 0;
     #if WITH_OMP
-        numThreads = omp_get_num_threads();
         threadID = omp_get_thread_num();
     #endif
 
-        // VS OMP limitation: for loops must use signed integer indices, size_t apparently doesn't work
+        // Limitation in older OMP implementations: for loops must use signed integer indices, size_t doesn't work
         const int32_t N = static_cast<int32_t>(getPolynomialBasisSize());
 
     #if WG_OMP_SUPPORTS_COLLAPSE
