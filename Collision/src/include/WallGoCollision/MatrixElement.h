@@ -1,22 +1,30 @@
 #pragma once
 
-#include "EnvironmentMacros.h"
+#include "Common.h"
+#include "ModelParameters.h"
 
 #include "muParser.h" // math expression parser
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
+#include <type_traits>
 
-
-// Forward declare things from muparser
-namespace mu
-{
-    class Parser;
-}
 
 namespace wallgo
 {
+
+template<typename T>
+struct WALLGO_API TMandelstam
+{
+    static_assert(std::is_floating_point<T>::value, "T must be floating point type (in TMandelstam)");
+    TMandelstam() {}
+    TMandelstam(T sIn, T tIn, T uIn) : s(sIn), t(tIn), u(uIn) {}
+    T s, t, u;
+};
+
+using Mandelstam = TMandelstam<double>;
+
 
 /* Class MatrixElement - Describes a single symbolic matrix element (abs value squared). Uses muparser as the math parsing backend.
 Logic here is that the default constructor just constructs a dummy element with expression equal to 0
@@ -24,13 +32,6 @@ and defines the Mandelstam variables s,t,u as symbols whose numerical values are
 Calling initSymbols(parameters) defines a symbol for each string key in the 'parameters' map and fills an internal parameters map
 for setting numerical values for these symbols. Note that it is currently NOT possible to define a symbol without specifying also an initial value.
 Here 'parameters' refers to model-dependent variables like couplings, masses etc.
-
-Therefore, once you have a math expression in string format to describe a matrix element, usage should be: 
-    1. Call initSymbols(parameters) with a std::map that has all symbols (apart from s,t,u) needed to evaluate the wanted expression, with some initial values.
-    It is safe to pass a map containing "extra" symbols that the expression does not actually depend on, but this wastes memory as we still reserve memory for the unused symbols.
-    2. Call setExpression(expr) with your string expression. This does the parsing and tests that the expression can be computed numerically.
-    3. Evaluate with evaluate(s, t, u) with Mandelstam variables of your choice.
-    4. Can change parameter values with the setParameters function without having to redefine or re-parse anything.
 */
 class WALLGO_API MatrixElement
 {
@@ -43,42 +44,46 @@ public:
     // Need custom copy and assignment operators to properly handle parser symbol bindings
     MatrixElement(const MatrixElement& other);
     MatrixElement& operator=(const MatrixElement& other);
+
+    /* Initializes the matrix element with given math expression.
+    * 'symbols' must contain all non-constant symbols that appear in the expression
+    * and their initial values, however the letters s, t, u are reserved for internal use.
+    * Extra symbols that do not actually appear in the expression are OK but will waste memory.
+    * 
+    * NB: This will clear any existing state from the MatrixElement object. */
+    void init(
+        const std::string& expression,
+        const std::vector<uint32_t> externalParticleIndices,
+        const std::unordered_map<std::string, double>& symbols);
     
     void setExpression(const std::string& expressionIn);
 
-    std::string getExpression() const { return expression; }
+    std::string getExpression() const { return mExpression; }
+    std::vector<uint32_t> getParticleIndices() const { return mParticleIndices; }
 
-    /* Initialize symbols for math expression parser. This defines a symbol for each string in 'parameters'
-    and associates them with variables in parametersInternal. Needs to be called before actual parsing. */
-    void initSymbols(const std::map<std::string, double>& parameters);
-
-    // Used to change numerical values of our internal symbols except for (s,t,u). Does not add or remove symbols.
-    void setParameters(const std::map<std::string, double>& parameters);
-
-    void setParameter(const std::string& name, double newValue);
+    // Must be called to update values of model-specific symbols in matrix elements
+    void updateModelParameters(const ModelParameters& parameters);
+    void updateModelParameter(const std::string& name, double newValue);
 
     /* Evaluate the matrix element at s, t, u, using cached couplings and masses.
     NB: No easy way of making this const because evaluating the parsed expression requires we set internal variables. */
-    double evaluate(double s, double t, double u);
-
-    std::string expression;
+    double evaluate(const Mandelstam& mandelstams);
 
 private:
-    /* Math expression parser. Might as well make it a pointer - had issues with this breaking when passing MatrixElements around with default constructors */
-    //mu::Parser* parser = nullptr;
 
     mu::Parser parser;
 
     // Binds Mandelstam variables to the parser
-    double s_internal, t_internal, u_internal;
+    Mandelstam mMandelstam;
+    
+    /* We mirror model parameters and bind the parser to these instead of binding directly to parameter structs in a model class.
+    This is safer and not a performance issue as long as the parameters need not be updated too frequently.*/
+    std::unordered_map<std::string, double> mSymbols;
 
-    // Internal map of model-specific symbols that are not (s,t,u), and their current values
-    std::map<std::string, double> parametersInternal;
+    // Metadata about what external particles this matrix element describes
+    std::vector<uint32_t> mParticleIndices;
 
-    /* LN: In principle it may be better to use a map of shared_ptrs to describe the parameters.
-    That way we could automatically sync parameter values with eg. those contained in CollisionTensor.
-    But this probably introduces too much overhead to be worth it - it's easy to enough to update the map here
-    by calling MatrixElement::setParameters() from the manager. */
+    std::string mExpression;
 
     // Tests that our expression is valid and can be evaluated by the parser
     void testExpression();

@@ -2,9 +2,8 @@
 
 #include <cmath>
 
-#include "Utils.h"
+#include "Common.h"
 #include "FourVector.h"
-#include "EnvironmentMacros.h"
 
 /* Note to self: GSL library has functions for computing Chebyshev series expansions so could investigate 
 * if their implementation of Chebyshev polynomials are faster than what we have here. However I didn't find 

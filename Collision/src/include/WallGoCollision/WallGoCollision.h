@@ -11,8 +11,8 @@
 
 #include "ResultContainers.h"
 #include "CollisionIntegral.h"
-#include "CollElem.h"
+#include "CollisionElement.h"
 #include "MatrixElement.h"
-#include "ModelDefinitions.h"
+#include "PhysicsModel.h"
 
 #include "hdf5Interface.h"

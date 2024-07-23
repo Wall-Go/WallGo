@@ -5,7 +5,7 @@
 
 #include "EnvironmentMacros.h"
 #include "CollisionIntegral.h"
-#include "CollElem.h"
+#include "CollisionElement.h"
 #include "FourVector.h"
 #include "ThreeVector.h"
 
@@ -272,7 +272,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     return result;
 }
 
-void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
+void CollisionIntegral4::addCollisionElement(const CollisionElement<4> &elem)
 {
     // TODO should check here that the collision element makes sense: has correct p1 particle etc
     if (elem.isUltrarelativistic())
@@ -285,24 +285,26 @@ void CollisionIntegral4::addCollisionElement(const CollElem<4> &elem)
     }
 }
 
+/*
 void CollisionIntegral4::updateModelParameters(const std::map<std::string, double> &parameters)
 {
-    for (auto &collElem : collisionElements_ultrarelativistic)
+    for (auto &CollisionElement : collisionElements_ultrarelativistic)
     {
-        collElem.matrixElement.setParameters(parameters);
+        CollisionElement.matrixElement.setParameters(parameters);
     }
 
-    for (auto &collElem : collisionElements_nonUltrarelativistic)
+    for (auto &CollisionElement : collisionElements_nonUltrarelativistic)
     {
-        collElem.matrixElement.setParameters(parameters);
+        CollisionElement.matrixElement.setParameters(parameters);
     }
 }
 
 void CollisionIntegral4::updateModelParameter(const std::string &name, double newValue)
 {
-    for (auto &collElem : collisionElements_ultrarelativistic) collElem.matrixElement.setParameter(name, newValue);
-    for (auto &collElem : collisionElements_nonUltrarelativistic) collElem.matrixElement.setParameter(name, newValue);
+    for (auto &CollisionElement : collisionElements_ultrarelativistic) CollisionElement.matrixElement.setParameter(name, newValue);
+    for (auto &CollisionElement : collisionElements_nonUltrarelativistic) CollisionElement.matrixElement.setParameter(name, newValue);
 }
+*/
 
 size_t CollisionIntegral4::countIndependentIntegrals() const
 {
@@ -331,13 +333,15 @@ bool CollisionIntegral4::isEmpty() const
         && collisionElements_ultrarelativistic.size() == 0;
 }
 
-std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const
+std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollisionElement<4> &CollisionElement, const InputsForKinematics& kinematicInput) const
 {
     // Vacuum masses squared
     std::array<double, 4> massSquared;
     for (int i = 0; i < 4; ++i)
     {
-        massSquared[i] =  collElem.particles[i]->isUltrarelativistic() ? 0.0 : collElem.particles[i]->getTotalMassSquared();
+        /* NB: we always take the cached mass squared here because the mass shouldn't depend on kinematics (ie. is momentum independent).
+        Must revisit this if we ever let the mass be grid-dependent, including position dependence. */
+        massSquared[i] =  CollisionElement.particles[i]->isUltrarelativistic() ? 0.0 : CollisionElement.particles[i]->getCachedMassSquared();
     }
 
     const double p1 = kinematicInput.p1;
@@ -445,13 +449,13 @@ Kinematics CollisionIntegral4::calculateKinematics_ultrarelativistic(const Input
 }
 
 
-double CollisionIntegral4::evaluateCollisionElement(CollElem<4> &collElem, const Kinematics &kinematics, const std::array<double, 4> &TmTn)
+double CollisionIntegral4::evaluateCollisionElement(CollisionElement<4> &CollisionElement, const Kinematics &kinematics, const std::array<double, 4> &TmTn)
 {
-    // Need to set correct deltaF factors in collElem
+    // Need to set correct deltaF factors in CollisionElement
     std::array<double, 4> deltaF;
     for (int i = 0; i < 4; ++i)
     {
-        if (collElem.particles[i]->isInEquilibrium())
+        if (CollisionElement.particles[i]->isInEquilibrium())
         {
             deltaF[i] = 0.0;
         }
@@ -461,9 +465,9 @@ double CollisionIntegral4::evaluateCollisionElement(CollElem<4> &collElem, const
         }
     }
 
-    // Evaluate |M|^2 P[f] for this CollElem
+    // Evaluate |M|^2 P[f] for this CollisionElement
     const std::array<FourVector, 4> fourMomenta({kinematics.FV1, kinematics.FV2, kinematics.FV3, kinematics.FV4});
-    double res = collElem.evaluate(fourMomenta, deltaF);
+    double res = CollisionElement.evaluate(fourMomenta, deltaF);
 
     // Multiply by p2^2 / E2 * p3^2 / E3 |1/g'(p3)|
     res *= kinematics.prefactor;
@@ -556,7 +560,7 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
         {
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
             // We're doing off-eq pair (a, l) so the rhoZ, rhoPar momenta here are always momenta of the l-particle.
-            // This is automatically handled by bDeltaF flags in CollElem (although the logic is not very transparent)
+            // This is automatically handled by bDeltaF flags in CollisionElement (although the logic is not very transparent)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
                 polynomialBasis.TmTn(m, n, kinematics.FV2),
@@ -564,22 +568,22 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
                 polynomialBasis.TmTn(m, n, kinematics.FV4)
             };
             
-            for (CollElem<4> &collElem : collisionElements_ultrarelativistic)
+            for (CollisionElement<4> &CollisionElement : collisionElements_ultrarelativistic)
             {
-                fullIntegrand += evaluateCollisionElement(collElem, kinematics, TmTn);
+                fullIntegrand += evaluateCollisionElement(CollisionElement, kinematics, TmTn);
             }
         }
         bDoneUR = true;
     }
 
-    //---- Non-ultrarelativistic computations. Here each CollElem has its own kinematics and the momentum delta-function needs a sum over p3 roots
+    //---- Non-ultrarelativistic computations. Here each CollisionElement has its own kinematics and the momentum delta-function needs a sum over p3 roots
 
     // ugly lambda to avoid copy-paste or unnecessary member function just for this
-    auto evaluateNonUR = [&](CollElem<4> &collElem)
+    auto evaluateNonUR = [&](CollisionElement<4> &CollisionElement)
     {
         double res = 0.0;
 
-        const std::vector<Kinematics> kinematicFactors = calculateKinematics(collElem, kinematicInput);
+        const std::vector<Kinematics> kinematicFactors = calculateKinematics(CollisionElement, kinematicInput);
 
         // kinematicFactors only contains solutions with E4 > 0 so the theta(E4) is OK.
         for (const Kinematics &kinematics : kinematicFactors)
@@ -592,14 +596,14 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
                 polynomialBasis.TmTn(m, n, kinematics.FV4)
             };
 
-            res += evaluateCollisionElement(collElem, kinematics, TmTn);
+            res += evaluateCollisionElement(CollisionElement, kinematics, TmTn);
         }
         return res;
     };
 
-    for (CollElem<4> &collElem : collisionElements_nonUltrarelativistic) fullIntegrand += evaluateNonUR(collElem);
+    for (CollisionElement<4> &CollisionElement : collisionElements_nonUltrarelativistic) fullIntegrand += evaluateNonUR(CollisionElement);
     
-    if (!bDoneUR) for (CollElem<4> &collElem : collisionElements_ultrarelativistic) fullIntegrand += evaluateNonUR(collElem);
+    if (!bDoneUR) for (CollisionElement<4> &CollisionElement : collisionElements_ultrarelativistic) fullIntegrand += evaluateNonUR(CollisionElement);
 
     // Common numerical prefactor
     constexpr double PI = constants::pi;

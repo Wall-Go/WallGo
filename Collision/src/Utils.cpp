@@ -4,6 +4,9 @@
 namespace wallgo
 {
 
+namespace utils
+{
+
 void initializeRNG(int seed)
 {
     gslWrapper::initializeRNG(seed);
@@ -24,4 +27,6 @@ void clearRNG()
     gslWrapper::clearRNG();
 }
 
-} // namespace
+
+} // namespace utils
+} // namespace wallgo

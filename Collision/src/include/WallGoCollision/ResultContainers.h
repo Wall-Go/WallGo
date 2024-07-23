@@ -1,13 +1,11 @@
 #pragma once
 
-#include "EnvironmentMacros.h"
-#include "Utils.h"
-#include "hdf5Interface.h"
-#include "ModelDefinitions.h"
-
 #include <filesystem>
 #include <memory>
 #include <unordered_map>
+
+#include "Common.h"
+#include "hdf5Interface.h"
 
 namespace wallgo
 {

@@ -3,14 +3,12 @@
 #include <cmath>
 #include <vector>
 
-#include "EnvironmentMacros.h"
+#include "Common.h"
 #include "FourVector.h"
 #include "ThreeVector.h"
-#include "CollElem.h"
-#include "Utils.h"
+#include "CollisionElement.h"
 #include "PolynomialBasis.h"
 #include "ResultContainers.h"
-
 
 namespace wallgo
 {
@@ -20,7 +18,7 @@ namespace wallgo
  *  2) Inside propagators in the matrix elements
  * Handling of these two kinds of masses is different in the code and usually also in physical applications:
  * 
- * For 1) we use the total mass-squared values in each of our CollElem,
+ * For 1) we use the total mass-squared values in each of our CollisionElement,
  * ie. this mass squared is msq_vacuum + msq_thermal for each external particle. If the ultrarelativistic approximation is used,
  * the mass for ultrarelativistic particles is set to 0.
  * 
@@ -29,8 +27,8 @@ namespace wallgo
  * integration logic in any way, but can be achieved by passing the wanted (symbol, value) pair to matrix elements.  
 */
 
-/**** Ultrarelativistic approximations. We separate CollElem objects to ultrarelativistic (UR) and non-UR elements.
- * A CollElem is UR if all its external particles have the UR flag enabled. For particles, the UR flag means that the
+/**** Ultrarelativistic approximations. We separate CollisionElement objects to ultrarelativistic (UR) and non-UR elements.
+ * A CollisionElement is UR if all its external particles have the UR flag enabled. For particles, the UR flag means that the
  * their mass is neglected in dispersion relations, ie. E(p) = |p| always. For UR CollElems, the kinematic factors
  * can be calculated in a more optimized way. Whether this optimization is used or not is controlled by our bOptimizeUltrarelativistic flag,
  * which can be changed by passing a IntegrationOptions struct to CollisionIntegral4::integrate(). 
@@ -63,6 +61,14 @@ struct InputsForKinematics
     double p2p3HatDot;
 };
 
+struct IntegrationResult
+{
+    double result;
+    double error;
+    // TODO add some error flags etc here
+    //bool bConverged; // Did the integration converge to goal accuracy
+};
+
 struct WALLGO_API IntegrationOptions
 {
     double maxIntegrationMomentum;
@@ -89,13 +95,6 @@ struct WALLGO_API IntegrationOptions
     }
 };
 
-struct IntegrationResult
-{
-    double result;
-    double error;
-    // TODO add some error flags etc here
-    //bool bConverged; // Did the integration converge to goal accuracy
-};
 
 struct CollisionTensorVerbosity
 {
@@ -113,7 +112,7 @@ struct CollisionTensorVerbosity
 
 /*
 2 -> 2 collision term integration. One particle is fixed as the "incoming" particle whose momentum is NOT integrated over. 
-This is always assumed to be first particle in each stored CollElem.
+This is always assumed to be first particle in each stored CollisionElement.
 Momenta are denoted p1, p2 ; p3, p4.
 Assumes a 5D integral of form:
     int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
@@ -147,8 +146,13 @@ public:
 
     /* Calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
     Includes the 1/(2N) prefactor. Kinematics is solved (from delta functions) separately for each 
-    CollElem in our collisionElements array. For ultrarelativistic CollElems we heavily optimize the kinematic part. */
-    double calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, 
+    CollisionElement in our collisionElements array. For ultrarelativistic CollElems we heavily optimize the kinematic part. */
+    double calculateIntegrand(
+        double p2,
+        double phi2,
+        double phi3,
+        double cosTheta2,
+        double cosTheta3, 
         const IntegrandParameters &integrandParameters);
 
     // Calculate the integral C[m,n; j,k] with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
@@ -159,7 +163,7 @@ public:
 
     inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
 
-    void addCollisionElement(const CollElem<4>& elem);
+    void addCollisionElement(const CollisionElement<4>& elem);
 
     /* Used to update parameters inside CollElems (actually their MatrixElements).
     This does not define new parameters, so things work even if the input map is "too big". */
@@ -186,20 +190,20 @@ private:
 
     /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
     We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector. */
-    std::vector<Kinematics> calculateKinematics(const CollElem<4> &collElem, const InputsForKinematics& kinematicInput) const;
+    std::vector<Kinematics> calculateKinematics(const CollisionElement<4> &CollisionElement, const InputsForKinematics& kinematicInput) const;
 
-    /* Optimized computation of the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollElem itself. 
+    /* Optimized computation of the kinematic factor for ultrarelativistic CollElems. This only depends on input momenta and not the CollisionElement itself. 
     In UR limit the momentum-conserving delta function gives only one solution for p3, so this one does not return an array. */
     Kinematics calculateKinematics_ultrarelativistic(const InputsForKinematics& kinematicInput) const;
 
     /* Evaluate |M^2|/N * P[TmTn] * (kinematics.prefactor). TmTn are the polynomial factors evaluated at each momenta.
     NB: No way of making this const as long as the matrix element evaluation is not const */
-    double evaluateCollisionElement(CollElem<4> &collElem, const Kinematics& kinematics, const std::array<double, 4>& TmTn);
+    double evaluateCollisionElement(CollisionElement<4> &CollisionElement, const Kinematics& kinematics, const std::array<double, 4>& TmTn);
 
     /* We separate the collision elements into two subsets: ones with only ultrarelativistic (UR) external particles, and all others. 
     This allows optimizations related to the kinematic factor in UR terms */
-    std::vector<CollElem<4>> collisionElements_ultrarelativistic;
-    std::vector<CollElem<4>> collisionElements_nonUltrarelativistic;
+    std::vector<CollisionElement<4>> collisionElements_ultrarelativistic;
+    std::vector<CollisionElement<4>> collisionElements_nonUltrarelativistic;
 
     // This is set again whenever integrate() is called, based on the options inputted there
     bool bOptimizeUltrarelativistic = true;

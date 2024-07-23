@@ -15,15 +15,10 @@
 namespace wallgo
 {
 
-struct WALLGO_API Mandelstam
-{
-	double s, t, u;
-};
-
-
-/* CollElem class: This describes collision process with external particles types being fixed */
+/* Describes collision process of N external particles; one term in a collision integral.
+Contains a matrix element and info about statistics of the colliding particles. */
 template <size_t NPARTICLES>
-class WALLGO_API CollElem
+class WALLGO_API CollisionElement
 {
 
 public:
@@ -31,7 +26,7 @@ public:
 	// which deltaF terms are nonzero
 	std::array<bool, NPARTICLES> bDeltaF;
 
-	CollElem(const std::array<std::shared_ptr<ParticleSpecies>, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies)
+	CollisionElement(const std::array<std::shared_ptr<ParticleSpecies>, NPARTICLES> &inputParticleSpecies) : particles(inputParticleSpecies)
 	{
 		bool bAllUltrarelativistic = true;
 		for (const auto& p : inputParticleSpecies)
@@ -58,9 +53,9 @@ public:
 	// Calculate |M|^2 
 	inline double evaluateMatrixElement(const std::array<FourVector, NPARTICLES> &momenta)
 	{
-		Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
+		const Mandelstam mandelstam = calculateMandelstam(momenta[0], momenta[1], momenta[2], momenta[3]);
 
-		return matrixElement.evaluate(mandelstam.s, mandelstam.t, mandelstam.u);
+		return matrixElement.evaluate(mandelstam);
 	}
 
 	/* Evaluate the statistical "population factor", eq (A3) in 2204.13120. See published version since arxiv v1 is wrong.

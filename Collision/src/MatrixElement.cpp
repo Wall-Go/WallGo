@@ -1,20 +1,17 @@
 #include <iostream>
-#include <functional>
-#include <array>
 #include <cassert>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
-#include "ParticleSpecies.h"
-#include "CollElem.h"
-#include "CollisionIntegral.h"
+#include "ModelParameters.h"
+
 
 namespace wallgo
 {
 
 MatrixElement::MatrixElement() 
+    : mMandelstam(0, 0, 0)
 {
-    s_internal = 0; t_internal = 0; u_internal = 0;
     initParser();
 }
 
@@ -25,85 +22,82 @@ MatrixElement::~MatrixElement()
 
 MatrixElement::MatrixElement(const MatrixElement& other)
 {
-    const std::map<std::string, double> parameters = other.parametersInternal;
-    expression = other.expression;
-
-    initParser();
-    initSymbols(parameters);
-    parser.SetExpr(expression);
+    init(other.mExpression, other.mParticleIndices, other.mSymbols);
 }
 
 MatrixElement& MatrixElement::operator=(const MatrixElement &other)
 {
     if (this == &other) return *this;
 
-    const std::map<std::string, double> parameters = other.parametersInternal;
-    expression = other.expression;
+    init(other.mExpression, other.mParticleIndices, other.mSymbols);
+    return *this;
+}
 
-    // Reset the parser just in case
+void MatrixElement::init(
+    const std::string& expression,
+    const std::vector<uint32_t> externalParticleIndices,
+    const std::unordered_map<std::string, double>& symbols)
+{
+    mSymbols.clear();
     clearParser();
 
+    mParticleIndices = externalParticleIndices;
+
     initParser();
-    initSymbols(parameters);
-    parser.SetExpr(expression);
-    return *this;
+
+    for (const auto& [symbol, value] : symbols)
+    {
+        defineSymbol(symbol, value);
+    }
+    setExpression(expression);
 }
 
 void MatrixElement::setExpression(const std::string &expressionIn)
 {
-    expression = expressionIn;
-    parser.SetExpr(expression);
+    mExpression = expressionIn;
+    parser.SetExpr(mExpression);
 
     // Do sensibility checks here so that we can skip them in performance critical sections
     testExpression();
 }
 
 
-void MatrixElement::initSymbols(const std::map<std::string, double> &parameters)
+void MatrixElement::updateModelParameters(const ModelParameters& parameters)
 {
-    parametersInternal.clear();
-
-    for (auto const& [symbol, value] : parameters)
+    for (auto const& [name, newValue] : parameters.getParameterMap())
     {
-        defineSymbol(symbol, value);
+        // Change only keys that have been defined as symbols
+        if (mSymbols.count(name) > 0)
+        {
+            updateModelParameter(name, newValue);
+        }
     }
 }
 
-void MatrixElement::setParameters(const std::map<std::string, double> &parameters)
+void MatrixElement::updateModelParameter(const std::string &name, double newValue)
 {
-    for (auto const& [name, newValue] : parameters)
+    if (mSymbols.count(name) > 0)
     {
-        setParameter(name, newValue);
+        mSymbols[name] = newValue;
+    }
+    else
+    {
+        std::cerr << "MatrixElement::updateModelParameter called with parameter " << name << ", but the parameter has not been defined" << std::endl;
     }
 }
 
-void MatrixElement::setParameter(const std::string &name, double newValue)
+double MatrixElement::evaluate(const Mandelstam& mandelstams)
 {
-    assert(parametersInternal.count(name) > 0);
-    
-    // Change only keys that the MatrixElement already holds internally
-    if (parametersInternal.count(name) > 0) 
-    {
-        parametersInternal[name] = newValue;
-    }
-}
-
-double MatrixElement::evaluate(double s, double t, double u)
-{
-    s_internal = s;
-    t_internal = t;
-    u_internal = u;
-
+    mMandelstam = mandelstams;
     return parser.Eval();
 }
-
 
 void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
 {
     try
     {
-        parametersInternal[symbol] = initValue;
-        parser.DefineVar(symbol, &parametersInternal.at(symbol));
+        mSymbols[symbol] = initValue;
+        parser.DefineVar(symbol, &mSymbols.at(symbol));
     }
     catch (mu::Parser::exception_type &parserException) 
     {
@@ -116,9 +110,9 @@ void MatrixElement::initParser()
 {
     parser.SetExpr("0");
 
-    parser.DefineVar("s", &s_internal);
-    parser.DefineVar("t", &t_internal);
-    parser.DefineVar("u", &u_internal);
+    parser.DefineVar("s", &mMandelstam.s);
+    parser.DefineVar("t", &mMandelstam.t);
+    parser.DefineVar("u", &mMandelstam.u);
 
     // To allow variable names like msq[2] we need to add [] to parser's character list
     parser.DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
@@ -127,18 +121,22 @@ void MatrixElement::initParser()
 void MatrixElement::clearParser()
 {
     parser.SetExpr("0");
+    parser.ClearVar();
 }
 
 void MatrixElement::testExpression() 
 {
     // try evaluate at some random values
-    try {
-        evaluate(-4.2, 2.9, 0);
-    } catch (mu::Parser::exception_type &parserException) {
+    try
+    {
+        evaluate(Mandelstam(-4.2, 2.9, 0));
+    }
+    catch (mu::Parser::exception_type &parserException)
+    {
         std::cerr << "=== Error when evaluating matrix element. Parser threw error: \n"; 
         std::cerr << parserException.GetMsg() << std::endl;
         std::cerr << "The expression was: \n";
-        std::cerr << expression << "\n";
+        std::cerr << mExpression << "\n";
     }
 }
 
