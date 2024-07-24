@@ -11,6 +11,10 @@
 
 #include "gslWrapper.h"
 
+#if WITH_OMP
+    #include <omp.h>
+#endif
+
 namespace wallgo
 {
 
@@ -265,8 +269,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
         std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
         auto elapsedTime = currentTime - startTime;
         auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count();
-
-        std::cout << "Done, took " << elapsedSeconds << " seconds.\n\n";
+        std::cout << "(" << mParticlePair.first << ", " << mParticlePair.second << ") done, took " << elapsedSeconds << " seconds.\n\n";
     }
 
     return result;
@@ -341,7 +344,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollisionE
     {
         /* NB: we always take the cached mass squared here because the mass shouldn't depend on kinematics (ie. is momentum independent).
         Must revisit this if we ever let the mass be grid-dependent, including position dependence. */
-        massSquared[i] =  CollisionElement.particles[i]->isUltrarelativistic() ? 0.0 : CollisionElement.particles[i]->getCachedMassSquared();
+        massSquared[i] =  CollisionElement.mExternalParticles[i]->isUltrarelativistic() ? 0.0 : CollisionElement.mExternalParticles[i]->getCachedMassSquared();
     }
 
     const double p1 = kinematicInput.p1;
@@ -455,7 +458,7 @@ double CollisionIntegral4::evaluateCollisionElement(CollisionElement<4> &Collisi
     std::array<double, 4> deltaF;
     for (int i = 0; i < 4; ++i)
     {
-        if (CollisionElement.particles[i]->isInEquilibrium())
+        if (CollisionElement.mExternalParticles[i]->isInEquilibrium())
         {
             deltaF[i] = 0.0;
         }
@@ -476,14 +479,14 @@ double CollisionIntegral4::evaluateCollisionElement(CollisionElement<4> &Collisi
 }
 
 CollisionIntegral4::CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair)
-    : polynomialBasis(polynomialBasisSize),
+    : mPolynomialBasis(polynomialBasisSize),
     mParticlePair(particlePair)
 {
 }
 
 void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)
 {
-    polynomialBasis = Chebyshev(newBasisSize);
+    mPolynomialBasis = Chebyshev(newBasisSize);
 }
 
 CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandParameters(int m, int n, int j, int k) const
@@ -493,11 +496,11 @@ CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandP
     params.n = n;
 
     // Precalculate stuff related to the p1 momentum (optimization)
-    params.rhoZ1 = polynomialBasis.rhoZGrid(j);
-    params.rhoPar1 = polynomialBasis.rhoParGrid(k);
-    params.pZ1 = polynomialBasis.rhoZ_to_pZ(params.rhoZ1);
-    params.pPar1 = polynomialBasis.rhoPar_to_pPar(params.rhoPar1);
-    params.TmTn_p1 = polynomialBasis.TmTn(m, n, params.rhoZ1, params.rhoPar1);
+    params.rhoZ1 = mPolynomialBasis.rhoZGrid(j);
+    params.rhoPar1 = mPolynomialBasis.rhoParGrid(k);
+    params.pZ1 = mPolynomialBasis.rhoZ_to_pZ(params.rhoZ1);
+    params.pPar1 = mPolynomialBasis.rhoPar_to_pPar(params.rhoPar1);
+    params.TmTn_p1 = mPolynomialBasis.TmTn(m, n, params.rhoZ1, params.rhoPar1);
     params.p1 = std::sqrt(params.pZ1*params.pZ1 + params.pPar1*params.pPar1);
     return params;
 }
@@ -563,9 +566,9 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
             // This is automatically handled by bDeltaF flags in CollisionElement (although the logic is not very transparent)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
-                polynomialBasis.TmTn(m, n, kinematics.FV2),
-                polynomialBasis.TmTn(m, n, kinematics.FV3),
-                polynomialBasis.TmTn(m, n, kinematics.FV4)
+                mPolynomialBasis.TmTn(m, n, kinematics.FV2),
+                mPolynomialBasis.TmTn(m, n, kinematics.FV3),
+                mPolynomialBasis.TmTn(m, n, kinematics.FV4)
             };
             
             for (CollisionElement<4> &CollisionElement : collisionElements_ultrarelativistic)
@@ -591,9 +594,9 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
-                polynomialBasis.TmTn(m, n, kinematics.FV2),
-                polynomialBasis.TmTn(m, n, kinematics.FV3),
-                polynomialBasis.TmTn(m, n, kinematics.FV4)
+                mPolynomialBasis.TmTn(m, n, kinematics.FV2),
+                mPolynomialBasis.TmTn(m, n, kinematics.FV3),
+                mPolynomialBasis.TmTn(m, n, kinematics.FV4)
             };
 
             res += evaluateCollisionElement(CollisionElement, kinematics, TmTn);

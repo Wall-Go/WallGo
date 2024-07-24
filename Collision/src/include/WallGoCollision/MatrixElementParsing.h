@@ -18,7 +18,7 @@ bool parseMatrixElements(
     const std::filesystem::path& matrixElementFile,
     std::vector<uint32_t> offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
-    std::map<IndexPair, std::vector<MatrixElement>> outMatrixElements);
+    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements);
 
 
 } // namespace utils

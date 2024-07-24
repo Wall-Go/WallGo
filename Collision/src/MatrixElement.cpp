@@ -33,7 +33,7 @@ MatrixElement& MatrixElement::operator=(const MatrixElement &other)
     return *this;
 }
 
-void MatrixElement::init(
+bool MatrixElement::init(
     const std::string& expression,
     const std::vector<uint32_t> externalParticleIndices,
     const std::unordered_map<std::string, double>& symbols)
@@ -45,20 +45,25 @@ void MatrixElement::init(
 
     initParser();
 
+    bool bInitOK = true;
+
     for (const auto& [symbol, value] : symbols)
     {
-        defineSymbol(symbol, value);
+        bInitOK &= defineSymbol(symbol, value);
     }
-    setExpression(expression);
+
+    bInitOK &= setExpression(expression);
+    
+    return bInitOK;
 }
 
-void MatrixElement::setExpression(const std::string &expressionIn)
+bool MatrixElement::setExpression(const std::string &expressionIn)
 {
     mExpression = expressionIn;
     parser.SetExpr(mExpression);
 
     // Do sensibility checks here so that we can skip them in performance critical sections
-    testExpression();
+    return testExpression();
 }
 
 
@@ -92,7 +97,7 @@ double MatrixElement::evaluate(const Mandelstam& mandelstams)
     return parser.Eval();
 }
 
-void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
+bool MatrixElement::defineSymbol(const std::string &symbol, double initValue)
 {
     try
     {
@@ -103,7 +108,9 @@ void MatrixElement::defineSymbol(const std::string &symbol, double initValue)
     {
         std::cerr << "=== Error when defining symbol '" << symbol << "'. Parser threw error: \n"; 
         std::cerr << parserException.GetMsg() << std::endl;
+        return false;
     }
+    return true;
 }
 
 void MatrixElement::initParser()
@@ -124,7 +131,7 @@ void MatrixElement::clearParser()
     parser.ClearVar();
 }
 
-void MatrixElement::testExpression() 
+bool MatrixElement::testExpression() 
 {
     // try evaluate at some random values
     try
@@ -137,7 +144,10 @@ void MatrixElement::testExpression()
         std::cerr << parserException.GetMsg() << std::endl;
         std::cerr << "The expression was: \n";
         std::cerr << mExpression << "\n";
+
+        return false;
     }
+    return true;
 }
 
 } // namespace

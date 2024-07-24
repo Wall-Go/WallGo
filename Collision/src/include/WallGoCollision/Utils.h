@@ -23,6 +23,8 @@ inline T clamp(T value, T lower, T upper)
 	return std::max(lower, std::min(value, upper));
 }
 
+} // namespace utils
+
 //---- Generic wrappers for RNG routines (so that the user doesn't have to access the gslWrapper namespace)
 
 /* Initializes RNG used by Monte Carlo integrators. Needs to be called before eg. integrating anything. */
@@ -37,6 +39,4 @@ void WALLGO_API setSeed(int seed);
 void WALLGO_API cleanup();
 void WALLGO_API clearRNG();
 
-
-} // namespace utils
 } // namespace wallgo

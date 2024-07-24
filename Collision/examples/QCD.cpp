@@ -14,65 +14,115 @@
 
 #include "WallGoCollision/WallGoCollision.h"
 
-// Configures QCD-like particle content
-void setupQCD(wallgo::CollisionTensor& collTensor) {
-
-	const double gs = 1.2279920495357861;
-
-    //**** Masses squared. These need to be in units of temperature, ie. (m/T)^2 **//
-	// Thermal
-	const double mq2 = 0.251327; // quark, m^2 = gs^2 * T^2 / 6.0
-	const double mg2 = 3.01593; // SU(3) gluon, m^2 = 2*gs^2 T^2
-	// Set vacuum masses to 0
-	const double msqVacuum = 0.0;
-
-    /* Approximate all particles as ultrarelativistic, allowing heavy optimizations.
-    * This means E = |p| inside collision integrations, but thermal masses are kept inside matrix element propagators.
-	* Note that this may not be a good approximation for the gluons in particular due to its large thermal mass. */
-	const bool bUltraRelativistic = true;
-
-	// Take top and gluon to be out-of-equilibrium
-    wallgo::ParticleSpecies topQuark("top", wallgo::EParticleType::FERMION, /*inEquilibrium*/false, msqVacuum, mq2, bUltraRelativistic);
-	wallgo::ParticleSpecies gluon("gluon", wallgo::EParticleType::BOSON, false, msqVacuum, mg2, bUltraRelativistic);
-	wallgo::ParticleSpecies lightQuark("quark", wallgo::EParticleType::FERMION, true, msqVacuum, mq2, bUltraRelativistic);
-
-	// Ordering NEEDS to match the order in which particles are defined in the matrix element file(s). TODO improve this
-	collTensor.defineParticle(topQuark);
-	collTensor.defineParticle(gluon);
-	collTensor.defineParticle(lightQuark);
-	
-
-	// Define all symbol that appear in matrix elements along with an initial value. The values can be changed later with manager.setVariable(name, value)
-	collTensor.defineVariable("gs", gs);
-	collTensor.defineVariable("msq[0]", mq2);
-	collTensor.defineVariable("msq[1]", mg2);
-	collTensor.defineVariable("msq[2]", mq2);
-
-}
-
-
-int main() 
+// Helper function that configures a QCD-like model
+wallgo::PhysicsModel setupQCD()
 {
-	std::cout << "=== Running WallGo collision example: QCD" << std::endl;
+	wallgo::PhysicsModel model;
 
-	// We use GSL for Monte Carlo integration. It needs to be initialized before use, with optional seed (default = 0)
-    wallgo::initializeRNG();
+	/* Specify symbolic variables that are present in matrix elements, and their initial values.
+	This typically includes at least coupling constants of the theory, but often also masses of fields that appear in internal propagators.
+	Depending on your model setup, the propagator masses may or may not match with "particle" masses used elsewhere in WallGo.
+	
+	In this example the symbols needed by matrix elements are:
+		gs -- QCD coupling
+		msq[0] -- Mass of a fermion propagator (thermal part only, so no distinction between quark types)
+		msq[1] -- Mass of a gluon propagator.
 
-	// Can also set the seed at any later time. Example:
-	//wallgo::setSeed(42);
+	Thermal masses depend on the QCD coupling, however the model definition always needs a numerical value for each symbol.
+	This adds some complexity to the model setup, and therefore we do the symbol definitions in stages: 
+		1) Define independent couplings
+		2) Define helper functions for computing thermal masses from the couplings
+		3) Define the mass symbols using initial values computed from the helpers.
 
-    wallgo::CollisionTensor collTensor;
+	For purposes of this example this approach is overly explicit because the mass expressions are very simple.
+	However the helper functions are needed later when defining particle content anyway, see below.
+	*/
 
-	// Helper function for setting the particle content and model parameters
-	setupQCD(collTensor);
+	/* The parameter container used by PhysicsModel class is of wallgo::ModelParameters type which behaves much like an std::map.
+	* Here we fill in a local copy first and pass it to the model later. */ 
+	wallgo::ModelParameters parameters;
+	parameters.addOrModifyParameter("gs", 1.2279920495357861); // QCD coupling
 
-	// Polynomial basis size. Using a trivially small N to make the example run fast
-	const int basisSizeN = 3;
-	collTensor.changePolynomialBasisSize(basisSizeN);
+	/* Define mass helper functions. We need the mass - squares in units of temperature, ie. m^2 / T^2.
+	* In case you're not familiar with the syntax below:
+	* It is a C++11 lambda expression that takes in a ModelParameters object, does no parameter capture and returns a double.
+	*/
+	auto quarkThermalMassSquared = [](const wallgo::ModelParameters& params) -> double
+		{
+			const double gs = params.getParameterValue("gs");
+			return gs * gs / 6.0;
+		};
+
+	auto gluonThermalMassSquared = [](const wallgo::ModelParameters& params) -> double
+		{
+			const double gs = params.getParameterValue("gs");
+			return 2.0 * gs * gs;
+		};
+
+	parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters));
+	parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters));
+
+	/* Pass the symbols to the model.This is equivalent to calling PhysicsModel::defineParameter() separately for each symbol.
+	* Note that the model will manages its own copy of the parameters and is not linked to our local variable here. */
+	model.defineParameters(parameters);
+
+
+	/*** Particle definitions.
+	* The model needs to be aware of all particles species that appear as external legs in matrix elements.
+	* Note that this includes also particles that are assumed to remain in equilibrium but have collisions with out-of-equilibrium particles.
+	* Particle definition is done by filling in a ParticleDescription struct and calling PhysicsModel::defineParticleSpecies.
+	*/
+	wallgo::ParticleDescription topQuark;
+	topQuark.name = "top"; // Ttring identifier, MUST be unique
+	topQuark.index = 0; // Unique integer identifier, MUST match index that appears in matrix element file
+	topQuark.type = wallgo::EParticleType::eFermion; // Statistics: boson or fermion
+	topQuark.bInEquilibrium = false; // Whether the particle species is assumed to remain in equilibrium or not
+
+	/* For each particle you can specify how its energy should be calculated during collision integration.
+	* In general the dispersion relation is E^2 = p^2 + m^2, where p is the 3-momentum, and the mass will be discussed shortly.
+	* Flagging a particle as ultrarelativistic means the dispersion relation is simply E(p) = |p|, which is a valid approximation at leading log order.
+	* WallGo is able to heavily optimize collision integrations if all particles are treated as ultrarelativistic,
+	* so it's generally adviced to use this feature unless the ultrarelativistic approximation does not work well for your particle. */
+	topQuark.bUltrarelativistic = true;
+
+	/* We must also specify a function that computes the mass-squared of the particle from given ModelParameters input.
+	* This mass will be used in the energy dispersion relation as described above.
+	* Note in particular that the mass defined here is DIFFERENT from the propagator masses we defined above as "model parameters".
+	* In many model setups they may be equal, but WallGo does not enforce this.
+	* This setting can be skipped if the particle is ultrarelativistic; here we include it for completeness. */
+
+	/* massSqFunction must be a callable function with signature f : ModelParameters -> double
+	* and should return mass squared in units of the temperature, ie. m^2 / T^2.
+	* We already defined a helper function for computing the thermal quark mass from model parameters, so we simply pass that function here. */
+	topQuark.massSqFunction = quarkThermalMassSquared;
+
+	// Finish particle definition and make the model aware of this particle species:
+	model.defineParticleSpecies(topQuark);
+
+	/* Repeat particle definitions for light quarks and the gluon. */
+
+	wallgo::ParticleDescription gluon;
+	gluon.name = "gluon";
+	gluon.index = 1;
+	gluon.type = wallgo::EParticleType::eBoson;
+	gluon.bInEquilibrium = false;
+	gluon.bUltrarelativistic = true;
+	gluon.massSqFunction = gluonThermalMassSquared;
+
+	model.defineParticleSpecies(gluon);
+
+	// Light quarks remain in equilibrium but appear as external particles in collision processes, so define a generic light quark:
+	wallgo::ParticleDescription lightQuark = topQuark;
+	lightQuark.name = "light quark";
+	lightQuark.index = 2;
+	lightQuark.bInEquilibrium = true;
+
+	model.defineParticleSpecies(lightQuark);
+
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
 	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
-	
+
 	if (!std::filesystem::exists(matrixElementFile))
 	{
 		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
@@ -81,21 +131,55 @@ int main()
 			<< std::endl;
 	}
 
-	/* Initialize collision integrals for all off-equilibrium particles currently registered with the manager.
-	Setting verbosity to true will tell the manager to print each matrix element in a symbolic form which can be useful for debugging. */
-	collTensor.setupCollisionIntegrals(matrixElementFile, /*verbose*/ true);
+	bool bPrintMatrixElements = true;
 
-	/* Configure integrator.The defaults should be reasonably OK so you can only modify what you need.
+	bool bMatrixElementsOK = model.readMatrixElements(matrixElementFile, bPrintMatrixElements);
+	
+	// If something in matrix element parsing went wrong we abort here
+	if (!bMatrixElementsOK)
+	{
+		std::cerr << "\nCRITICAL: Matrix element parsing failed, aborting!" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
+
+	return model;
+}
+
+
+int main() 
+{
+	std::cout << "### Running WallGo collision example : QCD ###" << std::endl;
+
+	/* We use Monte Carlo for collision integrations, which needs random numbers.
+	You must initialize the RNG before use, with optional seed (default = 0) */ 
+    wallgo::initializeRNG();
+
+	// Can also set the seed at any later time. Example:
+	//wallgo::setSeed(42);
+
+	// First step is model definition, which specifies particle content and model parameters relevant for collisions. See the helper function above for details
+	wallgo::PhysicsModel model = setupQCD();
+
+	// Polynomial basis size. Using a trivially small N to make the example run fast
+	const int basisSizeN = 3;
+
+	wallgo::CollisionTensor collisionTensor = model.createCollisionTensor(basisSizeN);
+
+	// Can change the basis size easily without having to reconstruct the tensor. Example:
+	//collisionTensor.changePolynomialBasisSize(7);
+
+
+	/* Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
 	Here we set everything manually to show how it's done. */
 	wallgo::IntegrationOptions integrationOptions;
 	integrationOptions.calls = 50000;
 	integrationOptions.maxTries = 50;
-	integrationOptions.maxIntegrationMomentum = 20;
+	integrationOptions.maxIntegrationMomentum = 20; // collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
 	integrationOptions.absoluteErrorGoal = 1e-8;
 	integrationOptions.relativeErrorGoal = 1e-1;
 	
 	// Override the built-in defaults with our new settings
-	collTensor.setDefaultIntegrationOptions(integrationOptions);
+	collisionTensor.setDefaultIntegrationOptions(integrationOptions);
 
 	/* We can also configure various verbosity settings. These include progress reporting and time estimates
 	as well as a full result dump of each individual integral to stdout. By default these are all disabled.
@@ -113,11 +197,11 @@ int main()
 	verbosity.bPrintEveryElement = true; 
 
 	// Override the built-in defaults with our new settings
-	collTensor.setDefaultIntegrationVerbosity(verbosity);
+	collisionTensor.setDefaultIntegrationVerbosity(verbosity);
 
 	// Evaluate all collision integrals that were prepared in the setupCollisionIntegrals() step
 	std::cout << "== Evaluating collision integrals for all particles combinations ==" << std::endl;
-	wallgo::CollisionTensorResult results = collTensor.computeIntegralsAll();
+	wallgo::CollisionTensorResult results = collisionTensor.computeIntegralsAll();
 
 	/* Write results to disk using HDF5 format. Each particle pair gets its own HDF5 file.
 	The bool argument specifies whether statistical errors should be written as well.
@@ -135,11 +219,12 @@ int main()
 		{"msq[1]", 0.2},
 	};
 
+	/*
 	collTensor.setVariables(newVars);
 	collTensor.setVariable("msq[2]", 0.3);
-
+	*/
 	std::cout << "== Evaluating (top, gluon) only with modified parameters ==" << std::endl;
-	wallgo::CollisionResultsGrid resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon");
+	wallgo::CollisionResultsGrid resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon");
 
 	/* CollisionTensor also defines overloaded versions of the main "compute" functions for specifying custom
 	IntegrationOptions and CollisionTensorVerbosity objects on a per-call basis, instead defaulting to the ones cached inside the CollisionTensor instance.
@@ -148,7 +233,7 @@ int main()
 	verbosity.bPrintEveryElement = false;
 	verbosity.progressReportPercentage = 0; // no progress reporting
 	verbosity.bPrintElapsedTime = true;
-	resultsTopGluon = collTensor.computeIntegralsForPair("top", "gluon", integrationOptions, verbosity);
+	resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon", integrationOptions, verbosity);
 
 	// Perform clean exit
     wallgo::cleanup();

@@ -56,43 +56,11 @@ void CollisionTensor::changePolynomialBasisSize(size_t newBasisSize)
     }
 }
 
-
-CollisionIntegral4 CollisionTensor::setupCollisionIntegral(const std::shared_ptr<ParticleSpecies>& particle1, const std::shared_ptr<ParticleSpecies>& particle2, 
-    const std::string &matrixElementFile, size_t inBasisSize, bool bVerbose)
+void CollisionTensor::addCollisionIntegral(const ParticleNamePair& particleNames, const CollisionIntegral4& inIntegral)
 {
-    std::vector<CollisionElement<4>> collisionElements = parseMatrixElements(particle1->getName(), particle2->getName(), matrixElementFile, bVerbose);
-
-    ParticleNamePair namePair(particle1->name, particle2->name);
-    CollisionIntegral4 collisionIntegral(inBasisSize, namePair);
-
-    for (const CollisionElement<4> &elem : collisionElements)
-    {
-        collisionIntegral.addCollisionElement(elem);
-    }
-
-    return collisionIntegral;
+    mCachedIntegrals[particleNames] = inIntegral;
 }
 
-
-void CollisionTensor::setupCollisionIntegrals(const std::filesystem::path& matrixElementFile, bool bVerbose)
-{
-    clearIntegralCache();
-
-    for (const std::shared_ptr<ParticleSpecies>& particle1 : outOfEqParticles)
-    for (const std::shared_ptr<ParticleSpecies>& particle2 : outOfEqParticles)
-    {
-        const auto namePair = std::make_pair(particle1->getName(), particle2->getName());
-
-        CollisionIntegral4 newIntegral = setupCollisionIntegral(particle1, particle2, matrixElementFile.string(), mBasisSize, bVerbose);
-
-        mCachedIntegrals.insert({ namePair, newIntegral });
-    }
-}
-
-void CollisionTensor::clearIntegralCache()
-{
-    mCachedIntegrals.clear();
-}
 
 CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
@@ -158,9 +126,6 @@ CollisionTensorResult CollisionTensor::computeIntegralsAll(const IntegrationOpti
     for (auto& [namePair, integral] : mCachedIntegrals)
     {
         result.mData[i] = integral.evaluateOnGrid(options, verbosity);
-
-        //std::cout << particlePairToString(namePair) << " done\n";
-
         ++i;
     }
 
@@ -201,44 +166,5 @@ size_t CollisionTensor::countIndependentIntegrals() const
     }
     return res;
 }
-
-/*
-CollisionElement<4> CollisionTensor::makeCollisionElement(const std::string &particleName2, const std::vector<size_t> &indices, 
-    const std::string &expr, const std::vector<std::string> &symbols)
-{
-    assert(indices.size() == 4);
-
-    const std::shared_ptr<ParticleSpecies> p1 = particles[indices[0]];
-    const std::shared_ptr<ParticleSpecies> p2 = particles[indices[1]];
-    const std::shared_ptr<ParticleSpecies> p3 = particles[indices[2]];
-    const std::shared_ptr<ParticleSpecies> p4 = particles[indices[3]];
-    
-    CollisionElement<4> collisionElement( { p1, p2, p3, p4} );
-
-    std::map<std::string, double> variables;
-    for (const std::string& s : symbols)
-    {
-        if (!mModelParameters.contains(s))
-        {
-            std::cerr << "CollisionTensor error: symbol " << s << " not found in modelParameters map, can't parse matrix element " << expr << "\n";
-            return collisionElement;
-        }
-        variables[s] = mModelParameters.getParameterValue(s);
-    }
-
-    collisionElement.matrixElement.initSymbols(variables);
-    // Parse expr as a math function
-    collisionElement.matrixElement.setExpression(expr);
-
-    // Set deltaF flags: in general there can be 4 deltaF terms but we only take the ones with deltaF of particle2
-    for (size_t i = 0; i < collisionElement.bDeltaF.size(); ++i) 
-    {
-        collisionElement.bDeltaF[i] = (collisionElement.particles[i]->getName() == particleName2);
-    }
-    
-    return collisionElement;
-}
-*/
-
 
 } // namespace

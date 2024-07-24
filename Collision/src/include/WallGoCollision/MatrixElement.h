@@ -49,14 +49,17 @@ public:
     * 'symbols' must contain all non-constant symbols that appear in the expression
     * and their initial values, however the letters s, t, u are reserved for internal use.
     * Extra symbols that do not actually appear in the expression are OK but will waste memory.
-    * 
-    * NB: This will clear any existing state from the MatrixElement object. */
-    void init(
+    * NB: This will clear any existing state from the MatrixElement object.
+    * Return value is false if something goes wrong in either symbol definitions or expression test evaluation,
+    * and will leave the matrix element in an invalid state. */
+    bool init(
         const std::string& expression,
         const std::vector<uint32_t> externalParticleIndices,
         const std::unordered_map<std::string, double>& symbols);
     
-    void setExpression(const std::string& expressionIn);
+    /* Sets a new math expression, requires re-parse.
+    Return value is false if the expression cannot be evaluated. NB: failure will put this matrix element in an invalid state. */
+    bool setExpression(const std::string& expressionIn);
 
     std::string getExpression() const { return mExpression; }
     std::vector<uint32_t> getParticleIndices() const { return mParticleIndices; }
@@ -86,9 +89,9 @@ private:
     std::string mExpression;
 
     // Tests that our expression is valid and can be evaluated by the parser
-    void testExpression();
+    bool testExpression();
 
-    void defineSymbol(const std::string& symbol, double initValue);
+    bool defineSymbol(const std::string& symbol, double initValue);
     void initParser();
     void clearParser();
 };

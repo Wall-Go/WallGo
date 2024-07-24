@@ -55,21 +55,10 @@ public:
     // Change basis size used by the polynomial grid. This is a fast operation, does not require rebuild of stored integral objects
     void changePolynomialBasisSize(size_t newBasisSize);
 
-
-    // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
-    CollisionIntegral4 setupCollisionIntegral(
-        const std::shared_ptr<ParticleSpecies>& particle1,
-        const std::shared_ptr<ParticleSpecies>& particle2, 
-        const std::string &matrixElementFile,
-        size_t inBasisSize,
-        bool bVerbose = false);
-
-    /* Initializes and caches collision integrals for all registered particles. Basis size and matrix element file need to be set before calling this.
-    Note that calling this will clear any previously stored collision integral objects. */
-    void setupCollisionIntegrals(const std::filesystem::path& matrixElementFile, bool bVerbose = false);
-    
-    // Clears all stored collision integral objects
-    void clearIntegralCache();
+    /* Adds a new collision integral object for an off - eq particle pair.
+    Currently we always have just one CollisionIntegral4 for each pair, so this will override any existing integral for that pair.
+    NB: does NOT perform sensibility checks on the input integral.*/
+    void addCollisionIntegral(const ParticleNamePair& particleNames, const CollisionIntegral4& inIntegral);
 
     // ---- Evaluating cached integrals
 
@@ -119,19 +108,9 @@ public:
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
     size_t countIndependentIntegrals() const;
 
-protected:
-
-    /* Turns a symbolic string expression into usable CollisionElement<4>. 
-    Our matrix elements are M[a,b,c,d] -> expr, here indices are the abcd identifiers for outgoing particles.
-    This needs the off-eq particle 2 to set deltaF flags properly. particleName1 is not needed (could be inferred from indices[0]). 
-    The symbols array needs to contain all free symbols that appear in the expr, apart from 's','t','u' which are automatically defined.
-    As a sensibility check, the symbols MUST be contained in our modelParameters map, from which we also pick initial values for the symbols. */  
-    CollisionElement<4> makeCollisionElement(const std::string &particleName2, const std::vector<size_t> &indices,
-        const std::string &expr, const std::vector<std::string>& symbols);
-    
 private:
 
-    size_t mBasisSize = 1;
+    size_t mBasisSize;
 
     IntegrationOptions mDefaultIntegrationOptions;
     CollisionTensorVerbosity mDefaultVerbosity;

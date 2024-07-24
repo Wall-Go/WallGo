@@ -26,10 +26,6 @@
     #define WG_DEBUG 1
 #endif
 
-#if WITH_OMP
-    #include <omp.h>
-#endif
-
 // NB: For MSVC the default OMP version is only 2.X, so some newer features may not be available
 #if defined WITH_OMP && _OPENMP >= 200805 // OMP >= 3.0
     #define WG_OMP_SUPPORTS_COLLAPSE 1

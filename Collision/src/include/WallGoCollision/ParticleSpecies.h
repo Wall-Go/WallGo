@@ -21,12 +21,17 @@ enum class WALLGO_API EParticleType
 // Data-only container for describing a particle species
 struct ParticleDescription
 {
+	// Must be unique
 	std::string name = "Unknown";
+	// Must be unique
+	uint32_t index = 0;
+
+	EParticleType type = EParticleType::eNone;
 
 	// Is the particle assumed to be in thermal equilibrium?
-	bool bInEquilibrium;
+	bool bInEquilibrium = false;
 	// Neglect mass in dispersion relations or not?
-	bool bUltrarelativistic;
+	bool bUltrarelativistic = true;
 
 	/* Function f(x) -> double that calculates mass squared of the particle.
 	Must be in units of the temperature, ie. this should return m^2 / T^2.
@@ -43,8 +48,6 @@ public:
 	ParticleSpecies() {}
 	ParticleSpecies(const ParticleDescription& description)
 		: mDescription(description) {}
-
-	EParticleType type = EParticleType::eNone;
 
 	// Computes particle mass squared
 	double computeMassSquared(const ModelParameters& params) const
@@ -74,12 +77,14 @@ public:
 	inline bool isUltrarelativistic() const { return mDescription.bUltrarelativistic; }
 	inline bool isInEquilibrium() const { return mDescription.bInEquilibrium; }
 	inline std::string_view getName() const { return mDescription.name; }
+	inline EParticleType getStatistics() const { return mDescription.type; }
 
 	// Equilibrium distribution function for the particle species
 	double fEq(double energy) const
 	{
-		assert(type != EParticleType::eNone && "Particle statistics type was None");
-		if (type == EParticleType::eBoson)
+		assert(mDescription.type != EParticleType::eNone && "Particle statistics type was None");
+
+		if (mDescription.type == EParticleType::eBoson)
 		{
 			return 1.0 / (std::exp(energy) - 1.0 + 1e-50);
 		}

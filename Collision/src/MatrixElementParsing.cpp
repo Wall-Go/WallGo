@@ -58,7 +58,7 @@ bool parseMatrixElements(
     const std::filesystem::path& matrixElementFile,
     std::vector<uint32_t> offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
-    std::map<IndexPair, std::vector<MatrixElement>> outMatrixElements)
+    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
     outMatrixElements.clear();
 
@@ -103,6 +103,8 @@ bool parseMatrixElements(
 
     file.close();
 
+    bool bMatrixElementsOK = true;
+
     /* Now create the MatrixElement objects and group them by their external off-eq indices
     * so that we know which elements are needed for collisions of particle pair (a,b).
     */
@@ -119,13 +121,13 @@ bool parseMatrixElements(
             if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
 
             MatrixElement newElement;
-            newElement.init(readExpressions[elementIdx], indices, symbols);
+            bMatrixElementsOK &= newElement.init(readExpressions[elementIdx], indices, symbols);
 
             outMatrixElements.at(offEqPair).push_back(newElement);
         }
     }
 
-    return true;
+    return bMatrixElementsOK;
 }
 
 } // namespace utils

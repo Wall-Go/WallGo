@@ -135,7 +135,7 @@ public:
         double TmTn_p1; 
     };
 
-    CollisionIntegral4() : polynomialBasis(1) {}
+    CollisionIntegral4() : mPolynomialBasis(1) {}
     CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair);
     CollisionIntegral4(const CollisionIntegral4&) = default;
 
@@ -161,7 +161,7 @@ public:
     /* Evaluates the integral everywhere on the (m,n,j,k) grid. */
     CollisionResultsGrid evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
 
-    inline std::size_t getPolynomialBasisSize() const { return polynomialBasis.getBasisSize(); }
+    inline std::size_t getPolynomialBasisSize() const { return mPolynomialBasis.getBasisSize(); }
 
     void addCollisionElement(const CollisionElement<4>& elem);
 
@@ -182,7 +182,7 @@ private:
     // For avoiding 1/0
     static constexpr double SMALL_NUMBER = 1e-50;
 
-    Chebyshev polynomialBasis;
+    Chebyshev mPolynomialBasis;
     ParticleNamePair mParticlePair;
 
     // mn = polynomial indices, jk = momentum indices
