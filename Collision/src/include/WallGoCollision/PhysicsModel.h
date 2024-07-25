@@ -53,7 +53,7 @@ public:
     * dependent objects such as CollisionTensors, and we want to avoid hard-to-diagnoze bugs related to this. */
     void lockModelDefinitions();
 
-    bool isLocked() const { return bLocked; }
+    inline bool isLocked() const { return bLocked; }
 
     /* Read matrix elements from a file and stores them internally.
     This will only consider expressions where at least one currently registered out-of-equilibrium particle appears as an external particle.
@@ -97,6 +97,11 @@ private:
     void updateParticleMassCache();
 
     void printMatrixElements() const;
+
+    // ---- We use a very simple "observer pattern" to sync CollisionTensor objects when model parameters change
+    std::vector<CollisionTensor*> mObservers;
+
+    void notifyModelParameterChange(const ModelParameters& changedParameters);
 
     // ---- Factory-like functions for setupping collision integrals. Consider moving these to dedicated factory class(es) if the model becomes too 
 

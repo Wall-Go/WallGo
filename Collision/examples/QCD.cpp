@@ -119,6 +119,7 @@ wallgo::PhysicsModel setupQCD()
 
 	model.defineParticleSpecies(lightQuark);
 
+	model.lockModelDefinitions();
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
 	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";

@@ -11,6 +11,12 @@ namespace wallgo
 
 bool PhysicsModel::defineParticleSpecies(const ParticleDescription& description)
 {
+    if (isLocked())
+    {
+        std::cerr << "Attempted to define a new particle to a locked wallgo::PhysicsModel!\n";
+        return false;
+    }
+
     // Check if particle with this index has already been defined
     if (mParticles.count(description.index) > 0)
     {
@@ -47,6 +53,12 @@ void PhysicsModel::defineParameter(const char* symbol, double value)
 
 void PhysicsModel::defineParameter(const std::string& symbol, double value)
 {
+    if (isLocked())
+    {
+        std::cerr << "Attempted to define a new model parameter to a locked wallgo::PhysicsModel!!\n";
+        return;
+    }
+
     if (mParameters.contains(symbol))
     {
         std::cerr << "Attempted to redefine already defined parameter: " << symbol << "\n";
@@ -151,26 +163,35 @@ void PhysicsModel::printMatrixElements() const
     }
 }
 
+void PhysicsModel::notifyModelParameterChange(const ModelParameters& changedParameters)
+{
+    for (CollisionTensor* tensor : mObservers)
+    {
+        tensor->updateModelParameters(changedParameters);
+    }
+}
+
 CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<uint32_t>& offEqParticleIndices) const
 {
-    CollisionTensor outTensor(basisSize);
-
     // Sanity checks
     for (uint32_t idx : offEqParticleIndices)
     {
         if (mParticles.count(idx) == 0)
         {
             std::cerr << "Unknown particle index: " << idx << std::endl;
-            return CollisionTensor();
+            return CollisionTensor(this);
         }
 
         if (mParticles.at(idx)->isInEquilibrium())
         {
             std::cerr << "Attempted to create collision tensor for particle " << mParticles.at(idx)->getName()
                 << " (index " << idx << "), but the particle is in equilibrium" << std::endl;
-            return CollisionTensor();
+            return CollisionTensor(this);
         }
     }
+
+    CollisionTensor outTensor(this, basisSize);
+
 
     for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
     {

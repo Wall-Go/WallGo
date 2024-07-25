@@ -1,4 +1,5 @@
 #include "CollisionTensor.h"
+#include "PhysicsModel.h"
 
 #include <array>
 #include <fstream>
@@ -12,7 +13,7 @@ namespace wallgo
 {
 
 
-CollisionTensor::CollisionTensor()
+CollisionTensor::CollisionTensor(const PhysicsModel* creator)
 {
     // Set default options
 
@@ -27,10 +28,12 @@ CollisionTensor::CollisionTensor()
     mDefaultIntegrationOptions.bIncludeStatisticalErrors = true;
 
     mDefaultVerbosity = CollisionTensorVerbosity();
+
+    mModel = creator;
 }
 
-CollisionTensor::CollisionTensor(size_t basisSize)
-    : CollisionTensor()
+CollisionTensor::CollisionTensor(const PhysicsModel* creator, size_t basisSize)
+    : CollisionTensor(creator)
 {
     changePolynomialBasisSize(basisSize);
 }
@@ -165,6 +168,10 @@ size_t CollisionTensor::countIndependentIntegrals() const
         res += integral.countIndependentIntegrals();
     }
     return res;
+}
+
+void CollisionTensor::updateModelParameters(const ModelParameters& changedParameters)
+{
 }
 
 } // namespace

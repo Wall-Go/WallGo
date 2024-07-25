@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "Common.h"
+#include "ModelParameters.h"
 #include "CollisionElement.h"
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
@@ -34,6 +35,8 @@
 namespace wallgo
 {
 
+class PhysicsModel;
+
 /* CollisionTensor is the main interface to computing WallGo collision integrals. 
 * Manages model-parameter and particle definitions, and construct collision integral objects
 * based on matrix element input. Used also to initiate collision integrations. */
@@ -41,8 +44,9 @@ class WALLGO_API CollisionTensor
 {
 
 public: 
-    CollisionTensor();
-    CollisionTensor(size_t basisSize);
+
+    CollisionTensor(const PhysicsModel* creator);
+    CollisionTensor(const PhysicsModel* creator, size_t basisSize);
 
     /* Configures default integration options that are used by computeIntegralsForPair() and related functions
     if no IntegrationOptions object is passed when calling them. */
@@ -108,7 +112,12 @@ public:
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
     size_t countIndependentIntegrals() const;
 
+    /* Used to sync matrix elements etc with changes to model parameters */
+    void updateModelParameters(const ModelParameters& changedParameters);
+
 private:
+
+    const PhysicsModel* mModel = nullptr;
 
     size_t mBasisSize;
 
