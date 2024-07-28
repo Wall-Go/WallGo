@@ -16,6 +16,9 @@
 namespace wallgo
 {
 
+struct ModelChangeContext;
+class IModelObserver;
+
 class PhysicsModel
 {
 public:
@@ -99,9 +102,11 @@ private:
     void printMatrixElements() const;
 
     // ---- We use a very simple "observer pattern" to sync CollisionTensor objects when model parameters change
-    std::vector<CollisionTensor*> mObservers;
-
-    void notifyModelParameterChange(const ModelParameters& changedParameters);
+    std::vector<IModelObserver*> mObservers;
+    
+    void registerObserver(const IModelObserver* observer);
+    void unregisterObserver(const IModelObserver* observer);
+    void notifyModelChange(const ModelChangeContext& context) const;
 
     // ---- Factory-like functions for setupping collision integrals. Consider moving these to dedicated factory class(es) if the model becomes too 
 

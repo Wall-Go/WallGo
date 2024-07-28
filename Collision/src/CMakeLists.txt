@@ -3,7 +3,7 @@ set(LIB WallGoCollision)
 
 
 file(GLOB_RECURSE SOURCES "*.cpp")
-file(GLOB_RECURSE HEADERS "*.h")
+file(GLOB_RECURSE HEADERS "*.h" "*.inl")
 
 add_library(${LIB} ${SOURCES} ${HEADERS})
 

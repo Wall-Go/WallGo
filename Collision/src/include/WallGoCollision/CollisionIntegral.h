@@ -9,6 +9,7 @@
 #include "CollisionElement.h"
 #include "PolynomialBasis.h"
 #include "ResultContainers.h"
+#include "ModelParameters.h"
 
 namespace wallgo
 {
@@ -165,11 +166,9 @@ public:
 
     void addCollisionElement(const CollisionElement<4>& elem);
 
-    /* Used to update parameters inside CollElems (actually their MatrixElements).
+    /* Used to update parameters inside CollElems (and in their MatrixElements).
     This does not define new parameters, so things work even if the input map is "too big". */
-    void updateModelParameters(const std::map<std::string, double>& parameters);
-
-    void updateModelParameter(const std::string& name, double newValue);
+    void updateModelParameters(const ModelParameters& changedParams);
 
     // How many integrals need to be computed with the current grid size
     size_t countIndependentIntegrals() const;

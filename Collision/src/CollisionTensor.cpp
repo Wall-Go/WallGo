@@ -29,7 +29,6 @@ CollisionTensor::CollisionTensor(const PhysicsModel* creator)
 
     mDefaultVerbosity = CollisionTensorVerbosity();
 
-    mModel = creator;
 }
 
 CollisionTensor::CollisionTensor(const PhysicsModel* creator, size_t basisSize)
@@ -170,8 +169,15 @@ size_t CollisionTensor::countIndependentIntegrals() const
     return res;
 }
 
-void CollisionTensor::updateModelParameters(const ModelParameters& changedParameters)
+void CollisionTensor::handleModelChange(const ModelChangeContext& context)
 {
+    if (context.changedParams.size() > 0)
+    {
+        for (auto& [_, integral] : mCachedIntegrals)
+        {
+            integral.updateModelParameters(context.changedParams);
+        }
+    }
 }
 
 } // namespace

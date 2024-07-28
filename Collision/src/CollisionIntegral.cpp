@@ -288,26 +288,18 @@ void CollisionIntegral4::addCollisionElement(const CollisionElement<4> &elem)
     }
 }
 
-/*
-void CollisionIntegral4::updateModelParameters(const std::map<std::string, double> &parameters)
-{
-    for (auto &CollisionElement : collisionElements_ultrarelativistic)
-    {
-        CollisionElement.matrixElement.setParameters(parameters);
-    }
 
-    for (auto &CollisionElement : collisionElements_nonUltrarelativistic)
+void CollisionIntegral4::updateModelParameters(const ModelParameters& changedParams)
+{
+    for (auto& collisionElement : collisionElements_nonUltrarelativistic)
     {
-        CollisionElement.matrixElement.setParameters(parameters);
+        collisionElement.mMatrixElement.updateModelParameters(changedParams);
+    }
+    for (auto& collisionElement : collisionElements_nonUltrarelativistic)
+    {
+        collisionElement.mMatrixElement.updateModelParameters(changedParams);
     }
 }
-
-void CollisionIntegral4::updateModelParameter(const std::string &name, double newValue)
-{
-    for (auto &CollisionElement : collisionElements_ultrarelativistic) CollisionElement.matrixElement.setParameter(name, newValue);
-    for (auto &CollisionElement : collisionElements_nonUltrarelativistic) CollisionElement.matrixElement.setParameter(name, newValue);
-}
-*/
 
 size_t CollisionIntegral4::countIndependentIntegrals() const
 {

@@ -15,6 +15,7 @@
 #include "ParticleSpecies.h"
 #include "CollisionIntegral.h"
 #include "ResultContainers.h"
+#include "ModelObserver.h"
 
 
 /** How we manage particles. Calling addParticle(particle) registers a new particle with the CollisionTensor.
@@ -37,13 +38,14 @@ namespace wallgo
 
 class PhysicsModel;
 
+
 /* CollisionTensor is the main interface to computing WallGo collision integrals. 
 * Manages model-parameter and particle definitions, and construct collision integral objects
 * based on matrix element input. Used also to initiate collision integrations. */
-class WALLGO_API CollisionTensor 
+class WALLGO_API CollisionTensor : public IModelObserver
 {
 
-public: 
+public:
 
     CollisionTensor(const PhysicsModel* creator);
     CollisionTensor(const PhysicsModel* creator, size_t basisSize);
@@ -112,12 +114,11 @@ public:
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
     size_t countIndependentIntegrals() const;
 
-    /* Used to sync matrix elements etc with changes to model parameters */
-    void updateModelParameters(const ModelParameters& changedParameters);
+    // IModelObserver interface
+    virtual void handleModelChange(const ModelChangeContext& context) override;
+    // ~IModelObserverInterface
 
 private:
-
-    const PhysicsModel* mModel = nullptr;
 
     size_t mBasisSize;
 
@@ -126,6 +127,7 @@ private:
 
     // Holds collision integrals so that they can be reused
     std::map<ParticleNamePair, CollisionIntegral4> mCachedIntegrals;
+
 };
 
 } // namespace

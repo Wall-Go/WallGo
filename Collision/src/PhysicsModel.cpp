@@ -1,8 +1,10 @@
+#include "ModelObserver.h"
 #include "PhysicsModel.h"
 #include "ParticleSpecies.h"
 #include "CollisionElement.h"
 #include "MatrixElementParsing.h"
 
+#include <algorithm>
 #include <array>
 #include <iostream>
 
@@ -88,15 +90,30 @@ void PhysicsModel::updateParameter(const std::string& symbol, double value)
         return;
     }
     mParameters.addOrModifyParameter(symbol, value);
+
+    updateParticleMassCache();
+    
+    ModelChangeContext changeContext;
+    changeContext.changedParams.addOrModifyParameter(symbol, value);
+    notifyModelChange(changeContext);
 }
 
 void PhysicsModel::updateParameters(const ModelParameters& newValues)
 {
     for (const auto& [symbol, value] : newValues.getParameterMap())
     {
-        // NB: unnecessary cache updates here. Should update only after the loop is done
-        updateParameter(symbol, value);
+        if (!mParameters.contains(symbol))
+        {
+            std::cerr << "Attempted to update undefined parameter: " << symbol << "\n";
+        }
+        mParameters.addOrModifyParameter(symbol, value);
     }
+
+    updateParticleMassCache();
+
+    ModelChangeContext changeContext;
+    changeContext.changedParams = newValues;
+    notifyModelChange(changeContext);
 }
 
 void PhysicsModel::lockModelDefinitions()
@@ -163,11 +180,34 @@ void PhysicsModel::printMatrixElements() const
     }
 }
 
-void PhysicsModel::notifyModelParameterChange(const ModelParameters& changedParameters)
+void PhysicsModel::registerObserver(const IModelObserver* observer)
 {
-    for (CollisionTensor* tensor : mObservers)
+    if (observer && std::find(mObservers.begin(), mObservers.end(), observer) != mObservers.end())
     {
-        tensor->updateModelParameters(changedParameters);
+        mObservers.emplace_back(observer);
+    }
+    else
+    {
+        std::cerr << "Warning: redundant registerObserver() call\n";
+    }
+}
+
+void PhysicsModel::unregisterObserver(const IModelObserver* observer)
+{
+    if (!observer) return;
+
+    auto it = std::find(mObservers.begin(), mObservers.end(), observer);
+    if (it != mObservers.end())
+    {
+        mObservers.erase(it);
+    }
+}
+
+void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
+{
+    for (IModelObserver* observer : mObservers)
+    {
+        observer->handleModelChange(context);
     }
 }
 

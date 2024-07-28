@@ -24,6 +24,7 @@ public:
     // True if we contain the specified parameter name
     bool contains(const std::string& paramName) const { return mParams.count(paramName) > 0; }
     void clear() { params.clear(); }
+    size_t size() const { return mParams.size(); }
     uint32_t getNumParams() const { return static_cast<uint32_t>(mParams.size()); }
     std::vector<std::string> getParameterNames() const;
 
