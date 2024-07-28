@@ -180,7 +180,7 @@ void PhysicsModel::printMatrixElements() const
     }
 }
 
-void PhysicsModel::registerObserver(const IModelObserver* observer)
+void PhysicsModel::registerObserver(IModelObserver* observer)
 {
     if (observer && std::find(mObservers.begin(), mObservers.end(), observer) != mObservers.end())
     {
@@ -192,7 +192,7 @@ void PhysicsModel::registerObserver(const IModelObserver* observer)
     }
 }
 
-void PhysicsModel::unregisterObserver(const IModelObserver* observer)
+void PhysicsModel::unregisterObserver(IModelObserver* observer)
 {
     if (!observer) return;
 

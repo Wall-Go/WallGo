@@ -75,15 +75,16 @@ public:
         bool bWriteErrors = true) const;
 
 private:
+
+    ParticleNamePair mParticlePair;
+    
+    size_t mElementsPerDimension;  // equals basisSize - 1
+
     Array4D mData;
     // Optional: statistical errors of integrations. Has large memory cost, so we allocate this only if needed
     std::unique_ptr<Array4D> mErrors = nullptr;
 
     CollisionMetadata mMetadata;
-    size_t mElementsPerDimension;  // equals basisSize - 1
-
-    ParticleNamePair mParticlePair;
-
     void initData();
 };
 
