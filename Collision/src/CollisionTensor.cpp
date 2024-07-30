@@ -13,7 +13,7 @@ namespace wallgo
 {
 
 
-CollisionTensor::CollisionTensor(const PhysicsModel* creator)
+CollisionTensor::CollisionTensor(PhysicsModel* creator)
 {
     // Set default options
 
@@ -29,14 +29,58 @@ CollisionTensor::CollisionTensor(const PhysicsModel* creator)
 
     mDefaultVerbosity = CollisionTensorVerbosity();
 
+    assert(creator);
+    mObservingModel = creator;
+    creator->registerObserver(*this);
 }
 
-CollisionTensor::CollisionTensor(const PhysicsModel* creator, size_t basisSize)
+CollisionTensor::CollisionTensor(PhysicsModel* creator, size_t basisSize)
     : CollisionTensor(creator)
 {
     changePolynomialBasisSize(basisSize);
 }
 
+CollisionTensor::~CollisionTensor()
+{
+    if (mObservingModel)
+    {
+        mObservingModel->unregisterObserver(*this);
+    }
+}
+
+CollisionTensor::CollisionTensor(const CollisionTensor& other)
+{
+    mBasisSize = other.mBasisSize;
+    mDefaultIntegrationOptions = other.mDefaultIntegrationOptions;
+    mDefaultVerbosity = other.mDefaultVerbosity;
+
+    mCachedIntegrals = other.mCachedIntegrals;
+
+    mObservingModel = other.mObservingModel;
+    if (mObservingModel)
+    {
+        mObservingModel->registerObserver(*this);
+    }
+}
+
+CollisionTensor& CollisionTensor::operator=(const CollisionTensor& other)
+{
+    if (&other == this) return *this;
+    
+    mBasisSize = other.mBasisSize;
+    mDefaultIntegrationOptions = other.mDefaultIntegrationOptions;
+    mDefaultVerbosity = other.mDefaultVerbosity;
+
+    mCachedIntegrals = other.mCachedIntegrals;
+
+    mObservingModel = other.mObservingModel;
+    if (mObservingModel)
+    {
+        mObservingModel->registerObserver(*this);
+    }
+
+    return *this;
+}
 
 void CollisionTensor::setDefaultIntegrationOptions(const IntegrationOptions& options)
 {

@@ -47,8 +47,16 @@ class WALLGO_API CollisionTensor : public IModelObserver
 
 public:
 
-    CollisionTensor(const PhysicsModel* creator);
-    CollisionTensor(const PhysicsModel* creator, size_t basisSize);
+    CollisionTensor(PhysicsModel* creator);
+    CollisionTensor(PhysicsModel* creator, size_t basisSize);
+    // Destructor that calls unregisterObserver() on the creator
+    ~CollisionTensor();
+
+    /* Rule of three: need custom copy/assignment operators because of the custom dtor that handles unregistration from model.
+    * Not ideal, but these ensure that a copied CollisionTensor is also registered as a model observer.
+    */
+    CollisionTensor(const CollisionTensor& other);
+    CollisionTensor& operator=(const CollisionTensor& other);
 
     /* Configures default integration options that are used by computeIntegralsForPair() and related functions
     if no IntegrationOptions object is passed when calling them. */
@@ -119,6 +127,8 @@ public:
     // ~IModelObserverInterface
 
 private:
+
+    PhysicsModel* mObservingModel = nullptr;
 
     size_t mBasisSize;
 

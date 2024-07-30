@@ -69,15 +69,20 @@ public:
     // Get copy of our cached matrix elements, grouped by out-of-equilibrium particle indices
     std::map<IndexPair, std::vector<MatrixElement>> getMatrixElements() { return mMatrixElements; }
 
-    /* Creates a CollisionTensor object that includes all registered out-of-equilibrium particles.
+    /* Creates a CollisionTensor object that includes all registered out-of-equilibrium particles, and registers it as a model observer.
     This uses stored matrix elements that should be setup with readMatrixElements() prior to calling this function. */
     CollisionTensor createCollisionTensor(size_t basisSize);
+
+    // ---- We use a simple "observer pattern" to sync CollisionTensor objects when model parameters change
+    void registerObserver(IModelObserver& observer);
+    void unregisterObserver(IModelObserver& observer);
 
     PhysicsModel() {}
     // Models cannot be copied, only moving ownership is allowed
     PhysicsModel(const PhysicsModel&) = delete;
-    PhysicsModel operator=(const PhysicsModel&) = delete;
+    PhysicsModel& operator=(const PhysicsModel&) = delete;
 
+    // TODO should we move observer registrations?
     PhysicsModel(PhysicsModel&&) noexcept = default;
     PhysicsModel& operator=(PhysicsModel&&) noexcept = default;
 
@@ -101,20 +106,16 @@ private:
 
     void printMatrixElements() const;
 
-    // ---- We use a very simple "observer pattern" to sync CollisionTensor objects when model parameters change
     std::vector<IModelObserver*> mObservers;
-    
-    void registerObserver(IModelObserver* observer);
-    void unregisterObserver(IModelObserver* observer);
     void notifyModelChange(const ModelChangeContext& context) const;
 
     // ---- Factory-like functions for setupping collision integrals. Consider moving these to dedicated factory class(es) if the model becomes too 
 
-    // Creates a CollisionTensor from cached matrix elements. Includes only off-eq particles specified in the input
+    // Creates a CollisionTensor from cached matrix elements and registers it as a model observer. Includes only off-eq particles specified in the input
     CollisionTensor createCollisionTensor(
         size_t basisSize,
         const std::vector<uint32_t>& offEqParticleIndices
-    ) const;
+    );
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.
     CollisionIntegral4 createCollisionIntegral4(

@@ -62,8 +62,8 @@ wallgo::PhysicsModel setupQCD()
 	parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters));
 	parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters));
 
-	/* Pass the symbols to the model.This is equivalent to calling PhysicsModel::defineParameter() separately for each symbol.
-	* Note that the model will manages its own copy of the parameters and is not linked to our local variable here. */
+	/* Pass the symbols to the model. This is equivalent to calling PhysicsModel::defineParameter() separately for each symbol.
+	* Note that the model manages its own copy of the parameters and is not linked to our local variable here. */
 	model.defineParameters(parameters);
 
 
@@ -164,11 +164,14 @@ int main()
 	// Polynomial basis size. Using a trivially small N to make the example run fast
 	const int basisSizeN = 3;
 
+	/* The CollisionTensor class acts as a main interface into collision integral computations.
+	It will be linked to the PhysicsModel that creates it, so that changes to model parameters and particles
+	will directly propagate to CollisionTensor objects created from it.
+	This also means that you MUST keep the model alive for as long as you use CollisionTensors linked to it. */
 	wallgo::CollisionTensor collisionTensor = model.createCollisionTensor(basisSizeN);
 
 	// Can change the basis size easily without having to reconstruct the tensor. Example:
 	//collisionTensor.changePolynomialBasisSize(7);
-
 
 	/* Configure integrator. The defaults should be reasonably OK so you can only modify what you need.
 	Here we set everything manually to show how it's done. */
@@ -209,23 +212,22 @@ int main()
 	Statistical errors will go to a separate dataset in the HDF5 file. */
 	results.writeToIndividualHDF5(/*output directory*/ "output", /*bWriteErrors*/ true);
 	
-
-
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
-	We can also request to compute integrals only for a specific off-equilibrium particle pair
-	Demonstration: */
-	std::map<std::string, double> newVars
-	{
-		{"gs", 1},
-		{"msq[1]", 0.2},
-	};
+	As explained above, CollisionTensors are linked to their respective PhysicsModel objects, so we just need to modify the model object to achieve this.
+	Note we use the PhysicsModel::updateParameter() method to modify existing parameters and not PhysicsModel::defineParameter(). */
+	model.updateParameter("gs", 1.0);
 
-	/*
-	collTensor.setVariables(newVars);
-	collTensor.setVariable("msq[2]", 0.3);
-	*/
+	// Can also pack the new parameters in a ModelParameters object and pass it to the model:
+	wallgo::ModelParameters changedParams;
+	changedParams.addOrModifyParameter("gs", 1.0); // some random values
+	changedParams.addOrModifyParameter("msq[1]", 0.3);
+	model.updateParameters(changedParams);
+
+	/* We can also request to compute integrals only for a specific off-equilibrium particle pair
+	Demonstration: */
 	std::cout << "== Evaluating (top, gluon) only with modified parameters ==" << std::endl;
 	wallgo::CollisionResultsGrid resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon");
+
 
 	/* CollisionTensor also defines overloaded versions of the main "compute" functions for specifying custom
 	IntegrationOptions and CollisionTensorVerbosity objects on a per-call basis, instead defaulting to the ones cached inside the CollisionTensor instance.
@@ -234,6 +236,7 @@ int main()
 	verbosity.bPrintEveryElement = false;
 	verbosity.progressReportPercentage = 0; // no progress reporting
 	verbosity.bPrintElapsedTime = true;
+	std::cout << "== Evaluating (top, gluon) only without progress tracking ==" << std::endl;
 	resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon", integrationOptions, verbosity);
 
 	// Perform clean exit

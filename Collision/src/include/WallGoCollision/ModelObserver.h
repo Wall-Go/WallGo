@@ -21,15 +21,5 @@ public:
     virtual void handleModelChange(const ModelChangeContext& context) = 0;
 };
 
-struct ModelObserverRegistration
-{
-public:
-
-
-private:
-    PhysicsModel* model = nullptr;
-    IModelObserver* observer = nullptr;
-};
-
 
 } // namespace wallgo

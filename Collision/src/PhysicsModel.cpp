@@ -146,6 +146,19 @@ CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize)
     return createCollisionTensor(basisSize, mOffEqIndices);
 }
 
+void PhysicsModel::registerObserver(IModelObserver& observer)
+{
+    mObservers.push_back(&observer);
+}
+
+void PhysicsModel::unregisterObserver(IModelObserver& observer)
+{
+    auto it = std::find(mObservers.begin(), mObservers.end(), &observer);
+    if (it != mObservers.end())
+    {
+        mObservers.erase(it);
+    }
+}
 
 void PhysicsModel::updateParticleMassCache()
 {
@@ -180,29 +193,6 @@ void PhysicsModel::printMatrixElements() const
     }
 }
 
-void PhysicsModel::registerObserver(IModelObserver* observer)
-{
-    if (observer && std::find(mObservers.begin(), mObservers.end(), observer) != mObservers.end())
-    {
-        mObservers.emplace_back(observer);
-    }
-    else
-    {
-        std::cerr << "Warning: redundant registerObserver() call\n";
-    }
-}
-
-void PhysicsModel::unregisterObserver(IModelObserver* observer)
-{
-    if (!observer) return;
-
-    auto it = std::find(mObservers.begin(), mObservers.end(), observer);
-    if (it != mObservers.end())
-    {
-        mObservers.erase(it);
-    }
-}
-
 void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
 {
     for (IModelObserver* observer : mObservers)
@@ -211,7 +201,7 @@ void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
     }
 }
 
-CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<uint32_t>& offEqParticleIndices) const
+CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<uint32_t>& offEqParticleIndices)
 {
     // Sanity checks
     for (uint32_t idx : offEqParticleIndices)
