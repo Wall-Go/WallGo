@@ -19,16 +19,16 @@ namespace wallgo
 struct ModelChangeContext;
 class IModelObserver;
 
-class PhysicsModel
+/* Helper class for specifying model contents.This is separate from the actual PhysicsModel class because we don't want to allow model structure to change after creation */
+class ModelDefinition
 {
 public:
-
     /* Defines a new particle species for the model.
     * Usage:
     *   - description is a ParticleDescription struct that must be filled in accordingly
     *   - description.name must be a unique string name
     *   - description.index must be a unique integer identifier for the particle and must match the intended index in matrix element files .
-    * 
+    *
     * If the input is invalid, return value is false and no particle is defined.
     */
     bool defineParticleSpecies(const ParticleDescription& description);
@@ -40,23 +40,28 @@ public:
     // Defines new symbolic parameters. Symbols must not have been previously defined
     void defineParameters(const ModelParameters& inParams);
 
-    // Updates a symbolic parameter value. The symbol must have been previously defined
+private:
+
+    ModelParameters mParameters;
+    std::vector<ParticleDescription> mParticleDescriptions;
+
+    friend class PhysicsModel;
+};
+
+class PhysicsModel
+{
+public:
+
+    // Construct a new PhysicsModel
+    PhysicsModel(const ModelDefinition& modelDefinition);
+
+    // Updates a symbolic parameter value. The symbol must have been defined at model creation time
     void updateParameter(const char* symbol, double newValue);
-    // Updates a symbolic parameter value. The symbol must have been previously defined
+    // Updates a symbolic parameter value. The symbol must have been defined at model creation time
     void updateParameter(const std::string& symbol, double newValue);
     /* Updates model parameter values.
     * NB: This never removes parameter definitions even if the input contains less parameters than what have been defined for this model */
     void updateParameters(const ModelParameters& newValues);
-
-    /* Call to fix model contents (parameters and particles).
-    * After locking, it is not possible to define new parameters or particles,
-    * but calls to updateParameter() and similar are still valid.
-    * MUST be called before readMatrixElements or similar.
-    * Locking is required because runtime modifications to model definitions could immediately invalidate
-    * dependent objects such as CollisionTensors, and we want to avoid hard-to-diagnoze bugs related to this. */
-    void lockModelDefinitions();
-
-    inline bool isLocked() const { return bLocked; }
 
     /* Read matrix elements from a file and stores them internally.
     This will only consider expressions where at least one currently registered out-of-equilibrium particle appears as an external particle.
@@ -68,6 +73,8 @@ public:
 
     // Get copy of our cached matrix elements, grouped by out-of-equilibrium particle indices
     std::map<IndexPair, std::vector<MatrixElement>> getMatrixElements() { return mMatrixElements; }
+
+    void printMatrixElements() const;
 
     /* Creates a CollisionTensor object that includes all registered out-of-equilibrium particles, and registers it as a model observer.
     This uses stored matrix elements that should be setup with readMatrixElements() prior to calling this function. */
@@ -104,8 +111,6 @@ private:
     // Must be called after changing mParameters to propagate changes to cached particle masses
     void updateParticleMassCache();
 
-    void printMatrixElements() const;
-
     std::vector<IModelObserver*> mObservers;
     void notifyModelChange(const ModelChangeContext& context) const;
 
@@ -122,12 +127,10 @@ private:
         size_t basisSize,
         const IndexPair& offEqIndices) const;
 
-    /* Create collision element for an off - eq pair. This will pass raw ParticleSpecies pointers to the resulting object. */
+    /* Create collision element for an off-eq pair. This will pass raw ParticleSpecies pointers to the resulting object. */
     CollisionElement<4> createCollisionElement(
         const IndexPair& offEqIndices,
         const MatrixElement& matrixElement) const;
-
-    bool bLocked = false;
 };
 
 

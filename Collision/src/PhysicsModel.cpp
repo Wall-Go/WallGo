@@ -11,70 +11,77 @@
 namespace wallgo
 {
 
-bool PhysicsModel::defineParticleSpecies(const ParticleDescription& description)
+bool ModelDefinition::defineParticleSpecies(const ParticleDescription& description)
 {
-    if (isLocked())
+    // Check if particle with this index or name has already been defined
+    for (const ParticleDescription& knownParticle : mParticleDescriptions)
     {
-        std::cerr << "Attempted to define a new particle to a locked wallgo::PhysicsModel!\n";
-        return false;
+        if (knownParticle.name == description.name)
+        {
+            std::cerr << "Particle definition error: particle named " << description.name << " has already been defined and has index: " << knownParticle.index << std::endl;
+            return false;
+        }
+
+        if (knownParticle.index == description.index)
+        {
+            std::cerr << "Particle definition error: particle at index " << description.index << " has already been defined and is named: " << knownParticle.index << std::endl;
+            return false;
+        }
     }
 
-    // Check if particle with this index has already been defined
-    if (mParticles.count(description.index) > 0)
-    {
-        assert(mParticles.at(description.index));
-        std::string_view otherName = mParticles.at(description.index)->getName();
-        std::cerr << "Particle definition error: particle at index " << description.index << " has already been defined and is named: " << otherName << std::endl;
-        return false;
-    }
-
-    // Check if particle with this name has already been defined
-    if (mParticleNameMap.count(description.name) > 0)
-    {
-        const uint32_t otherIndex = mParticleNameMap.at(description.name);
-        std::cerr << "Particle definition error: particle named " << description.name << " has already been defined and has index: " << otherIndex << std::endl;
-        return false;
-    }
-
-    mParticles.emplace(description.index, std::make_unique<ParticleSpecies>(description));
-
-    mParticleNameMap.insert({ description.name, description.index });
-
-    if (!description.bInEquilibrium)
-    {
-        mOffEqIndices.push_back(description.index);
-    }
-
+    mParticleDescriptions.push_back(description);
     return true;
 }
 
-void PhysicsModel::defineParameter(const char* symbol, double value)
+void ModelDefinition::defineParameter(const char* symbol, double value)
 {
     defineParameter(std::string(symbol), value);
 }
 
-void PhysicsModel::defineParameter(const std::string& symbol, double value)
+void ModelDefinition::defineParameter(const std::string& symbol, double value)
 {
-    if (isLocked())
-    {
-        std::cerr << "Attempted to define a new model parameter to a locked wallgo::PhysicsModel!!\n";
-        return;
-    }
-
     if (mParameters.contains(symbol))
     {
         std::cerr << "Attempted to redefine already defined parameter: " << symbol << "\n";
         return;
     }
+
+    // These are reserved:
+    if (symbol == "s" || symbol == "t" || symbol == "u")
+    {
+        std::cerr << "Parameter name " << symbol << " is reserved for internal use, please choose a different symbol\n";
+        return;
+    }
+
     mParameters.addOrModifyParameter(symbol, value);
 }
 
-void PhysicsModel::defineParameters(const ModelParameters& inParams)
+void ModelDefinition::defineParameters(const ModelParameters& inParams)
 {
     for (const auto& [symbol, value] : inParams.getParameterMap())
     {
         defineParameter(symbol, value);
     }
+}
+
+
+PhysicsModel::PhysicsModel(const ModelDefinition& modelDefinition)
+{
+    // This assumes that particle and parameter contents has been sanitized already (currently done by ModelDefinition itself)
+
+    mParameters = modelDefinition.mParameters;
+    for (const ParticleDescription& particle : modelDefinition.mParticleDescriptions)
+    {
+        mParticles.emplace(particle.index, std::make_unique<ParticleSpecies>(particle));
+        mParticleNameMap.insert({ particle.name, particle.index });
+
+        if (!particle.bInEquilibrium)
+        {
+            mOffEqIndices.push_back(particle.index);
+        }
+    }
+
+    updateParticleMassCache();
 }
 
 void PhysicsModel::updateParameter(const char* symbol, double value)
@@ -114,14 +121,6 @@ void PhysicsModel::updateParameters(const ModelParameters& newValues)
     ModelChangeContext changeContext;
     changeContext.changedParams = newValues;
     notifyModelChange(changeContext);
-}
-
-void PhysicsModel::lockModelDefinitions()
-{
-    bLocked = true;
-
-    // Can now cache model-specific stuff
-    updateParticleMassCache();
 }
 
 bool PhysicsModel::readMatrixElements(
@@ -295,5 +294,6 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
 
     return CollisionElement<4>(externalParticles, matrixElement, bDeltaF);
 }
+
 
 } // namespace wallgo

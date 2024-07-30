@@ -295,7 +295,7 @@ void CollisionIntegral4::updateModelParameters(const ModelParameters& changedPar
     {
         collisionElement.mMatrixElement.updateModelParameters(changedParams);
     }
-    for (auto& collisionElement : collisionElements_nonUltrarelativistic)
+    for (auto& collisionElement : collisionElements_ultrarelativistic)
     {
         collisionElement.mMatrixElement.updateModelParameters(changedParams);
     }

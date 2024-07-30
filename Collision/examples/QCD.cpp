@@ -17,7 +17,8 @@
 // Helper function that configures a QCD-like model
 wallgo::PhysicsModel setupQCD()
 {
-	wallgo::PhysicsModel model;
+	// Model definitions must be filled in to a ModelDefinition helper object
+	wallgo::ModelDefinition modelDefinition;
 
 	/* Specify symbolic variables that are present in matrix elements, and their initial values.
 	This typically includes at least coupling constants of the theory, but often also masses of fields that appear in internal propagators.
@@ -38,15 +39,16 @@ wallgo::PhysicsModel setupQCD()
 	However the helper functions are needed later when defining particle content anyway, see below.
 	*/
 
-	/* The parameter container used by PhysicsModel class is of wallgo::ModelParameters type which behaves much like an std::map.
-	* Here we fill in a local copy first and pass it to the model later. */ 
+	/* The parameter container used by WallGo collision routines is of wallgo::ModelParameters type, which is a wrapper around std::map.
+	Here we write our parameter definitions to a ModelParameters variable and pass it to modelDefinitions later. */
 	wallgo::ModelParameters parameters;
-	parameters.addOrModifyParameter("gs", 1.2279920495357861); // QCD coupling
 
-	/* Define mass helper functions. We need the mass - squares in units of temperature, ie. m^2 / T^2.
-	* In case you're not familiar with the syntax below:
-	* It is a C++11 lambda expression that takes in a ModelParameters object, does no parameter capture and returns a double.
-	*/
+	parameters.addOrModifyParameter("gs", 1.2279920495357861);
+
+	/* Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
+	These should take in a wallgo::ModelParameters object and return a double value
+
+	Here we use a C++11 lambda expression, with explicit return type, to define the mass function: */
 	auto quarkThermalMassSquared = [](const wallgo::ModelParameters& params) -> double
 		{
 			const double gs = params.getParameterValue("gs");
@@ -62,16 +64,12 @@ wallgo::PhysicsModel setupQCD()
 	parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters));
 	parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters));
 
-	/* Pass the symbols to the model. This is equivalent to calling PhysicsModel::defineParameter() separately for each symbol.
-	* Note that the model manages its own copy of the parameters and is not linked to our local variable here. */
-	model.defineParameters(parameters);
-
+	modelDefinition.defineParameters(parameters);
 
 	/*** Particle definitions.
 	* The model needs to be aware of all particles species that appear as external legs in matrix elements.
 	* Note that this includes also particles that are assumed to remain in equilibrium but have collisions with out-of-equilibrium particles.
-	* Particle definition is done by filling in a ParticleDescription struct and calling PhysicsModel::defineParticleSpecies.
-	*/
+	* Particle definition is done by filling in a ParticleDescription struct and calling ModelDefinition::defineParticleSpecies. */
 	wallgo::ParticleDescription topQuark;
 	topQuark.name = "top"; // Ttring identifier, MUST be unique
 	topQuark.index = 0; // Unique integer identifier, MUST match index that appears in matrix element file
@@ -97,7 +95,7 @@ wallgo::PhysicsModel setupQCD()
 	topQuark.massSqFunction = quarkThermalMassSquared;
 
 	// Finish particle definition and make the model aware of this particle species:
-	model.defineParticleSpecies(topQuark);
+	modelDefinition.defineParticleSpecies(topQuark);
 
 	/* Repeat particle definitions for light quarks and the gluon. */
 
@@ -109,7 +107,7 @@ wallgo::PhysicsModel setupQCD()
 	gluon.bUltrarelativistic = true;
 	gluon.massSqFunction = gluonThermalMassSquared;
 
-	model.defineParticleSpecies(gluon);
+	modelDefinition.defineParticleSpecies(gluon);
 
 	// Light quarks remain in equilibrium but appear as external particles in collision processes, so define a generic light quark:
 	wallgo::ParticleDescription lightQuark = topQuark;
@@ -117,9 +115,13 @@ wallgo::PhysicsModel setupQCD()
 	lightQuark.index = 2;
 	lightQuark.bInEquilibrium = true;
 
-	model.defineParticleSpecies(lightQuark);
+	modelDefinition.defineParticleSpecies(lightQuark);
 
-	model.lockModelDefinitions();
+	// Create the concrete model
+	wallgo::PhysicsModel model(modelDefinition);
+
+	/* Read and verify matrix elements from a file. This is done with PhysicsModel::readMatrixElements.
+	Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content. */
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
 	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
@@ -132,6 +134,7 @@ wallgo::PhysicsModel setupQCD()
 			<< std::endl;
 	}
 
+	// Should we print each parsed matrix element to stdout? Can be useful for logging and debugging purposes
 	bool bPrintMatrixElements = true;
 
 	bool bMatrixElementsOK = model.readMatrixElements(matrixElementFile, bPrintMatrixElements);
@@ -158,7 +161,9 @@ int main()
 	// Can also set the seed at any later time. Example:
 	//wallgo::setSeed(42);
 
-	// First step is model definition, which specifies particle content and model parameters relevant for collisions. See the helper function above for details
+	/* First step is model definition, which specifies particle content and model parameters relevant for collisions.
+	See the helper function above for details, which also prepares matrix elements.
+	Note that it is NOT possible to change model particle or parameter content after creation, only parameter value changes are allowed; see below for an example. */
 	wallgo::PhysicsModel model = setupQCD();
 
 	// Polynomial basis size. Using a trivially small N to make the example run fast
@@ -215,29 +220,29 @@ int main()
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	As explained above, CollisionTensors are linked to their respective PhysicsModel objects, so we just need to modify the model object to achieve this.
 	Note we use the PhysicsModel::updateParameter() method to modify existing parameters and not PhysicsModel::defineParameter(). */
-	model.updateParameter("gs", 1.0);
+	model.updateParameter("gs", 0.5); // some random value
 
-	// Can also pack the new parameters in a ModelParameters object and pass it to the model:
+	// Can also pack the new parameters in a wallgo::ModelParameters object and pass it to the model:
 	wallgo::ModelParameters changedParams;
-	changedParams.addOrModifyParameter("gs", 1.0); // some random values
+	changedParams.addOrModifyParameter("gs", 0.5);
 	changedParams.addOrModifyParameter("msq[1]", 0.3);
 	model.updateParameters(changedParams);
 
-	/* We can also request to compute integrals only for a specific off-equilibrium particle pair
+	/* We can also request to compute integrals only for a specific off-equilibrium particle pair.
 	Demonstration: */
-	std::cout << "== Evaluating (top, gluon) only with modified parameters ==" << std::endl;
-	wallgo::CollisionResultsGrid resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon");
-
+	std::cout << "== Evaluating (top, top) only with modified parameters ==" << std::endl;
+	wallgo::CollisionResultsGrid resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "top");
 
 	/* CollisionTensor also defines overloaded versions of the main "compute" functions for specifying custom
 	IntegrationOptions and CollisionTensorVerbosity objects on a per-call basis, instead defaulting to the ones cached inside the CollisionTensor instance.
-	Can be used for more fine-grained evaluation. Demonstration: */
+	Can be used for more fine-grained evaluation.
+	Demonstration: */
 	integrationOptions.calls = 10000;
 	verbosity.bPrintEveryElement = false;
 	verbosity.progressReportPercentage = 0; // no progress reporting
 	verbosity.bPrintElapsedTime = true;
-	std::cout << "== Evaluating (top, gluon) only without progress tracking ==" << std::endl;
-	resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "gluon", integrationOptions, verbosity);
+	std::cout << "== Evaluating (top, top) only without progress tracking ==" << std::endl;
+	resultsTopGluon = collisionTensor.computeIntegralsForPair("top", "top", integrationOptions, verbosity);
 
 	// Perform clean exit
     wallgo::cleanup();
