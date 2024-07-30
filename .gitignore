@@ -11,6 +11,7 @@ docs/_build
 dist/
 *.hdf5
 .vscode/
+.vs/
 *.code-workspace
 .ropeproject/
 Collision/bin/
@@ -27,4 +28,6 @@ out*
 .ropeproject/
 run/
 old/
-Collision/CMakeUserPresets.json
+*generated.h
+CMakeUserPresets.json
+CMakeCache.txt
