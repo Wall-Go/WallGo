@@ -3,7 +3,7 @@
 
 add_executable(QCD QCD.cpp)
 
-target_link_libraries(QCD PRIVATE WallGoCollision)
+target_link_libraries(QCD PRIVATE ${WALLGO_LIB})
 
 install(TARGETS QCD DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 

@@ -15,7 +15,6 @@ dist/
 *.code-workspace
 .ropeproject/
 Collision/bin/
-Collision/pybind/lib/
 Collision/examples/bin/
 Collision/run/
 Collision/testrun/
@@ -31,3 +30,5 @@ old/
 *generated.h
 CMakeUserPresets.json
 CMakeCache.txt
+*.pyd
+*.pdb

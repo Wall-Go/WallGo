@@ -12,7 +12,7 @@
 
 #include <filesystem>
 
-#include "WallGoCollision/WallGoCollision.h"
+#include "WallGo/WallGoCollision.h"
 
 // Helper function that configures a QCD-like model
 wallgo::PhysicsModel setupQCD()

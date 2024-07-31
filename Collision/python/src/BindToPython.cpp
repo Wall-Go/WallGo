@@ -6,10 +6,11 @@
 #include <string>
 #include <cstdlib> // std::atexit
 
-#include "WallGoCollision/CollisionIntegral.h"
-#include "WallGoCollision/ParticleSpecies.h"
-#include "WallGoCollision/CollisionTensor.h"
-#include "WallGoCollision/Utils.h"
+#include "WallGo/Common.h"
+#include "WallGo/ModelParameters.h"
+#include "WallGo/CollisionTensor.h"
+#include "WallGo/ParticleSpecies.h"
+#include "WallGo/PhysicsModel.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -19,46 +20,34 @@
 namespace wallgo
 {
 
-/* We bind a subclass of the CollisionTensor "control" class. 
-This way we can override some functions with python-specific functionality.
-Marking this as final prevents some non-virtual destructor warnings from clang. */
-class CollisionPython final : public CollisionTensor
-{
-
-public: 
-
-    CollisionPython() : CollisionTensor() {}
-
-protected:
-
-    // NB: if called inside OpenMP block this does lead to core dumped on CTRL-C
-    // So @todo make a clean exit
-    virtual inline bool shouldContinueEvaluation() final override 
-    {
-        // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
-        if (PyErr_CheckSignals() != 0)
-        {
-            throw pybind11::error_already_set();
-            return false;
-        }
-        return true;
-    }
-
-};
-
-
 // Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(WallGoCollisionPy, m) 
+PYBIND11_MODULE(WallGoCollision, m) 
 {
-
     namespace py = pybind11;
 
     m.doc() = "WallGo collision module";
+
+#if WG_DEBUG
+    std::cout << "Warning: Loaded debug build of WallGo Collision module. Expect poor performance." << std::endl;
+#endif
 
     wallgo::initializeRNG();
 
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
+
+
+    py::class_<IntegrationOptions>(m, "IntegrationOptions")
+        .def(py::init<>())
+        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum)
+        .def_readwrite("calls", &IntegrationOptions::calls)
+        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
+        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
+        .def_readwrite("maxTries", &IntegrationOptions::maxTries)
+        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic)
+        .def_readwrite("bIncludeStatisticalErrors", &IntegrationOptions::bIncludeStatisticalErrors);
+
+    /*
 
     // Bind particle type enums
     py::enum_<EParticleType>(m, "EParticleType")
@@ -145,6 +134,8 @@ PYBIND11_MODULE(WallGoCollisionPy, m)
         .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
         .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
         .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
+
+    */
 
     std::atexit(wallgo::cleanup);
 }

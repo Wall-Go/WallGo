@@ -21,14 +21,17 @@ if (USE_CXX20)
 endif()
 
 # Set output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Default to static libs
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
-## Installation directory
+# What to call the C++ library
+set(WALLGO_LIB libWallGoCollision CACHE STRING "Name of the WallGo Collision library")
+
+# Installation directory
 set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
 
 # Set default built type
@@ -109,7 +112,7 @@ if (BUILD_EXAMPLES)
 endif()
 
 if (BUILD_PYTHON_MODULE)
-	add_subdirectory(pybind)
+	add_subdirectory(python)
 endif()
 
 if(BUILD_UNIT_TESTS)

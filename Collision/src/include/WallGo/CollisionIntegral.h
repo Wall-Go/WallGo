@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <vector>
+#include <cstdint>
 
 #include "Common.h"
 #include "FourVector.h"
@@ -74,10 +75,10 @@ struct WALLGO_API IntegrationOptions
 {
     double maxIntegrationMomentum;
     // How many Monte Carlo calls between convergence checks 
-    size_t calls;
+    uint32_t calls;
     double relativeErrorGoal;
     double absoluteErrorGoal;
-    int maxTries;
+    uint32_t maxTries;
     // Enables faster computation of kinematic factors for ultrarelativistic collision elements. Should be no reason to disable this outside testing
     bool bOptimizeUltrarelativistic;
 
