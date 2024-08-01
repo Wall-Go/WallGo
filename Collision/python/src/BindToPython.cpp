@@ -21,7 +21,7 @@ namespace wallgo
 {
 
 // Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(WallGoCollision, m) 
+PYBIND11_MODULE(_WallGoCollision, m)
 {
     namespace py = pybind11;
 
@@ -38,14 +38,18 @@ PYBIND11_MODULE(WallGoCollision, m)
 
 
     py::class_<IntegrationOptions>(m, "IntegrationOptions")
-        .def(py::init<>())
-        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum)
-        .def_readwrite("calls", &IntegrationOptions::calls)
-        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
-        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
-        .def_readwrite("maxTries", &IntegrationOptions::maxTries)
-        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic)
-        .def_readwrite("bIncludeStatisticalErrors", &IntegrationOptions::bIncludeStatisticalErrors);
+        .def(py::init<>(), "Struct for configuring collision integration")
+        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum, "Upper limit for momentum integration in units of temperature (|p|/T).")
+        .def_readwrite("calls", &IntegrationOptions::calls, "")
+        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal, "")
+        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal, "")
+        .def_readwrite("maxTries", &IntegrationOptions::maxTries, "")
+        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic, "Allow optimized evaluation of ultrarelativistic processes")
+        .def_readwrite("bIncludeStatisticalErrors", &IntegrationOptions::bIncludeStatisticalErrors, "Whether to store statistical error estimates of integration results");
+
+    py::class_<CollisionTensorVerbosity>(m, "CollisionTensorVerbosity")
+    .def(py::init<>());
+    
 
     /*
 
@@ -137,7 +141,7 @@ PYBIND11_MODULE(WallGoCollision, m)
 
     */
 
-    std::atexit(wallgo::cleanup);
+    //std::atexit(wallgo::cleanup);
 }
 
 } // namespace

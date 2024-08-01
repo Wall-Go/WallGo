@@ -31,4 +31,5 @@ old/
 CMakeUserPresets.json
 CMakeCache.txt
 *.pyd
+*.pyi
 *.pdb

@@ -1,5 +1,5 @@
 # What to call the python module. Needs to match the identifier used in PYBIND11_MODULE(...) in C++
-set(MODULE WallGoCollision)
+set(MODULE _WallGoCollision)
 
 # Find Python. The library produced by pybind11 is version dependent,
 # so we must to allow the user to specify their preferred Python version. 
@@ -20,7 +20,7 @@ set_target_properties(Python3::Module PROPERTIES
 
 find_package(pybind11 CONFIG REQUIRED)
 
-message(STATUS "=== Building Python bindings for Python ${Python3_VERSION}")
+message(STATUS "=== Building Python bindings for Python version ${Python3_VERSION}")
 
 pybind11_add_module(${MODULE})
 
@@ -37,27 +37,44 @@ target_include_directories(${MODULE} PRIVATE
 	${WALLGO_LIB}
 )
 
-## Output the module to ./module directory for easier testing
-set_target_properties(${MODULE} PROPERTIES
-	LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/module"
+set(PACKAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/package/WallGoCollision")
+
+add_custom_command(TARGET ${MODULE} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULE}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULE}>"
+	COMMENT "Copying module for packaging"
 )
 
-install(TARGETS ${MODULE} DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/module")
+# Generate .pyi stubs. The helper script needs exact directory of the built module; use generator expression to find this (works because this is POST_BUILD)
+add_custom_command(TARGET ${MODULE} POST_BUILD
+	COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/stubgen.py" "$<TARGET_FILE_DIR:${MODULE}>" "${MODULE}"
+	# move the generated .pyi stub to same directory as our module:
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULE}>/stubs/${MODULE}.pyi" "${PACKAGE_DIR}/${MODULE}.pyi"
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULE}>"
+	COMMENT "Generating Python stubs for WallGoCollision"
+)
+
+# For scikit builds use default install dir so that pip correctly puts the module in site-packages
+if(SKBUILD)
+	install(TARGETS ${MODULE} DESTINATION .)
+else()
+	#install(TARGETS ${MODULE} DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/module")
+endif()
 
 ## Setup a target for test Python script and tell VS how to run it 
 
-set(PYTHON_TEST_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/example/collision_python_example.py")
+set(PYTHON_TEST_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/package/test_collision_package.py")
 
 add_custom_target(
 	PybindTestScript ALL
 	SOURCES ${PYTHON_TEST_SCRIPT}
+	DEPENDS ${MODULE}
+	# if we want to run this at build time:
+	#COMMAND ${Python3_EXECUTABLE} ${PYTHON_TEST_SCRIPT} "$<TARGET_FILE:${MODULE}>"
 )
-
-add_dependencies(PybindTestScript ${MODULE})
 
 set_target_properties(PybindTestScript PROPERTIES
 	VS_DEBUGGER_COMMAND ${Python3_EXECUTABLE}
-	VS_DEBUGGER_COMMAND_ARGUMENTS ${PYTHON_TEST_SCRIPT}
+	VS_DEBUGGER_COMMAND_ARGUMENTS "${PYTHON_TEST_SCRIPT}"
 	VS_DEBUGGER_ENVIRONMENT "PATH=${Python3_EXECUTABLE_DIR};%PATH%"
-	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/example"
+	VS_DEBUGGER_WORKING_DIRECTORY "${PACKAGE_DIR}"
 )

@@ -18,10 +18,16 @@ license = {text = "MIT"}
 cmake.verbose = true
 #cmake.args = []
 cmake.build-type = "Release"
-#wheel.install-dir = "wheels"
 # Run cmake before building wheel
 wheel.cmake = true
-build-dir = "build_scikit"
+build-dir = "build_scikit" # not picked up when pip installing with -e for some reason, need to pass -Cbuild-dir=... on command line
+editable.mode = "redirect"
+#editable.mode = "inplace"
+
+# Editable installs come with a bunch of issues, see https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs
+# In particular, pip tends to delete the build dir after installation, so we lose the Conan toolchain file etc.
+# The docs recommend to preinstall dependencies when doing editable installs
+
 
 [tool.scikit-build-core-conan]
 build = "missing"
