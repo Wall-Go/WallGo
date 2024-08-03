@@ -4,12 +4,12 @@ import copy  ## for deepcopy
 from pathlib import Path
 import tempfile
 import numpy as np
-from scipy.special import eval_chebyt
 import h5py  # read/write hdf5 structured binary data file format
 
 from .particle import Particle
 from .grid import Grid
 from .polynomial import Polynomial
+from .collisionWrapper import Collision
 
 
 class CollisionArray:
@@ -27,7 +27,7 @@ class CollisionArray:
     AXIS_TYPES = ("Array", "pz", "pp", "Array", "pz", "pp")
     AXIS_LABELS = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
 
-    def __init__(self, grid: Grid, basisType: str, particles: list):
+    def __init__(self, grid: Grid, basisType: str, particles: list[Particle]):
         """
         Initializes a CollisionArray for a given grid and basis. Collision data will be set to zero.
 
@@ -67,18 +67,25 @@ class CollisionArray:
             data, grid, bases, CollisionArray.AXIS_TYPES, endpoints=False
         )
 
-    def __getitem__(self, key: int) -> any:
+    def __getitem__(self, key: int | slice) -> float | np.ndarray:
         """
         Retrieve the value at the specified key.
 
-        Parameters:
-            key (int): The index of the value to retrieve.
+        Parameters
+        ----------
+        key : int or slice
+            The index of the value to retrieve.
 
-        Returns:
-            Any: The value at the specified key.
+        Returns
+        -------
+        float or np.ndarray
+            The value at the specified key.
+            
+        Raises
+        ------
+        IndexError
+            If the key is out of range.
 
-        Raises:
-            IndexError: If the key is out of range.
         """
         return self.polynomialData.coefficients[key]
 
@@ -95,28 +102,36 @@ class CollisionArray:
         """
         Returns the basis type of the CollisionArray.
 
-        Returns:
-            str: The basis type of the CollisionArray.
+        Returns
+        -------
+        str
+            The basis type of the CollisionArray.
         """
         return self.basisType
 
     @staticmethod
     def newFromPolynomial(
-        inputPolynomial: Polynomial, particles: list
+        inputPolynomial: Polynomial, particles: list[Particle]
     ) -> "CollisionArray":
         """
         Creates a new CollisionArray object from polynomial data (which contains a grid reference).
         This only makes sense if the polynomial is already in correct shape.
 
-        Args:
-            inputPolynomial (Polynomial): The input polynomial data.
-            particles (list): The list of particles.
+        Parameters
+        ----------
+        inputPolynomial : Polynomial
+            The input polynomial data.
+        particles : list[Particle]
+            The list of particles.
 
-        Returns:
-            CollisionArray: The newly created CollisionArray object.
-
-        Raises:
-            AssertionError:
+        Returns
+        -------
+        "CollisionArray"
+            The newly created CollisionArray object.
+            
+        Raises
+        ------
+        AssertionError
             If the input polynomial does not meet the required conditions.
 
         """
@@ -140,7 +155,7 @@ class CollisionArray:
         collision: "Collision",
         grid: Grid,
         basisType: str,
-        particles: list,
+        particles: list[Particle],
         bInterpolate: bool = True,
     ) -> "CollisionArray":
         """
@@ -151,16 +166,12 @@ class CollisionArray:
         collision : Collision
             Collision class that holds path of the directory containing the collision files.
             The collision files must have names with the form "collisions_particle1_particle2.hdf5".
-
         grid : Grid
             The grid object representing the computational grid.
-
         basisType : str
             The basis type for the CollisionArray object.
-
-        particles : list
+        particles : list[Particle]
             The list of particles involved in the collisions.
-
         bInterpolate : bool, optional
             Interpolate the data to match the grid size. Extrapolation is not possible. Default is True.
 
@@ -173,16 +184,15 @@ class CollisionArray:
         ------
         FileNotFoundError
             If any of the collision files are not found.
-
         RuntimeError
             If there is a grid size mismatch and bInterpolate is set to False.
 
         """
         directoryname = collision.outputDirectory
         print(directoryname)
-        collisionFileArray = None
-        basisSizeFile = None
-        basisTypeFile = None
+        collisionFileArray: np.ndarray
+        basisSizeFile: int
+        basisTypeFile: str
 
         for i, particle1 in enumerate(particles):
             for j, particle2 in enumerate(particles):
@@ -198,8 +208,6 @@ class CollisionArray:
                         metadata = file["metadata"]
                         size = metadata.attrs["Basis Size"]
 
-                        ## TODO error handling, what happens if the dataset is not found?
-                        # assert basisSizeFile <= size, "CollisionArray interpolation error: target grid size must be smaller than the source grid size."
                         if grid.N > size and collision.generateCollisionIntegrals:
                             # Generate temporary directory
                             directoryname = tempfile.mkdtemp(
@@ -230,7 +238,7 @@ class CollisionArray:
                         datasetName = particle1.name + ", " + particle2.name
                         collisionDataset = np.array(file[datasetName][:])
 
-                        if collisionFileArray is None:
+                        if not 'collisionFileArray' in locals():
                             collisionFileArray = np.zeros(
                                 (
                                     len(particles),
@@ -244,7 +252,6 @@ class CollisionArray:
                             basisSizeFile = size
                             basisTypeFile = btype
                         else:
-                            ## TODO throw WallGo error?
                             assert (
                                 size == basisSizeFile
                             ), "CollisionArray error: All the collision files must have the same basis size."
@@ -252,7 +259,6 @@ class CollisionArray:
                                 btype == basisTypeFile
                             ), "CollisionArray error: All the collision files must have the same basis type."
 
-                        # HACK. converting between conventions because collision file was computed with different index ordering
                         collisionFileArray[i, :, :, j, :, :] = np.transpose(
                             np.flip(collisionDataset, (2, 3)),
                             (2, 3, 0, 1),
@@ -342,17 +348,24 @@ class CollisionArray:
         return newCollision.changeBasis(basisType)
 
     def changeBasis(self, newBasisType: str) -> "CollisionArray":
-        """Changes the basis in our polynomial indices.
+        """
+        Changes the basis in our polynomial indices.
 
-        Args:
-            newBasisType (str): The new basis type to be used.
+        Parameters
+        ----------
+        newBasisType : str
+            The new basis type to be used.
 
-        Returns:
-            CollisionArray: The modified CollisionArray object.
-
-        Notes:
+        Returns
+        -------
+        CollisionArray
+            The modified CollisionArray object.
+            
+        Notes
+        -----
             - Momentum indices always use the Cardinal basis.
             - This method modifies the object in place.
+
         """
 
         if self.basisType == newBasisType:
@@ -408,6 +421,7 @@ class CollisionArray:
         >>> srcCollision = CollisionArray(...)
         >>> targetGrid = Grid(...)
         >>> interpolatedCollision = interpolateCollisionArray(srcCollision, targetGrid)
+
         """
 
         assert (
@@ -432,7 +446,7 @@ class CollisionArray:
             targetGrid.N - 1,
             targetGrid.N - 1,
         )
-        interpolatedData = source.polynomialData.evaluate(gridPoints, (1, 2))[
+        interpolatedData = np.array(source.polynomialData.evaluate(gridPoints, (1, 2)))[
             ..., : targetGrid.N - 1, : targetGrid.N - 1
         ].reshape(newShape)
 
@@ -452,76 +466,24 @@ class CollisionArray:
         newCollision.changeBasis(srcCollision.getBasisType())
         return newCollision
 
-    def estimateLxi(
-        self, v: float, T1: float, T2: float, msq1: float, msq2: float
-    ) -> Tuple[float, float]:
-        """
-        Estimate the decay length of the solution by computing the eigenvalues
-        of the collision array.
-
-        Parameters
-        ----------
-        v : float
-            Wall velocity in the plasma frame.
-        T1 : float
-            Temperature in the symmetric phase.
-        T2 : float
-            Temperature in the broken phase.
-        msq1 : float
-            Squared mass in the symmetric phase.
-        msq2 : float
-            Squared mass in the broken phase.
-
-        Returns
-        -------
-        Tuple(float,float)
-            Approximate decay length in the symmetric and broken phases,
-            respectively.
-
-        """
-        # Compute the grid of momenta
-        _, pz, pp = self.grid.getCoordinates()
-        pz = pz[:, np.newaxis]
-        pp = pp[np.newaxis, :]
-        E1 = np.sqrt(msq1 + pz**2 + pp**2)
-        E2 = np.sqrt(msq2 + pz**2 + pp**2)
-
-        gamma = 1 / np.sqrt(1 - v**2)
-        PWall1 = gamma * (pz - v * E1)
-        PWall2 = gamma * (pz - v * E2)
-
-        # Compute the eigenvalues
-        size = self.grid.N - 1
-        eigvals1 = np.linalg.eigvals(
-            T1**2
-            * (
-                (self.polynomialData.coefficients / PWall1[:, :, None, None]).reshape(
-                    (size, size, size**2)
-                )
-            ).reshape((size**2, size**2))
-        )
-        eigvals2 = np.linalg.eigvals(
-            T2**2
-            * (
-                (self.polynomialData.coefficients / PWall2[:, :, None, None]).reshape(
-                    (size, size, size**2)
-                )
-            ).reshape((size**2, size**2))
-        )
-
-        # Compute the decay length
-        return np.max(-1 / np.real(eigvals1)), np.max(1 / np.real(eigvals2))
-
     @staticmethod
     def __checkBasis(basis: str) -> None:
         """
         Check that basis is recognized.
 
-        Parameters:
-        basis (str): The basis to be checked.
+        Parameters
+        ----------
+        basis : str
+            The basis to be checked.
 
-        Raises:
-        AssertionError: If the basis is unknown.
+        Returns
+        -------
+        None
+        
+        Raises
+        ------
+        AssertionError
+            If the basis is unknown.
 
         """
         bases = ["Cardinal", "Chebyshev"]
