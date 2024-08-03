@@ -1,4 +1,7 @@
-from typing import Tuple
+"""
+Class for loading and storing the collision files used in boltzmann.py.
+"""
+
 import codecs  # for decoding unicode string from hdf5 file
 import copy  ## for deepcopy
 from pathlib import Path
@@ -15,30 +18,33 @@ from .collisionWrapper import Collision
 class CollisionArray:
     """
     Class used to load, transform, interpolate and hold the collision array
-    which is needed in Boltzmann. Internally the collision array is represented by a Polynomial object.
-    Specifically, this describes a rank-4 tensor C[P_k(pZ_i) P_l(pPar_j)] where the p are momenta on grid.
+    which is needed in Boltzmann. Internally the collision array is represented by a
+    Polynomial object. Specifically, this describes a rank-4 tensor
+    C[P_k(pZ_i) P_l(pPar_j)] where the p are momenta on grid.
     Index ordering is hardcoded as: ijkl.
     Right now we have one CollisionArray for each pair of off-eq particles
     """
 
     """Hardcode axis types and their meaning in correct ordering. 
-    Our order is ijklmn, as given in AXIS_LABELS.
+    Our order is ijklmn, as given in axisLabels.
     """
-    AXIS_TYPES = ("Array", "pz", "pp", "Array", "pz", "pp")
-    AXIS_LABELS = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
+    axisTypes = ("Array", "pz", "pp", "Array", "pz", "pp")
+    axisLabels = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
 
     def __init__(self, grid: Grid, basisType: str, particles: list[Particle]):
         """
-        Initializes a CollisionArray for a given grid and basis. Collision data will be set to zero.
+        Initializes a CollisionArray for a given grid and basis. Collision data will be
+        set to zero.
 
         Parameters
         ----------
         grid : Grid
             Grid object that the collision array lives on (non-owned).
         basisType: str
-            Basis to use for the polynomials. Note that unlike in the Polynomial class, our basis is just a string.
-            We always use "Cardinal" basis on momentum axes and basisType on polynomial axes.
-            We do NOT support different basis types for the two polynomials.
+            Basis to use for the polynomials. Note that unlike in the Polynomial class,
+            our basis is just a string. We always use "Cardinal" basis on momentum axes
+            and basisType on polynomial axes. We do NOT support different basis types
+            for the two polynomials.
         particles: list
             List of the Particle objects this collision array describes.
 
@@ -56,7 +62,8 @@ class CollisionArray:
         self.basisType = basisType
         self.particles = particles
 
-        ## Setup the actual collision data. We will use "Cardinal" basis on momentum axes and default to "Chebyshev" for polynomial axes.
+        ## Setup the actual collision data. We will use "Cardinal" basis on momentum
+        ## axes and default to "Chebyshev" for polynomial axes.
         bases = ("Array", "Cardinal", "Cardinal", "Array", basisType, basisType)
 
         ## Default to zero but correct size
@@ -64,7 +71,7 @@ class CollisionArray:
             (len(particles), self.size, self.size, len(particles), self.size, self.size)
         )
         self.polynomialData = Polynomial(
-            data, grid, bases, CollisionArray.AXIS_TYPES, endpoints=False
+            data, grid, bases, CollisionArray.axisTypes, endpoints=False
         )
 
     def __getitem__(self, key: int | slice) -> float | np.ndarray:
@@ -80,7 +87,7 @@ class CollisionArray:
         -------
         float or np.ndarray
             The value at the specified key.
-            
+
         Raises
         ------
         IndexError
@@ -114,8 +121,8 @@ class CollisionArray:
         inputPolynomial: Polynomial, particles: list[Particle]
     ) -> "CollisionArray":
         """
-        Creates a new CollisionArray object from polynomial data (which contains a grid reference).
-        This only makes sense if the polynomial is already in correct shape.
+        Creates a new CollisionArray object from polynomial data (which contains a grid
+        reference). This only makes sense if the polynomial is already in correct shape.
 
         Parameters
         ----------
@@ -128,7 +135,7 @@ class CollisionArray:
         -------
         "CollisionArray"
             The newly created CollisionArray object.
-            
+
         Raises
         ------
         AssertionError
@@ -164,8 +171,9 @@ class CollisionArray:
         Parameters
         ----------
         collision : Collision
-            Collision class that holds path of the directory containing the collision files.
-            The collision files must have names with the form "collisions_particle1_particle2.hdf5".
+            Collision class that holds path of the directory containing the collision
+            files. The collision files must have names with the form
+            "collisions_particle1_particle2.hdf5".
         grid : Grid
             The grid object representing the computational grid.
         basisType : str
@@ -173,7 +181,8 @@ class CollisionArray:
         particles : list[Particle]
             The list of particles involved in the collisions.
         bInterpolate : bool, optional
-            Interpolate the data to match the grid size. Extrapolation is not possible. Default is True.
+            Interpolate the data to match the grid size. Extrapolation is not possible.
+            Default is True.
 
         Returns
         -------
@@ -214,15 +223,17 @@ class CollisionArray:
                                 prefix=f"N{grid.N}.", dir=directoryname
                             )
                             print(
-                                "CollisionArray generation warning: "
-                                f"target collison grid size ({grid.N}) must be smaller than or equal to "
-                                f"the exisiting collision grid size ({size}). "
-                                f"New collisons are generated now at grid size ({grid.N}) in directory {directoryname}."
+                                f"""CollisionArray generation warning: target collison
+                                grid size ({grid.N}) must be smaller than or equal to
+                                the exisiting collision grid size ({size}). New
+                                collisons are generated now at grid size ({grid.N}) in
+                                directory {directoryname}."""
                             )
                             print("Changing output directory to: ", directoryname)
                             collision.setOutputDirectory(directoryname)
-                            ## Computes collisions for all out-of-eq particles specified.
-                            ## The last argument is optional and mainly useful for debugging
+                            # Computes collisions for all out-of-eq particles specified.
+                            # The last argument is optional and mainly useful for
+                            # debugging
                             collision.calculateCollisionIntegrals(bVerbose=False)
                             return CollisionArray.newFromDirectory(
                                 collision, grid, basisType, particles, bInterpolate
@@ -232,13 +243,13 @@ class CollisionArray:
                             metadata.attrs["Basis Type"],
                             "unicode_escape",
                         )
-                        CollisionArray.__checkBasis(btype)
+                        CollisionArray._checkBasis(btype)
 
                         # Dataset names are hardcoded, eg. "top, top"
                         datasetName = particle1.name + ", " + particle2.name
                         collisionDataset = np.array(file[datasetName][:])
 
-                        if not 'collisionFileArray' in locals():
+                        if not "collisionFileArray" in locals():
                             collisionFileArray = np.zeros(
                                 (
                                     len(particles),
@@ -254,10 +265,12 @@ class CollisionArray:
                         else:
                             assert (
                                 size == basisSizeFile
-                            ), "CollisionArray error: All the collision files must have the same basis size."
+                            ), """CollisionArray error: All the collision files must
+                            have the same basis size."""
                             assert (
                                 btype == basisTypeFile
-                            ), "CollisionArray error: All the collision files must have the same basis type."
+                            ), """CollisionArray error: All the collision files must
+                            have the same basis type."""
 
                         collisionFileArray[i, :, :, j, :, :] = np.transpose(
                             np.flip(collisionDataset, (2, 3)),
@@ -273,8 +286,7 @@ class CollisionArray:
                         return CollisionArray.newFromDirectory(
                             collision, grid, basisType, particles, bInterpolate
                         )
-                    else:
-                        raise
+                    raise
 
         collisionFileArray = collisionFileArray.reshape(
             (
@@ -287,10 +299,11 @@ class CollisionArray:
             )
         )
 
-        """We want to compute Polynomial object from the loaded data and put it on the input grid.
-        This is straightforward if the grid size matches that of the data, if not we either abort
-        or attempt interpolation to smaller N. In latter case we need a dummy grid of read size,
-        create a dummy CollisionArray living on the dummy grid, and finally downscale that. 
+        """We want to compute Polynomial object from the loaded data and put it on the
+        input grid. This is straightforward if the grid size matches that of the data,
+        if not we either abort or attempt interpolation to smaller N. In latter case we
+        need a dummy grid of read size, create a dummy CollisionArray living on the
+        dummy grid, and finally downscale that. 
         """
 
         if basisSizeFile == grid.N:
@@ -305,7 +318,7 @@ class CollisionArray:
                     basisTypeFile,
                     basisTypeFile,
                 ),
-                CollisionArray.AXIS_TYPES,
+                CollisionArray.axisTypes,
                 endpoints=False,
             )
             newCollision = CollisionArray.newFromPolynomial(polynomialData, particles)
@@ -316,11 +329,15 @@ class CollisionArray:
                 raise RuntimeError(
                     "Grid size mismatch when loading collision directory: ",
                     directoryname,
-                    "Consider using bInterpolate=True in CollisionArray.loadFromFile().",
+                    "Consider using bInterpolate=True in CollisionArray.loadFromFile()."
                 )
 
             dummyGrid = Grid(
-                grid.M, basisSizeFile, grid.positionFalloff, grid.momentumFalloffT, grid.spacing
+                grid.M,
+                basisSizeFile,
+                grid.positionFalloff,
+                grid.momentumFalloffT,
+                grid.spacing,
             )
             dummyPolynomial = Polynomial(
                 collisionFileArray,
@@ -333,7 +350,7 @@ class CollisionArray:
                     basisTypeFile,
                     basisTypeFile,
                 ),
-                CollisionArray.AXIS_TYPES,
+                CollisionArray.axisTypes,
                 endpoints=False,
             )
 
@@ -360,7 +377,7 @@ class CollisionArray:
         -------
         CollisionArray
             The modified CollisionArray object.
-            
+
         Notes
         -----
             - Momentum indices always use the Cardinal basis.
@@ -371,7 +388,7 @@ class CollisionArray:
         if self.basisType == newBasisType:
             return self
 
-        CollisionArray.__checkBasis(newBasisType)
+        CollisionArray._checkBasis(newBasisType)
 
         # NEEDS to take inverse transpose because of magic
         self.polynomialData.changeBasis(
@@ -408,10 +425,12 @@ class CollisionArray:
         Notes
         -----
         This function interpolates a collision array to match the size of a target grid.
-        It takes the source collision array and the target grid as input, and returns the interpolated collision array.
+        It takes the source collision array and the target grid as input, and returns
+        the interpolated collision array.
 
-        The interpolation is performed by evaluating the original collisions on the interpolated grid points.
-        The resulting data is used to create a new polynomial, which is then used to create a new CollisionArray object.
+        The interpolation is performed by evaluating the original collisions on the
+        interpolated grid points. The resulting data is used to create a new polynomial,
+        which is then used to create a new CollisionArray object.
 
         The source collision array must be in the Chebyshev basis for interpolation.
         The target grid should have a size smaller than the source grid size.
@@ -426,7 +445,9 @@ class CollisionArray:
 
         assert (
             targetGrid.N <= srcCollision.getBasisSize()
-        ), f"CollisionArray interpolation error: target grid size ({targetGrid.N}) must be smaller than or equal to the source grid size ({srcCollision.getBasisSize()+1})."
+        ), f"""CollisionArray interpolation error: target grid size ({targetGrid.N})
+        must be smaller than or equal to the source grid size
+        ({srcCollision.getBasisSize()+1})."""
 
         ## Take deepcopy to avoid modifying the input
         source = copy.deepcopy(srcCollision)
@@ -439,8 +460,9 @@ class CollisionArray:
             np.meshgrid(targetGrid.rzValues, targetGrid.rpValues, indexing="ij")
         ).reshape((2, (targetGrid.N - 1) ** 2))
 
-        # Evaluate the original collisions on the interpolated grid,
-        # create a new polynomial from the result and finally a new CollisionArray from the polynomial data
+        # Evaluate the original collisions on the interpolated grid, create a new
+        # polynomial from the result and finally a new CollisionArray from the
+        # polynomial data
         newShape = 2 * (
             len(source.particles),
             targetGrid.N - 1,
@@ -467,7 +489,7 @@ class CollisionArray:
         return newCollision
 
     @staticmethod
-    def __checkBasis(basis: str) -> None:
+    def _checkBasis(basis: str) -> None:
         """
         Check that basis is recognized.
 
@@ -479,7 +501,7 @@ class CollisionArray:
         Returns
         -------
         None
-        
+
         Raises
         ------
         AssertionError
