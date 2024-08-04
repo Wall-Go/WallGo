@@ -36,7 +36,10 @@ struct CollisionMetadata
     std::string integrator = "Unknown";
 };
 
-// Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair
+/* Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair
+Range of indices is: [2, N] for m, [1, N-1] for njk.
+Attempting to access grid points with invalid indices results in failed assert (Debug builds)
+or a crash (Release builds). */
 class WALLGO_API CollisionResultsGrid
 {
 public:
@@ -57,14 +60,14 @@ public:
 
     // ---- Read-write accessors
 
-    double valueAt(size_t m, size_t n, size_t j, size_t k) const;
-    double& valueAt(size_t m, size_t n, size_t j, size_t k);
+    double valueAt(const GridPoint& gridPoint) const;
+    double& valueAt(const GridPoint& gridPoint);
 
-    double errorAt(size_t m, size_t n, size_t j, size_t k) const;
-    double& errorAt(size_t m, size_t n, size_t j, size_t k);
+    double errorAt(const GridPoint& gridPoint) const;
+    double& errorAt(const GridPoint& gridPoint);
 
     // Write (value, error) pair. Error will only be written if the CollisionResultsGrid object was created with bIncludeStatisticalErrors = true
-    void updateValue(size_t m, size_t n, size_t j, size_t k, double newValue, double newError);
+    void updateValue(const GridPoint& gridPoint, double newValue, double newError);
 
     /* Write array contents to a HDF5 file. This always overrides file if it exists.
     Dataset name for the integration results will be "particle1, particle2" with particle names read from mDescription.
@@ -86,6 +89,8 @@ private:
 
     CollisionMetadata mMetadata;
     void initData();
+
+    bool validateGridPoint(const GridPoint& gridPoint) const;
 };
 
 // TODO replace the manager with CollisionTensor

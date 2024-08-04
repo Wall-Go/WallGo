@@ -15,54 +15,54 @@ CollisionResultsGrid::CollisionResultsGrid(const ParticleNamePair& particlePair,
     initData();
 }
 
-double CollisionResultsGrid::valueAt(size_t m, size_t n, size_t j, size_t k) const
+double CollisionResultsGrid::valueAt(const GridPoint& gridPoint) const
 {
-    assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
-    return mData[m][n][j][k];
+    assert(validateGridPoint(gridPoint));
+    return mData[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
-double& CollisionResultsGrid::valueAt(size_t m, size_t n, size_t j, size_t k)
+double& CollisionResultsGrid::valueAt(const GridPoint& gridPoint)
 {
-    assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
-    return mData[m][n][j][k];
+    assert(validateGridPoint(gridPoint));
+    return mData[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
-double CollisionResultsGrid::errorAt(size_t m, size_t n, size_t j, size_t k) const
+double CollisionResultsGrid::errorAt(const GridPoint& gridPoint) const
 {
-    assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
-
+    assert(validateGridPoint(gridPoint));
     if (!hasStatisticalErrors())
     {
         std::cerr << "Warning: attempted to read statistical error of integral result at [m, n, j, k] = ["
-            << m << ", " << n << ", " << j << ", " << k << "], but the integrals were calculated without storing errors" << std::endl;
+            << gridPoint.m << ", " << gridPoint.n << ", " << gridPoint.j << ", " << gridPoint.k
+            << "], but the integrals were calculated without storing errors" << std::endl;
         return 0.0;
     }
 
-    return (*mErrors.get())[m][n][j][k];
+    return (*mErrors.get())[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
-double& CollisionResultsGrid::errorAt(size_t m, size_t n, size_t j, size_t k)
+double& CollisionResultsGrid::errorAt(const GridPoint& gridPoint)
 {
-    assert(m < mElementsPerDimension && n < mElementsPerDimension && j < mElementsPerDimension && k < mElementsPerDimension);
-
+    assert(validateGridPoint(gridPoint));
     if (!hasStatisticalErrors())
     {
         std::cerr << "Warning: attempted writing to statistical error of integral result at [m, n, j, k] = ["
-            << m << ", " << n << ", " << j << ", " << k << "], but the integrals were calculated without storing errors" << std::endl;
+            << gridPoint.m << ", " << gridPoint.n << ", " << gridPoint.j << ", " << gridPoint.k
+            << "], but the integrals were calculated without storing errors" << std::endl;
         
         // this is always fatal
         std::exit(444);
     }
 
-    return (*mErrors.get())[m][n][j][k];
+    return (*mErrors.get())[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
-void CollisionResultsGrid::updateValue(size_t m, size_t n, size_t j, size_t k, double newValue, double newError)
+void CollisionResultsGrid::updateValue(const GridPoint& gridPoint, double newValue, double newError)
 {
-    valueAt(m, n, j, k) = newValue;
+    valueAt(gridPoint) = newValue;
     if (hasStatisticalErrors())
     {
-        errorAt(m, n, j, k) = newError;
+        errorAt(gridPoint) = newError;
     }
 }
 
@@ -97,6 +97,17 @@ void CollisionResultsGrid::initData()
             mErrors = std::make_unique<Array4D>(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
         }
     }
+}
+
+bool CollisionResultsGrid::validateGridPoint(const GridPoint& gridPoint) const
+{
+    const uint32_t N = static_cast<uint32_t>(getBasisSize());
+
+    return (gridPoint.m <= N && gridPoint.m >= 2
+        && gridPoint.n <= N - 1 && gridPoint.n >= 1 
+        && gridPoint.j <= N - 1 && gridPoint.j >= 1
+        && gridPoint.k <= N - 1 && gridPoint.k >= 1
+        );
 }
 
 

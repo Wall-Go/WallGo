@@ -49,4 +49,21 @@ struct Vec<1, T> : public std::vector<T>
 
 using Array4D = Vec<4, double>;
 
+// Point on (polynomial, momentum) grid
+struct GridPoint
+{
+	GridPoint() {}
+	GridPoint(uint32_t polynomialIndex1, uint32_t polynomialIndex2, uint32_t momentumIndex1, uint32_t momentumIndex2)
+	{
+		m = polynomialIndex1;
+		n = polynomialIndex2;
+		j = momentumIndex1;
+		k = momentumIndex2;
+	}
+	// Polynomial indices
+	uint32_t m, n;
+	// Momentum indices
+	uint32_t j, k;
+};
+
 } //namespace wallgo

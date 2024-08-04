@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 
 #include "Common.h"
 #include "FourVector.h"
@@ -27,15 +28,15 @@ public:
     Chebyshev(size_t basisSize) : N(basisSize) {}
 
     // Chebyshev polynomials of 1st kind (see eg. Wikipedia for the definition) 
-    inline WG_CONSTEXPR20 double T(int n, double x) const { return std::cos(n* std::acos(x)); }
+    inline WG_CONSTEXPR20 double T(uint32_t n, double x) const { return std::cos(n* std::acos(x)); }
 
     // "Reduced" Chebyshev polynomials Tbar and Ttilde. Eq. (28) in 2204.13120 
-    inline WG_CONSTEXPR20 double Tbar(int m, double x) const { return (m % 2 == 0 ? T(m, x) - 1.0 : T(m, x) - x); }
-    inline WG_CONSTEXPR20 double Ttilde(int n, double x) const { return T(n, x) - 1.0; }
+    inline WG_CONSTEXPR20 double Tbar(uint32_t m, double x) const { return (m % 2 == 0 ? T(m, x) - 1.0 : T(m, x) - x); }
+    inline WG_CONSTEXPR20 double Ttilde(uint32_t n, double x) const { return T(n, x) - 1.0; }
     
     // Construct "rho" momenta on the grid
-    inline WG_CONSTEXPR20 double rhoZGrid(int j) const { return std::cos(j * constants::pi / static_cast<double>(N)); }
-    inline WG_CONSTEXPR20 double rhoParGrid(int k) const { return std::cos(k * constants::pi / static_cast<double>(N-1)); }
+    inline WG_CONSTEXPR20 double rhoZGrid(uint32_t j) const { return std::cos(j * constants::pi / static_cast<double>(N)); }
+    inline WG_CONSTEXPR20 double rhoParGrid(uint32_t k) const { return std::cos(k * constants::pi / static_cast<double>(N-1)); }
 
     // Convert p_z and p_par to rho_z, rho_par
     inline WG_CONSTEXPR20 double pZ_to_rhoZ(double pZ) const { return std::tanh(pZ / 2.0); }
@@ -46,13 +47,13 @@ public:
     inline WG_CONSTEXPR20 double rhoPar_to_pPar(double rho_par) const { return -std::log(0.5 * (1 - rho_par)); } 
 
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
-    inline WG_CONSTEXPR20 double TmTn(int m, int n, double rhoZ, double rhoPar) const
+    inline WG_CONSTEXPR20 double TmTn(uint32_t m, uint32_t n, double rhoZ, double rhoPar) const
     {
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
     
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
-    inline WG_CONSTEXPR20 double TmTn(int m, int n, const FourVector &FV) const
+    inline WG_CONSTEXPR20 double TmTn(uint32_t m, uint32_t n, const FourVector &FV) const
     {
         double pZ = FV.zComp();
         double pPar = FV.parComp();

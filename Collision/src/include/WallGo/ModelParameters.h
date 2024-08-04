@@ -13,7 +13,7 @@ namespace wallgo
 /* Holds physics model specific parameters that enter matrix elements.
 Wraps around std::unordered_map. */
 template<typename T>
-struct TModelParameters
+class TModelParameters
 {
 public:
     /* Modifies value of specified parameter. If the parameter has not yet been defined, adds it with the specified value. */
@@ -21,6 +21,9 @@ public:
 
     /* Returns value of the specified parameter. If the parameter is not found, returns 0 and asserts in debug builds. */
     T getParameterValue(const std::string& paramName) const;
+
+    /* Returns value of the specified parameter. If the parameter is not found, returns 0 and asserts in debug builds. */
+    T operator[](const std::string& paramName) const { return getParameterValue(paramName); }
 
     // True if we contain the specified parameter name
     bool contains(const std::string& paramName) const { return mParams.count(paramName) > 0; }

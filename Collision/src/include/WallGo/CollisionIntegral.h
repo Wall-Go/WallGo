@@ -158,7 +158,7 @@ public:
         const IntegrandParameters &integrandParameters);
 
     // Calculate the integral C[m,n; j,k] with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
-    IntegrationResult integrate(int m, int n, int j, int k, const IntegrationOptions& options);
+    IntegrationResult integrate(const GridPoint& gridPoint, const IntegrationOptions& options);
 
     /* Evaluates the integral everywhere on the (m,n,j,k) grid. */
     CollisionResultsGrid evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
@@ -186,7 +186,7 @@ private:
     ParticleNamePair mParticlePair;
 
     // mn = polynomial indices, jk = momentum indices
-    IntegrandParameters initializeIntegrandParameters(int m, int n, int j, int k) const;
+    IntegrandParameters initializeIntegrandParameters(const GridPoint& gridPoint) const;
 
     /* Kinematic factor depends on masses in the collision element so in principle each element has its own kinematics. 
     We also use a delta-function trick to do delta(g(p3)) as a sum over roots of g(p3) = 0 so this is returns a vector. */

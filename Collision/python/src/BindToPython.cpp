@@ -15,7 +15,7 @@
 // Python bindings
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
+#include <pybind11/functional.h>
 
 namespace wallgo
 {
@@ -32,13 +32,16 @@ PYBIND11_MODULE(_WallGoCollision, m)
 #endif
 
     wallgo::initializeRNG();
+    //std::atexit(wallgo::cleanup); // seems to behave badly...?
 
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
 
+    py::class_<GridPoint>(m, "GridPoint", "")
+        .def(py::init<>());
 
-    py::class_<IntegrationOptions>(m, "IntegrationOptions")
-        .def(py::init<>(), "Struct for configuring collision integration")
+    py::class_<IntegrationOptions>(m, "IntegrationOptions", "Struct for configuring collision integration")
+        .def(py::init<>())
         .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum, "Upper limit for momentum integration in units of temperature (|p|/T).")
         .def_readwrite("calls", &IntegrationOptions::calls, "")
         .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal, "")
@@ -47,19 +50,96 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic, "Allow optimized evaluation of ultrarelativistic processes")
         .def_readwrite("bIncludeStatisticalErrors", &IntegrationOptions::bIncludeStatisticalErrors, "Whether to store statistical error estimates of integration results");
 
-    py::class_<CollisionTensorVerbosity>(m, "CollisionTensorVerbosity")
-    .def(py::init<>());
-    
+    py::class_<CollisionTensorVerbosity>(m, "CollisionTensorVerbosity", "Struct for configuring verbosity and progress tracking of collision integration")
+        .def(py::init<>())
+        .def_readwrite("progressReportPercentage",
+            &CollisionTensorVerbosity::progressReportPercentage,
+            R"(Print progress report and time estimate to stdout when this percantage of grid integrals have been computed.
+            Should be in range[0, 1]. Value of 0 means no reporting and values >= 1 mean we only report at end.
+            Note that progress reporting has a small overhead particularly in multithreaded context (due to atomic operations)")
+        .def_readwrite("bPrintElapsedTime", &CollisionTensorVerbosity::bPrintElapsedTime, "Print elapsed time when done?")
+        .def_readwrite("bPrintEveryElement",
+            &CollisionTensorVerbosity::bPrintEveryElement,
+            "If true, prints every element of the collision tensor to stdout."
+            "Very high overhead, intended for debugging only."
+        );
+
+    py::class_<CollisionResultsGrid>(m, "CollisionResultsGrid", "Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair")
+        .def("hasStatisticalErrors", &CollisionResultsGrid::hasStatisticalErrors, "Returns True if statistical errors are included")
+        .def("getBasisSize", &CollisionResultsGrid::getBasisSize, "Basis size of the momentum grid")
+        ;
+
+
+    py::class_<ModelParameters>(m, "ModelParameters", "Container for physics model-dependent parameters (couplings etc)")
+        .def(py::init<>())
+        .def("addOrModifyParameter", &ModelParameters::addOrModifyParameter, "Define a new named parameter or modify value of an existing one.", py::arg("name"), py::arg("value"))
+        .def("getParameterValue", &ModelParameters::getParameterValue, "Get current value of specified parameter. Returns 0 if the parameter is not found (prefer the contains() method if unsure)", py::arg("name"))
+        .def("contains", &ModelParameters::contains, "Returns True if the specified parameter has been defined, otherwise returns False", py::arg("name"))
+        .def("clear", &ModelParameters::clear, "Empties the parameter container")
+        .def("getNumParams", &ModelParameters::getNumParams, "Returns number of contained parameters")
+        .def("getParameterNames", &ModelParameters::getParameterNames, "Returns list containing names of parameters that have been defined")
+        // Operator[] on Python side is __getitem__. We bind a helper lambda to achieve this
+        .def("__getitem__",
+            [](const ModelParameters& self, const std::string& paramName)
+            {
+                return self[paramName];
+            },
+            "Get current value of specified parameter. Returns 0 if the parameter is not found (prefer the contains() method if unsure)",
+            py::arg("name")
+        );
+        
+
+    py::enum_<EParticleType>(m, "EParticleType")
+        .value("eNone", EParticleType::eNone)
+        .value("eBoson", EParticleType::eBoson)
+        .value("eFermion", EParticleType::eFermion);
+
+    py::class_<ParticleDescription>(m, "ParticleDescription", "Data-only container for describing a particle species to WallGoCollision")
+        .def(py::init<>())
+        .def_readwrite("name", &ParticleDescription::name, "Particle species name, must be unique.")
+        .def_readwrite("index", &ParticleDescription::index, "Integer identifier for the species. Must be unique and match intended index used in matrix elements.")
+        .def_readwrite("type", &ParticleDescription::type, "Particle statistics (boson or fermion).")
+        .def_readwrite("bInEquilibrium", &ParticleDescription::bInEquilibrium, "Set to true if the particle species is assumed to remain in thermal equilibrium.")
+        .def_readwrite("bUltrarelativistic", &ParticleDescription::bUltrarelativistic, "Whether particles should be treated as ultrarelativistic in collision processes (ie. neglect mass in dispersion relations).")
+        .def_readwrite(
+            "massSqFunction",
+            &ParticleDescription::massSqFunction,
+            R"(Function with signature WallGoCollision.ModelParameters -> float that calculates
+               particle mass-squared. You must specify this function for all particle types that are NOT marked as ultrarelativistic.
+               The output should be in units of the temperature, ie. return value is (m/T)^2.)"
+        );
+
+    py::class_<ModelDefinition>(m,
+            "ModelDefinition",
+            R"(Helper class for defining a WallGoCollision.PhysicsModel. Fill in your model parameters and particle content here.)"
+        )
+        .def(py::init<>())
+        .def("defineParticleSpecies", &ModelDefinition::defineParticleSpecies, "Registers a new ParticleDescription with the model")
+        // Bind the right overload, see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
+        .def("defineParameter", static_cast<void(ModelDefinition::*)(const std::string&, double)>(&ModelDefinition::defineParameter), "Defines a new symbolic parameter and its initial value")
+        .def("defineParameters", &ModelDefinition::defineParameters, "Defines new symbolic parameters and their initial values");
+
+    py::class_<PhysicsModel>(m, "PhysicsModel", "Model class used by WallGoCollisions")
+        .def(py::init<const ModelDefinition&>())
+        .def("updateParameter", static_cast<void(PhysicsModel::*)(const std::string&, double)>(&PhysicsModel::updateParameter), "Updates a symbolic parameter value.The symbol must have been defined at model creation time")
+        .def("updateParameters", &PhysicsModel::updateParameters, "Updates model parameter values. The parameters must have been defined at model creation time")
+        // Bind lambda that takes std::string instead of std::filesystem::path
+        .def("readMatrixElements",
+            [](PhysicsModel& self, const std::string& filePath, bool bPrintMatrixElements)
+            {
+                return(
+                    self.readMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements)
+                );
+            },
+            R"(Read matrix elements from a file and stores them internally.
+            This will only consider expressions where at least one currently registered out-of-equilibrium particle appears as an external particle.
+            Note that this function clears any previously stored matrix elements for the model.
+            Returns false if something goes wrong.)",
+            py::arg("filePath"), py::arg("bPrintMatrixElements") = false
+        );
+        //.def("createCollisionTensor")
 
     /*
-
-    // Bind particle type enums
-    py::enum_<EParticleType>(m, "EParticleType")
-        .value("BOSON", EParticleType::BOSON)
-        .value("FERMION", EParticleType::FERMION)
-        .export_values();
-    
-
     // Bind constructor for ParticleSpecies class
     py::class_<ParticleSpecies>(m, "ParticleSpecies")
         .def(py::init<std::string, EParticleType, bool, double, double, bool>(),
@@ -78,16 +158,6 @@ PYBIND11_MODULE(_WallGoCollision, m)
         "    msq_thermal (float): Square of the thermal mass (in units of T^2).\n"
         "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
     );
-
-    // Bind IntegrationOptions struct
-    py::class_<IntegrationOptions>(m, "IntegrationOptions")
-        .def(py::init<>())
-        .def_readwrite("maxIntegrationMomentum", &IntegrationOptions::maxIntegrationMomentum)
-        .def_readwrite("calls", &IntegrationOptions::calls)
-        .def_readwrite("relativeErrorGoal", &IntegrationOptions::relativeErrorGoal)
-        .def_readwrite("absoluteErrorGoal", &IntegrationOptions::absoluteErrorGoal)
-        .def_readwrite("maxTries", &IntegrationOptions::maxTries)
-        .def_readwrite("bOptimizeUltrarelativistic", &IntegrationOptions::bOptimizeUltrarelativistic);
 
     //*********** Bind functions of the main control class
 
@@ -140,8 +210,6 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
 
     */
-
-    //std::atexit(wallgo::cleanup);
 }
 
 } // namespace

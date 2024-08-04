@@ -84,7 +84,6 @@ public:
     void registerObserver(IModelObserver& observer);
     void unregisterObserver(IModelObserver& observer);
 
-    PhysicsModel() {}
     // Models cannot be copied, only moving ownership is allowed
     PhysicsModel(const PhysicsModel&) = delete;
     PhysicsModel& operator=(const PhysicsModel&) = delete;

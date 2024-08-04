@@ -18,9 +18,9 @@
 namespace wallgo
 {
 
-IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, const IntegrationOptions& options)
+IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, const IntegrationOptions& options)
 {
-    IntegrandParameters integrandParameters = initializeIntegrandParameters(m, n, j, k);
+    IntegrandParameters integrandParameters = initializeIntegrandParameters(gridPoint);
 
     // Integral dimensions
     constexpr size_t dim = 5;
@@ -39,8 +39,8 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     bOptimizeUltrarelativistic = options.bOptimizeUltrarelativistic;
 
     // Define the integration limits for each variable: {p2, phi2, phi3, cosTheta2, cosTheta3}
-    double integralLowerLimits[dim] = {0.0, 0.0, 0.0, -1., -1.};
-    double integralUpperLimits[dim] = {maxIntegrationMomentum, 2.0 * constants::pi, 2.0 * constants::pi, 1., 1.};
+    double integralLowerLimits[dim] = { 0.0, 0.0, 0.0, -1., -1. };
+    double integralUpperLimits[dim] = { maxIntegrationMomentum, 2.0 * constants::pi, 2.0 * constants::pi, 1., 1. };
 
     // Construct parameter wrapper struct
     gslWrapper::gslFunctionParams gslWrapper;
@@ -56,7 +56,7 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     double error = 0.0;
 
     // Unique Monte Carlo state for this integration. NB: keep this here: thread safety
-    gsl_monte_vegas_state *gslState = gsl_monte_vegas_alloc(dim);
+    gsl_monte_vegas_state* gslState = gsl_monte_vegas_alloc(dim);
 
     // Start with a short warmup run. This is good for importance sampling
     const size_t warmupCalls = static_cast<size_t>(0.2 * calls);
@@ -65,27 +65,27 @@ IntegrationResult CollisionIntegral4::integrate(int m, int n, int j, int k, cons
     // Lambda to check if we've reached the accuracy goal. This requires chisq / dof to be consistent with 1,
     // otherwise the error is not reliable
     auto hasConverged = [&gslState, &mean, &error, &relativeErrorGoal, &absoluteErrorGoal]()
-    {
-        bool bConverged = false;
+        {
+            bool bConverged = false;
 
-        double chisq = gsl_monte_vegas_chisq(gslState); // the return value is actually chisq / dof
-        if (std::fabs(chisq - 1.0) > 0.5)
-        {
-            // Error not reliable
-        }
-        // Handle case where integral is very close to 0
-        else if (std::fabs(mean) < absoluteErrorGoal)
-        {
+            double chisq = gsl_monte_vegas_chisq(gslState); // the return value is actually chisq / dof
+            if (std::fabs(chisq - 1.0) > 0.5)
+            {
+                // Error not reliable
+            }
+            // Handle case where integral is very close to 0
+            else if (std::fabs(mean) < absoluteErrorGoal)
+            {
 
-            bConverged = true;
-        }
-        // Else: "standard" case
-        else if (std::fabs(error / mean) < relativeErrorGoal)
-        {
-            bConverged = true;
-        }
-        return bConverged;
-    };
+                bConverged = true;
+            }
+            // Else: "standard" case
+            else if (std::fabs(error / mean) < relativeErrorGoal)
+            {
+                bConverged = true;
+            }
+            return bConverged;
+        };
 
     int currentTries = 0;
     while (!hasConverged())
@@ -174,6 +174,13 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
             for (int32_t k = 1; k <= (N - 1); ++k)
             {
 
+                const GridPoint gridPoint(
+                    static_cast<uint32_t>(m),
+                    static_cast<uint32_t>(n),
+                    static_cast<uint32_t>(j),
+                    static_cast<uint32_t>(k)
+                );
+
                 IntegrationResult localResult;
 
                 // Integral vanishes if rho_z = 0 and m = odd. rho_z = 0 means j = N/2 which is possible only for even N
@@ -184,10 +191,10 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                 }
                 else
                 {
-                    localResult = workIntegral.integrate(m, n, j, k, options);
+                    localResult = workIntegral.integrate(gridPoint, options);
                 }
 
-                result.updateValue(m - 2, n - 1, j - 1, k - 1, localResult.result, localResult.error);
+                result.updateValue(gridPoint, localResult.result, localResult.error);
 
                 if (verbosity.bPrintEveryElement)
                 {
@@ -252,13 +259,27 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
             for (int32_t j = N / 2 + 1; j <= (N - 1); ++j)
             for (int32_t k = 1; k <= (N - 1); ++k)
             {
+                const GridPoint gridPoint(
+                    static_cast<uint32_t>(m),
+                    static_cast<uint32_t>(n),
+                    static_cast<uint32_t>(j),
+                    static_cast<uint32_t>(k)
+                );
+
                 const int32_t jOther = N - j;
                 const uint32_t sign = (m % 2 == 0 ? 1 : -1);
 
-                const double val = sign * result.valueAt(m - 2, n - 1, jOther - 1, k - 1);
-                const double err = options.bIncludeStatisticalErrors ? result.errorAt(m - 2, n - 1, jOther - 1, k - 1) : 0.0;
+                const GridPoint otherPoint(
+                    gridPoint.m,
+                    gridPoint.n,
+                    jOther,
+                    gridPoint.k
+                );
 
-                result.updateValue(m - 2, n - 1, j - 1, k - 1, val, err);
+                const double val = sign * result.valueAt(otherPoint);
+                const double err = options.bIncludeStatisticalErrors ? result.errorAt(otherPoint) : 0.0;
+
+                result.updateValue(gridPoint, val, err);
             }
         }
 
@@ -326,6 +347,22 @@ bool CollisionIntegral4::isEmpty() const
 {
     return collisionElements_nonUltrarelativistic.size() == 0
         && collisionElements_ultrarelativistic.size() == 0;
+}
+
+CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandParameters(const GridPoint& gridPoint) const
+{
+    IntegrandParameters params;
+    params.m = gridPoint.m;
+    params.n = gridPoint.n;
+
+    // Precalculate stuff related to the p1 momentum (optimization)
+    params.rhoZ1 = mPolynomialBasis.rhoZGrid(gridPoint.j);
+    params.rhoPar1 = mPolynomialBasis.rhoParGrid(gridPoint.k);
+    params.pZ1 = mPolynomialBasis.rhoZ_to_pZ(params.rhoZ1);
+    params.pPar1 = mPolynomialBasis.rhoPar_to_pPar(params.rhoPar1);
+    params.TmTn_p1 = mPolynomialBasis.TmTn(gridPoint.m, gridPoint.n, params.rhoZ1, params.rhoPar1);
+    params.p1 = std::sqrt(params.pZ1 * params.pZ1 + params.pPar1 * params.pPar1);
+    return params;
 }
 
 std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollisionElement<4> &CollisionElement, const InputsForKinematics& kinematicInput) const
@@ -480,23 +517,6 @@ void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)
 {
     mPolynomialBasis = Chebyshev(newBasisSize);
 }
-
-CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandParameters(int m, int n, int j, int k) const
-{
-    IntegrandParameters params;
-    params.m = m;
-    params.n = n;
-
-    // Precalculate stuff related to the p1 momentum (optimization)
-    params.rhoZ1 = mPolynomialBasis.rhoZGrid(j);
-    params.rhoPar1 = mPolynomialBasis.rhoParGrid(k);
-    params.pZ1 = mPolynomialBasis.rhoZ_to_pZ(params.rhoZ1);
-    params.pPar1 = mPolynomialBasis.rhoPar_to_pPar(params.rhoPar1);
-    params.TmTn_p1 = mPolynomialBasis.TmTn(m, n, params.rhoZ1, params.rhoPar1);
-    params.p1 = std::sqrt(params.pZ1*params.pZ1 + params.pPar1*params.pPar1);
-    return params;
-}
-
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3,
                                               const IntegrandParameters &integrandParameters)
