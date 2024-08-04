@@ -38,7 +38,7 @@ double CollisionResultsGrid::errorAt(const GridPoint& gridPoint) const
         return 0.0;
     }
 
-    return (*mErrors.get())[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mErrors[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
 double& CollisionResultsGrid::errorAt(const GridPoint& gridPoint)
@@ -54,7 +54,7 @@ double& CollisionResultsGrid::errorAt(const GridPoint& gridPoint)
         std::exit(444);
     }
 
-    return (*mErrors.get())[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mErrors[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
 }
 
 void CollisionResultsGrid::updateValue(const GridPoint& gridPoint, double newValue, double newError)
@@ -78,7 +78,7 @@ bool CollisionResultsGrid::writeToHDF5(const std::filesystem::path& filePath, bo
     utils::writeDataSet(h5File, mData, datasetName);
     if (bWriteErrors && hasStatisticalErrors())
     {
-        utils::writeDataSet(h5File, *mErrors, datasetName + " errors");
+        utils::writeDataSet(h5File, mErrors, datasetName + " errors");
     }
 
     h5File.close();
@@ -92,9 +92,13 @@ void CollisionResultsGrid::initData()
     if (mElementsPerDimension > 0)
     {
         mData = Array4D(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
-        if (mMetadata.bStatisticalErrors)
+        if (hasStatisticalErrors())
         {
-            mErrors = std::make_unique<Array4D>(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
+            mErrors = Array4D(mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, mElementsPerDimension, 0.0);
+        }
+        else
+        {
+            mErrors.clear();
         }
     }
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-#include <memory>
 #include <unordered_map>
 
 #include "Common.h"
@@ -47,13 +46,7 @@ public:
     CollisionResultsGrid() : mParticlePair("Unknown", "Unknown"), mElementsPerDimension(0) {}
     CollisionResultsGrid(const ParticleNamePair& particlePair, const CollisionMetadata& metadata);
 
-    // Move semantics needed to handle the dynamic errors array
-    CollisionResultsGrid(const CollisionResultsGrid& other) = delete;
-    CollisionResultsGrid& operator=(const CollisionResultsGrid& other) = delete;
-    CollisionResultsGrid(CollisionResultsGrid&& other) noexcept = default;
-    CollisionResultsGrid& operator=(CollisionResultsGrid&& other) noexcept = default;
-
-    inline bool hasStatisticalErrors() const { return mErrors != nullptr; }
+    inline bool hasStatisticalErrors() const { return mMetadata.bStatisticalErrors; }
     
     size_t getBasisSize() const { return mMetadata.basisSize; }
     ParticleNamePair getParticleNamePair() const { return mParticlePair; }
@@ -84,16 +77,14 @@ private:
     size_t mElementsPerDimension;  // equals basisSize - 1
 
     Array4D mData;
-    // Optional: statistical errors of integrations. Has large memory cost, so we allocate this only if needed
-    std::unique_ptr<Array4D> mErrors = nullptr;
+    // Statistical errors of integrations. Has large memory cost, so we keep this empty if not needed
+    Array4D mErrors;
 
     CollisionMetadata mMetadata;
     void initData();
 
     bool validateGridPoint(const GridPoint& gridPoint) const;
 };
-
-// TODO replace the manager with CollisionTensor
 
 struct WALLGO_API CollisionTensorResult
 {

@@ -5,12 +5,14 @@
 #include <iostream>
 #include <string>
 #include <cstdlib> // std::atexit
+#include <filesystem> // don't bind std::filesystem stuff directly, will wrap them in lambdas
 
 #include "WallGo/Common.h"
 #include "WallGo/ModelParameters.h"
 #include "WallGo/CollisionTensor.h"
 #include "WallGo/ParticleSpecies.h"
 #include "WallGo/PhysicsModel.h"
+#include "WallGo/ResultContainers.h"
 
 // Python bindings
 #include <pybind11/pybind11.h>
@@ -38,7 +40,11 @@ PYBIND11_MODULE(_WallGoCollision, m)
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
 
     py::class_<GridPoint>(m, "GridPoint", "")
-        .def(py::init<>());
+        .def(py::init<>())
+        .def_readwrite("m", &GridPoint::m, "First Polynomial index")
+        .def_readwrite("n", &GridPoint::n, "Second polynomial index")
+        .def_readwrite("j", &GridPoint::j, "First momentum index")
+        .def_readwrite("k", &GridPoint::k, "Second momentum index");
 
     py::class_<IntegrationOptions>(m, "IntegrationOptions", "Struct for configuring collision integration")
         .def(py::init<>())
@@ -63,12 +69,67 @@ PYBIND11_MODULE(_WallGoCollision, m)
             "If true, prints every element of the collision tensor to stdout."
             "Very high overhead, intended for debugging only."
         );
-
+    
     py::class_<CollisionResultsGrid>(m, "CollisionResultsGrid", "Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair")
         .def("hasStatisticalErrors", &CollisionResultsGrid::hasStatisticalErrors, "Returns True if statistical errors are included")
         .def("getBasisSize", &CollisionResultsGrid::getBasisSize, "Basis size of the momentum grid")
-        ;
+        // Bind the constant accessors only
+        .def("valueAt", static_cast<double(CollisionResultsGrid::*)(const GridPoint&) const>(&CollisionResultsGrid::valueAt), "Get value at specified grid point")
+        .def("errorAt", static_cast<double(CollisionResultsGrid::*)(const GridPoint&) const>(&CollisionResultsGrid::errorAt), "Get statistical error at specified grid point")
+        .def("updateValue", &CollisionResultsGrid::updateValue, "Updates value (and error, if they are included) at specified grid point")
+        .def(
+            "writeToHDF5",
+            [](const CollisionResultsGrid& self, const std::string& filePath, bool bWriteErrors = true)
+            {
+                return self.writeToHDF5(std::filesystem::path(filePath), bWriteErrors);
+            },
+            R"(Write array contents to a HDF5 file. This always overrides the file if it exists.
+            Dataset name for the integration results will be of form "particle1, particle2".
+            Dataset name for integration errors will be "particle1, particle2 errors"
+            Return value is False if something goes wrong.)",
+            py::arg("filePath"), py::arg("bWriteErrors") = true
+        );
 
+    py::class_<CollisionTensorResult>(m, "CollisionTensorResult", "Rank 6 tensor that holds integration results on a grid for all out-of-equilibrium particle pairs")
+        .def(
+            "writeToIndividualHDF5",
+            [](const CollisionTensorResult& self, const std::string& outDirectory, bool bWriteErrors = true)
+            {
+                return self.writeToIndividualHDF5(outDirectory, bWriteErrors);
+            },
+            R"(Writes the contents to disk, so that each particle pair is written into a separate HDF5 file.
+            In practice this just calls CollisionResultsGrid::writeToHDF5 for each particle pair.
+            Return value is false if something went wrong.)",
+            py::arg("outDirectory"), py::arg("bWriteErrors") = true)
+        .def(
+            "getResultsForParticlePair",
+            static_cast<CollisionResultsGrid*(CollisionTensorResult::*)(const std::string&, const std::string&)>(&CollisionTensorResult::getResultsForParticlePair),
+            py::return_value_policy::reference,
+            R"(Returns reference to collision integration results of the specified particle pair.
+            Can be None if the pair is not found)",
+            py::arg("particle1"), py::arg("particle2")
+        );
+
+    py::class_<CollisionTensor>(m,
+        "CollisionTensor",
+        R"(The CollisionTensor class acts as a main interface into collision integral computations.
+	    It will be linked to the PhysicsModel that creates it, so that changes to model parameters and particles
+	    will directly propagate to CollisionTensor objects created from it.
+	    This also means that you MUST keep the model alive for as long as you use CollisionTensors linked to it.)"
+    )
+        // For simplicity let's require that integration always uses cached IntegrationOptions and CollisionTensorVerbosity, so remove "default" from descriptions
+        .def("setIntegrationOptions",
+            &CollisionTensor::setDefaultIntegrationOptions,
+            R"(Configures integration options that are used by integration routines)")
+        .def("setIntegrationVerbosity",
+            &CollisionTensor::setDefaultIntegrationVerbosity,
+            R"(Configures integration verbosity settings)")
+        .def("changePolynomialBasisSize", &CollisionTensor::changePolynomialBasisSize, "Change basis size used by the polynomial grid")
+        .def("countIndependentIntegrals", &CollisionTensor::countIndependentIntegrals, "Count how many independent collision integrals we have")
+        .def("computeIntegralsAll",
+            static_cast<CollisionTensorResult(CollisionTensor::*)()>(&CollisionTensor::computeIntegralsAll),
+            R"(Calculates all collision integrals associated with this tensor.)"
+        );
 
     py::class_<ModelParameters>(m, "ModelParameters", "Container for physics model-dependent parameters (couplings etc)")
         .def(py::init<>())
@@ -138,78 +199,6 @@ PYBIND11_MODULE(_WallGoCollision, m)
             py::arg("filePath"), py::arg("bPrintMatrixElements") = false
         );
         //.def("createCollisionTensor")
-
-    /*
-    // Bind constructor for ParticleSpecies class
-    py::class_<ParticleSpecies>(m, "ParticleSpecies")
-        .def(py::init<std::string, EParticleType, bool, double, double, bool>(),
-        py::arg("particleName"),
-        py::arg("particleType"),
-        py::arg("isInEquilibrium"),
-        py::arg("msqVacuum"),
-        py::arg("msqThermal"),
-        py::arg("ultrarelativistic"),
-        "Constructor for ParticleSpecies.\n\n"
-        "Args:\n"
-        "    particleName (str): Name of the particle species.\n"
-        "    particleType (EParticleType): Type of particle (boson or fermion).\n"
-        "    isInEquilibrium (bool): Whether the species is in equilibrium.\n"
-        "    msqVacuum (float): Square of the vacuum mass (in units of T^2).\n"
-        "    msq_thermal (float): Square of the thermal mass (in units of T^2).\n"
-        "    ultrarelativistic (bool): Treat the particle as ultrarelativistic (m=0)?\n"
-    );
-
-    //*********** Bind functions of the main control class
-
-    // READMEs for the functions
-    std::string usage_CollisionManager = 
-        "Constructor for CollisionTensor class.\n";
-
-    std::string usage_addParticle =
-        "Add a new particle species \n\n"
-        "Args:\n"
-        "    particle (ParticleSpecies): Particle to add\n";
-
-    std::string usage_setVariable = 
-        "Sets value of a physics parameter used in matrix elements. The variable needs to already be defined previously with defineVariable()"
-        "Args:\n"
-        "    name (string): Variable name"
-        "    newValue (double): New value of the variable\n";
-
-    std::string usage_calculateAllIntegrals =
-        "Calculates all collision integrals with the currently defined particle content and stores in .hdf5 file."
-        "This is the main computation routine and will typically run for a while."
-        "Call only after specifying all particles and couplings with addParticle, addCoupling.\n\n"
-        "Args:\n"
-        "   verbose = false (bool): Floods stdout with intermediate results. For debugging only.\n\n";
-
-    std::string usage_setOutputDirectory =
-        "Set output directory for collision integral results.\n"
-        "Args:\n"
-        "   path (string)";
-
-    std::string usage_setMatrixElementFile =
-        "Specify file path where matrix elements are read from.\n"
-        "Args:\n"
-        "   path (string)";
-
-    std::string usage_configureIntegration =
-        "Specify options for the integration routine.\n"
-        "Args:\n"
-        "   options (IntegrationOptions)";
-
-    // For functions with default args we need to explicity define the arguments
-    py::class_<CollisionPython>(m, "CollisionTensor")
-        .def(py::init<>(), usage_CollisionManager.c_str())
-        .def("addParticle", &CollisionPython::addParticle, usage_addParticle.c_str())
-        .def("setVariable", &CollisionPython::setVariable, usage_setVariable.c_str())
-        .def("calculateAllIntegrals", &CollisionPython::calculateAllIntegrals,
-            usage_calculateAllIntegrals.c_str(), py::arg("bVerbose")=false)
-        .def("setOutputDirectory", &CollisionPython::setOutputDirectory, usage_setOutputDirectory.c_str())
-        .def("setMatrixElementFile", &CollisionPython::setMatrixElementFile, usage_setMatrixElementFile.c_str())
-        .def("configureIntegration", &CollisionPython::configureIntegration, usage_configureIntegration.c_str());
-
-    */
 }
 
 } // namespace
