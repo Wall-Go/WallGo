@@ -2,6 +2,7 @@
 Classes that contain thermodynamics quantities like pressure, enthalpy, energy density 
 for both phases
 """
+
 from typing import Tuple
 
 import numpy as np
@@ -11,6 +12,7 @@ from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .Fields import Fields
 from .FreeEnergy import FreeEnergy
+
 
 class Thermodynamics:
     """
@@ -22,7 +24,7 @@ class Thermodynamics:
         effectivePotential: EffectivePotential,
         nucleationTemperature: float,
         phaseLowT: Fields,
-        phaseHighT: Fields
+        phaseHighT: Fields,
     ):
         """Initialisation
 
@@ -88,18 +90,18 @@ class Thermodynamics:
         self, dT: float, rTol: float = 1e-6, paranoid: bool = True
     ) -> float:
         """
-        Computes the critical temperature by finding the temperature for which the 
+        Computes the critical temperature by finding the temperature for which the
         free energy of both phases is equal.
 
         Parameters
         ----------
         dT: float
             Temperature step size for the determination of Tc
-        rTol: float, optional 
+        rTol: float, optional
             Error tolerance for the phase tracing
         paranoid: bool, optional
             Setting for phase tracing. When True, recomputes minimum at every step
-        
+
         Returns
         -------
         Tc: float
@@ -192,6 +194,7 @@ class Thermodynamics:
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
+    
     def dpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the pressure in the high-temperature phase.
@@ -227,7 +230,7 @@ class Thermodynamics:
 
     def eHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
-        Energy density in the high-temperature phase, obtained via 
+        Energy density in the high-temperature phase, obtained via
         :math:`e(T) = T \frac{dp}{dT}-p`.
 
         Parameters
@@ -394,7 +397,7 @@ class Thermodynamics:
 
     def csqLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
-        Sound speed squared in the low-temperature phase, 
+        Sound speed squared in the low-temperature phase,
         obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
 
         Parameters
@@ -413,7 +416,7 @@ class Thermodynamics:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via
         :math:`\alpha = \frac{e_{\rm HighT}(T)-e_{\rm LowT}(T) -(p_{\rm HighT}(T)
-        -p_{\rm LowT}(T)) /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}` 
+        -p_{\rm LowT}(T)) /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}`
         as defined in eq. (34) of [GKvdV20]_
 
         Parameters
@@ -425,6 +428,13 @@ class Thermodynamics:
         -------
         alpha : array-like (float)
             Phase transition strength.
+
+        References
+        ----------
+        .. [GKvdV20] F. Giese, T. Konstandin and J. van de Vis, Model-independent energy
+            budget of cosmological first-order phase transitions — A sound argument
+            to go beyond the bag model, JCAP 07 (2020) 07, 057
+            doi:10.1088/1475-7516/2020/07/057
         """
         return (
             (
@@ -465,29 +475,28 @@ class ThermodynamicsExtrapolate:
         .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
             and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
             doi:10.1016/j.nuclphysb.2014.12.008
-        .. [GKvdV20] F. Giese, T. Konstandin and J. van de Vis, Model-independent energy 
-            budget of cosmological first-order phase transitions — A sound argument 
-            to go beyond the bag model, JCAP 07 (2020) 07, 057
-            doi:10.1088/1475-7516/2020/07/057
         """
-        self.thermodynamics : Thermodynamics = thermodynamics
-        self.TMaxHighT : float = thermodynamics.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT : float = thermodynamics.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT : float = thermodynamics.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT : float = thermodynamics.freeEnergyLow.minPossibleTemperature
+        self.thermodynamics: Thermodynamics = thermodynamics
+        self.TMaxHighT: float = thermodynamics.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT: float = thermodynamics.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT: float = thermodynamics.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT: float = thermodynamics.freeEnergyLow.minPossibleTemperature
 
         # The following parameters are defined such that the thermodynamic quantities
         # can be extrapolated beyond the minimum and maximum temperatures
         # by mapping onto the template model
         self.muMinHighT = float(1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT))
-        self.aMinHighT = float((
-            3
-            * self.thermodynamics.wHighT(self.TMinHighT)
-            / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
-        ))
-        self.epsilonMinHighT = float(1 / 3.0 * self.aMinHighT * pow(
-            self.TMinHighT, self.muMinHighT
-        ) - thermodynamics.pHighT(self.TMinHighT))
+        self.aMinHighT = float(
+            (
+                3
+                * self.thermodynamics.wHighT(self.TMinHighT)
+                / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
+            )
+        )
+        self.epsilonMinHighT = float(
+            1 / 3.0 * self.aMinHighT * pow(self.TMinHighT, self.muMinHighT)
+            - thermodynamics.pHighT(self.TMinHighT)
+        )
         self.muMaxHighT = 1 + 1 / float(self.thermodynamics.csqHighT(self.TMaxHighT))
         self.aMaxHighT = (
             3
@@ -519,9 +528,10 @@ class ThermodynamicsExtrapolate:
 
     def pHighT(self, temperature: float) -> float:
         r"""
-        Pressure in the high-temperature phase, obtained from thermodynamics.pHighT 
-        for the allowed temperature range and extrapolated to the template model 
-        outside of the allowed temperature range
+        Pressure in the high-temperature phase, obtained from
+        :py:data:`WallGo.Thermodynamics.pHighT` for the allowed temperature
+        range and extrapolated to the template model outside of the allowed
+        temperature range
 
         Parameters
         ----------
@@ -534,23 +544,24 @@ class ThermodynamicsExtrapolate:
             Pressure in the high-temperature phase.
         """
         if temperature < self.TMinHighT:
-            return (
-                float(1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
-                - self.epsilonMinHighT)
+            return float(
+                1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
+                - self.epsilonMinHighT
             )
         if temperature > self.TMaxHighT:
-            return (
-                float(1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
-                - self.epsilonMaxHighT)
+            return float(
+                1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
+                - self.epsilonMaxHighT
             )
 
         return float(self.thermodynamics.pHighT(temperature))
 
     def dpHighT(self, temperature: float) -> float:
         r"""
-        Temperature-derivative of the pressure in the high-temperature phase, 
-        obtained from thermodynamics.dpHighT for the allowed temperature range
-        and extrapolated to the template model outside of the allowed temperature range
+        Temperature-derivative of the pressure in the high-temperature phase,
+        obtained from :py:data:`WallGo.Thermodynamics.dpHighT` for the
+        allowed temperature range and extrapolated to the template model
+        outside of the allowed temperature range
 
         Parameters
         ----------
@@ -583,9 +594,10 @@ class ThermodynamicsExtrapolate:
 
     def ddpHighT(self, temperature: float) -> float:
         r"""
-        Second temperature-derivative of the pressure in the high-temperature phase, 
-        obtained from thermodynamics.ddpHighT for the allowed temperature range
-        and extrapolated to the template model outside of the allowed temperature range
+        Second temperature-derivative of the pressure in the high-temperature phase,
+        obtained from :py:data:`WallGo.Thermodynamics.ddpHighT` for the allowed
+        temperature range and extrapolated to the
+        template model outside of the allowed temperature range
 
         Parameters
         ----------
@@ -620,9 +632,9 @@ class ThermodynamicsExtrapolate:
 
     def eHighT(self, temperature: float) -> float:
         r"""
-        Energy density in the high-temperature phase, 
+        Energy density in the high-temperature phase,
         obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
-        valid outside of the allowed temeperature range.
+        valid inside and outside of the allowed temeperature range.
 
         Parameters
         ----------
@@ -640,7 +652,7 @@ class ThermodynamicsExtrapolate:
         r"""
         Temperature derivative of the energy density in the high-temperature phase,
         obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,
-        valid outside of the allowed temperature range.
+        valid inside and outside of the allowed temperature range.
 
         Parameters
         ----------
@@ -657,7 +669,8 @@ class ThermodynamicsExtrapolate:
     def wHighT(self, temperature: float) -> float:
         r"""
         Enthalpy density in the high-temperature phase, obtained via
-        :math:`w(T) = p(T)+e(T)`, outside of the allowed temperature range.
+        :math:`w(T) = p(T)+e(T)`, valid inside and outside of the allowed
+        temperature range.
 
         Parameters
         ----------
@@ -675,8 +688,8 @@ class ThermodynamicsExtrapolate:
         r"""
         Sound speed squared in the high-temperature phase, obtained via
         :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range and
-        by its value at TMinHighT and TMaxHighT outside of the allowed temperature
-        range.
+        by its value at :py:data:`TMinHighT` and :py:data:`TMaxHighT` outside of the
+        allowed temperature range.
 
         Parameters
         ----------
@@ -697,8 +710,9 @@ class ThermodynamicsExtrapolate:
 
     def pLowT(self, temperature: float) -> float:
         r"""
-        Pressure in the low-temperature phase, obtained from thermodynamics.pLowT for 
-        the allowed temperature range and extrapolated to the template model outside 
+        Pressure in the low-temperature phase, obtained from
+        :py:data:`WallGo.Thermodynamics.pLowT` for
+        the allowed temperature range and extrapolated to the template model outside
         of the allowed temperature range
 
         Parameters
@@ -726,9 +740,10 @@ class ThermodynamicsExtrapolate:
 
     def dpLowT(self, temperature: float) -> float:
         r"""
-        Temperature-derivative of the pressure in the low-temperature phase, 
-        obtained from thermodynamics.dpLowT for the allowed temperature range
-        and extrapolated to the template model outside of the allowed temperature range
+        Temperature-derivative of the pressure in the low-temperature phase,
+        obtained from :py:data:`WallGo.Thermodynamics.dpLowT` for the allowed
+        temperature range and extrapolated to the template model outside of
+        the allowed temperature range
 
         Parameters
         ----------
@@ -761,8 +776,8 @@ class ThermodynamicsExtrapolate:
 
     def ddpLowT(self, temperature: float) -> float:
         r"""
-        Second temperature-derivative of the pressure in the low-temperature phase, 
-        obtained from :py:data:`WallGo.Thermodynamics.ddpLowT` for the allowed 
+        Second temperature-derivative of the pressure in the low-temperature phase,
+        obtained from :py:data:`WallGo.Thermodynamics.ddpLowT` for the allowed
         temperature range and extrapolated to the template model outside of the
         allowed temperature range
 
@@ -799,8 +814,9 @@ class ThermodynamicsExtrapolate:
 
     def eLowT(self, temperature: float) -> float:
         r"""
-        Energy density in the low-temperature phase, obtained via 
-        :math:`e(T) = T \frac{dp}{dT}-p`, valid outside the allowed temeperature range.
+        Energy density in the low-temperature phase, obtained via
+        :math:`e(T) = T \frac{dp}{dT}-p`, valid inside and outside 
+        the allowed temeperature range.
 
         Parameters
         ----------
@@ -816,9 +832,9 @@ class ThermodynamicsExtrapolate:
 
     def deLowT(self, temperature: float) -> float:
         r"""
-        Temperature derivative of the energy density in the low-temperature phase, 
-        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,,
-        valid outside of the allowed temperature range.
+        Temperature derivative of the energy density in the low-temperature phase,
+        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,
+        valid inside and outside of the allowed temperature range.
 
         Parameters
         ----------
@@ -834,8 +850,9 @@ class ThermodynamicsExtrapolate:
 
     def wLowT(self, temperature: float) -> float:
         r"""
-        Enthalpy density in the low-temperature phase, obtained via 
-        :math:`w(T) = p(T)+e(T)`, outside of the allowed temperature range.
+        Enthalpy density in the low-temperature phase, obtained via
+        :math:`w(T) = p(T)+e(T)`, valid inside and outside of the allowed
+        temperature range.
 
         Parameters
         ----------
@@ -853,7 +870,8 @@ class ThermodynamicsExtrapolate:
         r"""
         Sound speed squared in the low-temperature phase, obtained via
         :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range and
-        by its value at TMinLowT and TMaxLowT outside of the allowed temperature range.
+        by its value at :py:data:`TMinLowT` and :py:data:`TMaxLowT` outside of the
+        allowed temperature range.
 
         Parameters
         ----------
