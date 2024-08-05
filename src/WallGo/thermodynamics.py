@@ -211,7 +211,6 @@ class Thermodynamics:
         """
         return -self.freeEnergyHigh.derivative(temperature, order=1).veffValue
 
-    ## LN: could just have something like dpdT(n) that calculates nth order derivative
     def ddpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Second temperature derivative of the pressure in the high-temperature phase.
