@@ -194,7 +194,7 @@ class Thermodynamics:
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
-    
+
     def dpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the pressure in the high-temperature phase.
