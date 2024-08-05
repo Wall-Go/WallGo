@@ -19,8 +19,8 @@ void gslWrapper::initializeRNG(int seed)
         {
             gslWrapper::rng = gsl_rng_alloc(gsl_rng_default);
         }
-        bInitialized = true;
 
+        bInitialized = true;
         setSeed(seed);
     }
 }
@@ -44,6 +44,7 @@ void gslWrapper::clearRNG()
         {
             gsl_rng_free(gslWrapper::rng);
         }
+
         bInitialized = false;
     }
 }

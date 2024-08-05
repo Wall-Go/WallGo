@@ -36,7 +36,7 @@ wallgo::PhysicsModel setupQCD()
 		3) Define the mass symbols using initial values computed from the helpers.
 
 	For purposes of this example this approach is overly explicit because the mass expressions are very simple.
-	However the helper functions are needed later when defining particle content anyway, see below.
+	However the helper functions are needed later when defining particle content anyway (assuming non-ultrarelativistic particles), see below.
 	*/
 
 	/* The parameter container used by WallGo collision routines is of wallgo::ModelParameters type, which is a wrapper around std::map.
@@ -71,7 +71,7 @@ wallgo::PhysicsModel setupQCD()
 	* Note that this includes also particles that are assumed to remain in equilibrium but have collisions with out-of-equilibrium particles.
 	* Particle definition is done by filling in a ParticleDescription struct and calling ModelDefinition::defineParticleSpecies. */
 	wallgo::ParticleDescription topQuark;
-	topQuark.name = "top"; // Ttring identifier, MUST be unique
+	topQuark.name = "top"; // string identifier, MUST be unique
 	topQuark.index = 0; // Unique integer identifier, MUST match index that appears in matrix element file
 	topQuark.type = wallgo::EParticleType::eFermion; // Statistics: boson or fermion
 	topQuark.bInEquilibrium = false; // Whether the particle species is assumed to remain in equilibrium or not

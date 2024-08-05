@@ -83,6 +83,7 @@ public:
     // ---- We use a simple "observer pattern" to sync CollisionTensor objects when model parameters change
     void registerObserver(IModelObserver& observer);
     void unregisterObserver(IModelObserver& observer);
+    size_t getNumObservers() const { return mObservers.size(); }
 
     // Models cannot be copied, only moving ownership is allowed
     PhysicsModel(const PhysicsModel&) = delete;

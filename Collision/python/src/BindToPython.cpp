@@ -188,17 +188,21 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def("readMatrixElements",
             [](PhysicsModel& self, const std::string& filePath, bool bPrintMatrixElements)
             {
-                return(
-                    self.readMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements)
-                );
+                return(self.readMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements));
             },
             R"(Read matrix elements from a file and stores them internally.
             This will only consider expressions where at least one currently registered out-of-equilibrium particle appears as an external particle.
             Note that this function clears any previously stored matrix elements for the model.
             Returns false if something goes wrong.)",
             py::arg("filePath"), py::arg("bPrintMatrixElements") = false
-        );
-        //.def("createCollisionTensor")
+        )
+        .def("createCollisionTensor",
+            static_cast<CollisionTensor(PhysicsModel::*)(size_t)>(&PhysicsModel::createCollisionTensor),
+            py::return_value_policy::take_ownership, // Python takes ownership, important for keeping observer registrations alive
+            R"(Creates a CollisionTensor object that contains and manages collision integrals relevant for this model)",
+            py::arg("basisSize")
+        )
+        .def("getNumObservers", &PhysicsModel::getNumObservers, "Returns number of objects that are registered as observers for this model");
 }
 
 } // namespace
