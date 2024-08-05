@@ -1,7 +1,7 @@
 ======================================
-Containers
+Fields
 ======================================
 
-.. automodule:: WallGo.containers
+.. automodule:: WallGo.Fields
     :members:
-    :inherited-members:
+    :special-members: __init__

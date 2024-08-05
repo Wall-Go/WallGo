@@ -169,7 +169,7 @@ class Thermodynamics:
 
         return rootResults.root
 
-    def pHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def pHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Pressure in the high-temperature phase.
 
@@ -187,7 +187,7 @@ class Thermodynamics:
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
-    def dpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def dpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the pressure in the high-temperature phase.
 
@@ -204,7 +204,7 @@ class Thermodynamics:
         return -self.freeEnergyHigh.derivative(temperature, order=1).veffValue
 
     ## LN: could just have something like dpdT(n) that calculates nth order derivative
-    def ddpHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def ddpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Second temperature derivative of the pressure in the high-temperature phase.
 
@@ -220,7 +220,7 @@ class Thermodynamics:
         """
         return -self.freeEnergyHigh.derivative(temperature, order=2).veffValue
 
-    def eHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def eHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Energy density in the high-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
 
@@ -236,7 +236,7 @@ class Thermodynamics:
         """
         return temperature*self.dpHighT(temperature) - self.pHighT(temperature)
 
-    def deHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def deHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the energy density in the high-temperature phase.
         
@@ -252,7 +252,7 @@ class Thermodynamics:
         """
         return temperature * self.ddpHighT(temperature)
 
-    def wHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def wHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Enthalpy density in the high-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
 
@@ -268,7 +268,7 @@ class Thermodynamics:
         """
         return temperature*self.dpHighT(temperature)
 
-    def csqHighT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def csqHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Sound speed squared in the high-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
 
@@ -284,7 +284,7 @@ class Thermodynamics:
         """
         return self.dpHighT(temperature) / self.deHighT(temperature)
 
-    def pLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def pLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Pressure in the low-temperature phase.
 
@@ -302,7 +302,7 @@ class Thermodynamics:
         VeffValue = self.freeEnergyLow(temperature).veffValue
         return -VeffValue
 
-    def dpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def dpLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the pressure in the low-temperature phase.
 
@@ -318,7 +318,7 @@ class Thermodynamics:
         """
         return -self.freeEnergyLow.derivative(temperature, order=1).veffValue
 
-    def ddpLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def ddpLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Second temperature derivative of the pressure in the low-temperature phase.
 
@@ -334,7 +334,7 @@ class Thermodynamics:
         """
         return -self.freeEnergyLow.derivative(temperature, order=2).veffValue
 
-    def eLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def eLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Energy density in the low-temperature phase, obtained via :math:`e(T) = T \frac{dp}{dT}-p`.
 
@@ -350,7 +350,7 @@ class Thermodynamics:
         """
         return temperature*self.dpLowT(temperature) - self.pLowT(temperature)
 
-    def deLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def deLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the energy density in the low-temperature phase.
         
@@ -366,7 +366,7 @@ class Thermodynamics:
         """
         return temperature*self.ddpLowT(temperature)
 
-    def wLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def wLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Enthalpy density in the low-temperature phase, obtained via :math:`w(T) = p(T)+e(T)`.
 
@@ -382,7 +382,7 @@ class Thermodynamics:
         """
         return temperature*self.dpLowT(temperature)
 
-    def csqLowT(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def csqLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
         Sound speed squared in the low-temperature phase, obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.
 
@@ -398,7 +398,7 @@ class Thermodynamics:
         """
         return self.dpLowT(temperature) / self.deLowT(temperature)
 
-    def alpha(self, T: npt.ArrayLike) -> npt.ArrayLike:
+    def alpha(self, T: np.ndarray | float) -> np.ndarray | float:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via 
         :math:`\alpha = \frac{(eHighT(T)-pHighT(T)/csqHighT(T))-(eLowT(T)-pLowT(T)/csqLowT(T))}{3wHighT(T)}`

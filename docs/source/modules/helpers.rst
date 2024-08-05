@@ -1,8 +1,8 @@
 ======================================
-Boltzmann
+Helpers
 ======================================
 
-.. automodule:: WallGo.boltzmann
+.. automodule:: WallGo.helpers
     :members:
     :inherited-members:
     :special-members: __init__

@@ -1,8 +1,8 @@
 ======================================
-EOM
+Grid
 ======================================
 
-.. automodule:: WallGo.EOM
+.. autoclass:: WallGo.Grid
     :members:
     :inherited-members:
     :special-members: __init__

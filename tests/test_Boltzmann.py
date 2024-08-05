@@ -43,7 +43,7 @@ def test_Delta00(
     # This is the fixture background constructed with input M. pytest magic
     # that works because argument name here matches that used in fixture def
     bg = boltzmannTestBackground
-    grid = WallGo.Grid(spatialGridSize, momentumGridSize, 1, 100)
+    grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 100)
     collisionPath = dir_path + "/Testdata/N19"
     boltzmann = WallGo.BoltzmannSolver(grid, "Cardinal", "Cardinal", "Spectral")
 
@@ -106,7 +106,7 @@ def test_solution(
     # This is the fixture background constructed with input M. pytest magic
     # that works because argument name here matches that used in fixture def
     bg = boltzmannTestBackground
-    grid = WallGo.Grid(spatialGridSize, momentumGridSize, 1, 1)
+    grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 1)
 
     collisionPath = dir_path + "/Testdata/N11"
     boltzmann = WallGo.BoltzmannSolver(grid)

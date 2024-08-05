@@ -228,7 +228,7 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
     wallThickness = 0.05
     momentumFalloffT = 100
 
-    grid = WallGo.Grid3Scales.Grid3Scales(M, N, tailInside, tailOutside, wallThickness, momentumFalloffT)
+    grid = WallGo.grid3Scales.Grid3Scales(M, N, tailInside, tailOutside, wallThickness, momentumFalloffT)
 
     return grid
 

@@ -1,5 +1,5 @@
 ======================================
-Collision
+License
 ======================================
 
-.. include:: ../../Collision/README.md
+.. include:: ../../LICENSE

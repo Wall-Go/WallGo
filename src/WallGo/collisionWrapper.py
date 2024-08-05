@@ -1,3 +1,6 @@
+"""
+Python wrapper for C++ computation of collision integrals.
+"""
 import os
 import sys
 from pathlib import Path
