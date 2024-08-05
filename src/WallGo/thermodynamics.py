@@ -412,12 +412,13 @@ class Thermodynamics:
     def alpha(self, T: np.ndarray | float) -> np.ndarray | float:
         r"""
         The phase transition strength at the temperature :math:`T`, computed via
-        :math:`\alpha = \frac{e_{\rm HighT}(T)-e_{\rm LowT}(T) -(p_{\rm HighT}(T)-p_{\rm LowT}(T)) 
-        /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}`
+        :math:`\alpha = \frac{e_{\rm HighT}(T)-e_{\rm LowT}(T) -(p_{\rm HighT}(T)
+        -p_{\rm LowT}(T)) /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}` 
+        as defined in eq. (34) of [GKvdV20]_
 
         Parameters
         ----------
-        temperature : array-like
+        T : array-like
             Temperature(s)
 
         Returns
@@ -425,8 +426,6 @@ class Thermodynamics:
         alpha : array-like (float)
             Phase transition strength.
         """
-        # LN: keeping T instead of 'temperature' here since the expression is long
-        # LN: Please add reference to a paper and eq number
         return (
             (
                 self.eHighT(T)
@@ -466,6 +465,10 @@ class ThermodynamicsExtrapolate:
         .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
             and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
             doi:10.1016/j.nuclphysb.2014.12.008
+        .. [GKvdV20] F. Giese, T. Konstandin and J. van de Vis, Model-independent energy 
+            budget of cosmological first-order phase transitions — A sound argument 
+            to go beyond the bag model, JCAP 07 (2020) 07, 057
+            doi:10.1088/1475-7516/2020/07/057
         """
         self.thermodynamics : Thermodynamics = thermodynamics
         self.TMaxHighT : float = thermodynamics.freeEnergyHigh.maxPossibleTemperature
@@ -759,8 +762,9 @@ class ThermodynamicsExtrapolate:
     def ddpLowT(self, temperature: float) -> float:
         r"""
         Second temperature-derivative of the pressure in the low-temperature phase, 
-        obtained from :py:data:`WallGo.Thermodynamics`.ddpLowT for the allowed temperature range
-        and extrapolated to the template model outside of the allowed temperature range
+        obtained from :py:data:`WallGo.Thermodynamics.ddpLowT` for the allowed 
+        temperature range and extrapolated to the template model outside of the
+        allowed temperature range
 
         Parameters
         ----------
