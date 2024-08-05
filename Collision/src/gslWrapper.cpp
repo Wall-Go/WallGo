@@ -1,14 +1,14 @@
 #include "gslWrapper.h"
+#include "EnvironmentMacros.h"
 
 namespace wallgo
 {
 
 namespace gslWrapper
 {
-    gsl_rng* rng = nullptr;
     bool bInitialized = false;
-    #pragma omp threadprivate(rng)
-}    
+    WG_INIT_THREADPRIVATE_EXTERN_VARIABLE(gsl_rng*, rng, nullptr)
+}
 
 void gslWrapper::initializeRNG(int seed)
 {
@@ -29,7 +29,7 @@ void gslWrapper::setSeed(int seed)
 {
     if (!bInitialized) return;
 
-    // All threads get same seed (OK for now)
+    // All threads get same seed but different RNG object (OK for now)
     #pragma omp parallel
     {
         gsl_rng_set(gslWrapper::rng, static_cast<unsigned long>(seed));
@@ -40,7 +40,7 @@ void gslWrapper::clearRNG()
 {
     if (bInitialized)
     {
-        #pragma omp parallel 
+        #pragma omp parallel
         {
             gsl_rng_free(gslWrapper::rng);
         }

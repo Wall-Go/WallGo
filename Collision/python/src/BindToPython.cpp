@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <string>
-#include <cstdlib> // std::atexit
 #include <filesystem> // don't bind std::filesystem stuff directly, will wrap them in lambdas
 
 #include "WallGo/Common.h"
@@ -34,7 +33,8 @@ PYBIND11_MODULE(_WallGoCollision, m)
 #endif
 
     wallgo::initializeRNG();
-    //std::atexit(wallgo::cleanup); // seems to behave badly...?
+    // Let pybind11 handle cleanup timing, works better than std::atexit
+    m.add_object("_cleanup", py::capsule(wallgo::cleanup));
 
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");

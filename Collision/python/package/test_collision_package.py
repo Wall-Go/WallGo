@@ -156,6 +156,9 @@ def setupQCD() -> WallGoCollision.PhysicsModel:
 
 def collisionExampleQCD() -> None:
     
+    # Monte Carlo integration will be used and random numbers are thus involved. You can specify seed for RNG (optional, default is 0):
+    WallGoCollision.setSeed(0)
+
     """First step is model definition, which specifies particle content and model parameters relevant for collisions.
 	See the helper function above for details, which also prepares matrix elements.
 	Note that it is NOT possible to change model particle or parameter content after creation, only parameter value changes are allowed.

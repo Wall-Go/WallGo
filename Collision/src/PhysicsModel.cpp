@@ -84,6 +84,14 @@ PhysicsModel::PhysicsModel(const ModelDefinition& modelDefinition)
     updateParticleMassCache();
 }
 
+PhysicsModel::~PhysicsModel()
+{
+    if (mObservers.size() > 0)
+    {
+        std::cout << "warning: deleting PhysicsModel that still has " << mObservers.size() << " observers" << std::endl;
+    }
+}
+
 void PhysicsModel::updateParameter(const char* symbol, double value)
 {
     updateParameter(std::string(symbol), value);

@@ -55,6 +55,14 @@ public:
     // Construct a new PhysicsModel
     PhysicsModel(const ModelDefinition& modelDefinition);
 
+    // Models cannot be copied, only moving ownership is allowed
+    PhysicsModel(const PhysicsModel&) = delete;
+    PhysicsModel& operator=(const PhysicsModel&) = delete;
+
+    // TODO should we move observer registrations?
+    PhysicsModel(PhysicsModel&&) noexcept = default;
+    PhysicsModel& operator=(PhysicsModel&&) noexcept = default;
+
     // Updates a symbolic parameter value. The symbol must have been defined at model creation time
     void updateParameter(const char* symbol, double newValue);
     // Updates a symbolic parameter value. The symbol must have been defined at model creation time
@@ -84,14 +92,6 @@ public:
     void registerObserver(IModelObserver& observer);
     void unregisterObserver(IModelObserver& observer);
     size_t getNumObservers() const { return mObservers.size(); }
-
-    // Models cannot be copied, only moving ownership is allowed
-    PhysicsModel(const PhysicsModel&) = delete;
-    PhysicsModel& operator=(const PhysicsModel&) = delete;
-
-    // TODO should we move observer registrations?
-    PhysicsModel(PhysicsModel&&) noexcept = default;
-    PhysicsModel& operator=(PhysicsModel&&) noexcept = default;
 
 private:
 
