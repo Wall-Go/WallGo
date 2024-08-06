@@ -3,8 +3,15 @@ file(GLOB_RECURSE HEADERS "*.h" "*.inl")
 
 add_library(${WALLGO_LIB} ${SOURCES} ${HEADERS})
 
+# Python module always has shared linkage, so the main lib needs PIC too if building for Python
+if(BUILD_SHARED_LIBS OR BUILD_PYTHON_MODULE)
+    set(NEEDS_PIC ON)
+else()
+    set(NEEDS_PIC OFF)
+endif()
+
 set_target_properties(${WALLGO_LIB} PROPERTIES
-    POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
+    POSITION_INDEPENDENT_CODE ${NEEDS_PIC}
 )
 
 # Generate export defs (shared lib visibility macros) in the default header dir (easier to #include)

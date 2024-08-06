@@ -6,6 +6,7 @@
 
 import sys, os
 import subprocess
+from shutil import which
 
 if len(sys.argv) != 3:
     print("Usage: stubgen.py <module_search_path> <module name (base)>")
@@ -17,6 +18,12 @@ moduleName = sys.argv[2]
 # Set PYTHONPATH for the subprocess
 env = os.environ.copy()
 env['PYTHONPATH'] = searchDir
+
+stubgenCommand = "pybind11-stubgen"
+
+if which(stubgenCommand) is None:
+    print(f"Error: can't find program: {stubgenCommand}")
+    sys.exit(1)
 
 try:
     subprocess.run(['pybind11-stubgen', moduleName], check=True, env=env)

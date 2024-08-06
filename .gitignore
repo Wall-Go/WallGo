@@ -33,3 +33,4 @@ CMakeCache.txt
 *.pyd
 *.pyi
 *.pdb
+*.so
