@@ -291,7 +291,11 @@ class WallGoManager:
         """"""
         tmax = self.config.getfloat("Hydrodynamics", "tmax")
         tmin = self.config.getfloat("Hydrodynamics", "tmin")
-        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin)
+
+        rtol = self.config.getfloat("Hydrodynamics", "hydrodynamicsRelErrTol")
+        atol = self.config.getfloat("Hydrodynamics", "hydrodynamicsAbsErrTol")
+
+        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin, rtol, atol)
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""
@@ -449,7 +453,7 @@ class WallGoManager:
 
         """
         self.eom.includeOffEq = bIncludeOffEq
-        errTol = self.config.getfloat("EOM", "errTol")
+        errTol = self.config.getfloat("EquationOfMotion", "errTol")
 
         vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydrodynamics.slowestDeton())
         return self.eom.solveInterpolation(
