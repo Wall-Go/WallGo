@@ -6,6 +6,22 @@ namespace wallgo
 
 namespace utils
 {
+
+std::function<bool()> gExitSignalChecker = nullptr;
+
+
+bool receivedExitSignal()
+{
+    if (gExitSignalChecker && gExitSignalChecker())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 } // namespace utils
 
 

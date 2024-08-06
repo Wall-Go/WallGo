@@ -23,6 +23,12 @@ inline T clamp(T value, T lower, T upper)
 	return std::max(lower, std::min(value, upper));
 }
 
+/* Used to manually check for kill signals during long-running functions.
+Required for the Python module because CTRL-C does not automatically propagate to C++ from Python */
+extern std::function<bool()> gExitSignalChecker;
+
+bool receivedExitSignal();
+
 } // namespace utils
 
 //---- Generic wrappers for RNG routines (so that the user doesn't have to access the gslWrapper namespace)

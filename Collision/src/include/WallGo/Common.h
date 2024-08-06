@@ -6,13 +6,12 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 #include "EnvironmentMacros.h"
 
 namespace wallgo
 {
-
-extern bool gExitSignaled;
 
 // Namespace for numerical constants 
 namespace constants

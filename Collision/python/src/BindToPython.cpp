@@ -7,6 +7,7 @@
 #include <filesystem> // don't bind std::filesystem stuff directly, will wrap them in lambdas
 
 #include "WallGo/Common.h"
+#include "WallGo/Utils.h"
 #include "WallGo/ModelParameters.h"
 #include "WallGo/CollisionTensor.h"
 #include "WallGo/ParticleSpecies.h"
@@ -35,6 +36,20 @@ PYBIND11_MODULE(_WallGoCollision, m)
     wallgo::initializeRNG();
     // Let pybind11 handle cleanup timing, works better than std::atexit
     m.add_object("_cleanup", py::capsule(wallgo::cleanup));
+
+    // Check if exit signal was received from Python side
+    utils::gExitSignalChecker = []() -> bool
+        {
+            if (PyErr_CheckSignals() != 0)
+            {
+                throw py::error_already_set();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        };
 
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");

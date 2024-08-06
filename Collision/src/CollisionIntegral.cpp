@@ -236,13 +236,11 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                     }
                 }
 
-                /*
                 // Check if we received instructions to stop
-                if (!shouldContinueEvaluation())
+                if (utils::receivedExitSignal())
                 {
                     std::exit(20);
                 }
-                */
 
                 } // end j,k
         } // end m,n
