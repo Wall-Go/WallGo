@@ -350,14 +350,14 @@ class WallGoManager:
     def _initEOM(self) -> None:
         numberOfFields = self.model.fieldCount
 
-        errTol = self.config.getfloat("EOM", "errTol")
-        maxIterations = self.config.getint("EOM", "maxIterations")
-        pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
+        errTol = self.config.getfloat("EquationOfMotion", "errTol")
+        maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
         
-        wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
-                               self.config.getfloat("EOM", "wallThicknessUpperBound"))
-        wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
-                               self.config.getfloat("EOM", "wallOffsetUpperBound"))
+        wallThicknessBounds = (self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
+                               self.config.getfloat("EquationOfMotion", "wallThicknessUpperBound"))
+        wallOffsetBounds = (self.config.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
+                               self.config.getfloat("EquationOfMotion", "wallOffsetUpperBound"))
 
         self.eom = EOM(
             self.boltzmannSolver,
