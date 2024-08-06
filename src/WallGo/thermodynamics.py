@@ -446,10 +446,12 @@ class Thermodynamics:
         )
 
 
-class ThermodynamicsExtrapolate:
+class ThermodynamicsExtrapolate(Thermodynamics):
     """
     Thermodynamics functions corresponding to the potential, extrapolated with the
-    template model [LM15]_ outside of the allowed temperture range of the potential
+    template model [LM15]_ outside of the allowed temperture range of the potential.
+    ThermodynamicsExtrapolate inherits from Thermodynamics, in particular the functions
+    for the (derivative of the) energy density and enthalpy.
     """
 
     def __init__(
@@ -629,60 +631,6 @@ class ThermodynamicsExtrapolate:
 
         return float(self.thermodynamics.ddpHighT(temperature))
 
-    def eHighT(self, temperature: float) -> float:
-        r"""
-        Energy density in the high-temperature phase,
-        obtained via :math:`e(T) = T \frac{dp}{dT}-p`,
-        valid inside and outside of the allowed temeperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        eHighT : array-like (float)
-            Energy density in the high-temperature phase.
-        """
-        return temperature * self.dpHighT(temperature) - self.pHighT(temperature)
-
-    def deHighT(self, temperature: float) -> float:
-        r"""
-        Temperature derivative of the energy density in the high-temperature phase,
-        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,
-        valid inside and outside of the allowed temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        deHighT : array-like (float)
-            Temperature derivative of the energy density in the high-temperature phase.
-        """
-        return temperature * self.ddpHighT(temperature)
-
-    def wHighT(self, temperature: float) -> float:
-        r"""
-        Enthalpy density in the high-temperature phase, obtained via
-        :math:`w(T) = p(T)+e(T)`, valid inside and outside of the allowed
-        temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        wHighT : array-like (float)
-            Enthalpy density in the high-temperature phase.
-        """
-        return temperature * self.dpHighT(temperature)
-
     def csqHighT(self, temperature: float) -> float:
         r"""
         Sound speed squared in the high-temperature phase, obtained via
@@ -810,60 +758,6 @@ class ThermodynamicsExtrapolate:
             )
 
         return float(self.thermodynamics.ddpLowT(temperature))
-
-    def eLowT(self, temperature: float) -> float:
-        r"""
-        Energy density in the low-temperature phase, obtained via
-        :math:`e(T) = T \frac{dp}{dT}-p`, valid inside and outside 
-        the allowed temeperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        eLowT : array-like (float)
-            Energy density in the low-temperature phase.
-        """
-        return temperature * self.dpLowT(temperature) - self.pLowT(temperature)
-
-    def deLowT(self, temperature: float) -> float:
-        r"""
-        Temperature derivative of the energy density in the low-temperature phase,
-        obtained via :math:`\frac{ d e(T)}{dT} = T \frac{d^2p}{dT^2}`,
-        valid inside and outside of the allowed temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        deLowT : array-like (float)
-            Temperature derivative of the energy density in the low-temperature phase.
-        """
-        return temperature * self.ddpLowT(temperature)
-
-    def wLowT(self, temperature: float) -> float:
-        r"""
-        Enthalpy density in the low-temperature phase, obtained via
-        :math:`w(T) = p(T)+e(T)`, valid inside and outside of the allowed
-        temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        wLowT : array-like (float)
-            Enthalpy density in the low-temperature phase.
-        """
-        return temperature * self.dpLowT(temperature)
 
     def csqLowT(self, temperature: float) -> float:
         r"""
