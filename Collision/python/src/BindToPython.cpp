@@ -23,7 +23,7 @@ namespace wallgo
 {
 
 // Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(PyCollision, m)
+PYBIND11_MODULE(_WallGoCollision, m)
 {
     namespace py = pybind11;
 

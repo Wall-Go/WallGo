@@ -1,5 +1,5 @@
 # What to call the python module. Needs to match the identifier used in PYBIND11_MODULE(...) in C++
-set(MODULE PyCollision)
+set(MODULE _WallGoCollision)
 
 # Find Python. The library produced by pybind11 is version dependent,
 # so we must to allow the user to specify their preferred Python version. 
