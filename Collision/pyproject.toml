@@ -5,7 +5,7 @@
 # Note that build artifacts will go wherever pip decides to put them .
 
 [build-system]
-requires = ["scikit-build-core-conan", "pybind11"]
+requires = ["scikit-build-core-conan>=0.3.1", "pybind11>=2.13.1", "mypy>=1.11.1"]
 build-backend = "scikit_build_core_conan.build"
 
 [project]
@@ -13,6 +13,10 @@ name = "WallGoCollision"
 version = "0.1.0"
 description = "Python bindings for WallGo Collision module"
 license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+	"mypy>=1.11.1"
+]
 
 [tool.scikit-build-core]
 cmake.verbose = true
@@ -20,14 +24,12 @@ cmake.verbose = true
 cmake.build-type = "Release"
 # Run cmake before building wheel
 wheel.cmake = true
-build-dir = "build_scikit" # not picked up when pip installing with -e for some reason, need to pass -Cbuild-dir=... on command line
 editable.mode = "redirect"
 #editable.mode = "inplace"
 
 # Editable installs come with a bunch of issues, see https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs
 # In particular, pip tends to delete the build dir after installation, so we lose the Conan toolchain file etc.
 # The docs recommend to preinstall dependencies when doing editable installs
-
 
 [tool.scikit-build-core-conan]
 build = "missing"

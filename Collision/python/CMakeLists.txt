@@ -1,5 +1,5 @@
 # What to call the python module. Needs to match the identifier used in PYBIND11_MODULE(...) in C++
-set(MODULE _WallGoCollision)
+set(MODULE PyCollision)
 
 # Find Python. The library produced by pybind11 is version dependent,
 # so we must to allow the user to specify their preferred Python version. 
@@ -40,17 +40,19 @@ target_include_directories(${MODULE} PRIVATE
 set(PACKAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/package/WallGoCollision")
 
 add_custom_command(TARGET ${MODULE} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULE}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULE}>"
 	COMMENT "Copying module for packaging"
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULE}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULE}>"
 )
 
-# Generate .pyi stubs. The helper script needs exact directory of the built module; use generator expression to find this (works because this is POST_BUILD)
+# Generate .pyi stubs. "stubgen" command is from mypy.
+# TODO for scikit builds run this always since mypy is a build requirement. For non-scikit, run it only if stubgen command is found
 add_custom_command(TARGET ${MODULE} POST_BUILD
-	COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/stubgen.py" "$<TARGET_FILE_DIR:${MODULE}>" "${MODULE}"
+	COMMENT "Generating Python stubs for WallGoCollision"
+	COMMAND stubgen --include-docstrings -o stubs -m ${MODULE}
+	#COMMAND PYTHONPATH="$<TARGET_FILE_DIR:${MODULE}>" ${Python3_EXECUTABLE} -m pybind11_stubgen ${MODULE}
 	# move the generated .pyi stub to same directory as our module:
 	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULE}>/stubs/${MODULE}.pyi" "${PACKAGE_DIR}/${MODULE}.pyi"
 	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULE}>"
-	COMMENT "Generating Python stubs for WallGoCollision"
 )
 
 # For scikit builds use default install dir so that pip correctly puts the module in site-packages

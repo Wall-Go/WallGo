@@ -29,7 +29,7 @@ endif()
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 # What to call the C++ library
-set(WALLGO_LIB libWallGoCollision CACHE STRING "Name of the WallGo Collision library")
+set(WALLGO_LIB WallGoCollision CACHE STRING "Name of the WallGo Collision library")
 
 # Installation directory
 set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
