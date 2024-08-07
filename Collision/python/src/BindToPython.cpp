@@ -41,15 +41,20 @@ PYBIND11_MODULE(_WallGoCollision, m)
     utils::gExitSignalChecker = []() -> bool
         {
             // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
-            if (PyErr_CheckSignals() != 0)
+            
+            /*if (PyErr_CheckSignals() != 0)
             {
-                throw py::error_already_set();
+                // Must throw to propagate KeyboardInterrupt
+                //throw py::error_already_set();
                 return true;
             }
             else
             {
                 return false;
             }
+            */
+            bool bShouldExit = static_cast<bool>(PyErr_CheckSignals());
+            return bShouldExit;
         };
 
     // Bind GSL seed setter

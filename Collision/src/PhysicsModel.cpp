@@ -67,12 +67,12 @@ void ModelDefinition::defineParameters(const ModelParameters& inParams)
 
 PhysicsModel::PhysicsModel(const ModelDefinition& modelDefinition)
 {
-    // This assumes that particle and parameter contents has been sanitized already (currently done by ModelDefinition itself)
+    // This assumes that particle and parameter contents has been validated already (currently done by ModelDefinition itself)
 
     mParameters = modelDefinition.mParameters;
     for (const ParticleDescription& particle : modelDefinition.mParticleDescriptions)
     {
-        mParticles.emplace(particle.index, std::make_unique<ParticleSpecies>(particle));
+        mParticles.emplace(particle.index, ParticleSpecies(particle));
         mParticleNameMap.insert({ particle.name, particle.index });
 
         if (!particle.bInEquilibrium)
@@ -80,8 +80,40 @@ PhysicsModel::PhysicsModel(const ModelDefinition& modelDefinition)
             mOffEqIndices.push_back(particle.index);
         }
     }
+}
 
-    updateParticleMassCache();
+PhysicsModel::~PhysicsModel()
+{
+    for (IModelObserver* observer : mObservers)
+    {
+        observer->handleModelDestruction();
+    }
+}
+
+PhysicsModel::PhysicsModel(const PhysicsModel& other)
+{
+    // Copy everything but the observer registrations
+    mObservers.clear();
+    
+    mParameters = other.mParameters;
+    mParticles = other.mParticles;
+    mParticleNameMap = other.mParticleNameMap;
+    mOffEqIndices = other.mOffEqIndices;
+    mMatrixElements = other.mMatrixElements;
+}
+PhysicsModel& PhysicsModel::operator=(const PhysicsModel& other)
+{
+    if (&other != this)
+    {
+        // Copy everything but the observer registrations
+
+        mParameters = other.mParameters;
+        mParticles = other.mParticles;
+        mParticleNameMap = other.mParticleNameMap;
+        mOffEqIndices = other.mOffEqIndices;
+        mMatrixElements = other.mMatrixElements;
+    }
+    return *this;
 }
 
 void PhysicsModel::updateParameter(const char* symbol, double value)
@@ -97,11 +129,11 @@ void PhysicsModel::updateParameter(const std::string& symbol, double value)
         return;
     }
     mParameters.addOrModifyParameter(symbol, value);
-
-    updateParticleMassCache();
     
     ModelChangeContext changeContext;
     changeContext.changedParams.addOrModifyParameter(symbol, value);
+    changeContext.changedParticles = computeParticleChanges();
+
     notifyModelChange(changeContext);
 }
 
@@ -116,10 +148,10 @@ void PhysicsModel::updateParameters(const ModelParameters& newValues)
         mParameters.addOrModifyParameter(symbol, value);
     }
 
-    updateParticleMassCache();
-
     ModelChangeContext changeContext;
     changeContext.changedParams = newValues;
+    changeContext.changedParticles = computeParticleChanges();
+
     notifyModelChange(changeContext);
 }
 
@@ -159,21 +191,12 @@ void PhysicsModel::unregisterObserver(IModelObserver& observer)
     }
 }
 
-void PhysicsModel::updateParticleMassCache()
-{
-    for (auto& [_, particle] : mParticles)
-    {
-        assert(particle);
-        particle->computeMassSquared(mParameters, false, true);
-    }
-}
-
 void PhysicsModel::printMatrixElements() const
 {
     for (const auto& [indexPair, elements] : mMatrixElements)
     {
-        std::string_view name1 = mParticles.at(indexPair.first)->getName();
-        std::string_view name2 = mParticles.at(indexPair.second)->getName();
+        std::string_view name1 = mParticles.at(indexPair.first).getName();
+        std::string_view name2 = mParticles.at(indexPair.second).getName();
 
         std::cout << "\n## (" << name1 << ", " << name2 << ") matrix elements ##\n\n";
 
@@ -183,13 +206,28 @@ void PhysicsModel::printMatrixElements() const
             std::cout << "[";
             for (uint32_t i = 0; i < indices.size(); ++i)
             {
-                std::cout << mParticles.at(indices[i])->getName();
+                std::cout << mParticles.at(indices[i]).getName();
                 if (i != indices.size() - 1) std::cout << ", ";
             }
 
             std::cout << "] : " << m.getExpression() << "\n";
         }
     }
+}
+
+std::vector<ParticleChangeContext> PhysicsModel::computeParticleChanges()
+{
+    std::vector<ParticleChangeContext> outContext;
+    outContext.reserve(mParticles.size());
+    for (auto& [index, particle] : mParticles)
+    {
+        ParticleChangeContext context;
+        context.particleIndex = index;
+        // Re-evaluate particle mass and let the particle cache it
+        context.newMassSq = particle.computeMassSquared(mParameters, false, true);
+        outContext.push_back(context);
+    }
+    return outContext;
 }
 
 void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
@@ -211,9 +249,9 @@ CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std:
             return CollisionTensor(this);
         }
 
-        if (mParticles.at(idx)->isInEquilibrium())
+        if (mParticles.at(idx).isInEquilibrium())
         {
-            std::cerr << "Attempted to create collision tensor for particle " << mParticles.at(idx)->getName()
+            std::cerr << "Attempted to create collision tensor for particle " << mParticles.at(idx).getName()
                 << " (index " << idx << "), but the particle is in equilibrium" << std::endl;
             return CollisionTensor(this);
         }
@@ -225,7 +263,7 @@ CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std:
     for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
     {
         IndexPair indexPair(idx1, idx2);
-        ParticleNamePair namePair(mParticles.at(idx1)->getName(), mParticles.at(idx2)->getName());
+        ParticleNamePair namePair(mParticles.at(idx1).getName(), mParticles.at(idx2).getName());
 
         outTensor.addCollisionIntegral(namePair, createCollisionIntegral4(basisSize, indexPair));
     }
@@ -243,8 +281,8 @@ CollisionIntegral4 PhysicsModel::createCollisionIntegral4(size_t basisSize, cons
     assert(bFound2 && "Off eq particle 2 not found");
 #endif
 
-    auto name1 = mParticles.at(offEqIndices.first)->getName();
-    auto name2 = mParticles.at(offEqIndices.second)->getName();
+    auto name1 = mParticles.at(offEqIndices.first).getName();
+    auto name2 = mParticles.at(offEqIndices.second).getName();
 
     CollisionIntegral4 outIntegral(basisSize, ParticleNamePair(name1, name2));
 
@@ -284,12 +322,13 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     }
     assert(bFoundAny && "Matrix element had no particle2");
 
-    std::array<const ParticleSpecies*, 4> externalParticles{ nullptr, nullptr, nullptr, nullptr };
+    // Copy ParticleSpecies objects to the CollisionElement
+    std::array<ParticleSpecies, 4> externalParticles;
 
     for (uint32_t i = 0; i < indices.size(); ++i)
     {
         const uint32_t particleIndex = indices[i];
-        externalParticles[i] = mParticles.at(particleIndex).get();
+        externalParticles[i] = mParticles.at(particleIndex);
     }
 
     return CollisionElement<4>(externalParticles, matrixElement, bDeltaF);

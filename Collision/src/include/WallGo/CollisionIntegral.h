@@ -15,6 +15,8 @@
 namespace wallgo
 {
 
+struct ModelChangeContext;
+
 /**** Comment about particle masses. Masses in the integrals appear in two places: 
  *  1) Inside dispersion relations, E^2 = p^2 + m^2
  *  2) Inside propagators in the matrix elements
@@ -167,9 +169,8 @@ public:
 
     void addCollisionElement(const CollisionElement<4>& elem);
 
-    /* Used to update parameters inside CollElems (and in their MatrixElements).
-    This does not define new parameters, so things work even if the input map is "too big". */
-    void updateModelParameters(const ModelParameters& changedParams);
+    /* Call to propagate changes in a PhysicsModel to our CollisionElements and MatrixElements inside them. */
+    void handleModelChange(const ModelChangeContext& changeContext);
 
     // How many integrals need to be computed with the current grid size
     size_t countIndependentIntegrals() const;

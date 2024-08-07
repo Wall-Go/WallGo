@@ -72,7 +72,6 @@ public:
     NB: does NOT perform sensibility checks on the input integral.*/
     void addCollisionIntegral(const ParticleNamePair& particleNames, const CollisionIntegral4& inIntegral);
 
-    // ---- Evaluating cached integrals
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
     CollisionResultsGrid computeIntegralsForPair(
@@ -122,6 +121,7 @@ public:
 
     // IModelObserver interface
     virtual void handleModelChange(const ModelChangeContext& context) override;
+    virtual void handleModelDestruction() override;
     // ~IModelObserverInterface
 
 private:

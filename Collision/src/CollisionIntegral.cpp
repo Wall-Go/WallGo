@@ -8,6 +8,7 @@
 #include "CollisionElement.h"
 #include "FourVector.h"
 #include "ThreeVector.h"
+#include "ModelChangeContext.h"
 
 #include "gslWrapper.h"
 
@@ -231,6 +232,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                         std::cout << "Integral progress: " << currentCount << "/" << totalIntegralCount << " (" << 100.0 * currentPercentage << "%)." 
                             << " Time: " << elapsedSeconds << "s, remaining " << secondsRemaining << "s.\n";
 
+                        // TODO replace on Windows, cannot be critical
                         WG_PRAGMA_OMP_ATOMIC_WRITE
                         progressCounter = 0;
                     }
@@ -307,16 +309,15 @@ void CollisionIntegral4::addCollisionElement(const CollisionElement<4> &elem)
     }
 }
 
-
-void CollisionIntegral4::updateModelParameters(const ModelParameters& changedParams)
+void CollisionIntegral4::handleModelChange(const ModelChangeContext& changeContext)
 {
     for (auto& collisionElement : collisionElements_nonUltrarelativistic)
     {
-        collisionElement.mMatrixElement.updateModelParameters(changedParams);
+        collisionElement.handleModelChange(changeContext);
     }
     for (auto& collisionElement : collisionElements_ultrarelativistic)
     {
-        collisionElement.mMatrixElement.updateModelParameters(changedParams);
+        collisionElement.handleModelChange(changeContext);
     }
 }
 
@@ -371,7 +372,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollisionE
     {
         /* NB: we always take the cached mass squared here because the mass shouldn't depend on kinematics (ie. is momentum independent).
         Must revisit this if we ever let the mass be grid-dependent, including position dependence. */
-        massSquared[i] =  CollisionElement.mExternalParticles[i]->isUltrarelativistic() ? 0.0 : CollisionElement.mExternalParticles[i]->getCachedMassSquared();
+        massSquared[i] =  CollisionElement.mExternalParticles[i].isUltrarelativistic() ? 0.0 : CollisionElement.mExternalParticles[i].getCachedMassSquared();
     }
 
     const double p1 = kinematicInput.p1;
@@ -485,7 +486,7 @@ double CollisionIntegral4::evaluateCollisionElement(CollisionElement<4> &Collisi
     std::array<double, 4> deltaF;
     for (int i = 0; i < 4; ++i)
     {
-        if (CollisionElement.mExternalParticles[i]->isInEquilibrium())
+        if (CollisionElement.mExternalParticles[i].isInEquilibrium())
         {
             deltaF[i] = 0.0;
         }

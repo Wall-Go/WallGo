@@ -215,13 +215,15 @@ size_t CollisionTensor::countIndependentIntegrals() const
 
 void CollisionTensor::handleModelChange(const ModelChangeContext& context)
 {
-    if (context.changedParams.size() > 0)
+    for (auto& [_, integral] : mCachedIntegrals)
     {
-        for (auto& [_, integral] : mCachedIntegrals)
-        {
-            integral.updateModelParameters(context.changedParams);
-        }
+        integral.handleModelChange(context);
     }
+}
+
+void CollisionTensor::handleModelDestruction()
+{
+    mObservingModel = nullptr;
 }
 
 } // namespace

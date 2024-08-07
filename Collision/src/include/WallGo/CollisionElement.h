@@ -12,6 +12,7 @@
 #include "ParticleSpecies.h"
 #include "MatrixElement.h"
 #include "ModelParameters.h"
+#include "ModelChangeContext.h"
 
 namespace wallgo
 {
@@ -27,7 +28,7 @@ public:
 	/* Constructor, will store a copy, not reference, of the matrix element.
 	The bDeltaF array specifies which delta_f terms are included when computing the statistical population factor. */
 	CollisionElement(
-		const std::array<const ParticleSpecies*, NPARTICLES>& externalParticles,
+		const std::array<ParticleSpecies, NPARTICLES>& externalParticles,
 		const MatrixElement& matrixElement,
 		const std::array<bool, NPARTICLES> bDeltaF);
 
@@ -40,7 +41,7 @@ public:
 		const std::array<FourVector, NPARTICLES>& momenta,
 		const std::array<double, NPARTICLES>& deltaF) const;
 
-	// Calculate |M|^2 
+	// Calculate |M|^2
 	double evaluateMatrixElement(const std::array<FourVector, NPARTICLES>& momenta);
 
 	// Calculate matrix element times population factor for this process 
@@ -50,12 +51,12 @@ public:
 
 	inline bool isUltrarelativistic() const { return bUltrarelativistic; }
 
+	void handleModelChange(const ModelChangeContext& changeContext);
 
 private:
 
-	/* External particles. Order matters as we associate particles[i] with momentum p[i] when evaluating the CollisionElement.
-	Note that we store raw pointers to particles: idea is that we obtain these from the model. */
-	std::array<const ParticleSpecies*, NPARTICLES> mExternalParticles;
+	/* External particles. Order matters as we associate particles[i] with momentum p[i] when evaluating the CollisionElement. */
+	std::array<ParticleSpecies, NPARTICLES> mExternalParticles;
 
 	// Parsed matrix element for this process
 	MatrixElement mMatrixElement;
@@ -73,7 +74,7 @@ private:
 
 template<size_t NPARTICLES>
 inline CollisionElement<NPARTICLES>::CollisionElement(
-	const std::array<const ParticleSpecies*, NPARTICLES>& externalParticles,
+	const std::array<ParticleSpecies, NPARTICLES>& externalParticles,
 	const MatrixElement& matrixElement,
 	const std::array<bool, NPARTICLES> bDeltaF)
 	: mExternalParticles(externalParticles),
@@ -81,11 +82,9 @@ inline CollisionElement<NPARTICLES>::CollisionElement(
 	mDeltaF(bDeltaF)
 {
 	bool bAllUltrarelativistic = true;
-	for (const ParticleSpecies* p : mExternalParticles)
+	for (const ParticleSpecies& p : mExternalParticles)
 	{
-		assert(p && "CollisionElement received nullptr particle");
-
-		if (!p->isUltrarelativistic())
+		if (!p.isUltrarelativistic())
 		{
 			bAllUltrarelativistic = false;
 			break;
@@ -107,10 +106,10 @@ inline Mandelstam CollisionElement<NPARTICLES>::calculateMandelstam(const FourVe
 template<size_t NPARTICLES>
 inline double CollisionElement<NPARTICLES>::evaluatePopulationFactor(const std::array<FourVector, NPARTICLES>& momenta, const std::array<double, NPARTICLES>& deltaF) const
 {
-	const double f1 = mExternalParticles[0]->fEq(momenta[0].energy());
-	const double f2 = mExternalParticles[1]->fEq(momenta[1].energy());
-	const double f3 = mExternalParticles[2]->fEq(momenta[2].energy());
-	const double f4 = mExternalParticles[3]->fEq(momenta[3].energy());
+	const double f1 = mExternalParticles[0].fEq(momenta[0].energy());
+	const double f2 = mExternalParticles[1].fEq(momenta[1].energy());
+	const double f3 = mExternalParticles[2].fEq(momenta[2].energy());
+	const double f4 = mExternalParticles[3].fEq(momenta[3].energy());
 
 	double res = static_cast<int>(mDeltaF[0]) * std::exp(momenta[1].energy()) * deltaF[0] / (f1 * f1)
 		+ static_cast<int>(mDeltaF[1]) * std::exp(momenta[0].energy()) * deltaF[1] / (f2 * f2)
@@ -132,6 +131,23 @@ template<size_t NPARTICLES>
 inline double CollisionElement<NPARTICLES>::evaluate(const std::array<FourVector, NPARTICLES>& momenta, const std::array<double, NPARTICLES>& deltaF)
 {
 	return evaluateMatrixElement(momenta) * evaluatePopulationFactor(momenta, deltaF);
+}
+
+template<size_t NPARTICLES>
+inline void CollisionElement<NPARTICLES>::handleModelChange(const ModelChangeContext& changeContext)
+{
+	mMatrixElement.updateModelParameters(changeContext.changedParams);
+
+	for (const ParticleChangeContext& changedParticle : changeContext.changedParticles)
+	{
+		for (ParticleSpecies& externalParticle : mExternalParticles)
+		{
+			if (externalParticle.getIndex() == changedParticle.particleIndex)
+			{
+				externalParticle.cacheMassSquared(changedParticle.newMassSq);
+			}
+		}
+	}
 }
 
 

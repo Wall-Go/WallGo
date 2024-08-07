@@ -12,14 +12,14 @@
 #include "ModelParameters.h"
 #include "ParticleSpecies.h"
 #include "CollisionTensor.h"
+#include "ModelChangeContext.h"
 
 namespace wallgo
 {
 
-struct ModelChangeContext;
 class IModelObserver;
 
-/* Helper class for specifying model contents.This is separate from the actual PhysicsModel class because we don't want to allow model structure to change after creation */
+/* Helper class for specifying model contents. This is separate from the actual PhysicsModel class because we don't want to allow model structure to change after creation */
 class ModelDefinition
 {
 public:
@@ -55,13 +55,20 @@ public:
     // Construct a new PhysicsModel
     PhysicsModel(const ModelDefinition& modelDefinition);
 
-    // Models cannot be copied, only moving ownership is allowed
-    PhysicsModel(const PhysicsModel&) = delete;
-    PhysicsModel& operator=(const PhysicsModel&) = delete;
+    /* Rule of Three stuff to notify observers on model destruction.
+    Note that ideally we'd avoid these by requiring that models are kept alive for longer than observers,
+    but this can be hard especially in the Python module if we let Python GC take ownership of our objects. */
+    
+    ~PhysicsModel();
+    // Copying a model will NOT make observers listen to the copied model
+    PhysicsModel(const PhysicsModel& other);
+    PhysicsModel& operator=(const PhysicsModel& other);
 
+    /*
     // TODO should we move observer registrations?
     PhysicsModel(PhysicsModel&&) noexcept = default;
     PhysicsModel& operator=(PhysicsModel&&) noexcept = default;
+    */
 
     // Updates a symbolic parameter value. The symbol must have been defined at model creation time
     void updateParameter(const char* symbol, double newValue);
@@ -97,9 +104,8 @@ private:
 
     ModelParameters mParameters;
     
-    /* Use custom indices for particle lookup. unique_ptr because the model owns particles,
-    and we will pass particle references around to collision elements as raw pointers. */
-    std::unordered_map<uint32_t, std::unique_ptr<ParticleSpecies>> mParticles;
+    /* Use custom indices for particle lookup. Will send copies of ParticleSpecies objects to collision elements. */
+    std::unordered_map<uint32_t, ParticleSpecies> mParticles;
 
     ParticleNameMap mParticleNameMap;
     // Indices of out-of-equilibrium particles
@@ -108,8 +114,12 @@ private:
     // Cached matrix elements. This is std::map instead of std::unordered_map because we haven't defined a hash for IndexPair
     std::map<IndexPair, std::vector<MatrixElement>> mMatrixElements;
 
-    // Must be called after changing mParameters to propagate changes to cached particle masses
-    void updateParticleMassCache();
+    /* Called after changing mParameters to figure out how particle properties change. Currently: 
+        1) The only property that can change is the cached mass
+        2) We do the calculation for all particles even if some of them remain unchanged.
+        This is because we don't have logic in place to figure out which particles depend on which params.
+    */
+    std::vector<ParticleChangeContext> computeParticleChanges();
 
     std::vector<IModelObserver*> mObservers;
     void notifyModelChange(const ModelChangeContext& context) const;

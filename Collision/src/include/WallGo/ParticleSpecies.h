@@ -41,13 +41,18 @@ struct ParticleDescription
 };
 
 
+/** FIXME Some redundancy here since ParticleSpecies is not very different from ParticleDescription.
+The most important difference is that this can cache the mass for performance,
+but if we ever generalize to grid-dependent mass then that responsibility should probably be relegated to the CollisionIntegral class.
+*/
 class ParticleSpecies
 {
 public:
 
 	ParticleSpecies() {}
 	ParticleSpecies(const ParticleDescription& description)
-		: mDescription(description) {}
+		: mDescription(description)
+	{}
 
 	// Computes particle mass squared
 	double computeMassSquared(const ModelParameters& params) const
@@ -63,21 +68,25 @@ public:
 		bool bCanUseCachedValue,
 		bool bShouldCache)
 	{
-		if (bCanUseCachedValue) return mCachedMass;
+		if (bCanUseCachedValue) return mCachedMassSq;
 
 		double res = computeMassSquared(params);
-		mCachedMass = bShouldCache ? res : mCachedMass;
+		mCachedMassSq = bShouldCache ? res : mCachedMassSq;
 		
 		return res;
 	}
 
-	inline double getCachedMassSquared() const { return mCachedMass; }
+	inline double getCachedMassSquared() const { return mCachedMassSq; }
+
+	// Set cached mass directly without invoking the mass function
+	inline void cacheMassSquared(double newMassSq) { mCachedMassSq = newMassSq; }
 
 	ParticleDescription getDescription() const { return mDescription; }
 	inline bool isUltrarelativistic() const { return mDescription.bUltrarelativistic; }
 	inline bool isInEquilibrium() const { return mDescription.bInEquilibrium; }
 	inline std::string_view getName() const { return mDescription.name; }
 	inline EParticleType getStatistics() const { return mDescription.type; }
+	inline uint32_t getIndex() const { return mDescription.index; }
 
 	// Equilibrium distribution function for the particle species
 	double fEq(double energy) const
@@ -99,7 +108,7 @@ private:
 	ParticleDescription mDescription;
 
 	// Cache the mass to avoid unnecessary re-evaluations of the mass function
-	double mCachedMass = 0.0;
+	double mCachedMassSq = 0.0;
 };
 
 } // namespace

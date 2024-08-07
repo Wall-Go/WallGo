@@ -9,6 +9,9 @@
 namespace wallgo
 {
 
+/* NOTE: in the future we could extend TModelParameters to allow for grid-dependent parameters.
+These could be std::functions, or just arrays of doubles that the user must manually compute elsewhere.
+A function is probably better because then CollisionIntegrals can handle computations on their own grids. */
 
 /* Holds physics model specific parameters that enter matrix elements.
 Wraps around std::unordered_map. */
