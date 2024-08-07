@@ -40,6 +40,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
     // Check if exit signal was received from Python side
     utils::gExitSignalChecker = []() -> bool
         {
+            // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
             if (PyErr_CheckSignals() != 0)
             {
                 throw py::error_already_set();
