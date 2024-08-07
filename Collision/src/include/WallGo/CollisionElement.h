@@ -20,7 +20,7 @@ namespace wallgo
 /* Describes collision process of N external particles; one term in a collision integral.
 Contains a matrix element and info about statistics of the colliding particles. */
 template <size_t NPARTICLES>
-class WALLGO_API CollisionElement
+class CollisionElement
 {
 
 public:

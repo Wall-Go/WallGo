@@ -29,7 +29,7 @@ public:
 		for (uint32_t i = 0; i < NCOMPONENTS; ++i) comp[i] = 0.0;
 	}
 
-	FourVector(double x0, double x1, double x2, double x3)
+    FourVector(double x0, double x1, double x2, double x3)
     {
 		comp[0] = x0;
 		comp[1] = x1;
@@ -38,7 +38,7 @@ public:
 	}
 
 	// Constructor from length-4 std::array
-	FourVector(const std::array<double, 4> &arr)
+    FourVector(const std::array<double, 4> &arr)
     {
 		comp = arr;
 	}

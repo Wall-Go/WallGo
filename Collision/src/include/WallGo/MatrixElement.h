@@ -33,7 +33,7 @@ Calling initSymbols(parameters) defines a symbol for each string key in the 'par
 for setting numerical values for these symbols. Note that it is currently NOT possible to define a symbol without specifying also an initial value.
 Here 'parameters' refers to model-dependent variables like couplings, masses etc.
 */
-class WALLGO_API MatrixElement
+class MatrixElement
 {
 
 public:

@@ -40,7 +40,7 @@ class PhysicsModel;
 
 
 /**/
-class WALLGO_API CollisionTensor : public IModelObserver
+class CollisionTensor : public IModelObserver
 {
 
 public:

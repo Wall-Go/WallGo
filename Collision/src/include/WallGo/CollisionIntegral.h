@@ -100,7 +100,7 @@ struct WALLGO_API IntegrationOptions
 };
 
 
-struct CollisionTensorVerbosity
+struct WALLGO_API CollisionTensorVerbosity
 {
     /* Print progress report and time estimate to stdout when this percantage of grid integrals have been computed.
     Should be in range [0, 1]. Value of 0 means no reporting and values >= 1 mean we only report at end.
@@ -122,13 +122,13 @@ Assumes a 5D integral of form:
     int_0^infty p2^2/E2 dp2 p3^2/E3 dp3 int_0^(2pi) dphi2 dphi3 int_-1^1 dcosTheta2 dcosTheta3 Theta(E4) delta(P4^2 - m4^2) sum(|M|^2 P[ij -> mn])
 ie. the 9D -> 5D reduction has been done analytically and this class calculates the rest.
 */
-class WALLGO_API CollisionIntegral4 {
+class CollisionIntegral4 {
 
 public:
 
     /* Struct to carry info about parameters other than the 5 integration variables. 
     * Good for optimization (precalculate p1 etc) + thread safety (since each thread can have its own copy of this struct) */
-    struct IntegrandParameters {
+    struct WALLGO_API IntegrandParameters {
         // Basis polynomial indices (Tbar_m, Ttilde_n)
         int m, n;
         double rhoZ1, rhoPar1;

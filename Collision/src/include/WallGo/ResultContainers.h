@@ -39,7 +39,7 @@ struct CollisionMetadata
 Range of indices is: [2, N] for m, [1, N-1] for njk.
 Attempting to access grid points with invalid indices results in failed assert (Debug builds)
 or a crash (Release builds). */
-class WALLGO_API CollisionResultsGrid
+class CollisionResultsGrid
 {
 public:
 
@@ -86,7 +86,7 @@ private:
     bool validateGridPoint(const GridPoint& gridPoint) const;
 };
 
-struct WALLGO_API CollisionTensorResult
+struct CollisionTensorResult
 {
 public:
 
