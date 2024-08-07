@@ -153,9 +153,11 @@ class SingletSM_Z2(GenericModel):
         modelParameters = {}
 
         v0 = inputParameters["v0"]
+        modelParameters["v0"] = v0
         # Scalar eigenvalues
         mh1 = inputParameters["mh1"] # 125 GeV
         mh2 = inputParameters["mh2"]
+        modelParameters["mh"] = mh1
 
         ## these are direct inputs:
         modelParameters["RGScale"] = inputParameters["RGScale"]
