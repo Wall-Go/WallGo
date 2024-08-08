@@ -29,6 +29,13 @@ bool ModelDefinition::defineParticleSpecies(const ParticleDescription& descripti
         }
     }
 
+    if (!description.bUltrarelativistic && !description.massSqFunction)
+    {
+        std::cerr << "Particle definition error: no mass function given for particle '" << description.name
+            << "'. All non-ultrarelativistic particles must define a mass function that returns mass-squared in units of the temperature (m^2/T^2)." << std::endl;
+        return false;
+    }
+
     mParticleDescriptions.push_back(description);
     return true;
 }
@@ -72,7 +79,7 @@ PhysicsModel::PhysicsModel(const ModelDefinition& modelDefinition)
     mParameters = modelDefinition.mParameters;
     for (const ParticleDescription& particle : modelDefinition.mParticleDescriptions)
     {
-        mParticles.emplace(particle.index, ParticleSpecies(particle));
+        mParticles.insert({ particle.index, ParticleSpecies(particle) });
         mParticleNameMap.insert({ particle.name, particle.index });
 
         if (!particle.bInEquilibrium)

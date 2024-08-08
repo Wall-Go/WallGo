@@ -1,7 +1,3 @@
-
-/** This file defines a simple interface for calling collision 
- * integral routines from Python using the pybind11 library. **/
-
 #include <iostream>
 #include <string>
 #include <filesystem> // don't bind std::filesystem stuff directly, will wrap them in lambdas
@@ -14,13 +10,33 @@
 #include "WallGo/PhysicsModel.h"
 #include "WallGo/ResultContainers.h"
 
-// Python bindings
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
 namespace wallgo
 {
+
+/** NOTE. When working with Python bindings we must pay special care to Python's Global Interpreter Lock (GIL)
+because the collision integration routines are multithreaded. Reference: https://pybind11.readthedocs.io/en/stable/advanced/misc.html#global-interpreter-lock-gil. 
+
+In our case we have a GIL problem in CollisionIntegral4::evaluateOnGrid, because:
+    - Evaluation of a MatrixElement is not thread safe because it needs to set internal parameters in order to evaluate the parsed matrix element
+    - evaluateOnGrid() has to take a thread-local copy of the CollisionIntegral4 object (itself) to ensure that each thread has its own MatrixElements to operate with
+    - The copy process must hold GIL if CollisionIntegral4 contains any Python state, and pybind11 ensures this by default (it never implicitly releases GIL).
+    This is because copying a Python object increases its internal reference count.
+    - If evaluateOnGrid() holds GIL while trying to take thread-local copies in an OMP parallel region, only the main thread can do work while others hang.
+
+In our case CollisionIntegral4 DOES contain Python state because it contains ParticleSpecies, which in turn contains std::function (the mass function) that we've bound to Python.
+So taking thread-local copies while holding GIL is not possible.
+Currently it's just std::functions that are problematic, all other Python-bound data that we use is immutable (ints, floats etc)
+and is converted to pure C++ instead of having to keep Python state present.
+
+The present workaround is to do a scoped release of GIL in any Python-bound function that calls CollisionIntegral4::evaluateOnGrid, see eg. the binding of computeIntegralsAll.
+An earlier solution was to make CollisionElements store raw pointers to ParticleSpecies instead of copies; This also avoids the copy problem since copying a pointer can be done without
+increasing reference count on Python side.
+*/
+
 
 // Module definition. This block gets executed when the module is imported.
 PYBIND11_MODULE(_WallGoCollision, m)
@@ -37,22 +53,13 @@ PYBIND11_MODULE(_WallGoCollision, m)
     // Let pybind11 handle cleanup timing, works better than std::atexit
     m.add_object("_cleanup", py::capsule(wallgo::cleanup));
 
-    // Check if exit signal was received from Python side
+    /* Check if exit signal was received from Python side.
+    Here we avoid throwing and just check the flag and return bool based on it.
+    See https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions. */
     utils::gExitSignalChecker = []() -> bool
         {
-            // https://pybind11.readthedocs.io/en/stable/faq.html#how-can-i-properly-handle-ctrl-c-in-long-running-functions
-            
-            /*if (PyErr_CheckSignals() != 0)
-            {
-                // Must throw to propagate KeyboardInterrupt
-                //throw py::error_already_set();
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-            */
+            // Hacky, ensure we have GIL before accessing Python state. Necessary because we do signal checks from long-running parallelized functions during which GIL is released
+            py::gil_scoped_acquire acquire;   
             bool bShouldExit = static_cast<bool>(PyErr_CheckSignals());
             return bShouldExit;
         };
@@ -149,6 +156,10 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def("countIndependentIntegrals", &CollisionTensor::countIndependentIntegrals, "Count how many independent collision integrals we have")
         .def("computeIntegralsAll",
             static_cast<CollisionTensorResult(CollisionTensor::*)()>(&CollisionTensor::computeIntegralsAll),
+            /* GIL released for the duration of this function to avoid it mess with multithreading.
+            FIXME How safe is this actually? Currently we do not do any thread-unsafe changes to Python state so it at least works.
+            */ 
+            py::call_guard<py::gil_scoped_release>(),
             R"(Calculates all collision integrals associated with this tensor.)"
         );
 
@@ -191,13 +202,14 @@ PYBIND11_MODULE(_WallGoCollision, m)
                The output should be in units of the temperature, ie. return value is (m/T)^2.)"
         );
 
+    
     py::class_<ModelDefinition>(m,
             "ModelDefinition",
             R"(Helper class for defining a WallGoCollision.PhysicsModel. Fill in your model parameters and particle content here.)"
         )
         .def(py::init<>())
         .def("defineParticleSpecies", &ModelDefinition::defineParticleSpecies, "Registers a new ParticleDescription with the model")
-        // Bind the right overload, see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
+        // Bind the right overload by explicitly casting to specific signature, see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
         .def("defineParameter", static_cast<void(ModelDefinition::*)(const std::string&, double)>(&ModelDefinition::defineParameter), "Defines a new symbolic parameter and its initial value")
         .def("defineParameters", &ModelDefinition::defineParameters, "Defines new symbolic parameters and their initial values");
 
@@ -205,7 +217,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def(py::init<const ModelDefinition&>())
         .def("updateParameter", static_cast<void(PhysicsModel::*)(const std::string&, double)>(&PhysicsModel::updateParameter), "Updates a symbolic parameter value.The symbol must have been defined at model creation time")
         .def("updateParameters", &PhysicsModel::updateParameters, "Updates model parameter values. The parameters must have been defined at model creation time")
-        // Bind lambda that takes std::string instead of std::filesystem::path
+        // Bind lambda wrapper that takes std::string instead of std::filesystem::path
         .def("readMatrixElements",
             [](PhysicsModel& self, const std::string& filePath, bool bPrintMatrixElements)
             {

@@ -144,14 +144,15 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     // Note symmetry: C[Tm(-rho_z), Tn(rho_par)] = (-1)^m C[Tm(rho_z), Tn(rho_par)]
     // which means we only need j <= N/2
 
-    // Each thread needs its collisionIntegral because evaluation of parsed matrix elements is not thread safe!
-    // Take manual copy inside the parallel region because using private(...) on a reference type is not supported by older OMP implementations
-
-    CollisionIntegral4 workIntegral(getPolynomialBasisSize(), mParticlePair);
-
-    #pragma omp parallel private(workIntegral)
+    #pragma omp parallel
     {
-        workIntegral = *this;
+        /* Each thread needs its collisionIntegral because evaluation of parsed matrix elements is not thread safe!
+        Take thread-local copy inside the parallel region. Note that when using Python bindings this can lead to complications with the GIL:
+        if anything in CollisionIntegral4 depends on Python state (eg. std::function callbacks obtained from Python),
+        invoking copy operator means Python needs to update its reference count which in turn requires GIL to be held and prevents multithreading.
+        Currently we avoid this by releasing GIL in Python-wrapped functions that call this function.
+        See PythonBindings.cpp for more details. */
+        CollisionIntegral4 workIntegral = *this;
 
         int threadID = 0;
     #if WITH_OMP
@@ -239,7 +240,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                 }
 
                 // Check if we received instructions to stop
-                if (utils::receivedExitSignal())
+                if (threadID == 0 && utils::receivedExitSignal())
                 {
                     std::exit(20);
                 }
