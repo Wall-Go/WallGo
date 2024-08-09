@@ -247,6 +247,11 @@ class WallGoManager:
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
+            
+        # Raise an error if this is an inverse PT (if epsilon is negative)
+        if hydrodynamicsTemplate.epsilon < 0:
+            raise WallGoError(
+                "WallGo cannot treat inverse PTs. epsilon must be positive.")
 
         _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ

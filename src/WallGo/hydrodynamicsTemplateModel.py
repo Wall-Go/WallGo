@@ -91,6 +91,7 @@ class HydrodynamicsTemplateModel:
         self.mu = 1 + 1 / self.cs2
         self.vJ = self.findJouguetVelocity()
         self.vMin = self.minVelocity()
+        self.epsilon = self.wN*(1/self.mu-(1-3*self.alN)/self.nu)
 
     def findJouguetVelocity(self, alN: float | None = None) -> float:
         r"""
@@ -201,7 +202,8 @@ class HydrodynamicsTemplateModel:
 
         """
         # Add 1e-100 to avoid having something like 0/0
-        return (abs((1 - 3 * self.alN) * self.mu - self.nu) + 1e-100) / (
+        sign = np.sign((1-3*self.alN)*self.mu-self.nu)*np.sign((1-3*al)*self.mu-self.nu)
+        return sign*(abs((1 - 3 * self.alN) * self.mu - self.nu) + 1e-100) / (
             abs((1 - 3 * al) * self.mu - self.nu) + 1e-100
         )
 
@@ -449,11 +451,26 @@ class HydrodynamicsTemplateModel:
         vpMax = min(
             self.cs2 / vw, vw
         )  # Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187
+        vpMin = 0
+
+        # Change vpMin or vpMax in case wp is negative between vpMin and vpMax
+        sqrtDisc = (self.mu+vm**2*self.mu*(self.nu-1))**2-4*vm**2*self.nu**2*(self.mu-1)
+        if sqrtDisc >= 0:
+            # vp at which wp changes sign
+            vpSignChangeWp = (self.mu*(1-vm**2*(1-self.nu))-np.sqrt(sqrtDisc))/(
+                2*vm*self.nu*(self.mu-1))
+            if not np.isnan(vpSignChangeWp):
+                if vpMin < vpSignChangeWp < vpMax:
+                    if self._shooting(vw, vpSignChangeWp+1e-10)*self._shooting(
+                            vw, vpMax) <= 0:
+                        vpMin = vpSignChangeWp+1e-10
+                    else:
+                        vpMax = vpSignChangeWp-1e-10
 
         try:
             sol = root_scalar(
                 lambda vp: self._shooting(vw, vp),
-                bracket=(0, vpMax),
+                bracket=(vpMin, vpMax),
                 rtol=self.rtol,
                 xtol=self.atol,
             )

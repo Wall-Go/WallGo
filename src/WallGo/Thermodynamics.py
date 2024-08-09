@@ -148,7 +148,8 @@ class Thermodynamics:
                 break
 
         if (not bConverged):
-            raise WallGoError("Could not find critical temperature")
+            raise WallGoError("""Could not find critical temperature.
+                              Try changing the temperature scale.""")
 
         # Improve Tc estimate by solving DeltaF = 0 in narrow range near T
         # NB: bracket will break if the function has same sign on both ends.
