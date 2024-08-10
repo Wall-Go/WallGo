@@ -278,20 +278,6 @@ class WallGoManager:
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 
-        # Find critical temperature for dT
-        self.Tc = self.thermodynamics.findCriticalTemperature(
-            dT=dT,
-            rTol=phaseTracerTol,
-        )
-
-        if self.Tc < Tn:
-            raise WallGoPhaseValidationError(
-                f"Got Tc < Tn, should not happen!",
-                Tn,
-                {"Tc": self.Tc},
-            )
-        print(f"Found Tc = {self.Tc} GeV.")
-
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """"""
         tmax = self.config.getfloat("Hydrodynamics", "tmax")

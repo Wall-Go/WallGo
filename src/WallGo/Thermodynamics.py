@@ -137,19 +137,19 @@ class Thermodynamics:
         # start from TMax and decrease temperature in small steps until
         # the free energy difference changes sign
         T = TMax
-        TStep = (TMax - TMin) / 10
+        TStep = dT #(TMax - TMin) / 10
         signAtStart = np.sign(freeEnergyDifference(T))
         bConverged = False
 
-        while (T > TMin):
+        while (T-TStep > TMin):
             T -= TStep
             if (np.sign(freeEnergyDifference(T)) != signAtStart):
                 bConverged = True
                 break
 
         if (not bConverged):
-            raise WallGoError("""Could not find critical temperature.
-                              Try changing the temperature scale.""")
+            raise WallGoError("Could not find critical temperature. "\
+                              "Try changing the temperature scale.")
 
         # Improve Tc estimate by solving DeltaF = 0 in narrow range near T
         # NB: bracket will break if the function has same sign on both ends.

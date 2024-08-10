@@ -452,7 +452,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         A = msq + 0.5*a2*x**2 + 3.*v**2*lam
         B = b2 + 0.5*a2*v**2 + 3.*b4*x**2
         C = a2 *v*x 
-        thingUnderSqrt = A**2 + B**2 - 2.*A*B + 4.*C**2
+        thingUnderSqrt = (A-B)**2 + 4.*C**2
 
         msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
         msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
