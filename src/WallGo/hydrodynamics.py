@@ -122,7 +122,7 @@ class Hydrodynamics:
         # We make a guess for Tmax, and if it does not work we use the secant method
 
         Tmin = self.Tnucl
-        Tmax = 2 * self.Tnucl  # HACK (factor 2 is some arbitrary number larger than 1)
+        Tmax = max(2*Tmin, self.TMaxLowT)
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
@@ -150,6 +150,7 @@ class Hydrodynamics:
         if rootResult.converged:
             tmSol = rootResult.root
         else:
+            print(Tmin,Tmax)
             raise WallGoError(
                 "Failed to solve Jouguet velocity at \
                               input temperature!",
@@ -395,8 +396,12 @@ class Hydrodynamics:
         # sure it satisfies all the relevant bounds.
         try:
             if vw > self.template.vMin:
+                vwTemplate = min(vw, self.template.vJ-1e-6)
+                vpTemplate = vp
+                if vp is not None:
+                    vpTemplate = min(vp, vwTemplate)
                 Tpm0 = self.template.matchDeflagOrHybInitial(
-                    min(vw, self.template.vJ), vp
+                    vwTemplate, vpTemplate
                 )
             else:
                 Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]

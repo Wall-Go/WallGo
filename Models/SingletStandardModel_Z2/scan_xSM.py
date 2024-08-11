@@ -53,7 +53,9 @@ def findWallVelocity(i, verbose=False):
         #     sys.stdout = open(os.devnull, 'w')
         
         trap = io.StringIO()
-        with redirect_stdout(sys.__stdout__):
+        if verbose:
+            trap = sys.__stdout__
+        with redirect_stdout(trap):
             if not WallGo._bInitialized:
                 WallGo.initialize()
                 
@@ -85,7 +87,7 @@ def findWallVelocity(i, verbose=False):
                 # The following 2 parameters are used to estimate the optimal value of dT used 
             # for the finite difference derivatives of the potential.
             # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-            temperatureScale = (modelsBenoit[i]['Tc'] - Tn)
+            temperatureScale = min(Tn/20, modelsBenoit[i]['Tc'] - Tn)
             # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
             # Can either be a single float, in which case all the fields have the same scale, or an array.
             fieldScale = [abs(modelsBenoit[i]['vn'])/10, abs(modelsBenoit[i]['wn'])/10]
@@ -198,7 +200,8 @@ def findWallVelocity(i, verbose=False):
             
             return i, wallVelocity, vwLTE, 'success'
     except Exception as e:
-        # raise e
+        if verbose:
+            raise e
         return i, -1, -1, e
 
 def scanXSM(start=0, end=None):
