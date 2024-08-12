@@ -83,6 +83,11 @@ class Thermodynamics:
         self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
 
+
+        print(f"{self.TMaxHighT =} {self.TMinHighT =} {self.TMaxLowT =} {self.TMinLowT =}")
+
+        print(f"{self.csqHighT(self.TMinHighT+ 1e-6)=}")
+        print(f"{self.csqHighT(self.Tnucl)=}")
         # The following parameters are defined such that the thermodynamic quantities
         # can be extrapolated beyond the minimum and maximum temperatures
         # by mapping onto the template model
@@ -126,6 +131,8 @@ class Thermodynamics:
         self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
             self.TMaxLowT, self.muMaxLowT
         ) - self.pLowT(self.TMaxLowT)
+
+        print(f"{self.aMaxLowT = } {self.muMinHighT=}")
 
 
 
@@ -591,6 +598,9 @@ class ThermodynamicsExtrapolate(Thermodynamics):
         self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
             self.TMaxLowT, self.muMaxLowT
         ) - thermodynamics.pLowT(self.TMaxLowT)
+
+        print(f"{self.TMaxHighT =} {self.TMinHighT =} {self.TMaxLowT =} {self.TMinLowT =}")
+        print(f"{self.csqHighT(self.TMinHighT+ 1e-6)=}")
 
     def pHighT(self, temperature: float) -> float:
         r"""
