@@ -25,6 +25,7 @@ class Thermodynamics:
         nucleationTemperature: float,
         phaseLowT: Fields,
         phaseHighT: Fields,
+        extrapolate: bool = True,
     ):
         """Initialisation
 
@@ -42,16 +43,29 @@ class Thermodynamics:
             The location of the high temperature phase at the nucleation
             temperature. Does not need to be exact, as resolved internally
             with input as starting point.
+        extrapolate: Bool
+            Setting for handling temperatures outside of the range where
+            the phase exists. If True, the equation of state gets
+            extrapolated using the template model of [LM15]_ outside of
+            the allowed range.
+            
 
         Returns
         -------
         cls: Thermodynamics
             An object of the Thermodynamics class.
+
+        References
+        ----------
+        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
+            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
+            doi:10.1016/j.nuclphysb.2014.12.008
         """
         self.effectivePotential = effectivePotential
         self.Tnucl = nucleationTemperature
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
+        self.extrapolate = extrapolate
 
         self.freeEnergyHigh = FreeEnergy(
             self.effectivePotential,
@@ -63,6 +77,57 @@ class Thermodynamics:
             self.Tnucl,
             self.phaseLowT,
         )
+
+        self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
+
+        # The following parameters are defined such that the thermodynamic quantities
+        # can be extrapolated beyond the minimum and maximum temperatures
+        # by mapping onto the template model
+        self.muMinHighT = float(1 + 1 / self.csqHighT(self.TMinHighT))
+        self.aMinHighT = float(
+            (
+                3
+                * self.wHighT(self.TMinHighT)
+                / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
+            )
+        )
+        self.epsilonMinHighT = float(
+            1 / 3.0 * self.aMinHighT * pow(self.TMinHighT, self.muMinHighT)
+            - self.pHighT(self.TMinHighT)
+        )
+        self.muMaxHighT = 1 + 1 / float(self.csqHighT(self.TMaxHighT))
+        self.aMaxHighT = (
+            3
+            * self.wHighT(self.TMaxHighT)
+            / (self.muMaxHighT * pow(self.TMaxHighT, self.muMaxHighT))
+        )
+        self.epsilonMaxHighT = 1 / 3.0 * self.aMaxHighT * pow(
+            self.TMaxHighT, self.muMaxHighT
+        ) - self.pHighT(self.TMaxHighT)
+
+        self.muMinLowT = 1 + 1 / float(self.csqLowT(self.TMinLowT))
+        self.aMinLowT = (
+            3
+            * self.wLowT(self.TMinLowT)
+            / (self.muMinLowT * pow(self.TMinLowT, self.muMinLowT))
+        )
+        self.epsilonMinLowT = 1 / 3.0 * self.aMinLowT * pow(
+            self.TMinLowT, self.muMinLowT
+        ) - self.pLowT(self.TMinLowT)
+        self.muMaxLowT = 1 + 1 / float(self.csqLowT(self.TMaxLowT))
+        self.aMaxLowT = (
+            3
+            * self.wLowT(self.TMaxLowT)
+            / (self.muMaxLowT * pow(self.TMaxLowT, self.muMaxLowT))
+        )
+        self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
+            self.TMaxLowT, self.muMaxLowT
+        ) - self.pLowT(self.TMaxLowT)
+
+
 
     def _getCoexistenceRange(self) -> Tuple[float, float]:
         """
