@@ -6,6 +6,7 @@ import codecs  # for decoding unicode string from hdf5 file
 import copy  ## for deepcopy
 from pathlib import Path
 import tempfile
+import typing
 import numpy as np
 import h5py  # read/write hdf5 structured binary data file format
 
@@ -16,20 +17,20 @@ from .collisionWrapper import Collision
 
 
 class CollisionArray:
-    """
+    r"""
     Class used to load, transform, interpolate and hold the collision array
-    which is needed in Boltzmann. Internally the collision array is represented by a
-    Polynomial object. Specifically, this describes a rank-4 tensor
-    C[P_k(pZ_i) P_l(pPar_j)] where the p are momenta on grid.
-    Index ordering is hardcoded as: ijkl.
-    Right now we have one CollisionArray for each pair of off-eq particles
+    which is needed in :py:data:`WallGo.BoltzmannSolver`. Internally the collision array is represented by a
+    :py:data:`WallGo.Polynomial` object. Specifically, this describes a rank-4 tensor
+    :math:`C[P_k(p_{z}^{(i)}) P_l(p_{\parallel}^{(j)})]` where the :math:`p` are momenta on
+    the grid. Index ordering is hardcoded as: :math:`ijkl`.
+    Currently we have one CollisionArray object for each pair of off-equilibrium particles
     """
 
-    """Hardcode axis types and their meaning in correct ordering. 
-    Our order is ijklmn, as given in axisLabels.
-    """
-    axisTypes = ("Array", "pz", "pp", "Array", "pz", "pp")
-    axisLabels = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
+    AXIS_TYPES: typing.Final[tuple[str, ...]] = ("Array", "pz", "pp", "Array", "pz", "pp")
+    r"""Static axis types in correct order."""
+
+    AXIS_LABELS: typing.Final[tuple[str, ...]] = ("particles", "pz", "pp", "particles", "polynomial1", "polynomial2")
+    r"""Static axis labels in correct order, :math:`ijklmn`."""
 
     def __init__(self, grid: Grid, basisType: str, particles: list[Particle]):
         """
@@ -41,12 +42,12 @@ class CollisionArray:
         grid : Grid
             Grid object that the collision array lives on (non-owned).
         basisType: str
-            Basis to use for the polynomials. Note that unlike in the Polynomial class,
-            our basis is just a string. We always use "Cardinal" basis on momentum axes
-            and basisType on polynomial axes. We do NOT support different basis types
+            Basis to use for the polynomials. Note that unlike in the :py:data:`WallGo.Polynomial` 
+            class, our basis is just a string. We always use `"Cardinal"` basis on momentum axes
+            and `basisType` on polynomial axes. We do NOT support different basis types
             for the two polynomials.
-        particles: list
-            List of the Particle objects this collision array describes.
+        particles: list[Particle]
+            List of the :py:data:`WallGo.Particle` objects this collision array describes.
 
         Returns
         -------
@@ -71,7 +72,7 @@ class CollisionArray:
             (len(particles), self.size, self.size, len(particles), self.size, self.size)
         )
         self.polynomialData = Polynomial(
-            data, grid, bases, CollisionArray.axisTypes, endpoints=False
+            data, grid, bases, CollisionArray.AXIS_TYPES, endpoints=False
         )
 
     def __getitem__(self, key: int | slice) -> float | np.ndarray:
@@ -318,7 +319,7 @@ class CollisionArray:
                     basisTypeFile,
                     basisTypeFile,
                 ),
-                CollisionArray.axisTypes,
+                CollisionArray.AXIS_TYPES,
                 endpoints=False,
             )
             newCollision = CollisionArray.newFromPolynomial(polynomialData, particles)
@@ -350,7 +351,7 @@ class CollisionArray:
                     basisTypeFile,
                     basisTypeFile,
                 ),
-                CollisionArray.axisTypes,
+                CollisionArray.AXIS_TYPES,
                 endpoints=False,
             )
 
