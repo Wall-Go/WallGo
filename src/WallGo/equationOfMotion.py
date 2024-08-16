@@ -476,8 +476,18 @@ class EOM:
         )
 
         # Positions of the phases
-        vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
-        vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
+        TminusEval = max(min(
+            Tminus,
+            self.thermo.freeEnergyLow.interpolationRangeMax()),
+            self.thermo.freeEnergyLow.interpolationRangeMin(),
+            )
+        TplusEval = max(min(
+            Tplus,
+            self.thermo.freeEnergyHigh.interpolationRangeMax()),
+            self.thermo.freeEnergyHigh.interpolationRangeMin(),
+            )
+        vevLowT = self.thermo.freeEnergyLow(TminusEval).fieldsAtMinimum
+        vevHighT = self.thermo.freeEnergyHigh(TplusEval).fieldsAtMinimum
 
         ##Estimate the new grid parameters
         widths = wallParams.widths

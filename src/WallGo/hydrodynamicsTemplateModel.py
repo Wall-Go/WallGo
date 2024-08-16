@@ -293,13 +293,14 @@ class HydrodynamicsTemplateModel:
             * (self.cb2 - vm * vpMax)
             / (3 * self.cb2 * vm * (1 - vpMax**2)),
             (self.mu - self.nu) / (3 * self.mu),
-            1e-10,
-        )
+            0,
+        ) + 1e-10
         alMax = 1 / 3
         branch = -1
-        if self._eqWall(alMin, vm) * self._eqWall(alMax, vm) > 0:
+        
+        if self._eqWall(alMin, vm) * self._eqWall(alMax, vm) > 0 and vm > self.cb2:
             # If alMin and alMax don't bracket the deflagration solution, try with the
-            # detonation one.
+            # detonation one, which only exists when vm > cb^2.
             branch = 1
         try:
             sol = root_scalar(
@@ -312,6 +313,13 @@ class HydrodynamicsTemplateModel:
             return float(sol.root)
 
         except ValueError as exc:
+            # import matplotlib.pyplot as plt
+            # als = np.linspace(alMin,alMax,100)
+            # plt.plot(als,[self._eqWall(al, vm, 1) for al in als])
+            # plt.grid()
+            # plt.show()
+            # print(branch, vw, constraint, alMin, self._eqWall(alMin, vm), self._eqWall(0, vm))
+            # print(self.alN,self.psiN,self.nu,self.mu,self.wFromAlpha(0),self.getVp(vm, 0, -1))
             raise WallGoError("alpha can not be found", data={"vw": vw}) from exc
 
     def _dxiAndWdv(self, v: float, xiAndW: np.ndarray) -> np.ndarray:
