@@ -89,7 +89,7 @@ class SingletSMZ2(GenericModel):
         )
 
         # Initialize internal effective potential with our params dict.
-        self.effectivePotential = EffectivePotentialxSM_Z2(
+        self.effectivePotential = EffectivePotentialxSMZ2(
             self.modelParameters, self.fieldCount
         )
 
@@ -118,12 +118,12 @@ class SingletSMZ2(GenericModel):
         # The msqVacuum function of an out-of-equilibrium particle must take
         # a Fields object and return an array of length equal to the number of
         # points in fields.
-        def topMsqVacuum(fields: Fields) -> float:
+        def topMsqVacuum(fields: Fields) -> Fields:
             return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
-        def topMsqDerivative(fields) -> float:
+        def topMsqDerivative(fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * np.transpose(
                 [fields.GetField(0), 0 * fields.GetField(1)]
             )
@@ -208,7 +208,7 @@ class SingletSMZ2(GenericModel):
 
         modelParameters["lambda"] = 0.5 * massh1**2 / v0**2
         # should be same as the following:
-        # modelParameters["msq"] = -massh1**2 / 2. 
+        # modelParameters["msq"] = -massh1**2 / 2.
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
         modelParameters["b2"] = massh2**2 - 0.5 * v0**2 * inputParameters["a2"]
 
@@ -404,32 +404,57 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return potentialTotal
 
-    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
         were not integrated over in the one-loop part.
+
+        See Eq. (39) in hep-ph/0510375 for general LO formula
+        
+        Parameters
+        ----------
+        temperature: array-like (float) 
+            The temperature
+
+        Returns
+        ----------
+        constantTerms: array-like (float) 
+            The value of the field-independent contribution to the effective potential
         """
 
-        ## See Eq. (39) in hep-ph/0510375 for general LO formula
-
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs
-        # that were done in evaluate(), could be better to pass it from there though
+        # How many degrees of freedom we have left. The number of DOFs
+        # that were included in evaluate() is hardcoded
         dofsBoson = self.numBosonDof - 14
-        dofsFermion = self.numFermionDof - 12  ## we only did top quark loops
+        dofsFermion = self.numFermionDof - 12  # we only included top quark loops
 
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
+        # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
     def bosonStuff(self, fields: Fields):
         """
-        
+        Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
+
+        Parameters
+        ----------
+        fields: Fields 
+            The field configuration
+
+        Returns
+        ----------
+        massSq: array_like 
+            A list of the boson particle masses at each input point `field`.
+        degreesOfFreedom: array_like
+            The number of degrees of freedom for each particle.
+        c: array_like
+            A constant used in the one-loop effective potential
+        rgScale : array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential  
         """
 
         v, x = fields.GetField(0), fields.GetField(1)
-
-        # TODO: numerical determination of scalar masses from V0
 
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
@@ -451,10 +476,8 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         mWsq = g2**2 * v**2 / 4.0
         mZsq = (g1**2 + g2**2) * v**2 / 4.0
-        # "Goldstones"
+        # Goldstones
         mGsq = msq + lam * v**2 + 0.5 * a2 * x**2
-
-        # this feels error prone:
 
         # h, s, chi, W, Z
         massSq = np.column_stack((msqEig1, msqEig2, mGsq, mWsq, mZsq))
@@ -465,14 +488,32 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
 
     def fermionStuff(self, fields: Fields):
+        """
+        Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
+
+        Parameters
+        ----------
+        fields: Fields 
+            The field configuration
+
+        Returns
+        ----------
+        massSq: array_like
+            A list of the fermion particle masses at each input point `field`.
+        degreesOfFreedom: array_like
+            The number of degrees of freedom for each particle.
+        c: array_like
+            A constant used in the one-loop effective potential
+        rgScale : array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential  
+        """
 
         v = fields.GetField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
         mtsq = yt**2 * v**2 / 2
-
-        # @todo include spins for each particle
 
         massSq = np.stack((mtsq,), axis=-1)
         degreesOfFreedom = np.array([12])
@@ -487,26 +528,26 @@ def main() -> None:
 
     WallGo.initialize()
 
-    ## Modify the config, we use N=5 for this example
+    ## Modify the config, we use N=11 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness
+    ## Guess of the wall thickness TODO specify in what units
     wallThicknessIni = 0.05
 
-    # Estimate of the mean free path of the particles in the plasma
+    # Estimate of the mean free path of the particles in the plasma TODO specify in what units
     meanFreePath = 1
 
     ## Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1).
+    # Temperature scale (in GeV) over which the potential changes by O(1).
     # A good value would be of order Tc-Tn.
     temperatureScale = 10.0
-    # Field scale over which the potential changes by O(1). A good value
+    # Field scale (in GeV) over which the potential changes by O(1). A good value
     # would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the
     # same scale, or an array.
@@ -520,17 +561,14 @@ def main() -> None:
     but this is likely to change in the future
     """
 
-    ## QFT model input. Some of these are probably not intended to change,
-    # like gauge masses. Could hardcode those directly in the class.
+    # QFT model input.
     inputParameters = {
-        # "RGScale" : 91.1876,
-        "RGScale": 125.0,  # <- Benoit benchmark
+        "RGScale": 125.0,
         "v0": 246.0,
         "MW": 80.379,
         "MZ": 91.1876,
         "Mt": 173.0,
         "g3": 1.2279920495357861,
-        # scalar specific, choose Benoit benchmark values
         "mh1": 125.0,
         "mh2": 120.0,
         "a2": 0.9,
@@ -539,11 +577,11 @@ def main() -> None:
 
     model = SingletSMZ2(inputParameters)
 
-    ## ---- collision integration and path specifications
+    # ---- collision integration and path specifications
 
-    # automatic generation of collision integrals is disabled by default
-    # set to "False" or comment if collision integrals already exist
-    # set to "True" to invoke automatic collision integral generation
+    # Automatic generation of collision integrals is disabled by default.
+    # Set to "False" or comment if collision integrals already exist
+    # Set to "True" to invoke automatic collision integral generation
     WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
 
     """
@@ -553,12 +591,12 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    ## Generates or reads collision integrals
+    # Generates or reads collision integrals
     manager.generateCollisionFiles()
 
     print("=== WallGo parameter scan ===")
-    ## ---- This is where you'd start an input parameter
-    ## loop if doing parameter-space scans ----
+    # ---- This is where you'd start an input parameter
+    # loop if doing parameter-space scans ----
 
     """ Example mass loop that just does one value of mh2. Note that the WallGoManager
     class is NOT thread safe internally, so it is NOT safe to parallelize this loop 
@@ -574,7 +612,7 @@ def main() -> None:
         nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
         Transition goes from phase1 to phase2.
         """
-        Tn = 100.0  ## nucleation temperature
+        Tn = 100.0  # nucleation temperature
         phaseInfo = WallGo.PhaseInfo(
             temperature=Tn,
             phaseLocation1=WallGo.Fields([0.0, 200.0]),
@@ -589,24 +627,17 @@ def main() -> None:
         """
         manager.setParameters(phaseInfo)
 
-        ## TODO initialize collisions. Either do it here or already in registerModel().
-        ## But for now it's just hardcoded in Boltzmann.py and __init__.py
-
         """WallGo can now be used to compute wall stuff!"""
 
-        ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+        # ---- Solve wall speed in Local Thermal Equilibrium approximation
 
         vwLTE = manager.wallSpeedLTE()
 
         print(f"LTE wall speed: {vwLTE}")
 
-        ## ---- Solve field EOM. For illustration, first solve it without any
+        # ---- Solve field EOM. For illustration, first solve it without any
         # out-of-equilibrium contributions. The resulting wall speed should
-        # match the LTE result:
-
-        ## Computes the detonation solutions
-        wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
+        # be close to the LTE result
 
         bIncludeOffEq = False
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
@@ -639,6 +670,10 @@ def main() -> None:
         delta00FD = results.DeltasFiniteDifference.Delta00.coefficients[0]
         errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
         print(f"finite difference error = {errorFD}")
+
+        print(f"=== Search for detonation solution ===")
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print(wallGoInterpolationResults.wallVelocities)
 
     # end parameter-space loop
 
