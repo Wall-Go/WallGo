@@ -106,11 +106,11 @@ class SingletSMZ2(GenericModel):
 
         Parameters
         ----------
-            None
+        None
 
         Returns
         ----------
-            None
+        None
         """
         self.clearParticles()
 
@@ -255,32 +255,38 @@ class SingletSMZ2(GenericModel):
 
 # end model
 
-# For this benchmark model we use the UNRESUMMED 4D potential.
-# Furthermore we use customized interpolation tables for Jb/Jf
-class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
+
+class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     """
     Effective potential for the SingletSMZ2 model.
 
     This class inherits from the EffectivePotentialNoResum class and provides the
     necessary methods for calculating the effective potential.
+
+    For this benchmark model we use the UNRESUMMED 4D potential.
+    Furthermore we use customized interpolation tables for Jb/Jf
     """
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
         """
-        Initialize the EffectivePotentialxSM_Z2.
+        Initialize the EffectivePotentialxSMZ2.
 
-        Args:
-        - modelParameters: A dictionary of model parameters.
-        - fieldCount: The number of fields in the model.
+        Parameters
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of model parameters.
+        fieldCount: int
+            The number of fields undergoing the phase transition
 
-        Returns:
-        None
+        Returns
+        ----------
+        cls: EffectivePotentialxSMZ2
+            an object of the EffectivePotentialxSMZ2 class
         """
         super().__init__(modelParameters, fieldCount)
-        ## ... do singlet+SM specific initialization here.
         # The super call already gave us the model params
 
-        ## Count particle degrees-of-freedom to facilitate inclusion of
+        # Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
         self.numBosonDof = 29
         self.numFermionDof = 90
@@ -296,12 +302,16 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         """
         Configure the benchmark integrals.
 
-        Returns:
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
         None
         """
-        # Load custom interpolation tables for Jb/Jf.
-        # These should be the same as what CosmoTransitions
-        # version 2.0.2 provides by default.
+        # Load custom interpolation tables for Jb/Jf. These should be
+        # the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
         self.integrals.Jb.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
@@ -315,7 +325,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
 
-        """And force out-of-bounds constant extrapolation because this is
+        """Force out-of-bounds constant extrapolation because this is
         what CosmoTransitions does
         => not really reliable for very negative (m/T)^2 ! 
         Strictly speaking: For x > xmax, CosmoTransitions just returns 0. 
@@ -335,11 +345,6 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
         )
 
-    ## ---------- EffectivePotential overrides.
-    # The user needs to define evaluate(), which has to return value of the effective
-    # potential when evaluated at a given field configuration, temperature pair.
-    # Remember to include full T-dependence, including eg. the free energy contribution
-    # from photons (which is field-independent!)
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
@@ -347,13 +352,19 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         """
         Evaluate the effective potential.
 
-        Args:
-        - fields: The field configuration.
-        - temperature: The temperature.
-        - checkForImaginary: Whether to check for imaginary parts.
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+        temperature: float
+            The temperature
+        checkForImaginary: bool
+            Setting to check for imaginary parts of the potential
 
-        Returns:
-        The value of the effective potential.
+        Returns
+        ----------
+        potentialTotal: complex
+            The value of the effective potential
         """
 
         # For this benchmark we don't use high-T approx and no resummation
@@ -370,7 +381,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         a2 = self.modelParameters["a2"]
 
         # tree level potential
-        V0 = (
+        potentialTree = (
             0.5 * msq * v**2
             + 0.25 * lam * v**4
             + 0.5 * b2 * x**2
@@ -378,12 +389,12 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
             + 0.25 * a2 * v**2 * x**2
         )
 
-        # TODO should probably use the list of defined particles here?
+        # Particle masses and coefficients for the CW potential
         bosonStuff = self.bosonStuff(fields)
         fermionStuff = self.fermionStuff(fields)
 
-        VTotal = (
-            V0
+        potentialTotal = (
+            potentialTree
             + self.constantTerms(temperature)
             + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
             + self.potentialOneLoopThermal(
@@ -391,7 +402,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
             )
         )
 
-        return VTotal
+        return potentialTotal
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
         """Need to explicitly compute field-independent but T-dependent parts
