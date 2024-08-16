@@ -1,12 +1,14 @@
 """
-This Python script, SingletStandardModel_Z2.py,
+This Python script, singletStandardModelZ2.py,
 implements a minimal Standard Model extension via
 a scalar singlet and incorporating a Z2 symmetry.
-Only QCD top quark is out of equilibrium.
+Only the top quark is out of equilibrium, and only
+QCD-interactions are considered in the collisions.
 
 Features:
 - Definition of the extended model parameters including the singlet scalar field.
-- Implementation of the Z2 symmetry and its effects on particle interactions.
+- Definition of the out-of-equilibrium particles.
+- Implementation of the one-loop thermal potential, without high-T expansion.
 
 Usage:
 This script is intended to compute the wallspeed of the model.
@@ -18,13 +20,19 @@ Dependencies:
 integrals as the "CollisonOutput" directory
 
 Note:
+This benchmark model was used to compare against the results of
+B. Laurent and J. M. Cline, First principles determination
+of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501
+doi:10.1103/PhysRevD.106.023501
+As a consequence, we overwrite the default WallGo thermal functions
+Jb/Jf. 
 """
 
 import os
-import numpy as np
-import numpy.typing as npt
 import pathlib
 import sys
+import numpy as np
+import numpy.typing as npt
 
 ## WallGo imports
 import WallGo  ## Whole package, in particular we get WallGo.initialize()
@@ -36,13 +44,13 @@ from WallGo import Fields
 ## Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
-from effectivePotentialNoResum import EffectivePotentialNoResum #pylint: disable=E0401
+from effectivePotentialNoResum import EffectivePotentialNoResum #pylint: disable=E0401, C0413
 
 
 # Z2 symmetric SM + singlet model.
 # V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-class SingletSM_Z2(GenericModel):
-    """
+class SingletSMZ2(GenericModel):
+    r"""
     Z2 symmetric SM + singlet model.
 
     The potential is given by:
@@ -62,14 +70,17 @@ class SingletSM_Z2(GenericModel):
 
     def __init__(self, initialInputParameters: dict[str, float]):
         """
-        Initialize the SingletSM_Z2 model.
+        Initialize the SingletSMZ2 model.
 
-        Args:
-        - initialInputParameters: A dictionary of initial input
-            parameters for the model.
+        Parameters
+        ----------
+        initialInputParameters: dict[str, float]
+            A dictionary of initial input parameters for the model.
 
-        Returns:
-        None
+        Returns
+        ----------
+        cls: SingletSMZ2
+            An object of the SingletSMZ2 class.
         """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
@@ -77,32 +88,41 @@ class SingletSM_Z2(GenericModel):
             self.modelParameters
         )
 
-        # Initialize internal Veff with our params dict.
+        # Initialize internal effective potential with our params dict.
         self.effectivePotential = EffectivePotentialxSM_Z2(
             self.modelParameters, self.fieldCount
         )
 
+        # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles()
 
     def defineParticles(self) -> None:
         """
         Define the particles for the model.
+        Note that the particle list only needs to contain the
+        particles that are relevant for the Boltzmann equations.
+        The particles relevant to the effective potential are
+        included independently.
 
-        Returns:
-        None
+        Parameters
+        ----------
+            None
+
+        Returns
+        ----------
+            None
         """
-        # NB: particle multiplicity is pretty confusing because some
-        # internal DOF counting is handled internally already.
-        # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately
-        # define up, down, charm, strange, bottom
-
         self.clearParticles()
 
-        ## === Top quark ===
+        # === Top quark ===
+        # The msqVacuum function of an out-of-equilibrium particle must take
+        # a Fields object and return an array of length equal to the number of
+        # points in fields.
         def topMsqVacuum(fields: Fields) -> float:
             return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
 
+        # The msqDerivative function of an out-of-equilibrium particle must take
+        # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields) -> float:
             return self.modelParameters["yt"] ** 2 * np.transpose(
                 [fields.GetField(0), 0 * fields.GetField(1)]
@@ -123,24 +143,14 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(topQuark)
 
-        ## === SU(3) gluon ===
-        # The msqVacuum function must take a Fields object and return an array of
-        # length equal to the number of points in fields.
-        def gluonMsqVacuum(fields):
-            return np.zeros_like(fields.GetField(0))
-
-        # The msqDerivative function must take a Fields object and return an
-        # array with the same shape as fields.
-        def gluonMsqDerivative(fields):
-            return np.zeros_like(fields)
-
+        # === SU(3) gluon ===
         def gluonMsqThermal(T):
             return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
         gluon = Particle(
             "gluon",
-            msqVacuum=gluonMsqVacuum,
-            msqDerivative=gluonMsqDerivative,
+            msqVacuum=0.0,
+            msqDerivative=0.0,
             msqThermal=gluonMsqThermal,
             statistics="Boson",
             inEquilibrium=True,
@@ -165,18 +175,22 @@ class SingletSM_Z2(GenericModel):
         )
         self.addParticle(lightQuark)
 
-    ## Go from whatever input params --> action params
+    ## Go from input parameters --> action parameters
     def calculateModelParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
         """
         Calculate the model parameters based on the input parameters.
 
-        Args:
-        - inputParameters: A dictionary of input parameters for the model.
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
 
-        Returns:
-        A dictionary of calculated model parameters.
+        Returns
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of calculated model parameters.
         """
         super().calculateModelParameters(inputParameters)
 
@@ -184,33 +198,34 @@ class SingletSM_Z2(GenericModel):
 
         v0 = inputParameters["v0"]
         # Scalar eigenvalues
-        mh1 = inputParameters["mh1"]  # 125 GeV
-        mh2 = inputParameters["mh2"]
+        massh1 = inputParameters["mh1"]  # 125 GeV
+        massh2 = inputParameters["mh2"]
 
         ## these are direct inputs:
         modelParameters["RGScale"] = inputParameters["RGScale"]
         modelParameters["a2"] = inputParameters["a2"]
         modelParameters["b4"] = inputParameters["b4"]
 
-        modelParameters["lambda"] = 0.5 * mh1**2 / v0**2
-        # modelParameters["msq"] = -mh1**2 / 2. # should be same as the following:
+        modelParameters["lambda"] = 0.5 * massh1**2 / v0**2
+        # should be same as the following:
+        # modelParameters["msq"] = -massh1**2 / 2. 
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
-        modelParameters["b2"] = mh2**2 - 0.5 * v0**2 * inputParameters["a2"]
+        modelParameters["b2"] = massh2**2 - 0.5 * v0**2 * inputParameters["a2"]
 
-        ## Then the gauge/Yukawa sector
-
-        Mt = inputParameters["Mt"]
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
+        ## Then the gauge and Yukawa sector
+        massT = inputParameters["Mt"]
+        massW = inputParameters["MW"]
+        massZ = inputParameters["MZ"]
 
         # helper
-        g0 = 2.0 * MW / v0
-        modelParameters["g1"] = g0 * np.sqrt((MZ / MW) ** 2 - 1)
+        g0 = 2.0 * massW / v0
+
+        modelParameters["g1"] = g0 * np.sqrt((massZ / massW) ** 2 - 1)
         modelParameters["g2"] = g0
         # Just take QCD coupling as input
         modelParameters["g3"] = inputParameters["g3"]
 
-        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * Mt / MW
+        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * massT / massW
 
         return modelParameters
 
@@ -219,7 +234,17 @@ class SingletSM_Z2(GenericModel):
     ) -> dict[str, float]:
         """
         Calculate collision couplings (Lagrangian parameters) from the input parameters.
-        List as they appear in the MatrixElements file
+        List as they appear in the MatrixElements file.
+
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
+
+        Returns
+        ----------
+        collisionParameters: dict[str, float]
+            A dictionary of model parameters for the collision.
         """
         collisionParameters = {}
 
@@ -230,12 +255,11 @@ class SingletSM_Z2(GenericModel):
 
 # end model
 
-
 # For this benchmark model we use the UNRESUMMED 4D potential.
 # Furthermore we use customized interpolation tables for Jb/Jf
 class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
     """
-    Effective potential for the SingletSM_Z2 model.
+    Effective potential for the SingletSMZ2 model.
 
     This class inherits from the EffectivePotentialNoResum class and provides the
     necessary methods for calculating the effective potential.
@@ -258,8 +282,8 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
         ## Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
-        self.num_boson_dof = 29
-        self.num_fermion_dof = 90
+        self.numBosonDof = 29
+        self.numFermionDof = 90
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
         This is because the benchmark points we're comparing with were originally done
@@ -355,8 +379,8 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         )
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.bosonStuff(fields, temperature)
-        fermionStuff = self.fermionStuff(fields, temperature)
+        bosonStuff = self.bosonStuff(fields)
+        fermionStuff = self.fermionStuff(fields)
 
         VTotal = (
             V0
@@ -380,14 +404,17 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
         ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs
         # that were done in evaluate(), could be better to pass it from there though
-        dofsBoson = self.num_boson_dof - 14
-        dofsFermion = self.num_fermion_dof - 12  ## we only did top quark loops
+        dofsBoson = self.numBosonDof - 14
+        dofsFermion = self.numFermionDof - 12  ## we only did top quark loops
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(self, fields: Fields, temperature):
+    def bosonStuff(self, fields: Fields):
+        """
+        
+        """
 
         v, x = fields.GetField(0), fields.GetField(1)
 
@@ -403,9 +430,9 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         b4 = self.modelParameters["b4"]
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam
-        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2
-        C = a2 * v * x
+        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam #pylint: disable=C0103
+        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2 #pylint: disable=C0103
+        C = a2 * v * x #pylint: disable=C0103
         thingUnderSqrt = A**2 + B**2 - 2.0 * A * B + 4.0 * C**2
 
         msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
@@ -426,7 +453,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(self, fields: Fields, temperature):
+    def fermionStuff(self, fields: Fields):
 
         v = fields.GetField(0)
 
@@ -499,7 +526,7 @@ def main() -> None:
         "b4": 1.0,
     }
 
-    model = SingletSM_Z2(inputParameters)
+    model = SingletSMZ2(inputParameters)
 
     ## ---- collision integration and path specifications
 
