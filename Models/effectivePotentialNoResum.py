@@ -76,12 +76,12 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @abstractmethod
     def bosonStuff(
-        self, fields: npt.ArrayLike, temperature: float | npt.ArrayLike
+        self, fields: np.ndarray, __temperature: float | np.ndarray
     ) -> tuple[
-        npt.ArrayLike,
-        float | npt.ArrayLike,
-        float | npt.ArrayLike,
-        float | npt.ArrayLike,
+        np.ndarray,
+        float | np.ndarray,
+        float | np.ndarray,
+        float | np.ndarray,
     ]:
         """
         Calculate the boson particle spectrum. Should be overridden by
@@ -125,12 +125,12 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @abstractmethod
     def fermionStuff(
-        self, fields: npt.ArrayLike, temperature: float | npt.ArrayLike
+        self, fields: np.ndarray, __temperature: float | np.ndarray
     ) -> tuple[
-        npt.ArrayLike,
-        float | npt.ArrayLike,
-        float | npt.ArrayLike,
-        float | npt.ArrayLike,
+        np.ndarray,
+        float | np.ndarray,
+        float | np.ndarray,
+        float | np.ndarray,
     ]:
         """
         Calculate the fermion particle spectrum. Should be overridden by
@@ -153,7 +153,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         degreesOfFreedom : float or array_like
             The number of degrees of freedom for each particle. If an array
             (i.e., different particles have different d.o.f.), it should have
-            len
+            length `Ndim`.
         c : float or array_like
             A constant used in the one-loop zero-temperature effective
             potential. If an array, it should have length `Ndim`. Generally
@@ -167,8 +167,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @staticmethod
     def jCW(
-        massSq: float, degreesOfFreedom: int, c: float, rgScale: float
-    ) -> float | npt.ArrayLike:
+        massSq: np.ndarray, degreesOfFreedom: int | np.ndarray, c: float| np.ndarray, rgScale: float| np.ndarray
+    ) -> float | np.ndarray:
         """
         Coleman-Weinberg potential
 
@@ -206,7 +206,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     def potentialOneLoop(
         self, bosons: tuple, fermions: tuple, checkForImaginary: bool = False
-    ) -> float | npt.ArrayLike:
+    ) -> float | np.ndarray:
         """
         One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
@@ -248,9 +248,9 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         self,
         bosons: tuple,
         fermions: tuple,
-        temperature: npt.ArrayLike,
+        temperature: np.ndarray | float,
         checkForImaginary: bool = False,
-    ) -> float | npt.ArrayLike:
+    ) -> float | np.ndarray:
         """
         One-loop thermal correction to the effective potential without any
         temperature expansions.

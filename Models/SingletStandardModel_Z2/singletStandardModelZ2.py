@@ -123,7 +123,7 @@ class SingletSMZ2(GenericModel):
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
-        def topMsqDerivative(fields) -> Fields:
+        def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * np.transpose(
                 [fields.GetField(0), 0 * fields.GetField(1)]
             )
@@ -144,7 +144,7 @@ class SingletSMZ2(GenericModel):
         self.addParticle(topQuark)
 
         # === SU(3) gluon ===
-        def gluonMsqThermal(T):
+        def gluonMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
         gluon = Particle(
@@ -298,7 +298,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         """
         self._configureBenchmarkIntegrals()
 
-    def _configureBenchmarkIntegrals(self):
+    def _configureBenchmarkIntegrals(self) -> None:
         """
         Configure the benchmark integrals.
 
@@ -348,7 +348,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex:
+    ) -> float:
         """
         Evaluate the effective potential.
 
@@ -363,7 +363,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Returns
         ----------
-        potentialTotal: complex
+        potentialTotal: float
             The value of the effective potential
         """
 
@@ -381,7 +381,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         a2 = self.modelParameters["a2"]
 
         # tree level potential
-        potentialTree = (
+        potentialTree = float(
             0.5 * msq * v**2
             + 0.25 * lam * v**4
             + 0.5 * b2 * x**2
@@ -404,7 +404,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return potentialTotal
 
-    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
+    def constantTerms(self, temperature: float) -> float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
@@ -432,7 +432,12 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(self, fields: Fields):
+    def bosonStuff(self, fields: Fields) -> tuple[
+        npt.ArrayLike,
+        npt.ArrayLike,
+        npt.ArrayLike,
+        npt.ArrayLike,
+    ]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -487,7 +492,12 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(self, fields: Fields):
+    def fermionStuff(self, fields: Fields)-> tuple[
+        npt.ArrayLike,
+        npt.ArrayLike,
+        npt.ArrayLike,
+        npt.ArrayLike,
+    ]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -538,7 +548,8 @@ def main() -> None:
     ## Guess of the wall thickness TODO specify in what units
     wallThicknessIni = 0.05
 
-    # Estimate of the mean free path of the particles in the plasma TODO specify in what units
+    # Estimate of the mean free path of the particles in the plasma
+    # TODO specify in what units
     meanFreePath = 1
 
     ## Create WallGo control object
@@ -671,7 +682,7 @@ def main() -> None:
         errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
         print(f"finite difference error = {errorFD}")
 
-        print(f"=== Search for detonation solution ===")
+        print("=== Search for detonation solution ===")
         wallGoInterpolationResults = manager.solveWallDetonation()
         print(wallGoInterpolationResults.wallVelocities)
 
