@@ -348,7 +348,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> float:
+    ) -> complex:
         """
         Evaluate the effective potential.
 
@@ -363,7 +363,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Returns
         ----------
-        potentialTotal: float
+        potentialTotal: complex
             The value of the effective potential
         """
 
@@ -381,7 +381,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         a2 = self.modelParameters["a2"]
 
         # tree level potential
-        potentialTree = float(
+        potentialTree = (
             0.5 * msq * v**2
             + 0.25 * lam * v**4
             + 0.5 * b2 * x**2
@@ -404,7 +404,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return potentialTotal
 
-    def constantTerms(self, temperature: float) -> float:
+    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
@@ -432,12 +432,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(self, fields: Fields) -> tuple[
-        npt.ArrayLike,
-        npt.ArrayLike,
-        npt.ArrayLike,
-        npt.ArrayLike,
-    ]:
+    def bosonStuff(self, fields: Fields):
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -492,12 +487,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(self, fields: Fields)-> tuple[
-        npt.ArrayLike,
-        npt.ArrayLike,
-        npt.ArrayLike,
-        npt.ArrayLike,
-    ]:
+    def fermionStuff(self, fields: Fields):
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
