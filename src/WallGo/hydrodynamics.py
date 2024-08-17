@@ -448,6 +448,15 @@ class Hydrodynamics:
         if vp is None:
             vp = np.sqrt((Tm**2 - Tp**2 * (1 - vm**2))) / Tm
 
+        if np.isnan(vp):
+            raise WallGoError(
+                "Hydrodynamics error: Not able to find vp in matchDeflagOrHyb. "\
+                "Can sometimes be caused by a negative sound speed squared. If that is"\
+                " the case, try decreasing phaseTracerTol or the temperature scale, "\
+                "which will improve the potential's interpolation.",
+                {'vw': vw, 'vm': vm, 'Tp': Tp, 'Tm': Tm,
+                 'csq': self.thermodynamicsExtrapolate.csqLowT(Tm)},
+            )
         return vp, vm, Tp, Tm
 
     def shockDE(self, v: float, xiAndT: np.ndarray) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
@@ -531,14 +540,18 @@ class Hydrodynamics:
             xiShock = self.thermodynamicsExtrapolate.csqHighT(Tp) ** 0.5
             TmShock = Tp
         else:
-            solshock = solve_ivp(
-                self.shockDE,
-                [vpcent, 1e-8],
-                xi0T0,
-                events=shock,
-                rtol=self.rtol,
-                atol=0,
-            )  # solve differential equation all the way from v = v+ to v = 0
+            try:
+                solshock = solve_ivp(
+                    self.shockDE,
+                    [vpcent, 1e-8],
+                    xi0T0,
+                    events=shock,
+                    rtol=self.rtol,
+                    atol=0,
+                )  # solve differential equation all the way from v = v+ to v = 0
+            except:
+                print(vpcent, vw, Tp, vp)
+                raise
             vmShock = solshock.t[-1]
             xiShock, TmShock = solshock.y[:, -1]
 
@@ -827,7 +840,7 @@ class Hydrodynamics:
 
         self.success = True
         vmin = self.vMin
-        vmax = self.vJ
+        vmax = self.vJ-1e-10
 
         if (
             shock(vmax) > 0

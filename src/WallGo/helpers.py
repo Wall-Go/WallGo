@@ -92,7 +92,7 @@ def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=Non
     assert isinstance(bounds, tuple) and len(bounds) == 2 and bounds[1] > bounds[0], "Derivative error: bounds must be a tuple of 2 elements or None."
     assert n == 0 or n == 1 or n == 2, "Derivative error: n must be 0, 1 or 2."
     assert order == 2 or order == 4, "Derivative error: order must be 2 or 4."
-    assert np.all(x <= bounds[1]) and np.all(x >= bounds[0]), "Derivative error: x must be inside bounds."
+    assert np.all(x <= bounds[1]) and np.all(x >= bounds[0]), f"Derivative error: {x=} must be inside bounds."
     
     if n == 0:
         return f(x, *args)

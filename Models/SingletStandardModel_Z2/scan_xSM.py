@@ -5,6 +5,7 @@ import sys
 import os
 from contextlib import redirect_stdout
 import io
+import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -61,6 +62,8 @@ def findWallVelocity(i, verbose=False):
                 
                 ## Modify the config, we use N=5 for this example
                 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+                WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "40")
+                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
             
             
             # Print WallGo config. This was read by WallGo.initialize()
@@ -196,6 +199,17 @@ def findWallVelocity(i, verbose=False):
             print(f"{widths=}")
             print(f"{offsets=}")
             
+            if verbose and 0 < wallVelocity < 1:
+                print(f"{results.temperaturePlus=}, {results.temperatureMinus=}")
+                plt.plot(manager.grid.chiValues, Tn**2*results.Deltas.Delta00.coefficients[0])
+                plt.plot(manager.grid.chiValues, results.Deltas.Delta20.coefficients[0])
+                plt.plot(manager.grid.chiValues, results.Deltas.Delta02.coefficients[0])
+                plt.plot(manager.grid.chiValues, results.Deltas.Delta11.coefficients[0])
+                plt.legend((r'$\Delta_{00}T_n^2$',r'$\Delta_{20}$',r'$\Delta_{02}$',r'$\Delta_{11}$'), fontsize=12)
+                plt.xlabel(r'$\chi$')
+                plt.grid()
+                plt.show()
+            
             # sys.stdout = sys.__stdout__
             
             return i, wallVelocity, vwLTE, 'success'
@@ -204,7 +218,8 @@ def findWallVelocity(i, verbose=False):
             raise e
         return i, -1, -1, e
 
-def scanXSM(start=0, end=None):
+# Stopped at i=736
+def scanXSM(start=0, end=None, onlyErrors=False):
     WallGo.initialize()
     
     ## Modify the config, we use N=5 for this example
@@ -218,57 +233,22 @@ def scanXSM(start=0, end=None):
     assert 0 <= start < end <= len(modelsBenoit), 'Error: Wrong values of start and end.'
     
     timeIni = time()
+    nbrModels = 0
     # with concurrent.futures.ProcessPoolExecutor(max_workers=min(16, end-start)) as executor:
     for i in range(start, end):
-        try:
-            _, vwOut, vwLTE, error = findWallVelocity(i)
-            
-            currentTime = time()
-            timePerModel = (currentTime-timeIni)/(i-start+1)
-            remainingModels = end - i - 1
-            remainingTime = remainingModels*timePerModel
-            
-            if 'vw_out2' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']}; vwLTE={modelsBenoit[i]['vw']}")
-            elif 'vw_out' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out']}; vwLTE={modelsBenoit[i]['vw']}")
-            else:
-                print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=}")
-            if vwOut == -1:
-                print(f'ERROR: {error}')
-            
-            scanResults[i]['vwOut'] = vwOut
-            scanResults[i]['vwLTE'] = vwLTE
-            scanResults[i]['error'] = error
-            
-            np.save('scanResults.npy', scanResults)
-        except:
-            np.save('scanResults.npy', scanResults)
-            raise
-            
-def scanXSMPar(start=0, end=None):
-    WallGo.initialize()
-    
-    ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-    
-    scanResults = np.load('scanResults.npy', allow_pickle=True).tolist()
-    
-    if end is None:
-        end = len(modelsBenoit)
-        
-    assert 0 <= start < end <= len(modelsBenoit), 'Error: Wrong values of start and end.'
-    
-    timeIni = time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=min(2, end-start)) as executor:
-        for result in executor.map(findWallVelocity, np.arange(start, end)):
+        isInverse = False
+        if isinstance(scanResults[i]['error'], WallGo.exceptions.WallGoError):
+            if scanResults[i]['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
+                isInverse = True
+        if (scanResults[i]['error'] != 'success' and not isInverse) or not onlyErrors:
             try:
-                i, vwOut, vwLTE, error = result
+                _, vwOut, vwLTE, error = findWallVelocity(i)
                 
                 currentTime = time()
-                timePerModel = (currentTime-timeIni)/(i-start+1)
+                timePerModel = (currentTime-timeIni)/(nbrModels-start+1)
                 remainingModels = end - i - 1
                 remainingTime = remainingModels*timePerModel
+                nbrModels += 1
                 
                 if 'vw_out2' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
                     print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']}; vwLTE={modelsBenoit[i]['vw']}")
@@ -276,6 +256,8 @@ def scanXSMPar(start=0, end=None):
                     print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out']}; vwLTE={modelsBenoit[i]['vw']}")
                 else:
                     print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=}")
+                if vwOut == -1:
+                    print(f'ERROR: {error}')
                 
                 scanResults[i]['vwOut'] = vwOut
                 scanResults[i]['vwLTE'] = vwLTE

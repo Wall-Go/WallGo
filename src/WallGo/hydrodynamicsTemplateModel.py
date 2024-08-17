@@ -36,7 +36,7 @@ class HydrodynamicsTemplateModel:
     """
 
     def __init__(
-        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-6
+        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-10
     ) -> None:
         r"""
         Initialize the HydroTemplateModel class. 
@@ -297,7 +297,7 @@ class HydrodynamicsTemplateModel:
         ) + 1e-10
         alMax = 1 / 3
         branch = -1
-        
+
         if self._eqWall(alMin, vm) * self._eqWall(alMax, vm) > 0 and vm > self.cb2:
             # If alMin and alMax don't bracket the deflagration solution, try with the
             # detonation one, which only exists when vm > cb^2.
@@ -311,15 +311,7 @@ class HydrodynamicsTemplateModel:
                 xtol=self.atol,
             )
             return float(sol.root)
-
         except ValueError as exc:
-            # import matplotlib.pyplot as plt
-            # als = np.linspace(alMin,alMax,100)
-            # plt.plot(als,[self._eqWall(al, vm, 1) for al in als])
-            # plt.grid()
-            # plt.show()
-            # print(branch, vw, constraint, alMin, self._eqWall(alMin, vm), self._eqWall(0, vm))
-            # print(self.alN,self.psiN,self.nu,self.mu,self.wFromAlpha(0),self.getVp(vm, 0, -1))
             raise WallGoError("alpha can not be found", data={"vw": vw}) from exc
 
     def _dxiAndWdv(self, v: float, xiAndW: np.ndarray) -> np.ndarray:
@@ -424,6 +416,7 @@ class HydrodynamicsTemplateModel:
         if self.alN > self.maxAl(100) or shootingInLTE(self.vJ) < 0:
             # alpha is too large
             return 1.0
+
         sol = root_scalar(
             shootingInLTE, bracket=[1e-3, self.vJ], rtol=self.rtol, xtol=self.atol
         )
@@ -469,11 +462,7 @@ class HydrodynamicsTemplateModel:
                 2*vm*self.nu*(self.mu-1))
             if not np.isnan(vpSignChangeWp):
                 if vpMin < vpSignChangeWp < vpMax:
-                    if self._shooting(vw, vpSignChangeWp+1e-10)*self._shooting(
-                            vw, vpMax) <= 0:
-                        vpMin = vpSignChangeWp+1e-10
-                    else:
-                        vpMax = vpSignChangeWp-1e-10
+                    vpMax = vpSignChangeWp-1e-10
 
         try:
             sol = root_scalar(
