@@ -6,7 +6,7 @@ from typing import Tuple
 from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .Fields import Fields
-from .FreeEnergy import FreeEnergy
+from .freeEnergy import FreeEnergy
 import WallGo.helpers
 
 

@@ -1,6 +1,10 @@
+"""
+Class for the free energy of a phase.
+"""
+
+import math  # for math.ceil
 import numpy as np
 import numpy.typing as npt
-import math
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
 from dataclasses import dataclass

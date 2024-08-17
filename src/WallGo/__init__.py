@@ -21,7 +21,7 @@ from .particle import Particle
 from .Fields import Fields
 from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential
-from .FreeEnergy import FreeEnergy
+from .freeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .InterpolatableFunction import InterpolatableFunction
 
