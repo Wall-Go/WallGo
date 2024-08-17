@@ -227,8 +227,16 @@ class HydrodynamicsTemplateModel:
             Plasma temperature right behind the bubble wall
         """
         # a paramaters appearing in the definition of the template model
-        ap = 3 / (self.mu * self.Tnucl**self.mu)
-        am = 3 * self.psiN / (self.nu * self.Tnucl**self.nu)
+        try:
+            ap = 3 / (self.mu * self.Tnucl**self.mu)
+        except:
+            # If self.mu is large, the exponential can overflow and trigger an error
+            ap = 0
+        try:
+            am = 3 * self.psiN / (self.nu * self.Tnucl**self.nu)
+        except:
+            # Same thing
+            am = 0
         return float(
             (
                 (ap * vp * self.mu * (1 - vm**2) * Tp**self.mu)

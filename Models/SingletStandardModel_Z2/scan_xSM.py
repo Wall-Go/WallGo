@@ -63,7 +63,7 @@ def findWallVelocity(i, verbose=False):
                 ## Modify the config, we use N=5 for this example
                 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
                 WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "40")
-                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
+                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-6")
             
             
             # Print WallGo config. This was read by WallGo.initialize()
@@ -90,7 +90,7 @@ def findWallVelocity(i, verbose=False):
                 # The following 2 parameters are used to estimate the optimal value of dT used 
             # for the finite difference derivatives of the potential.
             # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-            temperatureScale = min(Tn/20, modelsBenoit[i]['Tc'] - Tn)
+            temperatureScale = min(Tn/100, modelsBenoit[i]['Tc'] - Tn)
             # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
             # Can either be a single float, in which case all the fields have the same scale, or an array.
             fieldScale = [abs(modelsBenoit[i]['vn'])/10, abs(modelsBenoit[i]['wn'])/10]
