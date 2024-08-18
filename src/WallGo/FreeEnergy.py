@@ -312,8 +312,4 @@ class FreeEnergy(InterpolatableFunction):
 
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, VeffFullList), axis=1)
-        try:
-            self.newInterpolationTableFromValues(TFullList, result)
-        except:
-            print(TFullList)
-            raise
+        self.newInterpolationTableFromValues(TFullList, result)

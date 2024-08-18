@@ -253,9 +253,14 @@ class WallGoManager:
             raise WallGoError(
                 "WallGo cannot treat inverse PTs. epsilon must be positive.")
 
-        _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrodynamicsTemplate.findMatching(
+        _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
+        
+        if THighTMaxTemplate is None:
+            THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
+        if TLowTMaxTemplate is None:
+            TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
@@ -268,8 +273,8 @@ class WallGoManager:
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
-        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate
-        TMinLowT, TMaxLowT = 0, fudgeFactor * TLowTTMaxTemplate
+        TMinHighT, TMaxHighT = 0, max(2*Tn, fudgeFactor * THighTMaxTemplate)
+        TMinLowT, TMaxLowT = 0, max(2*Tn, fudgeFactor * TLowTMaxTemplate)
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
@@ -282,7 +287,9 @@ class WallGoManager:
         """"""
         tmax = self.config.getfloat("Hydrodynamics", "tmax")
         tmin = self.config.getfloat("Hydrodynamics", "tmin")
-        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin)
+        rtol = self.config.getfloat("Hydrodynamics", "relativeTol")
+        atol = self.config.getfloat("Hydrodynamics", "absoluteTol")
+        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin, rtol, atol)
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""

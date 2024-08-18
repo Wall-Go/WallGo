@@ -71,8 +71,8 @@ class Hydrodynamics:
             self.vJ = self.findJouguetVelocity()
         except WallGoError:
             print(
-                "Couldn't find Jouguet velocity, we continute\
-                   with the Jouguet velocity of the template model"
+                "Couldn't find Jouguet velocity, we continue "\
+                "with the Jouguet velocity of the template model"
             )
             self.vJ = self.template.vJ
 
@@ -122,11 +122,15 @@ class Hydrodynamics:
         # We make a guess for Tmax, and if it does not work we use the secant method
 
         Tmin = self.Tnucl
-        Tmax = max(2*Tmin, self.TMaxLowT)
+        Tmax = min(max(2*Tmin, self.TMaxLowT), self.TMaxHydro)
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
+        while bracket1 * bracket2 > 0 and Tmax < self.TMaxHydro:
+            Tmin = Tmax 
+            Tmax = min(Tmax+self.Tnucl, self.TMaxHydro)
+            bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
-        tmSol = None
+        tmSol: float
         if bracket1 * bracket2 <= 0:
             # If Tmin and Tmax bracket our root, use the 'brentq' method.
             rootResult = root_scalar(
@@ -150,11 +154,10 @@ class Hydrodynamics:
         if rootResult.converged:
             tmSol = rootResult.root
         else:
-            print(Tmin,Tmax)
             raise WallGoError(
                 "Failed to solve Jouguet velocity at \
                               input temperature!",
-                data={rootResult.flag, rootResult},
+                data={'flag': rootResult.flag, 'Root result': rootResult},
             )
 
         vp = np.sqrt(
@@ -407,11 +410,17 @@ class Hydrodynamics:
                 Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]
         except WallGoError:
             Tpm0 = [
-                1.1 * self.Tnucl,
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
                 self.Tnucl,
             ]  # The temperature in front of the wall Tp will be above Tnucl,
             # so we use 1.1 Tnucl as initial guess, unless that is above the maximum
             # allowed temperature
+
+        if np.any(np.isnan(Tpm0)):
+            Tpm0 = [
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
+                self.Tnucl,
+            ]
         if (vp is not None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01 * Tpm0[1]
         if (vp is None) and (
@@ -540,18 +549,14 @@ class Hydrodynamics:
             xiShock = self.thermodynamicsExtrapolate.csqHighT(Tp) ** 0.5
             TmShock = Tp
         else:
-            try:
-                solshock = solve_ivp(
-                    self.shockDE,
-                    [vpcent, 1e-8],
-                    xi0T0,
-                    events=shock,
-                    rtol=self.rtol,
-                    atol=0,
-                )  # solve differential equation all the way from v = v+ to v = 0
-            except:
-                print(vpcent, vw, Tp, vp)
-                raise
+            solshock = solve_ivp(
+                self.shockDE,
+                [vpcent, 1e-8],
+                xi0T0,
+                events=shock,
+                rtol=self.rtol/10,
+                atol=0,
+            )  # solve differential equation all the way from v = v+ to v = 0
             vmShock = solshock.t[-1]
             xiShock, TmShock = solshock.y[:, -1]
 

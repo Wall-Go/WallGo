@@ -265,8 +265,38 @@ def scanXSM(start=0, end=None, onlyErrors=False):
                 
                 np.save('scanResults.npy', scanResults)
             except:
+                print(f'{i=}')
                 np.save('scanResults.npy', scanResults)
                 raise
+                
+    ms,lHS = [],[]
+    msError,lHSError = [],[]
+    msInverse,lHSInverse = [],[]
+    for i in range(len(scanResults)):
+        model = modelsBenoit[i]
+        scanResult = scanResults[i]
+        if scanResult['error'] == 'success':
+            ms.append(model['ms'])
+            lHS.append(model['lambdaHS'])
+        else:
+            if isinstance(scanResult['error'], WallGo.exceptions.WallGoError):
+                if scanResult['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
+                    msInverse.append(model['ms'])
+                    lHSInverse.append(model['lambdaHS'])
+                else: 
+                    print(i,scanResult['error'])
+                    msError.append(model['ms'])
+                    lHSError.append(model['lambdaHS'])
+            else: 
+                print(i,scanResult['error'])
+                msError.append(model['ms'])
+                lHSError.append(model['lambdaHS'])
+    plt.scatter(ms,lHS, c='green', s=4)
+    plt.scatter(msError, lHSError, c='r', s=4)
+    plt.scatter(msInverse, lHSInverse, c='b', s=4)
+    plt.grid()
+    plt.show()
+    print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
 
 # if __name__ == '__main__':
 #     scanXSM()

@@ -4,6 +4,7 @@ approximating the equation of state by the template model.
 """
 
 import numpy as np
+import warnings
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
@@ -75,6 +76,10 @@ class HydrodynamicsTemplateModel:
                 "Invalid sound speed at nucleation temperature",
                 data={"csqLowT": self.cb2, "csqHighT": self.cs2},
             )
+        if self.cb2 > 0.4 or self.cs2 > 0.4:
+            warnings.warn(f"Warning: One of the sound speed at Tnucl is unusually"\
+                          f" large (cb^2={self.cb2}, cs^2={self.cs2}). This can lead"\
+                          f" to errors later.")
 
         ## Calculate other thermodynamics quantities like alpha and Psi
         self.alN = float((eHighT - eLowT - (pHighT - pLowT) / self.cb2) / (3 * wHighT))
