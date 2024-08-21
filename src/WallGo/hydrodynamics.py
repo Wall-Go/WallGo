@@ -348,6 +348,8 @@ class Hydrodynamics:
             raise WallGoError(rootResult.flag, rootResult)
         vpvm, vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm / vpovm)
+        if vp == 1:
+            vm = 1
         return (vp, vm, Tp, Tm)
 
     def matchDeflagOrHyb(
@@ -489,6 +491,15 @@ class Hydrodynamics:
             and :math:`\frac{\partial T}{\partial v}`
         """
         xi, T = xiAndT
+
+        if T <= 0:
+            raise WallGoError(
+                "Hydrodynamics error: The temperature in the shock wave became "\
+                "negative during the integration. This can be caused by a too coarse "\
+                "integration. Try decreasing Hydrodynamics's relative tolerance.",
+                {'v': v, 'xi': xi, 'T': T},
+            )
+
         eq1 = (
             gammaSq(v)
             * (1.0 - v * xi)
@@ -554,7 +565,7 @@ class Hydrodynamics:
                 [vpcent, 1e-8],
                 xi0T0,
                 events=shock,
-                rtol=self.rtol/10,
+                rtol=self.rtol,
                 atol=0,
             )  # solve differential equation all the way from v = v+ to v = 0
             vmShock = solshock.t[-1]
@@ -706,7 +717,7 @@ class Hydrodynamics:
             # The speed of sound below should really be evaluated at Tp, but we use Tn
             # here to save time. We will use Tp later if it doesn't work.
             vpmax = min(
-                vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
+                vwTry-1e-10, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
 
             def shockTnDiff(vpTry: float) -> float:
