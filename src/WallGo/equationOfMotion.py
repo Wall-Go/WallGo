@@ -237,9 +237,9 @@ class EOM:
             wallVelocityMin *= 2
             if wallVelocityMin >= wallVelocityMax:
                 print(
-                    """EOM warning: the pressure at vw = 0 is positive which indicates the 
-                    phase transition cannot proceed. Something might be wrong with your 
-                    potential."""
+                    """EOM warning: the pressure at vw = 0 is positive which indicates
+                    the phase transition cannot proceed. Something might be wrong with
+                    your potential."""
                 )
                 results.setWallVelocities(0, 0, wallVelocityLTE)
                 results.setWallParams(wallParamsMin)

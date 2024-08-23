@@ -126,7 +126,7 @@ class Hydrodynamics:
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
         while bracket1 * bracket2 > 0 and Tmax < self.TMaxHydro:
-            Tmin = Tmax 
+            Tmin = Tmax
             Tmax = min(Tmax+self.Tnucl, self.TMaxHydro)
             bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
@@ -470,7 +470,9 @@ class Hydrodynamics:
             )
         return vp, vm, Tp, Tm
 
-    def shockDE(self, v: float, xiAndT: np.ndarray) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    def shockDE(
+            self, v: float, xiAndT: np.ndarray
+        ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
@@ -717,7 +719,7 @@ class Hydrodynamics:
             # The speed of sound below should really be evaluated at Tp, but we use Tn
             # here to save time. We will use Tp later if it doesn't work.
             vpmax = min(
-                vwTry-1e-10, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
+                vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
             )
 
             def shockTnDiff(vpTry: float) -> float:

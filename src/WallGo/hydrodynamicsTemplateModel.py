@@ -3,8 +3,8 @@ Class for solving the hydrodynamic equations for the fluid velocity and temperat
 approximating the equation of state by the template model.
 """
 
-import numpy as np
 import warnings
+import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
@@ -234,12 +234,12 @@ class HydrodynamicsTemplateModel:
         # a paramaters appearing in the definition of the template model
         try:
             ap = 3 / (self.mu * self.Tnucl**self.mu)
-        except:
+        except OverflowError:
             # If self.mu is large, the exponential can overflow and trigger an error
             ap = 0
         try:
             am = 3 * self.psiN / (self.nu * self.Tnucl**self.nu)
-        except:
+        except OverflowError:
             # Same thing
             am = 0
         return float(
