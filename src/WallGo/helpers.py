@@ -388,6 +388,12 @@ def nextStepDeton(
         pressure2 *= -1
         mean2ndDeriv *= -1
     
+    #Use pressure units such that abs(pressure2)=1. Helps when integrate to get the prob
+    pressure1 /= abs(pressure2)
+    mean2ndDeriv /= abs(pressure2)
+    std2ndDeriv /= abs(pressure2)
+    pressure2 = -1
+    
     dx = pos2 - pos1
     dp = pressure2 - pressure1
     
@@ -415,7 +421,8 @@ def nextStepDeton(
             )
         
         # Integrate the probability density to get the probability
-        return integrate.quad(probDensity, -2*pressure2/(pos-pos2)**2, np.inf)[0]
+        return integrate.quad(
+            probDensity, -2*pressure2/(pos-pos2)**2, np.inf, full_output=1)[0]
     
     # Probability of overshooting 2 roots when the 2nd derivative is negative:
     def probNegative(pos: float) -> float:
@@ -435,7 +442,8 @@ def nextStepDeton(
             )
         
         # Integrate the probability density to get the probability
-        return integrate.quad(probDensity, -np.inf, 2*pressure2/(pos-pos2)**2)[0]
+        return integrate.quad(
+            probDensity, -np.inf, 2*pressure2/(pos-pos2)**2, full_output=1)[0]
     
     try:
         # Find a position for which the total probability is overshootProb

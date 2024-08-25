@@ -262,13 +262,14 @@ class EOM:
                 mean2ndDeriv = list2ndDeriv[-1]
                 std2ndDeriv = (std2ndDerivPrior + np.std(list2ndDeriv)*n)/(n+1)
             
+            
             # Find the next position to explore
             vw3 = nextStepDeton(
                 vw1,
                 vw2,
                 pressure1,
                 pressure2,
-                mean2ndDeriv,
+                0,
                 std2ndDeriv,
                 rtol,
                 min(vmax, vw2+stepSizeMax),
@@ -300,8 +301,7 @@ class EOM:
             
             if pressure3 >= 0 and pressure2 <= 0:
                 listResults.append(self.solveWall(
-                    vw2, vw3, wallParams2, wallPressureResults1,
-                    wallPressureResults2, 0, rtol))
+                    vw2, vw3, wallParams2, wallPressureResults1, wallPressureResults2))
                 if onlySmallest:
                     break
             
@@ -333,8 +333,6 @@ class EOM:
                                       BoltzmannBackground, HydroResults] | None = None,
         wallPressureResultsMax: tuple[float, WallParams, BoltzmannResults,
                                       BoltzmannBackground, HydroResults] | None = None,
-        atol: float | None = None,
-        rtol: float | None = None,
     ) -> WallGoResults:
         r"""
         Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity
@@ -359,10 +357,6 @@ class EOM:
         wallPressureResultsMax : tuple or None, optional
             Tuple containing the results of the self.wallPressure function evaluated
             at wallVelocityMax. If None, computes it manually. Default is None.
-        atol : float or None, optional
-            Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.
-        rtol : float or None, optional
-            Relative tolerance. If None, uses self.pressRelErrTol. Default is None.
 
         Returns
         -------
@@ -382,7 +376,7 @@ class EOM:
                 boltzmannResultsMax,
                 boltzmannBackgroundMax,
                 hydroResultsMax,
-            ) = self.wallPressure(wallVelocityMax, wallParamsGuess, atol, rtol)
+            ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
         else:
             (
                 pressureMax,
@@ -415,7 +409,7 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-            ) = self.wallPressure(wallVelocityMin, wallParamsGuess, atol, rtol)
+            ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
         else:
             (
                 pressureMin,
@@ -446,7 +440,7 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-            ) = self.wallPressure(wallVelocityMin, wallParamsGuess, atol, rtol)
+            ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
 
         self.pressAbsErrTol = (
             0.01
@@ -474,7 +468,7 @@ class EOM:
             newBoltzmannResults = boltzmannResultsMin+(
                 boltzmannResultsMax-boltzmannResultsMin)*fractionVw
             return self.wallPressure(
-                vw, newWallParams, atol, rtol, newBoltzmannResults)[0]
+                vw, newWallParams, boltzmannResultsInput=newBoltzmannResults)[0]
 
         optimizeResult = scipy.optimize.root_scalar(
             pressureWrapper,
@@ -500,7 +494,7 @@ class EOM:
             boltzmannBackground,
             hydroResults,
         ) = self.wallPressure(
-            wallVelocity, newWallParams, atol, rtol, newBoltzmannResults)
+            wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults)
 
         # minimum possible error in the wall speed
         wallVelocityMinError = self.errTol * optimizeResult.root

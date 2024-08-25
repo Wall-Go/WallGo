@@ -605,7 +605,7 @@ def main() -> None:
         wallParams: WallGo.WallParams
         
         ## Computes the detonation solutions
-        wallGoInterpolationResults = manager.solveWallDetonation()
+        wallGoInterpolationResults = manager.solveWallDetonation(onlySmallest=True)
         print(wallGoInterpolationResults[0].wallVelocity)
         
 
