@@ -606,7 +606,7 @@ def main() -> None:
         
         ## Computes the detonation solutions
         wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
+        print(wallGoInterpolationResults[0].wallVelocity)
         
 
         bIncludeOffEq = False

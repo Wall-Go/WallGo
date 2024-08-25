@@ -364,13 +364,15 @@ def nextStepDeton(
     posMax : float
         Maximal position that the next step can have.
     overshootProb : float, optional
-        Desired overshoot probability. The default is 0.05.
+        Desired overshoot probability. A smaller value will lead to smaller step sizes
+        which will take longer to evaluate, but with less chances of missing a root.
+        The default is 0.05.
 
     Returns
     -------
     float
-        Position where the overshoot probability is overshootProb or posMax if there is
-        no solution.
+        Position where the overshoot probability is overshootProb (or posMax if there is
+        no solution).
 
     """
     assert pos2 > pos1, "Error: pos2 must be greater than pos1."
@@ -444,58 +446,3 @@ def nextStepDeton(
     except:
         # If no solution is found, returns posMax
         return posMax
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

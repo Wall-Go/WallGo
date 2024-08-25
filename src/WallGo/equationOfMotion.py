@@ -14,7 +14,7 @@ from scipy.interpolate import UnivariateSpline
 from .boltzmann import BoltzmannSolver
 from .Fields import Fields, FieldPoint
 from .grid3Scales import Grid3Scales
-from .helpers import gammaSq  # derivatives for callable functions
+from .helpers import gammaSq, nextStepDeton
 from .hydrodynamics import Hydrodynamics
 from .polynomial import Polynomial
 from .Thermodynamics import Thermodynamics
@@ -165,12 +165,176 @@ class EOM:
         vmin = self.hydrodynamics.vMin
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
         return self.solveWall(vmin, vmax, wallParams)
+    
+    def findWallVelocityDetonation(
+            self,
+            vmin: float,
+            vmax: float,
+            wallThicknessIni: float | None = None,
+            nbrPointsMin: int = 5,
+            nbrPointsMax: int = 20,
+            overshootProb: float = 0.05,
+            rtol: float = 0.01,
+            onlySmallest: bool = True,
+            ) -> list[WallGoResults]:
+        """
+        Finds the wall velocity of detonation solutions. This is more complicated than
+        for deflagrations or hybrids since the pressure is not necessarily monotonous,
+        so the root cannot be bracketed easily. To bracket it, we start at vmin and
+        increase it until the pressure goes from negative to positive. We then use a
+        normal bracketed root finding algorithm to find the wall velocity. In
+        principles, several solutions can exist. The function can either return a list
+        containing all the solutions or the solution containing the smallest wall 
+        velocity.
+
+        Parameters
+        ----------
+        vmin : float
+            Smallest wall velocity probed. Must be between the Jouguet velocity and 1.
+        vmax : float
+            Largest wall velocity probed. Must be between the Jouguet velocity and 1.
+        wallThicknessIni : float | None, optional
+            Initial value of the wall thickness. If None, it is set to 5/Tnucl.
+            The default is None.
+        nbrPointsMin : int, optional
+            Minimal number of points to bracket the roots. The default is 5.
+        nbrPointsMax : int, optional
+            Maximal number of points to bracket the roots. The default is 20.
+        overshootProb : float, optional
+            Desired probability of overshooting a root. Must be between 0 and 1. A
+            smaller value will lead to more pressure evaluations
+            (and thus a longer time), but is less likely to miss a root.
+            The default is 0.05.
+        rtol : float, optional
+            Relative tolerance on the pressure. The default is 0.01.
+        onlySmallest : bool, optional
+            If True, returns a list containing only the root with the smallest wall
+            velocity. Otherwise, the list contains all the roots. The default is True.
+
+        Returns
+        -------
+        list[WallGoResults]
+            List containing the detonation solutions. If no solutions were found,
+            returns a wall velocity of 0  if the pressure at vmin is positive, or 1 if
+            it is negative (runaway wall).
+
+        """
+        assert self.hydrodynamics.vJ < vmin < 1, "EOM error: vmin must be between vJ"\
+                                                 " and 1"
+        assert self.hydrodynamics.vJ < vmax < 1, "EOM error: vmax must be between vJ"\
+                                                 " and 1"
+        
+        # If no initial wall thickness was provided, starts with a reasonable guess
+        if wallThicknessIni is None:
+            wallThicknessIni = 5 / self.thermo.Tnucl
+
+        wallParams2 = WallParams(
+            widths=wallThicknessIni * np.ones(self.nbrFields),
+            offsets=np.zeros(self.nbrFields),
+        )
+        
+        vw2 = vmin
+
+        wallPressureResults2 = self.wallPressure(vw2, wallParams2, 0, rtol, None)
+        pressure2, wallParams2, boltzmannResults2, _, _ = wallPressureResults2
+        pressureIni = pressure2 # Only used at the end if no solutions are found
+        
+        list2ndDeriv = []
+        listResults = []
+        # Prior on the scale of the 2nd derivative
+        std2ndDerivPrior = abs(
+            2*(pressure2+self.hydrodynamics.template.epsilon)/vw2**2)
+        
+        vw1 = 0.
+        pressure1 = pressure2
+        wallParams1 = copy.deepcopy(wallParams2)
+        boltzmannResults1 = copy.deepcopy(boltzmannResults2)
+        wallPressureResults1 = copy.deepcopy(wallPressureResults2)
+        
+        stepSizeMin = (vmax-vmin)/nbrPointsMax
+        stepSizeMax = (vmax-vmin)/nbrPointsMin
+        
+        while vw2 < vmax:
+            mean2ndDeriv = 0
+            std2ndDeriv = std2ndDerivPrior
+            n = len(list2ndDeriv)
+            if n > 0:
+                mean2ndDeriv = list2ndDeriv[-1]
+                std2ndDeriv = (std2ndDerivPrior + np.std(list2ndDeriv)*n)/(n+1)
+            
+            # Find the next position to explore
+            vw3 = nextStepDeton(
+                vw1,
+                vw2,
+                pressure1,
+                pressure2,
+                mean2ndDeriv,
+                std2ndDeriv,
+                rtol,
+                min(vmax, vw2+stepSizeMax),
+                overshootProb,
+            )
+            # Increase pos3 if the step size is too small
+            vw3 = max(vw3, min(vmax, vw2+stepSizeMin))
+            
+            # Use linear extrapolation to get a more accurate initial value of wall
+            # parameters
+            wallParams3 = wallParams2+(wallParams2-wallParams1)*(vw3-vw2)/(vw2-vw1)
+            boltzmannResults3 = boltzmannResults2+(
+                boltzmannResults2-boltzmannResults1)*((vw3-vw2)/(vw2-vw1))
+            
+            wallParams1 = copy.deepcopy(wallParams2)
+            boltzmannResults1 = copy.deepcopy(boltzmannResults2)
+            wallPressureResults1 = copy.deepcopy(wallPressureResults2)
+
+            # Compute the new pressure
+            wallPressureResults2 = self.wallPressure(
+                vw3, wallParams3, 0, rtol, boltzmannResults3)
+            pressure3, wallParams2, boltzmannResults2, _, _ = wallPressureResults2
+            
+            # Estimate the 2nd deriv by finite differences and append it to list2nDeriv
+            list2ndDeriv.append(
+                2*(pressure1*(vw2-vw3)-pressure2*(vw1-vw3)+pressure3*(vw1-vw2))
+                / ((vw1-vw2)*(vw2-vw3)*(vw1-vw3))
+            )
+            
+            if pressure3 >= 0 and pressure2 <= 0:
+                listResults.append(self.solveWall(
+                    vw2, vw3, wallParams2, wallPressureResults1,
+                    wallPressureResults2, 0, rtol))
+                if onlySmallest:
+                    break
+            
+            vw1 = vw2
+            vw2 = vw3
+            pressure1 = pressure2
+            pressure2 = pressure3
+            
+        if len(listResults) == 0:
+            results = WallGoResults()
+            if pressureIni > 0:
+                # If pressure is too large at vmin to have a detonation solution,
+                # we return 0.
+                results.setWallVelocities(0, 0, 0)
+            else:
+                # If pressure is too small to have a detonation, it is a runaway and we
+                # return 1.
+                results.setWallVelocities(1, 0, 1)
+            return [results]
+
+        return listResults
 
     def solveWall(
         self,
         wallVelocityMin: float,
         wallVelocityMax: float,
         wallParamsGuess: WallParams,
+        wallPressureResultsMin: tuple[float, WallParams, BoltzmannResults,
+                                      BoltzmannBackground, HydroResults] | None = None,
+        wallPressureResultsMax: tuple[float, WallParams, BoltzmannResults,
+                                      BoltzmannBackground, HydroResults] | None = None,
+        atol: float | None = None,
+        rtol: float | None = None,
     ) -> WallGoResults:
         r"""
         Solves the equation :math:`P_{\rm tot}(\xi_w)=0` for the wall velocity
@@ -189,6 +353,16 @@ class EOM:
             :math:`{\rm wallVelocityMin}<{\rm wallVelocityMax}\leq\xi_J`.
         wallParamsGuess : WallParams
             Contains a guess of the wall thicknesses and wall offsets.
+        wallPressureResultsMin : tuple or None, optional
+            Tuple containing the results of the self.wallPressure function evaluated
+            at wallVelocityMin. If None, computes it manually. Default is None.
+        wallPressureResultsMax : tuple or None, optional
+            Tuple containing the results of the self.wallPressure function evaluated
+            at wallVelocityMax. If None, computes it manually. Default is None.
+        atol : float or None, optional
+            Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.
+        rtol : float or None, optional
+            Relative tolerance. If None, uses self.pressRelErrTol. Default is None.
 
         Returns
         -------
@@ -201,13 +375,22 @@ class EOM:
         self.pressAbsErrTol = 1e-8
 
         # Get the pressure at vw = wallVelocityMax
-        (
-            pressureMax,
-            wallParamsMax,
-            boltzmannResultsMax,
-            boltzmannBackgroundMax,
-            hydroResultsMax,
-        ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
+        if wallPressureResultsMax is None:
+            (
+                pressureMax,
+                wallParamsMax,
+                boltzmannResultsMax,
+                boltzmannBackgroundMax,
+                hydroResultsMax,
+            ) = self.wallPressure(wallVelocityMax, wallParamsGuess, atol, rtol)
+        else:
+            (
+                pressureMax,
+                wallParamsMax,
+                boltzmannResultsMax,
+                boltzmannBackgroundMax,
+                hydroResultsMax,
+            ) = wallPressureResultsMax
 
         # also getting the LTE results
         wallVelocityLTE = self.hydrodynamics.findvwLTE()
@@ -225,13 +408,23 @@ class EOM:
             return results
 
         # Get the pressure at vw = wallVelocityMin
-        (
-            pressureMin,
-            wallParamsMin,
-            boltzmannResultsMin,
-            boltzmannBackgroundMin,
-            hydroResultsMin,
-        ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
+        if wallPressureResultsMin is None:
+            (
+                pressureMin,
+                wallParamsMin,
+                boltzmannResultsMin,
+                boltzmannBackgroundMin,
+                hydroResultsMin,
+            ) = self.wallPressure(wallVelocityMin, wallParamsGuess, atol, rtol)
+        else:
+            (
+                pressureMin,
+                wallParamsMin,
+                boltzmannResultsMin,
+                boltzmannBackgroundMin,
+                hydroResultsMin,
+            ) = wallPressureResultsMin
+
         while pressureMin > 0:
             # If pressureMin is positive, increase it until it's negative.
             wallVelocityMin *= 2
@@ -253,7 +446,7 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-            ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
+            ) = self.wallPressure(wallVelocityMin, wallParamsGuess, atol, rtol)
 
         self.pressAbsErrTol = (
             0.01
@@ -278,7 +471,10 @@ class EOM:
             # parameters
             fractionVw = (vw - wallVelocityMin) / (wallVelocityMax - wallVelocityMin)
             newWallParams = wallParamsMin + (wallParamsMax - wallParamsMin) * fractionVw
-            return self.wallPressure(vw, newWallParams)[0]
+            newBoltzmannResults = boltzmannResultsMin+(
+                boltzmannResultsMax-boltzmannResultsMin)*fractionVw
+            return self.wallPressure(
+                vw, newWallParams, atol, rtol, newBoltzmannResults)[0]
 
         optimizeResult = scipy.optimize.root_scalar(
             pressureWrapper,
@@ -295,6 +491,8 @@ class EOM:
         newWallParams = (
             wallParamsMin + (wallParamsMax - wallParamsMin) * fractionWallVelocity
         )
+        newBoltzmannResults = boltzmannResultsMin + (
+            boltzmannResultsMax - boltzmannResultsMin) * fractionWallVelocity
         (
             _,
             wallParams,
@@ -302,9 +500,7 @@ class EOM:
             boltzmannBackground,
             hydroResults,
         ) = self.wallPressure(
-            wallVelocity,
-            newWallParams,
-        )
+            wallVelocity, newWallParams, atol, rtol, newBoltzmannResults)
 
         # minimum possible error in the wall speed
         wallVelocityMinError = self.errTol * optimizeResult.root
@@ -873,216 +1069,6 @@ class EOM:
         pressure = eomPoly.integrate(weight=-dzdchi)
 
         return pressure, wallParams, boltzmannResults, boltzmannBackground
-
-    def gridPressure(
-        self,
-        vmin: float,
-        vmax: float,
-        nbrPoints: int,
-        wallThicknessIni: float | None = None,
-        rtol: float = 1e-3,
-    ) -> tuple[
-        np.ndarray,
-        np.ndarray,
-        list[WallParams],
-        list[BoltzmannResults],
-        list[BoltzmannBackground],
-        list[HydroResults],
-    ]:
-        """
-        Computes the pressure on a linearly spaced grid of velocities between
-        vmin and vmax. Typically used to find detonation solutions.
-
-        Parameters
-        ----------
-        vmin : float
-            Lower bound of the interpolation interval.
-        vmax : float
-            Upper bound of the interpolation interval.
-        nbrPoints : int
-            Number of points on the grid.
-        wallThicknessIni : float or None, optional
-            Initial wall thickness used to compute the first pressure at vmin. If None,
-            uses 5/Tnucl. The default is None.
-        rtol : float, optional
-            Relative tolerance. The default is 1e-3.
-
-        Returns
-        -------
-        wallVelocities : ndarray
-            Velocity grid.
-        pressures: ndarray
-            Pressure evaluated on the grid.
-        wallParamsList : list[WallParams]
-            WallParams evaluated on the grid.
-        boltzmannResultsList : list[BoltzmannResults]
-            BoltzmannResults evaluated on the grid.
-        boltzmannBackgroundList : list[BoltzmannBackground]
-            BoltzmannBackground evaluated on the grid.
-        hydroResultsList : list[HydroResults]
-            HydroResults evaluated on the grid.
-
-        """
-        # Defining the velocity grid
-        wallVelocities = np.linspace(vmin, vmax, nbrPoints)
-
-        # Initializing the wall parameters
-        if wallThicknessIni is None:
-            wallThicknessIni = 5 / self.thermo.Tnucl
-
-        wallParams = WallParams(
-            widths=wallThicknessIni * np.ones(self.nbrFields),
-            offsets=np.zeros(self.nbrFields),
-        )
-
-        boltzmannResults = None
-
-        pressure, wallParams, boltzmannResults, _, hydroResults = self.wallPressure(
-            vmin, wallParams, 0, rtol, boltzmannResults
-        )
-
-        pressures: list[float] = []
-        boltzmannBackgroundList: list[BoltzmannBackground] = []
-        boltzmannResultsList: list[BoltzmannResults] = []
-        hydroResultsList: list[HydroResults] = []
-        wallParamsList: list[WallParams] = []
-        # Computing the pressure on the velocity grid
-        for i, wallVelocity in enumerate(wallVelocities):
-            if i > 1:
-                # Use linear extrapolation to get a more accurate initial value of wall
-                # parameters
-                wallParamsTry = wallParamsList[-1] + (
-                    wallParamsList[-1] - wallParamsList[-2]
-                ) * (wallVelocity - wallVelocities[i - 1]) / (
-                    wallVelocities[i - 1] - wallVelocities[i - 2]
-                )
-                boltzmannResultsTry = boltzmannResultsList[-1] + (
-                    boltzmannResultsList[-1] - boltzmannResultsList[-2]
-                ) * (
-                    (wallVelocity - wallVelocities[i - 1])
-                    / (wallVelocities[i - 1] - wallVelocities[i - 2])
-                )
-            else:
-                wallParamsTry = wallParams
-                boltzmannResultsTry = boltzmannResults
-
-            (
-                pressure,
-                wallParams,
-                boltzmannResults,
-                boltzmannBackground,
-                hydroResults,
-            ) = self.wallPressure(
-                wallVelocity, wallParamsTry, 0, rtol, boltzmannResultsTry
-            )
-
-            pressures.append(pressure)
-            wallParamsList.append(wallParams)
-            boltzmannResultsList.append(boltzmannResults)
-            boltzmannBackgroundList.append(boltzmannBackground)
-            hydroResultsList.append(hydroResults)
-
-        return (
-            wallVelocities,
-            np.array(pressures),
-            wallParamsList,
-            boltzmannResultsList,
-            boltzmannBackgroundList,
-            hydroResultsList,
-        )
-
-    def solveInterpolation(
-        self,
-        vmin: float,
-        vmax: float,
-        wallThicknessIni: float | None = None,
-        desiredPressure: float = 0.0,
-        rtol: float = 1e-3,
-        dvMin: float = 0.02,
-    ) -> WallGoInterpolationResults:
-        """
-        Finds all the EOM solutions in some interval by computing the pressure
-        on a grid and interpolating to get the roots.
-
-        Parameters
-        ----------
-        vmin : float
-            Lower bound of the interpolation interval.
-        vmax : float
-            Upper bound of the interpolation interval.
-        wallThicknessIni : float or None, optional
-            Initial wall thickness used to compute the first pressure at vmin. If None,
-            uses 5/Tnucl. The default is None.
-        desiredPressure : float, optional
-            The solver finds the velocities for which the pressure is equal to
-            desiredPressure. The default is 0.
-        rtol : float, optional
-            Relative tolerance. The default is 1e-3.
-        dvMin : float, optional
-            Minimal spacing between each grid points. The default is 0.02.
-
-        Returns
-        -------
-        wallGoInterpolationResults : WallGoInterpolationResults
-
-        """
-        if vmin < 0.99:
-            """
-            Chooses the number of points on the grid to reach the tolerance goal
-            assuming the spline error scales as Delta v^4. Always uses at least
-            5 points for the spline to be accurate.
-            """
-            nbrPoints = max(1 + int((vmax - vmin) / min(dvMin, rtol**0.25)), 5)
-            # Computing the pressure on the grid
-            (
-                wallVelocities,
-                pressures,
-                wallParamsList,
-                boltzmannResultsList,
-                boltzmannBackgroundList,
-                hydroResultsList,
-            ) = self.gridPressure(vmin, vmax, nbrPoints, wallThicknessIni, rtol)
-            # Splining the result
-            pressuresSpline = UnivariateSpline(
-                wallVelocities, pressures - desiredPressure, s=0.0
-            )
-
-            # Finding the roots of the spline and classifying the result as stable or
-            # unstable solutions
-            roots = pressuresSpline.roots()
-            stableRoots, unstableRoots = [], []
-            for root in roots:
-                if pressuresSpline.derivative()(root) > 0:
-                    stableRoots.append(root)
-                else:
-                    unstableRoots.append(root)
-
-            # Storing the result in a WallGoInterpolationResults class
-            wallGoInterpolationResults = WallGoInterpolationResults(
-                wallVelocities=stableRoots,
-                unstableWallVelocities=unstableRoots,
-                velocityGrid=wallVelocities.tolist(),
-                pressures=pressures.tolist(),
-                pressureSpline=pressuresSpline,
-                wallParams=wallParamsList,
-                boltzmannResults=boltzmannResultsList,
-                boltzmannBackgrounds=boltzmannBackgroundList,
-                hydroResults=hydroResultsList,
-            )
-            return wallGoInterpolationResults
-
-        wallGoInterpolationResults = WallGoInterpolationResults(
-            wallVelocities=[],
-            unstableWallVelocities=[],
-            velocityGrid=[],
-            pressures=[],
-            pressureSpline=[],
-            wallParams=[],
-            boltzmannResults=[],
-            boltzmannBackgrounds=[],
-            hydroResults=[],
-        )
-        return wallGoInterpolationResults
 
     def _toWallParams(self, wallArray: np.ndarray) -> WallParams:
         offsets: np.ndarray = np.concatenate(

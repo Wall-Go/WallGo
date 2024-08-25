@@ -424,7 +424,7 @@ class WallGoManager:
         self,
         bIncludeOffEq: bool = True,
         wallThicknessIni: float = None,
-        dvMinInterpolation: float = 0.02,
+        onlySmallest: bool = True,
     ) -> WallGoResults:
         """
         Finds all the detonation solutions by computing the pressure on a grid
@@ -436,8 +436,10 @@ class WallGoManager:
             If True, includes the out-of-equilibrium effects. The default is True.
         wallThicknessIni : float, optional
             Initial wall thickness. The default is None.
-        dvMinInterpolation : float, optional
-            Minimal spacing between each grid points. The default is 0.02.
+        overshootProb : float, optional
+            Desired overshoot probability. A smaller value will lead to smaller step
+            sizes which will take longer to evaluate, but with less chances of missing a
+            root. The default is 0.05.
 
         Returns
         -------
@@ -447,11 +449,22 @@ class WallGoManager:
 
         """
         self.eom.includeOffEq = bIncludeOffEq
-        errTol = self.config.getfloat("EOM", "errTol")
-
-        vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydrodynamics.slowestDeton())
-        return self.eom.solveInterpolation(
-            vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
+        rtol = self.config.getfloat("EOM", "errTol")
+        vmax = self.config.getfloat("EOM", "vwMaxDeton")
+        nbrPointsMin = self.config.getfloat("EOM", "nbrPointsMinDeton")
+        nbrPointsMax = self.config.getfloat("EOM", "nbrPointsMaxDeton")
+        overshootProb = self.config.getfloat("EOM", "overshootProbDeton")
+        vmin = max(self.hydrodynamics.vJ + 1e-10, self.hydrodynamics.slowestDeton())
+        
+        return self.eom.findWallVelocityDetonation(
+            vmin,
+            vmax,
+            wallThicknessIni,
+            nbrPointsMin,
+            nbrPointsMax,
+            overshootProb,
+            rtol,
+            onlySmallest
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
