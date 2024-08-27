@@ -535,12 +535,11 @@ def main() -> None:
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness TODO specify in what units
+    ## Guess of the wall thickness: 5/Tn
     wallThicknessIni = 0.05
 
-    # Estimate of the mean free path of the particles in the plasma
-    # TODO specify in what units
-    meanFreePath = 1
+    # Estimate of the mean free path of the particles in the plasma: 100/Tn
+    meanFreePath = 1.
 
     ## Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
