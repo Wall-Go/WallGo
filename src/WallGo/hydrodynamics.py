@@ -63,8 +63,6 @@ class Hydrodynamics:
         self.TMaxHydro = tmax * self.Tnucl
         self.TMinHydro = tmin * self.Tnucl
 
-        #self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
-
         self.rtol, self.atol = rtol, atol
 
         self.template = HydrodynamicsTemplateModel(thermodynamics, rtol=rtol, atol=atol)

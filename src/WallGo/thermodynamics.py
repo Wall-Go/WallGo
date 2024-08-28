@@ -29,7 +29,7 @@ class Thermodynamics:
         effectivePotential: EffectivePotential,
         nucleationTemperature: float,
         phaseLowT: Fields,
-        phaseHighT: Fields
+        phaseHighT: Fields,
     ):
         """Initialisation
 
@@ -75,9 +75,22 @@ class Thermodynamics:
         self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
         self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
 
+        # These parameters are set by setExtrapolate
+        self.muMinHighT = 0
+        self.aMinHighT = 0
+        self.epsilonMinHighT = 0
+        self.muMaxHighT = 0
+        self.aMaxHighT = 0
+        self.epsilonMaxHighT = 0
+        self.muMinLowT = 0
+        self.aMinLowT = 0
+        self.epsilonMinLowT = 0
+        self.muMaxLowT = 0
+        self.aMaxLowT = 0
+        self.epsilonMaxLowT = 0
 
     def setExtrapolate(self) -> None:
-        """        
+        """
         Allows use of thermodynamics outside of the temperature range where
         the phase exists. The equation of state gets
         extrapolated using the template model of [LM15]_ outside of
@@ -86,10 +99,10 @@ class Thermodynamics:
 
         Parameters
         ----------
-        
+
         Returns
         -------
-        
+
         References
         ----------
         .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
@@ -143,7 +156,6 @@ class Thermodynamics:
         self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
             self.TMaxLowT, self.muMaxLowT
         ) - self.pLowT(self.TMaxLowT)
-
 
     def _getCoexistenceRange(self) -> Tuple[float, float]:
         """
@@ -286,7 +298,6 @@ class Thermodynamics:
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
-
     def dpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
         Temperature derivative of the pressure in the high-temperature phase.
@@ -424,7 +435,7 @@ class Thermodynamics:
         """
 
         if temperature < self.TMinHighT:
-            return  self.dpHighT(self.TMinHighT) / self.deHighT(self.TMinHighT)
+            return self.dpHighT(self.TMinHighT) / self.deHighT(self.TMinHighT)
         if temperature > self.TMaxHighT:
             return self.dpHighT(self.TMaxHighT) / self.deHighT(self.TMaxHighT)
 
@@ -444,7 +455,7 @@ class Thermodynamics:
         pLowT : array-like (float)
             Pressure in the low-temperature phase.
         """
-    
+
         if temperature < self.TMinLowT:
             return float(
                 1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
@@ -490,7 +501,7 @@ class Thermodynamics:
                 * pow(temperature, self.muMaxLowT - 1)
             )
 
-        return  -self.freeEnergyLow.derivative(temperature, order=1).veffValue
+        return -self.freeEnergyLow.derivative(temperature, order=1).veffValue
 
     def ddpLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
@@ -505,7 +516,8 @@ class Thermodynamics:
         -------
         ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
-        """        
+        """
+
         if temperature < self.TMinLowT:
             return float(
                 1
@@ -526,7 +538,6 @@ class Thermodynamics:
             )
 
         return -self.freeEnergyLow.derivative(temperature, order=2).veffValue
-
 
     def eLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
@@ -598,9 +609,6 @@ class Thermodynamics:
         if temperature > self.TMaxLowT:
             return self.dpLowT(self.TMaxLowT) / self.deLowT(self.TMaxLowT)
         return self.dpLowT(temperature) / self.deLowT(temperature)
-    
-
-
 
     def alpha(self, T: np.ndarray | float) -> np.ndarray | float:
         r"""
