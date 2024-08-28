@@ -88,9 +88,18 @@ class Thermodynamics:
 
         print(f"{self.csqHighT(self.TMinHighT+ 1e-6)=}")
         print(f"{self.csqHighT(self.Tnucl)=}")
+
+
+    def setExtrapolate(self) -> None:
         # The following parameters are defined such that the thermodynamic quantities
         # can be extrapolated beyond the minimum and maximum temperatures
         # by mapping onto the template model
+
+        self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
+
         self.muMinHighT = float(1 + 1 / self.csqHighT(self.TMinHighT))
         self.aMinHighT = float(
             (
@@ -133,7 +142,6 @@ class Thermodynamics:
         ) - self.pLowT(self.TMaxLowT)
 
         print(f"{self.aMaxLowT = } {self.muMinHighT=}")
-
 
 
     def _getCoexistenceRange(self) -> Tuple[float, float]:
@@ -263,6 +271,17 @@ class Thermodynamics:
             Pressure in the high-temperature phase.
 
         """
+        if temperature < self.TMinHighT:
+            return float(
+                1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
+                - self.epsilonMinHighT
+            )
+        if temperature > self.TMaxHighT:
+            return float(
+                1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
+                - self.epsilonMaxHighT
+            )
+
         veffValue = self.freeEnergyHigh(temperature).veffValue
         return -veffValue
 
@@ -281,6 +300,24 @@ class Thermodynamics:
         dpHighT : array-like (float)
             Temperature derivative of the pressure in the high-temperature phase.
         """
+
+        if temperature < self.TMinHighT:
+            return float(
+                1
+                / 3.0
+                * self.muMinHighT
+                * self.aMinHighT
+                * pow(temperature, self.muMinHighT - 1)
+            )
+        if temperature > self.TMaxHighT:
+            return float(
+                1
+                / 3.0
+                * self.muMaxHighT
+                * self.aMaxHighT
+                * pow(temperature, self.muMaxHighT - 1)
+            )
+
         return -self.freeEnergyHigh.derivative(temperature, order=1).veffValue
 
     def ddpHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
@@ -297,6 +334,26 @@ class Thermodynamics:
         ddpHighT : array-like (float)
             Second temperature derivative of the pressure in the high-temperature phase.
         """
+
+        if temperature < self.TMinHighT:
+            return float(
+                1
+                / 3.0
+                * self.muMinHighT
+                * (self.muMinHighT - 1)
+                * self.aMinHighT
+                * pow(temperature, self.muMinHighT - 2)
+            )
+        if temperature > self.TMaxHighT:
+            return float(
+                1
+                / 3.0
+                * self.muMaxHighT
+                * (self.muMaxHighT - 1)
+                * self.aMaxHighT
+                * pow(temperature, self.muMaxHighT - 2)
+            )
+
         return -self.freeEnergyHigh.derivative(temperature, order=2).veffValue
 
     def eHighT(self, temperature: np.ndarray | float) -> np.ndarray | float:
@@ -364,6 +421,12 @@ class Thermodynamics:
         csqHighT : array-like (float)
             Sound speed squared in the high-temperature phase.
         """
+
+        if temperature < self.TMinHighT:
+            return  self.dpHighT(self.TMinHighT) / self.deHighT(self.TMinHighT)
+        if temperature > self.TMaxHighT:
+            return self.dpHighT(self.TMaxHighT) / self.deHighT(self.TMaxHighT)
+
         return self.dpHighT(temperature) / self.deHighT(temperature)
 
     def pLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
@@ -380,6 +443,17 @@ class Thermodynamics:
         pLowT : array-like (float)
             Pressure in the low-temperature phase.
         """
+    
+        if temperature < self.TMinLowT:
+            return float(
+                1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
+                - self.epsilonMinLowT
+            )
+        if temperature > self.TMaxLowT:
+            return float(
+                1 / 3.0 * self.aMaxLowT * pow(temperature, self.muMaxLowT)
+                - self.epsilonMaxLowT
+            )
 
         veffValue = self.freeEnergyLow(temperature).veffValue
         return -veffValue
@@ -398,7 +472,24 @@ class Thermodynamics:
         dpLowT : array-like (float)
             Temperature derivative of the pressure in the low-temperature phase.
         """
-        return -self.freeEnergyLow.derivative(temperature, order=1).veffValue
+        if temperature < self.TMinLowT:
+            return float(
+                1
+                / 3.0
+                * self.muMinLowT
+                * self.aMinLowT
+                * pow(temperature, self.muMinLowT - 1)
+            )
+        if temperature > self.TMaxLowT:
+            return float(
+                1
+                / 3.0
+                * self.muMaxLowT
+                * self.aMaxLowT
+                * pow(temperature, self.muMaxLowT - 1)
+            )
+
+        return  -self.freeEnergyLow.derivative(temperature, order=1).veffValue
 
     def ddpLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """
@@ -413,8 +504,28 @@ class Thermodynamics:
         -------
         ddpLowT : array-like (float)
             Second temperature derivative of the pressure in the low-temperature phase.
-        """
+        """        
+        if temperature < self.TMinLowT:
+            return float(
+                1
+                / 3.0
+                * self.muMinLowT
+                * (self.muMinLowT - 1)
+                * self.aMinLowT
+                * pow(temperature, self.muMinLowT - 2)
+            )
+        if temperature > self.TMaxLowT:
+            return float(
+                1
+                / 3.0
+                * self.muMaxLowT
+                * (self.muMaxLowT - 1)
+                * self.aMaxLowT
+                * pow(temperature, self.muMaxLowT - 2)
+            )
+
         return -self.freeEnergyLow.derivative(temperature, order=2).veffValue
+
 
     def eLowT(self, temperature: np.ndarray | float) -> np.ndarray | float:
         r"""
@@ -481,7 +592,14 @@ class Thermodynamics:
         csqLowT : array-like (float)
             Sound speed squared in the low-temperature phase.
         """
+        if temperature < self.TMinLowT:
+            return self.dpLowT(self.TMinLowT) / self.deLowT(self.TMinLowT)
+        if temperature > self.TMaxLowT:
+            return self.dpLowT(self.TMaxLowT) / self.deLowT(self.TMaxLowT)
         return self.dpLowT(temperature) / self.deLowT(temperature)
+    
+
+
 
     def alpha(self, T: np.ndarray | float) -> np.ndarray | float:
         r"""
@@ -516,344 +634,3 @@ class Thermodynamics:
             / 3
             / self.wHighT(T)
         )
-
-
-class ThermodynamicsExtrapolate(Thermodynamics):
-    """
-    Thermodynamics functions corresponding to the potential, extrapolated with the
-    template model [LM15]_ outside of the allowed temperture range of the potential.
-    ThermodynamicsExtrapolate inherits from Thermodynamics, in particular the functions
-    for the (derivative of the) energy density and enthalpy.
-    """
-
-    def __init__(
-        self,
-        thermodynamics: Thermodynamics,
-    ):
-        """Initialisation
-
-        Parameters
-        ----------
-        thermodynamics : Thermodynamics
-            A thermodynamics object that is not extrapolated outside of the allowed
-            temperature ranges of freeEnergyHigh and freeEnergyLow
-
-        Returns
-        -------
-        cls: ThermodynamicsExtrapolate
-            An object of the ThermodynamicsExtrapolate class.
-
-        References
-        ----------
-        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
-            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
-            doi:10.1016/j.nuclphysb.2014.12.008
-        """
-        self.thermodynamics: Thermodynamics = thermodynamics
-        self.TMaxHighT: float = thermodynamics.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT: float = thermodynamics.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT: float = thermodynamics.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT: float = thermodynamics.freeEnergyLow.minPossibleTemperature
-
-        # The following parameters are defined such that the thermodynamic quantities
-        # can be extrapolated beyond the minimum and maximum temperatures
-        # by mapping onto the template model
-        self.muMinHighT = float(1 + 1 / self.thermodynamics.csqHighT(self.TMinHighT))
-        self.aMinHighT = float(
-            (
-                3
-                * self.thermodynamics.wHighT(self.TMinHighT)
-                / (self.muMinHighT * pow(self.TMinHighT, self.muMinHighT))
-            )
-        )
-        self.epsilonMinHighT = float(
-            1 / 3.0 * self.aMinHighT * pow(self.TMinHighT, self.muMinHighT)
-            - thermodynamics.pHighT(self.TMinHighT)
-        )
-        self.muMaxHighT = 1 + 1 / float(self.thermodynamics.csqHighT(self.TMaxHighT))
-        self.aMaxHighT = (
-            3
-            * self.thermodynamics.wHighT(self.TMaxHighT)
-            / (self.muMaxHighT * pow(self.TMaxHighT, self.muMaxHighT))
-        )
-        self.epsilonMaxHighT = 1 / 3.0 * self.aMaxHighT * pow(
-            self.TMaxHighT, self.muMaxHighT
-        ) - thermodynamics.pHighT(self.TMaxHighT)
-
-        self.muMinLowT = 1 + 1 / float(self.thermodynamics.csqLowT(self.TMinLowT))
-        self.aMinLowT = (
-            3
-            * self.thermodynamics.wLowT(self.TMinLowT)
-            / (self.muMinLowT * pow(self.TMinLowT, self.muMinLowT))
-        )
-        self.epsilonMinLowT = 1 / 3.0 * self.aMinLowT * pow(
-            self.TMinLowT, self.muMinLowT
-        ) - thermodynamics.pLowT(self.TMinLowT)
-        self.muMaxLowT = 1 + 1 / float(self.thermodynamics.csqLowT(self.TMaxLowT))
-        self.aMaxLowT = (
-            3
-            * self.thermodynamics.wLowT(self.TMaxLowT)
-            / (self.muMaxLowT * pow(self.TMaxLowT, self.muMaxLowT))
-        )
-        self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
-            self.TMaxLowT, self.muMaxLowT
-        ) - thermodynamics.pLowT(self.TMaxLowT)
-
-        print(f"{self.TMaxHighT =} {self.TMinHighT =} {self.TMaxLowT =} {self.TMinLowT =}")
-        print(f"{self.csqHighT(self.TMinHighT+ 1e-6)=}")
-
-    def pHighT(self, temperature: float) -> float:
-        r"""
-        Pressure in the high-temperature phase, obtained from
-        :py:data:`WallGo.Thermodynamics.pHighT` for the allowed temperature
-        range and extrapolated to the template model outside of the allowed
-        temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        pHighT : array-like (float)
-            Pressure in the high-temperature phase.
-        """
-        if temperature < self.TMinHighT:
-            return float(
-                1 / 3.0 * self.aMinHighT * pow(temperature, self.muMinHighT)
-                - self.epsilonMinHighT
-            )
-        if temperature > self.TMaxHighT:
-            return float(
-                1 / 3.0 * self.aMaxHighT * pow(temperature, self.muMaxHighT)
-                - self.epsilonMaxHighT
-            )
-
-        return float(self.thermodynamics.pHighT(temperature))
-
-    def dpHighT(self, temperature: float) -> float:
-        r"""
-        Temperature-derivative of the pressure in the high-temperature phase,
-        obtained from :py:data:`WallGo.Thermodynamics.dpHighT` for the
-        allowed temperature range and extrapolated to the template model
-        outside of the allowed temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        dpHighT : array-like (float)
-            Temperature-derivative of the pressure in the high-temperature phase.
-        """
-        if temperature < self.TMinHighT:
-            return float(
-                1
-                / 3.0
-                * self.muMinHighT
-                * self.aMinHighT
-                * pow(temperature, self.muMinHighT - 1)
-            )
-        if temperature > self.TMaxHighT:
-            return float(
-                1
-                / 3.0
-                * self.muMaxHighT
-                * self.aMaxHighT
-                * pow(temperature, self.muMaxHighT - 1)
-            )
-
-        return float(self.thermodynamics.dpHighT(temperature))
-
-    def ddpHighT(self, temperature: float) -> float:
-        r"""
-        Second temperature-derivative of the pressure in the high-temperature phase,
-        obtained from :py:data:`WallGo.Thermodynamics.ddpHighT` for the allowed
-        temperature range and extrapolated to the
-        template model outside of the allowed temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        ddpHighT : array-like (float)
-            Second temperature-derivative of the pressure in the high-temperature phase.
-        """
-        if temperature < self.TMinHighT:
-            return float(
-                1
-                / 3.0
-                * self.muMinHighT
-                * (self.muMinHighT - 1)
-                * self.aMinHighT
-                * pow(temperature, self.muMinHighT - 2)
-            )
-        if temperature > self.TMaxHighT:
-            return float(
-                1
-                / 3.0
-                * self.muMaxHighT
-                * (self.muMaxHighT - 1)
-                * self.aMaxHighT
-                * pow(temperature, self.muMaxHighT - 2)
-            )
-
-        return float(self.thermodynamics.ddpHighT(temperature))
-
-    def csqHighT(self, temperature: float) -> float:
-        r"""
-        Sound speed squared in the high-temperature phase, obtained via
-        :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range and
-        by its value at :py:data:`TMinHighT` and :py:data:`TMaxHighT` outside of the
-        allowed temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        csqHighT : array-like (float)
-            Sound speed squared in the high-temperature phase.
-        """
-        if temperature < self.TMinHighT:
-            return float(self.thermodynamics.csqHighT(self.TMinHighT))
-        if temperature > self.TMaxHighT:
-            return float(self.thermodynamics.csqHighT(self.TMaxHighT))
-
-        return float(self.thermodynamics.csqHighT(temperature))
-
-    def pLowT(self, temperature: float) -> float:
-        r"""
-        Pressure in the low-temperature phase, obtained from
-        :py:data:`WallGo.Thermodynamics.pLowT` for
-        the allowed temperature range and extrapolated to the template model outside
-        of the allowed temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        pLowT : array-like (float)
-            Pressure in the low-temperature phase.
-        """
-        if temperature < self.TMinLowT:
-            return float(
-                1 / 3.0 * self.aMinLowT * pow(temperature, self.muMinLowT)
-                - self.epsilonMinLowT
-            )
-        if temperature > self.TMaxLowT:
-            return float(
-                1 / 3.0 * self.aMaxLowT * pow(temperature, self.muMaxLowT)
-                - self.epsilonMaxLowT
-            )
-
-        return float(self.thermodynamics.pLowT(temperature))
-
-    def dpLowT(self, temperature: float) -> float:
-        r"""
-        Temperature-derivative of the pressure in the low-temperature phase,
-        obtained from :py:data:`WallGo.Thermodynamics.dpLowT` for the allowed
-        temperature range and extrapolated to the template model outside of
-        the allowed temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        dpLowT : array-like (float)
-            Temperature-derivative of the pressure in the low-temperature phase.
-        """
-        if temperature < self.TMinLowT:
-            return float(
-                1
-                / 3.0
-                * self.muMinLowT
-                * self.aMinLowT
-                * pow(temperature, self.muMinLowT - 1)
-            )
-        if temperature > self.TMaxLowT:
-            return float(
-                1
-                / 3.0
-                * self.muMaxLowT
-                * self.aMaxLowT
-                * pow(temperature, self.muMaxLowT - 1)
-            )
-
-        return float(self.thermodynamics.dpLowT(temperature))
-
-    def ddpLowT(self, temperature: float) -> float:
-        r"""
-        Second temperature-derivative of the pressure in the low-temperature phase,
-        obtained from :py:data:`WallGo.Thermodynamics.ddpLowT` for the allowed
-        temperature range and extrapolated to the template model outside of the
-        allowed temperature range
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        ddpLowT : array-like (float)
-            Second temperature-derivative of the pressure in the low-temperature phase.
-        """
-        if temperature < self.TMinLowT:
-            return float(
-                1
-                / 3.0
-                * self.muMinLowT
-                * (self.muMinLowT - 1)
-                * self.aMinLowT
-                * pow(temperature, self.muMinLowT - 2)
-            )
-        if temperature > self.TMaxLowT:
-            return float(
-                1
-                / 3.0
-                * self.muMaxLowT
-                * (self.muMaxLowT - 1)
-                * self.aMaxLowT
-                * pow(temperature, self.muMaxLowT - 2)
-            )
-
-        return float(self.thermodynamics.ddpLowT(temperature))
-
-    def csqLowT(self, temperature: float) -> float:
-        r"""
-        Sound speed squared in the low-temperature phase, obtained via
-        :math:`c_s^2 = \frac{dp/dT}{de/dT}` inside of the allowed temperature range and
-        by its value at :py:data:`TMinLowT` and :py:data:`TMaxLowT` outside of the
-        allowed temperature range.
-
-        Parameters
-        ----------
-        temperature : array-like
-            Temperature(s)
-
-        Returns
-        -------
-        csqLowT : array-like (float)
-            Sound speed squared in the low-temperature phase.
-        """
-        if temperature < self.TMinLowT:
-            return float(self.thermodynamics.csqLowT(self.TMinLowT))
-        if temperature > self.TMaxLowT:
-            return float(self.thermodynamics.csqLowT(self.TMaxLowT))
-
-        return float(self.thermodynamics.csqLowT(temperature))

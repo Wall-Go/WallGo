@@ -125,6 +125,8 @@ class WallGoManager:
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
         )
 
+        self.thermodynamics.setExtrapolate()
+
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydrodynamics(self.thermodynamics)
@@ -272,6 +274,8 @@ class WallGoManager:
 
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
+
+
 
         # Find critical temperature for dT
         self.Tc = self.thermodynamics.findCriticalTemperature(
