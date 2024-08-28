@@ -45,13 +45,14 @@ add_custom_command(TARGET ${MODULE} POST_BUILD
 )
 
 # Generate .pyi stubs. "stubgen" command is from mypy.
+# This step is non-fatal, so we continue with the build even if the stubgen fails (achieved with logical || in the command).
 # TODO for scikit builds run this always since mypy is a build requirement. For non-scikit, run it only if stubgen command is found
 add_custom_command(TARGET ${MODULE} POST_BUILD
 	COMMENT "Generating Python stubs for WallGoCollision"
-	COMMAND stubgen --include-docstrings -o stubs -m ${MODULE}
+	COMMAND stubgen --include-docstrings -o stubs -m ${MODULE} || (exit 0)
 	#COMMAND PYTHONPATH="$<TARGET_FILE_DIR:${MODULE}>" ${Python3_EXECUTABLE} -m pybind11_stubgen ${MODULE}
 	# move the generated .pyi stub to same directory as our module:
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULE}>/stubs/${MODULE}.pyi" "${PACKAGE_DIR}/${MODULE}.pyi"
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULE}>/stubs/${MODULE}.pyi" "${PACKAGE_DIR}/${MODULE}.pyi" || (exit 0)
 	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULE}>"
 )
 
