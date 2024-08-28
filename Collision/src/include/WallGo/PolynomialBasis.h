@@ -53,7 +53,7 @@ public:
     }
     
     // Calculate Tm(rhoZ) Tn(rhoPar) for a given input momenta
-    inline WG_CONSTEXPR20 double TmTn(uint32_t m, uint32_t n, const FourVector &FV) const
+    inline double TmTn(uint32_t m, uint32_t n, const FourVector &FV) const
     {
         double pZ = FV.zComp();
         double pPar = FV.parComp();
@@ -62,7 +62,7 @@ public:
         return Tbar(m, rhoZ) * Ttilde(n, rhoPar);
     }
 
-    inline constexpr size_t getBasisSize() const { return N; }
+    inline size_t getBasisSize() const { return N; }
 };
 
 } // namespace
