@@ -53,7 +53,7 @@ class Fields(np.ndarray):
 
     # Custom constructor that stacks 1D arrays or lists of field-space points into a 2D array 
     def __new__(cls, *fieldSpacePoints: Tuple[FieldPoint]):
-        obj = np.row_stack(fieldSpacePoints)
+        obj = np.vstack(fieldSpacePoints)
         obj = np.atleast_2d(obj)
         return obj.view(cls)
     
