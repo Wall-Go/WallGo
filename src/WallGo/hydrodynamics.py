@@ -255,7 +255,8 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
-            return float(vmin)
+            # We add 0.01 because the functions in EOM become unstable at vmin
+            return float(vmin+0.01)
 
         except ValueError:
             return self.vJ

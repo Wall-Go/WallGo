@@ -126,6 +126,11 @@ class EOM:
         self.maxIterations = maxIterations
         self.pressRelErrTol = pressRelErrTol
         self.pressAbsErrTol = 0.0
+        
+        ## Flag to detect if the temperature profile was found successfully
+        self.successTemperatureProfile = True
+        ## Flag to detect if we were able to find the pressure
+        self.successWallPressure = True
 
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
@@ -251,15 +256,13 @@ class EOM:
         boltzmannResults1 = copy.deepcopy(boltzmannResults2)
         wallPressureResults1 = copy.deepcopy(wallPressureResults2)
         
-        stepSizeMin = (vmax-vmin)/nbrPointsMax
-        stepSizeMax = (vmax-vmin)/nbrPointsMin
+        stepSizeMin = (vmax-vmin)/(nbrPointsMax-1)
+        stepSizeMax = (vmax-vmin)/(nbrPointsMin-1)
         
         while vw2 < vmax:
-            mean2ndDeriv = 0
             std2ndDeriv = std2ndDerivPrior
             n = len(list2ndDeriv)
             if n > 0:
-                mean2ndDeriv = list2ndDeriv[-1]
                 std2ndDeriv = (std2ndDerivPrior + np.std(list2ndDeriv)*n)/(n+1)
             
             
@@ -277,6 +280,11 @@ class EOM:
             )
             # Increase pos3 if the step size is too small
             vw3 = max(vw3, min(vmax, vw2+stepSizeMin))
+            
+            # If this is the last point probed and pressure2>0, there is no point in
+            # computing the pressure since no stable solution is possible.
+            if vw3 == vmax and pressure2 > 0:
+                break
             
             # Use linear extrapolation to get a more accurate initial value of wall
             # parameters
@@ -316,10 +324,20 @@ class EOM:
                 # If pressure is too large at vmin to have a detonation solution,
                 # we return 0.
                 results.setWallVelocities(0, 0, 0)
+                results.setMessage(
+                    True,
+                    "The pressure is too large to have a detonation solution. "\
+                    "Try finding a deflagration or hybrid solution."
+                )
             else:
                 # If pressure is too small to have a detonation, it is a runaway and we
                 # return 1.
                 results.setWallVelocities(1, 0, 1)
+                results.setMessage(
+                    True,
+                    "The pressure is too small to have a detonation solution. "\
+                    "The solution is a runaway wall."
+                )
             return [results]
 
         return listResults
@@ -399,6 +417,11 @@ class EOM:
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
             results.setBoltzmannResults(boltzmannResultsMax)
+            results.setMessage(
+                True,
+                "The maximum pressure on the wall is negative. "\
+                "The solution must be a detonation or a runaway wall."
+            )
             return results
 
         # Get the pressure at vw = wallVelocityMin
@@ -433,6 +456,11 @@ class EOM:
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
+                results.setMessage(
+                    False,
+                    "The pressure at vw=0 is positive which indicates the PT cannot "\
+                    "proceed. Something might be wrong with your potential."
+                )
                 return results
             (
                 pressureMin,
@@ -542,6 +570,44 @@ class EOM:
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
         results.setFiniteDifferenceBoltzmannResults(finiteDifferenceBoltzmannResults)
+        
+        # Set the message
+        if not self.successTemperatureProfile:
+            results.setMessage(
+                False, "The temperature profile was not found succcessfully")
+        elif (results.temperatureMinus < self.hydrodynamics.TMinLowT or
+              results.temperatureMinus > self.hydrodynamics.TMaxLowT):
+            results.setMessage(
+                False,
+                f"Tminus={results.temperatureMinus} is not in the allowed range "\
+                f"[{self.hydrodynamics.TMinLowT},{self.hydrodynamics.TMaxLowT}]."
+            )
+        elif (results.temperaturePlus < self.hydrodynamics.TMinHighT or
+              results.temperaturePlus > self.hydrodynamics.TMaxHighT):
+            results.setMessage(
+                False,
+                f"Tplus={results.temperaturePlus} is not in the allowed range "\
+                f"[{self.hydrodynamics.TMinHighT},{self.hydrodynamics.TMaxHighT}]."
+            )
+        elif not self.successWallPressure:
+            results.setMessage(
+                False,
+                "The pressure for the wall velocity has not converged to sufficient "\
+                "accuracy with the given maximum number for iterations."
+            )
+        elif not optimizeResult.converged:
+            results.setMessage(False, optimizeResult.flag)
+        elif (np.any(wallParams.widths == self.wallThicknessBounds[0]/self.thermo.Tnucl)
+              or np.any(wallParams.offsets == self.wallOffsetBounds[0]) or
+              np.any(wallParams.widths == self.wallThicknessBounds[1]/self.thermo.Tnucl)
+              or np.any(wallParams.offsets == self.wallOffsetBounds[1])):
+            results.setMessage(
+                False,
+                f"At least one of the {wallParams=} saturates the given bounds. "\
+                "The solution is probably inaccurate."
+            )
+        else:
+            results.setMessage(True, "The wall velocity was found successfully.")
 
         # return collected results
         return results
@@ -602,6 +668,8 @@ class EOM:
             atol = self.pressAbsErrTol
         if rtol is None:
             rtol = self.pressRelErrTol
+
+        self.successWallPressure = True
 
         improveConvergence = self.forceImproveConvergence
         if wallVelocity > self.hydrodynamics.vJ:
@@ -679,38 +747,8 @@ class EOM:
         vevLowT = self.thermo.freeEnergyLow(TminusEval).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(TplusEval).fieldsAtMinimum
 
-        ##Estimate the new grid parameters
-        widths = wallParams.widths
-        offsets = wallParams.offsets
-        ## Distance between the right and left edges of the walls at the boundaries
-        wallThicknessGrid = (
-            np.max((1 - offsets) * widths) - np.min((-1 - offsets) * widths)
-        ) / 2
-        ## Center between these two edges
-        ## The source and pressure are proportional to d(m^2)/dz, which peaks at
-        ## -wallThicknessGrid*np.log(2)/2. This is why we substract this value.
-        wallCenterGrid = (
-            np.max((1 - offsets) * widths) + np.min((-1 - offsets) * widths)
-        ) / 2 - wallThicknessGrid * np.log(2) / 2
-        gammaWall = 1 / np.sqrt(1 - velocityMid**2)
-        """ The length of the tail inside typically scales like gamma, while the one
-        outside like 1/gamma. We take the max because the tail lengths must be larger
-        than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
-        tailInside = max(
-            self.meanFreePath * gammaWall * self.includeOffEq,
-            wallThicknessGrid
-            * (1 + 2.1 * self.grid.smoothing)
-            / self.grid.ratioPointsWall,
-        )
-        tailOutside = max(
-            self.meanFreePath / gammaWall * self.includeOffEq,
-            wallThicknessGrid
-            * (1 + 2.1 * self.grid.smoothing)
-            / self.grid.ratioPointsWall,
-        )
-        self.grid.changePositionFalloffScale(
-            tailInside, tailOutside, wallThicknessGrid, wallCenterGrid
-        )
+        ## Update the grid
+        self._updateGrid(wallParams, velocityMid)
 
         (
             pressure,
@@ -788,7 +826,7 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            print(f"{pressure=} {error=} {errTol=} {improveConvergence=} {multiplier=}")
+            print(f"{pressure=} {error=} {errorSolver=} {errTol=} {improveConvergence=} {multiplier=}")
             i += 1
 
             if error < errTol or (errorSolver < errTol and improveConvergence):
@@ -811,13 +849,24 @@ class EOM:
                     "sufficient accuracy with the given maximum number "
                     "for iterations."
                 )
+                # If it has not converged, returns the mean of the last 4 iterations
+                pressure = np.mean(pressures[-4:])
+                self.successWallPressure = False
                 break
+            elif len(pressures) >= 4:
+                # If the pressure oscillates between 2 values, decrease the multiplier
+                if (abs(pressures[-1]-pressures[-3]) < errTol and 
+                    abs(pressures[-2]-pressures[-4]) < errTol):
+                    multiplier /= 2.0
+                elif i % 10 == 0:
+                    multiplier = min(multiplier, 0.5**int(i/10))
 
             if len(pressures) > 2:
                 if error > abs(pressures[-2] - pressures[-3]) / 1.5:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
-
+        
+        print(f"Final {pressure=}; Final {wallParams=}")
         return (
             pressure,
             wallParams,
@@ -940,6 +989,14 @@ class EOM:
         wall parameters and Boltzmann solution. This is done by first solving
         the Boltzmann equation and then minimizing the action to solve the EOM.
         """
+
+        wallParams.widths = np.maximum(
+            np.minimum(wallParams.widths,
+                       0.9*self.wallThicknessBounds[1]/self.thermo.Tnucl),
+            1.1*self.wallThicknessBounds[0]/self.thermo.Tnucl)
+        wallParams.offsets = np.maximum(
+            np.minimum(wallParams.offsets, 0.9*self.wallOffsetBounds[1]),
+            1.1*self.wallOffsetBounds[0])
 
         ## here dfieldsdz are z-derivatives of the fields
         fields, dfieldsdz = self.wallProfile(
@@ -1069,6 +1126,54 @@ class EOM:
             (np.array([0.0]), wallArray[self.nbrFields :])
         )
         return WallParams(widths=wallArray[: self.nbrFields], offsets=offsets)
+    
+    def _updateGrid(self, wallParams: WallParams, velocityMid: float) -> None:
+        """
+        Update the grid parameters.
+
+        Parameters
+        ----------
+        wallParams : WallParams
+            Wall parameters to match.
+        velocityMid : float
+            Plasma velocity at xi=0.
+
+        Returns
+        -------
+        None
+
+        """
+        widths = wallParams.widths
+        offsets = wallParams.offsets
+        ## Distance between the right and left edges of the walls at the boundaries
+        wallThicknessGrid = (
+            np.max((1 - offsets) * widths) - np.min((-1 - offsets) * widths)
+        ) / 2
+        ## Center between these two edges
+        ## The source and pressure are proportional to d(m^2)/dz, which peaks at
+        ## -wallThicknessGrid*np.log(2)/2. This is why we substract this value.
+        wallCenterGrid = (
+            np.max((1 - offsets) * widths) + np.min((-1 - offsets) * widths)
+        ) / 2 - wallThicknessGrid * np.log(2) / 2
+        gammaWall = 1 / np.sqrt(1 - velocityMid**2)
+        """ The length of the tail inside typically scales like gamma, while the one
+        outside like 1/gamma. We take the max because the tail lengths must be larger
+        than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
+        tailInside = max(
+            self.meanFreePath * gammaWall * self.includeOffEq,
+            wallThicknessGrid
+            * (1 + 2.1 * self.grid.smoothing)
+            / self.grid.ratioPointsWall,
+        )
+        tailOutside = max(
+            self.meanFreePath / gammaWall * self.includeOffEq,
+            wallThicknessGrid
+            * (1 + 2.1 * self.grid.smoothing)
+            / self.grid.ratioPointsWall,
+        )
+        self.grid.changePositionFalloffScale(
+            tailInside, tailOutside, wallThicknessGrid, wallCenterGrid
+        )
 
     def action(
         self,
@@ -1077,6 +1182,7 @@ class EOM:
         vevHighT: Fields,
         temperatureProfile: np.ndarray,
         offEquilDelta00: Polynomial,
+        showLagrangian: bool = False,
     ) -> float:
         """
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
@@ -1206,7 +1312,7 @@ class EOM:
         offEquilDeltas: BoltzmannDeltas,
         Tplus: float,
         Tminus: float,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, bool]:
         r"""
         Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of
         LHS.
@@ -1236,10 +1342,13 @@ class EOM:
             Temperature profile in the wall.
         velocityProfile : array-like
             Plasma velocity profile in the wall.
+        success : bool
+            Whether or not the temperature profile was found successfully.
 
         """
         temperatureProfile = np.zeros(len(self.grid.xiValues))
         velocityProfile = np.zeros(len(self.grid.xiValues))
+        self.successTemperatureProfile = True
 
         for index in range(len(self.grid.xiValues)):
             T, vPlasma = self.findPlasmaProfilePoint(
@@ -1253,9 +1362,14 @@ class EOM:
                 Tplus,
                 Tminus,
             )
-
-            temperatureProfile[index] = T
-            velocityProfile[index] = vPlasma
+            if T > 0:
+                temperatureProfile[index] = T
+                velocityProfile[index] = vPlasma
+            else:
+                ## If no solution was found, use the last point
+                temperatureProfile[index] = temperatureProfile[index-1]
+                velocityProfile[index] = velocityProfile[index-1]
+                self.successTemperatureProfile = False
 
         return temperatureProfile, velocityProfile
 
@@ -1340,7 +1454,8 @@ class EOM:
         i = 0 # pylint: disable=invalid-name
         while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
             if i > 100:
-                raise WallGoError("Can't find the temperature profile.")
+                ## No solution was found. We return 0.
+                return 0, 0
             tempAtMinimum *= TMultiplier
             testTemp *= TMultiplier
             i += 1

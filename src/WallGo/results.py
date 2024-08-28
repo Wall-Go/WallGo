@@ -172,6 +172,12 @@ class WallGoResults:
     r"""Relativistically invariant integrals over
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
+    
+    success: bool
+    """Whether or not the calculation was successful."""
+    
+    message: str
+    """Description of the cause of the termination."""
 
     def __init__(self) -> None:
         pass
@@ -230,6 +236,13 @@ class WallGoResults:
         """
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
+
+    def setMessage(self, success: bool, message: str) -> None:
+        """
+        Set the termination message and the success flag.
+        """
+        self.success = success
+        self.message = message
 
 
 @dataclass

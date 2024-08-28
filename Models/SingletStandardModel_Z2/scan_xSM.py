@@ -48,7 +48,7 @@ class SingletSMScan(SingletSM_Z2):
 modelsBenoit = np.load('models.npy', allow_pickle=True)
 
 
-def findWallVelocity(i, verbose=False):
+def findWallVelocity(i, verbose=False, detonation=False):
     try:
         # if not verbose:
         #     sys.stdout = open(os.devnull, 'w')
@@ -83,6 +83,7 @@ def findWallVelocity(i, verbose=False):
             if wallThicknessIni == 0:
                 wallThicknessIni = 5/Tn
             
+            wallThicknessIni = 20/Tn
             # Estimate of the mean free path of the particles in the plasma
             meanFreePath = 100/Tn
             
@@ -190,17 +191,23 @@ def findWallVelocity(i, verbose=False):
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
             
-            results = manager.solveWall(bIncludeOffEq)
+            if not detonation:
+                results = manager.solveWall(bIncludeOffEq, wallThicknessIni)
+            else:
+                results = manager.solveWallDetonation(wallThicknessIni=wallThicknessIni)[0]
             wallVelocity = results.wallVelocity
-            widths = results.wallWidths
-            offsets = results.wallOffsets
+            
+            if not results.success:
+                raise WallGo.WallGoError(results.message)
             
             print(f"WallGo: {wallVelocity=}")
-            print(f"{widths=}")
-            print(f"{offsets=}")
+            print("Message:", results.message)
             
             if verbose and 0 < wallVelocity < 1:
                 print(f"{results.temperaturePlus=}, {results.temperatureMinus=}")
+                widths = results.wallWidths
+                offsets = results.wallOffsets
+                print(f"{widths=} {offsets=}")
                 plt.plot(manager.grid.chiValues, Tn**2*results.Deltas.Delta00.coefficients[0])
                 plt.plot(manager.grid.chiValues, results.Deltas.Delta20.coefficients[0])
                 plt.plot(manager.grid.chiValues, results.Deltas.Delta02.coefficients[0])
@@ -219,7 +226,7 @@ def findWallVelocity(i, verbose=False):
         return i, -1, -1, e
 
 # Stopped at i=736
-def scanXSM(start=0, end=None, onlyErrors=False):
+def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
     WallGo.initialize()
     
     ## Modify the config, we use N=5 for this example
@@ -242,7 +249,7 @@ def scanXSM(start=0, end=None, onlyErrors=False):
                 isInverse = True
         if (scanResults[i]['error'] != 'success' and not isInverse) or not onlyErrors:
             try:
-                _, vwOut, vwLTE, error = findWallVelocity(i)
+                _, vwOut, vwLTE, error = findWallVelocity(i, False, detonation)
                 
                 currentTime = time()
                 timePerModel = (currentTime-timeIni)/(nbrModels-start+1)
@@ -259,9 +266,13 @@ def scanXSM(start=0, end=None, onlyErrors=False):
                 if vwOut == -1:
                     print(f'ERROR: {error}')
                 
-                scanResults[i]['vwOut'] = vwOut
-                scanResults[i]['vwLTE'] = vwLTE
-                scanResults[i]['error'] = error
+                if not detonation:
+                    scanResults[i]['vwOut'] = vwOut
+                    scanResults[i]['vwLTE'] = vwLTE
+                    scanResults[i]['error'] = error
+                else:
+                    scanResults[i]['vwDeton'] = vwOut
+                    scanResults[i]['errorDeton'] = error
                 
                 np.save('scanResults.npy', scanResults)
             except:
