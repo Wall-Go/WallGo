@@ -16,7 +16,12 @@ from .FreeEnergy import FreeEnergy
 
 class Thermodynamics:
     """
-    Thermodynamic functions corresponding to the effective potential
+    Thermodynamic functions corresponding to the effective potential.
+
+    All functions can be run outside of the temperature range where the phases
+    exist if the minimum and maximum temperatures of the phases are known
+    (these are obtained by FreeEnergy.tracePhase()) and self.setExtrapolate has
+    been run.
     """
 
     def __init__(
@@ -24,8 +29,7 @@ class Thermodynamics:
         effectivePotential: EffectivePotential,
         nucleationTemperature: float,
         phaseLowT: Fields,
-        phaseHighT: Fields,
-        extrapolate: bool = True,
+        phaseHighT: Fields
     ):
         """Initialisation
 
@@ -43,29 +47,17 @@ class Thermodynamics:
             The location of the high temperature phase at the nucleation
             temperature. Does not need to be exact, as resolved internally
             with input as starting point.
-        extrapolate: Bool
-            Setting for handling temperatures outside of the range where
-            the phase exists. If True, the equation of state gets
-            extrapolated using the template model of [LM15]_ outside of
-            the allowed range.
-            
 
         Returns
         -------
         cls: Thermodynamics
             An object of the Thermodynamics class.
 
-        References
-        ----------
-        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
-            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
-            doi:10.1016/j.nuclphysb.2014.12.008
         """
         self.effectivePotential = effectivePotential
         self.Tnucl = nucleationTemperature
         self.phaseLowT = phaseLowT
         self.phaseHighT = phaseHighT
-        self.extrapolate = extrapolate
 
         self.freeEnergyHigh = FreeEnergy(
             self.effectivePotential,
@@ -84,16 +76,27 @@ class Thermodynamics:
         self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
 
 
-        print(f"{self.TMaxHighT =} {self.TMinHighT =} {self.TMaxLowT =} {self.TMinLowT =}")
-
-        print(f"{self.csqHighT(self.TMinHighT+ 1e-6)=}")
-        print(f"{self.csqHighT(self.Tnucl)=}")
-
-
     def setExtrapolate(self) -> None:
-        # The following parameters are defined such that the thermodynamic quantities
-        # can be extrapolated beyond the minimum and maximum temperatures
-        # by mapping onto the template model
+        """        
+        Allows use of thermodynamics outside of the temperature range where
+        the phase exists. The equation of state gets
+        extrapolated using the template model of [LM15]_ outside of
+        the allowed range.
+        This function computes the parameters of the template model.
+
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        
+        References
+        ----------
+        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts
+            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199
+            doi:10.1016/j.nuclphysb.2014.12.008
+
+        """
 
         self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature
         self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature
@@ -140,8 +143,6 @@ class Thermodynamics:
         self.epsilonMaxLowT = 1 / 3.0 * self.aMaxLowT * pow(
             self.TMaxLowT, self.muMaxLowT
         ) - self.pLowT(self.TMaxLowT)
-
-        print(f"{self.aMaxLowT = } {self.muMinHighT=}")
 
 
     def _getCoexistenceRange(self) -> Tuple[float, float]:
