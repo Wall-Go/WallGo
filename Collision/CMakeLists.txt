@@ -20,12 +20,6 @@ if (USE_CXX20)
     endif()
 endif()
 
-# Set output directories
-#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
-# Default to static libs
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 # What to call the C++ library
@@ -37,7 +31,6 @@ set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
 # Set default built type
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
-	#set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 if (CMAKE_TOOLCHAIN_FILE)

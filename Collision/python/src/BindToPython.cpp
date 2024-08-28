@@ -18,7 +18,7 @@ namespace wallgo
 {
 
 /** NOTE. When working with Python bindings we must pay special care to Python's Global Interpreter Lock (GIL)
-because the collision integration routines are multithreaded. Reference: https://pybind11.readthedocs.io/en/stable/advanced/misc.html#global-interpreter-lock-gil. 
+because the collision integration routines are multithreaded. Reference: https://pybind11.readthedocs.io/en/stable/advanced/misc.html#global-interpreter-lock-gil.
 
 In our case we have a GIL problem in CollisionIntegral4::evaluateOnGrid, because:
     - Evaluation of a MatrixElement is not thread safe because it needs to set internal parameters in order to evaluate the parsed matrix element
@@ -38,8 +38,9 @@ increasing reference count on Python side.
 */
 
 
-// Module definition. This block gets executed when the module is imported.
-PYBIND11_MODULE(_WallGoCollision, m)
+/* Module definition.This block gets executed when the module is imported.
+Module name is passed from cmake. */
+PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
 {
     namespace py = pybind11;
 
@@ -49,7 +50,12 @@ PYBIND11_MODULE(_WallGoCollision, m)
     std::cout << "Warning: Loaded debug build of WallGo Collision module. Expect poor performance." << std::endl;
 #endif
 
+#if !WITH_OMP
+    std::cout << "Warning: WallGo Collision module running in single-threaded mode (no OpenMP installation found during compilation). Expect poor performance." << std::endl;
+#endif
+
     wallgo::initializeRNG();
+
     // Let pybind11 handle cleanup timing, works better than std::atexit
     m.add_object("_cleanup", py::capsule(wallgo::cleanup));
 
@@ -59,7 +65,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
     utils::gExitSignalChecker = []() -> bool
         {
             // Hacky, ensure we have GIL before accessing Python state. Necessary because we do signal checks from long-running parallelized functions during which GIL is released
-            py::gil_scoped_acquire acquire;   
+            py::gil_scoped_acquire acquire;
             bool bShouldExit = static_cast<bool>(PyErr_CheckSignals());
             return bShouldExit;
         };
@@ -97,7 +103,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
             "If true, prints every element of the collision tensor to stdout."
             "Very high overhead, intended for debugging only."
         );
-    
+
     py::class_<CollisionResultsGrid>(m, "CollisionResultsGrid", "Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair")
         .def("hasStatisticalErrors", &CollisionResultsGrid::hasStatisticalErrors, "Returns True if statistical errors are included")
         .def("getBasisSize", &CollisionResultsGrid::getBasisSize, "Basis size of the momentum grid")
@@ -131,7 +137,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
             py::arg("outDirectory"), py::arg("bWriteErrors") = true)
         .def(
             "getResultsForParticlePair",
-            static_cast<CollisionResultsGrid*(CollisionTensorResult::*)(const std::string&, const std::string&)>(&CollisionTensorResult::getResultsForParticlePair),
+            static_cast<CollisionResultsGrid * (CollisionTensorResult::*)(const std::string&, const std::string&)>(&CollisionTensorResult::getResultsForParticlePair),
             py::return_value_policy::reference,
             R"(Returns reference to collision integration results of the specified particle pair.
             Can be None if the pair is not found)",
@@ -157,8 +163,8 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def("computeIntegralsAll",
             static_cast<CollisionTensorResult(CollisionTensor::*)()>(&CollisionTensor::computeIntegralsAll),
             /* GIL released for the duration of this function to avoid it mess with multithreading.
-            FIXME How safe is this actually? Currently we do not do any thread-unsafe changes to Python state so it at least works.
-            */ 
+            FIXME How safe is this actually? Currently we do not do any thread-unsafe changes to Python state, and at least it seems to work.
+            */
             py::call_guard<py::gil_scoped_release>(),
             R"(Calculates all collision integrals associated with this tensor.)"
         );
@@ -171,7 +177,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
         .def("clear", &ModelParameters::clear, "Empties the parameter container")
         .def("getNumParams", &ModelParameters::getNumParams, "Returns number of contained parameters")
         .def("getParameterNames", &ModelParameters::getParameterNames, "Returns list containing names of parameters that have been defined")
-        // Operator[] on Python side is __getitem__. We bind a helper lambda to achieve this
+        // Operator[] on Python side is __getitem__. Bind a helper lambda to achieve this
         .def("__getitem__",
             [](const ModelParameters& self, const std::string& paramName)
             {
@@ -180,7 +186,7 @@ PYBIND11_MODULE(_WallGoCollision, m)
             "Get current value of specified parameter. Returns 0 if the parameter is not found (prefer the contains() method if unsure)",
             py::arg("name")
         );
-        
+
 
     py::enum_<EParticleType>(m, "EParticleType")
         .value("eNone", EParticleType::eNone)
@@ -202,11 +208,11 @@ PYBIND11_MODULE(_WallGoCollision, m)
                The output should be in units of the temperature, ie. return value is (m/T)^2.)"
         );
 
-    
+
     py::class_<ModelDefinition>(m,
-            "ModelDefinition",
-            R"(Helper class for defining a WallGoCollision.PhysicsModel. Fill in your model parameters and particle content here.)"
-        )
+        "ModelDefinition",
+        R"(Helper class for defining a WallGoCollision.PhysicsModel. Fill in your model parameters and particle content here.)"
+    )
         .def(py::init<>())
         .def("defineParticleSpecies", &ModelDefinition::defineParticleSpecies, "Registers a new ParticleDescription with the model")
         // Bind the right overload by explicitly casting to specific signature, see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods

@@ -18,14 +18,15 @@ dependencies = [
 	"mypy>=1.11.1"
 ]
 
-[tool.scikit-build-core]
+[tool.scikit-build]
 cmake.verbose = true
-#cmake.args = []
 cmake.build-type = "Release"
 # Run cmake before building wheel
 wheel.cmake = true
-editable.mode = "redirect"
-#editable.mode = "inplace"
+
+[tool.scikit-build.cmake.define]
+# Disable compilation of CPP specific examples
+BUILD_EXAMPLES = "OFF"
 
 # Editable installs come with a bunch of issues, see https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs
 # In particular, pip tends to delete the build dir after installation, so we lose the Conan toolchain file etc.
@@ -33,4 +34,3 @@ editable.mode = "redirect"
 
 [tool.scikit-build-core-conan]
 build = "missing"
-output_folder = "build"

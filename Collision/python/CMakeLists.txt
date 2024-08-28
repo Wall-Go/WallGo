@@ -1,10 +1,9 @@
 # What to call the python module. Needs to match the identifier used in PYBIND11_MODULE(...) in C++
-set(MODULE _WallGoCollision)
+set(MODULENAME _WallGoCollision)
 
 # Find Python. The library produced by pybind11 is version dependent,
 # so we must to allow the user to specify their preferred Python version. 
 # Also, Development.Module should be safer than Development. https://pybind11.readthedocs.io/en/stable/compiling.html#findpython-mode
-
 if (DEFINED USER_PYTHON_VERSION)
 	find_package(Python3 ${USER_PYTHON_VERSION} EXACT REQUIRED COMPONENTS Interpreter Development.Module)
 else()
@@ -22,45 +21,48 @@ find_package(pybind11 CONFIG REQUIRED)
 
 message(STATUS "=== Building Python bindings for Python version ${Python3_VERSION}")
 
-pybind11_add_module(${MODULE})
+pybind11_add_module(${MODULENAME})
 
-target_sources(${MODULE} PRIVATE
+target_compile_definitions(${MODULENAME} PUBLIC WG_PYTHON_MODULE_NAME=${MODULENAME})
+
+target_sources(${MODULENAME} PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/src/BindToPython.cpp
 )
 
-target_link_libraries(${MODULE} PRIVATE
+target_link_libraries(${MODULENAME} PRIVATE
 	${WALLGO_LIB}
 )	
 
-target_include_directories(${MODULE} PRIVATE
+target_include_directories(${MODULENAME} PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/include"
 	${WALLGO_LIB}
 )
 
 set(PACKAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/package/WallGoCollision")
 
-add_custom_command(TARGET ${MODULE} POST_BUILD
+add_custom_command(TARGET ${MODULENAME} POST_BUILD
 	COMMENT "Copying module for packaging"
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULE}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULE}>"
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULENAME}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULENAME}>"
 )
 
 # Generate .pyi stubs. "stubgen" command is from mypy.
 # This step is non-fatal, so we continue with the build even if the stubgen fails (achieved with logical || in the command).
-# TODO for scikit builds run this always since mypy is a build requirement. For non-scikit, run it only if stubgen command is found
-add_custom_command(TARGET ${MODULE} POST_BUILD
+add_custom_command(TARGET ${MODULENAME} POST_BUILD
 	COMMENT "Generating Python stubs for WallGoCollision"
-	COMMAND stubgen --include-docstrings -o stubs -m ${MODULE} || (exit 0)
-	#COMMAND PYTHONPATH="$<TARGET_FILE_DIR:${MODULE}>" ${Python3_EXECUTABLE} -m pybind11_stubgen ${MODULE}
+	COMMAND stubgen --include-docstrings -o stubs -m ${MODULENAME} || (exit 0)
+	# Old version that uses pybind11_stubgen instead:
+	#COMMAND PYTHONPATH="$<TARGET_FILE_DIR:${MODULENAME}>" ${Python3_EXECUTABLE} -m pybind11_stubgen ${MODULENAME}
+
 	# move the generated .pyi stub to same directory as our module:
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULE}>/stubs/${MODULE}.pyi" "${PACKAGE_DIR}/${MODULE}.pyi" || (exit 0)
-	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULE}>"
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULENAME}>/stubs/${MODULENAME}.pyi" "${PACKAGE_DIR}/${MODULENAME}.pyi" || (exit 0)
+	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULENAME}>"
 )
 
 # For scikit builds use default install dir so that pip correctly puts the module in site-packages
 if(SKBUILD)
-	install(TARGETS ${MODULE} DESTINATION .)
+	install(TARGETS ${MODULENAME} DESTINATION .)
 else()
-	#install(TARGETS ${MODULE} DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/module")
+	#install(TARGETS ${MODULENAME} DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/module")
 endif()
 
 ## Setup a target for test Python script and tell VS how to run it 
@@ -70,9 +72,7 @@ set(PYTHON_TEST_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/package/test_collision_packa
 add_custom_target(
 	PybindTestScript ALL
 	SOURCES ${PYTHON_TEST_SCRIPT}
-	DEPENDS ${MODULE}
-	# if we want to run this at build time:
-	#COMMAND ${Python3_EXECUTABLE} ${PYTHON_TEST_SCRIPT} "$<TARGET_FILE:${MODULE}>"
+	DEPENDS ${MODULENAME}
 )
 
 set_target_properties(PybindTestScript PROPERTIES
