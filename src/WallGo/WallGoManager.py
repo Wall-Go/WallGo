@@ -454,7 +454,7 @@ class WallGoManager:
         nbrPointsMin = self.config.getfloat("EOM", "nbrPointsMinDeton")
         nbrPointsMax = self.config.getfloat("EOM", "nbrPointsMaxDeton")
         overshootProb = self.config.getfloat("EOM", "overshootProbDeton")
-        vmin = max(self.hydrodynamics.vJ + 1e-10, self.hydrodynamics.slowestDeton())
+        vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
         
         return self.eom.findWallVelocityDetonation(
             vmin,

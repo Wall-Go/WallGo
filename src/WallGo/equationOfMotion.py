@@ -241,7 +241,7 @@ class EOM:
         vw2 = vmin
 
         wallPressureResults2 = self.wallPressure(vw2, wallParams2, 0, rtol, None)
-        pressure2, wallParams2, boltzmannResults2, _, _ = wallPressureResults2
+        pressure2, wallParams, boltzmannResults, _, _ = wallPressureResults2
         pressureIni = pressure2 # Only used at the end if no solutions are found
         
         list2ndDeriv = []
@@ -252,8 +252,6 @@ class EOM:
         
         vw1 = 0.
         pressure1 = pressure2
-        wallParams1 = copy.deepcopy(wallParams2)
-        boltzmannResults1 = copy.deepcopy(boltzmannResults2)
         wallPressureResults1 = copy.deepcopy(wallPressureResults2)
         
         stepSizeMin = (vmax-vmin)/(nbrPointsMax-1)
@@ -286,19 +284,11 @@ class EOM:
             if vw3 == vmax and pressure2 > 0:
                 break
             
-            # Use linear extrapolation to get a more accurate initial value of wall
-            # parameters
-            wallParams3 = wallParams2+(wallParams2-wallParams1)*(vw3-vw2)/(vw2-vw1)
-            boltzmannResults3 = boltzmannResults2+(
-                boltzmannResults2-boltzmannResults1)*((vw3-vw2)/(vw2-vw1))
-            
-            wallParams1 = copy.deepcopy(wallParams2)
-            boltzmannResults1 = copy.deepcopy(boltzmannResults2)
             wallPressureResults1 = copy.deepcopy(wallPressureResults2)
 
             # Compute the new pressure
             wallPressureResults2 = self.wallPressure(
-                vw3, wallParams3, 0, rtol, boltzmannResults3)
+                vw3, wallParams, 0, rtol, boltzmannResults)
             pressure3, wallParams2, boltzmannResults2, _, _ = wallPressureResults2
             
             # Estimate the 2nd deriv by finite differences and append it to list2nDeriv
