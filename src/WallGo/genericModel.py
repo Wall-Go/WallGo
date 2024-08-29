@@ -13,54 +13,21 @@ class GenericModel(ABC):
     The user should implement this and the abstract methods below with their model-specific stuff.
     """
 
-    ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones)
-    @property
-    @abstractmethod
-    def particles(self) -> list[Particle]:
-        pass
-
-    ## Another particle array for holding just the out-of-equilibrium particles
-    @property
-    @abstractmethod
-    def outOfEquilibriumParticles(self) -> list[Particle]:
-        pass
-
-    @property
-    @abstractmethod
-    def modelParameters(self) -> dict[str, float]:
+    def __init__(self):
+        """Initializes empty model content.
         """
-        Returns the parameters of the model as a dictionary.
-        Model parameters (parameters in the action and RG scale, but not temperature)
-        are expected to be a member dict.
-        Here, is a property definition for it.
-        Child classes can just do modelParameters = { ... } to define it
+        self.particles: list[Particle] = []
+        self.outOfEquilibriumParticles: list[Particle] = []
+        self.modelParameters: dict[str, float] = {}
+        effectivePotential: EffectivePotential = None
+        inputParameters: dict[str, float] = None
 
-        Returns:
-            A dictionary containing the model parameters,
-            where the keys are strings and the values are floats.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def collisionParameters(self) -> dict[str, float]:
-        pass
-
-    ## How many classical fields
+        
+    ## How many classical fields. We require getter only; field count should not change at runtime
     @property
     @abstractmethod
     def fieldCount(self) -> int:
         pass
-
-    """
-    ## Effective potential
-    @property
-    @abstractmethod
-    def Veff(self) -> EffectivePotential:
-        pass
-    """
-    effectivePotential: EffectivePotential
-    inputParameters: dict[str, float]
 
     def addParticle(self, particleToAdd: Particle) -> None:
         ## Common routine for defining a new particle. Usually should not be overriden
