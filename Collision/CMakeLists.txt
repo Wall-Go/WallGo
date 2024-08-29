@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
 project(Collision VERSION 0.2.0 LANGUAGES CXX)
-# NB: project name is used across other CMake files for target names (${CMAKE_PROJECT_NAME})
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -12,20 +11,18 @@ if (USE_CXX20)
     
     if (COMPILER_SUPPORTS_CXX20)
         set(CMAKE_CXX_STANDARD 20)
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
     else()
         # Fallback to C++17
         set(CMAKE_CXX_STANDARD 17)
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
     endif()
 endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
 
 # What to call the C++ library
 set(WALLGO_LIB WallGoCollision CACHE STRING "Name of the WallGo Collision library")
 
-# Installation directory
 set(INSTALL_DIR ${CMAKE_SOURCE_DIR}/bin)
 
 # Set default built type
