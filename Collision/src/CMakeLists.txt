@@ -43,11 +43,10 @@ target_link_libraries(${WALLGO_LIB} PUBLIC
 if (USE_OMP)
 	if (OpenMP_CXX_FOUND)
 		target_link_libraries(${WALLGO_LIB} PUBLIC OpenMP::OpenMP_CXX)
-		add_compile_definitions(WITH_OMP=1)
-
+		target_compile_definitions(${WALLGO_LIB} PUBLIC WITH_OMP=1)
 	else()
 		message(WARNING "OpenMP installation not found, multithreading will be DISABLED.")
-        add_compile_definitions(WITH_OMP=0)
+        target_compile_definitions(${WALLGO_LIB} PUBLIC WITH_OMP=0)
 	endif()
 endif()
 
