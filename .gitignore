@@ -18,6 +18,7 @@ Collision/bin/
 Collision/examples/bin/
 Collision/run/
 Collision/testrun/
+Collision/python/package_standalone/WallGoCollision/*
 data/
 old/
 *.eps

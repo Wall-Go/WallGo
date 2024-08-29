@@ -23,6 +23,7 @@ import numpy as np
 import numpy.typing as npt
 import pathlib
 import sys
+import argparse
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
@@ -493,10 +494,14 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
 def main() -> None:
 
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument("--outOfEquilibriumGluon", help="")
+
+
     WallGo.initialize()
 
     ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
+    WallGo.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -546,7 +551,7 @@ def main() -> None:
     # automatic generation of collision integrals is disabled by default
     # set to "False" or comment if collision integrals already exist
     # set to "True" to invoke automatic collision integral generation
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
+    WallGo.config.set("Collisions", "generateCollisionIntegrals", "False")
 
     """
     Register the model with WallGo. This needs to be done only once.
@@ -555,14 +560,53 @@ def main() -> None:
     """
     manager.registerModel(model)
 
+    ## TEMP
+    bCalculateCollisions = True
+    if (bCalculateCollisions):
+        import WallGoCollision
+
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
+
+        # import utility functions for this example. These are not part of core WallGo and are intended to demonstrate how to setup the collision module
+        from CollisionDefs import setupCollisionModel_QCD, configureCollisionIntegration
+
+        allowGluonOutOfEquilibrium = True
+
+        # Path to matrix elements file, use location of this .py file as base. This model example only includes QCD processes in collision terms.
+        # Matrix elements can be generated with the accompanying Mathematica package; here we load a pre-generated file to simplify the example
+        scriptLocation = pathlib.Path(__file__).parent.resolve()
+        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD_generated.txt" 
+        collisionModel: WallGoCollision.PhysicsModel = setupCollisionModel_QCD(matrixElementFile, allowGluonOutOfEquilibrium)
+
+        # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
+        basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
+        collisionTensor: WallGoCollision.CollisionTensor = collisionModel.createCollisionTensor(basisSize)
+
+        # Use helper function to manually set integration options specific to this example, for example we enable progress tracking
+        configureCollisionIntegration(collisionTensor)
+
+        """Run the collision integrator. This is a very long running function: For M out-of-equilibrium particle species and momentum grid size N,
+        there are order M^2 x (N-1)^4 integrals to be computed. In your own runs you may want to handle this part in a separate script and offload it eg. to a cluster,
+        especially if using N >> 11.
+        """
+        collisionResults: WallGoCollision.CollisionTensorResult = collisionTensor.computeIntegralsAll()
+
+        """Export the collision integration results to .hdf5. "individual" means that each off-eq particle pair gets its own file.
+        This format is currently required for the main WallGo routines to understand the data. 
+        """
+        collisionResults.writeToIndividualHDF5(str(scriptLocation / f"CollisionOutput_N{basisSize}_UserGenerated"))
+
     ## Generates or reads collision integrals
     manager.generateCollisionFiles()
 
     print("=== WallGo parameter scan ===")
     ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
 
-    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally, 
-    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
+    """ Example mass loop that just does one value of mh2. Note that the WallGoManager class is NOT thread safe internally,
+    so it is NOT safe to parallelize this loop eg. with OpenMP unless you ensure that each thread gets its own copy of WallGoManager.
+    We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """  
     values_mh2 = [ 120.0 ]
     for mh2 in values_mh2:

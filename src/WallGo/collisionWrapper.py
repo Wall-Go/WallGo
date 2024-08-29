@@ -13,6 +13,37 @@ from .genericModel import GenericModel
 from .Fields import Fields
 from .particle import Particle
 
+from typing import TYPE_CHECKING
+
+class CollisionHelpers:
+    """Thin wrapper around the WallGoCollision module to support lazy loading.
+    Also defines utility functions for translating WallGo Python types to collision module types.
+    """
+
+    def __init__(self):
+        try:
+            self._module = importlib.import_module("WallGoCollision")
+            print(f"Loaded WallGoCollision package from location: {self._module.__path__}")
+            
+        except Exception as e:
+            print(f"Error loading WallGoCollision module: {e}")
+            sys.exit(1)
+
+    def getModule(self) -> ModuleType:
+        """Returns the loaded WallGoCollision module for direct access.
+        """
+        return self._module
+    
+    def generateCollisionModelDefinition(self, wallGoModel: GenericModel) -> 'WallGoCollision.ModelDefinition':
+        for particle in wallGoModel.particles:
+            print(particle)
+            
+
+# Import WallGoCollision normally for typechecking only
+if TYPE_CHECKING:
+    import WallGoCollision
+    
+
 
 class Collision:
     """Thin wrapper around the C++ module. This handles loading of the module, provides Python-readable type hints etc.
@@ -230,8 +261,6 @@ class Collision:
             bVerbose (bool, optional):
             If True, prints verbose output. Defaults to False.
         """
-        ## Make sure this is >= 0.
-        # The C++ code requires uint so pybind11 will throw TypeError otherwise
         basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
         self.manager.calculateCollisionIntegrals(basisSize, bVerbose)
 

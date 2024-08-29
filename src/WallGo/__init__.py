@@ -31,7 +31,11 @@ from .Integrals import Integrals
 from .Config import Config
 
 from .collisionWrapper import Collision
+from .collisionWrapper import CollisionHelpers
 from .WallGoUtils import getSafePathToResource
+
+from types import ModuleType
+import importlib
 
 
 defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
@@ -47,6 +51,8 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
 _bInitialized = False
 config = Config()
+# Created only if needed. CollisionHelpers will load the collision module on construction
+collisionHelpers: CollisionHelpers = None
 
 """Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by replacing their direct computation with 
 precomputed interpolation tables."""
@@ -76,6 +82,11 @@ def initialize() -> None:
         ## Initialize interpolations for our default integrals
         _initalizeIntegralInterpolations()
 
+        bNeedsCollisionModule = True
+        if bNeedsCollisionModule:
+            global collisionHelpers
+            collisionHelpers = CollisionHelpers()
+
         _bInitialized = True
     
     else:
@@ -91,3 +102,6 @@ def _initalizeIntegralInterpolations() -> None:
     defaultIntegrals.Jf.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
         )
+    
+def getCollisionModule() -> ModuleType:
+    return collisionModule

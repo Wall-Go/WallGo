@@ -43,8 +43,9 @@ def setupQCD() -> WallGoCollision.PhysicsModel:
     2) Define helper functions for computing thermal masses from the couplings
     3) Define the mass symbols using initial values computed from the helpers.
 
-    For purposes of this example this approach is overly explicit because the mass expressions are very simple.
-    However the helper functions are needed later when defining particle content anyway (assuming non-ultrarelativistic particles), see below.
+    For purposes of the model at hand this approach is overly complicated because the mass expressions are very simple.
+    However the helper functions are necessary in more general cases if using non-ultrarelativistic particle content.
+    In this example the mass functions are written explicitly to demonstrate how the model setup would work in more complicated models.
     """
 
     # The parameter container used by WallGo collision routines is of WallGoCollision.ModelParameters type which behaves somewhat like a Python dict.
