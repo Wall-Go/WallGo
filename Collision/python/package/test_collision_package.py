@@ -16,8 +16,6 @@ except Exception as e:
     input("Press any key to exit...")
     sys.exit(1)
 
-#WallGoCollision.setSeed() ## crash??
-
 # Helper function that configures a QCD-like model for WallGoCollision
 def setupQCD() -> WallGoCollision.PhysicsModel:
 
