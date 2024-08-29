@@ -620,11 +620,11 @@ def main() -> None:
         WallGoCollision.setSeed(0)
 
         # import utility functions for this example. These are not part of core WallGo and are intended to demonstrate how to setup the collision module
-        from CollisionDefs import setupCollisionModel_QCD, configureCollisionIntegration
+        from example_collision_defs import setupCollisionModel_QCD, configureCollisionIntegration
 
         # Path to matrix elements file, use location of this .py file as base. This model example only includes QCD processes in collision terms.
         # Matrix elements can be generated with the accompanying Mathematica package; here we load a pre-generated file to simplify the example
-        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD_generated.txt" 
+        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD.txt" 
         collisionModel: WallGoCollision.PhysicsModel = setupCollisionModel_QCD(matrixElementFile, args.outOfEquilibriumGluon)
 
         # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
