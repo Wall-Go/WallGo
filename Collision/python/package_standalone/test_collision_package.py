@@ -24,7 +24,7 @@ def setupQCD() -> WallGoCollision.PhysicsModel:
     1) Model parameter definitions which must contain all model-specific symbols that appear in matrix elements. This must include any particle masses that appear in propagators.
     2) List of all particle species that appear as external legs in collision processes. If ultrarelativistic approximations are NOT used for some particle species,
     the particle definition must contain a function that computes the particle mass from model parameters. This must be defined even if you include mass variables in the model parameters in stage 1).
-    Details of both stages are described in detail below.    
+    Details of both stages are described in detail below.
     """
     modelDefinition = WallGoCollision.ModelDefinition()
 

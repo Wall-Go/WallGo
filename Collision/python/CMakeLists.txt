@@ -38,12 +38,8 @@ target_include_directories(${MODULENAME} PRIVATE
 	${WALLGO_LIB}
 )
 
-set(PACKAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/package/WallGoCollision")
-
-add_custom_command(TARGET ${MODULENAME} POST_BUILD
-	COMMENT "Copying module for packaging"
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${MODULENAME}>" "${PACKAGE_DIR}/$<TARGET_FILE_NAME:${MODULENAME}>"
-)
+# Specify where our __init__.py and other python-package-specific files are. Stubs will be produced in this folder
+set(PACKAGE_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/packagedata/WallGoCollision")
 
 # Generate .pyi stubs. "stubgen" command is from mypy.
 # This step is non-fatal, so we continue with the build even if the stubgen fails (achieved with logical || in the command).
@@ -54,30 +50,39 @@ add_custom_command(TARGET ${MODULENAME} POST_BUILD
 	#COMMAND PYTHONPATH="$<TARGET_FILE_DIR:${MODULENAME}>" ${Python3_EXECUTABLE} -m pybind11_stubgen ${MODULENAME}
 
 	# move the generated .pyi stub to same directory as our module:
-	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULENAME}>/stubs/${MODULENAME}.pyi" "${PACKAGE_DIR}/${MODULENAME}.pyi" || (exit 0)
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${MODULENAME}>/stubs/${MODULENAME}.pyi" "${PACKAGE_SOURCE_DIRECTORY}/${MODULENAME}.pyi" || (exit 0)
 	WORKING_DIRECTORY "$<TARGET_FILE_DIR:${MODULENAME}>"
 )
 
-# For scikit builds use default install dir so that pip correctly puts the module in site-packages
-if(SKBUILD)
-	install(TARGETS ${MODULENAME} DESTINATION .)
+if (SKBUILD)
+	# Scikit handles installation to correct location
+	install(TARGETS ${MODULENAME} DESTINATION ${SKBUILD_PROJECT_NAME})
 else()
-	#install(TARGETS ${MODULENAME} DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/module")
+
+	set(PACKAGE_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/package_standalone/WallGoCollision")
+
+	add_custom_command(TARGET ${MODULENAME} POST_BUILD
+		COMMENT "Copy Python package data to 'package_standalone/'"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${PACKAGE_SOURCE_DIRECTORY}" "${PACKAGE_INSTALL_DIR}" 
+	)
+
+	install(TARGETS ${MODULENAME} DESTINATION "${PACKAGE_INSTALL_DIR}")
 endif()
 
-## Setup a target for test Python script and tell VS how to run it 
+if(!SKBUILD)
+	## Setup a target for test Python script and tell VS how to run it 
+	set(PYTHON_TEST_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/package_standalone/test_collision_package.py")
 
-set(PYTHON_TEST_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/package/test_collision_package.py")
+	add_custom_target(
+		PybindTestScript ALL
+		SOURCES ${PYTHON_TEST_SCRIPT}
+		DEPENDS ${MODULENAME}
+	)
 
-add_custom_target(
-	PybindTestScript ALL
-	SOURCES ${PYTHON_TEST_SCRIPT}
-	DEPENDS ${MODULENAME}
-)
-
-set_target_properties(PybindTestScript PROPERTIES
-	VS_DEBUGGER_COMMAND "${Python3_EXECUTABLE}"
-	VS_DEBUGGER_COMMAND_ARGUMENTS "${PYTHON_TEST_SCRIPT}"
-	VS_DEBUGGER_ENVIRONMENT "PATH=${Python3_EXECUTABLE_DIR};%PATH%"
-#	VS_DEBUGGER_WORKING_DIRECTORY "${PACKAGE_DIR}"
-)
+	set_target_properties(PybindTestScript PROPERTIES
+		VS_DEBUGGER_COMMAND "${Python3_EXECUTABLE}"
+		VS_DEBUGGER_COMMAND_ARGUMENTS "${PYTHON_TEST_SCRIPT}"
+		VS_DEBUGGER_ENVIRONMENT "PATH=${Python3_EXECUTABLE_DIR};%PATH%"
+	#	VS_DEBUGGER_WORKING_DIRECTORY "${PACKAGE_DIR}"
+	)
+endif()
