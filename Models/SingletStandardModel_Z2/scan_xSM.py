@@ -46,6 +46,7 @@ class SingletSMScan(SingletSM_Z2):
 
 
 modelsBenoit = np.load('models.npy', allow_pickle=True)
+scanResults = np.load('scanResults.npy',allow_pickle=True).tolist()
 
 
 def findWallVelocity(i, verbose=False, detonation=False):
@@ -252,17 +253,17 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
                 _, vwOut, vwLTE, error = findWallVelocity(i, False, detonation)
                 
                 currentTime = time()
-                timePerModel = (currentTime-timeIni)/(nbrModels-start+1)
+                timePerModel = (currentTime-timeIni)/(nbrModels+1)
                 remainingModels = end - i - 1
                 remainingTime = remainingModels*timePerModel
                 nbrModels += 1
                 
                 if 'vw_out2' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                    print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']}; vwLTE={modelsBenoit[i]['vw']}")
+                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
                 elif 'vw_out' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                    print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=} | Benoit results: vwOut={modelsBenoit[i]['vw_out']}; vwLTE={modelsBenoit[i]['vw']}")
+                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
                 else:
-                    print(f"{i=}; Time per model={timePerModel}; Remaining time={remainingTime} | WallGo results: {vwOut=}; {vwLTE=}")
+                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f}")
                 if vwOut == -1:
                     print(f'ERROR: {error}')
                 
