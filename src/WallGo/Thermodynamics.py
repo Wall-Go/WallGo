@@ -137,7 +137,7 @@ class Thermodynamics:
         # start from TMax and decrease temperature in small steps until
         # the free energy difference changes sign
         T = TMax
-        TStep = dT #(TMax - TMin) / 10
+        TStep = dT
         signAtStart = np.sign(freeEnergyDifference(T))
         bConverged = False
 

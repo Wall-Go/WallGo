@@ -272,7 +272,7 @@ class WallGoManager:
         the program can slow down significantly, but TMax must be large
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
-        fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
+        fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
         TMinHighT, TMaxHighT = 0, max(2*Tn, fudgeFactor * THighTMaxTemplate)
         TMinLowT, TMaxLowT = 0, max(2*Tn, fudgeFactor * TLowTMaxTemplate)
 

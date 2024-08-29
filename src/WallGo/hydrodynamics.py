@@ -415,8 +415,8 @@ class Hydrodynamics:
                 min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
                 self.Tnucl,
             ]  # The temperature in front of the wall Tp will be above Tnucl,
-            # so we use 1.1 Tnucl as initial guess, unless that is above the maximum
-            # allowed temperature
+            # so we use teh smallest of 1.1*Tnucl or gamma_-*Tnucl as initial guess
+            # (the latter being close to the LTE value of (gamma_-/gamma_+)*T_-).
 
         if np.any(np.isnan(Tpm0)):
             Tpm0 = [
