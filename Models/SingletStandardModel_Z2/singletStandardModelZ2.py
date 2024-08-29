@@ -530,6 +530,8 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
 def main() -> None:
 
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+
     argParser = argparse.ArgumentParser()
     argParser.add_argument("--outOfEquilibriumGluon", help="Treat the SU(3) gluons as out-of-equilibrium particle species", action="store_true")
     argParser.add_argument("--recalculateCollisions",
@@ -544,7 +546,8 @@ def main() -> None:
     WallGo.initialize()
 
     ## Modify the config, we use N=11 for this example
-    WallGo.config.set("PolynomialGrid", "momentumGridSize", "11")
+    momentumBasisSize = 11
+    WallGo.config.set("PolynomialGrid", "momentumGridSize", str(momentumBasisSize))
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -606,6 +609,10 @@ def main() -> None:
     """
     if (args.recalculateCollisions):
 
+        # Failsafe, in general you should not worry about the collision module being unavailable as long as it has been properly installed (eg. with pip)
+        assert WallGo.isCollisionModuleAvailable(), """WallGoCollision module could not be loaded, cannot proceed with collision integration.
+        Please verify you have successfully installed the module ('pip install WallGoCollision')"""
+
         import WallGoCollision
 
         # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
@@ -617,13 +624,11 @@ def main() -> None:
 
         # Path to matrix elements file, use location of this .py file as base. This model example only includes QCD processes in collision terms.
         # Matrix elements can be generated with the accompanying Mathematica package; here we load a pre-generated file to simplify the example
-        scriptLocation = pathlib.Path(__file__).parent.resolve()
         matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD_generated.txt" 
         collisionModel: WallGoCollision.PhysicsModel = setupCollisionModel_QCD(matrixElementFile, args.outOfEquilibriumGluon)
 
         # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
-        basisSize = WallGo.config.getint("PolynomialGrid", "momentumGridSize")
-        collisionTensor: WallGoCollision.CollisionTensor = collisionModel.createCollisionTensor(basisSize)
+        collisionTensor: WallGoCollision.CollisionTensor = collisionModel.createCollisionTensor(momentumBasisSize)
 
         # Use helper function to manually set integration options specific to this example, for example we enable progress tracking
         configureCollisionIntegration(collisionTensor)
@@ -637,22 +642,31 @@ def main() -> None:
         """Export the collision integration results to .hdf5. "individual" means that each off-eq particle pair gets its own file.
         This format is currently required for the main WallGo routines to understand the data. 
         """
-        collisionDirectory = scriptLocation / f"CollisionOutput_N{basisSize}_UserGenerated"
-        collisionResults.writeToIndividualHDF5(str(collisionDirectory)) 
+        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
+        collisionResults.writeToIndividualHDF5(str(collisionDirectory))
+
+        ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
 
     else:
         # Load pre-generated collision files
-        collisionDirectory = scriptLocation / f"collisions_N{basisSize}
-        
+        #collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}"
 
-    # Generates or reads collision integrals
-    manager.generateCollisionFiles()
+        ## TEMP
+        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
+    
+    try:
+        # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
+        manager.loadCollisionFiles(collisionDirectory)
+    except Exception:
+        print("""\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
+              so load failure here probably means you've either moved files around or changed the grid size.
+              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+              """)
+        exit(2)
 
     print("=== WallGo parameter scan ===")
-    # ---- This is where you'd start an input parameter
-    # loop if doing parameter-space scans ----
 
-    """ Example mass loop that just does one value of mh2. Note that the WallGoManager
+    """ Example parameter-space loop that just does one value of mh2. Note that the WallGoManager
     class is NOT thread safe internally, so it is NOT safe to parallelize this loop 
     eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale
     parameter scans. 
@@ -726,8 +740,6 @@ def main() -> None:
         print(wallGoInterpolationResults.wallVelocities)
 
     # end parameter-space loop
-
-
 # end main()
 
 

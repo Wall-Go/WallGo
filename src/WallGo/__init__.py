@@ -30,13 +30,29 @@ from .collisionArray import CollisionArray
 from .Integrals import Integrals
 from .Config import Config
 
-from .collisionWrapper import Collision
-from .collisionWrapper import CollisionHelpers
 from .WallGoUtils import getSafePathToResource
 
-from types import ModuleType
-import importlib
+global _bCollisionModuleAvailable
+_bCollisionModuleAvailable: bool = False
 
+try:
+    import WallGoCollision
+    print(f"Loaded WallGoCollision package from location: {WallGoCollision.__path__}")
+    _bCollisionModuleAvailable = True
+
+    from .collisionHelpers import *
+
+except Exception as e:
+    print(f"Error loading WallGoCollision module: {e}")
+    print("""This could indicate an issue with your installation of WallGo or WallGoCollision, or both.
+          This is non-fatal, but you will not be able to utilize collision integration routines.""")
+
+def isCollisionModuleAvailable() -> bool:
+    """Returns True if the WallGoCollision extension module could be loaded and is ready for use.
+    By default it is loaded together with WallGo, but WallGo can operate in restricted mode even if the load fails.
+    This function can be used to check module availability at runtime if you must operate in an environment where the module may not always be available.  
+    """
+    return _bCollisionModuleAvailable
 
 defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
@@ -51,8 +67,6 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
 _bInitialized = False
 config = Config()
-# Created only if needed. CollisionHelpers will load the collision module on construction
-collisionHelpers: CollisionHelpers = None
 
 """Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by replacing their direct computation with 
 precomputed interpolation tables."""
@@ -82,11 +96,6 @@ def initialize() -> None:
         ## Initialize interpolations for our default integrals
         _initalizeIntegralInterpolations()
 
-        bNeedsCollisionModule = True
-        if bNeedsCollisionModule:
-            global collisionHelpers
-            collisionHelpers = CollisionHelpers()
-
         _bInitialized = True
     
     else:
@@ -103,5 +112,3 @@ def _initalizeIntegralInterpolations() -> None:
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")), bVerbose=False 
         )
     
-def getCollisionModule() -> ModuleType:
-    return collisionModule

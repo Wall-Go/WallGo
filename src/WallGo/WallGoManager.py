@@ -1,9 +1,10 @@
 import numpy as np
 import numpy.typing as npt
+from deprecated import deprecated
+import pathlib
 
 # WallGo imports
 import WallGo
-from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
@@ -55,31 +56,16 @@ class WallGoManager:
         self._initBoltzmann()
         self.temperatureScaleInput = temperatureScaleInput
         self.fieldScaleInput = fieldScaleInput
-        self.collision: Collision = None
         self.model: GenericModel = None
 
     def _initModel(self, model: GenericModel) -> None:
         """Initializes the model."""
         self.model = model
 
-    def _initCollision(self, model: GenericModel) -> None:
-        """Initializes the collision module.
-            Creates Collision singleton which automatically loads the collision module
-            Use help(Collision.manager) for info about what functionality is available
-
-        Args:
-            model (GenericModel): The model to be used for collision detection.
-
-        Returns:
-            None
-        """
-        self.collision = Collision(model)
-
     def registerModel(self, model: GenericModel) -> None:
         """Register a physics model with WallGo."""
         assert isinstance(model, GenericModel)
         self._initModel(model)
-        self._initCollision(model)
 
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
@@ -375,22 +361,19 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-    def loadCollisionFiles(self, collision: Collision) -> None:
+    def loadCollisionFiles(self, directoryPath: pathlib.Path) -> None:
         """
-        Loads collision files and reads them using the Boltzmann solver.
-
-        This method takes a collision object as input and uses the Boltzmann solver to read the collision files.
-        The collision object should contain the path of the collision file to be loaded.
+        Loads collision files for use with the Boltzmann solver.
 
         Args:
-            collision (Collision): The collision object from collision_wrapper.py.
+            directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.
 
         Returns:
             None
         """
-        print("=== WallGo collision generation ===")
-        self.boltzmannSolver.readCollisions(collision)
+        self.boltzmannSolver.loadCollisions(directoryPath)
     
+    @deprecated("Use WallGoManager.loadCollisionFiles")
     def generateCollisionFiles(self) -> None:
         """
         Loads collision files and reads them using the Boltzmann solver.
