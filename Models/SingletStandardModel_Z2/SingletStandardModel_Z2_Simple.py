@@ -4,11 +4,11 @@ import numpy as np
 # WallGo imports
 from WallGo import Fields
 from WallGo import EffectivePotential
-from .SingletStandardModel_Z2 import SingletSM_Z2, EffectivePotentialxSM_Z2
+from .singletStandardModelZ2 import SingletSMZ2, EffectivePotentialxSMZ2
 
 
 # Z2 symmetric SM + singlet model. V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
-class SingletSM_Z2_Simple(SingletSM_Z2):
+class SingletSM_Z2_Simple(SingletSMZ2):
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
