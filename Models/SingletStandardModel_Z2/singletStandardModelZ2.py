@@ -541,7 +541,7 @@ def main() -> None:
     
     args = argParser.parse_args()
 
-    print(f"Running WallGo example model file: Singlet Standard Model (Z2) ; Out-of-equilibrium gluon = {args.outOfEquilibriumGluon})")
+    print(f"Running WallGo example model file: Singlet Standard Model (Z2) ; Out-of-equilibrium gluon = {args.outOfEquilibriumGluon}")
 
     WallGo.initialize()
 
