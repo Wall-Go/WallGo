@@ -143,14 +143,18 @@ class SingletSMZ2(GenericModel):
         self.addParticle(topQuark)
 
         if includeGluon:
+
             # === SU(3) gluon ===
-            def gluonMsqThermal(T: float) -> float:
-                return self.modelParameters["g3"] ** 2 * T**2 * 2.0
+            # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
+            gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+            # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
+            gluonMsqDerivative = lambda fields: np.zeros_like(fields)
+            gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
 
             gluon = Particle(
                 "gluon",
-                msqVacuum=0.0,
-                msqDerivative=0.0,
+                msqVacuum=gluonMsqVacuum,
+                msqDerivative=gluonMsqDerivative,
                 msqThermal=gluonMsqThermal,
                 statistics="Boson",
                 inEquilibrium=False,

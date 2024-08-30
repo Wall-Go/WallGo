@@ -14,3 +14,4 @@
 #include "MatrixElement.h"
 #include "MatrixElementParsing.h"
 #include "PhysicsModel.h"
+#include "IntegrationOptions.h"

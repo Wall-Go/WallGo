@@ -5,6 +5,7 @@
 
 #include "Common.h"
 #include "hdf5Interface.h"
+#include "IntegrationOptions.h"
 
 namespace wallgo
 {
@@ -36,6 +37,9 @@ struct CollisionMetadata
     uint64_t seed = 0;
     // How many threads were used. This is useful info because multithreading affects order of RNG
     uint32_t numThreads = 1;
+
+    // Copy of the integration options used when producing this collision data
+    IntegrationOptions usedIntegrationOptions;
 };
 
 /* Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair

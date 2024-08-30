@@ -122,6 +122,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     metadata.integrator = "Vegas Monte Carlo";
     metadata.basisName = "Chebyshev";
     metadata.seed = gSeedGSL;
+    metadata.usedIntegrationOptions = options;
 
     CollisionResultsGrid result(mParticlePair, metadata);
 
