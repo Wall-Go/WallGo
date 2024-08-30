@@ -10,7 +10,7 @@ namespace gslWrapper
     WG_INIT_THREADPRIVATE_EXTERN_VARIABLE(gsl_rng*, rng, nullptr)
 }
 
-void gslWrapper::initializeRNG(int seed)
+void gslWrapper::initializeRNG(uint64_t seed)
 {
     if (!bInitialized)
     {
@@ -25,7 +25,7 @@ void gslWrapper::initializeRNG(int seed)
     }
 }
 
-void gslWrapper::setSeed(int seed)
+void gslWrapper::setSeed(uint64_t seed)
 {
     if (!bInitialized) return;
 
@@ -34,6 +34,8 @@ void gslWrapper::setSeed(int seed)
     {
         gsl_rng_set(gslWrapper::rng, static_cast<unsigned long>(seed));
     }
+
+    gSeedGSL = seed;
 }
 
 void gslWrapper::clearRNG()

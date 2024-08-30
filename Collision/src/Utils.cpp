@@ -18,12 +18,12 @@ bool receivedExitSignal()
 } // namespace utils
 
 
-void initializeRNG(int seed)
+void initializeRNG(uint64_t seed)
 {
     gslWrapper::initializeRNG(seed);
 }
 
-void setSeed(int seed)
+void setSeed(uint64_t seed)
 {
     gslWrapper::setSeed(seed);
 }

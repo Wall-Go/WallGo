@@ -23,16 +23,23 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 		H5::Attribute basisSizeAttr = metadataGroup.createAttribute("Basis Size", H5::PredType::NATIVE_INT, H5::DataSpace());
 		H5::Attribute basisNameAttr = metadataGroup.createAttribute("Basis Type", H5::StrType(H5::PredType::C_S1, metadata.basisName.size()), H5::DataSpace());
 		H5::Attribute integratorAttr = metadataGroup.createAttribute("Integrator", H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), H5::DataSpace());
+		H5::Attribute seedAttr = metadataGroup.createAttribute("Seed", H5::PredType::NATIVE_INT, H5::DataSpace());
+		H5::Attribute numThreadsAttr = metadataGroup.createAttribute("Num Threads", H5::PredType::NATIVE_INT, H5::DataSpace());
+
 
 		// Write the attributes
 		basisSizeAttr.write(H5::PredType::NATIVE_INT, &metadata.basisSize);
 		basisNameAttr.write(H5::StrType(H5::PredType::C_S1, metadata.basisName.size()), metadata.basisName);
 		integratorAttr.write(H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), metadata.integrator);
+		seedAttr.write(H5::PredType::NATIVE_INT, &metadata.seed);
+		numThreadsAttr.write(H5::PredType::NATIVE_INT, &metadata.numThreads);
 
 		// Cleanup
 		basisSizeAttr.close();
 		basisNameAttr.close();
 		integratorAttr.close();
+		seedAttr.close();
+		numThreadsAttr.close();
 		metadataGroup.close();
 
 	}

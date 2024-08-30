@@ -33,6 +33,9 @@ struct CollisionMetadata
     bool bStatisticalErrors = false;
     std::string basisName = "Unknown";
     std::string integrator = "Unknown";
+    uint64_t seed = 0;
+    // How many threads were used. This is useful info because multithreading affects order of RNG
+    uint32_t numThreads = 1;
 };
 
 /* Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair
@@ -73,6 +76,8 @@ public:
     // Sets all elements to a specified value
     void fillWithValue(double newValue, double newError);
 
+    CollisionMetadata mMetadata;
+
 private:
 
     ParticleNamePair mParticlePair;
@@ -83,7 +88,6 @@ private:
     // Statistical errors of integrations. Has large memory cost, so we keep this empty if not needed
     Array4D mErrors;
 
-    CollisionMetadata mMetadata;
     void initData();
 
     bool validateGridPoint(const GridPoint& gridPoint) const;

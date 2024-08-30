@@ -121,6 +121,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     metadata.bStatisticalErrors = options.bIncludeStatisticalErrors;
     metadata.integrator = "Vegas Monte Carlo";
     metadata.basisName = "Chebyshev";
+    metadata.seed = gSeedGSL;
 
     CollisionResultsGrid result(mParticlePair, metadata);
 
@@ -158,9 +159,16 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
         CollisionIntegral4 workIntegral = *this;
 
         int threadID = 0;
+        int numThreads = 1;
     #if WITH_OMP
         threadID = omp_get_thread_num();
+        numThreads = omp_get_num_threads();
     #endif
+
+        if (threadID == 0)
+        {
+            result.mMetadata.numThreads = numThreads;
+        }
 
         // Limitation in older OMP implementations: for loops must use signed integer indices, size_t doesn't work
         const int32_t N = static_cast<int32_t>(getPolynomialBasisSize());
