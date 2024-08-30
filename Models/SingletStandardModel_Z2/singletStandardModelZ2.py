@@ -153,7 +153,7 @@ class SingletSMZ2(GenericModel):
                 msqDerivative=0.0,
                 msqThermal=gluonMsqThermal,
                 statistics="Boson",
-                inEquilibrium=True,
+                inEquilibrium=False,
                 ultrarelativistic=True,
                 totalDOFs=16,
             )
@@ -637,6 +637,7 @@ def main() -> None:
         there are order M^2 x (N-1)^4 integrals to be computed. In your own runs you may want to handle this part in a separate script and offload it eg. to a cluster,
         especially if using N >> 11.
         """
+        print("Entering collision integral computation, this may take long", flush=True)
         collisionResults: WallGoCollision.CollisionTensorResult = collisionTensor.computeIntegralsAll()
 
         """Export the collision integration results to .hdf5. "individual" means that each off-eq particle pair gets its own file.
