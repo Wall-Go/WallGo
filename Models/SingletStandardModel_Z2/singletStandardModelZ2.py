@@ -31,9 +31,8 @@ Jb/Jf.
 import os
 import pathlib
 import sys
-import numpy as np
-import numpy.typing as npt
 import argparse
+import numpy as np
 
 ## WallGo imports
 import WallGo  ## Whole package, in particular we get WallGo.initialize()
@@ -45,7 +44,9 @@ from WallGo import Fields
 ## Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
-from effectivePotentialNoResum import EffectivePotentialNoResum #pylint: disable=E0401, C0413
+from effectivePotentialNoResum import (
+    EffectivePotentialNoResum,
+)  # pylint: disable=E0401, C0413
 
 
 # Z2 symmetric SM + singlet model.
@@ -65,8 +66,12 @@ class SingletSMZ2(GenericModel):
     @property
     def fieldCount(self) -> int:
         return 2
-    
-    def __init__(self, initialInputParameters: dict[str, float], allowOutOfEquilibriumGluon: bool = False):
+
+    def __init__(
+        self,
+        initialInputParameters: dict[str, float],
+        allowOutOfEquilibriumGluon: bool = False,
+    ):
         """
         Initialize the SingletSMZ2 model.
 
@@ -146,10 +151,14 @@ class SingletSMZ2(GenericModel):
 
             # === SU(3) gluon ===
             # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
-            gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
-            # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-            gluonMsqDerivative = lambda fields: np.zeros_like(fields)
-            gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
+            def gluonMsqVacuum(fields: Fields) -> Fields:
+                return np.zeros_like(fields.GetField(0))
+
+            def gluonMsqDerivative(fields: Fields) -> Fields:
+                return np.zeros_like(fields)
+
+            def gluonMsqThermal(T: float) -> float:
+                return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
             gluon = Particle(
                 "gluon",
@@ -181,7 +190,6 @@ class SingletSMZ2(GenericModel):
         )
         self.addParticle(lightQuark)
         """
-
 
     ## Go from input parameters --> action parameters
     def calculateModelParameters(
@@ -353,7 +361,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
         )
 
-
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
     ) -> complex:
@@ -419,15 +426,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         were not integrated over in the one-loop part.
 
         See Eq. (39) in hep-ph/0510375 for general LO formula
-        
+
         Parameters
         ----------
-        temperature: array-like (float) 
+        temperature: array-like (float)
             The temperature
 
         Returns
         ----------
-        constantTerms: array-like (float) 
+        constantTerms: array-like (float)
             The value of the field-independent contribution to the effective potential
         """
 
@@ -446,12 +453,12 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Parameters
         ----------
-        fields: Fields 
+        fields: Fields
             The field configuration
 
         Returns
         ----------
-        massSq: array_like 
+        massSq: array_like
             A list of the boson particle masses at each input point `field`.
         degreesOfFreedom: array_like
             The number of degrees of freedom for each particle.
@@ -459,7 +466,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             A constant used in the one-loop effective potential
         rgScale : array_like
             Renormalization scale in the one-loop zero-temperature effective
-            potential  
+            potential
         """
 
         v, x = fields.GetField(0), fields.GetField(1)
@@ -474,9 +481,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         b4 = self.modelParameters["b4"]
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam #pylint: disable=C0103
-        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2 #pylint: disable=C0103
-        C = a2 * v * x #pylint: disable=C0103
+        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam  # pylint: disable=C0103
+        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2  # pylint: disable=C0103
+        C = a2 * v * x  # pylint: disable=C0103
         thingUnderSqrt = A**2 + B**2 - 2.0 * A * B + 4.0 * C**2
 
         msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
@@ -501,7 +508,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Parameters
         ----------
-        fields: Fields 
+        fields: Fields
             The field configuration
 
         Returns
@@ -514,7 +521,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             A constant used in the one-loop effective potential
         rgScale : array_like
             Renormalization scale in the one-loop zero-temperature effective
-            potential  
+            potential
         """
 
         v = fields.GetField(0)
@@ -533,19 +540,28 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
 
 def main() -> None:
+    """Main function for the Standard Model + real singlet example"""
 
     scriptLocation = pathlib.Path(__file__).parent.resolve()
 
     argParser = argparse.ArgumentParser()
-    argParser.add_argument("--outOfEquilibriumGluon", help="Treat the SU(3) gluons as out-of-equilibrium particle species", action="store_true")
-    argParser.add_argument("--recalculateCollisions",
-                           help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
+    argParser.add_argument(
+        "--outOfEquilibriumGluon",
+        help="Treat the SU(3) gluons as out-of-equilibrium particle species",
+        action="store_true",
+    )
+    argParser.add_argument(
+        "--recalculateCollisions",
+        help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
                            This is very slow and disabled by default.""",
-                           action="store_true")
-    
+        action="store_true",
+    )
+
     args = argParser.parse_args()
 
-    print(f"Running WallGo example model file: Singlet Standard Model (Z2) ; Out-of-equilibrium gluon = {args.outOfEquilibriumGluon}")
+    print(
+        f"Running WallGo example model file: Singlet Standard Model (Z2) ; Out-of-equilibrium gluon = {args.outOfEquilibriumGluon}"
+    )
 
     WallGo.initialize()
 
@@ -561,7 +577,7 @@ def main() -> None:
     wallThicknessIni = 0.05
 
     # Estimate of the mean free path of the particles in the plasma: 100/Tn
-    meanFreePath = 1.
+    meanFreePath = 1.0
 
     ## Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
@@ -611,7 +627,7 @@ def main() -> None:
     only if the --recalculateCollisions command line flag was specified.
     Without this flag we simply load pre-generated collision data files.
     """
-    if (args.recalculateCollisions):
+    if args.recalculateCollisions:
 
         # Failsafe, in general you should not worry about the collision module being unavailable as long as it has been properly installed (eg. with pip)
         assert WallGo.isCollisionModuleAvailable(), """WallGoCollision module could not be loaded, cannot proceed with collision integration.
@@ -624,15 +640,22 @@ def main() -> None:
         WallGoCollision.setSeed(0)
 
         # import utility functions for this example. These are not part of core WallGo and are intended to demonstrate how to setup the collision module
-        from example_collision_defs import setupCollisionModel_QCD, configureCollisionIntegration
+        from example_collision_defs import (
+            setupCollisionModel_QCD,
+            configureCollisionIntegration,
+        )
 
         # Path to matrix elements file, use location of this .py file as base. This model example only includes QCD processes in collision terms.
         # Matrix elements can be generated with the accompanying Mathematica package; here we load a pre-generated file to simplify the example
-        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD.txt" 
-        collisionModel: WallGoCollision.PhysicsModel = setupCollisionModel_QCD(matrixElementFile, args.outOfEquilibriumGluon)
+        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_QCD.txt"
+        collisionModel: WallGoCollision.PhysicsModel = setupCollisionModel_QCD(
+            matrixElementFile, args.outOfEquilibriumGluon
+        )
 
         # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
-        collisionTensor: WallGoCollision.CollisionTensor = collisionModel.createCollisionTensor(momentumBasisSize)
+        collisionTensor: WallGoCollision.CollisionTensor = (
+            collisionModel.createCollisionTensor(momentumBasisSize)
+        )
 
         # Use helper function to manually set integration options specific to this example, for example we enable progress tracking
         configureCollisionIntegration(collisionTensor)
@@ -642,12 +665,16 @@ def main() -> None:
         especially if using N >> 11.
         """
         print("Entering collision integral computation, this may take long", flush=True)
-        collisionResults: WallGoCollision.CollisionTensorResult = collisionTensor.computeIntegralsAll()
+        collisionResults: WallGoCollision.CollisionTensorResult = (
+            collisionTensor.computeIntegralsAll()
+        )
 
         """Export the collision integration results to .hdf5. "individual" means that each off-eq particle pair gets its own file.
         This format is currently required for the main WallGo routines to understand the data. 
         """
-        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
+        collisionDirectory = (
+            scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
+        )
         collisionResults.writeToIndividualHDF5(str(collisionDirectory))
 
         ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
@@ -660,10 +687,12 @@ def main() -> None:
         # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
         manager.loadCollisionFiles(collisionDirectory)
     except Exception:
-        print("""\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
+        print(
+            """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
               so load failure here probably means you've either moved files around or changed the grid size.
               If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
-              """)
+              """
+        )
         exit(2)
 
     print("=== WallGo parameter scan ===")
@@ -742,6 +771,8 @@ def main() -> None:
         print(wallGoInterpolationResults.wallVelocities)
 
     # end parameter-space loop
+
+
 # end main()
 
 
