@@ -39,7 +39,7 @@ class BoltzmannSolver:
         derivatives: str = "Spectral",
     ):
         """
-        Initialsation of BoltzmannSolver
+        Initialisation of BoltzmannSolver
 
         Parameters
         ----------
