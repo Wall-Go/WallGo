@@ -1,5 +1,7 @@
-from typing import Protocol
+"""Physics model class for WallGo"""
+
 from abc import ABC, abstractmethod  # Abstract Base Class
+from typing import Optional
 
 ## WallGo imports
 from .particle import Particle
@@ -10,27 +12,26 @@ class GenericModel(ABC):
     """
     Common interface for WallGo model definitions.
     This is basically input parameters + particle definitions + effective potential.
-    The user should implement this and the abstract methods below with their model-specific stuff.
+    The user should implement this and the abstract methods below
+    with their model-specific stuff.
     """
 
-    def __init__(self):
-        """Initializes empty model content.
-        """
+    def __init__(self) -> None:
+        """Initializes empty model content."""
         self.particles: list[Particle] = []
         self.outOfEquilibriumParticles: list[Particle] = []
         self.modelParameters: dict[str, float] = {}
-        effectivePotential: EffectivePotential = None
-        inputParameters: dict[str, float] = None
+        self.effectivePotential: Optional[EffectivePotential] = None
+        self.inputParameters: dict[str, float] = {}
 
-        
-    ## How many classical fields. We require getter only; field count should not change at runtime
     @property
     @abstractmethod
     def fieldCount(self) -> int:
-        pass
+        """Override to return the number of classical background fields
+        in your model."""
 
     def addParticle(self, particleToAdd: Particle) -> None:
-        ## Common routine for defining a new particle. Usually should not be overriden
+        """Common routine for defining a new particle."""
 
         self.particles.append(particleToAdd)
 
@@ -38,8 +39,8 @@ class GenericModel(ABC):
         if not particleToAdd.inEquilibrium:
             self.outOfEquilibriumParticles.append(particleToAdd)
 
-    ## Empties the particle lists
     def clearParticles(self) -> None:
+        """Empties internal particle lists"""
         self.particles = []
         self.outOfEquilibriumParticles = []
 
