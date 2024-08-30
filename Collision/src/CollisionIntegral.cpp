@@ -204,10 +204,10 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                 if (verbosity.bPrintEveryElement)
                 {
                     // In principle this should be an OMP critical block, but probably not worth the slowdown
-                    std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
+                    std::cout << "[Thread " << threadID << "]: " << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
                         << localResult.result << " +/- " << localResult.error << "\n";
                 }
- 
+
                 if (bCanEverReportProgress)
                 {
                     #pragma omp atomic
@@ -271,7 +271,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                 );
 
                 const int32_t jOther = N - j;
-                const uint32_t sign = (m % 2 == 0 ? 1 : -1);
+                const int32_t sign = (m % 2 == 0 ? 1 : -1);
 
                 const GridPoint otherPoint(
                     gridPoint.m,

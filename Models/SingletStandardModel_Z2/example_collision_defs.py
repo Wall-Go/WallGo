@@ -162,6 +162,6 @@ def configureCollisionIntegration(inOutCollisionTensor: WallGoCollision.Collisio
     verbosity.progressReportPercentage = 0.25
 
 	# Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
-    verbosity.bPrintEveryElement = True
+    verbosity.bPrintEveryElement = False
     
     inOutCollisionTensor.setIntegrationVerbosity(verbosity)

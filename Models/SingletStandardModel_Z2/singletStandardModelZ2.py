@@ -649,11 +649,8 @@ def main() -> None:
 
     else:
         # Load pre-generated collision files
-        #collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}"
+        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}"
 
-        ## TEMP
-        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
-    
     try:
         # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
         manager.loadCollisionFiles(collisionDirectory)

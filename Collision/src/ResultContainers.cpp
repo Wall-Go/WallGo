@@ -86,6 +86,22 @@ bool CollisionResultsGrid::writeToHDF5(const std::filesystem::path& filePath, bo
     return true;
 }
 
+void CollisionResultsGrid::fillWithValue(double newValue, double newError)
+{
+    // I hate this as much as you do!
+    for (auto& v1 : mData) for (auto& v2 : v1) for (auto& v3 : v2) for (auto& v4 : v3)
+    {
+        v4 = newValue;
+    }
+    if (hasStatisticalErrors())
+    {
+        for (auto& v1 : mErrors) for (auto& v2 : v1) for (auto& v3 : v2) for (auto& v4 : v3)
+        {
+            v4 = newError;
+        }
+    }
+}
+
 void CollisionResultsGrid::initData()
 {
     mElementsPerDimension = mMetadata.basisSize - 1;

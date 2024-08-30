@@ -203,7 +203,7 @@ int main()
 	verbosity.progressReportPercentage = 0.25;
 
 	// Very slow and verbose, intended only for debugging purposes
-	verbosity.bPrintEveryElement = true; 
+	verbosity.bPrintEveryElement = false;
 
 	// Override the built-in defaults with our new settings
 	collisionTensor.setDefaultIntegrationVerbosity(verbosity);
@@ -216,7 +216,7 @@ int main()
 	The bool argument specifies whether statistical errors should be written as well.
 	Statistical errors will go to a separate dataset in the HDF5 file. */
 	results.writeToIndividualHDF5(/*output directory*/ "output", /*bWriteErrors*/ true);
-	
+
 	/* We can evaluate the integrals again with different model parameters, without the need to re-define particles or matrix elements.
 	As explained above, CollisionTensors are linked to their respective PhysicsModel objects, so we just need to modify the model object to achieve this.
 	Note we use the PhysicsModel::updateParameter() method to modify existing parameters and not PhysicsModel::defineParameter(). */

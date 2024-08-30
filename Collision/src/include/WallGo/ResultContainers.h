@@ -70,6 +70,9 @@ public:
         const std::filesystem::path& filePath,
         bool bWriteErrors = true) const;
 
+    // Sets all elements to a specified value
+    void fillWithValue(double newValue, double newError);
+
 private:
 
     ParticleNamePair mParticlePair;
