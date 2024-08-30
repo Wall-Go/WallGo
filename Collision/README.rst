@@ -1,6 +1,38 @@
 
 ## Installation
 
+You must have a C++17 compliant compiler (gcc, clang, MSVC etc) and CMake (version 3.18 or newer) installed.
+
+# Installing the Python extension module only (with pip)
+
+```pip install . -v```
+
+This works by invoking a CMake build via the scikit-core-build pyproject backend, and its Conan extension for handling dependencies with other C++ libraries.
+It produces a Python package that gets installed to pip's default location (usually ```site-packages/```). To use in your Python projects you only have to ```import WallGoCollision```.
+
+A Python stub file (provides type hints and docstrings) is also generated and installed with the package.
+
+Note that the pip installer is still work in progress. The following limitations apply:
+- OpenMP is not included as an explicit dependency, so it does not automatically get installed.
+The resulting module will still be multithreaded if you have an available OpenMP installation.
+TODO: Conan center has llvm-openmp available so we could automatically fetch it, but the issue about bad profile detection needs to be solved first (see below)
+because the library fails to compile with default profiles on older compilers (eg. gcc 9).
+
+- The automatic generation of stubs may fail (happened when building on a virtual machine). This is non fatal and the main module should still install normally. If you have ```mypy``` installed you can generate the stubs manually:
+```stubgen --include_docstrings -o stubs -m WallGoCollision._WallGoCollision```
+Copy the .pyi files from the generated stubs/ folder to where the WallGoCollision package was installed.
+
+- The installation uses Conan to download and compile C++ libraries that WallGoCollisions depends on.
+Currently this always uses the ```default``` Conan profile and creates the profile if it's not found (eg. if you don't already have Conan installed).
+The automated profile creation is done with the ```conan profile detect``` command which tries to guess a good compiler configuration based on what is available on your system.
+The profile detection is not perfect, so if you find that Conan is failing to compile dependencies (eg. cppstd version too low),
+you can install Conan yourself (```pip install Conan```) and modify your default profile as necessary.
+For example, the default C++ standard (```cppstd```) in gcc 9 is gnu14 and may not be sufficient for compiling all dependencies, even though the compiler fully supports C++17.
+
+TODO: Compile binaries using Github workflows for common OS/Python version combinations and upload those to PyPi. 
+
+# CMake installation
+
 CMake is used as the build system, but dependencies need to be installed first (see below). Once you have installed the dependencies you can compile as:
 ```
 cmake -B build [FLAGS]
@@ -18,7 +50,7 @@ We compile with OpenMP support by default, needed for parallel evaluation of int
 
 # Installing dependenciens with Conan
 
-Easiest way of handling the dependencies is with the Conan package manager (can be installed with eg. ```pip```). We require Conan version > 2.0. The build proceeds as:
+Easiest way of handling the dependencies is with the Conan package manager (can be installed with eg. ```pip```). We require Conan version >= 2.0. The build proceeds as:
 ```
 conan install . --output-folder=build --build=missing
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake

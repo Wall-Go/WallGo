@@ -553,7 +553,9 @@ def main() -> None:
     argParser.add_argument(
         "--recalculateCollisions",
         help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
-                           This is very slow and disabled by default.""",
+                This is very slow and disabled by default.
+                The resulting collision data will be written to a directory labeled _UserGenerated; the default provided data will not be overwritten.
+                """,
         action="store_true",
     )
 
@@ -562,12 +564,16 @@ def main() -> None:
     print(
         f"Running WallGo example model file: Singlet Standard Model (Z2) ; Out-of-equilibrium gluon = {args.outOfEquilibriumGluon}"
     )
-
     WallGo.initialize()
 
     ## Modify the config, we use N=11 for this example
     momentumBasisSize = 11
     WallGo.config.set("PolynomialGrid", "momentumGridSize", str(momentumBasisSize))
+
+    ##### TEMPORARY, REMOVE ONCE MATRIX ELEMENT STUFF HAS BEEN SETTLED #####
+    bUseBenoitCollisionData: bool = (
+        not args.outOfEquilibriumGluon and momentumBasisSize == 11
+    )
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -678,6 +684,12 @@ def main() -> None:
         collisionResults.writeToIndividualHDF5(str(collisionDirectory))
 
         ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
+
+    ## TEMPORARY
+    elif bUseBenoitCollisionData:
+        collisionDirectory = (
+            scriptLocation / f"CollisionOutput_N{momentumBasisSize}_BenoitBenchmark"
+        )
 
     else:
         # Load pre-generated collision files
