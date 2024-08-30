@@ -9,6 +9,7 @@
 #include "FourVector.h"
 #include "ThreeVector.h"
 #include "ModelChangeContext.h"
+#include "PolynomialBasis.h"
 
 #include "gslWrapper.h"
 
@@ -21,6 +22,8 @@ namespace wallgo
 
 IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, const IntegrationOptions& options)
 {
+    assert(isValidGridPoint(gridPoint));
+    
     IntegrandParameters integrandParameters = initializeIntegrandParameters(gridPoint);
 
     // Integral dimensions
@@ -48,10 +51,10 @@ IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, cons
     gslWrapper.pointerToObject = this;
     gslWrapper.integrandParameters = integrandParameters;
 
-    gsl_monte_function G;
-    G.f = &gslWrapper::integrandWrapper;
-    G.dim = dim;
-    G.params = &gslWrapper;
+    gsl_monte_function gslFunction;
+    gslFunction.f = &gslWrapper::integrandWrapper;
+    gslFunction.dim = dim;
+    gslFunction.params = &gslWrapper;
 
     double mean = 0.0;
     double error = 0.0;
@@ -61,7 +64,7 @@ IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, cons
 
     // Start with a short warmup run. This is good for importance sampling
     const size_t warmupCalls = static_cast<size_t>(0.2 * calls);
-    gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, warmupCalls, gslWrapper::rng, gslState, &mean, &error);
+    gsl_monte_vegas_integrate(&gslFunction, integralLowerLimits, integralUpperLimits, dim, warmupCalls, gslWrapper::rng, gslState, &mean, &error);
 
     // Lambda to check if we've reached the accuracy goal. This requires chisq / dof to be consistent with 1,
     // otherwise the error is not reliable
@@ -92,7 +95,7 @@ IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, cons
     while (!hasConverged())
     {
 
-        gsl_monte_vegas_integrate(&G, integralLowerLimits, integralUpperLimits, dim, calls, gslWrapper::rng, gslState, &mean, &error);
+        gsl_monte_vegas_integrate(&gslFunction, integralLowerLimits, integralUpperLimits, dim, calls, gslWrapper::rng, gslState, &mean, &error);
 
         currentTries++;
         if (currentTries >= maxTries)
@@ -204,7 +207,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
                     std::cout << "m=" << m << " n=" << n << " j=" << j << " k=" << k << " : "
                         << localResult.result << " +/- " << localResult.error << "\n";
                 }
-
+ 
                 if (bCanEverReportProgress)
                 {
                     #pragma omp atomic
@@ -349,6 +352,14 @@ bool CollisionIntegral4::isEmpty() const
         && collisionElements_ultrarelativistic.size() == 0;
 }
 
+bool CollisionIntegral4::isValidGridPoint(const GridPoint& gridPoint) const
+{
+    return gridPoint.m >= 2 && gridPoint.m <= mBasisSize
+        && gridPoint.n >= 1 && gridPoint.n < mBasisSize
+        && gridPoint.j >= 1 && gridPoint.j < mBasisSize
+        && gridPoint.k >= 1 && gridPoint.k < mBasisSize;
+}
+
 CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandParameters(const GridPoint& gridPoint) const
 {
     IntegrandParameters params;
@@ -356,11 +367,11 @@ CollisionIntegral4::IntegrandParameters CollisionIntegral4::initializeIntegrandP
     params.n = gridPoint.n;
 
     // Precalculate stuff related to the p1 momentum (optimization)
-    params.rhoZ1 = mPolynomialBasis.rhoZGrid(gridPoint.j);
-    params.rhoPar1 = mPolynomialBasis.rhoParGrid(gridPoint.k);
-    params.pZ1 = mPolynomialBasis.rhoZ_to_pZ(params.rhoZ1);
-    params.pPar1 = mPolynomialBasis.rhoPar_to_pPar(params.rhoPar1);
-    params.TmTn_p1 = mPolynomialBasis.TmTn(gridPoint.m, gridPoint.n, params.rhoZ1, params.rhoPar1);
+    params.rhoZ1 = chebyshev::rhoZGrid(gridPoint.j, mBasisSize);
+    params.rhoPar1 = chebyshev::rhoParGrid(gridPoint.k, mBasisSize);
+    params.pZ1 = chebyshev::rhoZ_to_pZ(params.rhoZ1);
+    params.pPar1 = chebyshev::rhoPar_to_pPar(params.rhoPar1);
+    params.TmTn_p1 = chebyshev::TmTn(gridPoint.m, gridPoint.n, params.rhoZ1, params.rhoPar1);
     params.p1 = std::sqrt(params.pZ1 * params.pZ1 + params.pPar1 * params.pPar1);
     return params;
 }
@@ -413,7 +424,7 @@ std::vector<Kinematics> CollisionIntegral4::calculateKinematics(const CollisionE
         return kappa + delta*p3 - eps * sqrt(p3*p3 + m3sq);
     };
 
-    assert(std::abs(funcG(root1)) < 1e-8 && std::abs(funcG(root2)) < 1e-8);
+    assert(std::abs(funcG(root1)) < 1e-10 && std::abs(funcG(root2)) < 1e-10);
 #endif
 
     // Since p3 is supposed to be magnitude, pick only positive roots (p3 = 0 contributes nothing to the integral)
@@ -461,6 +472,7 @@ Kinematics CollisionIntegral4::calculateKinematics_ultrarelativistic(const Input
     const double denom = p1 + p2 - kinematicInput.p1p3HatDot - kinematicInput.p2p3HatDot;
     const double p3 = (p1 * p2 - kinematicInput.p1p2Dot) / denom;
 
+    // Probably should not happen?
     assert(p3 >= 0);
 
     Kinematics newKinematics;
@@ -508,14 +520,14 @@ double CollisionIntegral4::evaluateCollisionElement(CollisionElement<4> &Collisi
 }
 
 CollisionIntegral4::CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair)
-    : mPolynomialBasis(polynomialBasisSize),
+    : mBasisSize(polynomialBasisSize),
     mParticlePair(particlePair)
 {
 }
 
 void CollisionIntegral4::changePolynomialBasis(size_t newBasisSize)
 {
-    mPolynomialBasis = Chebyshev(newBasisSize);
+    mBasisSize = newBasisSize;
 }
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3,
@@ -578,9 +590,9 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
             // This is automatically handled by bDeltaF flags in CollisionElement (although the logic is not very transparent)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
-                mPolynomialBasis.TmTn(m, n, kinematics.FV2),
-                mPolynomialBasis.TmTn(m, n, kinematics.FV3),
-                mPolynomialBasis.TmTn(m, n, kinematics.FV4)
+                chebyshev::TmTn(m, n, kinematics.FV2),
+                chebyshev::TmTn(m, n, kinematics.FV3),
+                chebyshev::TmTn(m, n, kinematics.FV4)
             };
             
             for (CollisionElement<4> &CollisionElement : collisionElements_ultrarelativistic)
@@ -606,9 +618,9 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
             // Calculate polynomial factors (which our method uses as replacement for deltaF): Tm(rhoZ) Tn(rhoPar)
             const std::array<double, 4> TmTn {
                 integrandParameters.TmTn_p1,
-                mPolynomialBasis.TmTn(m, n, kinematics.FV2),
-                mPolynomialBasis.TmTn(m, n, kinematics.FV3),
-                mPolynomialBasis.TmTn(m, n, kinematics.FV4)
+                chebyshev::TmTn(m, n, kinematics.FV2),
+                chebyshev::TmTn(m, n, kinematics.FV3),
+                chebyshev::TmTn(m, n, kinematics.FV4)
             };
 
             res += evaluateCollisionElement(CollisionElement, kinematics, TmTn);

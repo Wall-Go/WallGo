@@ -50,11 +50,11 @@ CollisionTensor::~CollisionTensor()
 
 CollisionTensor::CollisionTensor(const CollisionTensor& other)
 {
-    mBasisSize = other.mBasisSize;
     mDefaultIntegrationOptions = other.mDefaultIntegrationOptions;
     mDefaultVerbosity = other.mDefaultVerbosity;
 
     mCachedIntegrals = other.mCachedIntegrals;
+    changePolynomialBasisSize(other.mBasisSize);
 
     mObservingModel = other.mObservingModel;
     if (mObservingModel)
@@ -67,11 +67,11 @@ CollisionTensor& CollisionTensor::operator=(const CollisionTensor& other)
 {
     if (&other == this) return *this;
     
-    mBasisSize = other.mBasisSize;
     mDefaultIntegrationOptions = other.mDefaultIntegrationOptions;
     mDefaultVerbosity = other.mDefaultVerbosity;
 
     mCachedIntegrals = other.mCachedIntegrals;
+    changePolynomialBasisSize(other.mBasisSize);
 
     mObservingModel = other.mObservingModel;
     if (mObservingModel)
@@ -200,6 +200,30 @@ CollisionTensorResult CollisionTensor::computeIntegralsAll(const CollisionTensor
 CollisionTensorResult CollisionTensor::computeIntegralsAll()
 {
     return computeIntegralsAll(mDefaultIntegrationOptions, mDefaultVerbosity);
+}
+
+IntegrationResult CollisionTensor::computeSingleIntegral(const std::string& particle1, const std::string& particle2, const GridPoint& gridPoint, const IntegrationOptions& options)
+{
+    const auto pairName = std::make_pair(particle1, particle2);
+    if (mCachedIntegrals.count(pairName) < 1)
+    {
+        std::cerr << "No cached collision integral found for particle pair: ("
+            << particle1 << ", " << particle2 << ")" << std::endl;
+
+        assert(false && "Particle pair not found");
+
+        IntegrationResult res;
+        res.result = 0.0;
+        res.error = 0.0;
+        return res;
+    }
+
+    return mCachedIntegrals.at(pairName).integrate(gridPoint, options);
+}
+
+IntegrationResult CollisionTensor::computeSingleIntegral(const std::string& particle1, const std::string& particle2, const GridPoint& gridPoint)
+{
+    return computeSingleIntegral(particle1, particle2, gridPoint, mDefaultIntegrationOptions);
 }
 
 

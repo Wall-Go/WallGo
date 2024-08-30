@@ -48,7 +48,7 @@ struct Vec<1, T> : public std::vector<T>
 
 using Array4D = Vec<4, double>;
 
-// Point on (polynomial, momentum) grid
+// Point on (polynomial, momentum) grid. Ranges: [2, N] for m, [1, N-1] for njk
 struct GridPoint
 {
 	GridPoint() {}

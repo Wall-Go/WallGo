@@ -116,6 +116,17 @@ public:
     Uses default options and verbosity. */
     CollisionTensorResult computeIntegralsAll();
 
+    IntegrationResult computeSingleIntegral(
+        const std::string& particle1,
+        const std::string& particle2,
+        const GridPoint& gridPoint,
+        const IntegrationOptions& options);
+
+    IntegrationResult computeSingleIntegral(
+        const std::string& particle1,
+        const std::string& particle2,
+        const GridPoint& gridPoint);
+
     // Count how many independent collision integrals we have. Scales as N^4 * M^2, N = grid size, M = number of off-eq particles
     size_t countIndependentIntegrals() const;
 

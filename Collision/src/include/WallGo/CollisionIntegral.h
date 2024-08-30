@@ -8,7 +8,6 @@
 #include "FourVector.h"
 #include "ThreeVector.h"
 #include "CollisionElement.h"
-#include "PolynomialBasis.h"
 #include "ResultContainers.h"
 #include "ModelParameters.h"
 
@@ -139,7 +138,7 @@ public:
         double TmTn_p1; 
     };
 
-    CollisionIntegral4() : mPolynomialBasis(1) {}
+    CollisionIntegral4() : mBasisSize(1) {}
     CollisionIntegral4(size_t polynomialBasisSize, const ParticleNamePair& particlePair);
     CollisionIntegral4(const CollisionIntegral4&) = default;
 
@@ -165,7 +164,7 @@ public:
     /* Evaluates the integral everywhere on the (m,n,j,k) grid. */
     CollisionResultsGrid evaluateOnGrid(const IntegrationOptions& options, const CollisionTensorVerbosity& verbosity);
 
-    inline std::size_t getPolynomialBasisSize() const { return mPolynomialBasis.getBasisSize(); }
+    inline size_t getPolynomialBasisSize() const { return mBasisSize; }
 
     void addCollisionElement(const CollisionElement<4>& elem);
 
@@ -178,12 +177,14 @@ public:
     // True if our collision elements lists are empty
     bool isEmpty() const;
 
+    bool isValidGridPoint(const GridPoint& gridPoint) const;
+
 private:
 
     // For avoiding 1/0
     static constexpr double SMALL_NUMBER = 1e-50;
 
-    Chebyshev mPolynomialBasis;
+    size_t mBasisSize;
     ParticleNamePair mParticlePair;
 
     // mn = polynomial indices, jk = momentum indices
