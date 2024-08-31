@@ -171,16 +171,25 @@ def main() -> int:
         """
 
         collisionModelDef.defineParticleSpecies(phiParticle)
-        
+
+        # Define symbolic parameters that appear in the matrix elements and their values
         # TODO I don't know what matrix elements you wanted to use, so not defining anything yet.
         #collisionModelDef.defineParameter("someParamInMatrixElements.txt", model.modelParameters["someParam"])
+        # ....
 
-        ## ....
-        
+        collisionModel = WallGoCollision.PhysicsModel(collisionModelDef)
+        collisionModel.readMatrixElements("yourFileNameHere", bPrintMatrixElements=True)
+        collisionTensor = collisionModel.createCollisionTensor(11)
+
+        print("Entering collision integral computation", flush=True)
+        collisionTensorResult = collisionTensor.computeIntegralsAll()
+
         # Write output to a different directory than where the default data is
         collisionDirectory = scriptDirectory / "collisions_N11_UserGenerated"
-        ## ....
+        collisionTensorResult.writeToIndividualHDF5(collisionDirectory)
+
         raise NotImplementedError("Collision data generation in Yukawa example is WIP")
+
 
     manager.loadCollisionFiles(collisionDirectory)
 

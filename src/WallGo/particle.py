@@ -76,10 +76,10 @@ class Particle:  # pylint: disable=too-few-public-methods
     def _validateInput(  # pylint: disable=unused-argument
         name: str,
         index: int,
+        msqVacuum: typing.Callable[[Fields], np.ndarray],
+        msqDerivative: typing.Callable[[Fields], np.ndarray],
         msqThermal: typing.Callable[[float], float],
         statistics: str,
-        inEquilibrium: bool,
-        ultrarelativistic: bool,
         totalDOFs: int,
     ) -> None:
         """
@@ -94,7 +94,5 @@ class Particle:  # pylint: disable=too-few-public-methods
         ), f"msqThermal({temperature}) must return float"
         if statistics not in Particle.STATISTICS_OPTIONS:
             raise ValueError(f"{statistics=} not in {Particle.STATISTICS_OPTIONS}")
-        assert isinstance(inEquilibrium, bool), "inEquilibrium must be a bool"
-        assert isinstance(ultrarelativistic, bool), "ultrarelativistic must be a bool"
         assert isinstance(totalDOFs, int), "totalDOFs must be an integer"
         assert isinstance(index, int), "index must be an integer"
