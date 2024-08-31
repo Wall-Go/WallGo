@@ -19,6 +19,7 @@ from .Thermodynamics import Thermodynamics
 from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
+
 class WallGoManager:
     """Defines a 'control' class for managing the program flow.
     This should be better than writing the same stuff in every example main
@@ -77,7 +78,6 @@ class WallGoManager:
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
-    
     # Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(self, phaseInput: PhaseInfo) -> None:
         """Parameters
@@ -116,7 +116,11 @@ class WallGoManager:
         self._initHydrodynamics(self.thermodynamics)
         self._initEOM()
 
-        if not np.isfinite(self.hydrodynamics.vJ) or self.hydrodynamics.vJ > 1 or self.hydrodynamics.vJ < 0:
+        if (
+            not np.isfinite(self.hydrodynamics.vJ)
+            or self.hydrodynamics.vJ > 1
+            or self.hydrodynamics.vJ < 0
+        ):
             raise WallGoError(
                 "Failed to solve Jouguet velocity at input temperature!",
                 data={
@@ -339,11 +343,15 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-        
-        wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
-                               self.config.getfloat("EOM", "wallThicknessUpperBound"))
-        wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
-                               self.config.getfloat("EOM", "wallOffsetUpperBound"))
+
+        wallThicknessBounds = (
+            self.config.getfloat("EOM", "wallThicknessLowerBound"),
+            self.config.getfloat("EOM", "wallThicknessUpperBound"),
+        )
+        wallOffsetBounds = (
+            self.config.getfloat("EOM", "wallOffsetLowerBound"),
+            self.config.getfloat("EOM", "wallOffsetUpperBound"),
+        )
 
         self.eom = EOM(
             self.boltzmannSolver,
@@ -372,7 +380,8 @@ class WallGoManager:
             None
         """
         self.boltzmannSolver.loadCollisions(directoryPath)
-    
+
+    # this actually crashes now, so its more than deprecated
     @deprecated("Use WallGoManager.loadCollisionFiles")
     def generateCollisionFiles(self) -> None:
         """
@@ -388,7 +397,6 @@ class WallGoManager:
             None
         """
         self.loadCollisionFiles(self.collision)
-    
 
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation."""
