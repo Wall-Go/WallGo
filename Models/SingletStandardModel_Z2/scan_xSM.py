@@ -5,6 +5,7 @@ import sys
 import os
 from contextlib import redirect_stdout
 import io
+import pathlib
 import matplotlib.pyplot as plt
 
 ## WallGo imports
@@ -45,8 +46,8 @@ class SingletSMScan(SingletSM_Z2):
         self.defineParticles()
 
 
-modelsBenoit = np.load('models.npy', allow_pickle=True)
-scanResults = np.load('scanResults.npy',allow_pickle=True).tolist()
+modelsBenoit = np.load(pathlib.Path(__file__).parent.resolve() / 'models.npy', allow_pickle=True)
+scanResults = np.load(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy',allow_pickle=True).tolist()
 
 
 def findWallVelocity(i, verbose=False, detonation=False):
@@ -233,7 +234,7 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
     
-    scanResults = np.load('scanResults.npy', allow_pickle=True).tolist()
+    scanResults = np.load(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', allow_pickle=True).tolist()
     
     if end is None:
         end = len(modelsBenoit)
@@ -275,10 +276,10 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
                     scanResults[i]['vwDeton'] = vwOut
                     scanResults[i]['errorDeton'] = error
                 
-                np.save('scanResults.npy', scanResults)
+                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', scanResults)
             except:
                 print(f'{i=}')
-                np.save('scanResults.npy', scanResults)
+                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', scanResults)
                 raise
                 
     ms,lHS = [],[]
@@ -310,5 +311,5 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
     plt.show()
     print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
 
-# if __name__ == '__main__':
-#     scanXSM()
+if __name__ == '__main__':
+    scanXSM(177, detonation=True)
