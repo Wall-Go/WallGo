@@ -62,9 +62,9 @@ class SingletSMZ2(GenericModel):
     methods for the WallGo package.
     """
 
-    ## How many classical fields
     @property
     def fieldCount(self) -> int:
+        """How many classical background fields"""
         return 2
 
     def __init__(
@@ -137,12 +137,11 @@ class SingletSMZ2(GenericModel):
 
         topQuark = Particle(
             "top",
+            index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=12,
         )
         self.addParticle(topQuark)
@@ -162,34 +161,14 @@ class SingletSMZ2(GenericModel):
 
             gluon = Particle(
                 "gluon",
+                index=1,
                 msqVacuum=gluonMsqVacuum,
                 msqDerivative=gluonMsqDerivative,
                 msqThermal=gluonMsqThermal,
                 statistics="Boson",
-                inEquilibrium=False,
-                ultrarelativistic=True,
                 totalDOFs=16,
             )
             self.addParticle(gluon)
-
-        # Commented out, this needs to only be defined in the collision model
-        """
-        ## === Light quarks, 5 of them ===
-        def lightQuarkMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
-        lightQuark = Particle(
-            "lightQuark",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=lightQuarkMsqThermal,
-            statistics="Fermion",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=60,
-        )
-        self.addParticle(lightQuark)
-        """
 
     ## Go from input parameters --> action parameters
     def calculateModelParameters(

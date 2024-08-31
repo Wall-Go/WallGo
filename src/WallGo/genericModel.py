@@ -18,7 +18,6 @@ class GenericModel(ABC):
 
     def __init__(self) -> None:
         """Initializes empty model content."""
-        self.particles: list[Particle] = []
         self.outOfEquilibriumParticles: list[Particle] = []
         self.modelParameters: dict[str, float] = {}
         self.effectivePotential: Optional[EffectivePotential] = None
@@ -31,17 +30,11 @@ class GenericModel(ABC):
         in your model."""
 
     def addParticle(self, particleToAdd: Particle) -> None:
-        """Common routine for defining a new particle."""
-
-        self.particles.append(particleToAdd)
-
-        # add to out-of-eq particles too if applicable
-        if not particleToAdd.inEquilibrium:
-            self.outOfEquilibriumParticles.append(particleToAdd)
+        """Common routine for defining a new out-of-equilibrium particle."""
+        self.outOfEquilibriumParticles.append(particleToAdd)
 
     def clearParticles(self) -> None:
-        """Empties internal particle lists"""
-        self.particles = []
+        """Empties the cached particle list"""
         self.outOfEquilibriumParticles = []
 
     ## Go from whatever input parameters to renormalized Lagrangian parameters.
