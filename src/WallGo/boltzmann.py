@@ -11,7 +11,7 @@ from .containers import BoltzmannBackground, BoltzmannDeltas
 from .grid import Grid
 from .polynomial import Polynomial
 from .particle import Particle
-from .CollisionArray import CollisionArray
+from .collisionArray import CollisionArray
 from .results import BoltzmannResults
 
 

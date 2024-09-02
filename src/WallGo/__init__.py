@@ -25,7 +25,7 @@ from .FreeEnergy import FreeEnergy
 from .WallGoManager import WallGoManager
 from .InterpolatableFunction import InterpolatableFunction
 
-from .CollisionArray import CollisionArray
+from .collisionArray import CollisionArray
 
 from .Integrals import Integrals
 from .Config import Config
