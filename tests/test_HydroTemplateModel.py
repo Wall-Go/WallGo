@@ -30,6 +30,11 @@ class TestModelTemplate(WallGo.Thermodynamics):
         self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
         self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
 
+        self.TMinLowT = 0.01
+        self.TMaxLowT = 10.
+        self.TMinHighT = 0.01
+        self.TMaxHighT = 10.
+
     #Pressure in high T phase -- but note that a factor 1/3 a+ Tc**4 has been scaled out
     def pHighT(self, T):
         return self.ap*T**self.mu/3 - self.eps
