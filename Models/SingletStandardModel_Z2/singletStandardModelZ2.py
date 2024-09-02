@@ -426,9 +426,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(
+    def bosonStuff(  # pylint: disable=too-many-locals
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -449,7 +449,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             Renormalization scale in the one-loop zero-temperature effective
             potential
         """
-
         v, x = fields.GetField(0), fields.GetField(1)
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
@@ -488,7 +487,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def fermionStuff(
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
