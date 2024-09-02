@@ -31,20 +31,20 @@ Jb/Jf.
 import os
 import pathlib
 import sys
+import warnings
 import numpy as np
-import numpy.typing as npt
 
-## WallGo imports
-import WallGo  ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import WallGoManager
-from WallGo import Fields
+# WallGo imports
+import WallGo  # Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle, WallGoManager
+from WallGo.InterpolatableFunction import EExtrapolationType
 
-## Adding the Models folder to the path and import effectivePotentialNoResum
+# Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
-from effectivePotentialNoResum import EffectivePotentialNoResum #pylint: disable=E0401, C0413
+from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
+    EffectivePotentialNoResum,
+)
 
 
 # Z2 symmetric SM + singlet model.
@@ -65,7 +65,7 @@ class SingletSMZ2(GenericModel):
     modelParameters: dict[str, float] = {}
     collisionParameters: dict[str, float] = {}
 
-    ## Specifying this is REQUIRED
+    # Specifying this is REQUIRED
     fieldCount = 2
 
     def __init__(self, initialInputParameters: dict[str, float]):
@@ -119,17 +119,17 @@ class SingletSMZ2(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+            return 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"] ** 2 * np.transpose(
+            return self.modelParameters["yt"]**2 * np.transpose(
                 [fields.GetField(0), 0 * fields.GetField(1)]
             )
 
         def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
+            return self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuark = Particle(
             "top",
@@ -145,7 +145,7 @@ class SingletSMZ2(GenericModel):
 
         # === SU(3) gluon ===
         def gluonMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 * 2.0
+            return self.modelParameters["g3"]**2 * T**2 * 2.0
 
         gluon = Particle(
             "gluon",
@@ -159,9 +159,9 @@ class SingletSMZ2(GenericModel):
         )
         self.addParticle(gluon)
 
-        ## === Light quarks, 5 of them ===
+        # === Light quarks, 5 of them ===
         def lightQuarkMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
+            return self.modelParameters["g3"]**2 * T**2 / 6.0
 
         lightQuark = Particle(
             "lightQuark",
@@ -175,7 +175,7 @@ class SingletSMZ2(GenericModel):
         )
         self.addParticle(lightQuark)
 
-    ## Go from input parameters --> action parameters
+    # Go from input parameters --> action parameters
     def calculateModelParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
@@ -201,7 +201,7 @@ class SingletSMZ2(GenericModel):
         massh1 = inputParameters["mh1"]  # 125 GeV
         massh2 = inputParameters["mh2"]
 
-        ## these are direct inputs:
+        # these are direct inputs:
         modelParameters["RGScale"] = inputParameters["RGScale"]
         modelParameters["a2"] = inputParameters["a2"]
         modelParameters["b4"] = inputParameters["b4"]
@@ -212,7 +212,7 @@ class SingletSMZ2(GenericModel):
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
         modelParameters["b2"] = massh2**2 - 0.5 * v0**2 * inputParameters["a2"]
 
-        ## Then the gauge and Yukawa sector
+        # Then the gauge and Yukawa sector
         massT = inputParameters["Mt"]
         massW = inputParameters["MW"]
         massZ = inputParameters["MZ"]
@@ -220,12 +220,12 @@ class SingletSMZ2(GenericModel):
         # helper
         g0 = 2.0 * massW / v0
 
-        modelParameters["g1"] = g0 * np.sqrt((massZ / massW) ** 2 - 1)
+        modelParameters["g1"] = g0 * np.sqrt((massZ / massW)**2 - 1)
         modelParameters["g2"] = g0
         # Just take QCD coupling as input
         modelParameters["g3"] = inputParameters["g3"]
 
-        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * massT / massW
+        modelParameters["yt"] = np.sqrt(0.5) * g0 * massT / massW
 
         return modelParameters
 
@@ -333,8 +333,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         at the upper limit.
         """
 
-        from WallGo.InterpolatableFunction import EExtrapolationType
-
         self.integrals.Jb.setExtrapolationType(
             extrapolationTypeLower=EExtrapolationType.CONSTANT,
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
@@ -345,10 +343,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
         )
 
-
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex:
+    ) -> complex | np.ndarray:
         """
         Evaluate the effective potential.
 
@@ -363,7 +360,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Returns
         ----------
-        potentialTotal: complex
+        potentialTotal: complex | np.ndarray
             The value of the effective potential
         """
 
@@ -402,7 +399,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             )
         )
 
-        return potentialTotal
+        return potentialTotal  # TODO: resolve return type.
 
     def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -411,15 +408,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         were not integrated over in the one-loop part.
 
         See Eq. (39) in hep-ph/0510375 for general LO formula
-        
+
         Parameters
         ----------
-        temperature: array-like (float) 
+        temperature: array-like (float)
             The temperature
 
         Returns
         ----------
-        constantTerms: array-like (float) 
+        constantTerms: array-like (float)
             The value of the field-independent contribution to the effective potential
         """
 
@@ -432,18 +429,20 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(self, fields: Fields):
+    def bosonStuff(
+        self, fields: Fields
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
         Parameters
         ----------
-        fields: Fields 
+        fields: Fields
             The field configuration
 
         Returns
         ----------
-        massSq: array_like 
+        massSq: array_like
             A list of the boson particle masses at each input point `field`.
         degreesOfFreedom: array_like
             The number of degrees of freedom for each particle.
@@ -451,33 +450,36 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             A constant used in the one-loop effective potential
         rgScale : array_like
             Renormalization scale in the one-loop zero-temperature effective
-            potential  
+            potential
         """
 
         v, x = fields.GetField(0), fields.GetField(1)
 
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam #pylint: disable=C0103
-        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2 #pylint: disable=C0103
-        C = a2 * v * x #pylint: disable=C0103
-        thingUnderSqrt = A**2 + B**2 - 2.0 * A * B + 4.0 * C**2
+        mass00 = (
+            self.modelParameters["msq"]
+            + 0.5 * self.modelParameters["a2"] * x**2
+            + 3 * self.modelParameters["lambda"] * v**2
+        )
+        mass11 = (
+            self.modelParameters["b2"]
+            + 0.5 * self.modelParameters["a2"] * v**2
+            + 3 * self.modelParameters["b4"] * x**2
+        )
+        mass01 = self.modelParameters["a2"] * v * x
+        thingUnderSqrt = mass00**2 + mass11**2 - 2 * mass00 * mass11 + 4 * mass01**2
 
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
+        msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
+        msqEig2 = 0.5 * (mass00 + mass11 + np.sqrt(thingUnderSqrt))
 
-        mWsq = g2**2 * v**2 / 4.0
-        mZsq = (g1**2 + g2**2) * v**2 / 4.0
+        mWsq = self.modelParameters["g2"]**2 * v**2 / 4
+        mZsq = mWsq + self.modelParameters["g1"]**2 * v**2 / 4
         # Goldstones
-        mGsq = msq + lam * v**2 + 0.5 * a2 * x**2
+        mGsq = (
+            self.modelParameters["msq"]
+            + self.modelParameters["lambda"] * v**2
+            + 0.5 * self.modelParameters["a2"] * x**2
+        )
 
         # h, s, chi, W, Z
         massSq = np.column_stack((msqEig1, msqEig2, mGsq, mWsq, mZsq))
@@ -487,13 +489,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(self, fields: Fields):
+    def fermionStuff(
+        self, fields: Fields
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
         Parameters
         ----------
-        fields: Fields 
+        fields: Fields
             The field configuration
 
         Returns
@@ -506,7 +510,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             A constant used in the one-loop effective potential
         rgScale : array_like
             Renormalization scale in the one-loop zero-temperature effective
-            potential  
+            potential
         """
 
         v = fields.GetField(0)
@@ -525,23 +529,24 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
 
 def main() -> None:
+    """Runs WallGo for xSM, computing bubble wall speed."""
 
     WallGo.initialize()
 
-    ## Modify the config, we use N=11 for this example
+    # Modify the config, we use N=11 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness: 5/Tn
+    # Guess of the wall thickness: 5/Tn
     wallThicknessIni = 0.05
 
     # Estimate of the mean free path of the particles in the plasma: 100/Tn
-    meanFreePath = 1.
+    meanFreePath = 1.0
 
-    ## Create WallGo control object
+    # Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
     # Temperature scale (in GeV) over which the potential changes by O(1).
@@ -651,7 +656,7 @@ def main() -> None:
         print(f"{widths=}")
         print(f"{offsets=}")
 
-        ## Repeat with out-of-equilibrium parts included. This requires
+        # Repeat with out-of-equilibrium parts included. This requires
         # solving Boltzmann equations, invoked automatically by solveWall()
         bIncludeOffEq = True
         print(f"=== Begin EOM with {bIncludeOffEq=} ===")
@@ -677,6 +682,6 @@ def main() -> None:
 # end main()
 
 
-## Don't run the main function if imported to another file
+# Don't run the main function if imported to another file
 if __name__ == "__main__":
     main()
