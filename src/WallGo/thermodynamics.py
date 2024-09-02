@@ -76,18 +76,18 @@ class Thermodynamics:
         self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
 
         # These parameters are set by setExtrapolate
-        self.muMinHighT = 0
-        self.aMinHighT = 0
-        self.epsilonMinHighT = 0
-        self.muMaxHighT = 0
-        self.aMaxHighT = 0
-        self.epsilonMaxHighT = 0
-        self.muMinLowT = 0
-        self.aMinLowT = 0
-        self.epsilonMinLowT = 0
-        self.muMaxLowT = 0
-        self.aMaxLowT = 0
-        self.epsilonMaxLowT = 0
+        self.muMinHighT = 0.0
+        self.aMinHighT = 0.0
+        self.epsilonMinHighT = 0.0
+        self.muMaxHighT = 0.0
+        self.aMaxHighT = 0.0
+        self.epsilonMaxHighT = 0.0
+        self.muMinLowT = 0.0
+        self.aMinLowT = 0.0
+        self.epsilonMinLowT = 0.0
+        self.muMaxLowT = 0.0
+        self.aMaxLowT = 0.0
+        self.epsilonMaxLowT = 0.0
 
     def setExtrapolate(self) -> None:
         """
@@ -111,10 +111,10 @@ class Thermodynamics:
 
         """
 
-        self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
+        self.TMaxHighT = self.freeEnergyHigh.maxPossibleTemperature
+        self.TMinHighT = self.freeEnergyHigh.minPossibleTemperature
+        self.TMaxLowT = self.freeEnergyLow.maxPossibleTemperature
+        self.TMinLowT = self.freeEnergyLow.minPossibleTemperature
 
         self.muMinHighT = float(1 + 1 / self.csqHighT(self.TMinHighT))
         self.aMinHighT = float(
