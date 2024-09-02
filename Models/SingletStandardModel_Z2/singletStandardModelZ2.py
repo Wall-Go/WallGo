@@ -11,11 +11,11 @@ Features:
 - Implementation of the one-loop thermal potential, without high-T expansion.
 
 Usage:
-This script is intended to compute the wallspeed of the model.
+- This script is intended to compute the wall speed of the model.
 
 Dependencies:
 - NumPy for numerical calculations
-- WallGo for the WallGo package
+- the WallGo package
 - CollisionIntegrals in read-only mode using the default path for the collision
 integrals as the "CollisonOutput" directory
 
@@ -31,7 +31,6 @@ Jb/Jf.
 import os
 import pathlib
 import sys
-import warnings
 import numpy as np
 
 # WallGo imports
@@ -47,14 +46,12 @@ from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
 )
 
 
-# Z2 symmetric SM + singlet model.
-# V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSMZ2(GenericModel):
     r"""
     Z2 symmetric SM + singlet model.
 
     The potential is given by:
-    V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
+    V = msq |phi|^2 + lam |phi|^4 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 
     This class inherits from the GenericModel class and implements the necessary
     methods for the WallGo package.
@@ -537,7 +534,7 @@ def main() -> None:
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
-    print("=== WallGo configuration options ===")
+    print("\n=== WallGo configuration options ===")
     print(WallGo.config)
 
     # Guess of the wall thickness: 5/Tn
@@ -599,7 +596,7 @@ def main() -> None:
     # Generates or reads collision integrals
     manager.generateCollisionFiles()
 
-    print("=== WallGo parameter scan ===")
+    print("\n=== WallGo parameter scan ===")
     # ---- This is where you'd start an input parameter
     # loop if doing parameter-space scans ----
 
@@ -638,43 +635,40 @@ def main() -> None:
 
         vwLTE = manager.wallSpeedLTE()
 
-        print(f"LTE wall speed: {vwLTE}")
+        print(f"LTE wall speed:    {vwLTE:.6f}")
 
         # ---- Solve field EOM. For illustration, first solve it without any
         # out-of-equilibrium contributions. The resulting wall speed should
         # be close to the LTE result
 
         bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        print("\n=== Local equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
         # Repeat with out-of-equilibrium parts included. This requires
         # solving Boltzmann equations, invoked automatically by solveWall()
         bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
-        offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        print("\n=== Out-of-equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
-        print("=== Search for detonation solution ===")
+        print("\n=== Search for detonation solution ===")
         wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
+        print("\n=== Detonation results ===")
+        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
 
     # end parameter-space loop
 
