@@ -1,3 +1,34 @@
+"""
+This Python script, inertDoubletModel.py,
+implements an extension of the Standard Model by
+an inert SU(2) doublet. This is a special case of the
+Two Higgs Doublet Model.
+The top quark and W-bosons are out of equilibrium, and
+QCD and weak interactions are considered in the collisions.
+
+Features:
+- Definition of the extended model parameters including the inert doublet.
+- Definition of the out-of-equilibrium particles.
+- Implementation of the one-loop thermal potential, without high-T expansion.
+
+Usage:
+- This script is intended to compute the wall speed of the model.
+
+Dependencies:
+- NumPy for numerical calculations
+- the WallGo package
+- CollisionIntegrals in read-only mode using the default path for the collision
+integrals as the "CollisonOutput" directory
+
+Note:
+This benchmark model was used to compare against the results of
+S. Jiang, F. Peng Huang, and X. Wang, Bubble wall velocity during electroweak
+phase transition in the inert doublet model, Phys.Rev.D 107 (2023) 9, 095005
+doi:10.1103/PhysRevD.107.095005
+As a consequence, we overwrite the default WallGo thermal functions
+Jb/Jf. 
+"""
+
 import os
 import pathlib
 import sys
