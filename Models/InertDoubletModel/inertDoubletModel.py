@@ -33,9 +33,8 @@ import os
 import pathlib
 import sys
 import numpy as np
-import numpy.typing as npt
 
-## WallGo imports
+# WallGo imports
 import WallGo  ## Whole package, in particular we get WallGo.initialize()
 from WallGo import GenericModel
 from WallGo import Particle
@@ -43,11 +42,13 @@ from WallGo import WallGoManager
 
 from WallGo import Fields
 
-## To compare to 2211.13142 we need the unresummed, non-high-T potential:
+# To compare to 2211.13142 we need the unresummed, non-high-T potential:
+# Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
-from effectivePotentialNoResum import EffectivePotentialNoResum
-
+from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
+    EffectivePotentialNoResum,
+)
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
@@ -425,29 +426,33 @@ def main() -> None:
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness
+    # Guess of the wall thickness: (approximately) 5/Tn
     wallThicknessIni = 0.05
 
-    # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1
+    # Estimate of the mean free path of the particles in the plasma: (approximately) 100/Tn
+    meanFreePath = 1.0
 
-    ## Create WallGo control object
+    # Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    # Temperature scale (in GeV) over which the potential changes by O(1).
+    # A good value would be of order Tc-Tn.
     temperatureScale = 1.0
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    # Field scale (in GeV) over which the potential changes by O(1). A good value
+    # would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the
+    # same scale, or an array.
     fieldScale = 10.0
     manager = WallGoManager(
         wallThicknessIni, meanFreePath, temperatureScale, fieldScale
     )
 
     """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input, but this is likely to change in the future
+    The constructor currently requires an initial parameter input,
+    but this is likely to change in the future
     """
 
-    ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+    ## QFT model input.
     inputParameters = {
         "v0": 246.22,
         "Mt": 172.76,
@@ -480,10 +485,12 @@ def main() -> None:
     ## Generates or reads collision integrals
     manager.generateCollisionFiles()
 
-    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
+    # This is where to start an input parameter loop if doing parameter-space scans
 
-    """ Example mass loop that just does one value of mH. Note that the WallGoManager class is NOT thread safe internally, 
-    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
+    """ Example mass loop that just does one value of the Higgs mass.
+    Note that the WallGoManager class is NOT thread safe internally, so it 
+    is NOT safe to parallelize this loop eg. with OpenMP. We recommend 
+    ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """
     values_mH = [62.66]
 
@@ -491,8 +498,9 @@ def main() -> None:
 
         inputParameters["mH"] = mH
 
-        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        """In addition to model parameters, WallGo needs info about the phases at the
+        nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
+        The transition goes from phase1 to phase2.
         """
 
         Tn = 117.1  ## nucleation temperature
@@ -503,9 +511,11 @@ def main() -> None:
             phaseLocation2=WallGo.Fields([246.0]),
         )
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+        """Give the input to WallGo. It is NOT enough to change parameters directly
+           in the GenericModel instance because
             1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+            2) WallGoManager.setParameters() does parameter-specific initializations
+               of internal classes
         """
 
         ## Wrap everything in a try-except block to check for WallGo specific errors
@@ -520,8 +530,9 @@ def main() -> None:
 
             print(f"LTE wall speed: {vwLTE}")
 
-            ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions.
-            ## The resulting wall speed should match the LTE result:
+            # Solve field equation of motion. For illustration,
+            # first solve it without any out-of-equilibrium contributions.
+            # The resulting wall speed should approximately match the LTE result:
 
             bIncludeOffEq = False
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
@@ -536,8 +547,9 @@ def main() -> None:
             print(f"{widths=}")
             print(f"{offsets=}")
 
-            ## Repeat with out-of-equilibrium parts included.
-            # This requires solving Boltzmann equations, invoked automatically by solveWall()
+            # Repeat with out-of-equilibrium parts included.
+            # This requires solving Boltzmann equations, invoked automatically
+            # by solveWall()
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
