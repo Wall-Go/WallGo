@@ -89,6 +89,8 @@ def singletBenchmarkThermo(
     thermo.freeEnergyLow.minPossibleTemperature = 50.
     thermo.freeEnergyLow.maxPossibleTemperature = 200.
 
+    thermo.setExtrapolate()
+
     yield thermo, BM
 
 
@@ -119,6 +121,8 @@ def singletBenchmarkThermo_interpolate(
 
     thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
     thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
+    thermo.setExtrapolate()
 
     yield thermo, BM
 
@@ -201,6 +205,8 @@ def singletSimpleBenchmarkThermodynamics(
 
     thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
     thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
+    thermo.setExtrapolate()
 
     yield thermo, BM
 

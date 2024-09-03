@@ -15,7 +15,7 @@ from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
@@ -110,6 +110,8 @@ class WallGoManager:
             f"Low-T phase: TMin = {self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
         )
+
+        self.thermodynamics.setExtrapolate()
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
@@ -262,6 +264,8 @@ class WallGoManager:
 
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
+
+
 
         # Find critical temperature for dT
         self.Tc = self.thermodynamics.findCriticalTemperature(

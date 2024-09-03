@@ -11,11 +11,11 @@ Features:
 - Implementation of the one-loop thermal potential, without high-T expansion.
 
 Usage:
-This script is intended to compute the wallspeed of the model.
+- This script is intended to compute the wall speed of the model.
 
 Dependencies:
 - NumPy for numerical calculations
-- WallGo for the WallGo package
+- the WallGo package
 - CollisionIntegrals in read-only mode using the default path for the collision
 integrals as the "CollisonOutput" directory
 
@@ -29,34 +29,30 @@ Jb/Jf.
 """
 
 import os
-import pathlib
 import sys
+import pathlib
 import argparse
 import numpy as np
 
-## WallGo imports
-import WallGo  ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import WallGoManager
-from WallGo import Fields
+# WallGo imports
+import WallGo  # Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle, WallGoManager
+from WallGo.InterpolatableFunction import EExtrapolationType
 
-## Adding the Models folder to the path and import effectivePotentialNoResum
-modelsPath = pathlib.Path(__file__).parents[1]
-sys.path.insert(0, str(modelsPath))
-from effectivePotentialNoResum import (
+# Add the Models folder to the path and import effectivePotentialNoResum.
+modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
+sys.path.append(str(modelsBaseDir))
+from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
     EffectivePotentialNoResum,
-)  # pylint: disable=E0401, C0413
+)
 
 
-# Z2 symmetric SM + singlet model.
-# V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 class SingletSMZ2(GenericModel):
     r"""
     Z2 symmetric SM + singlet model.
 
     The potential is given by:
-    V = msq |phi|^2 + lam (|phi|^2)^2 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
+    V = msq |phi|^2 + lam |phi|^4 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 
     This class inherits from the GenericModel class and implements the necessary
     methods for the WallGo package.
@@ -196,7 +192,7 @@ class SingletSMZ2(GenericModel):
         massh1 = inputParameters["mh1"]  # 125 GeV
         massh2 = inputParameters["mh2"]
 
-        ## these are direct inputs:
+        # these are direct inputs:
         modelParameters["RGScale"] = inputParameters["RGScale"]
         modelParameters["a2"] = inputParameters["a2"]
         modelParameters["b4"] = inputParameters["b4"]
@@ -207,7 +203,7 @@ class SingletSMZ2(GenericModel):
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
         modelParameters["b2"] = massh2**2 - 0.5 * v0**2 * inputParameters["a2"]
 
-        ## Then the gauge and Yukawa sector
+        # Then the gauge and Yukawa sector
         massT = inputParameters["Mt"]
         massW = inputParameters["MW"]
         massZ = inputParameters["MZ"]
@@ -220,7 +216,7 @@ class SingletSMZ2(GenericModel):
         # Just take QCD coupling as input
         modelParameters["g3"] = inputParameters["g3"]
 
-        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * massT / massW
+        modelParameters["yt"] = np.sqrt(0.5) * g0 * massT / massW
 
         return modelParameters
 
@@ -328,8 +324,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         at the upper limit.
         """
 
-        from WallGo.InterpolatableFunction import EExtrapolationType
-
         self.integrals.Jb.setExtrapolationType(
             extrapolationTypeLower=EExtrapolationType.CONSTANT,
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
@@ -342,7 +336,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex:
+    ) -> complex | np.ndarray:
         """
         Evaluate the effective potential.
 
@@ -357,7 +351,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         Returns
         ----------
-        potentialTotal: complex
+        potentialTotal: complex | np.ndarray
             The value of the effective potential
         """
 
@@ -396,7 +390,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             )
         )
 
-        return potentialTotal
+        return potentialTotal  # TODO: resolve return type.
 
     def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -405,6 +399,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         were not integrated over in the one-loop part.
 
         See Eq. (39) in hep-ph/0510375 for general LO formula
+
 
         Parameters
         ----------
@@ -426,7 +421,11 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(self, fields: Fields):
+    def bosonStuff(  # pylint: disable=too-many-locals
+        self, fields: Fields
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -447,31 +446,33 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             Renormalization scale in the one-loop zero-temperature effective
             potential
         """
-
         v, x = fields.GetField(0), fields.GetField(1)
 
-        msq = self.modelParameters["msq"]
-        lam = self.modelParameters["lambda"]
-        g1 = self.modelParameters["g1"]
-        g2 = self.modelParameters["g2"]
-
-        b2 = self.modelParameters["b2"]
-        a2 = self.modelParameters["a2"]
-        b4 = self.modelParameters["b4"]
-
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
-        A = msq + 0.5 * a2 * x**2 + 3.0 * v**2 * lam  # pylint: disable=C0103
-        B = b2 + 0.5 * a2 * v**2 + 3.0 * b4 * x**2  # pylint: disable=C0103
-        C = a2 * v * x  # pylint: disable=C0103
-        thingUnderSqrt = A**2 + B**2 - 2.0 * A * B + 4.0 * C**2
+        mass00 = (
+            self.modelParameters["msq"]
+            + 0.5 * self.modelParameters["a2"] * x**2
+            + 3 * self.modelParameters["lambda"] * v**2
+        )
+        mass11 = (
+            self.modelParameters["b2"]
+            + 0.5 * self.modelParameters["a2"] * v**2
+            + 3 * self.modelParameters["b4"] * x**2
+        )
+        mass01 = self.modelParameters["a2"] * v * x
+        thingUnderSqrt = mass00**2 + mass11**2 - 2 * mass00 * mass11 + 4 * mass01**2
 
-        msqEig1 = 0.5 * (A + B - np.sqrt(thingUnderSqrt))
-        msqEig2 = 0.5 * (A + B + np.sqrt(thingUnderSqrt))
+        msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
+        msqEig2 = 0.5 * (mass00 + mass11 + np.sqrt(thingUnderSqrt))
 
-        mWsq = g2**2 * v**2 / 4.0
-        mZsq = (g1**2 + g2**2) * v**2 / 4.0
+        mWsq = self.modelParameters["g2"] ** 2 * v**2 / 4
+        mZsq = mWsq + self.modelParameters["g1"] ** 2 * v**2 / 4
         # Goldstones
-        mGsq = msq + lam * v**2 + 0.5 * a2 * x**2
+        mGsq = (
+            self.modelParameters["msq"]
+            + self.modelParameters["lambda"] * v**2
+            + 0.5 * self.modelParameters["a2"] * x**2
+        )
 
         # h, s, chi, W, Z
         massSq = np.column_stack((msqEig1, msqEig2, mGsq, mWsq, mZsq))
@@ -481,7 +482,11 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(self, fields: Fields):
+    def fermionStuff(
+        self, fields: Fields
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -555,16 +560,16 @@ def main() -> None:
     )
 
     # Print WallGo config. This was read by WallGo.initialize()
-    print("=== WallGo configuration options ===")
+    print("\n=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness: 5/Tn
+    # Guess of the wall thickness: 5/Tn
     wallThicknessIni = 0.05
 
     # Estimate of the mean free path of the particles in the plasma: 100/Tn
     meanFreePath = 1.0
 
-    ## Create WallGo control object
+    # Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
     # Temperature scale (in GeV) over which the potential changes by O(1).
@@ -723,43 +728,40 @@ def main() -> None:
 
         vwLTE = manager.wallSpeedLTE()
 
-        print(f"LTE wall speed: {vwLTE}")
+        print(f"LTE wall speed:    {vwLTE:.6f}")
 
         # ---- Solve field EOM. For illustration, first solve it without any
         # out-of-equilibrium contributions. The resulting wall speed should
         # be close to the LTE result
 
         bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        widths = results.wallWidths
-        offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        print("\n=== Local equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
-        ## Repeat with out-of-equilibrium parts included. This requires
+        # Repeat with out-of-equilibrium parts included. This requires
         # solving Boltzmann equations, invoked automatically by solveWall()
         bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
-        offsets = results.wallOffsets
 
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
-        print(f"{offsets=}")
+        print("\n=== Out-of-equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
-        print("=== Search for detonation solution ===")
+        print("\n=== Search for detonation solution ===")
         wallGoInterpolationResults = manager.solveWallDetonation()
-        print(wallGoInterpolationResults.wallVelocities)
+        print("\n=== Detonation results ===")
+        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
 
     # end parameter-space loop
 
@@ -767,6 +769,6 @@ def main() -> None:
 # end main()
 
 
-## Don't run the main function if imported to another file
+# Don't run the main function if imported to another file
 if __name__ == "__main__":
     main()
