@@ -71,8 +71,8 @@ class Hydrodynamics:
             self.vJ = self.findJouguetVelocity()
         except WallGoError:
             print(
-                "Couldn't find Jouguet velocity, we continute\
-                   with the Jouguet velocity of the template model"
+                "Couldn't find Jouguet velocity, we continue "\
+                "with the Jouguet velocity of the template model"
             )
             self.vJ = self.template.vJ
 
@@ -122,11 +122,15 @@ class Hydrodynamics:
         # We make a guess for Tmax, and if it does not work we use the secant method
 
         Tmin = self.Tnucl
-        Tmax = 2 * self.Tnucl  # HACK (factor 2 is some arbitrary number larger than 1)
+        Tmax = min(max(2*Tmin, self.TMaxLowT), self.TMaxHydro)
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
+        while bracket1 * bracket2 > 0 and Tmax < self.TMaxHydro:
+            Tmin = Tmax
+            Tmax = min(Tmax+self.Tnucl, self.TMaxHydro)
+            bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
-        tmSol = None
+        tmSol: float
         if bracket1 * bracket2 <= 0:
             # If Tmin and Tmax bracket our root, use the 'brentq' method.
             rootResult = root_scalar(
@@ -153,7 +157,7 @@ class Hydrodynamics:
             raise WallGoError(
                 "Failed to solve Jouguet velocity at \
                               input temperature!",
-                data={rootResult.flag, rootResult},
+                data={'flag': rootResult.flag, 'Root result': rootResult},
             )
 
         vp = np.sqrt(
@@ -344,6 +348,8 @@ class Hydrodynamics:
             raise WallGoError(rootResult.flag, rootResult)
         vpvm, vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm / vpovm)
+        if vp == 1:
+            vm = 1
         return (vp, vm, Tp, Tm)
 
     def matchDeflagOrHyb(
@@ -395,18 +401,28 @@ class Hydrodynamics:
         # sure it satisfies all the relevant bounds.
         try:
             if vw > self.template.vMin:
+                vwTemplate = min(vw, self.template.vJ-1e-6)
+                vpTemplate = vp
+                if vp is not None:
+                    vpTemplate = min(vp, vwTemplate)
                 Tpm0 = self.template.matchDeflagOrHybInitial(
-                    min(vw, self.template.vJ), vp
+                    vwTemplate, vpTemplate
                 )
             else:
                 Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]
         except WallGoError:
             Tpm0 = [
-                1.1 * self.Tnucl,
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
                 self.Tnucl,
             ]  # The temperature in front of the wall Tp will be above Tnucl,
-            # so we use 1.1 Tnucl as initial guess, unless that is above the maximum
-            # allowed temperature
+            # so we use the smallest of 1.1*Tnucl or gamma_-*Tnucl as initial guess
+            # (the latter being close to the LTE value of (gamma_-/gamma_+)*T_-).
+
+        if np.any(np.isnan(Tpm0)):
+            Tpm0 = [
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
+                self.Tnucl,
+            ]
         if (vp is not None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01 * Tpm0[1]
         if (vp is None) and (
@@ -443,9 +459,20 @@ class Hydrodynamics:
         if vp is None:
             vp = np.sqrt((Tm**2 - Tp**2 * (1 - vm**2))) / Tm
 
+        if np.isnan(vp):
+            raise WallGoError(
+                "Hydrodynamics error: Not able to find vp in matchDeflagOrHyb. "\
+                "Can sometimes be caused by a negative sound speed squared. If that is"\
+                " the case, try decreasing phaseTracerTol or the temperature scale, "\
+                "which will improve the potential's interpolation.",
+                {'vw': vw, 'vm': vm, 'Tp': Tp, 'Tm': Tm,
+                 'csq': self.thermodynamicsExtrapolate.csqLowT(Tm)},
+            )
         return vp, vm, Tp, Tm
 
-    def shockDE(self, v: float, xiAndT: np.ndarray) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    def shockDE(
+            self, v: float, xiAndT: np.ndarray
+        ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
@@ -466,6 +493,15 @@ class Hydrodynamics:
             and :math:`\frac{\partial T}{\partial v}`
         """
         xi, T = xiAndT
+
+        if T <= 0:
+            raise WallGoError(
+                "Hydrodynamics error: The temperature in the shock wave became "\
+                "negative during the integration. This can be caused by a too coarse "\
+                "integration. Try decreasing Hydrodynamics's relative tolerance.",
+                {'v': v, 'xi': xi, 'T': T},
+            )
+
         eq1 = (
             gammaSq(v)
             * (1.0 - v * xi)
@@ -822,7 +858,7 @@ class Hydrodynamics:
 
         self.success = True
         vmin = self.vMin
-        vmax = self.vJ
+        vmax = self.vJ-1e-10
 
         if (
             shock(vmax) > 0

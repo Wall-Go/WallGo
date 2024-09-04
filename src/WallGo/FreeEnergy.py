@@ -276,14 +276,14 @@ class FreeEnergy(InterpolatableFunction):
                     else:
                         # compute Veff
                         VeffT = self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
+                # check if step size is still okay to continue
+                if ode.step_size < 1e-16 * T0 or (TList.size > 0 and ode.t == TList[-1]):
+                    print(f"Step size {ode.step_size} shrunk too small at T={ode.t}, vev={ode.y}")
+                    break
                 # append results to lists
                 TList = np.append(TList, [ode.t], axis=0)
                 fieldList = np.append(fieldList, [ode.y], axis=0)
                 VeffList = np.append(VeffList, [VeffT], axis=0)
-                # check if step size is still okay to continue
-                if ode.step_size < 1e-16 * T0:
-                    print(f"Step size {ode.step_size} shrunk too small at T={ode.t}, vev={ode.y}")
-                    break
             if direction == 0:
                 # populating results array
                 TFullList = TList

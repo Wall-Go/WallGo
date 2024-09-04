@@ -249,10 +249,20 @@ class WallGoManager:
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
+            
+        # Raise an error if this is an inverse PT (if epsilon is negative)
+        if hydrodynamicsTemplate.epsilon < 0:
+            raise WallGoError(
+                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be positive.")
 
-        _, _, THighTMaxTemplate, TLowTTMaxTemplate = hydrodynamicsTemplate.findMatching(
+        _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
+        
+        if THighTMaxTemplate is None:
+            THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
+        if TLowTMaxTemplate is None:
+            TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
@@ -264,9 +274,9 @@ class WallGoManager:
         the program can slow down significantly, but TMax must be large
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
-        fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
-        TMinHighT, TMaxHighT = 0, fudgeFactor * THighTMaxTemplate
-        TMinLowT, TMaxLowT = 0, fudgeFactor * TLowTTMaxTemplate
+        fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
+        TMinHighT, TMaxHighT = 0, max(2*Tn, fudgeFactor * THighTMaxTemplate)
+        TMinLowT, TMaxLowT = 0, max(2*Tn, fudgeFactor * TLowTMaxTemplate)
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
@@ -275,27 +285,13 @@ class WallGoManager:
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 
-
-
-        # Find critical temperature for dT
-        self.Tc = self.thermodynamics.findCriticalTemperature(
-            dT=dT,
-            rTol=phaseTracerTol,
-        )
-
-        if self.Tc < Tn:
-            raise WallGoPhaseValidationError(
-                f"Got Tc < Tn, should not happen!",
-                Tn,
-                {"Tc": self.Tc},
-            )
-        print(f"Found Tc = {self.Tc} GeV.")
-
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """"""
         tmax = self.config.getfloat("Hydrodynamics", "tmax")
         tmin = self.config.getfloat("Hydrodynamics", "tmin")
-        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin)
+        rtol = self.config.getfloat("Hydrodynamics", "relativeTol")
+        atol = self.config.getfloat("Hydrodynamics", "absoluteTol")
+        self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin, rtol, atol)
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""

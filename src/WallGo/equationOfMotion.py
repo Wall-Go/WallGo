@@ -29,6 +29,7 @@ from .results import (
     WallGoResults,
     WallGoInterpolationResults,
 )
+from .exceptions import WallGoError
 
 
 class EOM:
@@ -231,18 +232,29 @@ class EOM:
             boltzmannBackgroundMin,
             hydroResultsMin,
         ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
-        if pressureMin > 0:
-            print(
-                """EOM warning: the pressure at vw = 0 is positive which indicates the 
-                phase transition cannot proceed. Something might be wrong with your 
-                potential."""
-            )
-            results.setWallVelocities(0, 0, wallVelocityLTE)
-            results.setWallParams(wallParamsMin)
-            results.setHydroResults(hydroResultsMin)
-            results.setBoltzmannBackground(boltzmannBackgroundMin)
-            results.setBoltzmannResults(boltzmannResultsMin)
-            return results
+        while pressureMin > 0:
+            # If pressureMin is positive, increase wallVelocityMin
+            # until it's negative.
+            wallVelocityMin *= 2
+            if wallVelocityMin >= wallVelocityMax:
+                print(
+                    """EOM warning: the pressure at vw = 0 is positive which indicates
+                    the phase transition cannot proceed. Something might be wrong with
+                    your potential."""
+                )
+                results.setWallVelocities(0, 0, wallVelocityLTE)
+                results.setWallParams(wallParamsMin)
+                results.setHydroResults(hydroResultsMin)
+                results.setBoltzmannBackground(boltzmannBackgroundMin)
+                results.setBoltzmannResults(boltzmannResultsMin)
+                return results
+            (
+                pressureMin,
+                wallParamsMin,
+                boltzmannResultsMin,
+                boltzmannBackgroundMin,
+                hydroResultsMin,
+            ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
 
         self.pressAbsErrTol = (
             0.01
@@ -465,8 +477,18 @@ class EOM:
         )
 
         # Positions of the phases
-        vevLowT = self.thermo.freeEnergyLow(Tminus).fieldsAtMinimum
-        vevHighT = self.thermo.freeEnergyHigh(Tplus).fieldsAtMinimum
+        TminusEval = max(min(
+            Tminus,
+            self.thermo.freeEnergyLow.interpolationRangeMax()),
+            self.thermo.freeEnergyLow.interpolationRangeMin(),
+            )
+        TplusEval = max(min(
+            Tplus,
+            self.thermo.freeEnergyHigh.interpolationRangeMax()),
+            self.thermo.freeEnergyHigh.interpolationRangeMin(),
+            )
+        vevLowT = self.thermo.freeEnergyLow(TminusEval).fieldsAtMinimum
+        vevHighT = self.thermo.freeEnergyHigh(TplusEval).fieldsAtMinimum
 
         ##Estimate the new grid parameters
         widths = wallParams.widths
@@ -1182,14 +1204,16 @@ class EOM:
             ## Broadcast mess needed
             zL = z[:, None] / wallParams.widths[None, :]  # pylint: disable=invalid-name
 
-        fields = vevLowT + 0.5 * (vevHighT - vevLowT) * (
-            1 + np.tanh(zL + wallParams.offsets)
-        )
-        dPhidz = (
-            0.5
-            * (vevHighT - vevLowT)
-            / (wallParams.widths * np.cosh(zL + wallParams.offsets) ** 2)
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            fields = vevLowT + 0.5 * (vevHighT - vevLowT) * (
+                1 + np.tanh(zL + wallParams.offsets)
+            )
+            dPhidz = (
+                0.5
+                * (vevHighT - vevLowT)
+                / (wallParams.widths * np.cosh(zL + wallParams.offsets) ** 2)
+            )
 
         return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
 
@@ -1329,15 +1353,18 @@ class EOM:
         # Bracketing the root
         tempAtMinimum = minRes.x
         TMultiplier = max(Tplus / tempAtMinimum, 1.2)
-        if (
-            Tplus < Tminus
-        ):  # If this is a detonation solution, finds a solution below TLowerBound
+        # If this is a detonation solution, finds a solution below TLowerBound
+        if abs(self.hydrodynamics.Tnucl-Tplus) < 1e-10:
             TMultiplier = min(Tminus / tempAtMinimum, 0.8)
 
         testTemp = tempAtMinimum * TMultiplier
+        i = 0 # pylint: disable=invalid-name
         while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
+            if i > 100:
+                raise WallGoError("Can't find the temperature profile.")
             tempAtMinimum *= TMultiplier
             testTemp *= TMultiplier
+            i += 1
 
         # Solving for the root
         res = scipy.optimize.root_scalar(
