@@ -233,7 +233,8 @@ class EOM:
             hydroResultsMin,
         ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
         while pressureMin > 0:
-            # If pressureMin is positive, increase it until it's negative.
+            # If pressureMin is positive, increase wallVelocityMin
+            # until it's negative.
             wallVelocityMin *= 2
             if wallVelocityMin >= wallVelocityMax:
                 print(
