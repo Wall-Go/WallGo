@@ -190,7 +190,7 @@ class FreeEnergy(InterpolatableFunction):
         solve. Stops if we get sqrt(negative) or something like that.
         """
         # make sure the initial conditions are extra accurate
-        extraTol = 0.01 * rTol
+        extraTol = 1e-2 * rTol
 
         # initial values, should be nice and accurate
         T0 = self.startingTemperature
