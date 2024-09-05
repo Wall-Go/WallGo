@@ -50,7 +50,7 @@ class HydrodynamicsTemplateModel:
         rtol : float, optional
             Default value is 1e-6.
         atol : float, optional
-            Default value is 1e-6.
+            Default value is 1e-10.
 
         Returns
         -------
