@@ -409,7 +409,7 @@ class Hydrodynamics:
                     vwTemplate, vpTemplate
                 )
             else:
-                Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]
+                Tpm0 = [self.Tnucl, (1 - 1e-2) * self.Tnucl]
         except WallGoError:
             Tpm0 = [
                 min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
