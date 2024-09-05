@@ -91,7 +91,6 @@ class WallGoManager:
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
-    
     # Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(self, phaseInput: PhaseInfo) -> None:
         """Parameters
@@ -249,16 +248,16 @@ class WallGoManager:
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
-            
+
         # Raise an error if this is an inverse PT (if epsilon is negative)
         if hydrodynamicsTemplate.epsilon < 0:
             raise WallGoError(
                 f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be positive.")
 
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
-            0.99 * hydrodynamicsTemplate.vJ
+            (1 - 1e-2) * hydrodynamicsTemplate.vJ
         )
-        
+
         if THighTMaxTemplate is None:
             THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
         if TLowTMaxTemplate is None:
@@ -353,7 +352,7 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-        
+
         wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
                                self.config.getfloat("EOM", "wallThicknessUpperBound"))
         wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
@@ -390,7 +389,7 @@ class WallGoManager:
         """
         print("=== WallGo collision generation ===")
         self.boltzmannSolver.readCollisions(collision)
-    
+
     def generateCollisionFiles(self) -> None:
         """
         Loads collision files and reads them using the Boltzmann solver.
@@ -405,7 +404,6 @@ class WallGoManager:
             None
         """
         self.loadCollisionFiles(self.collision)
-    
 
     def wallSpeedLTE(self) -> float:
         """Solves wall speed in the Local Thermal Equilibrium approximation."""
@@ -426,7 +424,7 @@ class WallGoManager:
         self,
         bIncludeOffEq: bool = True,
         wallThicknessIni: float = None,
-        dvMinInterpolation: float = 0.02,
+        dvMinInterpolation: float = 2e-2,
     ) -> WallGoResults:
         """
         Finds all the detonation solutions by computing the pressure on a grid
@@ -453,7 +451,7 @@ class WallGoManager:
 
         vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydrodynamics.slowestDeton())
         return self.eom.solveInterpolation(
-            vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
+            vmin, (1 - 1e-2), wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
