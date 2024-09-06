@@ -8,7 +8,7 @@ import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .exceptions import WallGoError
-from .Thermodynamics import Thermodynamics, ThermodynamicsExtrapolate
+from .thermodynamics import Thermodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .helpers import gammaSq, boostVelocity
 from .results import HydroResults
@@ -31,9 +31,11 @@ class Hydrodynamics:
         tmax: float,
         tmin: float,
         rtol: float,
-        atol: float
-    ) -> None:
-        """Initialisation
+        atol: float,
+    ):
+        
+        """
+        Initialisation
 
         Parameters
         ----------
@@ -61,8 +63,6 @@ class Hydrodynamics:
         self.TMaxHydro = tmax * self.Tnucl
         self.TMinHydro = tmin * self.Tnucl
 
-        self.thermodynamicsExtrapolate = ThermodynamicsExtrapolate(thermodynamics)
-
         self.rtol, self.atol = rtol, atol
 
         self.template = HydrodynamicsTemplateModel(thermodynamics, rtol=rtol, atol=atol)
@@ -71,8 +71,8 @@ class Hydrodynamics:
             self.vJ = self.findJouguetVelocity()
         except WallGoError:
             print(
-                "Couldn't find Jouguet velocity, we continute\
-                   with the Jouguet velocity of the template model"
+                "Couldn't find Jouguet velocity, we continue "\
+                "with the Jouguet velocity of the template model"
             )
             self.vJ = self.template.vJ
 
@@ -95,20 +95,20 @@ class Hydrodynamics:
             The value of the Jouguet velocity for this model.
 
         """
-        pHighT = self.thermodynamicsExtrapolate.pHighT(self.Tnucl)
-        eHighT = self.thermodynamicsExtrapolate.eHighT(self.Tnucl)
+        pHighT = self.thermodynamics.pHighT(self.Tnucl)
+        eHighT = self.thermodynamics.eHighT(self.Tnucl)
 
         def vpDerivNum(tm: float) -> float:  # The numerator of the derivative of v+^2
-            pLowT = self.thermodynamicsExtrapolate.pLowT(tm)
-            eLowT = self.thermodynamicsExtrapolate.eLowT(tm)
+            pLowT = self.thermodynamics.pLowT(tm)
+            eLowT = self.thermodynamics.eLowT(tm)
             num1 = pHighT - pLowT  # First factor in the numerator of v+^2
             num2 = pHighT + eLowT
             den1 = eHighT - eLowT  # First factor in the denominator of v+^2
             den2 = eHighT + pLowT
-            dnum1 = -self.thermodynamicsExtrapolate.dpLowT(
+            dnum1 = -self.thermodynamics.dpLowT(
                 tm
             )  # T-derivative of first factor wrt tm
-            dnum2 = self.thermodynamicsExtrapolate.deLowT(tm)
+            dnum2 = self.thermodynamics.deLowT(tm)
             dden1 = -dnum2  # T-derivative of second factor wrt tm
             dden2 = -dnum1
             return (
@@ -122,11 +122,15 @@ class Hydrodynamics:
         # We make a guess for Tmax, and if it does not work we use the secant method
 
         Tmin = self.Tnucl
-        Tmax = 2 * self.Tnucl  # HACK (factor 2 is some arbitrary number larger than 1)
+        Tmax = min(max(2*Tmin, self.TMaxLowT), self.TMaxHydro)
 
         bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
+        while bracket1 * bracket2 > 0 and Tmax < self.TMaxHydro:
+            Tmin = Tmax
+            Tmax = min(Tmax+self.Tnucl, self.TMaxHydro)
+            bracket1, bracket2 = vpDerivNum(Tmin), vpDerivNum(Tmax)
 
-        tmSol = None
+        tmSol: float
         if bracket1 * bracket2 <= 0:
             # If Tmin and Tmax bracket our root, use the 'brentq' method.
             rootResult = root_scalar(
@@ -153,14 +157,14 @@ class Hydrodynamics:
             raise WallGoError(
                 "Failed to solve Jouguet velocity at \
                               input temperature!",
-                data={rootResult.flag, rootResult},
+                data={'flag': rootResult.flag, 'Root result': rootResult},
             )
 
         vp = np.sqrt(
-            (pHighT - self.thermodynamicsExtrapolate.pLowT(tmSol))
-            * (pHighT + self.thermodynamicsExtrapolate.eLowT(tmSol))
-            / (eHighT - self.thermodynamicsExtrapolate.eLowT(tmSol))
-            / (eHighT + self.thermodynamicsExtrapolate.pLowT(tmSol))
+            (pHighT - self.thermodynamics.pLowT(tmSol))
+            * (pHighT + self.thermodynamics.eLowT(tmSol))
+            / (eHighT - self.thermodynamics.eLowT(tmSol))
+            / (eHighT + self.thermodynamics.pLowT(tmSol))
         )
         return float(vp)
 
@@ -274,12 +278,12 @@ class Hydrodynamics:
             `v_+v_-` and :math:`v_+/v_-`
         """
 
-        pHighT, pLowT = self.thermodynamicsExtrapolate.pHighT(
+        pHighT, pLowT = self.thermodynamics.pHighT(
             Tp
-        ), self.thermodynamicsExtrapolate.pLowT(Tm)
-        eHighT, eLowT = self.thermodynamicsExtrapolate.eHighT(
+        ), self.thermodynamics.pLowT(Tm)
+        eHighT, eLowT = self.thermodynamics.eHighT(
             Tp
-        ), self.thermodynamicsExtrapolate.eLowT(Tm)
+        ), self.thermodynamics.eLowT(Tm)
         vpvm = (
             (pHighT - pLowT) / (eHighT - eLowT)
             if eHighT != eLowT
@@ -307,15 +311,15 @@ class Hydrodynamics:
         """
         vp = vw
         Tp = self.Tnucl
-        pHighT, wHighT = self.thermodynamicsExtrapolate.pHighT(
+        pHighT, wHighT = self.thermodynamics.pHighT(
             Tp
-        ), self.thermodynamicsExtrapolate.wHighT(Tp)
+        ), self.thermodynamics.wHighT(Tp)
         eHighT = wHighT - pHighT
 
         def tmFromvpsq(tm: float) -> float:
-            pLowT, wLowT = self.thermodynamicsExtrapolate.pLowT(
+            pLowT, wLowT = self.thermodynamics.pLowT(
                 tm
-            ), self.thermodynamicsExtrapolate.wLowT(tm)
+            ), self.thermodynamics.wLowT(tm)
             eLowT = wLowT - pLowT
             return float(
                 vp**2 * (eHighT - eLowT)
@@ -344,6 +348,8 @@ class Hydrodynamics:
             raise WallGoError(rootResult.flag, rootResult)
         vpvm, vpovm = self.vpvmAndvpovm(Tp, Tm)
         vm = np.sqrt(vpvm / vpovm)
+        if vp == 1:
+            vm = 1
         return (vp, vm, Tp, Tm)
 
     def matchDeflagOrHyb(
@@ -373,7 +379,7 @@ class Hydrodynamics:
             mappedTpTm: list[float],
         ) -> Tuple[float, float]:  # Matching relations at the wall interface
             Tpm = self._inverseMappingT(mappedTpTm)
-            vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm[1]))
+            vmsq = min(vw**2, self.thermodynamics.csqLowT(Tpm[1]))
 
             if vp is None:
                 # Determine vp from entropy conservation, e.g. eq. (15) of 2303.10171
@@ -395,25 +401,35 @@ class Hydrodynamics:
         # sure it satisfies all the relevant bounds.
         try:
             if vw > self.template.vMin:
+                vwTemplate = min(vw, self.template.vJ-1e-6)
+                vpTemplate = vp
+                if vp is not None:
+                    vpTemplate = min(vp, vwTemplate)
                 Tpm0 = self.template.matchDeflagOrHybInitial(
-                    min(vw, self.template.vJ), vp
+                    vwTemplate, vpTemplate
                 )
             else:
                 Tpm0 = [self.Tnucl, 0.99 * self.Tnucl]
         except WallGoError:
             Tpm0 = [
-                1.1 * self.Tnucl,
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
                 self.Tnucl,
             ]  # The temperature in front of the wall Tp will be above Tnucl,
-            # so we use 1.1 Tnucl as initial guess, unless that is above the maximum
-            # allowed temperature
+            # so we use the smallest of 1.1*Tnucl or gamma_-*Tnucl as initial guess
+            # (the latter being close to the LTE value of (gamma_-/gamma_+)*T_-).
+
+        if np.any(np.isnan(Tpm0)):
+            Tpm0 = [
+                min(1.1, 1/np.sqrt(1-min(vw**2, self.template.cb2))) * self.Tnucl,
+                self.Tnucl,
+            ]
         if (vp is not None) and (Tpm0[0] <= Tpm0[1]):
             Tpm0[0] = 1.01 * Tpm0[1]
         if (vp is None) and (
             Tpm0[0] <= Tpm0[1]
             or Tpm0[0]
             > Tpm0[1]
-            / np.sqrt(1 - min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm0[1])))
+            / np.sqrt(1 - min(vw**2, self.thermodynamics.csqLowT(Tpm0[1])))
         ):
             Tpm0[0] = (
                 Tpm0[1]
@@ -421,7 +437,7 @@ class Hydrodynamics:
                     1
                     + 1
                     / np.sqrt(
-                        1 - min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tpm0[1]))
+                        1 - min(vw**2, self.thermodynamics.csqLowT(Tpm0[1]))
                     )
                 )
                 / 2
@@ -438,14 +454,25 @@ class Hydrodynamics:
         # we consider that root has converged even if it returns False.
         [Tp, Tm] = self._inverseMappingT(sol.x)
 
-        vmsq = min(vw**2, self.thermodynamicsExtrapolate.csqLowT(Tm))
+        vmsq = min(vw**2, self.thermodynamics.csqLowT(Tm))
         vm = np.sqrt(max(vmsq, 0))
         if vp is None:
             vp = np.sqrt((Tm**2 - Tp**2 * (1 - vm**2))) / Tm
 
+        if np.isnan(vp):
+            raise WallGoError(
+                "Hydrodynamics error: Not able to find vp in matchDeflagOrHyb. "\
+                "Can sometimes be caused by a negative sound speed squared. If that is"\
+                " the case, try decreasing phaseTracerTol or the temperature scale, "\
+                "which will improve the potential's interpolation.",
+                {'vw': vw, 'vm': vm, 'Tp': Tp, 'Tm': Tm,
+                 'csq': self.thermodynamicsExtrapolate.csqLowT(Tm)},
+            )
         return vp, vm, Tp, Tm
 
-    def shockDE(self, v: float, xiAndT: np.ndarray) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
+    def shockDE(
+            self, v: float, xiAndT: np.ndarray
+        ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
         the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`
@@ -466,11 +493,20 @@ class Hydrodynamics:
             and :math:`\frac{\partial T}{\partial v}`
         """
         xi, T = xiAndT
+
+        if T <= 0:
+            raise WallGoError(
+                "Hydrodynamics error: The temperature in the shock wave became "\
+                "negative during the integration. This can be caused by a too coarse "\
+                "integration. Try decreasing Hydrodynamics's relative tolerance.",
+                {'v': v, 'xi': xi, 'T': T},
+            )
+
         eq1 = (
             gammaSq(v)
             * (1.0 - v * xi)
             * (
-                boostVelocity(xi, v) ** 2 / self.thermodynamicsExtrapolate.csqHighT(T)
+                boostVelocity(xi, v) ** 2 / self.thermodynamics.csqHighT(T)
                 - 1.0
             )
             * xi
@@ -478,8 +514,8 @@ class Hydrodynamics:
             / v
         )
         eq2 = (
-            self.thermodynamicsExtrapolate.wHighT(T)
-            / self.thermodynamicsExtrapolate.dpHighT(T)
+            self.thermodynamics.wHighT(T)
+            / self.thermodynamics.dpHighT(T)
             * gammaSq(v)
             * boostVelocity(xi, v)
         )
@@ -511,7 +547,7 @@ class Hydrodynamics:
         def shock(v: float, xiAndT: np.ndarray | list) -> float:
             xi, T = xiAndT
             return float(
-                boostVelocity(xi, v) * xi - self.thermodynamicsExtrapolate.csqHighT(T)
+                boostVelocity(xi, v) * xi - self.thermodynamics.csqHighT(T)
             )
 
         shock.terminal = True  # What's happening here?
@@ -523,7 +559,7 @@ class Hydrodynamics:
             TmShock = Tp
         elif vw == vp:
             vmShock = 0
-            xiShock = self.thermodynamicsExtrapolate.csqHighT(Tp) ** 0.5
+            xiShock = self.thermodynamics.csqHighT(Tp) ** 0.5
             TmShock = Tp
         else:
             solshock = solve_ivp(
@@ -539,15 +575,15 @@ class Hydrodynamics:
 
         # continuity of the ii-compontent of the energy-momentum tensor
         def TiiShock(tn: float) -> float:
-            return self.thermodynamicsExtrapolate.wHighT(tn) * xiShock / (
+            return self.thermodynamics.wHighT(tn) * xiShock / (
                 1 - xiShock**2
-            ) - self.thermodynamicsExtrapolate.wHighT(TmShock) * boostVelocity(
+            ) - self.thermodynamics.wHighT(TmShock) * boostVelocity(
                 xiShock, vmShock
             ) * gammaSq(
                 boostVelocity(xiShock, vmShock)
             )
 
-        # Make an initial guess for the temperature range in which Tn will be found
+        # Make an initial guess for the temperature range in which Tnucl will be found
         Tmin, Tmax = max(self.Tnucl / 2, self.TMinHydro), TmShock
         bracket1, bracket2 = TiiShock(Tmin), TiiShock(Tmax)
 
@@ -596,15 +632,15 @@ class Hydrodynamics:
 
         Returns
         -------
-        Tn: float
+        Tnucl: float
             The nucleation temperature corresponding to the strongest shock.
 
         """
 
         def matchingStrongest(Tp: float) -> float:
-            return self.thermodynamicsExtrapolate.pHighT(
+            return self.thermodynamics.pHighT(
                 Tp
-            ) - self.thermodynamicsExtrapolate.pLowT(self.TMinHydro)
+            ) - self.thermodynamics.pLowT(self.TMinHydro)
 
         try:
             TpStrongestRootResult = root_scalar(
@@ -635,12 +671,12 @@ class Hydrodynamics:
 
         """
 
-        def strongestshockTn(vw: float) -> float:
+        def strongestshockTnucl(vw: float) -> float:
             return self.strongestShock(vw) - self.Tnucl
 
         try:
             vMinRootResult = root_scalar(
-                strongestshockTn,
+                strongestshockTnucl,
                 bracket=(self.vBracketLow, self.vJ),
                 rtol=self.rtol,
                 xtol=self.atol,
@@ -683,23 +719,23 @@ class Hydrodynamics:
             # The speed of sound below should really be evaluated at Tp, but we use Tn
             # here to save time. We will use Tp later if it doesn't work.
             vpmax = min(
-                vwTry, self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) / vwTry
+                vwTry, self.thermodynamics.csqHighT(self.Tnucl) / vwTry
             )
 
-            def shockTnDiff(vpTry: float) -> float:
+            def shockTnuclDiff(vpTry: float) -> float:
                 _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
                 return self.solveHydroShock(vwTry, vpTry, Tp) - self.Tnucl
 
-            shockTnDiffMin, shockTnDiffMax = shockTnDiff(vpmin), shockTnDiff(vpmax)
+            shockTnuclDiffMin, shockTnuclDiffMax = shockTnuclDiff(vpmin), shockTnuclDiff(vpmax)
 
             # If no solution was found between vpmin and vpmax, it might be because
             # vpmax was evaluated at Tn instead of Tp.  We thus reevaluate vpmax by
             # solving 'vpmax = cs(Tp(vpmax))^2/vwTry'
-            if shockTnDiffMin * shockTnDiffMax > 0:
+            if shockTnuclDiffMin * shockTnuclDiffMax > 0:
 
                 def solveVpmax(vpTry: float) -> float:
                     _, _, Tp, _ = self.matchDeflagOrHyb(vwTry, vpTry)
-                    return vpTry - self.thermodynamicsExtrapolate.csqHighT(Tp) / vwTry
+                    return vpTry - self.thermodynamics.csqHighT(Tp) / vwTry
 
                 if solveVpmax(vwTry) * solveVpmax(vpmax) <= 0:
                     vpmax = root_scalar(
@@ -708,18 +744,18 @@ class Hydrodynamics:
                         xtol=self.atol,
                         rtol=self.rtol,
                     ).root
-                    shockTnDiffMax = shockTnDiff(vpmax)
+                    shockTnuclDiffMax = shockTnuclDiff(vpmax)
 
-            if shockTnDiffMin * shockTnDiffMax <= 0:
+            if shockTnuclDiffMin * shockTnuclDiffMax <= 0:
                 sol = root_scalar(
-                    shockTnDiff,
+                    shockTnuclDiff,
                     bracket=[vpmin, vpmax],
                     xtol=self.atol,
                     rtol=self.rtol,
                 )
             else:
                 extremum = minimize_scalar(
-                    lambda x: np.sign(shockTnDiffMax) * shockTnDiff(x),
+                    lambda x: np.sign(shockTnuclDiffMax) * shockTnuclDiff(x),
                     bounds=[vpmin, vpmax],
                     method="Bounded",
                 )
@@ -736,7 +772,7 @@ class Hydrodynamics:
                     return self.template.findMatching(vwTemplate)
 
                 sol = root_scalar(
-                    shockTnDiff,
+                    shockTnuclDiff,
                     bracket=[vpmin, extremum.x],
                     xtol=self.atol,
                     rtol=self.rtol,
@@ -779,9 +815,9 @@ class Hydrodynamics:
         vp, vm, Tp, Tm = self.findMatching(vwTry)
         if vp is None:
             return (vp, vm, Tp, Tm, None)
-        wHighT = self.thermodynamicsExtrapolate.wHighT(Tp)
+        wHighT = self.thermodynamics.wHighT(Tp)
         c1 = -wHighT * gammaSq(vp) * vp
-        c2 = self.thermodynamicsExtrapolate.pHighT(Tp) + wHighT * gammaSq(vp) * vp**2
+        c2 = self.thermodynamics.pHighT(Tp) + wHighT * gammaSq(vp) * vp**2
         velocityMid = -0.5 * (vm + vp)  # NOTE: minus sign for convention change
         return (c1, c2, Tp, Tm, velocityMid)
 
@@ -805,7 +841,7 @@ class Hydrodynamics:
         """
 
         # Function given to the root finder.
-        def shockTnDiff(
+        def shockTnuclDiff(
             vw: float,
         ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
@@ -818,11 +854,11 @@ class Hydrodynamics:
             vw: float,
         ) -> float:
             vp, _, Tp, _ = self.matchDeflagOrHyb(vw)
-            return vp * vw - self.thermodynamicsExtrapolate.csqHighT(Tp)
+            return vp * vw - self.thermodynamics.csqHighT(Tp)
 
         self.success = True
         vmin = self.vMin
-        vmax = self.vJ
+        vmax = self.vJ-1e-10
 
         if (
             shock(vmax) > 0
@@ -831,7 +867,7 @@ class Hydrodynamics:
                 vmax = root_scalar(
                     shock,
                     bracket=[
-                        self.thermodynamicsExtrapolate.csqHighT(self.Tnucl) ** 0.5,
+                        self.thermodynamics.csqHighT(self.Tnucl) ** 0.5,
                         self.vJ,
                     ],
                     xtol=self.atol,
@@ -842,18 +878,18 @@ class Hydrodynamics:
                 return 1  # No shock can be found, e.g. when the PT is too strong --
             # is there a risk here of returning 1 when it should be 0?
 
-        shockTnDiffMax = shockTnDiff(vmax)
+        shockTnuclDiffMax = shockTnuclDiff(vmax)
         if (
-            shockTnDiffMax > 0 or not self.success
+            shockTnuclDiffMax > 0 or not self.success
         ):  # There is no deflagration or hybrid solution, we return 1.
             return 1
 
-        shockTnDiffMin = shockTnDiff(vmin)
-        if shockTnDiffMin < 0:  # vw is smaller than vmin, we return 0.
+        shockTnuclDiffMin = shockTnuclDiff(vmin)
+        if shockTnuclDiffMin < 0:  # vw is smaller than vmin, we return 0.
             return 0
 
         sol = root_scalar(
-            shockTnDiff,
+            shockTnuclDiff,
             bracket=(vmin, vmax),
             xtol=self.atol,
             rtol=self.rtol,

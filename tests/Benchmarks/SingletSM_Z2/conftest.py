@@ -8,8 +8,8 @@ from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
 from .Benchmarks_singlet import BM1
 
-from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import (
-    SingletSM_Z2,
+from Models.SingletStandardModel_Z2.singletStandardModelZ2 import (
+    SingletSMZ2,
 )  # Benoit benchmark model
 from Models.SingletStandardModel_Z2.SingletStandardModel_Z2_Simple import (
     SingletSM_Z2_Simple,
@@ -43,7 +43,7 @@ def singletBenchmarkPoint() -> BenchmarkPoint:
 @pytest.fixture(scope="session")
 def singletBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkModel:
     inputs = singletBenchmarkPoint.inputParams
-    model = SingletSM_Z2(inputs)
+    model = SingletSMZ2(inputs)
 
     yield BenchmarkModel(model, singletBenchmarkPoint)
 
@@ -89,6 +89,8 @@ def singletBenchmarkThermo(
     thermo.freeEnergyLow.minPossibleTemperature = 50.
     thermo.freeEnergyLow.maxPossibleTemperature = 200.
 
+    thermo.setExtrapolate()
+
     yield thermo, BM
 
 
@@ -119,6 +121,8 @@ def singletBenchmarkThermo_interpolate(
 
     thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
     thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
+    thermo.setExtrapolate()
 
     yield thermo, BM
 
@@ -201,6 +205,8 @@ def singletSimpleBenchmarkThermodynamics(
 
     thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
     thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+
+    thermo.setExtrapolate()
 
     yield thermo, BM
 

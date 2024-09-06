@@ -6,7 +6,7 @@ import numpy as np
 import WallGo
 
 ## should clean these imports...
-from Models.SingletStandardModel_Z2.SingletStandardModel_Z2 import SingletSM_Z2
+from Models.SingletStandardModel_Z2.singletStandardModelZ2 import SingletSMZ2
 from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 from .BenchmarkPoint import BenchmarkPoint
 

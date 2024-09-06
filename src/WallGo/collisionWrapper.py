@@ -9,7 +9,9 @@ from types import ModuleType
 
 # TODO here only need the current config instead of whole wallgo package
 import WallGo ## Whole package, in particular we get WallGo.initialize()
-from WallGo import Fields, GenericModel, Particle
+from .genericModel import GenericModel
+from .Fields import Fields
+from .particle import Particle
 
 
 class Collision:

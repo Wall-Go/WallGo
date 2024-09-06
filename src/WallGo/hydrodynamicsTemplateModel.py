@@ -3,12 +3,13 @@ Class for solving the hydrodynamic equations for the fluid velocity and temperat
 approximating the equation of state by the template model.
 """
 
+import warnings
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
 from .helpers import gammaSq
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 
 
 class HydrodynamicsTemplateModel:
@@ -36,7 +37,7 @@ class HydrodynamicsTemplateModel:
     """
 
     def __init__(
-        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-6
+        self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-10
     ) -> None:
         r"""
         Initialize the HydroTemplateModel class. 
@@ -75,6 +76,10 @@ class HydrodynamicsTemplateModel:
                 "Invalid sound speed at nucleation temperature",
                 data={"csqLowT": self.cb2, "csqHighT": self.cs2},
             )
+        if self.cb2 > 0.4 or self.cs2 > 0.4:
+            warnings.warn(f"Warning: One of the sound speed at Tnucl is unusually"\
+                          f" large (cb^2={self.cb2}, cs^2={self.cs2}). This can lead"\
+                          f" to errors later.")
 
         ## Calculate other thermodynamics quantities like alpha and Psi
         self.alN = float((eHighT - eLowT - (pHighT - pLowT) / self.cb2) / (3 * wHighT))
@@ -91,6 +96,7 @@ class HydrodynamicsTemplateModel:
         self.mu = 1 + 1 / self.cs2
         self.vJ = self.findJouguetVelocity()
         self.vMin = self.minVelocity()
+        self.epsilon = self.wN*(1/self.mu-(1-3*self.alN)/self.nu)
 
     def findJouguetVelocity(self, alN: float | None = None) -> float:
         r"""
@@ -201,7 +207,8 @@ class HydrodynamicsTemplateModel:
 
         """
         # Add 1e-100 to avoid having something like 0/0
-        return (abs((1 - 3 * self.alN) * self.mu - self.nu) + 1e-100) / (
+        sign = np.sign((1-3*self.alN)*self.mu-self.nu)*np.sign((1-3*al)*self.mu-self.nu)
+        return sign*(abs((1 - 3 * self.alN) * self.mu - self.nu) + 1e-100) / (
             abs((1 - 3 * al) * self.mu - self.nu) + 1e-100
         )
 
@@ -225,8 +232,16 @@ class HydrodynamicsTemplateModel:
             Plasma temperature right behind the bubble wall
         """
         # a paramaters appearing in the definition of the template model
-        ap = 3 / (self.mu * self.Tnucl**self.mu)
-        am = 3 * self.psiN / (self.nu * self.Tnucl**self.nu)
+        try:
+            ap = 3 / (self.mu * self.Tnucl**self.mu)
+        except OverflowError:
+            # If self.mu is large, the exponential can overflow and trigger an error
+            ap = 0
+        try:
+            am = 3 * self.psiN / (self.nu * self.Tnucl**self.nu)
+        except OverflowError:
+            # Same thing
+            am = 0
         return float(
             (
                 (ap * vp * self.mu * (1 - vm**2) * Tp**self.mu)
@@ -291,13 +306,14 @@ class HydrodynamicsTemplateModel:
             * (self.cb2 - vm * vpMax)
             / (3 * self.cb2 * vm * (1 - vpMax**2)),
             (self.mu - self.nu) / (3 * self.mu),
-            1e-10,
-        )
+            0,
+        ) + 1e-10
         alMax = 1 / 3
         branch = -1
-        if self._eqWall(alMin, vm) * self._eqWall(alMax, vm) > 0:
+
+        if self._eqWall(alMin, vm) * self._eqWall(alMax, vm) > 0 and vm > self.cb2:
             # If alMin and alMax don't bracket the deflagration solution, try with the
-            # detonation one.
+            # detonation one, which only exists when vm > cb^2.
             branch = 1
         try:
             sol = root_scalar(
@@ -308,7 +324,6 @@ class HydrodynamicsTemplateModel:
                 xtol=self.atol,
             )
             return float(sol.root)
-
         except ValueError as exc:
             raise WallGoError("alpha can not be found", data={"vw": vw}) from exc
 
@@ -414,6 +429,7 @@ class HydrodynamicsTemplateModel:
         if self.alN > self.maxAl(100) or shootingInLTE(self.vJ) < 0:
             # alpha is too large
             return 1.0
+
         sol = root_scalar(
             shootingInLTE, bracket=[1e-3, self.vJ], rtol=self.rtol, xtol=self.atol
         )
@@ -449,11 +465,22 @@ class HydrodynamicsTemplateModel:
         vpMax = min(
             self.cs2 / vw, vw
         )  # Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187
+        vpMin = 0
+
+        # Change vpMin or vpMax in case wp is negative between vpMin and vpMax
+        sqrtDisc = (self.mu+vm**2*self.mu*(self.nu-1))**2-4*vm**2*self.nu**2*(self.mu-1)
+        if sqrtDisc >= 0:
+            # vp at which wp changes sign
+            vpSignChangeWp = (self.mu*(1-vm**2*(1-self.nu))-np.sqrt(sqrtDisc))/(
+                2*vm*self.nu*(self.mu-1))
+            if not np.isnan(vpSignChangeWp):
+                if vpMin < vpSignChangeWp < vpMax:
+                    vpMax = vpSignChangeWp-1e-10
 
         try:
             sol = root_scalar(
                 lambda vp: self._shooting(vw, vp),
-                bracket=(0, vpMax),
+                bracket=(vpMin, vpMax),
                 rtol=self.rtol,
                 xtol=self.atol,
             )
