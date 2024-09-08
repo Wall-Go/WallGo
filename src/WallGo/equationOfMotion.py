@@ -27,7 +27,6 @@ from .results import (
     BoltzmannResults,
     HydroResults,
     WallGoResults,
-    WallGoInterpolationResults,
 )
 from .exceptions import WallGoError
 
