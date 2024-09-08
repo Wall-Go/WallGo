@@ -243,36 +243,3 @@ class WallGoResults:
         """
         self.success = success
         self.message = message
-
-
-@dataclass
-class WallGoInterpolationResults:
-    """
-    Used when interpolating the pressure. Like WallGoResults but expanded to lists.
-    """
-    wallVelocities: list[float]
-    """List of stable wall velocities."""
-
-    unstableWallVelocities: list[float]
-    """List of unstable wall velocities."""
-
-    velocityGrid: list[float]
-    """Velocity grid on which the pressures were computed."""
-
-    pressures: list[float]
-    """Pressures evaluated at velocityGrid."""
-
-    pressureSpline: UnivariateSpline
-    """Spline of the pressure."""
-
-    wallParams: list[WallParams]
-    """WallParams objects evaluated at velocityGrid."""
-
-    boltzmannResults: list[BoltzmannResults]
-    """BoltzmannResults objects evaluated at velocityGrid."""
-
-    boltzmannBackgrounds: list[BoltzmannBackground]
-    """BoltzmannBackground objects evaluated at velocityGrid."""
-
-    hydroResults: list[HydroResults]
-    """HydroResults objects evaluated at velocityGrid."""
