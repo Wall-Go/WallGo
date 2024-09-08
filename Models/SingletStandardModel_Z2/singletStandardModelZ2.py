@@ -660,7 +660,7 @@ def main() -> None:
 
         t = time()
         results = manager.solveWall(bIncludeOffEq)
-        print(time()-t)
+        print("\nTime:", time()-t, '(s)')
 
         print("\n=== Out-of-equilibrium results ===")
         print(f"wallVelocity:      {results.wallVelocity:.6f}")
