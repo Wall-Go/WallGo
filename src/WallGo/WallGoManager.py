@@ -450,11 +450,15 @@ class WallGoManager:
         """
         self.eom.includeOffEq = bIncludeOffEq
         rtol = self.config.getfloat("EOM", "errTol")
-        vmax = self.config.getfloat("EOM", "vwMaxDeton")
         nbrPointsMin = self.config.getfloat("EOM", "nbrPointsMinDeton")
         nbrPointsMax = self.config.getfloat("EOM", "nbrPointsMaxDeton")
         overshootProb = self.config.getfloat("EOM", "overshootProbDeton")
         vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
+        vmax = self.config.getfloat("EOM", "vwMaxDeton")
+        
+        if vmin >= vmax:
+            raise WallGoError("vmax must be larger than vmin",
+                              {'vmin': vmin, 'vmax': vmax})
         
         return self.eom.findWallVelocityDetonation(
             vmin,

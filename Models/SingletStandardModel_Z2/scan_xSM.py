@@ -46,8 +46,8 @@ class SingletSMScan(SingletSM_Z2):
         self.defineParticles()
 
 
-modelsBenoit = np.load(pathlib.Path(__file__).parent.resolve() / 'models.npy', allow_pickle=True)
-scanResults = np.load(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy',allow_pickle=True).tolist()
+modelsBenoit = np.load(pathlib.Path(__file__).parent.resolve() / 'modelsTruncated.npy', allow_pickle=True)
+scanResults = np.load(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy',allow_pickle=True).tolist()
 
 
 def findWallVelocity(i, verbose=False, detonation=False):
@@ -65,7 +65,9 @@ def findWallVelocity(i, verbose=False, detonation=False):
                 ## Modify the config, we use N=5 for this example
                 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
                 WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "40")
-                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-6")
+                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
+                WallGo.config.config.set("Hydrodynamics", "relativeTol", "1e-12")
+                WallGo.config.config.set("Hydrodynamics", "absoluteTol", "1e-12")
             
             
             # Print WallGo config. This was read by WallGo.initialize()
@@ -234,8 +236,6 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
     
-    scanResults = np.load(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', allow_pickle=True).tolist()
-    
     if end is None:
         end = len(modelsBenoit)
         
@@ -249,7 +249,7 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
         if isinstance(scanResults[i]['error'], WallGo.exceptions.WallGoError):
             if scanResults[i]['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
                 isInverse = True
-        if (scanResults[i]['error'] != 'success' and not isInverse) or not onlyErrors:
+        if (scanResults[i]['error'] != 'success' and not isInverse and not detonation) or (scanResults[i]['errorDeton'] != 'success' and detonation) or not onlyErrors:
             try:
                 _, vwOut, vwLTE, error = findWallVelocity(i, False, detonation)
                 
@@ -276,10 +276,10 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
                     scanResults[i]['vwDeton'] = vwOut
                     scanResults[i]['errorDeton'] = error
                 
-                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', scanResults)
+                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
             except:
                 print(f'{i=}')
-                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResults.npy', scanResults)
+                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
                 raise
                 
     ms,lHS = [],[]
@@ -311,5 +311,5 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
     plt.show()
     print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
 
-if __name__ == '__main__':
-    scanXSM(177, detonation=True)
+# if __name__ == '__main__':
+#     scanXSM(onlyErrors=True, detonation=True)

@@ -224,10 +224,10 @@ class EOM:
             it is negative (runaway wall).
 
         """
-        assert self.hydrodynamics.vJ < vmin < 1, "EOM error: vmin must be between vJ"\
-                                                 " and 1"
-        assert self.hydrodynamics.vJ < vmax < 1, "EOM error: vmax must be between vJ"\
-                                                 " and 1"
+        assert self.hydrodynamics.vJ < vmin < 1, f"EOM error: {vmin=} must be between "\
+                                                 "vJ and 1"
+        assert self.hydrodynamics.vJ < vmax < 1, f"EOM error: {vmax=} must be between "\
+                                                 "vJ and 1"
         
         # If no initial wall thickness was provided, starts with a reasonable guess
         if wallThicknessIni is None:
