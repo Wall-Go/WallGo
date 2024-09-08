@@ -12,7 +12,7 @@ from .Fields import FieldPoint, Fields
 @dataclass
 class FreeEnergyValueType:
     # Value of the effective potential at the free-energy minimum
-    veffValue: npt.ArrayLike
+    veffValue: np.ndarray ## NOTE: to whoever is going to clean this up: I changed the type from npt.ArrayLike to np.ndarray, because mypy was unhappy with Thermodynamics.findCriticalTemperature otherwise [JvdV]
     # Values of background fields at the free-energy minimum
     fieldsAtMinimum: Fields
 

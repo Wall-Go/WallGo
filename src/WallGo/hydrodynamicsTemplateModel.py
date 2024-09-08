@@ -9,7 +9,7 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
 from .helpers import gammaSq
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 
 
 class HydrodynamicsTemplateModel:

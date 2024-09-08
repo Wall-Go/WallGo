@@ -17,7 +17,7 @@ from .grid3Scales import Grid3Scales
 from .helpers import gammaSq, nextStepDeton
 from .hydrodynamics import Hydrodynamics
 from .polynomial import Polynomial
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .containers import (
     BoltzmannDeltas,
     BoltzmannBackground,
@@ -433,7 +433,8 @@ class EOM:
             ) = wallPressureResultsMin
 
         while pressureMin > 0:
-            # If pressureMin is positive, increase it until it's negative.
+            # If pressureMin is positive, increase wallVelocityMin
+            # until it's negative.
             wallVelocityMin *= 2
             if wallVelocityMin >= wallVelocityMax:
                 print(

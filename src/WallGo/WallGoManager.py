@@ -14,7 +14,7 @@ from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals
-from .Thermodynamics import Thermodynamics
+from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
@@ -124,6 +124,8 @@ class WallGoManager:
             f"Low-T phase: TMin = {self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
         )
+
+        self.thermodynamics.setExtrapolate()
 
         # LN: Giving sensible temperature ranges to Hydro seems to be very important.
         # I propose hydro routines be changed so that we have easy control over what temperatures are used
@@ -251,7 +253,7 @@ class WallGoManager:
         # Raise an error if this is an inverse PT (if epsilon is negative)
         if hydrodynamicsTemplate.epsilon < 0:
             raise WallGoError(
-                "WallGo cannot treat inverse PTs. epsilon must be positive.")
+                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be positive.")
 
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
@@ -272,7 +274,7 @@ class WallGoManager:
         the program can slow down significantly, but TMax must be large
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
-        fudgeFactor = 1.2  # should be bigger than 1, but not know a priori
+        fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
         TMinHighT, TMaxHighT = 0, max(2*Tn, fudgeFactor * THighTMaxTemplate)
         TMinLowT, TMaxLowT = 0, max(2*Tn, fudgeFactor * TLowTMaxTemplate)
 
