@@ -29,10 +29,12 @@ Jb/Jf.
 """
 
 import os
+N_THREADS = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = N_THREADS
 import pathlib
 import sys
+from time import time
 import numpy as np
-
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle, WallGoManager
@@ -640,23 +642,25 @@ def main() -> None:
         # out-of-equilibrium contributions. The resulting wall speed should
         # be close to the LTE result
 
-        bIncludeOffEq = False
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
+        # bIncludeOffEq = False
+        # print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
-        results = manager.solveWall(bIncludeOffEq)
+        # results = manager.solveWall(bIncludeOffEq)
 
-        print("\n=== Local equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
+        # print("\n=== Local equilibrium results ===")
+        # print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        # print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        # print(f"wallWidths:        {results.wallWidths}")
+        # print(f"wallOffsets:       {results.wallOffsets}")
 
         # Repeat with out-of-equilibrium parts included. This requires
         # solving Boltzmann equations, invoked automatically by solveWall()
         bIncludeOffEq = True
         print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
+        t = time()
         results = manager.solveWall(bIncludeOffEq)
+        print(time()-t)
 
         print("\n=== Out-of-equilibrium results ===")
         print(f"wallVelocity:      {results.wallVelocity:.6f}")
@@ -664,10 +668,10 @@ def main() -> None:
         print(f"wallWidths:        {results.wallWidths}")
         print(f"wallOffsets:       {results.wallOffsets}")
 
-        print("\n=== Search for detonation solution ===")
-        wallGoInterpolationResults = manager.solveWallDetonation()
-        print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
+        # print("\n=== Search for detonation solution ===")
+        # wallGoInterpolationResults = manager.solveWallDetonation()
+        # print("\n=== Detonation results ===")
+        # print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
 
     # end parameter-space loop
 
