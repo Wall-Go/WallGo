@@ -354,13 +354,65 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return potentialTotal
 
-    def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
-        return degrees_of_freedom * (
-            msq * msq * (np.log(np.abs(msq / rgScale**2) + 1e-100) - c)
-            + 2 * msq * rgScale**2
+    def jCW(self, massSq: np.ndarray, degreesOfFreedom: int | np.ndarray, c: float| np.ndarray, rgScale: float| np.ndarray
+    ) -> float | np.ndarray:
+        """
+        One-loop Coleman-Weinberg contribution to the effective potential,
+        as implemented in Jiang, Peng Huang, and Wang.
+        
+        Parameters
+        ----------
+        msq : array_like
+            A list of the boson particle masses at each input point `X`.
+        degreesOfFreedom : float or array_like
+            The number of degrees of freedom for each particle. If an array
+            (i.e., different particles have different d.o.f.), it should have
+            length `Ndim`.
+        c: float or array_like
+            A constant used in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Generally
+            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all
+            other bosons.
+        rgScale : float or array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential. If an array, it should have length `Ndim`. Typically, one
+            takes the same rgScale for all particles, but different scales
+            for each particle are possible.
+
+        Returns
+        -------
+        jCW : float or array_like
+            One-loop Coleman-Weinberg potential for given particle spectrum.
+        """
+        
+        return degreesOfFreedom * (
+            massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
+            + 2 * massSq * rgScale**2
         )
 
-    def fermionStuff(self, fields: Fields):
+    def fermionStuff(
+        self, fields: Fields
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+        """
+        Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
+
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+
+        Returns
+        ----------
+        massSq: array_like
+            A list of the fermion particle masses at each input point `field`.
+        degreesOfFreedom: array_like
+            The number of degrees of freedom for each particle.
+        c: array_like
+            A constant used in the one-loop effective potential
+        rgScale : array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential
+        """
 
         v = fields.GetField(0)
 
@@ -375,8 +427,30 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
-    def bosonStuff(self, fields: Fields):
+    def bosonStuff(  # pylint: disable=too-many-locals
+        self, fields: Fields
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+        """
+        Computes parameters for the one-loop potential (Coleman-Weinberg).
 
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+
+        Returns
+        ----------
+        massSq: array_like
+            A list of the boson particle masses at each input point `field`.
+        degreesOfFreedom: array_like
+            The number of degrees of freedom for each particle.
+        c: array_like
+            A constant used in the one-loop effective potential
+        rgScale : array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential
+        """
+        
         v = fields.GetField(0)
         v0 = self.modelParameters["v0"]
 
@@ -391,23 +465,25 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         g1 = self.modelParameters["g1"]
         g2 = self.modelParameters["g2"]
 
+        # Scalar masses
         mhsq = msq + 3 * lam * v**2
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2
         mAsq = msq2 + (lam3 + lam4 - lam5) / 2 * v**2
         mHpmsq = msq2 + lam3 / 2 * v**2
 
+        # Scalar masses at the zero-temperature vev (for RG-scale)
         mhsq0T = msq + 3 * lam * v0**2
         mHsq0T = msq2 + (lam3 + lam4 + lam5) / 2 * v0**2
         mAsq0T = msq2 + (lam3 + lam4 - lam5) / 2 * v0**2
         mHpmsq0T = msq2 + lam3 / 2 * v0**2
 
+        # Gauge boson masses
         mWsq = g2**2 * v**2 / 4.0 + 1e-100
         mZsq = (g1**2 + g2**2) * v**2 / 4.0 + 1e-100
 
+        # Gauge boson masses at the zero temperature vev (for RG-scale)
         mWsq0T = g2**2 * v0**2 / 4.0
         mZsq0T = (g1**2 + g2**2) * v0**2 / 4.0
-
-        # this feels error prone:
 
         # W, Z, h, H, A, Hpm
         massSq = np.column_stack((mWsq, mZsq, mhsq, mHsq, mAsq, mHpmsq))
@@ -417,7 +493,29 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def bosonStuffResummed(self, fields: Fields, temperature):
+    def bosonStuffResummed(  # pylint: disable=too-many-locals
+        self, fields: Fields, temperature: float | np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+        """
+        Computes parameters for the thermal one-loop potential.
+
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+
+        Returns
+        ----------
+        massSq: array_like
+            A list of the boson particle masses at each input point `field`.
+        degreesOfFreedom: array_like
+            The number of degrees of freedom for each particle.
+        c: array_like
+            A constant used in the one-loop effective potential
+        rgScale : array_like
+            Renormalization scale in the one-loop zero-temperature effective
+            potential
+        """
 
         v = fields.GetField(0)
 
@@ -434,6 +532,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         g1 = self.modelParameters["g1"]
         g2 = self.modelParameters["g2"]
 
+        # Thermal masses of the scalars
         piPhi = (
             temperature**2
             / 12.0
@@ -445,12 +544,14 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             * (6 * lam2 + 2 * lam3 + lam4 + 3 / 4 * (3 * g2**2 + g1**2))
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
+        # Scalar masses including thermal contribution
         mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
         mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
         mAsq = msq2 + (lam3 + lam4 - lam5) / 2 * v**2 + piEta
         mHpmsq = msq2 + lam3 / 2 * v**2 + piEta
 
+        # Gauge boson masses, with thermal contribution to longitudinal W mass
         mWsq = g2**2 * v**2 / 4.0
         mWsqL = g2**2 * v**2 / 4.0 + 2 * g2**2 * temperature**2
         mZsq = (g1**2 + g2**2) * v**2 / 4.0
@@ -477,12 +578,10 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             + np.sqrt(4 * m12sq**2 + (m2sq - m1sq - piB + piW) ** 2)
         ) / 2
 
-        # HACK This is probably not the optimal solution
+        # HACK make sure the masses have the right shape
         if mWsq.shape != mWsqL.shape:
             mWsq = mWsq * np.ones(mWsqL.shape[0])
             mZsq = mZsq * np.ones(mWsqL.shape[0])
-
-        # this feels error prone:
 
         # W, Wlong, Z,Zlong,photonLong, h, Goldstone H, A, Hpm
         massSq = np.column_stack(
@@ -490,22 +589,35 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )
         degreesOfFreedom = np.array([4, 2, 2, 1, 1, 1, 3, 1, 1, 2])
 
-        # As c and the RG-scale don't enter in V1T, we just set them to 0
+        # As c and the RG-scale don't enter in the one-loop effective potential, we just set them to 0
         return massSq, degreesOfFreedom, 0, 0
 
     def constantTerms(self, temperature: np.ndarray) -> np.ndarray:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
         (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
+        
+        See Eq. (39) in hep-ph/0510375 for general LO formula
+
+        Parameters
+        ----------
+        temperature: array-like (float)
+            The temperature
+
+        Returns
+        ----------
+        constantTerms: array-like (float)
+            The value of the field-independent contribution to the effective potential
+
         """
 
-        ## See Eq. (39) in hep-ph/0510375 for general LO formula
-
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
+        # How many degrees of freedom we have left. The number of DOFs
+        # that were included in evaluate() is hardcoded
         dofsBoson = self.num_boson_dof - 17
         dofsFermion = self.num_fermion_dof - 12  ## we only did top quark loops
 
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
+        # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
+        # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
@@ -563,7 +675,7 @@ def main() -> None:
 
     model = InertDoubletModel(inputParameters)
 
-    ## ---- collision integration and path specifications
+    # ---- collision integration and path specifications
 
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
@@ -576,19 +688,21 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    ## Generates or reads collision integrals
+    # Generates or reads collision integrals
     manager.generateCollisionFiles()
 
-    # This is where to start an input parameter loop if doing parameter-space scans
+    print("\n=== WallGo parameter scan ===")
+    # ---- This is where you'd start an input parameter
+    # loop if doing parameter-space scans ----
 
     """ Example mass loop that just does one value of the Higgs mass.
     Note that the WallGoManager class is NOT thread safe internally, so it 
     is NOT safe to parallelize this loop eg. with OpenMP. We recommend 
     ``embarrassingly parallel`` runs for large-scale parameter scans. 
     """
-    values_mH = [62.66]
+    valuesmH = [62.66]
 
-    for mH in values_mH:
+    for mH in valuesmH:
 
         inputParameters["mH"] = mH
 
@@ -597,7 +711,7 @@ def main() -> None:
         The transition goes from phase1 to phase2.
         """
 
-        Tn = 117.1  ## nucleation temperature
+        Tn = 117.1  # nucleation temperature
 
         phaseInfo = WallGo.PhaseInfo(
             temperature=Tn,
@@ -612,56 +726,42 @@ def main() -> None:
                of internal classes
         """
 
-        ## Wrap everything in a try-except block to check for WallGo specific errors
-        try:
-            manager.setParameters(phaseInfo)
+        manager.setParameters(phaseInfo)
 
-            """WallGo can now be used to compute wall stuff!"""
+        """WallGo can now be used to compute wall stuff!"""
 
-            ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+        # ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-            vwLTE = manager.wallSpeedLTE()
+        vwLTE = manager.wallSpeedLTE()
 
-            print(f"LTE wall speed: {vwLTE}")
+        print(f"LTE wall speed:    {vwLTE:.6f}")
 
-            # Solve field equation of motion. For illustration,
-            # first solve it without any out-of-equilibrium contributions.
-            # The resulting wall speed should approximately match the LTE result:
+        # ---- Solve field EOM. For illustration, first solve it without any
+        # out-of-equilibrium contributions. The resulting wall speed should
+        # be close to the LTE result
 
-            bIncludeOffEq = False
-            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        bIncludeOffEq = False
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-            results = manager.solveWall(bIncludeOffEq)
-            print(f"results=")
-            wallVelocity = results.wallVelocity
-            widths = results.wallWidths
-            offsets = results.wallOffsets
+        results = manager.solveWall(bIncludeOffEq)
 
-            print(f"{wallVelocity=}")
-            print(f"{widths=}")
-            print(f"{offsets=}")
+        print("\n=== Local equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
 
-            # Repeat with out-of-equilibrium parts included.
-            # This requires solving Boltzmann equations, invoked automatically
-            # by solveWall()
-            bIncludeOffEq = True
-            print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        # Repeat with out-of-equilibrium parts included. This requires
+        # solving Boltzmann equations, invoked automatically by solveWall()
+        bIncludeOffEq = True
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
-            results = manager.solveWall(bIncludeOffEq)
-            wallVelocity = results.wallVelocity
-            wallVelocityError = results.wallVelocityError
-            widths = results.wallWidths
-            offsets = results.wallOffsets
+        results = manager.solveWall(bIncludeOffEq)
 
-            print(f"{wallVelocity=}")
-            print(f"{wallVelocityError=}")
-            print(f"{widths=}")
-            print(f"{offsets=}")
+        print("\n=== Out-of-equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
 
-        except WallGo.WallGoError as error:
-            ## something went wrong!
-            print(error)
-            continue
 
     # end parameter-space loop
 
