@@ -43,6 +43,7 @@ from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
     EffectivePotentialNoResum,
 )
 
+
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
     r"""
@@ -52,9 +53,10 @@ class InertDoubletModel(GenericModel):
     V = msq |phi|^2 + msq2 |eta|^2 + lambda |phi|^4 + lambda2 |eta|^4
         + lambda3 |phi|^2 |eta|^2 + lambda4 |phi^dagger eta|^2
         + (lambda5 (phi^dagger eta)^2 +h.c.)
-    Note that there are some differences in normalization compared to Jiang, Peng Huang, and Wang
+    Note that there are some differences in normalization compared to
+    Jiang, Peng Huang, and Wang.
 
-    Only the Higgs field undergoes the phase transition, the new scalars only 
+    Only the Higgs field undergoes the phase transition, the new scalars only
     modify the effective potential.
 
     This class inherits from the GenericModel class and implements the necessary
@@ -82,7 +84,7 @@ class InertDoubletModel(GenericModel):
         ----------
         cls: InertDoubletModel
             An object of the InertDoubletModel class.
-        
+
         """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
@@ -112,19 +114,19 @@ class InertDoubletModel(GenericModel):
         None
         """
         self.clearParticles()
-    
+
         ## === Top quark ===
         # The msqVacuum function of an out-of-equilibrium particle must take
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-    
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * fields.GetField(0)
-        
+
         def topMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
@@ -154,9 +156,11 @@ class InertDoubletModel(GenericModel):
 
         ## === SU(2) gauge boson ===
         def WMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["g2"]**2*fields.GetField(0)**2/4
+            return self.modelParameters["g2"] ** 2 * fields.GetField(0) ** 2 / 4
+
         def WMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["g2"]**2*fields.GetField(0)/2
+            return self.modelParameters["g2"] ** 2 * fields.GetField(0) / 2
+
         def WMsqThermal(T: float) -> float:
             return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
 
@@ -194,8 +198,8 @@ class InertDoubletModel(GenericModel):
 
         lightQuark = Particle(
             "lightQuark",
-            msqVacuum= 0.0,
-            msqDerivative= 0.0,
+            msqVacuum=0.0,
+            msqDerivative=0.0,
             msqThermal=lightQuarkMsqThermal,
             statistics="Fermion",
             inEquilibrium=True,
@@ -262,7 +266,9 @@ class InertDoubletModel(GenericModel):
 
         return modelParameters
 
+
 # end model
+
 
 class EffectivePotentialIDM(EffectivePotentialNoResum):
     """
@@ -295,11 +301,10 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )
         # The super call already gave us the model params
 
-        # Count particle degrees-of-freedom to facilitate inclusion of light particle contributions
-        # to ideal gas pressure
+        # Count particle degrees-of-freedom to facilitate inclusion of light particle
+        # contributions to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90
-
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
@@ -323,8 +328,9 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """
 
         # For this benchmark we don't use the high-T approximation in the evaluation of
-        # the one-loop thermal potential. We do use daisy-resummed masses. The RG-scale
-        # in the CW-potential is given by the zero-temperature mass of the relevant particle.
+        # the one-loop thermal potential. We do use daisy-resummed masses.
+        # The RG-scale in the CW-potential is given by the zero-temperature mass
+        # of the relevant particle.
 
         # phi ~ 1/sqrt(2) (0, v)
         fields = Fields(fields)
@@ -354,12 +360,17 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return potentialTotal
 
-    def jCW(self, massSq: np.ndarray, degreesOfFreedom: int | np.ndarray, c: float| np.ndarray, rgScale: float| np.ndarray
+    def jCW(
+        self,
+        massSq: np.ndarray,
+        degreesOfFreedom: int | np.ndarray,
+        c: float | np.ndarray,
+        rgScale: float | np.ndarray,
     ) -> float | np.ndarray:
         """
         One-loop Coleman-Weinberg contribution to the effective potential,
         as implemented in Jiang, Peng Huang, and Wang.
-        
+
         Parameters
         ----------
         msq : array_like
@@ -384,7 +395,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         jCW : float or array_like
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
-        
+
         return degreesOfFreedom * (
             massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
             + 2 * massSq * rgScale**2
@@ -392,7 +403,9 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def fermionStuff(
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -429,7 +442,9 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def bosonStuff(  # pylint: disable=too-many-locals
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg).
 
@@ -450,7 +465,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             Renormalization scale in the one-loop zero-temperature effective
             potential
         """
-        
+
         v = fields.GetField(0)
         v0 = self.modelParameters["v0"]
 
@@ -495,7 +510,9 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def bosonStuffResummed(  # pylint: disable=too-many-locals
         self, fields: Fields, temperature: float | np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, np.ndarray
+    ]:  # TODO: fix return type inheritance error
         """
         Computes parameters for the thermal one-loop potential.
 
@@ -596,7 +613,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
         (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
-        
+
         See Eq. (39) in hep-ph/0510375 for general LO formula
 
         Parameters
@@ -761,7 +778,6 @@ def main() -> None:
         print(f"wallVelocity:      {results.wallVelocity:.6f}")
         print(f"wallVelocityError: {results.wallVelocityError:.6f}")
         print(f"wallWidths:        {results.wallWidths}")
-
 
     # end parameter-space loop
 
