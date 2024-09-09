@@ -173,15 +173,13 @@ class InertDoubletModel(GenericModel):
         self.addParticle(W)
 
         ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 * 2.0
-        gluonMsqVacuum = lambda fields: fields.GetField(0)
-        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        gluonMsqDerivative = lambda fields: fields.GetField(0)
+        def gluonMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
         gluon = Particle(
             "gluon",
-            msqVacuum=gluonMsqVacuum,
-            msqDerivative=gluonMsqDerivative,
+            msqVacuum=0.0,
+            msqDerivative=0.0,
             msqThermal=gluonMsqThermal,
             statistics="Boson",
             inEquilibrium=True,
@@ -191,12 +189,13 @@ class InertDoubletModel(GenericModel):
         self.addParticle(gluon)
 
         ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
+        def lightQuarkMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         lightQuark = Particle(
             "lightQuark",
-            msqVacuum=lambda fields: 0.0,
-            msqDerivative=lambda fields: 0.0,
+            msqVacuum= 0.0,
+            msqDerivative= 0.0,
             msqThermal=lightQuarkMsqThermal,
             statistics="Fermion",
             inEquilibrium=True,
@@ -209,6 +208,19 @@ class InertDoubletModel(GenericModel):
     def calculateModelParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
+        """
+        Calculate the model parameters based on the input parameters.
+
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
+
+        Returns
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of calculated model parameters.
+        """
         super().calculateModelParameters(inputParameters)
 
         modelParameters = {}
@@ -218,7 +230,6 @@ class InertDoubletModel(GenericModel):
 
         # Higgs parameters
         mh = inputParameters["mh"]
-
         modelParameters["lambda"] = 0.5 * mh**2 / v0**2
         modelParameters["msq"] = -modelParameters["lambda"] * v0**2
 
@@ -251,46 +262,89 @@ class InertDoubletModel(GenericModel):
 
         return modelParameters
 
+# end model
 
-## For this benchmark model we use the 4D potential, implemented as in 2211.13142.
-## We use interpolation tables for Jb/Jf
 class EffectivePotentialIDM(EffectivePotentialNoResum):
+    """
+    Effective potential for the InertDoubletModel.
+
+    This class inherits from the EffectivePotentialNoResum class and provides the
+    necessary methods for calculating the effective potential.
+
+    For this benchmark model we use the 4D potential without high-temperature expansion.
+    """
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+        """
+        Initialize the EffectivePotentialIDM.
+
+        Parameters
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of model parameters.
+        fieldCount: int
+            The number of fields undergoing the phase transition
+
+        Returns
+        ----------
+        cls: EffectivePotentialIDM
+            an object of the EffectivePotentialIDM class
+        """
         super().__init__(
             modelParameters, fieldCount, integrals=None, useDefaultInterpolation=True
         )
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions
-        ## to ideal gas pressure
+        # The super call already gave us the model params
+
+        # Count particle degrees-of-freedom to facilitate inclusion of light particle contributions
+        # to ideal gas pressure
         self.num_boson_dof = 32
         self.num_fermion_dof = 90
 
-    ## ---------- EffectivePotential overrides.
-    # The user needs to define evaluate(), which has to return value of the effective
-    # potential when evaluated at a given field configuration, temperature pair.
-    # Remember to include full T-dependence, including eg. the free energy contribution
-    # from photons (which is field-independent!)
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex:
+    ) -> complex | np.ndarray:
+        """
+        Evaluate the effective potential.
+
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+        temperature: float
+            The temperature
+        checkForImaginary: bool
+            Setting to check for imaginary parts of the potential
+
+        Returns
+        ----------
+        potentialTotal: complex | np.ndarray
+            The value of the effective potential
+        """
+
+        # For this benchmark we don't use the high-T approximation in the evaluation of
+        # the one-loop thermal potential. We do use daisy-resummed masses. The RG-scale
+        # in the CW-potential is given by the zero-temperature mass of the relevant particle.
 
         # phi ~ 1/sqrt(2) (0, v)
+        fields = Fields(fields)
         v = fields.GetField(0)
 
         msq = self.modelParameters["msq"]
         lam = self.modelParameters["lambda"]
 
         # tree level potential
-        V0 = 0.5 * msq * v**2 + 0.25 * lam * v**4
+        potentialTree = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
+        # Particle masses and coefficients for the CW potential
         bosonStuff = self.bosonStuff(fields)
         fermionStuff = self.fermionStuff(fields)
 
+        # Particle masses and coefficients for the one-loop thermal potential
         bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
 
-        VTotal = (
-            V0
+        potentialTotal = (
+            potentialTree
             + self.constantTerms(temperature)
             + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
             + self.potentialOneLoopThermal(
@@ -298,7 +352,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             )
         )
 
-        return VTotal
+        return potentialTotal
 
     def jCW(self, msq: float, degrees_of_freedom: int, c: float, rgScale: float):
         return degrees_of_freedom * (
