@@ -1,5 +1,9 @@
+"""
+Defines the WallGoManager class which initializes the different object needed for the
+wall velocity calculation.
+"""
+
 import numpy as np
-import numpy.typing as npt
 
 # WallGo imports
 import WallGo
@@ -72,6 +76,9 @@ class WallGoManager:
         self.model: GenericModel
         self.boltzmannSolver: BoltzmannSolver
         self.hydrodynamics: Hydrodynamics
+        self.phasesAtTn: PhaseInfo
+        self.thermodynamics: Thermodynamics
+        self.eom: EOM
 
     def _initModel(self, model: GenericModel) -> None:
         """
@@ -115,7 +122,6 @@ class WallGoManager:
         # Update Boltzmann off-eq particle list to match that defined in model
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
-    
     def setParameters(self, phaseInput: PhaseInfo) -> None:
         """
         Validate the phase input and initialize the temperature range and several
@@ -155,8 +161,8 @@ class WallGoManager:
         self._initHydrodynamics(self.thermodynamics)
         self._initEOM()
 
-        if (not np.isfinite(self.hydrodynamics.vJ) or 
-            self.hydrodynamics.vJ > 1 or 
+        if (not np.isfinite(self.hydrodynamics.vJ) or
+            self.hydrodynamics.vJ > 1 or
             self.hydrodynamics.vJ < 0):
             raise WallGoError(
                 "Failed to solve Jouguet velocity at input temperature!",
@@ -213,15 +219,15 @@ class WallGoManager:
         T = phaseInput.temperature
 
         # Find the actual minima at T, should be close to the user-specified locations
-        phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(
+        phaseLocation1, effPotValue1 = self.model.effectivePotential.findLocalMinimum(
             phaseInput.phaseLocation1, T
         )
-        phaseLocation2, VeffValue2 = self.model.effectivePotential.findLocalMinimum(
+        phaseLocation2, effPotValue2 = self.model.effectivePotential.findLocalMinimum(
             phaseInput.phaseLocation2, T
         )
 
-        print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {VeffValue1}")
-        print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {VeffValue2}")
+        print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
+        print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {effPotValue2}")
 
         if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
             raise WallGoPhaseValidationError(
@@ -229,23 +235,23 @@ class WallGoManager:
                 phaseInput,
                 {
                     "phaseLocation1": phaseLocation1,
-                    "Veff(phi1)": VeffValue1,
+                    "Veff(phi1)": effPotValue1,
                     "phaseLocation2": phaseLocation2,
-                    "Veff(phi2)": VeffValue2,
+                    "Veff(phi2)": effPotValue2,
                 },
             )
 
         ## Currently we assume transition phase1 -> phase2. This assumption shows up at
         ## least when initializing FreeEnergy objects
-        if np.real(VeffValue1) < np.real(VeffValue2):
+        if np.real(effPotValue1) < np.real(effPotValue2):
             raise WallGoPhaseValidationError(
                 "Phase 1 has lower free energy than Phase 2, this will not work",
                 phaseInput,
                 {
                     "phaseLocation1": phaseLocation1,
-                    "Veff(phi1)": VeffValue1,
+                    "Veff(phi1)": effPotValue1,
                     "phaseLocation2": phaseLocation2,
-                    "Veff(phi2)": VeffValue2,
+                    "Veff(phi2)": effPotValue2,
                 },
             )
 
@@ -264,7 +270,7 @@ class WallGoManager:
         # LN: this routine is probably too heavy. We could at least drop the
         # Tc part, or find it after FreeEnergy interpolations are done
 
-        assert self.phasesAtTn != None
+        assert self.phasesAtTn is not None
 
         Tn = self.phasesAtTn.temperature
 
@@ -290,8 +296,9 @@ class WallGoManager:
 
         except WallGoError as error:
             # Throw new error with more info
-            raise WallGoPhaseValidationError(error.message, self.phasesAtTn, error.data)
-            
+            raise WallGoPhaseValidationError(
+                error.message, self.phasesAtTn, error.data) from error
+
         # Raise an error if this is an inverse PT (if epsilon is negative)
         if hydrodynamicsTemplate.epsilon < 0:
             raise WallGoError(
@@ -301,7 +308,7 @@ class WallGoManager:
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
-        
+
         if THighTMaxTemplate is None:
             THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
         if TLowTMaxTemplate is None:
@@ -363,8 +370,8 @@ class WallGoManager:
         # nucleation temperature is obtained.
         initialMomentumFalloffScale = 50.0
 
-        N = self.config.getint("PolynomialGrid", "momentumGridSize")
-        M = self.config.getint("PolynomialGrid", "spatialGridSize")
+        gridN = self.config.getint("PolynomialGrid", "momentumGridSize")
+        gridM = self.config.getint("PolynomialGrid", "spatialGridSize")
         ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
         smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
         self.meanFreePath = meanFreePath
@@ -373,14 +380,14 @@ class WallGoManager:
             meanFreePath, wallThicknessIni * (1 + 3 * smoothing) / ratioPointsWall
         )
 
-        if N % 2 == 0:
+        if gridN % 2 == 0:
             raise ValueError(
                 "You have chosen an even number N of momentum-grid points. "
                 "WallGo only works with odd N, please change it to an odd number."
             )
         self.grid = Grid3Scales(
-            M,
-            N,
+            gridM,
+            gridN,
             tailLength,
             tailLength,
             wallThicknessIni,
@@ -407,7 +414,7 @@ class WallGoManager:
         errTol = self.config.getfloat("EOM", "errTol")
         maxIterations = self.config.getint("EOM", "maxIterations")
         pressRelErrTol = self.config.getfloat("EOM", "pressRelErrTol")
-        
+
         wallThicknessBounds = (self.config.getfloat("EOM", "wallThicknessLowerBound"),
                                self.config.getfloat("EOM", "wallThicknessUpperBound"))
         wallOffsetBounds = (self.config.getfloat("EOM", "wallOffsetLowerBound"),
@@ -444,7 +451,7 @@ class WallGoManager:
         """
         print("=== WallGo collision generation ===")
         self.boltzmannSolver.readCollisions(collision)
-    
+
     def generateCollisionFiles(self) -> None:
         """
         Loads collision files and reads them using the Boltzmann solver.
@@ -454,7 +461,6 @@ class WallGoManager:
         collision file to be loaded.
         """
         self.loadCollisionFiles(self.collision)
-    
 
     def wallSpeedLTE(self) -> float:
         """
@@ -538,7 +544,7 @@ class WallGoManager:
             Integrals object.
         """
 
-        assert self.config != None
+        assert self.config is not None
 
         integrals.Jb.readInterpolationTable(
             getSafePathToResource(
