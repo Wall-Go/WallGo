@@ -25,8 +25,6 @@ This benchmark model was used to compare against the results of
 S. Jiang, F. Peng Huang, and X. Wang, Bubble wall velocity during electroweak
 phase transition in the inert doublet model, Phys.Rev.D 107 (2023) 9, 095005
 doi:10.1103/PhysRevD.107.095005
-As a consequence, we overwrite the default WallGo thermal functions
-Jb/Jf. 
 """
 
 import os
@@ -35,14 +33,9 @@ import sys
 import numpy as np
 
 # WallGo imports
-import WallGo  ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import WallGoManager
+import WallGo  # Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle, WallGoManager
 
-from WallGo import Fields
-
-# To compare to 2211.13142 we need the unresummed, non-high-T potential:
 # Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
 sys.path.insert(0, str(modelsPath))
@@ -52,6 +45,21 @@ from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
 
 # Inert doublet model, as implemented in 2211.13142
 class InertDoubletModel(GenericModel):
+    r"""
+    Inert doublet model.
+
+    The tree-level potential is given by
+    V = msq |phi|^2 + msq2 |eta|^2 + lambda |phi|^4 + lambda2 |eta|^4
+        + lambda3 |phi|^2 |eta|^2 + lambda4 |phi^dagger eta|^2
+        + (lambda5 (phi^dagger eta)^2 +h.c.)
+    Note that there are some differences in normalization compared to Jiang, Peng Huang, and Wang
+
+    Only the Higgs field undergoes the phase transition, the new scalars only 
+    modify the effective potential.
+
+    This class inherits from the GenericModel class and implements the necessary
+    methods for the WallGo package.
+    """
 
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
@@ -62,6 +70,20 @@ class InertDoubletModel(GenericModel):
     fieldCount = 1
 
     def __init__(self, initialInputParameters: dict[str, float]):
+        """
+        Initialize the InertDoubletModel.
+
+        Parameters
+        ----------
+        initialInputParameters: dict[str, float]
+            A dictionary of initial input parameters for the model.
+
+        Returns
+        ----------
+        cls: InertDoubletModel
+            An object of the InertDoubletModel class.
+        
+        """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
 
@@ -70,25 +92,41 @@ class InertDoubletModel(GenericModel):
             self.modelParameters, self.fieldCount
         )
 
-        ## Define particles. this is a lot of clutter, especially if the mass
-        ## expressions are long, so @todo define these in a separate file?
+        # Create a list of particles relevant for the Boltzmann equations
+        self.defineParticles()
 
-        # NB: particle multiplicity is pretty confusing because some internal
-        # DOF counting is handled internally already.
-        # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately
-        # define up, down, charm, strange, bottom
+    def defineParticles(self) -> None:
+        """
+        Define the particles for the model.
+        Note that the particle list only needs to contain the
+        particles that are relevant for the Boltzmann equations.
+        The particles relevant to the effective potential are
+        included independently.
 
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        None
+        """
+        self.clearParticles()
+    
         ## === Top quark ===
-        topMsqVacuum = (
-            lambda fields: 0.5
-            * self.modelParameters["yt"] ** 2
-            * fields.GetField(0) ** 2
-        )
-        topMsqDerivative = lambda fields: self.modelParameters[
-            "yt"
-        ] ** 2 * fields.GetField(0)
-        topMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
+        # The msqVacuum function of an out-of-equilibrium particle must take
+        # a Fields object and return an array of length equal to the number of
+        # points in fields.
+        def topMsqVacuum(fields: Fields) -> Fields:
+            return 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
+    
+        # The msqDerivative function of an out-of-equilibrium particle must take
+        # a Fields object and return an array with the same shape as fields.
+        def topMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["yt"] ** 2 * fields.GetField(0)
+        
+        def topMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
             "topL",
@@ -115,10 +153,12 @@ class InertDoubletModel(GenericModel):
         self.addParticle(topQuarkR)
 
         ## === SU(2) gauge boson ===
-        WMsqThermal = lambda T: self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
-        WMsqVacuum = lambda fields: fields.GetField(0)
-        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        WMsqDerivative = lambda fields: fields.GetField(0)
+        def WMsqVacuum(fields: Fields) -> Fields:
+            return self.modelParameters["g2"]**2*fields.GetField(0)**2/4
+        def WMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["g2"]**2*fields.GetField(0)/2
+        def WMsqThermal(T: float) -> float:
+            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
 
         W = Particle(
             "W",
@@ -399,7 +439,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # As c and the RG-scale don't enter in V1T, we just set them to 0
         return massSq, degreesOfFreedom, 0, 0
 
-    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def constantTerms(self, temperature: np.ndarray) -> np.ndarray:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
         (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
