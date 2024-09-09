@@ -15,7 +15,7 @@ from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals
 from .thermodynamics import Thermodynamics
-from .results import WallGoResults
+from .results import WallGoResults, WallGoInterpolationResults
 from .WallGoUtils import getSafePathToResource
 
 class WallGoManager:
@@ -30,23 +30,36 @@ class WallGoManager:
         wallThicknessIni: float,
         meanFreePath: float,
         temperatureScaleInput: float,
-        fieldScaleInput: npt.ArrayLike,
+        fieldScaleInput: list | np.ndarray | float,
     ):
-        """do common model-independent setup here"""
+        """
+        Do common model-independent setup here
+        
+        Parameters
+        ----------
+        wallThicknessIni : float
+            Initial guess of the wall thickness that will be used to solve the EOM.
+        meanFreePath : float
+            Estimate of the mean free path of the plasma. This will be used to set the
+            tail lengths in the Grid object.
+        temperatureScaleInput : float
+            Temperature scale over which the potential changes by O(1). A good value
+            would be of order Tc-Tn.
+        fieldScaleInput : list, np.ndarray or float
+            Field scale over which the potential changes by O(1). A good value would be
+            similar to the field VEV. If a float is given, all the fields are assumed to
+            have the same scale.
+        """
 
-        # TODO cleanup, should not read the config here if we have a global WallGo config object
-        # self.config = Config()
-        # self.config.readINI( getSafePathToResource("Config/WallGoDefaults.ini") )
+        # TODO cleanup, should not read the config here if we have a global WallGo
+        # config object
 
         self.config = WallGo.config
-
-        # self.integrals = Integrals()
-
-        # self._initalizeIntegralInterpolations(self.integrals)
 
         # -- Order of initialization matters here
 
         # Grid
+        self.grid: Grid3Scales
         self._initGrid(
             wallThicknessIni,
             meanFreePath,
@@ -55,28 +68,39 @@ class WallGoManager:
         self._initBoltzmann()
         self.temperatureScaleInput = temperatureScaleInput
         self.fieldScaleInput = fieldScaleInput
-        self.collision: Collision = None
-        self.model: GenericModel = None
+        self.collision: Collision
+        self.model: GenericModel
+        self.boltzmannSolver: BoltzmannSolver
+        self.hydrodynamics: Hydrodynamics
 
     def _initModel(self, model: GenericModel) -> None:
-        """Initializes the model."""
+        """
+        Initializes the model.
+        """
         self.model = model
 
     def _initCollision(self, model: GenericModel) -> None:
-        """Initializes the collision module.
-            Creates Collision singleton which automatically loads the collision module
-            Use help(Collision.manager) for info about what functionality is available
+        """
+        Initializes the collision module.
+        Creates Collision singleton which automatically loads the collision module
+        Use help(Collision.manager) for info about what functionality is available
 
-        Args:
-            model (GenericModel): The model to be used for collision detection.
-
-        Returns:
-            None
+        Parameters
+        ----------
+        model : GenericModel
+            The model to be used for collision detection.
         """
         self.collision = Collision(model)
 
     def registerModel(self, model: GenericModel) -> None:
-        """Register a physics model with WallGo."""
+        """
+        Register a physics model with WallGo.
+        
+        Parameters
+        ----------
+        model : GenericModel
+            GenericModel object that describes the model studied.
+        """
         assert isinstance(model, GenericModel)
         self._initModel(model)
         self._initCollision(model)
@@ -92,19 +116,18 @@ class WallGoManager:
         self.boltzmannSolver.updateParticleList(model.outOfEquilibriumParticles)
 
     
-    # Name of this function does not really describe what it does (it also calls the function that finds the temperature range)
     def setParameters(self, phaseInput: PhaseInfo) -> None:
-        """Parameters
-        ----------
-        modelParameters: dict[str, float]
-                        Dict containing all QFT model parameters:
-                        Those that enter the action and the renormalization scale.
-        phaseInput: WallGo.PhaseInfo
-                    Should contain approximate field values at the two phases that WallGo will analyze,
-                    and the nucleation temperature. Transition is assumed to go phaseLocation1 --> phaseLocation2.
         """
-
-        # self.model.modelParameters = modelParameters
+        Validate the phase input and initialize the temperature range and several
+        objects that will be used for the calculation.
+        
+        Parameters
+        ----------
+        phaseInput: WallGo.PhaseInfo
+            Should contain approximate field values at the two phases that WallGo will
+            analyze, and the nucleation temperature. Transition is assumed to go
+            phaseLocation1 --> phaseLocation2.
+        """
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInput)
@@ -117,41 +140,47 @@ class WallGoManager:
 
         print("Temperature ranges:")
         print(
-            f"High-T phase: TMin = {self.thermodynamics.freeEnergyHigh.minPossibleTemperature}, "
+            "High-T phase: TMin = "\
+            f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature}, "\
             f"TMax = {self.thermodynamics.freeEnergyHigh.maxPossibleTemperature}"
         )
         print(
-            f"Low-T phase: TMin = {self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "
+            "Low-T phase: TMin = "\
+            f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "\
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
         )
 
         self.thermodynamics.setExtrapolate()
 
-        # LN: Giving sensible temperature ranges to Hydro seems to be very important.
-        # I propose hydro routines be changed so that we have easy control over what temperatures are used
         self._initHydrodynamics(self.thermodynamics)
         self._initEOM()
 
-        if not np.isfinite(self.hydrodynamics.vJ) or self.hydrodynamics.vJ > 1 or self.hydrodynamics.vJ < 0:
+        if (not np.isfinite(self.hydrodynamics.vJ) or 
+            self.hydrodynamics.vJ > 1 or 
+            self.hydrodynamics.vJ < 0):
             raise WallGoError(
                 "Failed to solve Jouguet velocity at input temperature!",
                 data={
                     "vJ": self.hydrodynamics.vJ,
                     "temperature": phaseInput.temperature,
-                    "TMin": self.TMin,
-                    "TMax": self.TMax,
                 },
             )
 
         print(f"Jouguet: {self.hydrodynamics.vJ}")
 
-    #  print(f"Matching at the Jouguet velocity {self.hydro.findMatching(0.99*self.hydro.vJ)}")
-
     def changeInputParameters(
         self, inputParameters: dict[str, float], effectivePotential: EffectivePotential
     ) -> None:
-        """Recomputes the model parameters when the user provides new inputparameters.
+        """
+        Recomputes the model parameters when the user provides new inputparameters.
         Also updates the effectivePotential correspondingly.
+        
+        Parameters
+        ----------
+        inputParameters : dict
+            Parameters used to compute the model parameters.
+        effectivePotential : EffectivePotential
+            EffectivePotential object.
         """
         self.model.modelParameters = self.model.calculateModelParameters(
             inputParameters
@@ -168,14 +197,22 @@ class WallGoManager:
         )
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
-        """This checks that the user-specified phases are OK.
+        """
+        This checks that the user-specified phases are OK.
         Specifically, the effective potential should have two minima at the given T,
         otherwise phase transition analysis is not possible.
+        
+        Parameters
+        ----------
+        phaseInput : PhaseInfo
+            Should contain approximate field values at the two phases that WallGo will
+            analyze, and the nucleation temperature. Transition is assumed to go
+            phaseLocation1 --> phaseLocation2.
         """
 
         T = phaseInput.temperature
 
-        # Find the actual minima at input T, should be close to the user-specified locations
+        # Find the actual minima at T, should be close to the user-specified locations
         phaseLocation1, VeffValue1 = self.model.effectivePotential.findLocalMinimum(
             phaseInput.phaseLocation1, T
         )
@@ -198,7 +235,8 @@ class WallGoManager:
                 },
             )
 
-        ## Currently we assume transition phase1 -> phase2. This assumption shows up at least when initializing FreeEnergy objects
+        ## Currently we assume transition phase1 -> phase2. This assumption shows up at
+        ## least when initializing FreeEnergy objects
         if np.real(VeffValue1) < np.real(VeffValue2):
             raise WallGoPhaseValidationError(
                 "Phase 1 has lower free energy than Phase 2, this will not work",
@@ -218,7 +256,10 @@ class WallGoManager:
         self.phasesAtTn = foundPhaseInfo
 
     def initTemperatureRange(self) -> None:
-        """Get initial guess for the relevant temperature range and store in internal TMin, TMax"""
+        """
+        Get initial guess for the relevant temperature range and store in internal TMin,
+        TMax.
+        """
 
         # LN: this routine is probably too heavy. We could at least drop the
         # Tc part, or find it after FreeEnergy interpolations are done
@@ -242,7 +283,8 @@ class WallGoManager:
         # maximum required temperatures
 
         try:
-            ## ---- Use the template model to find an estimate of the minimum and maximum required temperature
+            ## Use the template model to find an estimate of the minimum and maximum
+            ## required temperature
             hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
             print(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
 
@@ -253,7 +295,8 @@ class WallGoManager:
         # Raise an error if this is an inverse PT (if epsilon is negative)
         if hydrodynamicsTemplate.epsilon < 0:
             raise WallGoError(
-                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be positive.")
+                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be "\
+                "positive.")
 
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
@@ -286,7 +329,14 @@ class WallGoManager:
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
-        """"""
+        """
+        Initialize the Hydrodynamics object.
+        
+        Parameters
+        ----------
+        thermodynamics : Thermodynamics
+            Thermodynamics object.
+        """
         tmax = self.config.getfloat("Hydrodynamics", "tmax")
         tmin = self.config.getfloat("Hydrodynamics", "tmin")
         rtol = self.config.getfloat("Hydrodynamics", "relativeTol")
@@ -295,17 +345,15 @@ class WallGoManager:
 
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""
+        Initialize the Grid object
+        
         Parameters
         ----------
-        M : int
-            Number of basis functions in the :math:`\xi` (and :math:`\chi`)
-            direction.
-        N : int
-            Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
-            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
-            This number has to be odd
-        L_xi : float
-            Length scale determining transform in the xi direction.
+        wallThicknessIni : float
+            Initial guess of the wall thickness that will be used to solve the EOM.
+        meanFreePath : float
+            Estimate of the mean free path of the plasma. This will be used to set the
+            tail lengths in the Grid object.
         """
 
         # To initialize Grid we need to specify a "temperature" scale that has
@@ -342,12 +390,18 @@ class WallGoManager:
         )
 
     def _initBoltzmann(self) -> None:
+        """
+        Initialize the BoltzmannSolver object.
+        """
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
         self.boltzmannSolver = BoltzmannSolver(
             self.grid, basisM="Cardinal", basisN="Chebyshev"
         )
 
     def _initEOM(self) -> None:
+        """
+        Initialize the EOM object.
+        """
         numberOfFields = self.model.fieldCount
 
         errTol = self.config.getfloat("EOM", "errTol")
@@ -379,14 +433,14 @@ class WallGoManager:
         """
         Loads collision files and reads them using the Boltzmann solver.
 
-        This method takes a collision object as input and uses the Boltzmann solver to read the collision files.
-        The collision object should contain the path of the collision file to be loaded.
+        This method takes a collision object as input and uses the Boltzmann solver to
+        read the collision files. The collision object should contain the path of the
+        collision file to be loaded.
 
-        Args:
-            collision (Collision): The collision object from collision_wrapper.py.
-
-        Returns:
-            None
+        Parameters
+        ----------
+        collision : Collision
+            The collision object from collision_wrapper.py.
         """
         print("=== WallGo collision generation ===")
         self.boltzmannSolver.readCollisions(collision)
@@ -395,29 +449,47 @@ class WallGoManager:
         """
         Loads collision files and reads them using the Boltzmann solver.
 
-        This method takes a collision object as input and uses the Boltzmann solver to read the collision files.
-        The collision object should contain the path of the collision file to be loaded.
-
-        Args:
-            collision (Collision): The collision object from collision_wrapper.py.
-
-        Returns:
-            None
+        This method takes a collision object as input and uses the Boltzmann solver to
+        read the collision files. The collision object should contain the path of the
+        collision file to be loaded.
         """
         self.loadCollisionFiles(self.collision)
     
 
     def wallSpeedLTE(self) -> float:
-        """Solves wall speed in the Local Thermal Equilibrium approximation."""
+        """
+        Solves wall speed in the Local Thermal Equilibrium approximation.
+        
+        Returns
+        -------
+        float
+            Wall velocity in LTE.
+        """
 
         return self.hydrodynamics.findvwLTE()
 
     # Call after initGrid. I guess this would be the main workload function
 
     def solveWall(
-        self, bIncludeOffEq: bool, wallThicknessIni: float = None
+        self, bIncludeOffEq: bool, wallThicknessIni: float | None = None
     ) -> WallGoResults:
-        """Returns wall speed and wall parameters (widths and offsets)."""
+        """
+        Solves the EOM and computes the wall velocity.
+        
+        Parameters
+        ----------
+        bIncludeOffEq : bool
+            Weither or not to include out-of-equilibrium effects.
+        wallThicknessIni : float or None, optional
+            Initial guess of the wall thickness that will be used to solve the EOM. If
+            None, set it to 5/Tnucl. Default is None.
+            
+        Returns
+        -------
+        WallGoResults
+            Object containing the wall velocity and EOM solution, as well as different
+            quantities used to assess the accuracy of the solution.
+        """
         self.eom.includeOffEq = bIncludeOffEq
         # returning results
         return self.eom.findWallVelocityDeflagrationHybrid(wallThicknessIni)
@@ -425,9 +497,9 @@ class WallGoManager:
     def solveWallDetonation(
         self,
         bIncludeOffEq: bool = True,
-        wallThicknessIni: float = None,
+        wallThicknessIni: float | None = None,
         dvMinInterpolation: float = 0.02,
-    ) -> WallGoResults:
+    ) -> WallGoInterpolationResults:
         """
         Finds all the detonation solutions by computing the pressure on a grid
         and interpolating to find the roots.
@@ -457,6 +529,14 @@ class WallGoManager:
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
+        """
+        Initialize the interpolation of the thermal integrals.
+
+        Parameters
+        ----------
+        integrals : Integrals
+            Integrals object.
+        """
 
         assert self.config != None
 
