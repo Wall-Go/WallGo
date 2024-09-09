@@ -257,7 +257,7 @@ class EOM:
             ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
 
         self.pressAbsErrTol = (
-            0.01
+            1e-2
             * self.errTol
             * (1 - self.pressRelErrTol)
             * np.minimum(np.abs(pressureMin), np.abs(pressureMax))
