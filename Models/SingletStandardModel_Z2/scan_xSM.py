@@ -1,31 +1,33 @@
 from time import time
+import os
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 import numpy as np
 import concurrent.futures
 import sys
-import os
 from contextlib import redirect_stdout
 import io
 import pathlib
+from itertools import repeat
 import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
 from WallGo import WallGoManager, Fields
-from SingletStandardModel_Z2 import SingletSM_Z2,EffectivePotentialxSM_Z2
+from singletStandardModelZ2 import SingletSMZ2,EffectivePotentialxSMZ2
 
-class EffectivePotentialxSMScan(EffectivePotentialxSM_Z2):
+class EffectivePotentialxSMScan(EffectivePotentialxSMZ2):
     def potentialOneLoop(self, bosons, fermions, checkForImaginary=False):
         m2, n, c, _ = bosons
-        m2_0 = self.bosonStuff(Fields([self.modelParameters["v0"],0]), 0)[0]
-        y = np.sum(n*(m2*m2 * (np.log(np.abs(m2/np.where(m2_0 == 0, self.modelParameters["mh"]**2,m2_0)) + 1e-50)
+        m2_0 = self.bosonStuff(Fields([246,0]))[0]
+        y = np.sum(n*(m2*m2 * (np.log(np.abs(m2/np.where(m2_0 == 0, 125**2,m2_0)) + 1e-50)
                               - 1.5)+2*m2_0*m2), axis=-1)
         m2, n, _, _ = fermions
-        m2_0 = self.fermionStuff(Fields([self.modelParameters["v0"],0]), 0)[0]
-        y -= np.sum(n*(m2*m2 * (np.log(np.abs(m2/np.where(m2_0 == 0, self.modelParameters["mh"]**2,m2_0)) + 1e-50)
+        m2_0 = self.fermionStuff(Fields([246,0]))[0]
+        y -= np.sum(n*(m2*m2 * (np.log(np.abs(m2/np.where(m2_0 == 0, 125**2,m2_0)) + 1e-50)
                               - 1.5)+2*m2_0*m2), axis=-1)
         return y/(64*np.pi*np.pi)
 
-class SingletSMScan(SingletSM_Z2):
+class SingletSMScan(SingletSMZ2):
     def __init__(self, initialInputParameters: dict[str, float]):
         """
         Initialize the SingletSM_Z2 model.
@@ -65,9 +67,9 @@ def findWallVelocity(i, verbose=False, detonation=False):
                 ## Modify the config, we use N=5 for this example
                 WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
                 WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "40")
-                WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
-                WallGo.config.config.set("Hydrodynamics", "relativeTol", "1e-12")
-                WallGo.config.config.set("Hydrodynamics", "absoluteTol", "1e-12")
+                # WallGo.config.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
+                # WallGo.config.config.set("Hydrodynamics", "relativeTol", "1e-12")
+                # WallGo.config.config.set("Hydrodynamics", "absoluteTol", "1e-12")
             
             
             # Print WallGo config. This was read by WallGo.initialize()
@@ -87,7 +89,7 @@ def findWallVelocity(i, verbose=False, detonation=False):
             if wallThicknessIni == 0:
                 wallThicknessIni = 5/Tn
             
-            wallThicknessIni = 20/Tn
+            wallThicknessIni = 10/Tn
             # Estimate of the mean free path of the particles in the plasma
             meanFreePath = 100/Tn
             
@@ -230,7 +232,7 @@ def findWallVelocity(i, verbose=False, detonation=False):
         return i, -1, -1, e
 
 # Stopped at i=736
-def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
+def scanXSM(start=0, end=None, onlyErrors=False, detonation=False, threads=1, iList=None):
     WallGo.initialize()
     
     ## Modify the config, we use N=5 for this example
@@ -241,75 +243,92 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False):
         
     assert 0 <= start < end <= len(modelsBenoit), 'Error: Wrong values of start and end.'
     
+    if iList is None:
+        iList = np.arange(start, end)
+    
     timeIni = time()
     nbrModels = 0
-    # with concurrent.futures.ProcessPoolExecutor(max_workers=min(16, end-start)) as executor:
-    for i in range(start, end):
-        isInverse = False
-        if isinstance(scanResults[i]['error'], WallGo.exceptions.WallGoError):
-            if scanResults[i]['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
-                isInverse = True
-        if (scanResults[i]['error'] != 'success' and not isInverse and not detonation) or (scanResults[i]['errorDeton'] != 'success' and detonation) or not onlyErrors:
-            try:
-                _, vwOut, vwLTE, error = findWallVelocity(i, False, detonation)
+    with concurrent.futures.ProcessPoolExecutor(max_workers=min(threads, end-start)) as executor:
+        for i, vwOut, vwLTE, error in executor.map(findWallVelocity, iList, repeat(False), repeat(detonation)):#range(start, end):
+            isInverse = False
+            if isinstance(scanResults[i]['error'], WallGo.exceptions.WallGoError):
+                if scanResults[i]['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
+                    isInverse = True
+            if (scanResults[i]['error'] != 'success' and not isInverse and not detonation) or (scanResults[i]['errorDeton'] != 'success' and detonation) or not onlyErrors:
+                try:
+                    # _, vwOut, vwLTE, error = findWallVelocity(i, False, detonation)
+                    
+                    currentTime = time()
+                    timePerModel = (currentTime-timeIni)/(nbrModels+1)
+                    remainingModels = end - i - 1
+                    remainingTime = remainingModels*timePerModel
+                    nbrModels += 1
+                    
+                    if 'vw_out2' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
+                        print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
+                    elif 'vw_out' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
+                        print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
+                    else:
+                        print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f}")
+                    if vwOut == -1:
+                        print(f'ERROR: {error}')
+                    
+                    if not detonation:
+                        scanResults[i]['vwOut'] = vwOut
+                        scanResults[i]['vwLTE'] = vwLTE
+                        scanResults[i]['error'] = error
+                    else:
+                        scanResults[i]['vwDeton'] = vwOut
+                        scanResults[i]['errorDeton'] = error
+                    
+                    np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
+                except:
+                    print(f'{i=}')
+                    np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
+                    raise
                 
-                currentTime = time()
-                timePerModel = (currentTime-timeIni)/(nbrModels+1)
-                remainingModels = end - i - 1
-                remainingTime = remainingModels*timePerModel
-                nbrModels += 1
-                
-                if 'vw_out2' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out2']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
-                elif 'vw_out' in modelsBenoit[i].keys() and 'vw' in modelsBenoit[i].keys():
-                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f} | Benoit results: vwOut={modelsBenoit[i]['vw_out']:.4f}; vwLTE={modelsBenoit[i]['vw']:.4f}")
-                else:
-                    print(f"{i=}; Time per model={timePerModel:.2f}; Remaining time={remainingTime/3600:.2f} hours | WallGo results: {vwOut=:.4f}; {vwLTE=:.4f}")
-                if vwOut == -1:
-                    print(f'ERROR: {error}')
-                
-                if not detonation:
-                    scanResults[i]['vwOut'] = vwOut
-                    scanResults[i]['vwLTE'] = vwLTE
-                    scanResults[i]['error'] = error
-                else:
-                    scanResults[i]['vwDeton'] = vwOut
-                    scanResults[i]['errorDeton'] = error
-                
-                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
-            except:
-                print(f'{i=}')
-                np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
-                raise
-                
-    ms,lHS = [],[]
-    msError,lHSError = [],[]
-    msInverse,lHSInverse = [],[]
-    for i in range(len(scanResults)):
-        model = modelsBenoit[i]
-        scanResult = scanResults[i]
-        if scanResult['error'] == 'success':
-            ms.append(model['ms'])
-            lHS.append(model['lambdaHS'])
-        else:
-            if isinstance(scanResult['error'], WallGo.exceptions.WallGoError):
-                if scanResult['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
-                    msInverse.append(model['ms'])
-                    lHSInverse.append(model['lambdaHS'])
-                else: 
-                    print(i,scanResult['error'])
-                    msError.append(model['ms'])
-                    lHSError.append(model['lambdaHS'])
-            else: 
-                print(i,scanResult['error'])
-                msError.append(model['ms'])
-                lHSError.append(model['lambdaHS'])
-    plt.scatter(ms,lHS, c='green', s=4)
-    plt.scatter(msError, lHSError, c='r', s=4)
-    plt.scatter(msInverse, lHSInverse, c='b', s=4)
-    plt.grid()
-    plt.show()
-    print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
+    # ms,lHS = [],[]
+    # msError,lHSError = [],[]
+    # msInverse,lHSInverse = [],[]
+    # for i in range(len(scanResults)):
+    #     model = modelsBenoit[i]
+    #     scanResult = scanResults[i]
+    #     if scanResult['error'] == 'success':
+    #         ms.append(model['ms'])
+    #         lHS.append(model['lambdaHS'])
+    #     else:
+    #         if isinstance(scanResult['error'], WallGo.exceptions.WallGoError):
+    #             if scanResult['error'].message == 'WallGo cannot treat inverse PTs. epsilon must be positive.':
+    #                 msInverse.append(model['ms'])
+    #                 lHSInverse.append(model['lambdaHS'])
+    #             else: 
+    #                 print(i,scanResult['error'])
+    #                 msError.append(model['ms'])
+    #                 lHSError.append(model['lambdaHS'])
+    #         else: 
+    #             print(i,scanResult['error'])
+    #             msError.append(model['ms'])
+    #             lHSError.append(model['lambdaHS'])
+    # plt.scatter(ms,lHS, c='green', s=4)
+    # plt.scatter(msError, lHSError, c='r', s=4)
+    # plt.scatter(msInverse, lHSInverse, c='b', s=4)
+    # plt.grid()
+    # plt.show()
+    # print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
 
 # if __name__ == '__main__':
-#     scanXSM(onlyErrors=True, detonation=True)
+    # findWallVelocity(0,True)
+    # scanXSM(threads=16)
+    
+    # iList = []
+    # for i in range(len(scanResults)):
+    #     if modelsBenoit[i]['lambdaHS'] < 0.008333*modelsBenoit[i]['ms']-0.08333 and scanResults[i]['vwDeton'] == 1:
+    #         iList.append(i)
+    #         print(i)
+    # print(len(iList))
+    # scanXSM(detonation=True, threads=16, iList=[6,13,27])
+    
+    
+    
+    
+    
