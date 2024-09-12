@@ -455,13 +455,12 @@ class WallGoManager:
 
         """
         self.eom.includeOffEq = bIncludeOffEq
-<<<<<<< detonBugFixes
-        rtol = self.config.getfloat("EOM", "errTol")
-        nbrPointsMin = self.config.getfloat("EOM", "nbrPointsMinDeton")
-        nbrPointsMax = self.config.getfloat("EOM", "nbrPointsMaxDeton")
-        overshootProb = self.config.getfloat("EOM", "overshootProbDeton")
+        rtol = self.config.getfloat("EquationOfMotion", "errTol")
+        nbrPointsMin = self.config.getfloat("EquationOfMotion", "nbrPointsMinDeton")
+        nbrPointsMax = self.config.getfloat("EquationOfMotion", "nbrPointsMaxDeton")
+        overshootProb = self.config.getfloat("EquationOfMotion", "overshootProbDeton")
         vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
-        vmax = self.config.getfloat("EOM", "vwMaxDeton")
+        vmax = self.config.getfloat("EquationOfMotion", "vwMaxDeton")
         
         if vmin >= vmax:
             raise WallGoError("vmax must be larger than vmin",
@@ -476,13 +475,6 @@ class WallGoManager:
             overshootProb,
             rtol,
             onlySmallest
-=======
-        errTol = self.config.getfloat("EquationOfMotion", "errTol")
-
-        vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydrodynamics.slowestDeton())
-        return self.eom.solveInterpolation(
-            vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
->>>>>>> main
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
