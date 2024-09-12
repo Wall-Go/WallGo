@@ -446,7 +446,11 @@ class WallGoManager:
         Returns
         -------
         list[WallGoResults]
-            List of WallGoResults objects containing the solutions.
+            List containing the detonation solutions. If no solutions were found,
+            returns a wall velocity of 0  if the pressure is always positive, or 1 if
+            it is negative (runaway wall). If it is positive at vmin and negative at
+            vmax, the outcome is uncertain and would require a time-dependent analysis,
+            so it returns an empty list.
 
         """
         self.eom.includeOffEq = bIncludeOffEq
