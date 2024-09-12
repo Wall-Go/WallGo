@@ -220,8 +220,10 @@ class EOM:
         -------
         list[WallGoResults]
             List containing the detonation solutions. If no solutions were found,
-            returns a wall velocity of 0  if the pressure at vmin is positive, or 1 if
-            it is negative (runaway wall).
+            returns a wall velocity of 0  if the pressure is always positive, or 1 if
+            it is negative (runaway wall). If it is positive at vmin and negative at
+            vmax, the outcome is uncertain and would require a time-dependent analysis,
+            so it returns an empty list.
 
         """
         assert self.hydrodynamics.vJ < vmin < 1, f"EOM error: {vmin=} must be between "\
@@ -309,10 +311,15 @@ class EOM:
             pressure2 = pressure3
             
         if len(listResults) == 0:
+            if pressureIni > 1 and pressure2 < 0:
+                # The pressure is positive at vJ but negative at 1. The solution should
+                # be a defl/hyb, but time-dependent effects could allow it to be a 
+                # runaway. We return an empty list.
+                return []
             results = WallGoResults()
-            if pressureIni > 0:
-                # If pressure is too large at vmin to have a detonation solution,
-                # we return 0.
+            if pressureIni > 0 and pressure2 > 0:
+                # If pressure is always positive and is therefore too large to have a
+                # detonation solution, we return 0.
                 results.setWallVelocities(0, 0, 0)
                 results.setMessage(
                     True,

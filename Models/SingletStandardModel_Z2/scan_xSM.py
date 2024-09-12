@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 ## WallGo imports
 import WallGo ## Whole package, in particular we get WallGo.initialize()
-from WallGo import WallGoManager, Fields
+from WallGo import WallGoManager, Fields, WallGoResults
 from singletStandardModelZ2 import SingletSMZ2,EffectivePotentialxSMZ2
 
 class EffectivePotentialxSMScan(EffectivePotentialxSMZ2):
@@ -197,10 +197,16 @@ def findWallVelocity(i, verbose=False, detonation=False):
             bIncludeOffEq = True
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
             
+            results = WallGoResults()
             if not detonation:
                 results = manager.solveWall(bIncludeOffEq, wallThicknessIni)
             else:
-                results = manager.solveWallDetonation(wallThicknessIni=wallThicknessIni)[0]
+                resultsList = manager.solveWallDetonation(wallThicknessIni=wallThicknessIni)
+                if len(resultsList) > 0:
+                    results = resultsList[0]
+                else:
+                    results.setWallVelocities(-2, 0, 0)
+                    results.setMessage(True, 'Uncertain Outcome')
             wallVelocity = results.wallVelocity
             
             if not results.success:
@@ -316,17 +322,14 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False, threads=1, iL
     # plt.show()
     # print(len(ms)/len(scanResults),len(msError)/len(scanResults),len(msInverse)/len(scanResults),len(msError))
 
-# if __name__ == '__main__':
-    # findWallVelocity(0,True)
-    # scanXSM(threads=16)
-    
-    # iList = []
-    # for i in range(len(scanResults)):
-    #     if modelsBenoit[i]['lambdaHS'] < 0.008333*modelsBenoit[i]['ms']-0.08333 and scanResults[i]['vwDeton'] == 1:
-    #         iList.append(i)
-    #         print(i)
-    # print(len(iList))
-    # scanXSM(detonation=True, threads=16, iList=[6,13,27])
+if __name__ == '__main__':
+    iList = []
+    for i in range(len(scanResults)):
+        if scanResults[i]['vwDeton'] == 0:
+            iList.append(i)
+            # print(i)
+    print(len(iList))
+    scanXSM(detonation=True, threads=16, iList=iList)
     
     
     
