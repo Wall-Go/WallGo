@@ -30,8 +30,8 @@ class Hydrodynamics:
         thermodynamics: Thermodynamics,
         tmax: float,
         tmin: float,
-        rtol: float = 1e-6,
-        atol: float = 1e-6,
+        rtol: float,
+        atol: float,
     ):
         
         """
