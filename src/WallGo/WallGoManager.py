@@ -427,7 +427,7 @@ class WallGoManager:
         bIncludeOffEq: bool = True,
         wallThicknessIni: float = None,
         onlySmallest: bool = True,
-    ) -> WallGoResults:
+    ) -> list[WallGoResults]:
         """
         Finds all the detonation solutions by computing the pressure on a grid
         and interpolating to find the roots.
@@ -438,16 +438,15 @@ class WallGoManager:
             If True, includes the out-of-equilibrium effects. The default is True.
         wallThicknessIni : float, optional
             Initial wall thickness. The default is None.
-        overshootProb : float, optional
-            Desired overshoot probability. A smaller value will lead to smaller step
-            sizes which will take longer to evaluate, but with less chances of missing a
-            root. The default is 0.05.
+        onlySmallest : bool, optional
+            Weither or not to only look for one solution. If True, the solver will
+            stop the calculation after finding the first root. If False, it will
+            continue looking for solutions until it reaches the maximal velocity.
 
         Returns
         -------
-        WallGoInterpolationResults
-            Object containing the solutions and the pressures computed on the
-            velocity grid.
+        list[WallGoResults]
+            List of WallGoResults objects containing the solutions.
 
         """
         self.eom.includeOffEq = bIncludeOffEq
