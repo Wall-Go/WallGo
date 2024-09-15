@@ -6,13 +6,13 @@ build-backend = "setuptools.build_meta"
 name = "WallGo"
 dynamic = ["version"]
 authors = [
-    {name = "Andreas Ekstedt", email = "andreas.ekstedt@desy.de"},
+    {name = "Andreas Ekstedt", email = "andreas.ekstedt@physics.uu.se"},
     {name = "Oliver Gould", email = "oliver.gould@nottingham.ac.uk"},
     {name = "Joonas Hirvonen", email = "joonas.o.hirvonen@helsinki.fi"},
     {name = "Benoit Laurent", email = "benoit.laurent@mail.mcgill.ca"},
     {name = "Lauri Niemi", email = "lauri.b.niemi@helsinki.fi"},
-    {name = "Philipp Schicho", email = "schicho@itp.uni-frankfurt.de"},
-    {name = "Jorinde van de Vis", email = "vandevis@lorentz.leidenuniv.nl"},
+    {name = "Philipp Schicho", email = "philipp.schicho@unige.ch"},
+    {name = "Jorinde van de Vis", email = "jorinde.van.de.vis@cern.ch"},
 ]
 description = "A package for computing the bubble wall speed"
 license = {text = "MIT"}
@@ -86,6 +86,7 @@ function-rgx='^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 inlinevar-naming-style = "camelCase"
 method-naming-style = "camelCase"
 module-naming-style = "camelCase"
+
 variable-rgx = '^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 
 [tool.pylint."messages control"]
