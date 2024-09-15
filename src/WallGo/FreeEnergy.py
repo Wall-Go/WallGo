@@ -6,7 +6,7 @@ import scipy.linalg as scipylinalg
 from dataclasses import dataclass
 
 from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .Fields import FieldPoint, Fields
 
 @dataclass

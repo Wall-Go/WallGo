@@ -6,7 +6,7 @@ import WallGo
 from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel

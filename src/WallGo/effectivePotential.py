@@ -1,30 +1,10 @@
 """
-Base class for the effective potential Veff. WallGo uses this to identify phases and
-their temperature dependence, and computing free energies (pressures) in the two phases.
-
-Hydrodynamical routines in WallGo need the full pressure in the plasma, which in
-principle is p = -Veff(phi) if phi is a local minimum. However for phase transitions
-it is common to neglect field-independent parts of Veff, for example one may choose
-normalization so that Veff(0) = 0. Meanwhile for hydrodynamics we require knowledge
-of all temperature-dependent parts. With this in mind, WallGo requires that the
-effective potential is defined with full T-dependence included.
-
-The final technicality you should be aware of is the variable fieldLowerBound,
-which is used as a cutoff for avoiding spurious behavior at phi = 0.
-You may need to adjust this to suit your needs, especially if using
-a complicated 2-loop potential.
+Class for describing the field- and temperature-dependent effective potential.
 """
 
-# TODO we could optimize some routines that only depend on free-energy differences
-#( dV/dField, findTc ) by separating the field-dependent parts of Veff(phi, T)
-# and the T-dependent constant terms. This was done in intermediate commits but,
-# scrapped because it was too error prone (Veff appears in too many places).
-# But let's keep this possibility in mind. If attempting this,
-# keep full Veff as the default and use the field-only part internally when needed.
-
-import numpy as np
 from typing import Tuple
 from abc import ABC, abstractmethod  # Abstract Base Class
+import numpy as np
 import scipy.optimize
 import scipy.interpolate
 
@@ -33,21 +13,50 @@ from .Fields import Fields, FieldPoint
 
 
 class EffectivePotential(ABC):
+    """
+    Base class for the effective potential Veff. WallGo uses this to identify phases and
+    their temperature dependence, and to compute free energies
+    (pressures) in the two phases.
 
-    # How many background fields. This is explicitly required so that we can have better control over array shapes
+    Hydrodynamical routines in WallGo need the full pressure in the plasma, which in
+    principle is p = -Veff(phi) if phi is a local minimum. However for phase transitions
+    it is common to neglect field-independent parts of Veff, for example one may choose
+    normalization so that Veff(0) = 0. Meanwhile for hydrodynamics we require knowledge
+    of all temperature-dependent parts. With this in mind, WallGo requires that the
+    effective potential is defined with full T-dependence included.
+
+    The final technicality you should be aware of is the variable fieldLowerBound,
+    which is used as a cutoff for avoiding spurious behavior at phi = 0.
+    You may need to adjust this to suit your needs, especially if using
+    a complicated 2-loop potential.
+    """
+
+    # TODO we could optimize some routines that only depend on free-energy differences
+    # ( dV/dField, findTc ) by separating the field-dependent parts of Veff(phi, T)
+    # and the T-dependent constant terms. This was done in intermediate commits but,
+    # scrapped because it was too error prone (Veff appears in too many places).
+    # But let's keep this possibility in mind. If attempting this,
+    # keep full Veff as the default and use the field-only part internally when needed.
+
+    # How many background fields. This is explicitly required so that we can have
+    # better control over array shapes
     fieldCount: int
 
-    # Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
+    # Lower bound for field values, used in normalize(). Using a small but nonzero value
+    # to avoid spurious divergences from eg. logarithms
     fieldLowerBound: float = 1e-8
 
-    # Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
+    # Typical relative accuracy at which the effective potential can be computed.
+    # Is set close to the machine precision here which is appropriate
     # when the potential can be computed in terms of simple functions.
     effectivePotentialError: float = 1e-15
 
-    # Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
+    # Typical temperature scale over which the effective potential changes by O(1).
+    # A reasonable value would be of order Tc-Tn.
     temperatureScale: float
 
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
+    # Field scale over which the potential changes by O(1).
+    # A good value would be similar to the field VEV.
     fieldScale: np.ndarray
 
     # In practice we'll get the model params from a GenericModel subclass
@@ -59,7 +68,7 @@ class EffectivePotential(ABC):
         # Should be overriden by self.setScales, but used in some tests.
         self.fieldScale = np.ones(fieldCount)
         self.temperatureScale = 1.0
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
+        self.combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
     @abstractmethod
     def evaluate(
@@ -75,7 +84,7 @@ class EffectivePotential(ABC):
         Normalization of the potential DOES matter: You have to ensure that the full
         T-dependence is included. Pay special attention to field-independent "constant"
         terms such as (minus the) pressure from light fermions.
-        
+
         Parameters
         ----------
         fields: Fields | FieldPoint
@@ -84,7 +93,7 @@ class EffectivePotential(ABC):
             temperature at which the potential gets evaluated
         checkForImaginary: bool
             setting to handle imaginary parts in the effective potential.
-        
+
         """
         raise NotImplementedError(
             "You are required to give an expression for the effective potential."
@@ -99,13 +108,26 @@ class EffectivePotential(ABC):
         Parameters
         ----------
         potentialError: float
-            new value of effectivePotentialError.    
+            new value of effectivePotentialError.
         """
         self.effectivePotentialError = potentialError
 
-    def setScales(self, temperatureScale: float, fieldScale: np.ndarray) -> None:
+    def setScales(
+        self, temperatureScale: float, fieldScale: float | np.ndarray
+    ) -> None:
         """
-        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
+        Sets self.temperatureScale to temperatureScale and
+        self.fieldScale to fieldScale.
+
+        Parameters
+        ----------
+        temperatureScale : float
+            new temperature scale
+        fieldScale : float or np.ndarray
+            new field scale
+
+        Returns
+        -------
         """
         self.temperatureScale = temperatureScale
 
@@ -115,25 +137,37 @@ class EffectivePotential(ABC):
             self.fieldScale = np.asanyarray(fieldScale)
             assert (
                 self.fieldScale.size == self.fieldCount
-            ), "EffectivePotential error: fieldScale must have a size of self.fieldCount."
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
+            ), "EffectivePotential error: fieldScale must have size of self.fieldCount."
+        self.combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
     def findLocalMinimum(
         self, initialGuess: Fields, temperature: np.ndarray, tol: float = None
     ) -> Tuple[Fields, np.ndarray]:
         """
-        Finds a local minimum starting from a given initial configuration of background fields.
-        Feel free to override this if your model requires more delicate minimization.
+        Finds a local minimum starting from a given initial configuration
+        of background fields. Feel free to override this if your model requires more
+        delicate minimization.
+        The returned values will be arrays of the same length as temperature.
+
+        Parameters
+        ----------
+        initialguess: Fields
+            Initial guess for the position of the minimum.
+        temperature: np.ndarray
+            Temperature(s) at which the minimum should be found.
+        tol: float
+            Tolerance for the minimizer.
+
 
         Returns
         -------
         minimum, functionValue : tuple.
-        minimum: list[float] is the location x of the minimum in field space.
-        functionValue: float is Veff(x) evaluated at the minimum.
-        If the input temperature is a numpy array, the returned values will be arrays of same length.
+            minimum: list[float] is the location x of the minimum in field space.
+            functionValue: float is Veff(x) evaluated at the minimum.
         """
 
-        # I think we'll need to manually vectorize this in case we got many field/temperature points
+        # We need to manually vectorize this in case we get
+        # many field/temperature points
         T = np.atleast_1d(temperature)
 
         numPoints = max(T.shape[0], initialGuess.NumPoints())
@@ -147,10 +181,13 @@ class EffectivePotential(ABC):
 
         for i in range(0, numPoints):
 
-            """Numerically minimize the potential wrt. fields.
-            We can pass a fields array to scipy routines normally, but scipy seems to forcibly convert back to standard ndarray
-            causing issues in the Veff evaluate function if it uses extended functionality from the Fields class.
-            So we need a wrapper that casts back to Fields type. It also needs to fix the temperature, and we only minimize the real part
+            """
+            Numerically minimize the potential wrt. fields.
+            We can pass a fields array to scipy routines normally, but scipy
+            seems to forcibly convert back to standard ndarray causing issues in the
+            Veff evaluate function if it uses extended functionality from the
+            Fields class. So we need a wrapper that casts back to Fields type. 
+            It also needs to fix the temperature, and we only minimize the real part
             """
 
             def evaluateWrapper(fieldArray: np.ndarray):
@@ -170,15 +207,16 @@ class EffectivePotential(ABC):
         # Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
 
-    def __wrapperPotential(self, X):
+    def _wrapperPotential(self, fieldsAndTemperature):
         """
-        Calls self.evaluate from a single array X that contains both the fields and temperature.
+        Calls self.evaluate from a single array fieldsAndTemperature
+        that contains both the fields and temperature.
         """
-        fields = Fields(X[..., :-1])
-        temperature = X[..., -1]
+        fields = Fields(fieldsAndTemperature[..., :-1])
+        temperature = fieldsAndTemperature[..., -1]
         return self.evaluate(fields, temperature)
 
-    def __combineInputs(self, fields, temperature):
+    def _combineInputs(self, fields, temperature):
         """
         Combines the fields and temperature in a single array.
         """
@@ -236,10 +274,10 @@ class EffectivePotential(ABC):
         """
 
         return gradient(
-            self.__wrapperPotential,
-            self.__combineInputs(fields, temperature),
+            self._wrapperPotential,
+            self._combineInputs(fields, temperature),
             epsilon=self.effectivePotentialError,
-            scale=self.__combinedScales,
+            scale=self.combinedScales,
             axis=np.arange(self.fieldCount).tolist(),
         )
 
@@ -263,10 +301,10 @@ class EffectivePotential(ABC):
         """
 
         res = hessian(
-            self.__wrapperPotential,
-            self.__combineInputs(fields, temperature),
+            self._wrapperPotential,
+            self._combineInputs(fields, temperature),
             epsilon=self.effectivePotentialError,
-            scale=self.__combinedScales,
+            scale=self.combinedScales,
             xAxis=np.arange(self.fieldCount).tolist(),
             yAxis=-1,
         )[..., 0]
@@ -281,7 +319,8 @@ class EffectivePotential(ABC):
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
         temperature : np.ndarray
-            Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
+            Temperatures. Either scalar or a 1D array of same length
+            as fields.NumPoints()
 
         Returns
         ----------
@@ -292,10 +331,10 @@ class EffectivePotential(ABC):
 
         axis = np.arange(self.fieldCount).tolist()
         return hessian(
-            self.__wrapperPotential,
-            self.__combineInputs(fields, temperature),
+            self._wrapperPotential,
+            self._combineInputs(fields, temperature),
             epsilon=self.effectivePotentialError,
-            scale=self.__combinedScales,
+            scale=self.combinedScales,
             xAxis=axis,
             yAxis=axis,
         )
@@ -327,10 +366,10 @@ class EffectivePotential(ABC):
         """
 
         res = hessian(
-            self.__wrapperPotential,
-            self.__combineInputs(fields, temperature),
+            self._wrapperPotential,
+            self._combineInputs(fields, temperature),
             epsilon=self.effectivePotentialError,
-            scale=self.__combinedScales,
+            scale=self.combinedScales,
         )
 
         hess = res[..., :-1, :-1]
