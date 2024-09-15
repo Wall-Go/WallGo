@@ -141,7 +141,7 @@ class EffectivePotential(ABC):
         self.combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
     def findLocalMinimum(
-        self, initialGuess: Fields, temperature: np.ndarray, tol: float = None
+        self, initialGuess: Fields, temperature: np.ndarray, tol: float | None = None
     ) -> Tuple[Fields, np.ndarray]:
         """
         Finds a local minimum starting from a given initial configuration
@@ -190,7 +190,10 @@ class EffectivePotential(ABC):
             It also needs to fix the temperature, and we only minimize the real part
             """
 
-            def evaluateWrapper(fieldArray: np.ndarray):
+            def evaluateWrapper(fieldArray: np.ndarray) -> Fields:
+                """
+                Wrapper that casts the potential back to Fields type.
+                """
                 fields = Fields.CastFromNumpy(fieldArray)
                 return self.evaluate(fields, T[i]).real
 
@@ -311,7 +314,7 @@ class EffectivePotential(ABC):
 
         return res
 
-    def deriv2Field2(self, fields: Fields | FieldPoint, temperature: np.ndarray):
+    def deriv2Field2(self, fields: Fields | FieldPoint, temperature: np.ndarray) -> list[Fields]:
         r"""Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
 
         Parameters
@@ -341,7 +344,7 @@ class EffectivePotential(ABC):
 
     def allSecondDerivatives(
         self, fields: Fields | FieldPoint, temperature: np.ndarray
-    ):
+    ) -> Tuple[list[Fields], list[Fields], np.ndarray]:
         r"""Computes :math:`d^2V/(d\text{Field}^2)`, :math:`d^2V/(d\text{Field} dT)`
         and :math:`d^2V/(dT^2)` at the ssame time. This function is more efficient
         than calling the other functions one at a time.
