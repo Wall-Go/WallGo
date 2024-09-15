@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 Collection of non-physics related functions.
 Common physics/math functions should go into helpers.py.
@@ -5,14 +6,15 @@ Common physics/math functions should go into helpers.py.
 import importlib.resources
 import numpy as np
 
+
 def getSafePathToResource(relativePathToResource: str) -> str:
-    """ 
+    """
     Gives a safe path to a packaged resource. The input is a relative path
     from the WallGo package directory (ie. where __init__.py is located).
     Use this function to convert the relative path to a path that is safe
     to use in packaged context.
     Example relative path: /Data/Something/example.txt.
-    
+
     Parameters
     ----------
     relativePathToResource : str
@@ -32,7 +34,7 @@ def getSafePathToResource(relativePathToResource: str) -> str:
 def clamp(x: float, minx: float, maxx: float) -> float:
     """
     Clamp x in range [minx, maxx], inclusive.
-    
+
     Parameters
     ----------
     x : float
@@ -50,4 +52,4 @@ def clamp(x: float, minx: float, maxx: float) -> float:
 
 
     """
-    return np.clip(x, minx, maxx)
+    return float(np.clip(x, minx, maxx))
