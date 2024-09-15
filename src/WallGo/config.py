@@ -1,8 +1,11 @@
 """
 Class that manages configuration variables for WallGo.
 """
+
 import configparser
 import io
+from typing import Any
+
 
 class Config:
     """
@@ -12,13 +15,12 @@ class Config:
 
     configParser: configparser.ConfigParser
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.config = configparser.ConfigParser()
-        self.config.optionxform = str # preserve case
+        self.config.optionxform = str  # preserve case
 
-
-    def readINI(self, filePath: str):
+    def readINI(self, filePath: str) -> None:
         """
         Reads a configuration file.
 
@@ -32,8 +34,7 @@ class Config:
         """
         self.config.read(filePath)
 
-
-    def get(self, section: str, key: str) -> any:
+    def get(self, section: str, key: str) -> Any:
         """
         Returns a variable from the configuration.
 
@@ -46,7 +47,7 @@ class Config:
 
         Returns
         -------
-        variable: any
+        variable: Any
             The configuration variable.
         """
         return self.config.get(section, key)
@@ -87,7 +88,7 @@ class Config:
         """
         return self.config.getfloat(section, key)
 
-    def set(self, section: str, key: str, value: str):
+    def set(self, section: str, key: str, value: str) -> None:
         """
         Modifies a variable in the configuration
 
