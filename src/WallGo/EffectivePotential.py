@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 from typing import Tuple
 from abc import ABC, abstractmethod ## Abstract Base Class
 import cmath # complex numbers
@@ -45,7 +44,7 @@ class EffectivePotential(ABC):
     temperatureScale: float
     
     ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    fieldScale: npt.ArrayLike
+    fieldScale: np.ndarray
 
     ## In practice we'll get the model params from a GenericModel subclass 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
@@ -60,7 +59,7 @@ class EffectivePotential(ABC):
 
 
     @abstractmethod
-    def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
+    def evaluate(self, fields: Fields | FieldPoint, temperature: np.ndarray, checkForImaginary: bool = False) -> np.ndarray:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
         at the input field configuration and temperature. 
         
@@ -72,13 +71,13 @@ class EffectivePotential(ABC):
 
     #### Non-abstract stuff from here on
     
-    def setPotentialError(self, potentialError):
+    def setPotentialError(self, potentialError : float) -> None:
         """
         Sets self.effectivePotentialError to potentialError.
         """
         self.effectivePotentialError = potentialError
         
-    def setScales(self, temperatureScale: float, fieldScale: npt.ArrayLike):
+    def setScales(self, temperatureScale: float, fieldScale: np.ndarray) -> None:
         """
         Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
         """
@@ -91,7 +90,7 @@ class EffectivePotential(ABC):
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
-    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
+    def findLocalMinimum(self, initialGuess: Fields, temperature: np.ndarray, tol: float = None) -> Tuple[Fields, np.ndarray]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.
@@ -160,7 +159,7 @@ class EffectivePotential(ABC):
         combinedInput[...,-1] = temperature
         return combinedInput
 
-    def derivT(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
+    def derivT(self, fields: Fields | FieldPoint, temperature: np.ndarray):
         """Calculate derivative of (real part of) the effective potential with
         respect to temperature.
 
@@ -188,7 +187,7 @@ class EffectivePotential(ABC):
         )
         return der
 
-    def derivField(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
+    def derivField(self, fields: Fields | FieldPoint, temperature: np.ndarray):
         """ Compute field-derivative of the effective potential with respect to
         all background fields, at given temperature.
 
@@ -209,7 +208,7 @@ class EffectivePotential(ABC):
         return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                         scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
 
-    def deriv2FieldT(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
+    def deriv2FieldT(self, fields: Fields | FieldPoint, temperature: np.ndarray) -> list[Fields]:
         r""" Computes :math:`d^2V/(d\text{Field} dT)`.
 
         Parameters
@@ -231,14 +230,14 @@ class EffectivePotential(ABC):
         
         return res
 
-    def deriv2Field2(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
+    def deriv2Field2(self, fields: Fields | FieldPoint, temperature: np.ndarray):
         r""" Computes the Hessian, :math:`d^2V/(d\text{Field}^2)`.
 
         Parameters
         ----------
         fields : Fields
             The background field values (e.g.: Higgs, singlet)
-        temperature : npt.ArrayLike
+        temperature : np.ndarray
             Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()
 
         Returns
@@ -252,7 +251,7 @@ class EffectivePotential(ABC):
         return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                        scale=self.__combinedScales, xAxis=axis, yAxis=axis)
     
-    def allSecondDerivatives(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
+    def allSecondDerivatives(self, fields: Fields | FieldPoint, temperature: np.ndarray):
         r""" Computes :math:`d^2V/(d\text{Field}^2)`, :math:`d^2V/(d\text{Field} dT)` 
         and :math:`d^2V/(dT^2)` at the ssame time. This function is more efficient
         than calling the other functions one at a time.
