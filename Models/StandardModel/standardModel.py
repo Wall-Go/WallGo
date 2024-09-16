@@ -34,6 +34,13 @@ from WallGo import EffectivePotential, Fields, GenericModel, Particle, WallGoMan
 
 
 class StandardModel(GenericModel):
+    r"""
+    The Standard model, with a light Higgs mass, such that the
+    electroweak phase transition becomes fist order.
+
+    This class inherits from the GenericModel class and implements the necessary
+    methods for the WallGo package.
+    """
 
     particles: list[Particle] = []
     outOfEquilibriumParticles: list[Particle] = []
@@ -188,6 +195,19 @@ class StandardModel(GenericModel):
     def calculateModelParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
+        """
+        Calculate the model parameters based on the input parameters.
+
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
+
+        Returns
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of calculated model parameters.
+        """
         super().calculateModelParameters(inputParameters)
 
         modelParameters = {}
@@ -197,33 +217,34 @@ class StandardModel(GenericModel):
         modelParameters["v0"] = v0
 
         # Zero-temperature masses
-        mH = inputParameters["mH"]
-        mW = inputParameters["mW"]
-        mZ = inputParameters["mZ"]
-        mt = inputParameters["mt"]
+        massH = inputParameters["mH"]
+        massW = inputParameters["mW"]
+        massZ = inputParameters["mZ"]
+        massT = inputParameters["mt"]
 
-        modelParameters["mW"] = mW
-        modelParameters["mZ"] = mZ
-        modelParameters["mt"] = mt
+        modelParameters["mW"] = massW
+        modelParameters["mZ"] = massZ
+        modelParameters["mt"] = massT
 
         # helper
-        g0 = 2.0 * mW / v0
+        g0 = 2.0 * massW / v0
 
         # Gauge couplings
-        modelParameters["g1"] = g0 * np.sqrt((mZ / mW) ** 2 - 1)
+        modelParameters["g1"] = g0 * np.sqrt((massZ / massW) ** 2 - 1)
         modelParameters["g2"] = g0
         modelParameters["g3"] = inputParameters["g3"]
-        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * mt / mW
+        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * massT / massW
 
         modelParameters["lambda"] = inputParameters["mH"] ** 2 / (2 * v0**2)
 
-        bconst = 3 / (64 * np.pi**2 * v0**4) * (2 * mW**4 + mZ**4 - 4 * mt**4)
+        # The following parameters are defined on page 6 of hep-ph/9506475
+        bconst = 3 / (64 * np.pi**2 * v0**4) * (2 * massW**4 + massZ**4 - 4 * massT**4)
 
-        modelParameters["D"] = 1 / (8 * v0**2) * (2 * mW**2 + mZ**2 + 2 * mt**2)
-        modelParameters["E0"] = 1 / (12 * np.pi * v0**3) * (4 * mW**3 + 2 * mZ**3)
+        modelParameters["D"] = 1 / (8 * v0**2) * (2 * massW**2 + massZ**2 + 2 * massT**2)
+        modelParameters["E0"] = 1 / (12 * np.pi * v0**3) * (4 * massW**3 + 2 * massZ**3)
 
         modelParameters["T0sq"] = (
-            1 / 4 / modelParameters["D"] * (mH**2 - 8 * bconst * v0**2)
+            1 / 4 / modelParameters["D"] * (massH**2 - 8 * bconst * v0**2)
         )
         modelParameters["C0"] = (
             1 / (16 * np.pi**2) * (1.42 * modelParameters["g2"] ** 4)
@@ -247,18 +268,57 @@ class StandardModel(GenericModel):
 
 
 class EffectivePotentialSM(EffectivePotential):
+    """
+    Effective potential for the Standard Model.
+
+    This class inherits from the EffectivePotential class.
+    """
 
     def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        super().__init__(modelParameters, fieldCount)
-        ## ... do SM specific initialization here. The super call already gave us the model params
+        """
+        Initialize the EffectivePotentialSM.
 
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 28  # check if correct
+        Parameters
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of model parameters.
+        fieldCount: int
+            The number of fields undergoing the phase transition
+
+        Returns
+        ----------
+        cls: EffectivePotentialSM
+            an object of the EffectivePotentialSM class
+        """
+        super().__init__(modelParameters, fieldCount)
+        # The super call already gave us the model params
+
+        # Count particle degrees-of-freedom to facilitate inclusion of
+        # light particle contributions to ideal gas pressure
+        self.num_boson_dof = 28  
         self.num_fermion_dof = 90
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
     ) -> complex | np.ndarray:
+        """
+        Evaluate the effective potential. We implement the effective potential
+        of eq. (7) of hep-ph/9506475.
+
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+        temperature: float
+            The temperature
+        checkForImaginary: bool
+            Setting to check for imaginary parts of the potential
+
+        Returns
+        ----------
+        potentialTotal: complex | np.ndarray
+            The value of the effective potential
+        """
         # phi ~ 1/sqrt(2) (0, v)
         fields = Fields(fields)
         v = fields.GetField(0) + 0.0000001
@@ -272,6 +332,8 @@ class EffectivePotentialSM(EffectivePotential):
         mZ = self.modelParameters["mZ"]
         mt = self.modelParameters["mt"]
 
+        # Implement finite-temperature corrections to the modelParameters lambda, 
+        # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
         lambdaT = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
         ) * (
@@ -287,57 +349,73 @@ class EffectivePotentialSM(EffectivePotential):
         # HACK: take the absolute value of lambdaT here, to avoid taking the square root of a negative number
         eT = self.modelParameters["E0"] + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT)**1.5
 
-        VT = (
+        potentialT = (
             self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
             - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T))
             - eT * T * pow(v, 3)
             + lambdaT / 4 * pow(v, 4)
         )
 
-        VTotal = np.real(VT + self.constantTerms(T))
+        potentialTotal = np.real(potentialT + self.constantTerms(T))
 
-        return VTotal
+        return potentialTotal
 
     def constantTerms(self, temperature: np.ndarray) -> np.ndarray:
         """Need to explicitly compute field-independent but T-dependent parts
-        that we don't already get from field-dependent loops. At leading order in high-T expansion these are just
-        (minus) the ideal gas pressure of light particles that were not integrated over in the one-loop part.
+        that we don't already get from field-dependent loops. At leading order in high-T
+        expansion these are just (minus) the ideal gas pressure of light particles that
+        were not integrated over in the one-loop part.
+
+        See Eq. (39) in hep-ph/0510375 for general LO formula
+
+        Parameters
+        ----------
+        temperature: array-like (float)
+            The temperature
+
+        Returns
+        ----------
+        constantTerms: array-like (float)
+            The value of the field-independent contribution to the effective potential
         """
 
-        ## See Eq. (39) in hep-ph/0510375 for general LO formula
-
-        ## How many degrees of freedom we have left. I'm hardcoding the number of DOFs that were done in evaluate(), could be better to pass it from there though
+        # How many degrees of freedom we have left. The number of DOFs
+        # that were included in evaluate() is hardcoded
         dofsBoson = self.num_boson_dof
         dofsFermion = self.num_fermion_dof
 
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
+        # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
+        # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
 def main():
+    """Runs WallGo for the SM, computing bubble wall speed."""
 
     WallGo.initialize()
 
-    ## Modify the config, we use N=11 for this example
+    # Modify the config, we use N=11 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
-    ## Guess of the wall thickness
+    # Guess of the wall thickness: (approximately) 10/Tn
     wallThicknessIni = 0.1
 
-    # Estimate of the mean free path of the particles in the plasma
+    # Estimate of the mean free path of the particles in the plasma: (approximately) 100/Tn
     meanFreePath = 1
 
     # The following 2 parameters are used to estimate the optimal value of dT used
-
     # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
+    # Temperature scale (in GeV) over which the potential changes by O(1).
+    # A good value would be of order Tc-Tn.
     temperatureScale = 1.
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or an array.
+    # Field scale (in GeV) over which the potential changes by O(1). A good value
+    # would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the
+    # same scale, or an array.
     fieldScale = (50.0,)
 
     ## Create WallGo control object
@@ -346,7 +424,8 @@ def main():
     )
 
     """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input, but this is likely to change in the future
+    The constructor currently requires an initial parameter input,
+    but this is likely to change in the future
     """
 
     ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
@@ -387,34 +466,34 @@ def main():
     ## Generates or reads collision integrals
     manager.generateCollisionFiles()
 
-    ## ---- This is where you'd start an input parameter loop if doing parameter-space scans ----
+    print("\n=== WallGo parameter scan ===")
+    # ---- This is where you'd start an input parameter
+    # loop if doing parameter-space scans ----
 
-    """ Example mass loop that does two value of mH. Note that the WallGoManager class is NOT thread safe internally, 
-    so it is NOT safe to parallelize this loop eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale parameter scans. 
+    """ Example mass loop that does five values of mH. Note that the WallGoManager
+    class is NOT thread safe internally, so it is NOT safe to parallelize this loop 
+    eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale
+    parameter scans. 
     """
 
-    values_mH = [0.0, 50.0, 68.0, 79.0, 88.0]
-    values_Tn = [57.192, 83.426, 100.352, 111.480, 120.934]
+    valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
+    valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
 
-    wallVelocitiesErrors = np.zeros((5, 4))
 
-    for i in range(len(values_mH)):
+    for i in range(len(valuesMH)):
         print(
-            f"=== Begin Bechmark with mH = {values_mH[i]} GeV and Tn = {values_Tn[i]} GeV ===="
+            f"=== Begin Bechmark with mH = {valuesMH[i]} GeV and Tn = {valuesTn[i]} GeV ===="
         )
 
-        inputParameters["mH"] = values_mH[i]
-
-        """ Register the model with WallGo. This needs to be done only once. TODO What does that mean? It seems we have to do it for every choice of input parameters 
-        If you need to use multiple models during a single run, we recommend creating a separate WallGoManager instance for each model. 
-        """
+        inputParameters["mH"] = valuesMH[i]
 
         manager.changeInputParameters(inputParameters, EffectivePotentialSM)
 
-        """In addition to model parameters, WallGo needs info about the phases at nucleation temperature.
-        Use the WallGo.PhaseInfo dataclass for this purpose. Transition goes from phase1 to phase2.
+        """In addition to model parameters, WallGo needs info about the phases at
+        nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
+        Transition goes from phase1 to phase2.
         """
-        Tn = values_Tn[i]
+        Tn = valuesTn[i]
 
         phaseInfo = WallGo.PhaseInfo(
             temperature=Tn,
@@ -422,9 +501,11 @@ def main():
             phaseLocation2=WallGo.Fields([Tn]),
         )
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
+        """Give the input to WallGo. It is NOT enough to change parameters
+           directly in the GenericModel instance because
             1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
+            2) WallGoManager.setParameters() does parameter-specific
+               initializations of internal classes
         """
         manager.setParameters(phaseInfo)
 
@@ -432,52 +513,42 @@ def main():
 
         ## ---- Solve wall speed in Local Thermal Equilibrium approximation
 
-        print(f"PT strength {manager.hydrodynamics.thermodynamics.alpha(Tn)}")
-
         vwLTE = manager.wallSpeedLTE()
 
-        print(
-            f"Maximum deflagration/hybrid velocity: {manager.hydrodynamics.fastestDeflag()}"
-        )
-        print(f"LTE wall speed: {vwLTE}")
+        print(f"LTE wall speed:    {vwLTE:.6f}")
 
-        ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
-
-        ## Computes the detonation solutions
-        # wallGoInterpolationResults = manager.solveWallDetonation()
-        # print(wallGoInterpolationResults.wallVelocities)
-
-        ## This will contain wall widths and offsets for each classical field. Offsets are relative to the first field, so first offset is always 0
-        wallParams: WallGo.WallParams
+        # ---- Solve field EOM. For illustration, first solve it without any
+        # out-of-equilibrium contributions. The resulting wall speed should
+        # be close to the LTE result
 
         bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
 
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
+        print("\n=== Local equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
-    #     ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()
+        # Repeat with out-of-equilibrium parts included. This requires
+        # solving Boltzmann equations, invoked automatically by solveWall()
         bIncludeOffEq = True
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
 
         results = manager.solveWall(bIncludeOffEq)
-        wallVelocity = results.wallVelocity
-        wallVelocityError = results.wallVelocityError
-        widths = results.wallWidths
 
-        print(f"{wallVelocity=}")
-        print(f"{wallVelocityError=}")
-        print(f"{widths=}")
+        print("\n=== Out-of-equilibrium results ===")
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
 
-    #     wallVelocitiesErrors[i,:] = np.array([Tn,wallVelocity,wallVelocityError,widths[0]])
-
-    # print(wallVelocitiesErrors)
+        print("\n=== Search for detonation solution ===")
+        wallGoInterpolationResults = manager.solveWallDetonation()
+        print("\n=== Detonation results ===")
+        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
 
     # end parameter-space loop
 
