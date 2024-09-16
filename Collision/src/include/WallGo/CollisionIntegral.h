@@ -169,6 +169,13 @@ private:
 
     // This is set again whenever integrate() is called, based on the options inputted there
     bool bOptimizeUltrarelativistic = true;
+
+    /* Copy of the model's ModelParameters, this is not strictly needed for evaluation because matrix elements manage their own
+    * parameters internally. But storing these here as well allows us to easily write them to HDF5 metadata.
+    */
+    ModelParameters mModelParameters;
+    // Hacky friend declaration used to write the initial model params from PhysicsModel
+    friend class PhysicsModel;
 };
 
 
