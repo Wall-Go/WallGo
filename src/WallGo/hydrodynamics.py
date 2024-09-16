@@ -250,7 +250,7 @@ class Hydrodynamics:
         try:
             vmin = root_scalar(
                 TmMax,
-                bracket=[self.vJ, 1],
+                bracket=[self.vJ + 1e-4, 1],
                 method="brentq",
                 xtol=self.atol,
                 rtol=self.rtol,
