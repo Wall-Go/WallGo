@@ -329,7 +329,7 @@ if __name__ == '__main__':
             iList.append(i)
             # print(i)
     print(len(iList))
-    scanXSM(detonation=True, threads=16, iList=iList)
+    scanXSM(detonation=True, threads=16, iList=[4,31]+iList)
     
     
     

@@ -36,9 +36,11 @@ def drawDeton():
     ms = []
     msRun = []
     msDef = []
+    msUnknown = []
     lHS = []
     lHSRun = []
     lHSDef = []
+    lHSUnknown = []
     vw = []
     for i,model in enumerate(models):
         scan = scanResults[i]
@@ -59,12 +61,16 @@ def drawDeton():
                 lHSDef.append(model['lambdaHS'])
                 if 0.86 < model['lambdaHS'] < 0.9 and 115 < model['ms'] < 120:
                     print(i, scan['vwDeton'], model['ms'], model['lambdaHS'], model['Tn'])
+            elif scan['vwDeton'] == -2:
+                msUnknown.append(model['ms'])
+                lHSUnknown.append(model['lambdaHS'])
     
     fig,ax = plt.subplots(1)
     c=ax.scatter(ms, lHS, s=4, c=vw)
     cbar = fig.colorbar(c)
     ax.scatter(msRun, lHSRun, s=4, c='r')
     ax.scatter(msDef, lHSDef, s=4, c='grey')
+    ax.scatter(msUnknown, lHSUnknown, s=4, c='black')
     # x = np.linspace(130,160,10)
     # ax.plot(x, 0.008333*x-0.08333, c='black')
     ax.set_xlim((60,160))
@@ -73,9 +79,10 @@ def drawDeton():
     n = len(ms)
     nRun = len(msRun)
     nDef = len(msDef)
+    nUnknown = len(msUnknown)
     ntot = n+nRun+nDef
-    print(n,nRun,nDef,ntot)
-    print(n/ntot, nRun/ntot, nDef/ntot)
+    print(n,nRun,nDef, nUnknown,ntot)
+    print(n/ntot, nRun/ntot, nDef/ntot, nUnknown/ntot)
     
 def drawTn(msRange, lHSRange):
     ms = []
