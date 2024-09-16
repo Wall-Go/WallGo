@@ -96,7 +96,6 @@ class StandardModel(GenericModel):
         """
         self.clearParticles()
 
-
         ## === Top quark ===
         # The msqVacuum function of an out-of-equilibrium particle must take
         # a Fields object and return an array of length equal to the number of
@@ -240,7 +239,9 @@ class StandardModel(GenericModel):
         # The following parameters are defined on page 6 of hep-ph/9506475
         bconst = 3 / (64 * np.pi**2 * v0**4) * (2 * massW**4 + massZ**4 - 4 * massT**4)
 
-        modelParameters["D"] = 1 / (8 * v0**2) * (2 * massW**2 + massZ**2 + 2 * massT**2)
+        modelParameters["D"] = (
+            1 / (8 * v0**2) * (2 * massW**2 + massZ**2 + 2 * massT**2)
+        )
         modelParameters["E0"] = 1 / (12 * np.pi * v0**3) * (4 * massW**3 + 2 * massZ**3)
 
         modelParameters["T0sq"] = (
@@ -256,8 +257,8 @@ class StandardModel(GenericModel):
         self, modelParameters: dict[str, float]
     ) -> dict[str, float]:
         """
-        Calculate the collision couplings (Lagrangian parameters) from the input parameters.
-        List as they appear in the MatrixElements file
+        Calculate the collision couplings (Lagrangian parameters) from the input
+        parameters. List as they appear in the MatrixElements file
         """
         collisionParameters = {}
 
@@ -295,10 +296,10 @@ class EffectivePotentialSM(EffectivePotential):
 
         # Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
-        self.num_boson_dof = 28  
-        self.num_fermion_dof = 90
+        self.numBosonDof = 28
+        self.numFermionDof = 90
 
-    def evaluate(
+    def evaluate(  # pylint: disable=R0914
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
     ) -> complex | np.ndarray:
         """
@@ -332,7 +333,7 @@ class EffectivePotentialSM(EffectivePotential):
         mZ = self.modelParameters["mZ"]
         mt = self.modelParameters["mt"]
 
-        # Implement finite-temperature corrections to the modelParameters lambda, 
+        # Implement finite-temperature corrections to the modelParameters lambda,
         # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
         lambdaT = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
@@ -346,8 +347,12 @@ class EffectivePotentialSM(EffectivePotential):
             4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2
         )
 
-        # HACK: take the absolute value of lambdaT here, to avoid taking the square root of a negative number
-        eT = self.modelParameters["E0"] + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT)**1.5
+        # HACK: take the absolute value of lambdaT here,
+        # to avoid taking the square root of a negative number
+        eT = (
+            self.modelParameters["E0"]
+            + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT) ** 1.5
+        )
 
         potentialT = (
             self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
@@ -381,15 +386,15 @@ class EffectivePotentialSM(EffectivePotential):
 
         # How many degrees of freedom we have left. The number of DOFs
         # that were included in evaluate() is hardcoded
-        dofsBoson = self.num_boson_dof
-        dofsFermion = self.num_fermion_dof
+        dofsBoson = self.numBosonDof
+        dofsFermion = self.numFermionDof
 
         # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
-def main():
+def main():  # pylint: disable=R0915, R0914
     """Runs WallGo for the SM, computing bubble wall speed."""
 
     WallGo.initialize()
@@ -404,14 +409,15 @@ def main():
     # Guess of the wall thickness: (approximately) 10/Tn
     wallThicknessIni = 0.1
 
-    # Estimate of the mean free path of the particles in the plasma: (approximately) 100/Tn
+    # Estimate of the mean free path of the particles in the plasma:
+    # (approximately) 100/Tn
     meanFreePath = 1
 
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
     # Temperature scale (in GeV) over which the potential changes by O(1).
     # A good value would be of order Tc-Tn.
-    temperatureScale = 1.
+    temperatureScale = 1.0
     # Field scale (in GeV) over which the potential changes by O(1). A good value
     # would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the
@@ -428,7 +434,8 @@ def main():
     but this is likely to change in the future
     """
 
-    ## QFT model input. Some of these are probably not intended to change, like gauge masses. Could hardcode those directly in the class.
+    # QFT model input. Some of these are probably not intended to change,
+    # like gauge masses. Could hardcode those directly in the class.
     inputParameters = {
         "v0": 246.0,
         "mW": 80.4,
@@ -479,10 +486,9 @@ def main():
     valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
     valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
 
-
-    for i in range(len(valuesMH)):
+    for i in range(len(valuesMH)):  # pylint: disable=C0200
         print(
-            f"=== Begin Bechmark with mH = {valuesMH[i]} GeV and Tn = {valuesTn[i]} GeV ===="
+            f"== Begin Benchmark with mH = {valuesMH[i]} GeV, Tn = {valuesTn[i]} GeV =="
         )
 
         inputParameters["mH"] = valuesMH[i]
