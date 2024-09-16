@@ -93,3 +93,41 @@ FAQs
 - **I think I found a bug in WallGo, what can I do?**
 
     [To do]
+
+- **What is the parameter fieldCount?**
+
+    This is the number of scalar fields that participates *actively* in the phase transition, and are described in the effective potential. 
+    For example, if the Standard Model is coupled to a gauge singlet, and the phase transition
+    is two-step, fieldCount = 2. If the singlet would only give a radiative correction to the effective potential, and the 
+    phase transition is one-step, fieldCount = 1.
+
+- **What is the msqVacuum in the Particle definition?**
+
+    This is the field-dependent, vacuum (zero temperature) mass squared. The size of this quantity affects the strength of the 
+    friction effect in the equation of motion of the scalar field, and the force that the particle feels from the wall. 
+    Note that this parameter needs to be of the type Fields. If the particle is in equilibrium the type does not matter, and it
+    msqVacuum can simply be set to zero.
+
+- **What is the msqDerivative in the Particle definition?**
+
+    This is the field-derivative of msqVacuum.
+    Note that this parameter needs to be of the type Fields. If the particle is in equilibrium the type does not matter, and it
+    msqVacuum can simply be set to zero.
+
+- **What is the msqThermal in the Particle defintion?**
+
+    This is the (field-independent) thermal mass of the particle. It is used in the propagator in the matrix elements, and
+    regularizes the IV-divergence in the limit of vanishing Mandelstam variables t and u.
+
+- **How do I cound the totalDOFs in the Particle definition?**
+
+    totalDOFs counts the total number of degrees of freedom for a particle species. This includes summing over e.g. spins and colors. 
+    E.g. totalDOFs for the SM gluon would be 16. For a top quark with only SU(3) interactions totalDOFs would be 12,
+    but if we distinguish left-handed and right-handed top quarks both would have totalDOFs = 6
+
+- **I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?**
+
+    [To do]
+
+
+
