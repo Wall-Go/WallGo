@@ -44,38 +44,66 @@ class StandardModel(GenericModel):
     fieldCount = 1
 
     def __init__(self, initialInputParameters: dict[str, float]):
+        """
+        Initialize the SM model.
+
+        Parameters
+        ----------
+        initialInputParameters: dict[str, float]
+            A dictionary of initial input parameters for the model.
+
+        Returns
+        ----------
+        cls: StandardModel
+            An object of the StandardModel class.
+        """
 
         self.modelParameters = self.calculateModelParameters(initialInputParameters)
         self.collisionParameters = self.calculateCollisionParameters(
             self.modelParameters
         )
 
-        # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
+        # Initialize internal effective potential with our params dict.
         self.effectivePotential = EffectivePotentialSM(
             self.modelParameters, self.fieldCount
         )
 
+        # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles()
 
     def defineParticles(self) -> None:
+        """
+        Define the particles for the model.
+        Note that the particle list only needs to contain the
+        particles that are relevant for the Boltzmann equations.
+        The particles relevant to the effective potential are
+        included independently.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        None
+        """
         self.clearParticles()
 
-        # NB: particle multiplicity is pretty confusing because some internal
-        # DOF counting is handled internally already.
-        # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately
-        # define up, down, charm, strange, bottom
 
         ## === Top quark ===
-        topMsqVacuum = (
-            lambda fields: 0.5
-            * self.modelParameters["yt"] ** 2
-            * fields.GetField(0) ** 2
-        )
-        topMsqDerivative = lambda fields: self.modelParameters[
-            "yt"
-        ] ** 2 * fields.GetField(0)
-        topMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
+        # The msqVacuum function of an out-of-equilibrium particle must take
+        # a Fields object and return an array of length equal to the number of
+        # points in fields.
+        def topMsqVacuum(fields: Fields) -> Fields:
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+
+        # The msqDerivative function of an out-of-equilibrium particle must take
+        # a Fields object and return an array with the same shape as fields.
+        def topMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["yt"] ** 2 * fields.GetField(0)
+
+        def topMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
             "topL",
@@ -102,12 +130,16 @@ class StandardModel(GenericModel):
         self.addParticle(topQuarkR)
 
         ## === SU(2) gauge boson ===
-        WMsqThermal = lambda T: self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
-        WMsqVacuum = lambda fields: fields.GetField(0)
-        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        WMsqDerivative = lambda fields: fields.GetField(0)
+        def WMsqVacuum(fields: Fields) -> Fields:  # pylint: disable=invalid-name
+            return self.modelParameters["g2"] ** 2 * fields.GetField(0) ** 2 / 4
 
-        W = Particle(
+        def WMsqDerivative(fields: Fields) -> Fields:  # pylint: disable=invalid-name
+            return self.modelParameters["g2"] ** 2 * fields.GetField(0) / 2
+
+        def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
+            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
+
+        wBoson = Particle(
             "W",
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
@@ -117,18 +149,16 @@ class StandardModel(GenericModel):
             ultrarelativistic=True,
             totalDOFs=9,
         )
-        self.addParticle(W)
+        self.addParticle(wBoson)
 
         ## === SU(3) gluon ===
-        gluonMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 * 2.0
-        gluonMsqVacuum = lambda fields: fields.GetField(0)
-        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        gluonMsqDerivative = lambda fields: fields.GetField(0)
+        def gluonMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
         gluon = Particle(
             "gluon",
-            msqVacuum=gluonMsqVacuum,
-            msqDerivative=gluonMsqDerivative,
+            msqVacuum=0.0,
+            msqDerivative=0.0,
             msqThermal=gluonMsqThermal,
             statistics="Boson",
             inEquilibrium=True,
@@ -138,12 +168,13 @@ class StandardModel(GenericModel):
         self.addParticle(gluon)
 
         ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"] ** 2 * T**2 / 6.0
+        def lightQuarkMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         lightQuark = Particle(
             "lightQuark",
-            msqVacuum=lambda fields: 0.0,
-            msqDerivative=lambda fields: 0.0,
+            msqVacuum=0.0,
+            msqDerivative=0.0,
             msqThermal=lightQuarkMsqThermal,
             statistics="Fermion",
             inEquilibrium=True,
@@ -288,7 +319,7 @@ def main():
     WallGo.initialize()
 
     ## Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
@@ -338,7 +369,7 @@ def main():
     WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput_N11/")
 
     # set matrix elements initial specs
     WallGo.config.config.set("MatrixElements", "fileName", "MatrixElements.txt")
