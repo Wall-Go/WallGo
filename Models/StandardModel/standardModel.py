@@ -363,9 +363,9 @@ class EffectivePotentialSM(EffectivePotential):
 
         potentialTotal = np.real(potentialT + self.constantTerms(T))
 
-        return potentialTotal
+        return potentialTotal  # TODO: resolve return type.
 
-    def constantTerms(self, temperature: np.ndarray) -> np.ndarray:
+    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
@@ -394,7 +394,7 @@ class EffectivePotentialSM(EffectivePotential):
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
 
-def main():  # pylint: disable=R0915, R0914
+def main() -> None:  # pylint: disable=R0915, R0914
     """Runs WallGo for the SM, computing bubble wall speed."""
 
     WallGo.initialize()
