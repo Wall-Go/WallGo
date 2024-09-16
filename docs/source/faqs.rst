@@ -27,5 +27,35 @@ FAQs
     in the template model. In the full equation of state, there could be a maximum/minimum temperature due to the finite range of
     existence of the phases. This could limit the hydrodynamic backreaction effect, and as a result no terminal velocity can be found.
 
+- **Why does WallGo throw the error "Failed to solve Jouguet velocity at input temperature!"**
+
+    WallGo can not solve the hydrodynamic matching condition to obtain the Jouguet velocity. 
+    Please check your effective potential, and confirm that the thermodynamic quantities are reasonable 
+    (alpha positive, the speeds of sound real and positive and the ratio of enthalpies smaller than 1). 
+    Also make sure that you provided the WallGoManager with a temperature scale
+    that was not too large, as this might prevent finding a correct tracing of (one of) the phases.
+
+- **Can I choose any value for the grid size?**
+
+    No! The momentum-grid size has to be an ODD number. 
+
+- **Why do I get the warning "Truncation error large, increase N or M"?**
+    
+    The accuracy of the solution to the Boltzmann equation and equations of motion increases with the grid size.
+    WallGo will throw the warning "Truncation error large, increase N or M" when the estimated error on the solution of
+    the out-of-equilibirum is large. This happens when the truncation error (obtained with John Boyd's Rule-of-thumb-2) is larger 
+    than the finite-difference error *and* the truncation error is larger than the chosen error tolerance.
+
+- **Can I reuse the same collision integrals for different models/parameter choices?**
+
+    To do
+
+- **My effective potential is complex, what should I do?**
+
+    To do
+
+- **I want to compare to use a different set of matrix elements, is this possible?**
+
+    Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].
 
 
