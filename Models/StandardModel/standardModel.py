@@ -227,7 +227,7 @@ class EffectivePotentialSM(EffectivePotential):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex:
+    ) -> complex | np.ndarray:
         # phi ~ 1/sqrt(2) (0, v)
         fields = Fields(fields)
         v = fields.GetField(0) + 0.0000001
@@ -244,15 +244,17 @@ class EffectivePotentialSM(EffectivePotential):
         lambdaT = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
         ) * (
-            2 * mW**4 * np.log(mW**2 / (ab * T**2))
-            + mZ**4 * np.log(mZ**2 / (ab * T**2))
-            - 4 * mt**4 * np.log(mt**2 / (af * T**2))
+            2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
+            + mZ**4 * np.log(mZ**2 / (ab * T**2) + 1e-100)
+            - 4 * mt**4 * np.log(mt**2 / (af * T**2) + 1e-100)
         )
 
         cT = self.modelParameters["C0"] + 1 / (16 * np.pi * np.pi) * (
             4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2
         )
-        eT = self.modelParameters["E0"] + 1 / (12 * np.pi) * (3 + 3**1.5) * lambdaT**1.5
+
+        # HACK: take the absolute value of lambdaT here, to avoid taking the square root of a negative number
+        eT = self.modelParameters["E0"] + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT)**1.5
 
         VT = (
             self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
@@ -293,7 +295,7 @@ def main():
     print(WallGo.config)
 
     ## Guess of the wall thickness
-    wallThicknessIni = 0.05
+    wallThicknessIni = 0.1
 
     # Estimate of the mean free path of the particles in the plasma
     meanFreePath = 1
@@ -302,7 +304,7 @@ def main():
 
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-    temperatureScale = 0.1
+    temperatureScale = 1.
     # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the same scale, or an array.
     fieldScale = (50.0,)
@@ -430,17 +432,17 @@ def main():
         print(f"{widths=}")
 
     #     ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()
-    #     bIncludeOffEq = True
-    #     print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        bIncludeOffEq = True
+        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
 
-    #     results = manager.solveWall(bIncludeOffEq)
-    #     wallVelocity = results.wallVelocity
-    #     wallVelocityError = results.wallVelocityError
-    #     widths = results.wallWidths
+        results = manager.solveWall(bIncludeOffEq)
+        wallVelocity = results.wallVelocity
+        wallVelocityError = results.wallVelocityError
+        widths = results.wallWidths
 
-    #     print(f"{wallVelocity=}")
-    #     print(f"{wallVelocityError=}")
-    #     print(f"{widths=}")
+        print(f"{wallVelocity=}")
+        print(f"{wallVelocityError=}")
+        print(f"{widths=}")
 
     #     wallVelocitiesErrors[i,:] = np.array([Tn,wallVelocity,wallVelocityError,widths[0]])
 
