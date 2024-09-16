@@ -32,8 +32,22 @@ FAQs
     WallGo can not solve the hydrodynamic matching condition to obtain the Jouguet velocity. 
     Please check your effective potential, and confirm that the thermodynamic quantities are reasonable 
     (alpha positive, the speeds of sound real and positive and the ratio of enthalpies smaller than 1). 
+    Make sure that the field-independent contributions are also included in the effective potential 
+    (e.g. the T^4 contribution from light fermions).
     Also make sure that you provided the WallGoManager with a temperature scale
     that was not too large, as this might prevent finding a correct tracing of (one of) the phases.
+
+- **How can I check if implemented my potential correctly?**
+
+    Assuming that you know what the critical temperature of your model is, you could cross-check if
+    WallGo gives you the same. The critical temperature is not computed by default, but can be obtained
+    from WallGoManager.thermodynamics.findCriticalTemperature( dT, rTol, paranoid), where dT is the 
+    temperature step size, rTol the relative tolerance, and bool a setting for the phase tracing. The 
+    latter two arguments are optional.
+
+    Another cross-check is the position of the minimum at the provided nucleation temperature. 
+    This can be checked with WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn),
+    where phaseLocation is the approximate postion of the phase.
 
 - **Can I choose any value for the grid size?**
 
@@ -48,7 +62,9 @@ FAQs
 
 - **Can I reuse the same collision integrals for different models/parameter choices?**
 
-    To do
+    Yes, as long as your new model/parameter choice has the same interaction strength, 
+    thermal masses (for the out-of-equilibrium particles) and momentum grid size as the model
+    with which you obtained the collision integrals.
 
 - **My effective potential is complex, what should I do?**
 
@@ -58,4 +74,22 @@ FAQs
 
     Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].
 
+- **I do not have a Mathematica license, can I still generate matrix elements?**
 
+    [To do]
+
+- **Can I parallelize the computation of the collision terms?**
+
+    [To do]
+
+- **I am running a scan. Can I parallelize the computation of the wall velocity with Python?**
+
+    [To do]
+
+- **I can not install WallGo.**
+
+    [To do]
+
+- **I think I found a bug in WallGo, what can I do?**
+
+    [To do]
