@@ -130,7 +130,6 @@ bool CollisionResultsGrid::validateGridPoint(const GridPoint& gridPoint) const
         );
 }
 
-
 bool CollisionTensorResult::writeToIndividualHDF5(const std::filesystem::path& outDirectory, bool bWriteErrors) const
 {
     namespace fs = std::filesystem;

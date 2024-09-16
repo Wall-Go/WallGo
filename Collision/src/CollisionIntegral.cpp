@@ -123,6 +123,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     metadata.basisName = "Chebyshev";
     metadata.seed = gSeedGSL;
     metadata.usedIntegrationOptions = options;
+    metadata.modelParameters = mModelParameters;
 
     CollisionResultsGrid result(mParticlePair, metadata);
 
@@ -304,6 +305,8 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
         auto elapsedTime = currentTime - startTime;
         auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count();
         std::cout << "(" << mParticlePair.first << ", " << mParticlePair.second << ") done, took " << elapsedSeconds << " seconds.\n\n";
+
+        result.mMetadata.timeSpent = static_cast<uint32_t>(elapsedSeconds);
     }
 
     return result;
@@ -331,6 +334,15 @@ void CollisionIntegral4::handleModelChange(const ModelChangeContext& changeConte
     for (auto& collisionElement : collisionElements_ultrarelativistic)
     {
         collisionElement.handleModelChange(changeContext);
+    }
+
+    // Update also our own copy of params (for metadata)
+    for (auto const& [name, newValue] : mModelParameters.getParameterMap())
+    {
+        if (mModelParameters.contains(name))
+        {
+            mModelParameters.addOrModifyParameter(name, newValue);
+        }
     }
 }
 

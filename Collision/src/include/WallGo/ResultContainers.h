@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "hdf5Interface.h"
 #include "IntegrationOptions.h"
+#include "ModelParameters.h"
 
 namespace wallgo
 {
@@ -40,6 +41,12 @@ struct CollisionMetadata
 
     // Copy of the integration options used when producing this collision data
     IntegrationOptions usedIntegrationOptions;
+
+    // Evaluation time in seconds
+    uint32_t timeSpent = 0;
+
+    // Copy of model parameters that were used
+    ModelParameters modelParameters;
 };
 
 /* Rank 4 tensor that holds collision integration results on the grid for (particle1, particle2) pair
@@ -80,8 +87,6 @@ public:
     // Sets all elements to a specified value
     void fillWithValue(double newValue, double newError);
 
-    CollisionMetadata mMetadata;
-
 private:
 
     ParticleNamePair mParticlePair;
@@ -92,9 +97,14 @@ private:
     // Statistical errors of integrations. Has large memory cost, so we keep this empty if not needed
     Array4D mErrors;
 
+    CollisionMetadata mMetadata;
+
     void initData();
 
     bool validateGridPoint(const GridPoint& gridPoint) const;
+
+    // Allow CollisionIntegral4 to update metadata on the go
+    friend class CollisionIntegral4;
 };
 
 struct CollisionTensorResult

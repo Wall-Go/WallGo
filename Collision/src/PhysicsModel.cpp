@@ -293,10 +293,12 @@ CollisionIntegral4 PhysicsModel::createCollisionIntegral4(size_t basisSize, cons
 
     CollisionIntegral4 outIntegral(basisSize, ParticleNamePair(name1, name2));
 
-    // Fill in the collision integral with CollisionElements
+    // Copy our params to the integral object (hacky, currently used only for writing metadata)
+    outIntegral.mModelParameters = mParameters;
 
     assert(mMatrixElements.count(offEqIndices) > 0);
-    
+
+    // Fill in the collision integral with CollisionElements
     for (const MatrixElement& matrixElement : mMatrixElements.at(offEqIndices))
     {
         outIntegral.addCollisionElement(createCollisionElement(offEqIndices, matrixElement));

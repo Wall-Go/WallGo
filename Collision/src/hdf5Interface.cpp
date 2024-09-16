@@ -17,7 +17,7 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 	try
 	{
 		// Create a group to hold metadata (keeping it separate from the actual data)
-		H5::Group metadataGroup = h5File.createGroup("metadata");
+		H5::Group metadataGroup = h5File.createGroup("Metadata");
 
 		// Create attributes in the group. One attribute for each variable in metadata struct
 		H5::Attribute basisSizeAttr = metadataGroup.createAttribute("Basis Size", H5::PredType::NATIVE_INT, H5::DataSpace());
@@ -25,6 +25,7 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 		H5::Attribute integratorAttr = metadataGroup.createAttribute("Integrator", H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), H5::DataSpace());
 		H5::Attribute seedAttr = metadataGroup.createAttribute("Seed", H5::PredType::NATIVE_INT, H5::DataSpace());
 		H5::Attribute numThreadsAttr = metadataGroup.createAttribute("Num Threads", H5::PredType::NATIVE_INT, H5::DataSpace());
+		H5::Attribute timeSpentAttr = metadataGroup.createAttribute("Evaluation Time in Seconds", H5::PredType::NATIVE_INT, H5::DataSpace());
 		// Integration options
 		H5::Attribute callsAttr = metadataGroup.createAttribute("Calls Per Vegas Step", H5::PredType::NATIVE_INT, H5::DataSpace());
 		H5::Attribute maxTriesAttr = metadataGroup.createAttribute("Vegas Max Tries", H5::PredType::NATIVE_INT, H5::DataSpace());
@@ -32,7 +33,7 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 		H5::Attribute relativeErrorGoalAttr = metadataGroup.createAttribute("Relative Tolerance", H5::PredType::NATIVE_DOUBLE, H5::DataSpace());
 		H5::Attribute maxIntegrationMomentumAttr = metadataGroup.createAttribute("Max Integration Momentum", H5::PredType::NATIVE_DOUBLE, H5::DataSpace());
 		H5::Attribute optimizeUltrarelativisticAttr = metadataGroup.createAttribute("bOptimizeUltrarelativistic", H5::PredType::NATIVE_INT, H5::DataSpace());
-
+		
 		uint32_t optimizeUltrarelativistic = metadata.usedIntegrationOptions.bOptimizeUltrarelativistic ? 1 : 0;
 
 		// Write the attributes
@@ -41,6 +42,7 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 		integratorAttr.write(H5::StrType(H5::PredType::C_S1, metadata.integrator.size()), metadata.integrator);
 		seedAttr.write(H5::PredType::NATIVE_INT, &metadata.seed);
 		numThreadsAttr.write(H5::PredType::NATIVE_INT, &metadata.numThreads);
+		timeSpentAttr.write(H5::PredType::NATIVE_INT, &metadata.timeSpent);
 		//
 		callsAttr.write(H5::PredType::NATIVE_INT, &metadata.usedIntegrationOptions.calls);
 		maxTriesAttr.write(H5::PredType::NATIVE_INT, &metadata.usedIntegrationOptions.maxTries);
@@ -49,21 +51,17 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 		maxIntegrationMomentumAttr.write(H5::PredType::NATIVE_DOUBLE, &metadata.usedIntegrationOptions.maxIntegrationMomentum);
 		optimizeUltrarelativisticAttr.write(H5::PredType::NATIVE_INT, &optimizeUltrarelativistic);
 
-		// Cleanup
-		basisSizeAttr.close();
-		basisNameAttr.close();
-		integratorAttr.close();
-		seedAttr.close();
-		numThreadsAttr.close();
-		//
-		callsAttr.close();
-		maxTriesAttr.close();
-		absoluteErrorGoalAttr.close();
-		relativeErrorGoalAttr.close();
-		maxIntegrationMomentumAttr.close();
-		optimizeUltrarelativisticAttr.close();
-
 		metadataGroup.close();
+
+		// Write model params in a separate group
+		H5::Group modelParamsGroup = h5File.createGroup("Model Parameters");
+		for (const auto& [key, value] : metadata.modelParameters.getParameterMap())
+		{
+			H5::Attribute paramAttr = modelParamsGroup.createAttribute(key, H5::PredType::NATIVE_DOUBLE, H5::DataSpace());
+			paramAttr.write(H5::PredType::NATIVE_DOUBLE, &value);
+		}
+
+		modelParamsGroup.close();
 
 	}
 	catch (const H5::Exception& error)
