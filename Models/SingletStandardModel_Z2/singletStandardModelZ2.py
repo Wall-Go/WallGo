@@ -535,6 +535,11 @@ def main() -> None:
         action="store_true",
     )
     argParser.add_argument(
+        "--recalculateMatrixElements",
+        help="Forces full recalculation of the matrix element from DRalgo",
+        action="store_true",
+    )
+    argParser.add_argument(
         "--recalculateCollisions",
         help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
                 This is very slow and disabled by default.
@@ -617,6 +622,12 @@ def main() -> None:
     only if the --recalculateCollisions command line flag was specified.
     Without this flag we simply load pre-generated collision data files.
     """
+
+    if args.recalculateMatrixElements:
+        from WallGo import mathematicaHelpers 
+        matrixElementInputFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
+        mathematicaHelpers.calculateMatrixElements(matrixElementInputFile)
+
     if args.recalculateCollisions:
 
         # Failsafe, in general you should not worry about the collision module being unavailable as long as it has been properly installed (eg. with pip)
