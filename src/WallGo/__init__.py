@@ -21,13 +21,13 @@ from .particle import Particle
 from .Fields import Fields
 from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential
-from .FreeEnergy import FreeEnergy
+from .freeEnergy import FreeEnergy
 from .wallGoManager import WallGoManager
-from .InterpolatableFunction import InterpolatableFunction
+from .interpolatableFunction import InterpolatableFunction
 
 from .collisionArray import CollisionArray
 
-from .Integrals import Integrals
+from .integrals import Integrals
 from .Config import Config
 
 from .collisionWrapper import Collision

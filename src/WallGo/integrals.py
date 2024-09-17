@@ -3,7 +3,7 @@ import numpy.typing as npt
 from abc import abstractmethod
 import scipy.integrate
 
-from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
+from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
 
 
 r""" For 1-loop thermal potential WITHOUT high-T approximations, need to calculate

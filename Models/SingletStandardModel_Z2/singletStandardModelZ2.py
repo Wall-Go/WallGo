@@ -36,7 +36,7 @@ import numpy as np
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle, WallGoManager
-from WallGo.InterpolatableFunction import EExtrapolationType
+from WallGo.interpolatableFunction import EExtrapolationType
 
 # Adding the Models folder to the path and import effectivePotentialNoResum
 modelsPath = pathlib.Path(__file__).parents[1]
