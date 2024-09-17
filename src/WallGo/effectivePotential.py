@@ -190,7 +190,7 @@ class EffectivePotential(ABC):
             It also needs to fix the temperature, and we only minimize the real part
             """
 
-            def evaluateWrapper(fieldArray: np.ndarray) -> Fields:
+            def evaluateWrapper(fieldArray: np.ndarray) -> float | np.ndarray:
                 """
                 Wrapper that casts the potential back to Fields type.
                 """
@@ -210,7 +210,7 @@ class EffectivePotential(ABC):
         # Need to cast the field location
         return Fields.CastFromNumpy(resLocation), resValue
 
-    def _wrapperPotential(self, fieldsAndTemperature):
+    def _wrapperPotential(self, fieldsAndTemperature: np.ndarray) -> float | np.ndarray:
         """
         Calls self.evaluate from a single array fieldsAndTemperature
         that contains both the fields and temperature.
@@ -219,7 +219,7 @@ class EffectivePotential(ABC):
         temperature = fieldsAndTemperature[..., -1]
         return self.evaluate(fields, temperature)
 
-    def _combineInputs(self, fields, temperature):
+    def _combineInputs(self, fields: Fields | FieldPoint, temperature: float | np.ndarray) -> np.ndarray:
         """
         Combines the fields and temperature in a single array.
         """
@@ -230,7 +230,7 @@ class EffectivePotential(ABC):
         combinedInput[..., -1] = temperature
         return combinedInput
 
-    def derivT(self, fields: Fields | FieldPoint, temperature: np.ndarray):
+    def derivT(self, fields: Fields | FieldPoint, temperature: float | np.ndarray) -> np.ndarray:
         """Calculate derivative of (real part of) the effective potential with
         respect to temperature.
 
@@ -343,10 +343,10 @@ class EffectivePotential(ABC):
         )
 
     def allSecondDerivatives(
-        self, fields: Fields | FieldPoint, temperature: np.ndarray
+        self, fields: Fields | FieldPoint, temperature: np.ndarray | float
     ) -> Tuple[list[Fields], list[Fields], np.ndarray]:
         r"""Computes :math:`d^2V/(d\text{Field}^2)`, :math:`d^2V/(d\text{Field} dT)`
-        and :math:`d^2V/(dT^2)` at the ssame time. This function is more efficient
+        and :math:`d^2V/(dT^2)` at the same time. This function is more efficient
         than calling the other functions one at a time.
 
         Parameters
