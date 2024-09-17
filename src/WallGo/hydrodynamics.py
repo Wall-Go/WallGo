@@ -30,8 +30,8 @@ class Hydrodynamics:
         thermodynamics: Thermodynamics,
         tmax: float,
         tmin: float,
-        rtol: float = 1e-6,
-        atol: float = 1e-6,
+        rtol: float,
+        atol: float,
     ):
         
         """
@@ -255,7 +255,8 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
-            return float(vmin)
+            # We add 0.01 because the functions in EOM become unstable at vmin
+            return float(min(1, vmin+0.01))
 
         except ValueError:
             return self.vJ
@@ -331,10 +332,18 @@ class Hydrodynamics:
             bounds=[self.Tnucl, self.TMaxHydro],
             method="Bounded",
         )
+        
         if minimizeResult.success:
             Tmax = minimizeResult.x
         else:
-            raise WallGoError(minimizeResult.flag, minimizeResult)
+            raise WallGoError(minimizeResult.message, minimizeResult)
+        if minimizeResult.fun > 0:
+            raise WallGoError(
+                "No solutions to the matching equations were found. This can be "\
+                "caused by a bad interpolation of the free energy. Try decreasing "\
+                "phaseTracerTol.",
+                minimizeResult
+            )
         rootResult = root_scalar(
             tmFromvpsq,
             bracket=[self.Tnucl, Tmax],
