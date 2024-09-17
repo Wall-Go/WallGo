@@ -36,22 +36,3 @@ class GenericModel(ABC):
     def clearParticles(self) -> None:
         """Empties the cached particle list"""
         self.outOfEquilibriumParticles = []
-
-    ## Go from whatever input parameters to renormalized Lagrangian parameters.
-    # Override this if your inputs are something else than Lagrangian parameters
-    def calculateModelParameters(
-        self, inputParameters: dict[str, float]
-    ) -> dict[str, float]:
-        """
-        Calculates the model parameters based on the given input parameters.
-
-        Args:
-            inputParameters (dict[str, float]):
-            A dictionary containing the input parameters.
-
-        Returns:
-            dict[str, float]:
-            A dictionary containing the calculated model parameters.
-        """
-        self.inputParameters = inputParameters
-        return {}

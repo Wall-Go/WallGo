@@ -166,8 +166,8 @@ class SingletSMZ2(GenericModel):
             )
             self.addParticle(gluon)
 
-    ## Go from input parameters --> action parameters
-    def calculateModelParameters(
+    ## Go from input parameters --> Lagrangian parameters
+    def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
         """
@@ -183,7 +183,6 @@ class SingletSMZ2(GenericModel):
         modelParameters: dict[str, float]
             A dictionary of calculated model parameters.
         """
-        super().calculateModelParameters(inputParameters)
 
         modelParameters = {}
 
@@ -219,29 +218,6 @@ class SingletSMZ2(GenericModel):
         modelParameters["yt"] = np.sqrt(0.5) * g0 * massT / massW
 
         return modelParameters
-
-    def calculateCollisionParameters(
-        self, inputParameters: dict[str, float]
-    ) -> dict[str, float]:
-        """
-        Calculate collision couplings (Lagrangian parameters) from the input parameters.
-        List as they appear in the MatrixElements file.
-
-        Parameters
-        ----------
-        inputParameters: dict[str, float]
-            A dictionary of input parameters for the model.
-
-        Returns
-        ----------
-        collisionParameters: dict[str, float]
-            A dictionary of model parameters for the collision.
-        """
-        collisionParameters = {}
-
-        collisionParameters["g3"] = inputParameters["g3"]
-
-        return collisionParameters
 
 
 # end model
@@ -568,23 +544,6 @@ def main() -> None:
     print("\n=== WallGo configuration options ===")
     print(WallGo.config)
 
-    # Guess of the wall thickness: 5/Tn
-    wallThicknessIni = 0.05
-
-    # Estimate of the mean free path of the particles in the plasma: 100/Tn
-    meanFreePath = 1.0
-
-    # Create WallGo control object
-    # The following 2 parameters are used to estimate the optimal value of dT used
-    # for the finite difference derivatives of the potential.
-    # Temperature scale (in GeV) over which the potential changes by O(1).
-    # A good value would be of order Tc-Tn.
-    temperatureScale = 10.0
-    # Field scale (in GeV) over which the potential changes by O(1). A good value
-    # would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the
-    # same scale, or an array.
-    fieldScale = [10.0, 10.0]
     manager = WallGoManager(
         wallThicknessIni, meanFreePath, temperatureScale, fieldScale
     )
@@ -623,12 +582,20 @@ def main() -> None:
     Without this flag we simply load pre-generated collision data files.
     """
 
+<<<<<<< HEAD
     if args.regenerateMatrixElements:
         from WallGo import mathematicaHelpers
 
         matrixElementModelFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
         mathematicaHelpers.generateMatrixElementsViaSubprocess(matrixElementModelFile)
         # FIXME need to ensure that the pre-generated "default" matrix elements do not get overriden
+=======
+    if args.recalculateMatrixElements:
+        from WallGo import mathematicaHelpers
+
+        matrixElementInputFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
+        mathematicaHelpers.calculateMatrixElements(matrixElementInputFile)
+>>>>>>> 89dd4d4 (WIP refactor of models to make them use a common base interface)
 
     if args.recalculateCollisions:
 
@@ -706,27 +673,78 @@ def main() -> None:
 
     print("=== WallGo parameter scan ===")
 
-    """ Example parameter-space loop that just does one value of mh2. Note that the WallGoManager
-    class is NOT thread safe internally, so it is NOT safe to parallelize this loop 
-    eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale
-    parameter scans. 
-    """
-    valuesMh2 = [120.0]
-    for mh2 in valuesMh2:
 
-        inputParameters["mh2"] = mh2
+# end main()
+
+from wallgo_example_base import WallGoExampleBase
+from wallgo_example_base import ExampleInputPoint
+
+
+class SingletStandardModelExample(WallGoExampleBase):
+
+    # @override
+    def initWallGoManager(self) -> "WallGo.WallGoManager":
+        # Guess of the wall thickness: 5/Tn
+        wallThicknessIni = 0.05
+
+        # Estimate of the mean free path of the particles in the plasma: 100/Tn
+        meanFreePath = 1.0
+
+        # Create WallGo control object
+        # The following 2 parameters are used to estimate the optimal value of dT used
+        # for the finite difference derivatives of the potential.
+        # Temperature scale (in GeV) over which the potential changes by O(1).
+        # A good value would be of order Tc-Tn.
+        temperatureScale = 10.0
+        # Field scale (in GeV) over which the potential changes by O(1). A good value
+        # would be similar to the field VEV.
+        # Can either be a single float, in which case all the fields have the
+        # same scale, or an array.
+        fieldScale = [10.0, 10.0]
+        return WallGoManager(
+            wallThicknessIni, meanFreePath, temperatureScale, fieldScale
+        )
+
+    # @override
+    def initCollisionModel(self) -> "WallGoCollision.PhysicsModel":
+        pass
+
+    # @override
+    def initWallGoModel(self) -> "WallGo.GenericModel":
+        return SingletSMZ2({})
+
+    # @override
+    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
+
+        output: list[ExampleInputPoint] = []
+        output.append(
+            ExampleInputPoint(
+                {
+                    "RGScale": 125.0,
+                    "v0": 246.0,
+                    "MW": 80.379,
+                    "MZ": 91.1876,
+                    "Mt": 173.0,
+                    "g3": 1.2279920495357861,
+                    "mh1": 125.0,
+                    "mh2": 120.0,
+                    "a2": 0.9,
+                    "b4": 1.0,
+                },
+                WallGo.PhaseInfo(
+                    temperature=100.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([0.0, 200.0]),
+                    phaseLocation2=WallGo.Fields([246.0, 0.0]),
+                ),
+            )
+        )
 
         """In addition to model parameters, WallGo needs info about the phases at
         nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
         Transition goes from phase1 to phase2.
         """
-        Tn = 100.0  # nucleation temperature
-        phaseInfo = WallGo.PhaseInfo(
-            temperature=Tn,
-            phaseLocation1=WallGo.Fields([0.0, 200.0]),
-            phaseLocation2=WallGo.Fields([246.0, 0.0]),
-        )
 
+<<<<<<< HEAD
         """Give the input to WallGo. It is NOT enough to change parameters
            directly in the GenericModel instance because
             1) WallGo needs the PhaseInfo 
@@ -777,11 +795,11 @@ def main() -> None:
         print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
 
     # end parameter-space loop
+=======
+        return output
+>>>>>>> 89dd4d4 (WIP refactor of models to make them use a common base interface)
 
 
-# end main()
-
-
-# Don't run the main function if imported to another file
 if __name__ == "__main__":
-    main()
+    example = SingletStandardModelExample()
+    example.runExample()
