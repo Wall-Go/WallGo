@@ -3,6 +3,7 @@ Defines the WallGoManager class which initializes the different object needed fo
 wall velocity calculation.
 """
 
+from typing import Type
 import numpy as np
 
 # WallGo imports
@@ -19,7 +20,7 @@ from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .Integrals import Integrals
 from .thermodynamics import Thermodynamics
-from .results import WallGoResults, WallGoInterpolationResults
+from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
 class WallGoManager:
@@ -175,7 +176,9 @@ class WallGoManager:
         print(f"Jouguet: {self.hydrodynamics.vJ}")
 
     def changeInputParameters(
-        self, inputParameters: dict[str, float], effectivePotential: EffectivePotential
+        self,
+        inputParameters: dict[str, float],
+        effectivePotential: Type[EffectivePotential],
     ) -> None:
         """
         Recomputes the model parameters when the user provides new inputparameters.
@@ -186,7 +189,9 @@ class WallGoManager:
         inputParameters : dict
             Parameters used to compute the model parameters.
         effectivePotential : EffectivePotential
-            EffectivePotential object.
+            Class that inherits from EffectivePotential
+            (not an object of EffectivePotential). A new object of this class will be
+            created and stored in self.model.effectivePotential.
         """
         self.model.modelParameters = self.model.calculateModelParameters(
             inputParameters
@@ -415,7 +420,7 @@ class WallGoManager:
         errTol = self.config.getfloat("EquationOfMotion", "errTol")
         maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
         pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
-        
+
         wallThicknessBounds = (
             self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
             self.config.getfloat("EquationOfMotion", "wallThicknessUpperBound"))
@@ -506,7 +511,7 @@ class WallGoManager:
     def solveWallDetonation(
         self,
         bIncludeOffEq: bool = True,
-        wallThicknessIni: float = None,
+        wallThicknessIni: float | None = None,
         onlySmallest: bool = True,
     ) -> list[WallGoResults]:
         """
@@ -517,8 +522,9 @@ class WallGoManager:
         ----------
         bIncludeOffEq : bool, optional
             If True, includes the out-of-equilibrium effects. The default is True.
-        wallThicknessIni : float, optional
-            Initial wall thickness. The default is None.
+        wallThicknessIni : float or None, optional
+            Initial wall thickness used by the solver. If None, uses the value 5/Tn.
+            The default is None.
         onlySmallest : bool, optional
             Whether or not to only look for one solution. If True, the solver will
             stop the calculation after finding the first root. If False, it will
@@ -536,16 +542,16 @@ class WallGoManager:
         """
         self.eom.includeOffEq = bIncludeOffEq
         rtol = self.config.getfloat("EquationOfMotion", "errTol")
-        nbrPointsMin = self.config.getfloat("EquationOfMotion", "nbrPointsMinDeton")
-        nbrPointsMax = self.config.getfloat("EquationOfMotion", "nbrPointsMaxDeton")
+        nbrPointsMin = self.config.getint("EquationOfMotion", "nbrPointsMinDeton")
+        nbrPointsMax = self.config.getint("EquationOfMotion", "nbrPointsMaxDeton")
         overshootProb = self.config.getfloat("EquationOfMotion", "overshootProbDeton")
         vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
         vmax = self.config.getfloat("EquationOfMotion", "vwMaxDeton")
-        
+
         if vmin >= vmax:
             raise WallGoError("vmax must be larger than vmin",
                               {'vmin': vmin, 'vmax': vmax})
-        
+
         return self.eom.findWallVelocityDetonation(
             vmin,
             vmax,
