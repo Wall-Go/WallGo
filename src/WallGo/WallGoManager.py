@@ -427,8 +427,8 @@ class WallGoManager:
         self,
         bIncludeOffEq: bool = True,
         wallThicknessIni: float = None,
-        dvMinInterpolation: float = 0.02,
-    ) -> WallGoResults:
+        onlySmallest: bool = True,
+    ) -> list[WallGoResults]:
         """
         Finds all the detonation solutions by computing the pressure on a grid
         and interpolating to find the roots.
@@ -439,22 +439,42 @@ class WallGoManager:
             If True, includes the out-of-equilibrium effects. The default is True.
         wallThicknessIni : float, optional
             Initial wall thickness. The default is None.
-        dvMinInterpolation : float, optional
-            Minimal spacing between each grid points. The default is 0.02.
+        onlySmallest : bool, optional
+            Whether or not to only look for one solution. If True, the solver will
+            stop the calculation after finding the first root. If False, it will
+            continue looking for solutions until it reaches the maximal velocity.
 
         Returns
         -------
-        WallGoInterpolationResults
-            Object containing the solutions and the pressures computed on the
-            velocity grid.
+        list[WallGoResults]
+            List containing the detonation solutions. If no solutions were found,
+            returns a wall velocity of 0  if the pressure is always positive, or 1 if
+            it is negative (runaway wall). If it is positive at vmin and negative at
+            vmax, the outcome is uncertain and would require a time-dependent analysis,
+            so it returns an empty list.
 
         """
         self.eom.includeOffEq = bIncludeOffEq
-        errTol = self.config.getfloat("EquationOfMotion", "errTol")
-
-        vmin = max(self.hydrodynamics.vJ + 1e-4, self.hydrodynamics.slowestDeton())
-        return self.eom.solveInterpolation(
-            vmin, 0.99, wallThicknessIni, rtol=errTol, dvMin=dvMinInterpolation
+        rtol = self.config.getfloat("EquationOfMotion", "errTol")
+        nbrPointsMin = self.config.getfloat("EquationOfMotion", "nbrPointsMinDeton")
+        nbrPointsMax = self.config.getfloat("EquationOfMotion", "nbrPointsMaxDeton")
+        overshootProb = self.config.getfloat("EquationOfMotion", "overshootProbDeton")
+        vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
+        vmax = self.config.getfloat("EquationOfMotion", "vwMaxDeton")
+        
+        if vmin >= vmax:
+            raise WallGoError("vmax must be larger than vmin",
+                              {'vmin': vmin, 'vmax': vmax})
+        
+        return self.eom.findWallVelocityDetonation(
+            vmin,
+            vmax,
+            wallThicknessIni,
+            nbrPointsMin,
+            nbrPointsMax,
+            overshootProb,
+            rtol,
+            onlySmallest
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
