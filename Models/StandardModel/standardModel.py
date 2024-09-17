@@ -452,16 +452,7 @@ def main() -> None:  # pylint: disable=R0915, R0914
     # automatic generation of collision integrals is disabled by default
     # set to "False" or comment if collision integrals already exist
     # set to "True" to invoke automatic collision integral generation
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "True")
-    # Directory name for collisions integrals defaults to "CollisionOutput/"
-    # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput_N11/")
-
-    # set matrix elements initial specs
-    WallGo.config.config.set("MatrixElements", "fileName", "MatrixElements.txt")
-    ## Instruct the collision manager to print out
-    # symbolic matrix elements as it parses them. Can be useful for debugging
-    WallGo.config.config.set("MatrixElements", "verbose", "True")
+    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
 
     """
     Register the model with WallGo. This needs to be done only once.
