@@ -535,7 +535,7 @@ def main() -> None:
         action="store_true",
     )
     argParser.add_argument(
-        "--recalculateMatrixElements",
+        "--regenerateMatrixElements",
         help="Forces full recalculation of the matrix element from DRalgo",
         action="store_true",
     )
@@ -623,10 +623,12 @@ def main() -> None:
     Without this flag we simply load pre-generated collision data files.
     """
 
-    if args.recalculateMatrixElements:
-        from WallGo import mathematicaHelpers 
-        matrixElementInputFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
-        mathematicaHelpers.calculateMatrixElements(matrixElementInputFile)
+    if args.regenerateMatrixElements:
+        from WallGo import mathematicaHelpers
+
+        matrixElementModelFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
+        mathematicaHelpers.generateMatrixElementsViaSubprocess(matrixElementModelFile)
+        # FIXME need to ensure that the pre-generated "default" matrix elements do not get overriden
 
     if args.recalculateCollisions:
 
