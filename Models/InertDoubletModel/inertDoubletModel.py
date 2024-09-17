@@ -307,7 +307,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex | np.ndarray:
+    ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
 
@@ -357,7 +357,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             )
         )
 
-        return potentialTotal  # TODO: fix return type inheritance error
+        return np.array(potentialTotal)
 
     def jCW(
         self,
@@ -365,7 +365,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         degreesOfFreedom: int | np.ndarray,
         c: float | np.ndarray,
         rgScale: float | np.ndarray,
-    ) -> float | np.ndarray:  # TODO: fix return type inheritance error
+    ) -> float | np.ndarray:
         """
         One-loop Coleman-Weinberg contribution to the effective potential,
         as implemented in Jiang, Peng Huang, and Wang.
@@ -395,7 +395,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
 
-        return degreesOfFreedom * (
+        return degreesOfFreedom * np.array(
             massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
             + 2 * massSq * rgScale**2
         )
