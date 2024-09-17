@@ -440,7 +440,7 @@ class WallGoManager:
         wallThicknessIni : float, optional
             Initial wall thickness. The default is None.
         onlySmallest : bool, optional
-            Weither or not to only look for one solution. If True, the solver will
+            Whether or not to only look for one solution. If True, the solver will
             stop the calculation after finding the first root. If False, it will
             continue looking for solutions until it reaches the maximal velocity.
 
