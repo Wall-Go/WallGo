@@ -198,16 +198,19 @@ def findWallVelocity(i, verbose=False, detonation=False):
             print(f"=== Begin EOM with {bIncludeOffEq=} ===")
             
             results = WallGoResults()
+            resultsList = []
             if not detonation:
                 results = manager.solveWall(bIncludeOffEq, wallThicknessIni)
             else:
-                resultsList = manager.solveWallDetonation(wallThicknessIni=wallThicknessIni)
+                resultsList = manager.solveWallDetonation(wallThicknessIni=wallThicknessIni, onlySmallest=False)
                 if len(resultsList) > 0:
                     results = resultsList[0]
                 else:
                     results.setWallVelocities(-2, 0, 0)
                     results.setMessage(True, 'Uncertain Outcome')
             wallVelocity = results.wallVelocity
+            if len(resultsList) > 1:
+                wallVelocity = [l.wallVelocity for l in resultsList]
             
             if not results.success:
                 raise WallGo.WallGoError(results.message)
@@ -215,19 +218,20 @@ def findWallVelocity(i, verbose=False, detonation=False):
             print(f"WallGo: {wallVelocity=}")
             print("Message:", results.message)
             
-            if verbose and 0 < wallVelocity < 1:
-                print(f"{results.temperaturePlus=}, {results.temperatureMinus=}")
-                widths = results.wallWidths
-                offsets = results.wallOffsets
-                print(f"{widths=} {offsets=}")
-                plt.plot(manager.grid.chiValues, Tn**2*results.Deltas.Delta00.coefficients[0])
-                plt.plot(manager.grid.chiValues, results.Deltas.Delta20.coefficients[0])
-                plt.plot(manager.grid.chiValues, results.Deltas.Delta02.coefficients[0])
-                plt.plot(manager.grid.chiValues, results.Deltas.Delta11.coefficients[0])
-                plt.legend((r'$\Delta_{00}T_n^2$',r'$\Delta_{20}$',r'$\Delta_{02}$',r'$\Delta_{11}$'), fontsize=12)
-                plt.xlabel(r'$\chi$')
-                plt.grid()
-                plt.show()
+            if not isinstance(wallVelocity, list):
+                if verbose and 0 < wallVelocity < 1:
+                    print(f"{results.temperaturePlus=}, {results.temperatureMinus=}")
+                    widths = results.wallWidths
+                    offsets = results.wallOffsets
+                    print(f"{widths=} {offsets=}")
+                    plt.plot(manager.grid.chiValues, Tn**2*results.Deltas.Delta00.coefficients[0])
+                    plt.plot(manager.grid.chiValues, results.Deltas.Delta20.coefficients[0])
+                    plt.plot(manager.grid.chiValues, results.Deltas.Delta02.coefficients[0])
+                    plt.plot(manager.grid.chiValues, results.Deltas.Delta11.coefficients[0])
+                    plt.legend((r'$\Delta_{00}T_n^2$',r'$\Delta_{20}$',r'$\Delta_{02}$',r'$\Delta_{11}$'), fontsize=12)
+                    plt.xlabel(r'$\chi$')
+                    plt.grid()
+                    plt.show()
             
             # sys.stdout = sys.__stdout__
             
@@ -284,7 +288,12 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False, threads=1, iL
                         scanResults[i]['vwLTE'] = vwLTE
                         scanResults[i]['error'] = error
                     else:
-                        scanResults[i]['vwDeton'] = vwOut
+                        if isinstance(vwOut, list):
+                            scanResults[i]['vwDeton'] = vwOut[0]
+                            scanResults[i]['vwDetonList'] = vwOut
+                        else:
+                            scanResults[i]['vwDeton'] = vwOut
+                            scanResults[i]['vwDetonList'] = [vwOut]
                         scanResults[i]['errorDeton'] = error
                     
                     np.save(pathlib.Path(__file__).parent.resolve() / 'scanResultsTruncated.npy', scanResults)
@@ -325,11 +334,11 @@ def scanXSM(start=0, end=None, onlyErrors=False, detonation=False, threads=1, iL
 if __name__ == '__main__':
     iList = []
     for i in range(len(scanResults)):
-        if scanResults[i]['vwDeton'] == 0:
+        if 0 < scanResults[i]['vwDeton'] < 1:
             iList.append(i)
             # print(i)
     print(len(iList))
-    scanXSM(detonation=True, threads=16, iList=[4,31]+iList)
+    scanXSM(detonation=True, threads=16, iList=[6,13,28]+iList)
     
     
     
