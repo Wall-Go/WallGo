@@ -50,9 +50,7 @@ class NSinglets(GenericModel):
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"] ** 2 * np.transpose(
-                [fields.GetField(0), 0 * fields.GetField(1)]
-            )
+            return self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.GetField(i) for i in range(self.fieldCount)])
 
         def topMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
