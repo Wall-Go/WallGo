@@ -506,15 +506,9 @@ class WallGoManager:
     def solveWallDetonation(
         self,
         bIncludeOffEq: bool = True,
-<<<<<<< HEAD:src/WallGo/wallGoManager.py
-        wallThicknessIni: float | None = None,
-        dvMinInterpolation: float = 0.02,
-    ) -> WallGoInterpolationResults:
-=======
         wallThicknessIni: float = None,
         onlySmallest: bool = True,
     ) -> list[WallGoResults]:
->>>>>>> main:src/WallGo/WallGoManager.py
         """
         Finds all the detonation solutions by computing the pressure on a grid
         and interpolating to find the roots.
