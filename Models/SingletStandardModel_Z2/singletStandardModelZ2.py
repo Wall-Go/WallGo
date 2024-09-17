@@ -460,7 +460,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             + 3 * self.modelParameters["b4"] * x**2
         )
         mass01 = self.modelParameters["a2"] * v * x
-        thingUnderSqrt = mass00**2 + mass11**2 - 2 * mass00 * mass11 + 4 * mass01**2
+        thingUnderSqrt = (mass00 - mass11)**2 + 4 * mass01**2
 
         msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
         msqEig2 = 0.5 * (mass00 + mass11 + np.sqrt(thingUnderSqrt))
@@ -772,9 +772,9 @@ def main() -> None:
         print(f"wallOffsets:       {results.wallOffsets}")
 
         print("\n=== Search for detonation solution ===")
-        wallGoInterpolationResults = manager.solveWallDetonation()
+        wallGoDetonationResults = manager.solveWallDetonation(onlySmallest=True)[0]
         print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
+        print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
 
     # end parameter-space loop
 

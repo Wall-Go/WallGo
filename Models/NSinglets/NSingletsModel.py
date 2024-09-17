@@ -323,7 +323,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
 def main() -> None:
     #########################################
-    ## Example with 1 Higss and 2 singlets ##
+    ## Example with 1 Higgs and 2 singlets ##
     #########################################
 
     scriptLocation = pathlib.Path(__file__).parent.resolve()
