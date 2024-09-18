@@ -1,14 +1,24 @@
-import numpy as np
-import numpy.typing as npt
+"""
+Class that can be use to evaluate and interpolate functions.
+"""
+
 from abc import ABC, abstractmethod
-import scipy.interpolate
 from enum import Enum, auto
 from typing import Callable, Tuple
+import numpy as np
+from scipy.interpolate import CubicSpline
 
 from . import helpers
 
-## Enums for extrapolation. Default is NONE, no extrapolation at all. 
+inputType = list[float] | np.ndarray
+outputType = list[float | np.ndarray] | np.ndarray
+
+
 class EExtrapolationType(Enum):
+    """
+    Enums for extrapolation. Default is NONE, no extrapolation at all.
+    """
+
     ## Throw and error
     ERROR = auto()
     ## Re-evaluate
@@ -20,16 +30,16 @@ class EExtrapolationType(Enum):
 
 
 class InterpolatableFunction(ABC):
-    """ 
+    """
     This is a totally-not-overengineered base class for defining optimized functions
     f(x) that, in addition to normal evaluation, support the following:
         - Producing and using interpolation tables in favor of direct evaluation, where
           applicable.
         - Automatic adaptive updating of the interpolation table.
-        - Reading interpolation tables from a file. 
+        - Reading interpolation tables from a file.
         - Producing said file for some range of inputs.
         - Validating that what was read from a file makes sense, ie. matches the result
-          given by __evaluate().
+          given by _evaluate().
 
     WallGo uses this class for the thermal Jb, Jf integrals and for evaluating the free
     energy as function of the temperature.
@@ -41,7 +51,7 @@ class InterpolatableFunction(ABC):
     user's responsibility to ensure that the implementation of _functionImplementation
     is compatible with this behavior. The logic is such that if x is an array and idx is
     a index-tuple for an element in x, then fx[idx] is the value of f(x) at x[idx]. Note
-    that the shapes of fx and x will NOT match IF f(x) is vector valued. 
+    that the shapes of fx and x will NOT match IF f(x) is vector valued.
 
     Special care is needed if the function evaluation fails for some input x, eg. if the
     function is evaluated only on some interval. In this case it is the user's
@@ -52,39 +62,38 @@ class InterpolatableFunction(ABC):
 
     Limitations.
      - If the initial interpolation is bad, then it will remain bad: no functionality to
-       improve existing interpolations, only increase of the range is possible. 
+       improve existing interpolations, only increase of the range is possible.
      - Currently makes sense only for functions of one variable. However, you CAN call
        this with numpy arrays of any shape (see above).
      - Does NOT support piecewise functions as interpolations would break for those.
     """
 
-
     def __init__(
-            self,
-            bUseAdaptiveInterpolation: bool=True,
-            initialInterpolationPointCount: int=1000,
-            returnValueCount=1,
-            ) -> None:
-        """ 
+        self,
+        bUseAdaptiveInterpolation: bool = True,
+        initialInterpolationPointCount: int = 1000,
+        returnValueCount: int = 1,
+    ) -> None:
+        """
         Optional argument returnValueCount should be set by the user if using
         list-valued functions.
         """
         ## Vector-like functions can return many values from one input, user needs to
         ## specify this when constructing the object
         assert returnValueCount >= 1
-        self.__RETURN_VALUE_COUNT = returnValueCount
-        
-        self.__interpolatedFunction: Callable = None
+        self._RETURN_VALUE_COUNT = returnValueCount  # pylint: disable=invalid-name
+
+        self._interpolatedFunction: CubicSpline
 
         ## Will hold list of interpolated derivatives, 1st and 2nd derivatives only
-        self.__interpolatedDerivatives: list[Callable] = None
+        self._interpolatedDerivatives: list[Callable]
 
         ## These control out-of-bounds extrapolations.
         ## See toggleExtrapolation() function below.
         self.extrapolationTypeLower = EExtrapolationType.NONE
         self.extrapolationTypeUpper = EExtrapolationType.NONE
 
-        if (bUseAdaptiveInterpolation): 
+        if bUseAdaptiveInterpolation:
             self.enableAdaptiveInterpolation()
         else:
             self.disableAdaptiveInterpolation()
@@ -95,66 +104,67 @@ class InterpolatableFunction(ABC):
 
         ## keep list of values where the function had to be evaluated without
         ## interpolation, allows smart updating of ranges
-        self.__directEvaluateCount = 0
-        self.__directlyEvaluatedAt = []
+        self._directEvaluateCount = 0
+        self._directlyEvaluatedAt: inputType = []
 
         ## Range for which we have precalculated data ("x")
-        self.__interpolationPoints = []
-        ## f(x) for x in self.__interpolationPoints
-        self.__interpolationValues = []
+        self._interpolationPoints: inputType = []
+        ## f(x) for x in self._interpolationPoints
+        self._interpolationValues: outputType = []
 
         """This specifies how many points are calculated the first time an interpolation
         table is constructed. If the interpolation range is changed later
         (adaptive interpolation), more points will be added outside the initial table.
-        Point spacing is NOT guaranteed to be uniform in adaptive updating."""  
+        Point spacing is NOT guaranteed to be uniform in adaptive updating."""
         self._initialInterpolationPointCount = initialInterpolationPointCount
 
+        self._rangeMin: float
+        self._rangeMax: float
+
     @abstractmethod
-    def _functionImplementation(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def _functionImplementation(self, x: inputType | float) -> outputType:
         """
         Override this with the function return value.
-        Do not call this directly, use the __call__ functionality instead. 
-        If the function value is invalid for whatever reason, you should return np.nan. 
+        Do not call this directly, use the __call__ functionality instead.
+        If the function value is invalid for whatever reason, you should return np.nan.
         This will guarantee that the invalid values are not included in interpolations
-        
-        The return value can be a scalar, or a list if the function is vector valued. 
+
+        The return value can be a scalar, or a list if the function is vector valued.
         Can also be a numpy array, in which case the function should be applied
         element-wise. The number of elements returned needs to match
-        self.__RETURN_VALUE_COUNT; for numpy array input, list length
-        self.__RETURN_VALUE_COUNT for each x value. A list containing np.nan anywhere in
+        self._RETURN_VALUE_COUNT; for numpy array input, list length
+        self._RETURN_VALUE_COUNT for each x value. A list containing np.nan anywhere in
         the list is interpreted as a failed evaluation, and this input x is not included
         in interpolation
         """
-        pass
 
     """ Non abstracts """
 
     def interpolationRangeMin(self) -> float:
         """Get lower limit of our current interpolation table."""
-        return self.__rangeMin
-    
+        return self._rangeMin
+
     def interpolationRangeMax(self) -> float:
         """Get upper limit of our current interpolation table."""
-        return self.__rangeMax
-    
-    def numPoints(self):
-        """How many input points in our interpolation table."""
-        return len(self.__interpolationPoints)
+        return self._rangeMax
 
+    def numPoints(self) -> int:
+        """How many input points in our interpolation table."""
+        return len(self._interpolationPoints)
 
     def hasInterpolation(self) -> bool:
-        """Returns true if we have an interpolation table.
-        """
-        return (self.__interpolatedFunction != None)
+        """Returns true if we have an interpolation table."""
+        return hasattr(self, "_interpolatedFunction")
+        # return self._interpolatedFunction is not None
 
     def setExtrapolationType(
-            self,
-            extrapolationTypeLower: EExtrapolationType,
-            extrapolationTypeUpper: EExtrapolationType,
-            ) -> None:
+        self,
+        extrapolationTypeLower: EExtrapolationType,
+        extrapolationTypeUpper: EExtrapolationType,
+    ) -> None:
         """
         Changes extrapolation behavior, default is NONE. See the enum class
-        EExtrapolationType. 
+        EExtrapolationType.
         NOTE: This will effectively prevent adaptive updates to the interpolation table.
         NOTE 2: Calling this function will force a rebuild of our interpolation table.
         """
@@ -163,30 +173,28 @@ class InterpolatableFunction(ABC):
 
         ## CubicSplines build the extrapolations when initialized,
         ## so reconstruct the interpolation here
-        if self.__interpolatedFunction:
-            self.newInterpolationTableFromValues(self.__interpolationPoints,
-                                                 self.__interpolationValues)
-
+        if self.hasInterpolation():
+            self.newInterpolationTableFromValues(
+                self._interpolationPoints, self._interpolationValues
+            )
 
     def enableAdaptiveInterpolation(self) -> None:
-        """ Enables adaptive interpolation functionality. 
+        """Enables adaptive interpolation functionality.
         Will clear internal work arrays."""
-        self.__bUseAdaptiveInterpolation = True
-        self.__directEvaluateCount = 0
-        self.__directlyEvaluatedAt: list[float] = []
+        self._bUseAdaptiveInterpolation = True
+        self._directEvaluateCount = 0
+        self._directlyEvaluatedAt = []
 
     def disableAdaptiveInterpolation(self) -> None:
-        """ Disables adaptive interpolation functionality.
-        """
-        self.__bUseAdaptiveInterpolation = False
-
+        """Disables adaptive interpolation functionality."""
+        self._bUseAdaptiveInterpolation = False
 
     def newInterpolationTable(
-            self,
-            xMin: float,
-            xMax: float,
-            numberOfPoints: int,
-            ) -> None:
+        self,
+        xMin: float,
+        xMax: float,
+        numberOfPoints: int,
+    ) -> None:
         """Creates a new interpolation table over given range.
         This will purge any existing interpolation information.
         """
@@ -195,26 +203,41 @@ class InterpolatableFunction(ABC):
 
         fx = self._functionImplementation(xValues)
 
-        self.__interpolate(xValues, fx)
-
+        self._interpolate(xValues, fx)
 
     def newInterpolationTableFromValues(
-            self,
-            x: npt.ArrayLike,
-            fx: npt.ArrayLike,
-            ) -> None:
+        self,
+        x: inputType,
+        fx: outputType,
+    ) -> None:
         """
         Like initializeInterpolationTable but takes in precomputed function values 'fx'
         """
-        self.__interpolate(x, fx)
+        self._interpolate(x, fx)
 
-    ## Add x, f(x) pairs to our pending interpolation table update 
-    def scheduleForInterpolation(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
+    ## Add x, f(x) pairs to our pending interpolation table update
+    def scheduleForInterpolation(self, x: inputType, fx: outputType) -> None:
+        """
+
+
+        Parameters
+        ----------
+        x : npt.ArrayLike
+            DESCRIPTION.
+        fx : npt.ArrayLike
+            DESCRIPTION.
+
+        Returns
+        -------
+        None
+            DESCRIPTION.
+
+        """
 
         x = np.asanyarray(x)
         fx = np.asanyarray(fx)
 
-        if (np.ndim(x) == 0):
+        if np.ndim(x) == 0:
             # Just got 1 input x
             bValidResult = np.all(np.isfinite(fx))
 
@@ -225,15 +248,19 @@ class InterpolatableFunction(ABC):
             ## Got many input x, keep only x values where f(x) is finite.
             ## For vector-valued f(x), keep x where ALL return values are finite
 
-            if (self.__RETURN_VALUE_COUNT > 1):
-                assert fx.shape == x.shape + (self.__RETURN_VALUE_COUNT, ), "" \
-                    "Incompatable array shapes in scheduleForInterpolation(), "\
+            if self._RETURN_VALUE_COUNT > 1:
+                assert fx.shape == x.shape + (self._RETURN_VALUE_COUNT,), (
+                    ""
+                    "Incompatable array shapes in scheduleForInterpolation(), "
                     "should not happen!"
+                )
                 validIndices = np.all(np.isfinite(fx), axis=-1)
             else:
-                assert fx.shape == x.shape, "" \
-                    "Incompatable array shapes in scheduleForInterpolation(), "\
+                assert fx.shape == x.shape, (
+                    ""
+                    "Incompatable array shapes in scheduleForInterpolation(), "
                     "should not happen!"
+                )
                 validIndices = np.all(np.isfinite(fx))
 
             xValid = x[validIndices]
@@ -242,26 +269,24 @@ class InterpolatableFunction(ABC):
             ## which is fine here since we're just storing x values for later
             xValid = np.ravel(xValid)
 
-        # add x to our internal work list 
-        if (np.size(xValid) > 0):
+        # add x to our internal work list
+        if np.size(xValid) > 0:
 
             xValid = np.unique(xValid)
 
-            self.__directEvaluateCount += len(xValid)
-            self.__directlyEvaluatedAt = np.concatenate((self.__directlyEvaluatedAt, 
-                                                         xValid))
-            
-            if (self.__directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate):
-                self.__adaptiveInterpolationUpdate()
+            self._directEvaluateCount += len(xValid)
+            self._directlyEvaluatedAt = np.concatenate(
+                (self._directlyEvaluatedAt, xValid)
+            )
 
+            if self._directEvaluateCount >= self._evaluationsUntilAdaptiveUpdate:
+                self._adaptiveInterpolationUpdate()
 
-    def evaluateInterpolation(self, x: npt.ArrayLike) -> npt.ArrayLike:
-        """Evaluates our interpolated function at input x
-        """
-        return self.__interpolatedFunction(x)
+    def evaluateInterpolation(self, x: inputType | float) -> np.ndarray:
+        """Evaluates our interpolated function at input x"""
+        return np.asarray(self._interpolatedFunction(x))
 
-
-    def __evaluateOutOfBounds(self, x: npt.ArrayLike) -> npt.ArrayLike:
+    def _evaluateOutOfBounds(self, x: inputType) -> outputType:
         """
         This gets called when the function is called outside the range of its
         interpolation table. We either extrapolate (different extrapolations are
@@ -271,86 +296,103 @@ class InterpolatableFunction(ABC):
         x = np.asanyarray(x)
 
         bErrorExtrapolation = (
-            self.extrapolationTypeLower == EExtrapolationType.ERROR and
-            self.extrapolationTypeUpper == EExtrapolationType.ERROR)
+            self.extrapolationTypeLower == EExtrapolationType.ERROR
+            and self.extrapolationTypeUpper == EExtrapolationType.ERROR
+        )
         bNoExtrapolation = (
-            self.extrapolationTypeLower == EExtrapolationType.NONE and
-            self.extrapolationTypeUpper == EExtrapolationType.NONE)
+            self.extrapolationTypeLower == EExtrapolationType.NONE
+            and self.extrapolationTypeUpper == EExtrapolationType.NONE
+        )
 
         if bErrorExtrapolation:
             raise ValueError(
-                f"Out of bounds: {x} outside [{self.__rangeMin}, {self.__rangeMax}]")
-        elif not self.__interpolatedFunction or bNoExtrapolation:
-            res = self.__evaluateDirectly(x)
+                f"Out of bounds: {x} outside [{self._rangeMin}, {self._rangeMax}]"
+            )
+        if not self.hasInterpolation() or bNoExtrapolation:
+            res = self._evaluateDirectly(x)
         else:
             ## Now we have something to extrapolate
 
-            xLower = (x <= self.__rangeMin)
-            xUpper = (x >= self.__rangeMax)
+            xLower = x <= self._rangeMin
+            xUpper = x >= self._rangeMax
             res = np.empty_like(x)
 
             ## Lower range
             match self.extrapolationTypeLower:
                 case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} < {self.__rangeMin}")
+                    raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
                 case EExtrapolationType.NONE:
-                    res[xLower] = self.__evaluateDirectly(x[xLower])
+                    res[xLower] = self._evaluateDirectly(x[xLower])
                 case EExtrapolationType.CONSTANT:
-                    res[xLower] = self.evaluateInterpolation(self.__rangeMin)
+                    res[xLower] = self.evaluateInterpolation(self._rangeMin)
                 case EExtrapolationType.FUNCTION:
                     res[xLower] = self.evaluateInterpolation(x[xLower])
 
             ## Upper range
             match self.extrapolationTypeUpper:
                 case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} > {self.__rangeMax}")
+                    raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
                 case EExtrapolationType.NONE:
-                    res[xUpper] = self.__evaluateDirectly(x[xUpper])
+                    res[xUpper] = self._evaluateDirectly(x[xUpper])
                 case EExtrapolationType.CONSTANT:
-                    res[xUpper] = self.evaluateInterpolation(self.__rangeMax)
+                    res[xUpper] = self.evaluateInterpolation(self._rangeMax)
                 case EExtrapolationType.FUNCTION:
                     res[xUpper] = self.evaluateInterpolation(x[xUpper])
 
         return res
-    
 
-    def __call__(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> npt.ArrayLike:
+    def __call__(self, x: inputType, bUseInterpolatedValues: bool = True) -> outputType:
         """Just calls evaluate()"""
         return self.evaluate(x, bUseInterpolatedValues)
-    
 
-    def evaluate(self, x: npt.ArrayLike, bUseInterpolatedValues=True) -> npt.ArrayLike:
-        """"""
+    def evaluate(self, x: inputType, bUseInterpolatedValues: bool = True) -> outputType:
+        """
+
+
+        Parameters
+        ----------
+        x : npt.ArrayLike
+            DESCRIPTION.
+        bUseInterpolatedValues : TYPE, optional
+            DESCRIPTION. The default is True.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
 
         x = np.asanyarray(x)
 
-        if (not bUseInterpolatedValues or not self.hasInterpolation()):
-            return self.__evaluateDirectly(x)
+        if not bUseInterpolatedValues or not self.hasInterpolation():
+            return self._evaluateDirectly(x)
 
         # Use interpolated values whenever possible
-        canInterpolateCondition, fxShape = self.__findInterpolatablePoints(x)
+        canInterpolateCondition, fxShape = self._findInterpolatablePoints(x)
 
-        needsEvaluationCondition = ~canInterpolateCondition 
+        needsEvaluationCondition = ~canInterpolateCondition
 
-        xInterpolateRegion = x[ canInterpolateCondition ] 
-        xEvaluateRegion = x[ needsEvaluationCondition ]
+        xInterpolateRegion = x[canInterpolateCondition]
+        xEvaluateRegion = x[needsEvaluationCondition]
 
         results = np.empty(fxShape)
         results[canInterpolateCondition] = self.evaluateInterpolation(
-            xInterpolateRegion)
+            xInterpolateRegion
+        )
 
-        if (xEvaluateRegion.size > 0):
-            results[needsEvaluationCondition] = self.__evaluateOutOfBounds(
-                xEvaluateRegion)
-            
+        if xEvaluateRegion.size > 0:
+            results[needsEvaluationCondition] = self._evaluateOutOfBounds(
+                xEvaluateRegion
+            )
+
         return results
 
-
-    def __evaluateDirectly(
-            self,
-            x: npt.ArrayLike,
-            bScheduleForInterpolation=True,
-            ) -> npt.ArrayLike: 
+    def _evaluateDirectly(
+        self,
+        x: inputType,
+        bScheduleForInterpolation: bool = True,
+    ) -> outputType:
         """
         Evaluate the function directly based on _functionImplementation, instead of
         using interpolations. This also accumulates data for the adaptive interpolation
@@ -359,20 +401,19 @@ class InterpolatableFunction(ABC):
         """
         fx = self._functionImplementation(x)
 
-        if (self.__bUseAdaptiveInterpolation and bScheduleForInterpolation):
+        if self._bUseAdaptiveInterpolation and bScheduleForInterpolation:
             self.scheduleForInterpolation(x, fx)
 
-        return fx 
-    
+        return fx
 
     def derivative(
-            self,
-            x: npt.ArrayLike,
-            order: int = 1,
-            bUseInterpolation=True,
-            epsilon=1e-16,
-            scale=1.0,
-            ) -> npt.ArrayLike:
+        self,
+        x: inputType,
+        order: int = 1,
+        bUseInterpolation: bool = True,
+        epsilon: float = 1e-16,
+        scale: float = 1.0,
+    ) -> outputType:
         """
         Takes derivative of the function at points x. If bUseInterpolation=True, will
         compute derivatives from the interpolated function (if it exists). nth order
@@ -381,94 +422,101 @@ class InterpolatableFunction(ABC):
         helpers.derivative() routine.
         """
         x = np.asanyarray(x)
-        if (not bUseInterpolation or not self.hasInterpolation() or order > 2):
-            return helpers.derivative(self.__evaluateDirectly, x, n=order)
-
+        if not bUseInterpolation or not self.hasInterpolation() or order > 2:
+            return helpers.derivative(self._evaluateDirectly, x, n=order)
 
         # Use interpolated values whenever possible
-        canInterpolateCondition, fxShape = self.__findInterpolatablePoints(x)
-        needsEvaluationCondition = ~canInterpolateCondition 
+        canInterpolateCondition, fxShape = self._findInterpolatablePoints(x)
+        needsEvaluationCondition = ~canInterpolateCondition
 
         xEvaluateRegion = x[needsEvaluationCondition]
 
         results = np.empty(fxShape)
-        results[canInterpolateCondition] = self.__interpolatedDerivatives[order-1](
-            x[canInterpolateCondition])
+        results[canInterpolateCondition] = self._interpolatedDerivatives[order - 1](
+            x[canInterpolateCondition]
+        )
 
         ## Outside the interpolation region use whatever extrapolation
         ## type the function uses
-        if (xEvaluateRegion.size > 0):
+        if xEvaluateRegion.size > 0:
             results[needsEvaluationCondition] = helpers.derivative(
-                self.__evaluateOutOfBounds, x, n=order, epsilon=epsilon, scale=scale)
-            
+                self._evaluateOutOfBounds, x, n=order, epsilon=epsilon, scale=scale
+            )
+
         return results
 
-        
-
-
-    def __findInterpolatablePoints(
-            self,
-            x: npt.ArrayLike,
-            ) -> Tuple[npt.ArrayLike, Tuple]:
+    def _findInterpolatablePoints(
+        self,
+        x: np.ndarray,
+    ) -> Tuple[np.ndarray, Tuple]:
         """
         Finds x values where interpolation can be used. Return tuple is:
         canInterpolateCondition, fxShape where the condition is a numpy bool array and
-        fxShape is the resulting shape of f(x). 
+        fxShape is the resulting shape of f(x).
         """
 
-        canInterpolateCondition = (x <= self.__rangeMax) & (x >= self.__rangeMin)
-        
+        canInterpolateCondition = (x <= self._rangeMax) & (x >= self._rangeMin)
+
         """If x is N-dimensional array and idx is a tuple index for this array,
         we want to return fx so that fx[idx] is the result of function evaluation at
         x[idx]. But if f(x) is vector-valued then necessarily fx shape will not match x
         shape. So figure out the shape here. 
         """
-        if (self.__RETURN_VALUE_COUNT > 1):
-            fxShape = x.shape + (self.__RETURN_VALUE_COUNT, )
+        if self._RETURN_VALUE_COUNT > 1:
+            fxShape = x.shape + (self._RETURN_VALUE_COUNT,)
         else:
             fxShape = x.shape
 
         return canInterpolateCondition, fxShape
 
-    def __interpolate(self, x: npt.ArrayLike, fx: npt.ArrayLike) -> None:
+    def _interpolate(
+        self,
+        x: inputType,
+        fx: outputType,
+    ) -> None:
         """Does the actual interpolation and sets some internal values.
         Input x needs to be 1D, and input fx needs to be at most 2D.
         """
 
         x = np.asanyarray(x)
         fx = np.asanyarray(fx)
-        assert x.ndim == 1 and fx.ndim <= 2, "Shape error in __interpolate(), "\
-                                             "this should not happen!"
+        assert x.ndim == 1 and fx.ndim <= 2, (
+            "Shape error in _interpolate(), " "this should not happen!"
+        )
 
         ## Can't specify different extrapolation methods for x > xmax, x < xmin in
         ## CubicSpline! This logic is handled manually in __call__()
-        bShouldExtrapolate = (
-            (self.extrapolationTypeLower == EExtrapolationType.FUNCTION) or
-            (self.extrapolationTypeUpper == EExtrapolationType.FUNCTION))
+        bShouldExtrapolate = EExtrapolationType.FUNCTION in (
+            self.extrapolationTypeLower,
+            self.extrapolationTypeUpper,
+        )
 
         ## Explicitly drop non-numerics
-        xFiltered, fxFiltered = self.__dropBadPoints(x, fx)
-        
-        ## This works even if f(x) is vector valued
-        self.__interpolatedFunction = scipy.interpolate.CubicSpline(
-            xFiltered,fxFiltered, extrapolate=bShouldExtrapolate, axis=0)
+        xFiltered, fxFiltered = self._dropBadPoints(x, fx)
 
-        self.__rangeMin = np.min(xFiltered)
-        self.__rangeMax = np.max(xFiltered)
-        self.__interpolationPoints = xFiltered
-        self.__interpolationValues = fxFiltered
+        ## This works even if f(x) is vector valued
+        self._interpolatedFunction = CubicSpline(
+            xFiltered, fxFiltered, extrapolate=bShouldExtrapolate, axis=0
+        )
+
+        self._rangeMin = np.min(xFiltered)
+        self._rangeMax = np.max(xFiltered)
+        self._interpolationPoints = xFiltered
+        self._interpolationValues = fxFiltered
 
         """Store a cubic spline for the 1st and 2nd derivatives into a list.
         We do not attempt to spline the higher derivatives as they are not 
         guaranteed to be continuous."""
-        self.__interpolatedDerivatives = [self.__interpolatedFunction.derivative(1), 
-                                          self.__interpolatedFunction.derivative(2)]
+        self._interpolatedDerivatives = [
+            self._interpolatedFunction.derivative(1),
+            self._interpolatedFunction.derivative(2),
+        ]
 
     @staticmethod
-    def __dropBadPoints(
-            x: npt.ArrayLike,
-            fx: npt.ArrayLike,
-            ) -> tuple[npt.ArrayLike, npt.ArrayLike]:
+    def _dropBadPoints(
+        x: np.ndarray,
+        fx: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Removes non-numerical (x, fx) pairs. For 2D fx the check is applied row-wise.
         Input x needs to be 1D, and input fx needs to be at most 2D.
@@ -480,99 +528,97 @@ class InterpolatableFunction(ABC):
         else:
             ## fx is 1D array
             validIndices = np.all(np.isfinite(fx))
-            fxValid = np.ravel( fx[validIndices] )
+            fxValid = np.ravel(fx[validIndices])
 
-        xValid = np.ravel( x[validIndices] )
+        xValid = np.ravel(x[validIndices])
 
         return xValid, fxValid
 
-        
-    def __adaptiveInterpolationUpdate(self) -> None:
+    def _adaptiveInterpolationUpdate(self) -> None:
         """
         Handles interpolation table updates for adaptive interpolation.
         """
 
         ## Where did the new evaluations happen
-        evaluatedPointMin = np.min(self.__directlyEvaluatedAt)
-        evaluatedPointMax = np.max(self.__directlyEvaluatedAt)
+        evaluatedPointMin = np.min(self._directlyEvaluatedAt)
+        evaluatedPointMax = np.max(self._directlyEvaluatedAt)
 
         # Reset work variables (doing this here already to avoid spaghetti nesting)
-        self.__directEvaluateCount = 0
-        self.__directlyEvaluatedAt = []
+        self._directEvaluateCount = 0
+        self._directlyEvaluatedAt = []
 
         if self.hasInterpolation():
-            appendPointCount = 0.2*self._initialInterpolationPointCount
+            appendPointCount = int(0.2 * self._initialInterpolationPointCount)
         else:
-            appendPointCount = self._initialInterpolationPointCount / 2
+            appendPointCount = int(self._initialInterpolationPointCount / 2)
 
         self.extendInterpolationTable(
-            evaluatedPointMin, evaluatedPointMax, appendPointCount, appendPointCount)
-            
-    
+            evaluatedPointMin, evaluatedPointMax, appendPointCount, appendPointCount
+        )
+
     def extendInterpolationTable(
-            self,
-            newMin: float,
-            newMax: float,
-            pointsMin: int,
-            pointsMax: int,
-            ) -> None:
+        self,
+        newMin: float,
+        newMax: float,
+        pointsMin: int,
+        pointsMax: int,
+    ) -> None:
         """
-        Extend our interpolation table. 
+        Extend our interpolation table.
         NB: This will reset internally accumulated data of adaptive interpolation.
         """
         if not self.hasInterpolation():
             newPoints = int(pointsMin + pointsMax)
-            print(f"Warning: {self.__class__.__name__}.extendInterpolationRange() "\
-                  "called without existing interpolation. "\
-                  f"Creating new table in range [{newMin}, {newMax}] with {newPoints} "\
-                  "points")
+            print(
+                f"Warning: {self.__class__.__name__}.extendInterpolationRange() "
+                "called without existing interpolation. "
+                f"Creating new table in range [{newMin}, {newMax}] with {newPoints} "
+                "points"
+            )
             self.newInterpolationTable(newMin, newMax, newPoints)
             return
-        
+
         # what to append to lower end
-        if (newMin < self.__rangeMin and pointsMin > 0):
-            
-            ## Point spacing to use at new lower end 
-            spacing = np.abs(self.__rangeMin - newMin) / pointsMin
+        if newMin < self._rangeMin and pointsMin > 0:
+
+            ## Point spacing to use at new lower end
+            spacing = np.abs(self._rangeMin - newMin) / pointsMin
             # arange stops one spacing before the max value, which is what we want
-            appendPointsMin = np.arange(newMin, self.__rangeMin, spacing)
+            appendPointsMin = np.arange(newMin, self._rangeMin, spacing)
         else:
             appendPointsMin = np.array([])
 
         # what to append to upper end
-        if (newMax > self.__rangeMax and pointsMax > 0):
+        if newMax > self._rangeMax and pointsMax > 0:
 
-            ## Point spacing to use at new upper end 
-            spacing = np.abs(newMax - self.__rangeMax) / pointsMax
-            appendPointsMax = np.arange(self.__rangeMax + spacing,
-                                        newMax + spacing,
-                                        spacing)
+            ## Point spacing to use at new upper end
+            spacing = np.abs(newMax - self._rangeMax) / pointsMax
+            appendPointsMax = np.arange(
+                self._rangeMax + spacing, newMax + spacing, spacing
+            )
         else:
             appendPointsMax = np.array([])
 
-        
-        appendValuesMin = self._functionImplementation(appendPointsMin)
-        appendValuesMax = self._functionImplementation(appendPointsMax)
+        appendValuesMin = np.asarray(self._functionImplementation(appendPointsMin))
+        appendValuesMax = np.asarray(self._functionImplementation(appendPointsMax))
 
-        # Ordering is important since interpolation needs the x values to be ordered. 
-        # This works, but could be made safer by rearranging the resulting arrays accordingly:
-        xRange = np.concatenate((appendPointsMin,
-                                  self.__interpolationPoints,
-                                  appendPointsMax))
-        fxRange = np.concatenate((appendValuesMin,
-                                   self.__interpolationValues,
-                                   appendValuesMax))
+        # Ordering is important since interpolation needs the x values to be ordered.
+        # This works, but could be made safer by rearranging the resulting arrays:
+        xRange = np.concatenate(
+            (appendPointsMin, self._interpolationPoints, appendPointsMax)
+        )
+        fxRange: np.ndarray = np.concatenate(
+            (appendValuesMin, np.asarray(self._interpolationValues), appendValuesMax)
+        )
 
         self.newInterpolationTableFromValues(xRange, fxRange)
 
         ## Hacky reset of adaptive routines
-        if (self.__bUseAdaptiveInterpolation):
+        if self._bUseAdaptiveInterpolation:
             self.disableAdaptiveInterpolation()
             self.enableAdaptiveInterpolation()
 
-    # end extendInterpolationTable()    
-
-    def readInterpolationTable(self, fileToRead: str, bVerbose=True) -> None:
+    def readInterpolationTable(self, fileToRead: str, bVerbose: bool = True) -> None:
         """Reads precalculated values from a file and does cubic interpolation.
         Each line in the file must be of form x f(x).
         For vector valued functions: x f1(x) f2(x)
@@ -583,10 +629,12 @@ class InterpolatableFunction(ABC):
 
         try:
             ## Each line should be of form x f(x).
-            ## For vector valued functions, x f1(x) f2(x) ...  
-            data = np.genfromtxt(fileToRead, delimiter=' ', dtype=float, encoding=None)
+            ## For vector valued functions, x f1(x) f2(x) ...
+            data = np.genfromtxt(
+                fileToRead, delimiter=" ", dtype=np.float128, encoding=None
+            )
 
-            rows, columns = data.shape
+            columns = data.shape[1]
 
             # now slice this column-wise. First column is x:
             x = data[:, 0]
@@ -596,65 +644,85 @@ class InterpolatableFunction(ABC):
 
             ## If f(x) is 1D, this actually gives it in messy format
             ## [ [fx1] [fx2] ...]. So let's fix that
-            if (columns == 2): 
+            if columns == 2:
                 fx = np.ravel(fx)
 
-            self.__interpolate(x, fx)
+            self._interpolate(x, fx)
 
             ## check that what we read matches our function definition (just evaluate
             ## and compare at a few values)
-            self.__validateInterpolationTable(self.__rangeMin)
-            self.__validateInterpolationTable(self.__rangeMax)
-            self.__validateInterpolationTable((self.__rangeMax - self.__rangeMin)/2.55)
+            self._validateInterpolationTable(self._rangeMin)
+            self._validateInterpolationTable(self._rangeMax)
+            self._validateInterpolationTable((self._rangeMax - self._rangeMin) / 2.55)
 
-            if (bVerbose):
-                print(f"{selfName}: Succesfully read interpolation table from file. "\
-                      "Range [{self.__rangeMin}, {self.__rangeMax}]")
+            if bVerbose:
+                print(
+                    f"{selfName}: Succesfully read interpolation table from file. "
+                    "Range [{self._rangeMin}, {self._rangeMax}]"
+                )
 
         except IOError as ioError:
-            print(f"IOError! {selfName} attempted to read interpolation table from "\
-                  "file, but got error:")
+            print(
+                f"IOError! {selfName} attempted to read interpolation table from "
+                "file, but got error:"
+            )
             print(ioError)
-            print(f"This is non-fatal. Interpolation table will not be updated.\n")
+            print("This is non-fatal. Interpolation table will not be updated.\n")
 
-
-    def writeInterpolationTable(self, outputFileName: str, bVerbose=True) -> None:
-        """ Write our interpolation table to file.
+    def writeInterpolationTable(
+        self, outputFileName: str, bVerbose: bool = True
+    ) -> None:
+        """
+        Write our interpolation table to file.
         """
         try:
             ## Write to file, line i is of form: x[i] fx[i]. If our function is vector
             ## valued then x[i] fx1[i] fx2[i] ...
 
-            stackedArray = np.column_stack((self.__interpolationPoints,
-                                            self.__interpolationValues))
-            np.savetxt(outputFileName, stackedArray, fmt='%.15g', delimiter=' ')
+            stackedArray = np.column_stack(
+                (
+                    np.asarray(self._interpolationPoints),
+                    np.asarray(self._interpolationValues),
+                )
+            )
+            np.savetxt(outputFileName, stackedArray, fmt="%.15g", delimiter=" ")
 
-            if (bVerbose):
-                print("Stored interpolation table for function "\
-                      f"{self.__class__.__name__}, output file {outputFileName}.")
+            if bVerbose:
+                print(
+                    "Stored interpolation table for function "
+                    f"{self.__class__.__name__}, output file {outputFileName}."
+                )
 
         except Exception as e:
-            print(f"Error from {self.__class__.__name__}, function "\
-                  f"writeInterpolationTable(): {e}")
+            print(
+                f"Error from {self.__class__.__name__}, function "
+                f"writeInterpolationTable(): {e}"
+            )
 
     ## Test the interpolation table with some input.
-    ## Result should agree with self.__evaluateDirectly(x)
-    def __validateInterpolationTable(
-            self,
-            x: float,
-            absoluteTolerance: float = 1e-6,
-            ) -> bool:
-        
-        if (self.__interpolatedFunction == None or 
-            not (self.__rangeMin <= x <= self.__rangeMax)):
-            print(f"{self.__class__.__name__}: __validateInterpolationTable called, "\
-                  "but no valid interpolation table was found.")
+    ## Result should agree with self._evaluateDirectly(x)
+    def _validateInterpolationTable(
+        self,
+        x: float,
+        absoluteTolerance: float = 1e-6,
+    ) -> bool:
+
+        if (
+            self._interpolatedFunction is None
+            or not self._rangeMin <= x <= self._rangeMax
+        ):
+            print(
+                f"{self.__class__.__name__}: _validateInterpolationTable called, "
+                "but no valid interpolation table was found."
+            )
             return False
 
         diff = self.evaluateInterpolation(x) - self._functionImplementation(x)
-        if (np.any(np.abs(diff) > absoluteTolerance)):
-            print(f"{self.__class__.__name__}: Could not validate interpolation table!"\
-                  f" Value discrepancy was {diff}")
+        if np.any(np.abs(diff) > absoluteTolerance):
+            print(
+                f"{self.__class__.__name__}: Could not validate interpolation table!"
+                f" Value discrepancy was {diff}"
+            )
             return False
-        
+
         return True

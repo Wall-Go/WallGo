@@ -42,7 +42,7 @@ HESSIAN_POS = {'2': np.array([[1,1,-1,-1],
 HESSIAN_COEFF = {'2': np.array([1,-1,-1,1],dtype=float)/4,
                  '4': np.array([-1,1,16,-16,-16,16,1,-1],dtype=float)/48}
 
-def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=None, args=None):
+def derivative(f, x, n=1, order=4, bounds=None, epsilon=1e-16, scale=1.0, dx=None, args=None) -> np.ndarray:
     r"""Computes numerical derivatives of a callable function. Use the epsilon
     and scale parameters to estimate the optimal value of dx, if the latter is
     not provided. 
