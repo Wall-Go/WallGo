@@ -172,6 +172,12 @@ class WallGoResults:
     r"""Relativistically invariant integrals over
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
+    
+    success: bool
+    """Whether or not the calculation was successful."""
+    
+    message: str
+    """Description of the cause of the termination."""
 
     def __init__(self) -> None:
         pass
@@ -231,35 +237,9 @@ class WallGoResults:
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
 
-
-@dataclass
-class WallGoInterpolationResults:
-    """
-    Used when interpolating the pressure. Like WallGoResults but expanded to lists.
-    """
-    wallVelocities: list[float]
-    """List of stable wall velocities."""
-
-    unstableWallVelocities: list[float]
-    """List of unstable wall velocities."""
-
-    velocityGrid: list[float]
-    """Velocity grid on which the pressures were computed."""
-
-    pressures: list[float]
-    """Pressures evaluated at velocityGrid."""
-
-    pressureSpline: UnivariateSpline
-    """Spline of the pressure."""
-
-    wallParams: list[WallParams]
-    """WallParams objects evaluated at velocityGrid."""
-
-    boltzmannResults: list[BoltzmannResults]
-    """BoltzmannResults objects evaluated at velocityGrid."""
-
-    boltzmannBackgrounds: list[BoltzmannBackground]
-    """BoltzmannBackground objects evaluated at velocityGrid."""
-
-    hydroResults: list[HydroResults]
-    """HydroResults objects evaluated at velocityGrid."""
+    def setMessage(self, success: bool, message: str) -> None:
+        """
+        Set the termination message and the success flag.
+        """
+        self.success = success
+        self.message = message

@@ -91,7 +91,7 @@ class EffectivePotential(ABC):
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 
-    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
+    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.

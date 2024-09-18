@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import integrate, special, optimize
 
 FIRST_DERIV_COEFF = {'2': np.array([[-0.5,0.5],
                                     [-1,1],
@@ -322,3 +323,134 @@ def boostVelocity(xi : float, v : float) -> float:
     Lorentz-transformed velocity
     """
     return (xi - v)/(1. - xi*v)
+
+def nextStepDeton(
+        pos1: float,
+        pos2: float,
+        pressure1: float,
+        pressure2: float,
+        mean2ndDeriv: float,
+        std2ndDeriv: float,
+        pressureTol: float,
+        posMax: float,
+        overshootProb: float=0.05
+        ) -> float:
+    """
+    Function used in EquationOfMotion to find detonation solutions. It finds the next
+    point to be sampled to try to bracket a root in such a way that the probability of
+    overshooting a root is roughly equal to overshootProb.
+    
+    To estimate the overshoot probability, it fits the pressure to a quadratic which is
+    equal to pressure2 at pos2, but with uncertain 1st and 2nd derivatives which are
+    assumed to be normally distributed. The mean of the 1st derivative is computed by
+    finite differences from the last 2 points.
+
+    Parameters
+    ----------
+    pos1 : float
+        Position of the first sampled point.
+    pos2 : float
+        position of the second sampled point.
+    pressure1 : float
+        Pressure at pos1.
+    pressure2 : float
+        Pressure at pos2.
+    mean2ndDeriv : float
+        Estimate of the 2nd derivative at pos2.
+    std2ndDeriv : float
+        Uncertainty on the 2nd derivative at pos2.
+    pressureTol : float
+        Relative accuracy at which pressure1 and pressure2 are computed.
+    posMax : float
+        Maximal position that the next step can have.
+    overshootProb : float, optional
+        Desired overshoot probability. A smaller value will lead to smaller step sizes
+        which will take longer to evaluate, but with less chances of missing a root.
+        The default is 0.05.
+
+    Returns
+    -------
+    float
+        Position where the overshoot probability is overshootProb (or posMax if there is
+        no solution).
+
+    """
+    assert pos2 > pos1, "Error: pos2 must be greater than pos1."
+    assert posMax > pos2, "Error: posMax must be greater than pos2."
+    assert std2ndDeriv >= 0, "Error: std2ndDeriv must be positive."
+    assert pressureTol >= 0, "Error: pressureTol must positive."
+    assert 0 < overshootProb < 1, "Error: overshootProb must be between 0 and 1."
+
+    # This function requires pressure2 to be negative. If that's not the case,
+    # we invert the y axis.
+    if pressure2 > 0:
+        pressure1 *= -1
+        pressure2 *= -1
+        mean2ndDeriv *= -1
+    
+    #Use pressure units such that abs(pressure2)=1. Helps when integrate to get the prob
+    pressure1 /= abs(pressure2)
+    mean2ndDeriv /= abs(pressure2)
+    std2ndDeriv /= abs(pressure2)
+    pressure2 = -1
+    
+    dx = pos2 - pos1
+    dp = pressure2 - pressure1
+    
+    # Mean and variance of first derivative at pos2 
+    # (second term due to finite difference error)
+    meanDeriv = dp/dx +dx*mean2ndDeriv/2
+    # First term: variance due to pressure uncertainty
+    # Second term: variance due to finite difference error
+    varDeriv = (pressure1**2+pressure2**2)*(pressureTol/dx)**2 + (std2ndDeriv*dx/2)**2
+    stdDeriv = np.sqrt(varDeriv)
+    
+    # Probability of overshooting a root when the 2nd derivative is positive:
+    def probPositive(pos: float) -> float:
+        if pos == pos2:
+            return 0
+        
+        # Min derivative that can lead to overshooting 
+        derivMin = lambda secondDeriv: -pressure2/(pos-pos2)-secondDeriv*(pos-pos2)/2
+        
+        # Probability density of the 2nd derivative
+        probDensity = lambda secondDeriv: (
+            np.exp(-(secondDeriv-mean2ndDeriv)**2/std2ndDeriv**2/2)
+            *special.erfc((derivMin(secondDeriv)-meanDeriv)/stdDeriv/np.sqrt(2))
+            /(2*std2ndDeriv*np.sqrt(2*np.pi))
+            )
+        
+        # Integrate the probability density to get the probability
+        return integrate.quad(
+            probDensity, -2*pressure2/(pos-pos2)**2, np.inf, full_output=1)[0]
+    
+    # Probability of overshooting 2 roots when the 2nd derivative is negative:
+    def probNegative(pos: float) -> float:
+        if pos == pos2:
+            return 0
+        
+        # Min and max derivatives that can lead to overshooting 
+        derivMin = lambda secondDeriv: np.sqrt(2*secondDeriv*pressure2)
+        derivMax = lambda secondDeriv: -pressure2/(pos-pos2)-secondDeriv*(pos-pos2)/2
+        
+        # Probability density of the 2nd derivative
+        probDensity = lambda secondDeriv: (
+            np.exp(-(secondDeriv-mean2ndDeriv)**2/std2ndDeriv**2/2)
+            *(special.erf((derivMax(secondDeriv)-meanDeriv)/stdDeriv/np.sqrt(2))
+              -special.erf((derivMin(secondDeriv)-meanDeriv)/stdDeriv/np.sqrt(2)))
+            /(2*std2ndDeriv*np.sqrt(2*np.pi))
+            )
+        
+        # Integrate the probability density to get the probability
+        return integrate.quad(
+            probDensity, -np.inf, 2*pressure2/(pos-pos2)**2, full_output=1)[0]
+    
+    try:
+        # Find a position for which the total probability is overshootProb
+        return optimize.root_scalar(
+            lambda pos: probPositive(pos)+probNegative(pos)-overshootProb,
+            bracket=[pos2, posMax]
+            ).root
+    except:
+        # If no solution is found, returns posMax
+        return posMax
