@@ -77,6 +77,16 @@ class InterpolatableFunction(ABC):
         """
         Optional argument returnValueCount should be set by the user if using
         list-valued functions.
+
+        Parameters
+        ----------
+        bUseAdaptiveInterpolation : bool, optional
+            Whether or not to use adaptive interpolation. The default is True.
+        initialInterpolationPointCount : int, optional
+            Initial number of points for the interpolation. The default is 1000.
+        returnValueCount : int, optional
+            Number of outputs returned by the function. The default is 1.
+
         """
         ## Vector-like functions can return many values from one input, user needs to
         ## specify this when constructing the object
@@ -167,6 +177,14 @@ class InterpolatableFunction(ABC):
         EExtrapolationType.
         NOTE: This will effectively prevent adaptive updates to the interpolation table.
         NOTE 2: Calling this function will force a rebuild of our interpolation table.
+
+        Parameters
+        ----------
+        extrapolationTypeLower : EExtrapolationType
+            Extrapolation type when below the interpolation range.
+        extrapolationTypeUpper : EExtrapolationType
+            Extrapolation type when above the interpolation range.
+
         """
         self.extrapolationTypeLower = extrapolationTypeLower
         self.extrapolationTypeUpper = extrapolationTypeUpper
@@ -179,8 +197,10 @@ class InterpolatableFunction(ABC):
             )
 
     def enableAdaptiveInterpolation(self) -> None:
-        """Enables adaptive interpolation functionality.
-        Will clear internal work arrays."""
+        """
+        Enables adaptive interpolation functionality.
+        Will clear internal work arrays.
+        """
         self._bUseAdaptiveInterpolation = True
         self._directEvaluateCount = 0
         self._directlyEvaluatedAt = []
@@ -195,8 +215,19 @@ class InterpolatableFunction(ABC):
         xMax: float,
         numberOfPoints: int,
     ) -> None:
-        """Creates a new interpolation table over given range.
+        """
+        Creates a new interpolation table over given range.
         This will purge any existing interpolation information.
+
+        Parameters
+        ----------
+        xMin : float
+            Minimal interpolation point.
+        xMax : float
+            Maximal interpolation point.
+        numberOfPoints : int
+            Number of points to use in the interpolation.
+
         """
 
         xValues = np.linspace(xMin, xMax, numberOfPoints)
@@ -212,25 +243,27 @@ class InterpolatableFunction(ABC):
     ) -> None:
         """
         Like initializeInterpolationTable but takes in precomputed function values 'fx'
-        """
-        self._interpolate(x, fx)
-
-    ## Add x, f(x) pairs to our pending interpolation table update
-    def scheduleForInterpolation(self, x: inputType, fx: outputType) -> None:
-        """
-
 
         Parameters
         ----------
-        x : npt.ArrayLike
-            DESCRIPTION.
-        fx : npt.ArrayLike
-            DESCRIPTION.
+        x : list[float] or np.ndarray
+            Points where the function was evaluated.
+        fx : list[float | np.ndarray] or np.ndarray
+            Value of the function at x.
 
-        Returns
-        -------
-        None
-            DESCRIPTION.
+        """
+        self._interpolate(x, fx)
+
+    def scheduleForInterpolation(self, x: inputType, fx: outputType) -> None:
+        """
+        Add x, f(x) pairs to our pending interpolation table update
+
+        Parameters
+        ----------
+        x : list[float] or np.ndarray
+            Points where the function was evaluated.
+        fx : list[float | np.ndarray] or np.ndarray
+            Value of the function at x.
 
         """
 
@@ -342,24 +375,41 @@ class InterpolatableFunction(ABC):
         return res
 
     def __call__(self, x: inputType, bUseInterpolatedValues: bool = True) -> outputType:
-        """Just calls evaluate()"""
+        """
+        Just calls evaluate()
+
+        Parameters
+        ----------
+        x : list[float] or np.ndarray
+            Points where the function will be evaluated.
+        bUseInterpolatedValues : bool, optional
+            Whether or not to use interpolation to evaluate the function.
+            The default is True.
+
+        Returns
+        -------
+        list[float | np.ndarray] or np.ndarray
+            Value of the function at x.
+
+        """
         return self.evaluate(x, bUseInterpolatedValues)
 
     def evaluate(self, x: inputType, bUseInterpolatedValues: bool = True) -> outputType:
         """
-
+        Evaluate the function.
 
         Parameters
         ----------
-        x : npt.ArrayLike
-            DESCRIPTION.
-        bUseInterpolatedValues : TYPE, optional
-            DESCRIPTION. The default is True.
+        x : list[float] or np.ndarray
+            Points where the function will be evaluated.
+        bUseInterpolatedValues : bool, optional
+            Whether or not to use interpolation to evaluate the function.
+            The default is True.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        list[float | np.ndarray] or np.ndarray
+            Value of the function at x.
 
         """
 
@@ -420,6 +470,26 @@ class InterpolatableFunction(ABC):
         derivative can be taken with order=n, however we only support interpolated
         derivative of order=1,2 for now. epsilon and scale are parameters for the
         helpers.derivative() routine.
+
+        Parameters
+        ----------
+        x : list[float] or np.ndarray
+            Points where the derivative will be evaluated.
+        order : int, optional
+            Order of the derivative to take. The default is 1.
+        bUseInterpolation : bool, optional
+            Whether or not to use interpolation to evaluate the function.
+            The default is True.
+        epsilon : float, optional
+            Relative accuracy at which the function is evaluated. The default is 1e-16.
+        scale : float, optional
+            Scale at which the function changes by O(1). The default is 1.0.
+
+        Returns
+        -------
+        list[float | np.ndarray] or np.ndarray
+            Value of the derivative at x.
+
         """
         x = np.asanyarray(x)
         if not bUseInterpolation or not self.hasInterpolation() or order > 2:
@@ -566,6 +636,18 @@ class InterpolatableFunction(ABC):
         """
         Extend our interpolation table.
         NB: This will reset internally accumulated data of adaptive interpolation.
+
+        Parameters
+        ----------
+        newMin : float
+            New minimal value at which the interpolation starts.
+        newMax : float
+            New maximal value at which the interpolation starts.
+        pointsMin : int
+            Minimal number of points to use.
+        pointsMax : int
+            Maximal number of points to use.
+
         """
         if not self.hasInterpolation():
             newPoints = int(pointsMin + pointsMax)
@@ -619,9 +701,18 @@ class InterpolatableFunction(ABC):
             self.enableAdaptiveInterpolation()
 
     def readInterpolationTable(self, fileToRead: str, bVerbose: bool = True) -> None:
-        """Reads precalculated values from a file and does cubic interpolation.
+        """
+        Reads precalculated values from a file and does cubic interpolation.
         Each line in the file must be of form x f(x).
         For vector valued functions: x f1(x) f2(x)
+
+        Parameters
+        ----------
+        fileToRead : str
+            Path of the file where the interpolation table is stored.
+        bVerbose : bool, optional
+            Whether or not to print information. The default is True.
+
         """
 
         # for logging
@@ -674,6 +765,14 @@ class InterpolatableFunction(ABC):
     ) -> None:
         """
         Write our interpolation table to file.
+
+        Parameters
+        ----------
+        outputFileName : str
+            Name of the file where the interpolation table will be written.
+        bVerbose : bool, optional
+            Whether or not to print information. The default is True.
+
         """
         try:
             ## Write to file, line i is of form: x[i] fx[i]. If our function is vector
@@ -699,13 +798,15 @@ class InterpolatableFunction(ABC):
                 f"writeInterpolationTable(): {e}"
             )
 
-    ## Test the interpolation table with some input.
-    ## Result should agree with self._evaluateDirectly(x)
     def _validateInterpolationTable(
         self,
         x: float,
         absoluteTolerance: float = 1e-6,
     ) -> bool:
+        """
+        Test the interpolation table with some input.
+        Result should agree with self._evaluateDirectly(x).
+        """
 
         if (
             self._interpolatedFunction is None
