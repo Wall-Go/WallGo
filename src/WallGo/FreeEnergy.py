@@ -32,7 +32,7 @@ class FreeEnergyValueType:
             if len(values) == 1:
                 values = values[0]
 
-        return FreeEnergyValueType(veffValue=values, fieldsAtMinimum=Fields.CastFromNumpy(fields))
+        return FreeEnergyValueType(veffValue=values, fieldsAtMinimum=Fields.castFromNumpy(fields))
 
     
 class FreeEnergy(InterpolatableFunction):
@@ -72,7 +72,7 @@ class FreeEnergy(InterpolatableFunction):
 
         adaptiveInterpolation = True
         # Set return value count. Currently the InterpolatableFunction requires this to be set manually:
-        returnValueCount = startingPhaseLocationGuess.NumFields() + 1
+        returnValueCount = startingPhaseLocationGuess.numFields() + 1
         super().__init__(
             bUseAdaptiveInterpolation=adaptiveInterpolation,
             returnValueCount=returnValueCount,
@@ -230,7 +230,7 @@ class FreeEnergy(InterpolatableFunction):
 
         # arrays to store results
         TList = np.full(1, T0)
-        fieldList = np.full((1, phase0.NumFields()), Fields((phase0)))
+        fieldList = np.full((1, phase0.numFields()), Fields((phase0)))
         VeffList = np.full((1, 1), [V0])
 
         # maximum temperature range
@@ -291,7 +291,7 @@ class FreeEnergy(InterpolatableFunction):
                 VeffFullList = VeffList
                 # making new empty array for downwards integration
                 TList = np.empty(0, dtype=float)
-                fieldList = np.empty((0, phase0.NumFields()), dtype=float)
+                fieldList = np.empty((0, phase0.numFields()), dtype=float)
                 VeffList = np.empty((0, 1), dtype=float)
             else:
                 if len(TList) > 1:

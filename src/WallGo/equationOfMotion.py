@@ -1297,7 +1297,7 @@ class EOM:
                 / (wallParams.widths * np.cosh(zL + wallParams.offsets) ** 2)
             )
 
-        return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
+        return Fields.castFromNumpy(fields), Fields.castFromNumpy(dPhidz)
 
     def findPlasmaProfile(
         self,
@@ -1353,8 +1353,8 @@ class EOM:
                 c1,
                 c2,
                 velocityMid,
-                fields.GetFieldPoint(index),
-                dPhidz.GetFieldPoint(index),
+                fields.getFieldPoint(index),
+                dPhidz.getFieldPoint(index),
                 offEquilDeltas,
                 Tplus,
                 Tminus,
