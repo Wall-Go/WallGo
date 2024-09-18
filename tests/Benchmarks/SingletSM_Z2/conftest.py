@@ -219,8 +219,7 @@ def singletBenchmarkHydrodynamics(
 
     thermo, BM = singletBenchmarkThermo_interpolate
 
-    ## TODO Should fix rtol, atol here so that our tests don't magically change if the class defaults change !
-    yield WallGo.Hydrodynamics(thermo, 10., 0.01), BM
+    yield WallGo.Hydrodynamics(thermo, 10., 0.01, 1e-6, 1e-6), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now
