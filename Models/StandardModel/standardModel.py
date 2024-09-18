@@ -546,9 +546,9 @@ def main() -> None:  # pylint: disable=R0915, R0914
         print(f"wallOffsets:       {results.wallOffsets}")
 
         print("\n=== Search for detonation solution ===")
-        wallGoInterpolationResults = manager.solveWallDetonation()
+        wallGoDetonationResults = manager.solveWallDetonation(onlySmallest=True)[0]
         print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
+        print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
 
     # end parameter-space loop
 
