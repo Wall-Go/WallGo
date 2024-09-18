@@ -17,7 +17,7 @@ void writeMetadata(H5::H5File& h5File, const CollisionMetadata& metadata)
 	try
 	{
 		// Create a group to hold metadata (keeping it separate from the actual data)
-		H5::Group metadataGroup = h5File.createGroup("Metadata");
+		H5::Group metadataGroup = h5File.createGroup("metadata");
 
 		// Create attributes in the group. One attribute for each variable in metadata struct
 		H5::Attribute basisSizeAttr = metadataGroup.createAttribute("Basis Size", H5::PredType::NATIVE_INT, H5::DataSpace());
