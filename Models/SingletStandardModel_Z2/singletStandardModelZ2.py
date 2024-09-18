@@ -33,6 +33,7 @@ import sys
 import pathlib
 import argparse
 import numpy as np
+from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
@@ -48,6 +49,9 @@ from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
 
 from wallgo_example_base import WallGoExampleBase
 from wallgo_example_base import ExampleInputPoint
+
+if TYPE_CHECKING:
+    import WallGoCollision
 
 
 class SingletSMZ2(GenericModel):
@@ -496,7 +500,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
 class SingletStandardModelExample(WallGoExampleBase):
 
-    # ~ WallGoExampleBase interface
+    # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
         """Non-abstract override to add a SM + singlet specific cmd option"""
 
@@ -512,14 +516,111 @@ class SingletStandardModelExample(WallGoExampleBase):
     def exampleBaseDirectory(self) -> pathlib.Path:
         return pathlib.Path(__file__).resolve().parent
 
-    def initCollisionModel(self) -> "WallGoCollision.PhysicsModel":
-        # TODO
-        pass
+    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
+        """TEMPORARY: override to load Benoit's benchmark matrix elements if only top is off-eq.
+        Remove once matrix elements have been fixed."""
+
+        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
+
+        if bUseBenoit:
+            matrixElementFile = pathlib.Path(
+                self.exampleBaseDirectory
+                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
+            )
+
+        else:
+            matrixElementFile = pathlib.Path(
+                self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+            )
+
+        bPrintMatrixElements = True
+
+        bSuccess: bool = inOutModel.readMatrixElements(
+            str(matrixElementFile), bPrintMatrixElements
+        )
+        return bSuccess
+
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
+        """TEMPORARY: override to load provided collision data from Benoit's matrix elements if only top is off-eq.
+        Remove once matrix elements have been fixed and correct data generated from them.
+        """
+
+        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
+        if bUseBenoit:
+            return (
+                self.exampleBaseDirectory
+                / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
+            )
+        else:
+            return super().getDefaultCollisionDirectory(momentumGridSize)
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """"""
         # This should run after cmdline argument parsing so safe to use them here
         return SingletSMZ2(self.cmdArgs.outOfEquilibriumGluon)
+
+    def initCollisionModel(
+        self, wallGoModel: "SingletSMZ2"
+    ) -> "WallGoCollision.PhysicsModel":
+        """"""
+        import WallGoCollision
+
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
+
+        # This example comes with a very explicit example function on how to setup and configure the collision module.
+        # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
+        from example_collision_defs import setupCollisionModel_QCD
+
+        collisionModel = setupCollisionModel_QCD(
+            wallGoModel.modelParameters,
+            wallGoModel.bIsGluonOffEq,
+        )
+
+        return collisionModel
+
+    def configureCollisionIntegration(
+        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
+    ) -> None:
+        """Non-abstract override"""
+
+        """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
+        or skip this step entirely. Here we set everything manually to show how it's done.
+        """
+        integrationOptions = WallGoCollision.IntegrationOptions()
+        integrationOptions.calls = 50000
+        integrationOptions.maxTries = 50
+        integrationOptions.maxIntegrationMomentum = 20  # collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
+        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.relativeErrorGoal = 1e-1
+
+        inOutCollisionTensor.setIntegrationOptions(integrationOptions)
+
+        """We can also configure various verbosity settings that are useful when you want to see what is going on in long-running integrations.
+        These include progress reporting and time estimates, as well as a full result dump of each individual integral to stdout.
+        By default these are all disabled. Here we enable some for demonstration purposes.
+        """
+        verbosity = WallGoCollision.CollisionTensorVerbosity()
+        verbosity.bPrintElapsedTime = (
+            True  # report total time when finished with all integrals
+        )
+
+        """Progress report when this percentage of total integrals (approximately) have been computed.
+        Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done.
+        Note also that in multithreaded runs the progress tracking is less precise.
+        """
+        verbosity.progressReportPercentage = 0.25
+
+        # Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
+        verbosity.bPrintEveryElement = False
+
+        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
+
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """Singlet example uses spatial grid size = 20"""
+        super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]
@@ -567,7 +668,7 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         return output
 
-    # ~
+    # ~ End WallGoExampleBase interface
 
 
 if __name__ == "__main__":

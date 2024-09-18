@@ -308,7 +308,12 @@ class WallGoManager:
             None
         """
         # TODO validate? or not if we want to allow the data to be generated on the fly
+        # should at least validate that it is not an existing file
         self.collisionDirectory = directoryPath
+
+    def getCurrentCollisionDirectory(self) -> pathlib.Path:
+        """"""
+        return self.collisionDirectory
 
     def wallSpeedLTE(self) -> float:
         """
@@ -490,7 +495,6 @@ class WallGoManager:
         gridM = self.config.getint("PolynomialGrid", "spatialGridSize")
         ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
         smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
-        self.meanFreePath = meanFreePath
 
         tailLength = max(
             meanFreePath, wallThicknessIni * (1 + 3 * smoothing) / ratioPointsWall
