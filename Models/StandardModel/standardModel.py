@@ -405,6 +405,9 @@ def main() -> None:  # pylint: disable=R0915, R0914
     # Modify the config, we use N=11 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
 
+    # Modify the config, we use M=22 for this example
+    WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "22")
+
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
