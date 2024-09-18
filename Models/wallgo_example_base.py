@@ -222,6 +222,17 @@ class WallGoExampleBase(ABC):
                 manager.setPathToCollisionData(newCollisionDir)
 
                 collisionModel = self.initCollisionModel(model)
+
+                """Load matrix elements into the collision model.
+                This is simply a matter of passing a valid file path to the model,
+                but this base example defines a helper function that concrete
+                examples can modify to suit their needs. If the load or parsing fails,
+                we abort here. 
+                """
+                if not self.loadMatrixElements(collisionModel):
+                    print("FATAL: Failed to load matrix elements")
+                    exit()
+
                 collisionTensor = collisionModel.createCollisionTensor(momentumGridSize)
 
                 # Setup collision integration settings. Concrete example models can override this to do model-dependent setup

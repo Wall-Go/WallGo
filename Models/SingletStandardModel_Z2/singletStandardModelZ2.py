@@ -585,6 +585,8 @@ class SingletStandardModelExample(WallGoExampleBase):
     ) -> None:
         """Non-abstract override"""
 
+        import WallGoCollision
+
         """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
         or skip this step entirely. Here we set everything manually to show how it's done.
         """
