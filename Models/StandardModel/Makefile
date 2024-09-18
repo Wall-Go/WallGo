@@ -3,7 +3,7 @@
 PYTHON=python3
 WOLFRAMSCRIPT=wolframscript -file
 MATRIXELEMENTS=MatrixElements
-MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.sm.m
+MATRIX_SCRIPT=${MATRIXELEMENTS}/matrixElements.ew.m
 MATRIX_DATA=${MATRIXELEMENTS}.txt
 COLLISIONS=CollisionOutput
 MAIN=StandardModel
