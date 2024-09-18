@@ -27,6 +27,7 @@ doi:10.1103/PhysRevD.52.7182
 """
 
 import numpy as np
+import pathlib
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
@@ -112,25 +113,23 @@ class StandardModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            "topL",
+            name="topL",
+            index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=6,
         )
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            "topR",
+            name="topR",
+            index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=6,
         )
         self.addParticle(topQuarkR)
@@ -146,17 +145,18 @@ class StandardModel(GenericModel):
             return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
 
         wBoson = Particle(
-            "W",
+            name="W",
+            index=2,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
             statistics="Boson",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=9,
         )
         self.addParticle(wBoson)
 
+        # TODO create collision model. Backup of in-equilibrium particles:
+        """
         ## === SU(3) gluon ===
         def gluonMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 * 2.0
@@ -167,8 +167,6 @@ class StandardModel(GenericModel):
             msqDerivative=0.0,
             msqThermal=gluonMsqThermal,
             statistics="Boson",
-            inEquilibrium=True,
-            ultrarelativistic=True,
             totalDOFs=16,
         )
         self.addParticle(gluon)
@@ -183,13 +181,10 @@ class StandardModel(GenericModel):
             msqDerivative=0.0,
             msqThermal=lightQuarkMsqThermal,
             statistics="Fermion",
-            inEquilibrium=True,
-            ultrarelativistic=True,
             totalDOFs=60,
         )
         self.addParticle(lightQuark)
-
-        ## Go from whatever input params --> action params
+        """
 
     def calculateModelParameters(
         self, inputParameters: dict[str, float]
@@ -467,8 +462,17 @@ def main() -> None:  # pylint: disable=R0915, R0914
     """
     manager.registerModel(model)
 
-    ## Generates or reads collision integrals
-    manager.generateCollisionFiles()
+    try:
+        scriptLocation = pathlib.Path(__file__).parent.resolve()
+        manager.loadCollisionFiles(scriptLocation / "CollisionOutput")
+    except Exception:
+        print(
+            """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
+              so load failure here probably means you've either moved files around or changed the grid size.
+              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+              """
+        )
+        exit(2)
 
     print("\n=== WallGo parameter scan ===")
     # ---- This is where you'd start an input parameter

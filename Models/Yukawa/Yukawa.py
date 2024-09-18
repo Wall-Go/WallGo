@@ -42,7 +42,7 @@ class YukawaModel(WallGo.GenericModel):
         y = self.modelParameters["y"]
         psiL = WallGo.Particle(
             "psiL",
-            index=1, # old collision data has top at index 0
+            index=1,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
                 self.modelParameters["mf"] + y * fields.GetField(0)
             ),
@@ -53,7 +53,7 @@ class YukawaModel(WallGo.GenericModel):
         )
         psiR = WallGo.Particle(
             "psiR",
-            index=2, # old collision data has top at index 0
+            index=2,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
                 self.modelParameters["mf"] + y * fields.GetField(0)
             ),
@@ -205,15 +205,15 @@ def main() -> int:
         collisionModelDef = WallGo.collisionHelpers.generateCollisionModelDefinition(
             model,
             # Do not define any model parameters yet./
-            includeAllModelParameters = False,
-            parameterSymbolsToInclude = []
+            includeAllModelParameters=False,
+            parameterSymbolsToInclude=[],
         )
 
         # Add in-equilibrium particles that appear in collision processes
         phiParticle = WallGoCollision.ParticleDescription()
         phiParticle.name = "phi"
         phiParticle.index = 0
-        phiParticle.bInEquilibrium = True 
+        phiParticle.bInEquilibrium = True
         phiParticle.bUltrarelativistic = True
         phiParticle.type = WallGoCollision.EParticleType.eBoson
         # mass-sq function not required or used for UR particles, and it cannot be field-dependent for collisions.
@@ -229,7 +229,6 @@ def main() -> int:
         # Here we write our parameter definitions to a local ModelParameters variable and pass it to modelDefinitions later.
         parameters = WallGoCollision.ModelParameters()
 
-        # For defining new parameters use addOrModifyParameter(). For read-only access you can use the [] operator
         parameters.addOrModifyParameter("y", -0.177421729274665)
         parameters.addOrModifyParameter("gamma", -1.28565864794053)
         parameters.addOrModifyParameter("lam", 0.01320208496444000)
@@ -237,27 +236,25 @@ def main() -> int:
 
         # For particles here we include the thermal mass only
         def psiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-            return 1 / 16 * p["y"]**2
+            return 1 / 16 * p["y"] ** 2
 
         def phiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-            return p["lam"]/24.0 + p["y"]**2.0/6.0
+            return p["lam"] / 24.0 + p["y"] ** 2.0 / 6.0
 
-        parameters.addOrModifyParameter("msq[0]", phiThermalMassSquared(parameters))  
-        parameters.addOrModifyParameter("msq[1]", psiThermalMassSquared(parameters))  
+        parameters.addOrModifyParameter("msq[0]", phiThermalMassSquared(parameters))
+        parameters.addOrModifyParameter("msq[1]", psiThermalMassSquared(parameters))
 
         # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
         collisionModelDef.defineParameters(parameters)
 
-
-        # Define symbolic parameters that appear in the matrix elements and their values
-        # TODO I don't know what matrix elements you wanted to use, so not defining anything yet.
-        #collisionModelDef.defineParameter("someParamInMatrixElements.txt", model.modelParameters["someParam"])
-        # ....
-
         collisionModel = WallGoCollision.PhysicsModel(collisionModelDef)
 
-        matrixElementFile = scriptLocation / "MatrixElements/MatrixElements_Yukawa_massive.txt"
-        collisionModel.readMatrixElements(str(matrixElementFile), bPrintMatrixElements=True)
+        matrixElementFile = (
+            scriptLocation / "MatrixElements/MatrixElements_Yukawa_massive.txt"
+        )
+        collisionModel.readMatrixElements(
+            str(matrixElementFile), bPrintMatrixElements=True
+        )
 
         # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
         collisionTensor: WallGoCollision.CollisionTensor = (
@@ -284,9 +281,9 @@ def main() -> int:
         manager.loadCollisionFiles(collisionDirectory)
     except Exception:
         print(
-            """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
-              so load failure here probably means you've either moved files around or changed the grid size.
-              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+            """\nLoad of collision integrals failed!
+              If you were trying to generate your own collision data,
+              make sure you run this example script with the --recalculateCollisions command line flag.
               """
         )
         exit(2)
