@@ -130,25 +130,23 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            "topL",
+            name="topL",
+            index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=6,
         )
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            "topR",
+            name="topR",
+            index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=6,
         )
         self.addParticle(topQuarkR)
@@ -164,17 +162,18 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
 
         wBoson = Particle(
-            "W",
+            name="W",
+            index=2,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
             statistics="Boson",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=9,
         )
         self.addParticle(wBoson)
 
+        # In-eq particles commented out for backup
+        """
         ## === SU(3) gluon ===
         def gluonMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 * 2.0
@@ -206,6 +205,7 @@ class InertDoubletModel(GenericModel):
             totalDOFs=60,
         )
         self.addParticle(lightQuark)
+        """
 
     ## Go from whatever input params --> action params
     def calculateModelParameters(
@@ -696,7 +696,7 @@ def main() -> None:
 
     # Directory name for collisions integrals defaults to "CollisionOutput/"
     # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
+    WallGo.config.set("Collisions", "pathName", "CollisionOutput/")
 
     """
     Register the model with WallGo. This needs to be done only once.
@@ -705,18 +705,21 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    # Generates or reads collision integrals
-    manager.generateCollisionFiles()
+    try:
+        scriptLocation = pathlib.Path(__file__).parent.resolve()
+        manager.loadCollisionFiles(scriptLocation / "CollisionOutput")
+    except Exception:
+        print(
+            """\nLoad of collision integrals failed!
+              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+              """
+        )
+        exit(2)
 
     print("\n=== WallGo parameter scan ===")
     # ---- This is where you'd start an input parameter
     # loop if doing parameter-space scans ----
 
-    """ Example mass loop that just does one value of the Higgs mass.
-    Note that the WallGoManager class is NOT thread safe internally, so it 
-    is NOT safe to parallelize this loop eg. with OpenMP. We recommend 
-    ``embarrassingly parallel`` runs for large-scale parameter scans. 
-    """
     valuesmH = [62.66]
 
     for mH in valuesmH:
