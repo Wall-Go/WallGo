@@ -69,6 +69,9 @@ class WallGoManager:
 
         self.config = WallGo.config
 
+        # default to working directory
+        self.collisionDirectory = pathlib.Path.cwd()
+
         # These we currently have to keep cached, otherwise can't construct sensible WallSolver:
         ## TODO init these to None or have other easy way of checking if they have been properly initialized
         self.model: GenericModel
@@ -78,7 +81,6 @@ class WallGoManager:
 
     def analyzeHydrodynamics(
         self,
-        modelParameters: dict[str, float],
         phaseInfo: WallGo.PhaseInfo,
         veffDerivativeScales: WallGo.VeffDerivativeScales,
     ) -> None:
@@ -89,8 +91,7 @@ class WallGoManager:
             and phaseInfo.phaseLocation2.NumFields() == self.model.fieldCount
         ), "Invalid PhaseInfo input, field counts do not match those defined in the model"
 
-        self.model.modelParameters = modelParameters
-        self.model.effectivePotential.setScales(veffDerivativeScales)
+        self.model.getEffectivePotential().setScales(veffDerivativeScales)
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
@@ -130,7 +131,7 @@ class WallGoManager:
 
     def isModelValid(self) -> bool:
         """True if a valid model is currently registered."""
-        return (self.model is not None) and (self.model.effectivePotential is not None)
+        return self.model is not None
 
     def registerModel(self, model: GenericModel) -> None:
         """
@@ -151,7 +152,7 @@ class WallGoManager:
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
         ## FIXME default scales for derivatives, or just the simple ones built-in to the Veff initializer
-        self.model.effectivePotential.setPotentialError(potentialError)
+        self.model.getEffectivePotential().setPotentialError(potentialError)
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
         """
@@ -170,10 +171,16 @@ class WallGoManager:
         T = phaseInput.temperature
 
         # Find the actual minima at T, should be close to the user-specified locations
-        phaseLocation1, effPotValue1 = self.model.effectivePotential.findLocalMinimum(
+        (
+            phaseLocation1,
+            effPotValue1,
+        ) = self.model.getEffectivePotential().findLocalMinimum(
             phaseInput.phaseLocation1, T
         )
-        phaseLocation2, effPotValue2 = self.model.effectivePotential.findLocalMinimum(
+        (
+            phaseLocation2,
+            effPotValue2,
+        ) = self.model.getEffectivePotential().findLocalMinimum(
             phaseInput.phaseLocation2, T
         )
 
@@ -227,7 +234,7 @@ class WallGoManager:
         Tn = self.phasesAtTn.temperature
 
         self.thermodynamics = Thermodynamics(
-            self.model.effectivePotential,
+            self.model.getEffectivePotential(),
             Tn,
             self.phasesAtTn.phaseLocation2,
             self.phasesAtTn.phaseLocation1,
@@ -272,7 +279,7 @@ class WallGoManager:
 
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
-        dT = self.model.effectivePotential.temperatureScale * phaseTracerTol**0.25
+        dT = self.model.getEffectivePotential().temperatureScale * phaseTracerTol**0.25
 
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large
@@ -289,9 +296,10 @@ class WallGoManager:
         fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
         fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
 
-    def loadCollisionFiles(self, directoryPath: pathlib.Path) -> None:
+    def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
-        Loads collision files for use with the Boltzmann solver.
+        Specify path to collision files for use with the Boltzmann solver.
+        This does not necessarily load the files immediately.
 
         Args:
             directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.
@@ -299,7 +307,8 @@ class WallGoManager:
         Returns:
             None
         """
-        self.boltzmannSolver.loadCollisions(directoryPath)
+        # TODO validate? or not if we want to allow the data to be generated on the fly
+        self.collisionDirectory = directoryPath
 
     def wallSpeedLTE(self) -> float:
         """
@@ -429,8 +438,10 @@ class WallGoManager:
         boltzmannSolver = BoltzmannSolver(grid, basisM="Cardinal", basisN="Chebyshev")
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
-        
-        ## TODO load collisions
+
+        bShouldLoadCollisions = wallSolverSettings.bIncludeOffEquilibrium
+        if bShouldLoadCollisions:
+            boltzmannSolver.loadCollisions(self.collisionDirectory)
 
         eom: EOM = self._buildEOM(
             grid, boltzmannSolver, wallSolverSettings.meanFreePath

@@ -88,10 +88,14 @@ class Particle:  # pylint: disable=too-few-public-methods
         # fields = np.array([1, 1])
         # assert isinstance(msqVacuum(fields), float), \
         #    f"msqVacuum({fields}) must return float"
+
+        # LN: comment mass check out to prevent errors at model creation time if no valid params have yet been passed
+        """
         temperature = 100
         assert isinstance(
             msqThermal(temperature), float
         ), f"msqThermal({temperature}) must return float"
+        """
         if statistics not in Particle.STATISTICS_OPTIONS:
             raise ValueError(f"{statistics=} not in {Particle.STATISTICS_OPTIONS}")
         assert isinstance(totalDOFs, int), "totalDOFs must be an integer"

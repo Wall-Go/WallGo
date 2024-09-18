@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import typing
 from pathlib import Path
+import copy
 
 import WallGo
 
@@ -12,8 +13,10 @@ if typing.TYPE_CHECKING:
 
 @dataclass
 class ExampleInputPoint:
-    modelParameters: dict[str, float]
+    inputParameters: dict[str, float]
     phaseInfo: WallGo.PhaseInfo
+    veffDerivativeScales: WallGo.VeffDerivativeScales
+    wallSolverSettings: WallGo.WallSolverSettings
 
 
 class WallGoExampleBase(ABC):
@@ -22,10 +25,6 @@ class WallGoExampleBase(ABC):
         self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
     ) -> None:
         None
-
-    @abstractmethod
-    def initWallGoManager(self) -> "WallGo.WallGoManager":
-        pass
 
     @abstractmethod
     def initCollisionModel(self) -> "WallGoCollision.PhysicsModel":
@@ -39,9 +38,34 @@ class WallGoExampleBase(ABC):
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
         return []
 
-    def setupDirectoryPaths(self) -> None:
-        self.exampleBaseDir = Path(__file__).resolve()
-        self.matrixElementsDir = self.exampleBaseDir / "MatrixElements"
+    @abstractmethod
+    def updateModelParameters(
+        self, model: "WallGo.GenericModel", inputParameters: dict[str, float]
+    ) -> None:
+        """Override with whatever non-WallGo logic your example model needs to run
+        when model-specific inputs are changed. Normally this refers to conversion from "physical" input
+        (such as electroweak precision observables) to renormalized Lagrangian parameters,
+        and/or propagating the changes to the effective potential, particle masses, collision model etc.
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def exampleBaseDirectory(self) -> Path:
+        """Override to return base directory of this example."""
+        pass
+
+    @property
+    def defaultMatrixElementPath(self) -> Path:
+        """Path to default matrix elements file for the example.
+        This is relative to exampleBaseDirectory."""
+        return Path("MatrixElements/MatrixElements.txt")
+
+    @property
+    def defaultCollisionDirectory(self) -> Path:
+        """Path to the directory containing default collision data for the example.
+        This is relative to exampleBaseDirectory"""
+        return Path("CollisionOutput")
 
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
         argParser = argparse.ArgumentParser()
@@ -71,21 +95,23 @@ class WallGoExampleBase(ABC):
         return argParser
 
     def runExample(self) -> None:
-
+        """"""
         WallGo.initialize()
 
         argParser = self.initCommandLineArgs()
-        cmdArgs = argParser.parse_args()
+        self.cmdArgs = argParser.parse_args()
 
-        manager = self.initWallGoManager()
+        manager = WallGo.WallGoManager()
         model = self.initWallGoModel()
         manager.registerModel(model)
 
-        if cmdArgs.recalculateCollisions:
+        if self.cmdArgs.recalculateCollisions:
             import WallGoCollision
 
             collisionModel = self.initCollisionModel()
-            collisionModel.readMatrixElements(self.matrixElementsDir, True)
+            collisionModel.readMatrixElements(
+                self.exampleBaseDirectory / self.defaultMatrixElementPath, True
+            )
 
             collisionTensor = collisionModel.createCollisionTensor(3)
 
@@ -107,31 +133,49 @@ class WallGoExampleBase(ABC):
             This format is currently required for the main WallGo routines to understand the data. 
             """
             collisionDirectory = (
-                self.exampleBaseDir
-                / f"CollisionOutput_N{cmdArgs.momentumBasisSize}_UserGenerated"
+                self.exampleBaseDirectory
+                / f"CollisionOutput_N{self.cmdArgs.momentumBasisSize}_UserGenerated"
             )
             collisionResults.writeToIndividualHDF5(str(collisionDirectory))
 
             ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
-
-        try:
-            # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
-            manager.loadCollisionFiles(collisionDirectory)
-        except Exception:
-            print(
-                """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=5 and N=11,
-                so load failure here probably means you've either moved files around or changed the grid size.
-                If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
-                """
+        else:
+            collisionDirectory = (
+                self.exampleBaseDirectory / self.defaultCollisionDirectory
             )
-            exit(2)
+
+        # Specify where to load collision files from. The manager will load them when needed by the internal Boltzmann solver
+        manager.setPathToCollisionData(collisionDirectory)
+
+        # TODO catch load error nicely, it's less trivial now that the loading is hidden deep in manager
+        # print(
+        #    """\nLoad of collision integrals failed! WallGo example models come with pre-generated collision files,
+        #    so load failure here probably means you've either moved files around or changed to incompatible grid size.
+        #    If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+        #    """
+        # )
+        # exit(42)
 
         benchmarkPoints = self.getBenchmarkPoints()
 
         for benchmark in benchmarkPoints:
-            manager.changeInputParameters(benchmark.modelParameters)
-            ## FIXME whats up with the name of this function??
-            manager.setParameters(benchmark.phaseInfo)
+
+            """Update model parameters. Our examples store them internally in the model, through which they propagate to the effective potential.
+            WallGo is not directly aware of model-specific parameters; it only requires EffectivePotential.evaluate() to be valid at field, temperature input,
+            and similarly for particle masses. TODO update collision model
+            """
+            self.updateModelParameters(model, benchmark.inputParameters)
+
+            # This needs to run before wallSpeedLTE() or solveWall(), as it does a lot of internal caching related to hydrodynamics
+
+            """WallGo needs info about the phases at
+            nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
+            Transition goes from phase1 to phase2.
+            """
+            manager.analyzeHydrodynamics(
+                benchmark.phaseInfo,
+                benchmark.veffDerivativeScales,
+            )
 
             # ---- Solve wall speed in Local Thermal Equilibrium (LTE) approximation
             vwLTE = manager.wallSpeedLTE()
@@ -141,10 +185,11 @@ class WallGoExampleBase(ABC):
             # out-of-equilibrium contributions. The resulting wall speed should
             # be close to the LTE result
 
-            bIncludeOffEq = False
-            print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
+            wallSolverSettings = copy.deepcopy(benchmark.wallSolverSettings)
 
-            results = manager.solveWall(bIncludeOffEq)
+            wallSolverSettings.bIncludeOffEquilibrium = False
+            print(f"\n=== Begin EOM with off-eq effects ignored ===")
+            results = manager.solveWall(wallSolverSettings)
 
             print("\n=== Local equilibrium results ===")
             print(f"wallVelocity:      {results.wallVelocity:.6f}")
@@ -154,10 +199,10 @@ class WallGoExampleBase(ABC):
 
             # Repeat with out-of-equilibrium parts included. This requires
             # solving Boltzmann equations, invoked automatically by solveWall()
-            bIncludeOffEq = True
-            print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
+            wallSolverSettings.bIncludeOffEquilibrium = True
 
-            results = manager.solveWall(bIncludeOffEq)
+            print(f"\n=== Begin EOM with off-eq effects included ===")
+            results = manager.solveWall(wallSolverSettings)
 
             print("\n=== Out-of-equilibrium results ===")
             print(f"wallVelocity:      {results.wallVelocity:.6f}")
@@ -166,6 +211,7 @@ class WallGoExampleBase(ABC):
             print(f"wallOffsets:       {results.wallOffsets}")
 
             print("\n=== Search for detonation solution ===")
-            wallGoInterpolationResults = manager.solveWallDetonation()
-            print("\n=== Detonation results ===")
-            print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
+            results = manager.solveWallDetonation(wallSolverSettings)
+            print(f"\n=== Detonation results, {len(results)} solutions found ===")
+            for res in results:
+                print(f"wallVelocity:      {res.wallVelocity}")

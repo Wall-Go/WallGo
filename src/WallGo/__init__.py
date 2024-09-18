@@ -1,9 +1,3 @@
-"""Import types here. We do this so that eg. the EOM class can be accessed as 
-WallGo.EOM. If this wasn't done, WallGo.EOM would actually refer to the MODULE EOM.py which we don't want,
-and would cause hard-to-diagnoze crashes.
-TODO Is there a better way of doing all this?! 
-"""
-
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
 from .exceptions import WallGoError, WallGoPhaseValidationError
@@ -22,7 +16,7 @@ from .Fields import Fields
 from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential, VeffDerivativeScales
 from .FreeEnergy import FreeEnergy
-from .wallGoManager import WallGoManager
+from .wallGoManager import WallGoManager, WallSolverSettings
 from .InterpolatableFunction import InterpolatableFunction
 
 from .collisionArray import CollisionArray

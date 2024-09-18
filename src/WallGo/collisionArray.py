@@ -14,6 +14,7 @@ from .particle import Particle
 from .grid import Grid
 from .polynomial import Polynomial
 
+
 class CollisionArray:
     r"""
     Class used to load, transform, interpolate and hold the collision array
@@ -26,12 +27,22 @@ class CollisionArray:
     """
 
     AXIS_TYPES: typing.Final[tuple[str, ...]] = (
-        "Array", "pz", "pp", "Array",  "pz", "pp",
+        "Array",
+        "pz",
+        "pp",
+        "Array",
+        "pz",
+        "pp",
     )
     r"""Static axis types in correct order."""
 
     AXIS_LABELS: typing.Final[tuple[str, ...]] = (
-        "particles", "pz", "pp", "particles", "polynomial1", "polynomial2",
+        "particles",
+        "pz",
+        "pp",
+        "particles",
+        "polynomial1",
+        "polynomial2",
     )
     r"""Static axis labels in correct order, :math:`ijklmn`."""
 
@@ -211,8 +222,7 @@ class CollisionArray:
 
                 # file names are hardcoded
                 filename = (
-                    directoryPath
-                    / f"collisions_{particle1.name}_{particle2.name}.hdf5"
+                    directoryPath / f"collisions_{particle1.name}_{particle2.name}.hdf5"
                 )
                 try:
                     with h5py.File(str(filename), "r") as file:
@@ -221,9 +231,11 @@ class CollisionArray:
                         size = metadata.attrs["Basis Size"]
 
                         if grid.N > size:
-                            raise RuntimeError(f"""Target collision grid size ({grid.N}) must be smaller
+                            raise RuntimeError(
+                                f"""Target collision grid size ({grid.N}) must be smaller
                                                or equal to the grid size recorded in collision files ({size}).
-                                               """)
+                                               """
+                            )
 
                         # if grid.N > size and collision.generateCollisionIntegrals:
                         #     # Generate temporary directory
@@ -286,18 +298,6 @@ class CollisionArray:
                         )
                 except FileNotFoundError:
                     print(f"CollisionArray error: {filename} not found.")
-                    
-                    # Deprecated, collision integration must be manually initiated
-                    """
-                    if collision.generateCollisionIntegrals:
-                        print(f"Generating collision integrals for {filename}")
-                        ## Computes collisions for all out-of-eq particles specified.
-                        ## The last argument is optional and mainly useful for debugging
-                        collision.calculateCollisionIntegrals(bVerbose=False)
-                        return CollisionArray.newFromDirectory(
-                            collision, grid, basisType, particles, bInterpolate
-                        )
-                    """
                     raise
 
         collisionFileArray = collisionFileArray.reshape(

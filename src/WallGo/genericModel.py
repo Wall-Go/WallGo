@@ -1,7 +1,7 @@
 """Physics model class for WallGo"""
 
 from abc import ABC, abstractmethod  # Abstract Base Class
-from typing import Optional
+from typing import Type, Any
 
 ## WallGo imports
 from .particle import Particle
@@ -16,18 +16,24 @@ class GenericModel(ABC):
     with their model-specific stuff.
     """
 
-    def __init__(self) -> None:
-        """Initializes empty model content."""
-        self.outOfEquilibriumParticles: list[Particle] = []
-        self.modelParameters: dict[str, float] = {}
-        self.effectivePotential: Optional[EffectivePotential] = None
-        self.inputParameters: dict[str, float] = {}
-
     @property
     @abstractmethod
     def fieldCount(self) -> int:
         """Override to return the number of classical background fields
         in your model."""
+
+    @abstractmethod
+    def getEffectivePotential(self) -> "EffectivePotential":
+        """Override to return your effective potential."""
+
+    def __init_subclass__(cls: Type["GenericModel"], **kwargs: Any) -> None:
+        """Called whenever a subclass is initialized.
+        Initialize particle list here.
+        """
+        super().__init_subclass__(**kwargs)
+        cls.outOfEquilibriumParticles = []
+
+    ######
 
     def addParticle(self, particleToAdd: Particle) -> None:
         """Common routine for defining a new out-of-equilibrium particle."""
@@ -35,4 +41,4 @@ class GenericModel(ABC):
 
     def clearParticles(self) -> None:
         """Empties the cached particle list"""
-        self.outOfEquilibriumParticles = []
+        self.outOfEquilibriumParticles: list[Particle] = []

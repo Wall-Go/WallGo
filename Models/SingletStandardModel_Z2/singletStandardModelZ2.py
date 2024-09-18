@@ -58,43 +58,38 @@ class SingletSMZ2(GenericModel):
     methods for the WallGo package.
     """
 
-    @property
-    def fieldCount(self) -> int:
-        """How many classical background fields"""
-        return 2
-
-    def __init__(
-        self,
-        initialInputParameters: dict[str, float],
-        allowOutOfEquilibriumGluon: bool = False,
-    ):
+    def __init__(self, allowOutOfEquilibriumGluon: bool = False):
         """
         Initialize the SingletSMZ2 model.
 
         Parameters
         ----------
-        initialInputParameters: dict[str, float]
-            A dictionary of initial input parameters for the model.
-
+            FIXME
         Returns
         ----------
         cls: SingletSMZ2
             An object of the SingletSMZ2 class.
         """
-        super().__init__()
 
-        self.modelParameters = self.calculateModelParameters(initialInputParameters)
-        self.collisionParameters = self.calculateCollisionParameters(
-            self.modelParameters
-        )
+        self.modelParameters: dict[str, float] = {}
 
         # Initialize internal effective potential with our params dict.
-        self.effectivePotential = EffectivePotentialxSMZ2(
-            self.modelParameters, self.fieldCount
-        )
+        self.effectivePotential = EffectivePotentialxSMZ2(self.modelParameters)
 
         # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles(allowOutOfEquilibriumGluon)
+        self.bIsGluonOffEq = allowOutOfEquilibriumGluon
+
+    # ~ GenericModel interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 2
+
+    def getEffectivePotential(self) -> "EffectivePotentialxSMZ2":
+        return self.effectivePotential
+
+    # ~
 
     def defineParticles(self, includeGluon: bool) -> None:
         """
@@ -166,12 +161,11 @@ class SingletSMZ2(GenericModel):
             )
             self.addParticle(gluon)
 
-    ## Go from input parameters --> Lagrangian parameters
     def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
         """
-        Calculate the model parameters based on the input parameters.
+        Calculate Lagrangian parameters based on the input parameters.
 
         Parameters
         ----------
@@ -234,24 +228,14 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+    def __init__(self, initialModelParams: dict[str, float] = {}) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
-
-        Parameters
-        ----------
-        modelParameters: dict[str, float]
-            A dictionary of model parameters.
-        fieldCount: int
-            The number of fields undergoing the phase transition
-
-        Returns
-        ----------
-        cls: EffectivePotentialxSMZ2
-            an object of the EffectivePotentialxSMZ2 class
         """
-        super().__init__(modelParameters, fieldCount)
-        # The super call already gave us the model params
+
+        super().__init__()
+
+        self.modelParameters = initialModelParams
 
         # Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
@@ -264,6 +248,14 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
+
+    # ~ EffectivePotential interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 2
+
+    # ~
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
@@ -436,7 +428,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             + 3 * self.modelParameters["b4"] * x**2
         )
         mass01 = self.modelParameters["a2"] * v * x
-        thingUnderSqrt = (mass00 - mass11)**2 + 4 * mass01**2
+        thingUnderSqrt = (mass00 - mass11) ** 2 + 4 * mass01**2
 
         msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
         msqEig2 = 0.5 * (mass00 + mass11 + np.sqrt(thingUnderSqrt))
@@ -582,20 +574,12 @@ def main() -> None:
     Without this flag we simply load pre-generated collision data files.
     """
 
-<<<<<<< HEAD
     if args.regenerateMatrixElements:
         from WallGo import mathematicaHelpers
 
         matrixElementModelFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
         mathematicaHelpers.generateMatrixElementsViaSubprocess(matrixElementModelFile)
         # FIXME need to ensure that the pre-generated "default" matrix elements do not get overriden
-=======
-    if args.recalculateMatrixElements:
-        from WallGo import mathematicaHelpers
-
-        matrixElementInputFile = scriptLocation / "MatrixElements/matrixElements.qcd.m"
-        mathematicaHelpers.calculateMatrixElements(matrixElementInputFile)
->>>>>>> 89dd4d4 (WIP refactor of models to make them use a common base interface)
 
     if args.recalculateCollisions:
 
@@ -682,38 +666,41 @@ from wallgo_example_base import ExampleInputPoint
 
 class SingletStandardModelExample(WallGoExampleBase):
 
-    # @override
-    def initWallGoManager(self) -> "WallGo.WallGoManager":
-        # Guess of the wall thickness: 5/Tn
-        wallThicknessIni = 0.05
+    # ~ WallGoExampleBase interface
+    def initCommandLineArgs(self) -> argparse.ArgumentParser:
+        """Non-abstract override to add a SM + singlet specific cmd option"""
 
-        # Estimate of the mean free path of the particles in the plasma: 100/Tn
-        meanFreePath = 1.0
-
-        # Create WallGo control object
-        # The following 2 parameters are used to estimate the optimal value of dT used
-        # for the finite difference derivatives of the potential.
-        # Temperature scale (in GeV) over which the potential changes by O(1).
-        # A good value would be of order Tc-Tn.
-        temperatureScale = 10.0
-        # Field scale (in GeV) over which the potential changes by O(1). A good value
-        # would be similar to the field VEV.
-        # Can either be a single float, in which case all the fields have the
-        # same scale, or an array.
-        fieldScale = [10.0, 10.0]
-        return WallGoManager(
-            wallThicknessIni, meanFreePath, temperatureScale, fieldScale
+        argParser: argparse.ArgumentParser = super().initCommandLineArgs()
+        argParser.add_argument(
+            "--outOfEquilibriumGluon",
+            help="Treat the SU(3) gluons as out-of-equilibrium particle species",
+            action="store_true",
         )
+        return argParser
 
-    # @override
+    @property
+    def exampleBaseDirectory(self) -> pathlib.Path:
+        return pathlib.Path(__file__).resolve().parent
+
     def initCollisionModel(self) -> "WallGoCollision.PhysicsModel":
         pass
 
-    # @override
     def initWallGoModel(self) -> "WallGo.GenericModel":
-        return SingletSMZ2({})
+        """"""
+        # This should run after cmdline argument parsing so safe to use them here
+        return SingletSMZ2(self.cmdArgs.outOfEquilibriumGluon)
 
-    # @override
+    def updateModelParameters(
+        self, model: "SingletSMZ2", inputParameters: dict[str, float]
+    ) -> None:
+        """Convert SM + singlet inputs to Lagrangian params and update internal model parameters.
+        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        so be careful not to replace that reference here.
+        """
+        newParams = model.calculateLagrangianParameters(inputParameters)
+        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and masses
+        model.modelParameters.update(newParams)
+
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
         output: list[ExampleInputPoint] = []
@@ -736,68 +723,20 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0, 200.0]),
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
+                WallGo.VeffDerivativeScales(
+                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                ),
+                WallGo.WallSolverSettings(
+                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    meanFreePath=1.0,
+                    wallThicknessGuess=0.05,
+                ),
             )
         )
 
-        """In addition to model parameters, WallGo needs info about the phases at
-        nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
-        Transition goes from phase1 to phase2.
-        """
-
-<<<<<<< HEAD
-        """Give the input to WallGo. It is NOT enough to change parameters
-           directly in the GenericModel instance because
-            1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific
-               initializations of internal classes
-        """
-        manager.setParameters(phaseInfo)
-
-        """WallGo can now be used to compute wall stuff!"""
-
-        # ---- Solve wall speed in Local Thermal Equilibrium approximation
-
-        vwLTE = manager.wallSpeedLTE()
-
-        print(f"LTE wall speed:    {vwLTE:.6f}")
-
-        # ---- Solve field EOM. For illustration, first solve it without any
-        # out-of-equilibrium contributions. The resulting wall speed should
-        # be close to the LTE result
-
-        bIncludeOffEq = False
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
-
-        results = manager.solveWall(bIncludeOffEq)
-
-        print("\n=== Local equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
-
-        # Repeat with out-of-equilibrium parts included. This requires
-        # solving Boltzmann equations, invoked automatically by solveWall()
-        bIncludeOffEq = True
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
-
-        results = manager.solveWall(bIncludeOffEq)
-
-        print("\n=== Out-of-equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
-
-        print("\n=== Search for detonation solution ===")
-        wallGoDetonationResults = manager.solveWallDetonation(onlySmallest=True)[0]
-        print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
-
-    # end parameter-space loop
-=======
         return output
->>>>>>> 89dd4d4 (WIP refactor of models to make them use a common base interface)
+
+    # ~
 
 
 if __name__ == "__main__":

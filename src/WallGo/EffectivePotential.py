@@ -1,7 +1,8 @@
 import numpy as np
 import numpy.typing as npt
-from typing import Tuple
+from typing import Tuple, Type, Any
 from abc import ABC, abstractmethod ## Abstract Base Class
+from dataclasses import dataclass
 import cmath # complex numbers
 import scipy.optimize
 import scipy.interpolate
@@ -9,6 +10,22 @@ import scipy.interpolate
 from .helpers import derivative, gradient, hessian
 
 from .Fields import Fields, FieldPoint
+
+@dataclass
+class VeffDerivativeScales:
+    """Parameters used to estimate the optimal value of dT used
+    for the finite difference derivatives of the effective potential."""
+
+    temperatureScale: int
+    """Temperature scale (in GeV) over which the potential changes by O(1).
+    A good value would be of order Tc-Tn."""
+
+
+    fieldScale: float | list[float]
+    """Field scale (in GeV) over which the potential changes by O(1). A good value
+    would be similar to the field VEV.
+    Can either be a single float, in which case all the fields have the
+    same scale, or an array of floats (one element for each classical field in the model)."""
 
 
 class EffectivePotential(ABC):
@@ -18,10 +35,7 @@ class EffectivePotential(ABC):
     Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
     However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
-    With in mind, WallGo requires that the effective potential is defined with full T-dependence included.
-
-    The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
-    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
+    With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
     """
 
     """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
@@ -30,35 +44,17 @@ class EffectivePotential(ABC):
     If attempting this, keep full Veff as the default and use the field-only part internally when needed.
     """
 
-
-    ## How many background fields. This is explicitly required so that we can have better control over array shapes 
-    fieldCount: int
-
-    ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
-    fieldLowerBound: float = 1e-8
-    
     ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
     ## when the potential can be computed in terms of simple functions.
     effectivePotentialError: float = 1e-15
     
-    ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
-    temperatureScale: float
+    @property
+    @abstractmethod
+    def fieldCount(self) -> int:
+        """Override to return the number of classical background fields
+        in your model."""
     
-    ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    fieldScale: npt.ArrayLike
-
-    ## In practice we'll get the model params from a GenericModel subclass 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        self.modelParameters = modelParameters
-        self.fieldCount = fieldCount
         
-        # HACK! This intitializes fieldScale and temperatureScale to 1s.
-        # Should be overriden by self.setScales, but used in some tests.
-        self.fieldScale = np.ones(fieldCount)
-        self.temperatureScale = 1.
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
-
-
     @abstractmethod
     def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
@@ -70,24 +66,37 @@ class EffectivePotential(ABC):
         raise NotImplementedError("You are required to give an expression for the effective potential.")
     
 
+    def __init_subclass__(cls: Type["EffectivePotential"], **kwargs: Any) -> None:
+        """"""
+        super().__init_subclass__(**kwargs)
+
+        # HACK! This initializes fieldScale and temperatureScale to 1s.
+        # Should be overriden by self.setScales, but used in some tests.
+
+        """
+        fieldScale = np.ones(cls.fieldCount)
+        temperatureScale = 1.
+        cls.__combinedScales = np.append(fieldScale, temperatureScale)
+        """
+
     #### Non-abstract stuff from here on
     
-    def setPotentialError(self, potentialError):
+    def setPotentialError(self, potentialError: float) -> None:
         """
         Sets self.effectivePotentialError to potentialError.
         """
         self.effectivePotentialError = potentialError
         
-    def setScales(self, temperatureScale: float, fieldScale: npt.ArrayLike):
+    def setScales(self, derivativeScales: VeffDerivativeScales) -> None:
         """
-        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
+        Sets scales used in derivatives.
         """
-        self.temperatureScale = temperatureScale
+        self.temperatureScale = derivativeScales.temperatureScale
         
-        if isinstance(fieldScale, float):
-            self.fieldScale = fieldScale * np.ones(self.fieldCount)
+        if isinstance(derivativeScales.fieldScale, float):
+            self.fieldScale = derivativeScales.fieldScale * np.ones(self.fieldCount)
         else:
-            self.fieldScale = np.asanyarray(fieldScale)
+            self.fieldScale = np.asanyarray(derivativeScales.fieldScale)
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
 

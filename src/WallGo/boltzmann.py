@@ -16,7 +16,8 @@ from .results import BoltzmannResults
 
 if typing.TYPE_CHECKING:
     import importlib
-    
+
+
 class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
@@ -607,7 +608,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
 
-    def loadCollisions(self, directoryPath: 'pathlib.Path') -> None:
+    def loadCollisions(self, directoryPath: "pathlib.Path") -> None:
         """
         Loads collision files for use with the Boltzmann solver.
 
@@ -624,7 +625,6 @@ class BoltzmannSolver:
             self.offEqParticles,
         )
         print(f"Loaded collision data from directory {directoryPath}")
-
 
     @staticmethod
     def _checkBasis(basis: str) -> None:
