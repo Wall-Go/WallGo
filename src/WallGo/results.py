@@ -106,6 +106,7 @@ class WallGoResults:
     """
     Compiles output results for users of WallGo
     """
+
     wallVelocity: float
     """Bubble wall velocity."""
 
@@ -172,10 +173,10 @@ class WallGoResults:
     r"""Relativistically invariant integrals over
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
-    
+
     success: bool
     """Whether or not the calculation was successful."""
-    
+
     message: str
     """Description of the cause of the termination."""
 
