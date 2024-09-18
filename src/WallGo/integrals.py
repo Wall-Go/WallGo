@@ -29,10 +29,9 @@ Jb and Jf in WallGo.defaultIntegrals by loading their interpolation tables.
 import numpy as np
 import scipy.integrate
 
-from .interpolatableFunction import InterpolatableFunction
-
-inputType = list[float] | np.ndarray | float
-outputType = list[float | np.ndarray] | np.ndarray
+from .interpolatableFunction import (InterpolatableFunction,
+                                     inputType,
+                                     outputType)
 
 class JbIntegral(InterpolatableFunction):
     """
@@ -44,7 +43,7 @@ class JbIntegral(InterpolatableFunction):
     ## This doesn't vectorize nicely for numpy due to combination of piecewise
     ## scipy.integrate.quad and conditionals on x.
     # So for array input, let's just do a simple for loop
-    def _functionImplementation(self, x: inputType) -> outputType:
+    def _functionImplementation(self, x: inputType | float) -> outputType:
         """
         Computes the bosonic one-loop thermal function Jb.
 
@@ -107,7 +106,7 @@ class JfIntegral(InterpolatableFunction):
 
     SMALL_NUMBER = 1e-100 # pylint: disable=invalid-name
 
-    def _functionImplementation(self, x: inputType) -> outputType:
+    def _functionImplementation(self, x: inputType | float) -> outputType:
         """
         Computes the fermionic one-loop thermal function Jf.
 
