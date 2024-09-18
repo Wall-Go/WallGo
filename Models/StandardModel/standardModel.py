@@ -301,7 +301,7 @@ class EffectivePotentialSM(EffectivePotential):
 
     def evaluate(  # pylint: disable=R0914
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex | np.ndarray:
+    ) -> float | np.ndarray:
         """
         Evaluate the effective potential. We implement the effective potential
         of eq. (7) of hep-ph/9506475.
@@ -333,9 +333,12 @@ class EffectivePotentialSM(EffectivePotential):
         mZ = self.modelParameters["mZ"]
         mt = self.modelParameters["mt"]
 
+        # FIXME type detection doesn't work here, lambdaT is interpreted as "Any".
+        # Hotfix below (specify type hints manually)
+
         # Implement finite-temperature corrections to the modelParameters lambda,
         # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
-        lambdaT = self.modelParameters["lambda"] - 3 / (
+        lambdaT: float | np.ndarray = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
         ) * (
             2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
@@ -343,18 +346,18 @@ class EffectivePotentialSM(EffectivePotential):
             - 4 * mt**4 * np.log(mt**2 / (af * T**2) + 1e-100)
         )
 
-        cT = self.modelParameters["C0"] + 1 / (16 * np.pi * np.pi) * (
-            4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2
-        )
+        cT: float | np.ndarray = self.modelParameters["C0"] + 1 / (
+            16 * np.pi * np.pi
+        ) * (4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2)
 
         # HACK: take the absolute value of lambdaT here,
         # to avoid taking the square root of a negative number
-        eT = (
+        eT: float | np.ndarray = (
             self.modelParameters["E0"]
             + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT) ** 1.5
         )
 
-        potentialT = (
+        potentialT: float | np.ndarray = (
             self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
             - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T))
             - eT * T * pow(v, 3)
@@ -363,7 +366,7 @@ class EffectivePotentialSM(EffectivePotential):
 
         potentialTotal = np.real(potentialT + self.constantTerms(T))
 
-        return potentialTotal  # TODO: resolve return type.
+        return np.asanyarray(potentialTotal)
 
     def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
