@@ -1,5 +1,7 @@
-from typing import Protocol
+"""Physics model class for WallGo"""
+
 from abc import ABC, abstractmethod  # Abstract Base Class
+from typing import Optional
 
 ## WallGo imports
 from .particle import Particle
@@ -10,70 +12,29 @@ class GenericModel(ABC):
     """
     Common interface for WallGo model definitions.
     This is basically input parameters + particle definitions + effective potential.
-    The user should implement this and the abstract methods below with their model-specific stuff.
+    The user should implement this and the abstract methods below
+    with their model-specific stuff.
     """
 
-    ## Particle list, this should hold all particles relevant for matrix elements (including in-equilibrium ones)
-    @property
-    @abstractmethod
-    def particles(self) -> list[Particle]:
-        pass
+    def __init__(self) -> None:
+        """Initializes empty model content."""
+        self.outOfEquilibriumParticles: list[Particle] = []
+        self.modelParameters: dict[str, float] = {}
+        self.effectivePotential: Optional[EffectivePotential] = None
+        self.inputParameters: dict[str, float] = {}
 
-    ## Another particle array for holding just the out-of-equilibrium particles
-    @property
-    @abstractmethod
-    def outOfEquilibriumParticles(self) -> list[Particle]:
-        pass
-
-    @property
-    @abstractmethod
-    def modelParameters(self) -> dict[str, float]:
-        """
-        Returns the parameters of the model as a dictionary.
-        Model parameters (parameters in the action and RG scale, but not temperature)
-        are expected to be a member dict.
-        Here, is a property definition for it.
-        Child classes can just do modelParameters = { ... } to define it
-
-        Returns:
-            A dictionary containing the model parameters,
-            where the keys are strings and the values are floats.
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def collisionParameters(self) -> dict[str, float]:
-        pass
-
-    ## How many classical fields
     @property
     @abstractmethod
     def fieldCount(self) -> int:
-        pass
-
-    """
-    ## Effective potential
-    @property
-    @abstractmethod
-    def Veff(self) -> EffectivePotential:
-        pass
-    """
-    effectivePotential: EffectivePotential
-    inputParameters: dict[str, float]
+        """Override to return the number of classical background fields
+        in your model."""
 
     def addParticle(self, particleToAdd: Particle) -> None:
-        ## Common routine for defining a new particle. Usually should not be overriden
+        """Common routine for defining a new out-of-equilibrium particle."""
+        self.outOfEquilibriumParticles.append(particleToAdd)
 
-        self.particles.append(particleToAdd)
-
-        # add to out-of-eq particles too if applicable
-        if not particleToAdd.inEquilibrium:
-            self.outOfEquilibriumParticles.append(particleToAdd)
-
-    ## Empties the particle lists
     def clearParticles(self) -> None:
-        self.particles = []
+        """Empties the cached particle list"""
         self.outOfEquilibriumParticles = []
 
     ## Go from whatever input parameters to renormalized Lagrangian parameters.

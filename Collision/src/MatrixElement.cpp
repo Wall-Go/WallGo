@@ -1,115 +1,153 @@
 #include <iostream>
-#include <functional>
-#include <array>
+#include <cassert>
 
 #include "muParser.h" // math expression parser
 #include "MatrixElement.h"
-#include "ParticleSpecies.h"
-#include "CollElem.h"
-#include "CollisionIntegral.h"
+#include "ModelParameters.h"
+
 
 namespace wallgo
 {
 
-MatrixElement::MatrixElement() {
-
-    parser = new mu::Parser();
-    s_internal = 0; t_internal = 0; u_internal = 0;
-
-    parser->SetExpr("0"); 
+MatrixElement::MatrixElement() 
+    : mMandelstam(0, 0, 0)
+{
+    initParser();
 }
 
 MatrixElement::~MatrixElement()
 {
-    delete parser;
+    clearParser();
 }
 
 MatrixElement::MatrixElement(const MatrixElement& other)
 {
-    couplings_internal = other.couplings_internal;
-    msq_internal = other.msq_internal;
-    expression = other.getExpression();
-    parser = new mu::Parser();
-    initParser(couplings_internal, msq_internal);
-    parser->SetExpr(expression);
+    init(other.mExpression, other.mParticleIndices, other.mSymbols);
 }
 
-void MatrixElement::operator=(const MatrixElement &other)
+MatrixElement& MatrixElement::operator=(const MatrixElement &other)
 {
-    couplings_internal = other.couplings_internal;
-    msq_internal = other.msq_internal;
-    expression = other.getExpression();
-    // deleting this just to make sure we clear everything
-    delete parser;
-    parser = new mu::Parser();
-    initParser(couplings_internal, msq_internal);
-    parser->SetExpr(expression);
+    if (this == &other) return *this;
+
+    init(other.mExpression, other.mParticleIndices, other.mSymbols);
+    return *this;
 }
 
-void MatrixElement::initParser(const std::vector<double> &couplings, const std::vector<double> &massSquares)
+bool MatrixElement::init(
+    const std::string& expression,
+    const std::vector<uint32_t> externalParticleIndices,
+    const std::unordered_map<std::string, double>& symbols)
 {
-    parser->DefineVar("s", &s_internal);
-    parser->DefineVar("t", &t_internal);
-    parser->DefineVar("u", &u_internal);
+    mSymbols.clear();
+    clearParser();
 
-    setConstants(couplings, massSquares);
+    mParticleIndices = externalParticleIndices;
 
-    // Couplings are c[i], mass-squares are msq[i].
-    // To allow variable names like msq[2] we need to add [] to parser's character list
-    parser->DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+    initParser();
 
-    try {
-        for (uint i = 0; i < couplings_internal.size(); ++i) {
-            std::string coupling_str = "c[" + std::to_string(i) + "]";
-            parser->DefineVar(coupling_str, &couplings_internal[i]);
+    bool bInitOK = true;
+
+    for (const auto& [symbol, value] : symbols)
+    {
+        bInitOK &= defineSymbol(symbol, value);
+    }
+
+    bInitOK &= setExpression(expression);
+    
+    return bInitOK;
+}
+
+bool MatrixElement::setExpression(const std::string &expressionIn)
+{
+    mExpression = expressionIn;
+    parser.SetExpr(mExpression);
+
+    // Do sensibility checks here so that we can skip them in performance critical sections
+    return testExpression();
+}
+
+
+void MatrixElement::updateModelParameters(const ModelParameters& parameters)
+{
+    for (auto const& [name, newValue] : parameters.getParameterMap())
+    {
+        // Change only keys that have been defined as symbols
+        if (mSymbols.count(name) > 0)
+        {
+            updateModelParameter(name, newValue);
         }
-
-        for (uint i = 0; i < msq_internal.size(); ++i) {
-            std::string coupling_str = "msq[" + std::to_string(i) + "]";
-            parser->DefineVar(coupling_str, &msq_internal[i]);
-        }
-
-    } catch (mu::Parser::exception_type &parserException) {
-        std::cerr << "=== Error when initializing symbols. Parser threw error: \n"; 
-        std::cerr << parserException.GetMsg() << std::endl;
     }
 }
 
-void MatrixElement::setExpression(const std::string &expressionIn)
+void MatrixElement::updateModelParameter(const std::string &name, double newValue)
 {
-    expression = expressionIn;
-    parser->SetExpr(expression);
-
-    /* Do checks here so that we don't need to have slow try...catch in evaluate() function */
-    testExpression();
+    if (mSymbols.count(name) > 0)
+    {
+        mSymbols[name] = newValue;
+    }
+    else
+    {
+        std::cerr << "MatrixElement::updateModelParameter called with parameter " << name << ", but the parameter has not been defined" << std::endl;
+    }
 }
 
-void MatrixElement::setConstants(const std::vector<double> &couplings, const std::vector<double> &massSquares)
+double MatrixElement::evaluate(const Mandelstam& mandelstams)
 {
-    couplings_internal = couplings;
-    msq_internal = massSquares;
+    mMandelstam = mandelstams;
+    return parser.Eval();
 }
 
-double MatrixElement::evaluate(double s, double t, double u) {
-
-    s_internal = s;
-    t_internal = t;
-    u_internal = u;
-
-    return parser->Eval();
+bool MatrixElement::defineSymbol(const std::string &symbol, double initValue)
+{
+    try
+    {
+        mSymbols[symbol] = initValue;
+        parser.DefineVar(symbol, &mSymbols.at(symbol));
+    }
+    catch (mu::Parser::exception_type &parserException) 
+    {
+        std::cerr << "=== Error when defining symbol '" << symbol << "'. Parser threw error: \n"; 
+        std::cerr << parserException.GetMsg() << std::endl;
+        return false;
+    }
+    return true;
 }
 
-void MatrixElement::testExpression() {
+void MatrixElement::initParser()
+{
+    parser.SetExpr("0");
 
+    parser.DefineVar("s", &mMandelstam.s);
+    parser.DefineVar("t", &mMandelstam.t);
+    parser.DefineVar("u", &mMandelstam.u);
+
+    // To allow variable names like msq[2] we need to add [] to parser's character list
+    parser.DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+}
+
+void MatrixElement::clearParser()
+{
+    parser.SetExpr("0");
+    parser.ClearVar();
+}
+
+bool MatrixElement::testExpression() 
+{
     // try evaluate at some random values
-    try {
-        evaluate(-4.2, 2.9, 0);
-    } catch (mu::Parser::exception_type &parserException) {
+    try
+    {
+        evaluate(Mandelstam(-4.2, 2.9, 0));
+    }
+    catch (mu::Parser::exception_type &parserException)
+    {
         std::cerr << "=== Error when evaluating matrix element. Parser threw error: \n"; 
         std::cerr << parserException.GetMsg() << std::endl;
         std::cerr << "The expression was: \n";
-        std::cerr << expression << "\n";
+        std::cerr << mExpression << "\n";
+
+        return false;
     }
+    return true;
 }
 
 } // namespace

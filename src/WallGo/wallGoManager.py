@@ -3,12 +3,13 @@ Defines the WallGoManager class which initializes the different object needed fo
 wall velocity calculation.
 """
 
-from typing import Type
+from typing import Type, TYPE_CHECKING
 import numpy as np
+from deprecated import deprecated
+import pathlib
 
 # WallGo imports
 import WallGo
-from .collisionWrapper import Collision
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
@@ -22,6 +23,7 @@ from .Integrals import Integrals
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
+
 
 class WallGoManager:
     """Defines a 'control' class for managing the program flow.
@@ -39,7 +41,7 @@ class WallGoManager:
     ):
         """
         Do common model-independent setup here
-        
+
         Parameters
         ----------
         wallThicknessIni : float
@@ -73,7 +75,6 @@ class WallGoManager:
         self._initBoltzmann()
         self.temperatureScaleInput = temperatureScaleInput
         self.fieldScaleInput = fieldScaleInput
-        self.collision: Collision
         self.model: GenericModel
         self.boltzmannSolver: BoltzmannSolver
         self.hydrodynamics: Hydrodynamics
@@ -87,23 +88,10 @@ class WallGoManager:
         """
         self.model = model
 
-    def _initCollision(self, model: GenericModel) -> None:
-        """
-        Initializes the collision module.
-        Creates Collision singleton which automatically loads the collision module
-        Use help(Collision.manager) for info about what functionality is available
-
-        Parameters
-        ----------
-        model : GenericModel
-            The model to be used for collision detection.
-        """
-        self.collision = Collision(model)
-
     def registerModel(self, model: GenericModel) -> None:
         """
         Register a physics model with WallGo.
-        
+
         Parameters
         ----------
         model : GenericModel
@@ -111,7 +99,6 @@ class WallGoManager:
         """
         assert isinstance(model, GenericModel)
         self._initModel(model)
-        self._initCollision(model)
 
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
@@ -127,7 +114,7 @@ class WallGoManager:
         """
         Validate the phase input and initialize the temperature range and several
         objects that will be used for the calculation.
-        
+
         Parameters
         ----------
         phaseInput: WallGo.PhaseInfo
@@ -147,13 +134,13 @@ class WallGoManager:
 
         print("Temperature ranges:")
         print(
-            "High-T phase: TMin = "\
-            f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature}, "\
+            "High-T phase: TMin = "
+            f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature}, "
             f"TMax = {self.thermodynamics.freeEnergyHigh.maxPossibleTemperature}"
         )
         print(
-            "Low-T phase: TMin = "\
-            f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "\
+            "Low-T phase: TMin = "
+            f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
         )
 
@@ -162,9 +149,11 @@ class WallGoManager:
         self._initHydrodynamics(self.thermodynamics)
         self._initEOM()
 
-        if (not np.isfinite(self.hydrodynamics.vJ) or
-            self.hydrodynamics.vJ > 1 or
-            self.hydrodynamics.vJ < 0):
+        if (
+            not np.isfinite(self.hydrodynamics.vJ)
+            or self.hydrodynamics.vJ > 1
+            or self.hydrodynamics.vJ < 0
+        ):
             raise WallGoError(
                 "Failed to solve Jouguet velocity at input temperature!",
                 data={
@@ -183,7 +172,7 @@ class WallGoManager:
         """
         Recomputes the model parameters when the user provides new inputparameters.
         Also updates the effectivePotential correspondingly.
-        
+
         Parameters
         ----------
         inputParameters : dict
@@ -212,7 +201,7 @@ class WallGoManager:
         This checks that the user-specified phases are OK.
         Specifically, the effective potential should have two minima at the given T,
         otherwise phase transition analysis is not possible.
-        
+
         Parameters
         ----------
         phaseInput : PhaseInfo
@@ -302,22 +291,24 @@ class WallGoManager:
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(
-                error.message, self.phasesAtTn, error.data) from error
+                error.message, self.phasesAtTn, error.data
+            ) from error
 
         # Raise an error if this is an inverse PT (if epsilon is negative)
         if hydrodynamicsTemplate.epsilon < 0:
             raise WallGoError(
-                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be "\
-                "positive.")
+                f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be "
+                "positive."
+            )
 
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
 
         if THighTMaxTemplate is None:
-            THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
+            THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
         if TLowTMaxTemplate is None:
-            TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax")*Tn
+            TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
@@ -330,8 +321,8 @@ class WallGoManager:
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
-        TMinHighT, TMaxHighT = 0, max(2*Tn, fudgeFactor * THighTMaxTemplate)
-        TMinLowT, TMaxLowT = 0, max(2*Tn, fudgeFactor * TLowTMaxTemplate)
+        TMinHighT, TMaxHighT = 0, max(2 * Tn, fudgeFactor * THighTMaxTemplate)
+        TMinLowT, TMaxLowT = 0, max(2 * Tn, fudgeFactor * TLowTMaxTemplate)
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
@@ -343,7 +334,7 @@ class WallGoManager:
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """
         Initialize the Hydrodynamics object.
-        
+
         Parameters
         ----------
         thermodynamics : Thermodynamics
@@ -359,7 +350,7 @@ class WallGoManager:
     def _initGrid(self, wallThicknessIni: float, meanFreePath: float) -> None:
         r"""
         Initialize the Grid object
-        
+
         Parameters
         ----------
         wallThicknessIni : float
@@ -423,10 +414,12 @@ class WallGoManager:
 
         wallThicknessBounds = (
             self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
-            self.config.getfloat("EquationOfMotion", "wallThicknessUpperBound"))
+            self.config.getfloat("EquationOfMotion", "wallThicknessUpperBound"),
+        )
         wallOffsetBounds = (
             self.config.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
-            self.config.getfloat("EquationOfMotion", "wallOffsetUpperBound"))
+            self.config.getfloat("EquationOfMotion", "wallOffsetUpperBound"),
+        )
 
         self.eom = EOM(
             self.boltzmannSolver,
@@ -444,22 +437,20 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-    def loadCollisionFiles(self, collision: Collision) -> None:
+    def loadCollisionFiles(self, directoryPath: pathlib.Path) -> None:
         """
-        Loads collision files and reads them using the Boltzmann solver.
+        Loads collision files for use with the Boltzmann solver.
 
-        This method takes a collision object as input and uses the Boltzmann solver to
-        read the collision files. The collision object should contain the path of the
-        collision file to be loaded.
+        Args:
+            directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.
 
-        Parameters
-        ----------
-        collision : Collision
-            The collision object from collision_wrapper.py.
+        Returns:
+            None
         """
-        print("=== WallGo collision generation ===")
-        self.boltzmannSolver.readCollisions(collision)
+        self.boltzmannSolver.loadCollisions(directoryPath)
 
+    # this actually crashes now, so its more than deprecated
+    @deprecated("Use WallGoManager.loadCollisionFiles")
     def generateCollisionFiles(self) -> None:
         """
         Loads collision files and reads them using the Boltzmann solver.
@@ -473,7 +464,7 @@ class WallGoManager:
     def wallSpeedLTE(self) -> float:
         """
         Solves wall speed in the Local Thermal Equilibrium approximation.
-        
+
         Returns
         -------
         float
@@ -489,7 +480,7 @@ class WallGoManager:
     ) -> WallGoResults:
         """
         Solves the EOM and computes the wall velocity.
-        
+
         Parameters
         ----------
         bIncludeOffEq : bool
@@ -497,7 +488,7 @@ class WallGoManager:
         wallThicknessIni : float or None, optional
             Initial guess of the wall thickness that will be used to solve the EOM. If
             None, set it to 5/Tnucl. Default is None.
-            
+
         Returns
         -------
         WallGoResults
@@ -549,8 +540,9 @@ class WallGoManager:
         vmax = self.config.getfloat("EquationOfMotion", "vwMaxDeton")
 
         if vmin >= vmax:
-            raise WallGoError("vmax must be larger than vmin",
-                              {'vmin': vmin, 'vmax': vmax})
+            raise WallGoError(
+                "vmax must be larger than vmin", {"vmin": vmin, "vmax": vmax}
+            )
 
         return self.eom.findWallVelocityDetonation(
             vmin,
@@ -560,7 +552,7 @@ class WallGoManager:
             nbrPointsMax,
             overshootProb,
             rtol,
-            onlySmallest
+            onlySmallest,
         )
 
     def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:

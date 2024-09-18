@@ -1,0 +1,36 @@
+# Uses scikit-build-core and its conan plugin scikit-build-core-conan to invoke install dependencies with Conan, then invoke CMake normally.
+# Makes the Collision module installable with pip:
+# pip install . [-v]
+# The -v is necessary to see what is going on under the hood (Conan, CMake messages).
+# Note that build artifacts will go wherever pip decides to put them .
+
+[build-system]
+requires = ["scikit-build-core-conan>=0.3.1", "pybind11>=2.13.1", "mypy>=1.11.1"]
+build-backend = "scikit_build_core_conan.build"
+
+[project]
+name = "WallGoCollision"
+version = "0.1.0"
+description = "Python bindings for WallGo Collision module"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+[tool.scikit-build]
+cmake.verbose = false
+cmake.build-type = "Release"
+# Run cmake before building wheel
+wheel.cmake = true
+# Include files from these dirs in the wheel (__init__.py etc)
+wheel.packages = ["python/packagedata/WallGoCollision"]
+wheel.exclude = ["__pycache__/*"]
+
+[tool.scikit-build.cmake.define]
+# Disable compilation of CPP specific examples
+BUILD_EXAMPLES = "OFF"
+
+# Editable installs come with a bunch of issues, see https://scikit-build-core.readthedocs.io/en/latest/configuration.html#editable-installs
+# In particular, pip tends to delete the build dir after installation, so we lose the Conan toolchain file etc.
+# The docs recommend to preinstall dependencies when doing editable installs
+
+[tool.scikit-build-core-conan]
+build = "missing"

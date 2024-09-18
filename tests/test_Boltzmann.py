@@ -1,22 +1,14 @@
 """
 Tests of the boltzmann module
 """
-import os  # for path names
 import pytest  # for tests
 import numpy as np  # arrays and maths
+import pathlib
 import WallGo
 
 
-real_path = os.path.realpath(__file__)
-dir_path = os.path.dirname(real_path)
-
-
-class DummyCollisionPath:  # pylint: disable=too-few-public-methods
-    """
-    For reading collision integrals in the context of these tests
-    """
-    def __init__(self, path: str) -> None:
-        self.outputDirectory = path
+real_path = pathlib.Path(__file__)
+dir_path = pathlib.Path(__file__).parent.resolve()
 
 
 @pytest.mark.parametrize(
@@ -44,13 +36,13 @@ def test_Delta00(
     # that works because argument name here matches that used in fixture def
     bg = boltzmannTestBackground
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 100)
-    collisionPath = dir_path + "/Testdata/N19"
+    collisionPath = dir_path / "Testdata/N19"
     boltzmann = WallGo.BoltzmannSolver(grid, "Cardinal", "Cardinal", "Spectral")
 
     boltzmann.updateParticleList([particle])
     boltzmann.setBackground(bg)
-    collision = DummyCollisionPath(collisionPath)
-    boltzmann.readCollisions(collision)
+
+    boltzmann.loadCollisions(collisionPath)
 
     # coordinates
     _, rz, rp = grid.getCompactCoordinates()  # compact
@@ -108,12 +100,11 @@ def test_solution(
     bg = boltzmannTestBackground
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 1)
 
-    collisionPath = dir_path + "/Testdata/N11"
+    collisionPath = dir_path / "Testdata/N11"
     boltzmann = WallGo.BoltzmannSolver(grid)
     boltzmann.updateParticleList([particle])
     boltzmann.setBackground(bg)
-    collision = DummyCollisionPath(collisionPath)
-    boltzmann.readCollisions(collision)
+    boltzmann.loadCollisions(collisionPath)
 
     # solving Boltzmann equations
     deltaF = boltzmann.solveBoltzmannEquations()
