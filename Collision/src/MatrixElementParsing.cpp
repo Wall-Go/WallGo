@@ -3,8 +3,12 @@
 #include <regex>
 #include <map>
 
+#include "nlohmann/json.hpp"
+
 #include "MatrixElementParsing.h"
 #include "Common.h"
+
+using json = nlohmann::json;
 
 namespace wallgo
 {
@@ -128,6 +132,176 @@ bool parseMatrixElements(
     }
 
     return bMatrixElementsOK;
+}
+
+struct ReadParticle
+{
+    std::string name;
+    int32_t index;
+};
+
+bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles)
+{
+    bool bSuccess = true;
+    std::vector<std::string> errorReasons;
+    outParticles.clear();
+
+    if (data.contains("particles") && data["particles"].is_array())
+    {
+        for (const auto& particleEntry : data["particles"])
+        {
+
+            bool bHasName = particleEntry.contains("name") && particleEntry["name"].is_string();
+            bool bHasIndex = particleEntry.contains("index") && particleEntry["index"].is_number_integer();
+            
+            if (!bHasName)
+            {
+                errorReasons.push_back("Invalid name (missing or incomprehensible)");
+            }
+
+            if (!bHasIndex)
+            {
+                errorReasons.push_back("Invalid index (missing or incomprehensible)");
+            }
+
+            if (!bHasName || !bHasIndex)
+            {
+                std::cerr << "Invalid particle entry: " << particleEntry.dump() << std::endl;
+                bSuccess = false;
+                break;
+            }
+
+            ReadParticle particle;
+            particle.name = particleEntry["name"];
+            particle.index = particleEntry["index"];
+
+            outParticles.push_back(particle);
+        }
+    }
+    else
+    {
+        errorReasons.push_back("Missing or invalid entry: \"particles\"");
+        bSuccess = false;
+    }
+
+    if (!bSuccess)
+    {
+        std::cerr << "Particle parsing from JSON failed. Reasons:\n";
+        for (const std::string& errorMsg : errorReasons)
+        {
+            std::cerr << errorMsg << std::endl;
+        }
+    }
+
+    return bSuccess;
+}
+
+struct ReadMatrixElement
+{
+    std::vector<int32_t> particleIndices;
+    std::vector<std::string> parameters;
+    std::string expression;
+};
+
+bool readMatrixElementsJson(const json& data, std::vector<ReadMatrixElement>& outMatrixElements)
+{
+    std::vector<std::string> errorReasons;
+    outMatrixElements.clear();
+
+    if (data.contains("matrixElements") && data["matrixElements"].is_array())
+    {
+        for (const auto& entry : data["matrixElements"])
+        {
+            bool bHasIndices = entry.contains("externalParticles") && entry["externalParticles"].is_array();
+            // lack of parameters is non-fatal
+            bool bHasParameters = entry.contains("parameters") && entry["parameters"].is_array();
+            bool bHasExpression = entry.contains("expression") && entry["expression"].is_string();
+
+            ReadMatrixElement newElement;
+
+            if (!bHasIndices)
+            {
+                errorReasons.push_back("Invalid particle indices (missing or incomprehensible)");            }
+            else
+            {
+                for (const auto& idx : entry["externalParticles"])
+                {
+                    if (!idx.is_number_integer())
+                    {
+                        errorReasons.push_back("Non-integer particle index");
+                        newElement.particleIndices.clear();
+                        break;
+                    }
+
+                    newElement.particleIndices.push_back(idx);
+                }
+            }
+
+            if (!bHasExpression)
+            {
+                errorReasons.push_back("Invalid matrix element expression (missing or incomprehensible");
+            }
+
+            if (errorReasons.size() > 0)
+            {
+                std::cerr << "Invalid matrix element entry: " << entry.dump() << std::endl;
+                break;
+            }
+
+            newElement.expression = entry["expression"];
+
+            // Read parameter symbols associated with the expression
+            if (bHasParameters)
+            {
+                for (const auto& param : entry["parameters"])
+                {
+                    if (!param.is_string())
+                    {
+                        errorReasons.push_back("Invalid parameter (must be string)");
+                        newElement.parameters.clear();
+                        break;
+                    }
+
+                    newElement.parameters.push_back(param);
+                }
+            }
+        }
+    }
+    else
+    {
+        errorReasons.push_back("Missing or invalid entry: \"matrixElements\"");
+    }
+
+    bool bSuccess = errorReasons.size() == 0;
+    if (!bSuccess)
+    {
+        std::cerr << "Matrix element parsing from JSON failed. Reasons:\n";
+        for (const std::string& errorMsg : errorReasons)
+        {
+            std::cerr << errorMsg << std::endl;
+        }
+    }
+
+    return bSuccess;
+}
+
+bool testJSON(const std::filesystem::path& matrixElementJSON)
+{
+    std::ifstream file(matrixElementJSON);
+    json data = json::parse(file);
+
+    std::map<IndexPair, std::vector<MatrixElement>> outMatrixElements;
+
+
+    std::vector<ReadParticle> particlesJson;
+    bool bSuccess = readParticlesJson(data, particlesJson);
+    if (!bSuccess) return false;
+
+    std::vector<ReadMatrixElement> matrixElementsJson;
+    bSuccess &= readMatrixElementsJson(data, matrixElementsJson);
+    if (!bSuccess) return false;
+
+    return bSuccess;
 }
 
 } // namespace utils

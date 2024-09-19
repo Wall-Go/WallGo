@@ -21,5 +21,7 @@ bool parseMatrixElements(
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements);
 
 
+bool testJSON(const std::filesystem::path& matrixElementJSON);
+
 } // namespace utils
 } // namespace wallgo
