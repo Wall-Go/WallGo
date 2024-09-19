@@ -321,15 +321,56 @@ void buildMatrixElements(
     const std::vector<ReadMatrixElement>& parsedMatrixElements,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
-    for (const ReadMatrixElement& readElement : parsedMatrixElements)
+
+    outMatrixElements.clear();
+
+    // Iterate over all (p1, p2) off-eq particle combinations and find and init matrix elements that contribute to their Boltzmann mixing
+    for (int32_t idx1 : modelOffEqParticleIndices) for (int32_t idx2 : modelOffEqParticleIndices)
     {
-        MatrixElement newElement;
+        const IndexPair offEqPair(idx1, idx2);
+        outMatrixElements.insert({ offEqPair, std::vector<MatrixElement>() });
 
-        //newElement.init(readElement.expression, readElement.particleIndices)
+        for (const ReadMatrixElement& readElement : parsedMatrixElements)
+        {
+            assert(!readElement.particleIndices.empty(), "Matrix element missing external particle info");
 
-        
-        //bMatrixElementsOK &= newElement.init(readExpressions[elementIdx], indices, symbols);
+            const std::vector<int32_t>& indices = readElement.particleIndices;
+
+            if (indices.front() != idx1) continue;
+            // Any other index needs to match idx2
+            if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
+
+            // Indices found, so this matrix element contributes. Now create it
+
+            MatrixElement newElement;
+
+            // Define the numerical matrix element to only depend on symbols that were parsed together with the expression.
+            // If empty, define it to depend on all model parameters
+            std::unordered_map<std::string, double> symbols;
+
+            for (const std::string& s : readElement.parameters)
+            {
+                if (modelSymbols.count(s) < 1)
+                {
+                    std::cerr << "Error: matrix element was defined to depend on symbol '" << s << "', but this symbol has not been defined in PhysicsModel.\n";
+                    std::cerr << "This is very likely caused by invalid user input and almost certainly fatal, but we try to continue anyway.\n";
+                    std::cerr << "The problematic matrix element was:\n\n" << readElement.expression << std::endl;
+                    continue;
+                }
+
+                symbols.insert({ s, modelSymbols.at(s) });
+            }
+            if (symbols.empty())
+            {
+                symbols = modelSymbols;
+            }
+
+            newElement.init(readElement.expression, readElement.particleIndices, symbols);
+
+            outMatrixElements.at(offEqPair).push_back(newElement);
+        }
     }
+
 }
 
 } // namespace utils
