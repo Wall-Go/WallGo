@@ -2,7 +2,7 @@
 FAQs
 ===========================================
 
-.. contents:: Table of Contents
+.. contents::
     :local:
     :depth: 2
 
@@ -10,9 +10,10 @@ FAQs
 General
 =======
 
-- **How come WallGo is so amazing?**
+- **How should I cite WallGo?**
 
-    Great question!
+    WallGo is free and open source, but if you use WallGo in your work, we ask that you
+    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`.
 
 Installation
 ============
@@ -25,9 +26,15 @@ Installation
 Matrix elements
 ===============
 
-- **I want to compare to use a different set of matrix elements, is this possible?**
+- **I want to use a different set of matrix elements, is this possible?**
 
     Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].
+
+- **Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?**
+    Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
+    we used this to cross check our results. We have included an example in the repository
+    for the `WallGo MatrixElements package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
+    a look at `tests/feyn`.
 
 - **I do not have a Mathematica license, can I still generate matrix elements?**
 
