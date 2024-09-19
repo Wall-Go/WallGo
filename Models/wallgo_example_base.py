@@ -74,6 +74,24 @@ class WallGoExampleBase(ABC):
         )
         return bSuccess
 
+    def shouldRecalculateCollisions(self) -> bool:
+        """Called from runExample() to check if new collision data should be generated.
+        Override with your custom condition. The base class version always returns False.
+        """
+        return False
+
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "WallGo.GenericModel",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Override to propagate changes from your WallGo model to the collision model.
+        The base example calls this in runExample() if new collision data needs to be generated.
+        """
+        raise NotImplementedError(
+            "Must override WallGoBaseExample.updateCollisionModel() to propagate changes from WallGo model to the collision model"
+        )
+
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
         argParser = argparse.ArgumentParser()
 
@@ -144,6 +162,14 @@ class WallGoExampleBase(ABC):
         model = self.initWallGoModel()
         manager.registerModel(model)
 
+        """Collision model will be initialized only if new collision integrals are needed
+        """
+        collisionModel: "WallGoCollision.PhysicsModel" | None = None
+        """CollisionTensor object to hold and compute the collision integrals,
+        linked to the collision model that creates it. Will be initialized only if new collision integrals are needed.
+        """
+        collisionTensor: "WallGoCollision.CollisionTensor" | None = None
+
         # hacky
         momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
 
@@ -157,6 +183,10 @@ class WallGoExampleBase(ABC):
         # exit(42)
 
         benchmarkPoints = self.getBenchmarkPoints()
+        if len(benchmarkPoints) < 1:
+            print(
+                "No benchmark points given, did you forget to override WallGoExampleBase.getBenchmarkPoints()?"
+            )
 
         for benchmark in benchmarkPoints:
 
@@ -205,7 +235,9 @@ class WallGoExampleBase(ABC):
             package WallGoCollision. Here we either recalculate them in full, or load
             pre-calculated collision data.
             """
-            bNeedsNewCollisions = self.cmdArgs.recalculateCollisions
+            bNeedsNewCollisions = (
+                self.cmdArgs.recalculateCollisions or self.shouldRecalculateCollisions()
+            )
 
             # Specify where to load collision files from. The manager will load them when needed by the internal Boltzmann solver.
             # Can use existing collision data? => use data packaged with the example. Needs new data? => set new directory and run collision integrator there
@@ -221,22 +253,31 @@ class WallGoExampleBase(ABC):
                 )
                 manager.setPathToCollisionData(newCollisionDir)
 
-                collisionModel = self.initCollisionModel(model)
+                ## Initialize collision model if not already done during an earlier benchmark point
+                if collisionModel is None or collisionTensor is None:
+                    collisionModel = self.initCollisionModel(model)
 
-                """Load matrix elements into the collision model.
-                This is simply a matter of passing a valid file path to the model,
-                but this base example defines a helper function that concrete
-                examples can modify to suit their needs. If the load or parsing fails,
-                we abort here. 
-                """
-                if not self.loadMatrixElements(collisionModel):
-                    print("FATAL: Failed to load matrix elements")
-                    exit()
+                    """Load matrix elements into the collision model.
+                    This is simply a matter of passing a valid file path to the model,
+                    but this base example defines a helper function that concrete
+                    examples can modify to suit their needs. If the load or parsing fails,
+                    we abort here. 
+                    """
+                    if not self.loadMatrixElements(collisionModel):
+                        print("FATAL: Failed to load matrix elements")
+                        exit()
 
-                collisionTensor = collisionModel.createCollisionTensor(momentumGridSize)
+                    collisionTensor = collisionModel.createCollisionTensor(
+                        momentumGridSize
+                    )
 
-                # Setup collision integration settings. Concrete example models can override this to do model-dependent setup
-                self.configureCollisionIntegration(collisionTensor)
+                    # Setup collision integration settings. Concrete example models can override this to do model-dependent setup
+                    self.configureCollisionIntegration(collisionTensor)
+
+                else:
+                    # collisionModel exists already, update its parameters.
+                    # Note that these changes propagate to all collisionTensor objects that have been created from the collision model
+                    self.updateCollisionModel(model, collisionModel)
 
                 """Run the collision integrator. This is a very long running function: For M out-of-equilibrium particle species and momentum grid size N,
                 there are order M^2 x (N-1)^4 integrals to be computed. In your own runs you may want to handle this part in a separate script and offload it eg. to a cluster,

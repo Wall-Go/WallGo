@@ -37,7 +37,7 @@ try:
 
     from .collisionHelpers import *
 
-except Exception as e:
+except ImportError as e:
     print(f"Error loading WallGoCollision module: {e}")
     print(
         """This could indicate an issue with your installation of WallGo or WallGoCollision, or both.

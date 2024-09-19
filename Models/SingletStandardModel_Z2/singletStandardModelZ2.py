@@ -500,6 +500,10 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
 class SingletStandardModelExample(WallGoExampleBase):
 
+    def __init__(self) -> None:
+        """"""
+        self.bNeedsNewCollisions = False
+
     # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
         """Non-abstract override to add a SM + singlet specific cmd option"""
@@ -519,6 +523,11 @@ class SingletStandardModelExample(WallGoExampleBase):
     def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
         """TEMPORARY: override to load Benoit's benchmark matrix elements if only top is off-eq.
         Remove once matrix elements have been fixed."""
+
+        # ANNOYING: if we want to allow this example to run even if WallGoCollision is not available,
+        # we need to import it only in functions that really need it.
+        # TODO should come up with some centralized import inside WallGo, but it seems hard to do nicely
+        import WallGoCollision
 
         bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
 
@@ -563,6 +572,7 @@ class SingletStandardModelExample(WallGoExampleBase):
         self, wallGoModel: "SingletSMZ2"
     ) -> "WallGoCollision.PhysicsModel":
         """"""
+
         import WallGoCollision
 
         # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
@@ -579,6 +589,29 @@ class SingletStandardModelExample(WallGoExampleBase):
         )
 
         return collisionModel
+
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "SingletSMZ2",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagete changes in WallGo model to the collision model.
+        For this example we just need to update the QCD coupling and fermion/gluon thermal masses
+        """
+        import WallGoCollision
+
+        changedParams = WallGoCollision.ModelParameters()
+
+        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+        changedParams.addOrModifyParameter("gs", gs)
+        changedParams.addOrModifyParameter(
+            "msq[0]", gs**2 / 6.0
+        )  # quark thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "msq[1]", 2.0 * gs**2
+        )  # gluon thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
 
     def configureCollisionIntegration(
         self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
@@ -632,8 +665,24 @@ class SingletStandardModelExample(WallGoExampleBase):
         so be careful not to replace that reference here.
         """
         newParams = model.calculateLagrangianParameters(inputParameters)
+
+        """Collisions integrals for this example depend only on the QCD coupling,
+        if it changes we must recompute collisions before running the wall solver.
+        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
+        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        (FIXME?)
+        """
+        self.bNeedsNewCollisions = False
+        """
+        if not model.modelParameters or newParams["g3"] != model.modelParameters["g3"]:
+            self.bNeedsNewCollisions = True
+        """
         # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and masses
         model.modelParameters.update(newParams)
+
+    def shouldRecalculateCollisions(self) -> bool:
+        """"""
+        return self.bNeedsNewCollisions
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
@@ -674,5 +723,6 @@ class SingletStandardModelExample(WallGoExampleBase):
 
 
 if __name__ == "__main__":
+
     example = SingletStandardModelExample()
     example.runExample()

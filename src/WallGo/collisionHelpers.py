@@ -6,7 +6,6 @@ from .exceptions import WallGoError
 
 import WallGoCollision
 
-
 def dictToCollisionParameters(
     inParameterDict: dict[str, float]
 ) -> WallGoCollision.ModelParameters:
