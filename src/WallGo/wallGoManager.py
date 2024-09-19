@@ -5,7 +5,7 @@ wall velocity calculation.
 
 from typing import Type, TYPE_CHECKING
 import numpy as np
-from deprecated import deprecated
+#from deprecated import deprecated
 import pathlib
 
 # WallGo imports
@@ -450,7 +450,7 @@ class WallGoManager:
         self.boltzmannSolver.loadCollisions(directoryPath)
 
     # this actually crashes now, so its more than deprecated
-    @deprecated("Use WallGoManager.loadCollisionFiles")
+    #@deprecated("Use WallGoManager.loadCollisionFiles")
     def generateCollisionFiles(self) -> None:
         """
         Loads collision files and reads them using the Boltzmann solver.
