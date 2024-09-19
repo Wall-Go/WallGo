@@ -19,8 +19,8 @@ Installation
 
 - **I can not install WallGo.**
 
-    [To do]
-
+    Please take a look at our :doc:`installation instructions <installation>`. If it doesn't
+    work for you, feel free to :doc:`send us an email <contact>`.
 
 Matrix elements
 ===============
@@ -38,7 +38,10 @@ Collision integrals
 
 - **Can I parallelize the computation of the collision terms?**
 
-    [To do]
+    Yes! By default the collision code is compiled with :ref:`OpenMP <https://www.openmp.org/>`
+    parallelisation. This allows processors with shared memory to work in parallel,
+    so can make use of the multiple processors on your computer, or use up to one node
+    on a supercomputer. 
 
 - **Can I reuse the same collision integrals for different models/parameter choices?**
 
@@ -167,13 +170,19 @@ Warnings and errors
 Parallelisation
 ---------------
 
-- **I am running a scan. Can I parallelize the computation of the wall velocity with Python?**
+- **I am running a scan. Can I parallelise the computation of the wall velocity with Python?**
 
-    [To do]
+    For a single parameter point, the Python part of WallGo does not parallelise
+    simply. But, when running a scan, WallGo can be trivially parallelised, by sharing
+    out the parameter points between processors.
 
 Bugs
 ====
 
 - **I think I found a bug in WallGo, what can I do?**
 
-    [To do]
+    Please create an issue on our :ref:`GitHub Issues page <https://github.com/Wall-Go/WallGo/issues>`
+    including sufficient detail that we can follow it up, ideally with a minimal
+    example demonstrating the bug. Alternatively, :doc:`send us an email <contact>`
+    and we will take a look at it. Please do check the FAQs and GitHub issues first,
+    in case your bug has already been described.
