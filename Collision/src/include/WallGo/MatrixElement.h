@@ -54,7 +54,7 @@ public:
     * and will leave the matrix element in an invalid state. */
     bool init(
         const std::string& expression,
-        const std::vector<uint32_t> externalParticleIndices,
+        const std::vector<int32_t> externalParticleIndices,
         const std::unordered_map<std::string, double>& symbols);
     
     /* Sets a new math expression, requires re-parse.
@@ -62,7 +62,7 @@ public:
     bool setExpression(const std::string& expressionIn);
 
     std::string getExpression() const { return mExpression; }
-    std::vector<uint32_t> getParticleIndices() const { return mParticleIndices; }
+    std::vector<int32_t> getParticleIndices() const { return mParticleIndices; }
 
     // Must be called to update values of model-specific symbols in matrix elements
     void updateModelParameters(const ModelParameters& parameters);
@@ -84,7 +84,7 @@ private:
     std::unordered_map<std::string, double> mSymbols;
 
     // Metadata about what external particles this matrix element describes
-    std::vector<uint32_t> mParticleIndices;
+    std::vector<int32_t> mParticleIndices;
 
     std::string mExpression;
 

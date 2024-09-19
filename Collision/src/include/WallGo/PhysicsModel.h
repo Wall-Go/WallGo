@@ -105,11 +105,11 @@ private:
     ModelParameters mParameters;
     
     /* Use custom indices for particle lookup. Will send copies of ParticleSpecies objects to collision elements. */
-    std::unordered_map<uint32_t, ParticleSpecies> mParticles;
+    std::unordered_map<int32_t, ParticleSpecies> mParticles;
 
     ParticleNameMap mParticleNameMap;
     // Indices of out-of-equilibrium particles
-    std::vector<uint32_t> mOffEqIndices;
+    std::vector<int32_t> mOffEqIndices;
 
     // Cached matrix elements. This is std::map instead of std::unordered_map because we haven't defined a hash for IndexPair
     std::map<IndexPair, std::vector<MatrixElement>> mMatrixElements;
@@ -129,7 +129,7 @@ private:
     // Creates a CollisionTensor from cached matrix elements and registers it as a model observer. Includes only off-eq particles specified in the input
     CollisionTensor createCollisionTensor(
         size_t basisSize,
-        const std::vector<uint32_t>& offEqParticleIndices
+        const std::vector<int32_t>& offEqParticleIndices
     );
 
     // Creates new CollisionIntegral4 for an off-eq particle pair. Matrix elements are read from matrixElementFile.

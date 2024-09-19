@@ -35,7 +35,7 @@ MatrixElement& MatrixElement::operator=(const MatrixElement &other)
 
 bool MatrixElement::init(
     const std::string& expression,
-    const std::vector<uint32_t> externalParticleIndices,
+    const std::vector<int32_t> externalParticleIndices,
     const std::unordered_map<std::string, double>& symbols)
 {
     mSymbols.clear();

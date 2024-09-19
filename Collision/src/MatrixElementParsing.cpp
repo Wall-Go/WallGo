@@ -2,6 +2,7 @@
 #include <sstream>
 #include <regex>
 #include <map>
+#include <algorithm>
 
 #include "nlohmann/json.hpp"
 
@@ -15,8 +16,9 @@ namespace wallgo
 namespace utils
 {
 
+
 // Function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t>& indices, std::string& mathExpression)
+void interpretMatrixElement(const std::string& inputString, std::vector<int32_t>& indices, std::string& mathExpression)
 {
     // First split the string by "->""
     std::vector<std::string> tokens(2);
@@ -47,7 +49,7 @@ void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t
 
         while (ss >> num)
         {
-            indices.push_back(static_cast<uint32_t>(num));
+            indices.push_back(static_cast<int32_t>(num));
 
             // Check for the ',' separator and ignore it
             if (ss.peek() == ',')
@@ -58,13 +60,42 @@ void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t
     }
 }
 
-bool parseMatrixElements(
+// Naive check based on file extension if it's likely a .json file
+bool isJsonFile(const std::filesystem::path& filePath)
+{
+    std::string extension = filePath.extension().string();
+    // make all lowercase
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+    return extension == ".json";
+}
+
+bool buildMatrixElementsFromFile(
     const std::filesystem::path& matrixElementFile,
-    const std::vector<uint32_t>& offEqParticleIndices,
+    const std::vector<int32_t>& offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
+    if (offEqParticleIndices.size() < 1) return false;
+
     outMatrixElements.clear();
+
+    std::vector<ReadParticle> parsedParticles;
+    std::vector<ReadMatrixElement> parsedMatrixElements;
+
+    bool bSuccess = true;
+
+    if (isJsonFile(matrixElementFile))
+    {
+        bSuccess = parseMatrixElementsJson(
+            matrixElementFile,
+            parsedParticles,
+            parsedMatrixElements);
+    }
+    else
+    {
+        std::cout << "Warning: using legacy matrix element parsing. Consider using .json file format.\n";
+    }
 
     std::ifstream file(matrixElementFile);
     if (!file.is_open()) {
@@ -74,24 +105,18 @@ bool parseMatrixElements(
 
     // Use regex to read all lines of form M[a,b,c,d] -> expr
 
-    /* Big TODO. Change matrix element file format so that
-    1. It's easier to parse without regex hacks. Eg: JSON format
-    2. Each matrix element could be associated with a list of symbols needed to evaluate it.
-    This would make it possible to safely define just enough symbols needed for each matrix element.
-    */
-
     std::string line;
 
     // temp arrays
     std::vector<std::string> readExpressions;
-    std::vector<std::vector<uint32_t>> readIndices;
+    std::vector<std::vector<int32_t>> readIndices;
 
     while (std::getline(file, line))
     {
         if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)")))
         {
             std::string expr;
-            std::vector<uint32_t> indices;
+            std::vector<int32_t> indices;
             interpretMatrixElement(line, indices, expr);
 
             if (indices.size() < 1 || expr.empty())
@@ -112,12 +137,12 @@ bool parseMatrixElements(
     /* Now create the MatrixElement objects and group them by their external off-eq indices
     * so that we know which elements are needed for collisions of particle pair (a,b).
     */
-    for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
+    for (int32_t idx1 : offEqParticleIndices) for (int32_t idx2 : offEqParticleIndices)
     {
         const IndexPair offEqPair(idx1, idx2);
         outMatrixElements.insert({ offEqPair, std::vector<MatrixElement>() });
 
-        for (uint32_t elementIdx = 0; elementIdx < readExpressions.size(); ++elementIdx)
+        for (int32_t elementIdx = 0; elementIdx < readExpressions.size(); ++elementIdx)
         {
             const auto& indices = readIndices[elementIdx];
             if (indices[0] != idx1) continue;
@@ -133,12 +158,6 @@ bool parseMatrixElements(
 
     return bMatrixElementsOK;
 }
-
-struct ReadParticle
-{
-    std::string name;
-    int32_t index;
-};
 
 bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles)
 {
@@ -196,14 +215,7 @@ bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles
     return bSuccess;
 }
 
-struct ReadMatrixElement
-{
-    std::vector<int32_t> particleIndices;
-    std::vector<std::string> parameters;
-    std::string expression;
-};
-
-bool readMatrixElementsJson(const json& data, std::vector<ReadMatrixElement>& outMatrixElements)
+bool readExpressionsJson(const json& data, std::vector<ReadMatrixElement>& outMatrixElements)
 {
     std::vector<std::string> errorReasons;
     outMatrixElements.clear();
@@ -285,23 +297,39 @@ bool readMatrixElementsJson(const json& data, std::vector<ReadMatrixElement>& ou
     return bSuccess;
 }
 
-bool testJSON(const std::filesystem::path& matrixElementJSON)
+bool parseMatrixElementsJson(
+    const std::filesystem::path& matrixElementFile,
+    std::vector<ReadParticle>& outParticles,
+    std::vector<ReadMatrixElement>& outMatrixElements)
 {
-    std::ifstream file(matrixElementJSON);
+    std::ifstream file(matrixElementFile);
     json data = json::parse(file);
 
-    std::map<IndexPair, std::vector<MatrixElement>> outMatrixElements;
-
-
-    std::vector<ReadParticle> particlesJson;
-    bool bSuccess = readParticlesJson(data, particlesJson);
+    bool bSuccess = readParticlesJson(data, outParticles);
     if (!bSuccess) return false;
 
-    std::vector<ReadMatrixElement> matrixElementsJson;
-    bSuccess &= readMatrixElementsJson(data, matrixElementsJson);
+    bSuccess &= readExpressionsJson(data, outMatrixElements);
     if (!bSuccess) return false;
 
     return bSuccess;
+}
+
+void buildMatrixElements(
+    const std::vector<int32_t>& modelOffEqParticleIndices,
+    const std::unordered_map<std::string, double>& modelSymbols,
+    const std::vector<ReadParticle>& parsedParticles,
+    const std::vector<ReadMatrixElement>& parsedMatrixElements,
+    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
+{
+    for (const ReadMatrixElement& readElement : parsedMatrixElements)
+    {
+        MatrixElement newElement;
+
+        //newElement.init(readElement.expression, readElement.particleIndices)
+
+        
+        //bMatrixElementsOK &= newElement.init(readExpressions[elementIdx], indices, symbols);
+    }
 }
 
 } // namespace utils

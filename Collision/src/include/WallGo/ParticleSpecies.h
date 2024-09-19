@@ -24,7 +24,7 @@ struct ParticleDescription
 	// Must be unique
 	std::string name = "Unknown";
 	// Must be unique
-	uint32_t index = 0;
+	int32_t index = 0;
 
 	EParticleType type = EParticleType::eNone;
 
@@ -86,7 +86,7 @@ public:
 	inline bool isInEquilibrium() const { return mDescription.bInEquilibrium; }
 	inline std::string_view getName() const { return mDescription.name; }
 	inline EParticleType getStatistics() const { return mDescription.type; }
-	inline uint32_t getIndex() const { return mDescription.index; }
+	inline int32_t getIndex() const { return mDescription.index; }
 
 	// Equilibrium distribution function for the particle species
 	double fEq(double energy) const

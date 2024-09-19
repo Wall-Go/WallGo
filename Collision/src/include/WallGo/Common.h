@@ -24,11 +24,11 @@ template<typename Name_t, typename Index_t>
 using TNameMap = std::unordered_map<Name_t, Index_t>;
 
 // Map particle name -> particle index
-using ParticleNameMap = TNameMap<std::string, uint32_t>;
+using ParticleNameMap = TNameMap<std::string, int32_t>;
 using ParticleNamePair = std::pair<ParticleNameMap::key_type, ParticleNameMap::key_type>;
 
 // NB: cannot be used in std::unorderd_map due to lack of a hash function. std::map works
-using IndexPair = std::pair<uint32_t, uint32_t>;
+using IndexPair = std::pair<int32_t, int32_t>;
 
 /* Recursive boilerplate for nested D-dimensional std::vectors.
 * Note that this has a large memory overhead - ideally we would use genuine D-dimensional arrays. */

@@ -168,7 +168,7 @@ bool PhysicsModel::readMatrixElements(
 {
     mMatrixElements.clear();
 
-    const bool bReadOK = utils::parseMatrixElements(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
+    const bool bReadOK = utils::buildMatrixElementsFromFile(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
     if (!bReadOK) return false;
 
     if (bPrintMatrixElements)
@@ -209,9 +209,9 @@ void PhysicsModel::printMatrixElements() const
 
         for (const MatrixElement& m : elements)
         {
-            std::vector<uint32_t> indices = m.getParticleIndices();
+            std::vector<int32_t> indices = m.getParticleIndices();
             std::cout << "[";
-            for (uint32_t i = 0; i < indices.size(); ++i)
+            for (int32_t i = 0; i < indices.size(); ++i)
             {
                 std::cout << mParticles.at(indices[i]).getName();
                 if (i != indices.size() - 1) std::cout << ", ";
@@ -245,10 +245,10 @@ void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
     }
 }
 
-CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<uint32_t>& offEqParticleIndices)
+CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<int32_t>& offEqParticleIndices)
 {
     // Sanity checks
-    for (uint32_t idx : offEqParticleIndices)
+    for (int32_t idx : offEqParticleIndices)
     {
         if (mParticles.count(idx) == 0)
         {
@@ -267,7 +267,7 @@ CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std:
     CollisionTensor outTensor(this, basisSize);
 
 
-    for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
+    for (int32_t idx1 : offEqParticleIndices) for (int32_t idx2 : offEqParticleIndices)
     {
         IndexPair indexPair(idx1, idx2);
         ParticleNamePair namePair(mParticles.at(idx1).getName(), mParticles.at(idx2).getName());
@@ -315,7 +315,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     * so need to find which "position" indices are this particle:
     */
 
-    std::vector<uint32_t> indices = matrixElement.getParticleIndices();
+    std::vector<int32_t> indices = matrixElement.getParticleIndices();
     assert(indices.size() == 4);
     // Cannot happen if matrix elements are setup properly:
     assert(indices[0] == offEqIndices.first && "Invalid particle1 index in matrix element");
@@ -324,7 +324,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
 
     bool bFoundAny = false;
 
-    for (uint32_t i = 0; i < bDeltaF.size(); ++i)
+    for (int32_t i = 0; i < bDeltaF.size(); ++i)
     {
         bDeltaF[i] = (indices[i] == offEqIndices.second);
         bFoundAny |= bDeltaF[i];
@@ -334,9 +334,9 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     // Copy ParticleSpecies objects to the CollisionElement
     std::array<ParticleSpecies, 4> externalParticles;
 
-    for (uint32_t i = 0; i < indices.size(); ++i)
+    for (int32_t i = 0; i < indices.size(); ++i)
     {
-        const uint32_t particleIndex = indices[i];
+        const int32_t particleIndex = indices[i];
         externalParticles[i] = mParticles.at(particleIndex);
     }
 
