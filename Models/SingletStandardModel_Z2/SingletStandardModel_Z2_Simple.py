@@ -37,7 +37,7 @@ class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # 4D units
         thermalParameters = self.getThermalParameters(temperature)

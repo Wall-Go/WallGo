@@ -4,7 +4,7 @@ Module with Particle class to hold particle information
 
 import typing
 import numpy as np
-from .Fields import Fields
+from .fields import Fields
 
 
 class Particle:  # pylint: disable=too-few-public-methods

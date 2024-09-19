@@ -1,4 +1,4 @@
-import WallGo.Fields
+import WallGo.fields
 
 from tests.BenchmarkPoint import BenchmarkPoint
 

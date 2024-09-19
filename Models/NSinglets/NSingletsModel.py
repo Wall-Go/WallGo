@@ -45,12 +45,12 @@ class NSinglets(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.getField(0) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.GetField(i) for i in range(self.fieldCount)])
+            return self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.getField(i) for i in range(self.fieldCount)])
 
         def topMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0

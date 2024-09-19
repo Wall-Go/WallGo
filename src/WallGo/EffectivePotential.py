@@ -10,7 +10,7 @@ import scipy.interpolate
 
 from .helpers import derivative, gradient, hessian
 
-from .Fields import Fields, FieldPoint
+from .fields import Fields, FieldPoint
 
 @dataclass
 class VeffDerivativeScales:
@@ -118,10 +118,10 @@ class EffectivePotential(ABC):
         # I think we'll need to manually vectorize this in case we got many field/temperature points
         T = np.atleast_1d(temperature)
 
-        numPoints = max(T.shape[0], initialGuess.NumPoints())
+        numPoints = max(T.shape[0], initialGuess.numPoints())
 
         ## Reshape for broadcasting
-        guesses = initialGuess.Resize(numPoints, initialGuess.NumFields())
+        guesses = initialGuess.resizeFields(numPoints, initialGuess.numFields())
         T = np.resize(T, (numPoints))
 
         resValue = np.empty_like(T)
@@ -136,10 +136,10 @@ class EffectivePotential(ABC):
             """
 
             def evaluateWrapper(fieldArray: np.ndarray):
-                fields = Fields.CastFromNumpy(fieldArray)
+                fields = Fields.castFromNumpy(fieldArray)
                 return self.evaluate(fields, T[i]).real
 
-            guess = guesses.GetFieldPoint(i)
+            guess = guesses.getFieldPoint(i)
 
             res = scipy.optimize.minimize(evaluateWrapper, guess, tol=tol)
 
@@ -150,7 +150,7 @@ class EffectivePotential(ABC):
             self.evaluate(Fields((res.x)), T[i], checkForImaginary=True)
 
         ## Need to cast the field location
-        return Fields.CastFromNumpy(resLocation), resValue
+        return Fields.castFromNumpy(resLocation), resValue
     
     def __wrapperPotential(self, X):
         """

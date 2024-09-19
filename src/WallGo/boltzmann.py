@@ -151,7 +151,7 @@ class BoltzmannSolver:
 
         # Take all field-space points, but throw the boundary points away
         # TODO: LN: why throw away boundary points?
-        field = self.background.fieldProfiles.TakeSlice(
+        field = self.background.fieldProfiles.takeSlice(
             1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
 

@@ -12,7 +12,7 @@ import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
 from .boltzmann import BoltzmannSolver
-from .Fields import Fields, FieldPoint
+from .fields import Fields, FieldPoint
 from .grid3Scales import Grid3Scales
 from .helpers import gammaSq, nextStepDeton
 from .hydrodynamics import Hydrodynamics
@@ -1297,7 +1297,7 @@ class EOM:
                 / (wallParams.widths * np.cosh(zL + wallParams.offsets) ** 2)
             )
 
-        return Fields.CastFromNumpy(fields), Fields.CastFromNumpy(dPhidz)
+        return Fields.castFromNumpy(fields), Fields.castFromNumpy(dPhidz)
 
     def findPlasmaProfile(
         self,
@@ -1353,8 +1353,8 @@ class EOM:
                 c1,
                 c2,
                 velocityMid,
-                fields.GetFieldPoint(index),
-                dPhidz.GetFieldPoint(index),
+                fields.getFieldPoint(index),
+                dPhidz.getFieldPoint(index),
                 offEquilDeltas,
                 Tplus,
                 Tminus,

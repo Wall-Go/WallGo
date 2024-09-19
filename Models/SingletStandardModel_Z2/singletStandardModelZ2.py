@@ -121,13 +121,13 @@ class SingletSMZ2(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.getField(0) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * np.transpose(
-                [fields.GetField(0), 0 * fields.GetField(1)]
+                [fields.getField(0), 0 * fields.getField(1)]
             )
 
         def topMsqThermal(T: float) -> float:
@@ -149,7 +149,7 @@ class SingletSMZ2(GenericModel):
             # === SU(3) gluon ===
             # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
             def gluonMsqVacuum(fields: Fields) -> Fields:
-                return np.zeros_like(fields.GetField(0))
+                return np.zeros_like(fields.getField(0))
 
             def gluonMsqDerivative(fields: Fields) -> Fields:
                 return np.zeros_like(fields)
@@ -343,7 +343,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -429,7 +429,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             Renormalization scale in the one-loop zero-temperature effective
             potential
         """
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
         mass00 = (
@@ -491,7 +491,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             potential
         """
 
-        v = fields.GetField(0)
+        v = fields.getField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
