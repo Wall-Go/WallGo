@@ -10,7 +10,7 @@ import scipy.optimize
 
 from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
-from .Fields import Fields
+from .fields import Fields
 from .FreeEnergy import FreeEnergy
 
 

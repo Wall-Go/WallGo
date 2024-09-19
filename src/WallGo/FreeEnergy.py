@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from .InterpolatableFunction import InterpolatableFunction, EExtrapolationType
 from .EffectivePotential import EffectivePotential
-from .Fields import FieldPoint, Fields
+from .fields import FieldPoint, Fields
 
 @dataclass
 class FreeEnergyValueType:

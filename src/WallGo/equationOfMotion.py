@@ -12,7 +12,7 @@ import scipy.optimize
 from scipy.interpolate import UnivariateSpline
 
 from .boltzmann import BoltzmannSolver
-from .Fields import Fields, FieldPoint
+from .fields import Fields, FieldPoint
 from .grid3Scales import Grid3Scales
 from .helpers import gammaSq, nextStepDeton
 from .hydrodynamics import Hydrodynamics

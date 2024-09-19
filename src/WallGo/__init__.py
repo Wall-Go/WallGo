@@ -18,7 +18,7 @@ from .results import WallGoResults
 
 
 from .particle import Particle
-from .Fields import Fields
+from .fields import Fields
 from .genericModel import GenericModel
 from .EffectivePotential import EffectivePotential
 from .FreeEnergy import FreeEnergy

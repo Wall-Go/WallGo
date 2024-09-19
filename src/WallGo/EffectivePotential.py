@@ -8,7 +8,7 @@ import scipy.interpolate
 
 from .helpers import derivative, gradient, hessian
 
-from .Fields import Fields, FieldPoint
+from .fields import Fields, FieldPoint
 
 
 class EffectivePotential(ABC):
