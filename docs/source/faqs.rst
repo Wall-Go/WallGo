@@ -38,10 +38,13 @@ Collision integrals
 
 - **Can I parallelize the computation of the collision terms?**
 
-    Yes! By default the collision code is compiled with :ref:`OpenMP <https://www.openmp.org/>`
+    Yes! By default the collision code is compiled with `OpenMP <https://www.openmp.org/>`_
     parallelisation. This allows processors with shared memory to work in parallel,
     so can make use of the multiple processors on your computer, or use up to one node
-    on a supercomputer. 
+    on a supercomputer. For example, generate the collision integrals for the Standard
+    Model example, run
+
+        [TO DO]
 
 - **Can I reuse the same collision integrals for different models/parameter choices?**
 
@@ -181,7 +184,7 @@ Bugs
 
 - **I think I found a bug in WallGo, what can I do?**
 
-    Please create an issue on our :ref:`GitHub Issues page <https://github.com/Wall-Go/WallGo/issues>`
+    Please create an issue on our `GitHub Issues page <https://github.com/Wall-Go/WallGo/issues>`_
     including sufficient detail that we can follow it up, ideally with a minimal
     example demonstrating the bug. Alternatively, :doc:`send us an email <contact>`
     and we will take a look at it. Please do check the FAQs and GitHub issues first,
