@@ -60,7 +60,7 @@ void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t
 
 bool parseMatrixElements(
     const std::filesystem::path& matrixElementFile,
-    std::vector<uint32_t> offEqParticleIndices,
+    const std::vector<uint32_t>& offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
@@ -186,7 +186,7 @@ bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles
 
     if (!bSuccess)
     {
-        std::cerr << "Particle parsing from JSON failed. Reasons:\n";
+        std::cerr << "\nParticle parsing from JSON failed. Reasons:\n";
         for (const std::string& errorMsg : errorReasons)
         {
             std::cerr << errorMsg << std::endl;
@@ -257,7 +257,7 @@ bool readMatrixElementsJson(const json& data, std::vector<ReadMatrixElement>& ou
                 {
                     if (!param.is_string())
                     {
-                        errorReasons.push_back("Invalid parameter (must be string)");
+                        errorReasons.push_back("Invalid model parameter (must be string)");
                         newElement.parameters.clear();
                         break;
                     }
@@ -275,7 +275,7 @@ bool readMatrixElementsJson(const json& data, std::vector<ReadMatrixElement>& ou
     bool bSuccess = errorReasons.size() == 0;
     if (!bSuccess)
     {
-        std::cerr << "Matrix element parsing from JSON failed. Reasons:\n";
+        std::cerr << "\nMatrix element parsing from JSON failed. Reasons:\n";
         for (const std::string& errorMsg : errorReasons)
         {
             std::cerr << errorMsg << std::endl;

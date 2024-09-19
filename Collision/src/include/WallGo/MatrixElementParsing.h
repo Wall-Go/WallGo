@@ -16,7 +16,7 @@ namespace utils
 Returns false if something goes wrong. */
 bool parseMatrixElements(
     const std::filesystem::path& matrixElementFile,
-    std::vector<uint32_t> offEqParticleIndices,
+    const std::vector<uint32_t>& offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements);
 
