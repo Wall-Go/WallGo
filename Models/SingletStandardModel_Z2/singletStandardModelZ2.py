@@ -80,8 +80,8 @@ class SingletSMZ2(GenericModel):
 
         self.modelParameters: dict[str, float] = {}
 
-        # Initialize internal effective potential with our params dict.
-        self.effectivePotential = EffectivePotentialxSMZ2(self.modelParameters)
+        # Initialize internal effective potential
+        self.effectivePotential = EffectivePotentialxSMZ2(self)
 
         # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles(allowOutOfEquilibriumGluon)
@@ -220,6 +220,14 @@ class SingletSMZ2(GenericModel):
 
         return modelParameters
 
+    def updateModel(self, newInputParams: dict[str, float]) -> None:
+        """Computes new Lagrangian parameters from given input and caches them internally.
+        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """
+        newParams = self.calculateLagrangianParameters(newInputParams)
+        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        self.modelParameters.update(newParams)
+
 
 # end model
 
@@ -235,14 +243,17 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
-    def __init__(self, initialModelParams: dict[str, float] = {}) -> None:
+    def __init__(self, owningModel: SingletSMZ2) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
         """
 
         super().__init__()
 
-        self.modelParameters = initialModelParams
+        assert owningModel is not None, "Invalid model passed to Veff"
+
+        self.owner = owningModel
+        self.modelParameters = self.owner.modelParameters
 
         # Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
@@ -257,11 +268,8 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         self._configureBenchmarkIntegrals()
 
     # ~ EffectivePotential interface
-    @property
-    def fieldCount(self) -> int:
-        """How many classical background fields"""
-        return 2
-
+    fieldCount = 2
+    """How many classical background fields"""
     # ~
 
     def _configureBenchmarkIntegrals(self) -> None:
@@ -664,7 +672,9 @@ class SingletStandardModelExample(WallGoExampleBase):
         This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
         so be careful not to replace that reference here.
         """
-        newParams = model.calculateLagrangianParameters(inputParameters)
+        oldParams = model.modelParameters
+        model.updateModel(inputParameters)
+        newParams = model.modelParameters
 
         """Collisions integrals for this example depend only on the QCD coupling,
         if it changes we must recompute collisions before running the wall solver.
@@ -674,11 +684,9 @@ class SingletStandardModelExample(WallGoExampleBase):
         """
         self.bNeedsNewCollisions = False
         """
-        if not model.modelParameters or newParams["g3"] != model.modelParameters["g3"]:
+        if not oldParams or newParams["g3"] != oldParams["g3"]:
             self.bNeedsNewCollisions = True
         """
-        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and masses
-        model.modelParameters.update(newParams)
 
     def shouldRecalculateCollisions(self) -> bool:
         """"""

@@ -1,9 +1,10 @@
 import numpy as np
 import numpy.typing as npt
 from typing import Tuple, Type, Any
-from abc import ABC, abstractmethod ## Abstract Base Class
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import cmath # complex numbers
+import inspect # check for ABC
 import scipy.optimize
 import scipy.interpolate
 
@@ -16,7 +17,7 @@ class VeffDerivativeScales:
     """Parameters used to estimate the optimal value of dT used
     for the finite difference derivatives of the effective potential."""
 
-    temperatureScale: int
+    temperatureScale: float
     """Temperature scale (in GeV) over which the potential changes by O(1).
     A good value would be of order Tc-Tn."""
 
@@ -48,12 +49,9 @@ class EffectivePotential(ABC):
     ## when the potential can be computed in terms of simple functions.
     effectivePotentialError: float = 1e-15
     
-    @property
-    @abstractmethod
-    def fieldCount(self) -> int:
-        """Override to return the number of classical background fields
-        in your model."""
-    
+    fieldCount: int = 0
+    """Number of background fields in your potential. Your concrete potential must set this to a nonzero value."""
+    #NB fieldCount must now be class member because it is used in __init_subclass__, not ideal
         
     @abstractmethod
     def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
@@ -67,17 +65,21 @@ class EffectivePotential(ABC):
     
 
     def __init_subclass__(cls: Type["EffectivePotential"], **kwargs: Any) -> None:
-        """"""
+        """Called whenever a subclass is initialized.
+        Needed for common init of temperature and field scales
+        because we should ensure they always have some value even if setScales() is not called.
+        """
         super().__init_subclass__(**kwargs)
 
-        # HACK! This initializes fieldScale and temperatureScale to 1s.
-        # Should be overriden by self.setScales, but used in some tests.
+        # Check that fieldCount is valid, but skip the check for subclasses that are still abstract
+        if not inspect.isabstract(cls) and cls.fieldCount < 1:
+            raise NotImplementedError("EffectivePotential subclasses must define a class variable 'fieldCount' with value > 0.")
 
-        """
-        fieldScale = np.ones(cls.fieldCount)
-        temperatureScale = 1.
-        cls.__combinedScales = np.append(fieldScale, temperatureScale)
-        """
+        defaultScales = VeffDerivativeScales(1., 1.)
+        cls.temperatureScale = defaultScales.temperatureScale
+        cls.fieldScale = defaultScales.fieldScale * np.ones(cls.fieldCount)
+        cls.__combinedScales = np.append(cls.fieldScale, cls.temperatureScale)
+    
 
     #### Non-abstract stuff from here on
     
