@@ -110,7 +110,7 @@ class EffectivePotential(ABC):
         numPoints = max(T.shape[0], initialGuess.numPoints())
 
         ## Reshape for broadcasting
-        guesses = initialGuess.Resize(numPoints, initialGuess.numFields())
+        guesses = initialGuess.resizeFields(numPoints, initialGuess.numFields())
         T = np.resize(T, (numPoints))
 
         resValue = np.empty_like(T)
