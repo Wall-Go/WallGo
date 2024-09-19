@@ -87,8 +87,8 @@ class WallGoManager:
         """Must run before solveWall() and companions."""
 
         assert (
-            phaseInfo.phaseLocation1.NumFields() == self.model.fieldCount
-            and phaseInfo.phaseLocation2.NumFields() == self.model.fieldCount
+            phaseInfo.phaseLocation1.numFields() == self.model.fieldCount
+            and phaseInfo.phaseLocation2.numFields() == self.model.fieldCount
         ), "Invalid PhaseInfo input, field counts do not match those defined in the model"
 
         self.model.getEffectivePotential().setScales(veffDerivativeScales)
@@ -497,7 +497,7 @@ class WallGoManager:
         smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
 
         tailLength = max(
-            meanFreePath, wallThicknessIni * (1. + 3. * smoothing) / ratioPointsWall
+            meanFreePath, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
         )
 
         if gridN % 2 == 0:
