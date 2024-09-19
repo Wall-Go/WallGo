@@ -722,7 +722,7 @@ class InterpolatableFunction(ABC):
             ## Each line should be of form x f(x).
             ## For vector valued functions, x f1(x) f2(x) ...
             data = np.genfromtxt(
-                fileToRead, delimiter=" ", dtype=np.float128, encoding=None
+                fileToRead, delimiter=" ", dtype=float, encoding=None
             )
 
             columns = data.shape[1]
