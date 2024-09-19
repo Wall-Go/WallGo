@@ -44,7 +44,7 @@ class YukawaModel(WallGo.GenericModel):
             "psiL",
             index=1,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
-                self.modelParameters["mf"] + y * fields.GetField(0)
+                self.modelParameters["mf"] + y * fields.getField(0)
             ),
             msqDerivative=lambda fields: y,
             msqThermal=lambda T: 1 / 16 * y**2 * T**2,
@@ -55,7 +55,7 @@ class YukawaModel(WallGo.GenericModel):
             "psiR",
             index=2,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
-                self.modelParameters["mf"] + y * fields.GetField(0)
+                self.modelParameters["mf"] + y * fields.getField(0)
             ),
             msqDerivative=lambda fields: y,
             msqThermal=lambda T: 1 / 16 * y**2 * T**2,
@@ -87,7 +87,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         """
         # getting the field from the list of fields (here just of length 1)
         fields = WallGo.Fields(fields)
-        phi = fields.GetField(0)
+        phi = fields.getField(0)
 
         # the constant term
         f_0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
@@ -220,7 +220,7 @@ def main() -> int:
         # Backup of what the vacuum mass was intended to be:
         """
         msqVacuum=lambda fields: (
-                msq + g * fields.GetField(0) + lam / 2 * fields.GetField(0) ** 2
+                msq + g * fields.getField(0) + lam / 2 * fields.getField(0) ** 2
             ),
         """
         collisionModelDef.defineParticleSpecies(phiParticle)

@@ -102,12 +102,12 @@ class StandardModel(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"] ** 2 * fields.GetField(0) ** 2
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.getField(0) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"] ** 2 * fields.GetField(0)
+            return self.modelParameters["yt"] ** 2 * fields.getField(0)
 
         def topMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
@@ -136,10 +136,10 @@ class StandardModel(GenericModel):
 
         ## === SU(2) gauge boson ===
         def WMsqVacuum(fields: Fields) -> Fields:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * fields.GetField(0) ** 2 / 4
+            return self.modelParameters["g2"] ** 2 * fields.getField(0) ** 2 / 4
 
         def WMsqDerivative(fields: Fields) -> Fields:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * fields.GetField(0) / 2
+            return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
         def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
             return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
@@ -317,7 +317,7 @@ class EffectivePotentialSM(EffectivePotential):
         """
         # phi ~ 1/sqrt(2) (0, v)
         fields = Fields(fields)
-        v = fields.GetField(0) + 0.0000001
+        v = fields.getField(0) + 0.0000001
 
         T = temperature + 0.0000001
 
