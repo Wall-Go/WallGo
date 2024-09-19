@@ -555,9 +555,10 @@ def main() -> None:
     )
     WallGo.initialize()
 
-    ## Modify the config, we use N=11 for this example
-    momentumBasisSize = 11
-    WallGo.config.set("PolynomialGrid", "momentumGridSize", str(momentumBasisSize))
+    # loading in local config file
+    WallGo.config.readINI(
+        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
+    )
 
     ##### TEMPORARY, REMOVE ONCE MATRIX ELEMENT STUFF HAS BEEN SETTLED #####
     bUseBenoitCollisionData: bool = (
