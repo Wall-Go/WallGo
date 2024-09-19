@@ -28,7 +28,7 @@ public:
 
 private:
 
-    const uint basisSizeN = 11;
+    const size_t basisSizeN = 11;
 
 
     // QCD coupling

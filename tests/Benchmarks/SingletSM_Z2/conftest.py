@@ -248,17 +248,10 @@ def singletBenchmarkCollisionArray(
     import pathlib
 
     fileDir = pathlib.Path(__file__).parent.resolve()
-
     collisionPath = fileDir / "../../Testdata/N11/"
-    class DummyCollisionPath:
-        def __init__(self, path):
-            self.outputDirectory = path
-    collision = DummyCollisionPath(collisionPath)
 
-    return WallGo.CollisionArray.newFromDirectory(collision, singletBenchmarkGrid, "Chebyshev", 
+    return WallGo.CollisionArray.newFromDirectory(collisionPath, singletBenchmarkGrid, "Chebyshev", 
                                       particles, bInterpolate=False)
-
-
 
 
 @pytest.fixture(scope="session")

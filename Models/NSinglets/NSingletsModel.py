@@ -40,53 +40,31 @@ class NSinglets(GenericModel):
         
         self.clearParticles()
 
-        ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.GetField(i) for i in range(self.fieldCount)])
-        topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
+        # === Top quark ===
+        # The msqVacuum function of an out-of-equilibrium particle must take
+        # a Fields object and return an array of length equal to the number of
+        # points in fields.
+        def topMsqVacuum(fields: Fields) -> Fields:
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.getField(0) ** 2
 
-        topQuark = Particle("top", 
-                            msqVacuum = topMsqVacuum,
-                            msqDerivative = topMsqDerivative,
-                            msqThermal = topMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = False,
-                            ultrarelativistic = True,
-                            totalDOFs = 12
+        # The msqDerivative function of an out-of-equilibrium particle must take
+        # a Fields object and return an array with the same shape as fields.
+        def topMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.getField(i) for i in range(self.fieldCount)])
+
+        def topMsqThermal(T: float) -> float:
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
+
+        topQuark = Particle(
+            "top",
+            index=0,
+            msqVacuum=topMsqVacuum,
+            msqDerivative=topMsqDerivative,
+            msqThermal=topMsqThermal,
+            statistics="Fermion",
+            totalDOFs=12,
         )
         self.addParticle(topQuark)
-
-
-        ## === SU(3) gluon ===
-        # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
-        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
-        # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
-        gluonMsqDerivative = lambda fields: np.zeros_like(fields)
-        gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
-
-        gluon = Particle("gluon", 
-                            msqVacuum = gluonMsqVacuum,
-                            msqDerivative = gluonMsqDerivative,
-                            msqThermal = gluonMsqThermal,
-                            statistics = "Boson",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 16
-        )
-        self.addParticle(gluon)
-
-        ## === Light quarks, 5 of them ===
-        lightQuarkMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
-        lightQuark = Particle("lightQuark", 
-                            msqVacuum = lambda fields: 0.0,
-                            msqDerivative = 0.0,
-                            msqThermal = lightQuarkMsqThermal,
-                            statistics = "Fermion",
-                            inEquilibrium = True,
-                            ultrarelativistic = True,
-                            totalDOFs = 60
-        )
-        self.addParticle(lightQuark)
 
 
     ## Go from whatever input params --> action params
@@ -347,6 +325,8 @@ def main() -> None:
     #########################################
     ## Example with 1 Higgs and 2 singlets ##
     #########################################
+
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
     
     # Number of singlets
     nbrSinglets = 2
@@ -414,17 +394,6 @@ def main() -> None:
         print('Tunneling impossible. Try with different parameters.')
         return 0
 
-    
-    ## ---- collision integration and path specifications
-
-    # automatic generation of collision integrals is disabled by default
-    # set to "False" or comment if collision integrals already exist
-    # set to "True" to invoke automatic collision integral generation
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
-    # Directory name for collisions integrals defaults to "CollisionOutput/"
-    # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.config.set("Collisions", "pathName", "CollisionOutput/")
-
     """
     Register the model with WallGo. This needs to be done only once.
     If you need to use multiple models during a single run,
@@ -432,8 +401,19 @@ def main() -> None:
     """
     manager.registerModel(model)
 
-    # Generates or reads collision integrals
-    manager.generateCollisionFiles()
+    collisionDirectory = scriptLocation / "CollisionOutput"
+
+    try:
+        # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
+        manager.loadCollisionFiles(collisionDirectory)
+    except Exception:
+        print(
+            """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=11,
+              so load failure here probably means you've either moved files around or changed the grid size.
+              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
+              """
+        )
+        exit(2)
     
     phase1, phase2 = model.effectivePotential.findPhases(Tn)
 

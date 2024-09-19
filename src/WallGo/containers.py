@@ -3,7 +3,7 @@ Data classes passed around WallGo
 """
 from dataclasses import dataclass
 import numpy as np
-from .Fields import Fields
+from .fields import Fields
 from .helpers import boostVelocity
 from .polynomial import Polynomial
 

@@ -1,8 +1,10 @@
 """
 A simple example model, of a real scalar field coupled to a Dirac fermion
+c.f. 2310.02308
 """
 
 import pathlib
+import argparse
 import numpy as np
 import WallGo
 
@@ -12,11 +14,10 @@ class YukawaModel(WallGo.GenericModel):
     The Yukawa model, inheriting from WallGo.GenericModel.
     """
 
-    # specifying these is necessary
-    fieldCount: int = 1
-    particles: list[WallGo.Particle] = []
-    outOfEquilibriumParticles: list[WallGo.Particle] = []
-    modelParameters: dict[str, float] = {}
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 1
 
     def __init__(self, inputParameters: dict[str, float]):
         """
@@ -25,6 +26,8 @@ class YukawaModel(WallGo.GenericModel):
             - initialises effectivePotential
             - constructs list of Particles
         """
+
+        self.clearParticles()
 
         # must initialise and store the model parameters with this variable name
         self.modelParameters = inputParameters
@@ -37,37 +40,35 @@ class YukawaModel(WallGo.GenericModel):
         # constructing the list of particles, starting with psi
         # taking its fluctuations out of equilibrium
         y = self.modelParameters["y"]
-        psi = WallGo.Particle(
-            "top",  # HACK! should be psi, but just rehashing old collision integrals
+        psiL = WallGo.Particle(
+            "psiL",
+            index=1,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
-                self.modelParameters["mf"] + y * fields.GetField(0)
+                self.modelParameters["mf"] + y * fields.getField(0)
             ),
             msqDerivative=lambda fields: y,
             msqThermal=lambda T: 1 / 16 * y**2 * T**2,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=4,
         )
-        self.addParticle(psi)
-
-        # now adding the phi field, assuming fluctuations in equilibrium
-        msq = self.modelParameters["msq"]
-        g = self.modelParameters["g"]
-        lam = self.modelParameters["lam"]
-        phi = WallGo.Particle(
-            "phi",
+        psiR = WallGo.Particle(
+            "psiR",
+            index=2,  # old collision data has top at index 0
             msqVacuum=lambda fields: (
-            msq + g * fields.GetField(0) + lam / 2 * fields.GetField(0) ** 2
+                self.modelParameters["mf"] + y * fields.getField(0)
             ),
-            msqDerivative=lambda fields: g + lam * fields.GetField(0),
-            msqThermal=lambda T: 1 / 24 * (lam + 4 * y**2) * T**2,
-            statistics="Boson",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=1,
+            msqDerivative=lambda fields: y,
+            msqThermal=lambda T: 1 / 16 * y**2 * T**2,
+            statistics="Fermion",
+            totalDOFs=4,
         )
-        self.addParticle(phi)
+        self.addParticle(psiL)
+        self.addParticle(psiR)
+
+        # Parameters for "phi" field
+        msq = self.modelParameters["msq"]
+        gamma = self.modelParameters["gamma"]
+        lam = self.modelParameters["lam"]
 
 
 class EffectivePotentialYukawa(WallGo.EffectivePotential):
@@ -86,7 +87,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         """
         # getting the field from the list of fields (here just of length 1)
         fields = WallGo.Fields(fields)
-        phi = fields.GetField(0)
+        phi = fields.getField(0)
 
         # the constant term
         f_0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
@@ -96,7 +97,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         mf = self.modelParameters["mf"]
         sigma_eff = (
             self.modelParameters["sigma"]
-            + 1 / 24 * (self.modelParameters["g"] + 4 * y * mf) * temperature**2
+            + 1 / 24 * (self.modelParameters["gamma"] + 4 * y * mf) * temperature**2
         )
         msq_eff = (
             self.modelParameters["msq"]
@@ -108,21 +109,57 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
             f_0
             + sigma_eff * phi
             + 1 / 2 * msq_eff * phi**2
-            + 1 / 6 * self.modelParameters["g"] * phi**3
+            + 1 / 6 * self.modelParameters["gamma"] * phi**3
             + 1 / 24 * self.modelParameters["lam"] * phi**4
         )
 
 
 def main() -> int:
-    """ The main function, run with `python3 Yukawa.py` """
+    """The main function, run with `python3 Yukawa.py`"""
+
+    scriptLocation = pathlib.Path(__file__).parent.resolve()
+
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument(
+        "--recalculateCollisions",
+        help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
+                This is very slow and disabled by default.
+                The resulting collision data will be written to a directory labeled _UserGenerated; the default provided data will not be overwritten.
+                """,
+        action="store_true",
+    )
+
+    args = argParser.parse_args()
 
     # Initialise WallGo, including loading the default config.
     WallGo.initialize()
 
+    ## Modify the config, we use N=11 for this example
+    momentumBasisSize = 3
+    WallGo.config.set("PolynomialGrid", "momentumGridSize", str(momentumBasisSize))
+
+    # Print WallGo config. This was read by WallGo.initialize()
+    print("\n=== WallGo configuration options ===")
+    print(WallGo.config)
+
     # Scales used for determining suitable values of dxi, dT, dphi etc in derivatives.
+
+    # Guess of the wall thickness: 5/Tn
     wallThicknessIni = 0.05
+
+    # Estimate of the mean free path of the particles in the plasma: 100/Tn
     meanFreePath = 1.0
+
+    # Create WallGo control object
+    # The following 2 parameters are used to estimate the optimal value of dT used
+    # for the finite difference derivatives of the potential.
+    # Temperature scale (in GeV) over which the potential changes by O(1).
+    # A good value would be of order Tc-Tn.
     temperatureScaleInput = 1.0
+    # Field scale (in GeV) over which the potential changes by O(1). A good value
+    # would be similar to the field VEV.
+    # Can either be a single float, in which case all the fields have the
+    # same scale, or an array.
     fieldScaleInput = (100.0,)
 
     # Create WallGo control object
@@ -134,7 +171,7 @@ def main() -> int:
     inputParameters = {
         "sigma": 0,
         "msq": 1,
-        "g": -1.28565864794053,
+        "gamma": -1.28565864794053,
         "lam": 0.01320208496444000,
         "y": -0.177421729274665,
         "mf": 2.0280748307391000,
@@ -143,12 +180,113 @@ def main() -> int:
     # Initialise the YukawaModel instance.
     model = YukawaModel(inputParameters)
 
-    # Register the model with WallGo.
+    """
+    Register the model with WallGo. This needs to be done only once.
+    If you need to use multiple models during a single run,
+    we recommend creating a separate WallGoManager instance for each model. 
+    """
     manager.registerModel(model)
 
-    # Loading collision integrals.
-    collisionDirectory = pathlib.Path(__file__).parent.resolve() / "collisions_N11"
-    manager.loadCollisionFiles(collisionDirectory)
+    # Specify if new collision integrals should be generated by this example. Currently this option is read from WallGo.config
+    shouldGenerateCollisions = WallGo.config.getboolean(
+        "Collisions", "generateCollisionIntegrals"
+    )
+
+    if args.recalculateCollisions:
+
+        # Failsafe, in general you should not worry about the collision module being unavailable as long as it has been properly installed (eg. with pip)
+        assert WallGo.isCollisionModuleAvailable(), """WallGoCollision module could not be loaded, cannot proceed with collision integration.
+        Please verify you have successfully installed the module ('pip install WallGoCollision')"""
+
+        """Load the collision module and generate a stub collision model from the WallGo model.
+        """
+        import WallGoCollision
+
+        collisionModelDef = WallGo.collisionHelpers.generateCollisionModelDefinition(
+            model,
+            # Do not define any model parameters yet./
+            includeAllModelParameters=False,
+            parameterSymbolsToInclude=[],
+        )
+
+        # Add in-equilibrium particles that appear in collision processes
+        phiParticle = WallGoCollision.ParticleDescription()
+        phiParticle.name = "phi"
+        phiParticle.index = 0
+        phiParticle.bInEquilibrium = True
+        phiParticle.bUltrarelativistic = True
+        phiParticle.type = WallGoCollision.EParticleType.eBoson
+        # mass-sq function not required or used for UR particles, and it cannot be field-dependent for collisions.
+        # Backup of what the vacuum mass was intended to be:
+        """
+        msqVacuum=lambda fields: (
+                msq + g * fields.getField(0) + lam / 2 * fields.getField(0) ** 2
+            ),
+        """
+        collisionModelDef.defineParticleSpecies(phiParticle)
+
+        # The parameter container used by WallGo collision routines is of WallGoCollision.ModelParameters type which behaves somewhat like a Python dict.
+        # Here we write our parameter definitions to a local ModelParameters variable and pass it to modelDefinitions later.
+        parameters = WallGoCollision.ModelParameters()
+
+        parameters.addOrModifyParameter("y", -0.177421729274665)
+        parameters.addOrModifyParameter("gamma", -1.28565864794053)
+        parameters.addOrModifyParameter("lam", 0.01320208496444000)
+        parameters.addOrModifyParameter("v", 0.0)
+
+        # For particles here we include the thermal mass only
+        def psiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
+            return 1 / 16 * p["y"] ** 2
+
+        def phiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
+            return p["lam"] / 24.0 + p["y"] ** 2.0 / 6.0
+
+        parameters.addOrModifyParameter("msq[0]", phiThermalMassSquared(parameters))
+        parameters.addOrModifyParameter("msq[1]", psiThermalMassSquared(parameters))
+
+        # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
+        collisionModelDef.defineParameters(parameters)
+
+        collisionModel = WallGoCollision.PhysicsModel(collisionModelDef)
+
+        matrixElementFile = (
+            scriptLocation / "MatrixElements/MatrixElements_Yukawa_massive.txt"
+        )
+        collisionModel.readMatrixElements(
+            str(matrixElementFile), bPrintMatrixElements=True
+        )
+
+        # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
+        collisionTensor: WallGoCollision.CollisionTensor = (
+            collisionModel.createCollisionTensor(momentumBasisSize)
+        )
+
+        print("Entering collision integral computation, this may take long", flush=True)
+        collisionTensorResult: WallGoCollision.CollisionTensorResult = (
+            collisionTensor.computeIntegralsAll()
+        )
+
+        # Write output to a different directory than where the default data is
+        collisionDirectory = (
+            scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
+        )
+        collisionTensorResult.writeToIndividualHDF5(str(collisionDirectory))
+
+    else:
+        # Load pre-generated collision files
+        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}"
+
+    try:
+        # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
+        manager.loadCollisionFiles(collisionDirectory)
+    except Exception:
+        print(
+            """\nLoad of collision integrals failed!
+              If you were trying to generate your own collision data,
+              make sure you run this example script with the --recalculateCollisions command line flag.
+              """
+        )
+        exit(2)
 
     # Phase information.
     Tn = 89.0
