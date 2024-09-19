@@ -497,7 +497,7 @@ class WallGoManager:
         smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
 
         tailLength = max(
-            meanFreePath, wallThicknessIni * (1 + 3 * smoothing) / ratioPointsWall
+            meanFreePath, wallThicknessIni * (1. + 3. * smoothing) / ratioPointsWall
         )
 
         if gridN % 2 == 0:
