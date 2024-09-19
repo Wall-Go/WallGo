@@ -36,14 +36,14 @@ def test_freeEnergy_singletSimple(
     ## We get two fields (v = Higgs, x = singlet) and the Veff value at this field configuration
     fields, veffValue = f1.fieldsAtMinimum, f1.veffValue
 
-    v, x = fields.GetField(0), fields.GetField(1)
+    v, x = fields.getField(0), fields.getField(1)
     assert 0 == pytest.approx(v, abs=aTol)
     assert xExact == pytest.approx(x, rel=rTol)
     assert f0 + VxExact == pytest.approx(veffValue, rel=rTol)
 
     fields, veffValue = f2.fieldsAtMinimum, f2.veffValue
 
-    v, x = fields.GetField(0), fields.GetField(1)
+    v, x = fields.getField(0), fields.getField(1)
     assert vExact == pytest.approx(v, rel=rTol)
     assert 0 == pytest.approx(x, abs=aTol)
     assert f0 + VvExact == pytest.approx(veffValue, rel=rTol)

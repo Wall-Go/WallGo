@@ -5,7 +5,7 @@ Data classes for compiling and returning results
 from dataclasses import dataclass
 import numpy as np
 from scipy.interpolate import UnivariateSpline
-from .Fields import Fields
+from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
 
