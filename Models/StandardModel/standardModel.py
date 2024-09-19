@@ -402,12 +402,6 @@ def main() -> None:  # pylint: disable=R0915, R0914
         pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
     )
 
-    # # Modify the config, we use N=11 for this example
-    # WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-
-    # # Modify the config, we use M=22 for this example
-    # WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "22")
-
     # Print WallGo config. This was read by WallGo.initialize()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
@@ -423,7 +417,7 @@ def main() -> None:  # pylint: disable=R0915, R0914
     # for the finite difference derivatives of the potential.
     # Temperature scale (in GeV) over which the potential changes by O(1).
     # A good value would be of order Tc-Tn.
-    temperatureScale = 1.0
+    temperatureScale = 0.5
     # Field scale (in GeV) over which the potential changes by O(1). A good value
     # would be similar to the field VEV.
     # Can either be a single float, in which case all the fields have the
@@ -490,7 +484,9 @@ def main() -> None:  # pylint: disable=R0915, R0914
     """
 
     valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
+#    valuesMH = [79.0]
     valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
+#    valuesTn = [111.480]
 
     for i in range(len(valuesMH)):  # pylint: disable=C0200
         print(
@@ -557,10 +553,10 @@ def main() -> None:  # pylint: disable=R0915, R0914
         print(f"wallWidths:        {results.wallWidths}")
         print(f"wallOffsets:       {results.wallOffsets}")
 
-        print("\n=== Search for detonation solution ===")
-        wallGoDetonationResults = manager.solveWallDetonation(onlySmallest=True)[0]
-        print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
+#        print("\n=== Search for detonation solution ===")
+#        wallGoDetonationResults = manager.solveWallDetonation(onlySmallest=True)[0]
+#        print("\n=== Detonation results ===")
+#        print(f"wallVelocity:      {wallGoDetonationResults.wallVelocity}")
 
     # end parameter-space loop
 
