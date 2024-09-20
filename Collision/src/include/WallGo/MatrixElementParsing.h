@@ -41,8 +41,8 @@ bool parseMatrixElementsJson(
 
 
 /* Construct valid MatrixElement objects by matching read data with properties defined in a model.
-*/
-void buildMatrixElements(
+Returns false if something goes critically wrong. */
+bool buildMatrixElements(
     const std::vector<int32_t>& modelOffEqParticleIndices,
     const std::unordered_map<std::string, double>& modelSymbols,
     const std::vector<ReadParticle>& parsedParticles,

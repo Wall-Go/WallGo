@@ -54,9 +54,9 @@ void ModelDefinition::defineParameter(const std::string& symbol, double value)
     }
 
     // These are reserved:
-    if (symbol == "s" || symbol == "t" || symbol == "u")
+    if (symbol == "_s" || symbol == "_t" || symbol == "_u")
     {
-        std::cerr << "Parameter name " << symbol << " is reserved for internal use, please choose a different symbol\n";
+        std::cerr << "Parameter name '" << symbol << "' is reserved for internal use, please choose a different symbol\n";
         return;
     }
 
@@ -162,14 +162,19 @@ void PhysicsModel::updateParameters(const ModelParameters& newValues)
     notifyModelChange(changeContext);
 }
 
-bool PhysicsModel::readMatrixElements(
+bool PhysicsModel::loadMatrixElements(
     const std::filesystem::path& matrixElementFile,
     bool bPrintMatrixElements)
 {
     mMatrixElements.clear();
 
     const bool bReadOK = utils::buildMatrixElementsFromFile(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
-    if (!bReadOK) return false;
+    if (!bReadOK)
+    {
+        // On failure, leave cached matrix elements empty so that we know it's invalid
+        mMatrixElements.clear();
+        return false;
+    }
 
     if (bPrintMatrixElements)
     {
@@ -247,6 +252,12 @@ void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
 
 CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<int32_t>& offEqParticleIndices)
 {
+    if (!hasValidMatrixElements())
+    {
+        std::cerr << "PhysicsModel has no valid matrix elements cache, CollisionTensor will be invalid!" << std::endl;
+        return CollisionTensor(this);
+    }
+
     // Sanity checks
     for (int32_t idx : offEqParticleIndices)
     {

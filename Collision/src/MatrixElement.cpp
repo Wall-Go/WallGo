@@ -117,12 +117,12 @@ void MatrixElement::initParser()
 {
     parser.SetExpr("0");
 
-    parser.DefineVar("s", &mMandelstam.s);
-    parser.DefineVar("t", &mMandelstam.t);
-    parser.DefineVar("u", &mMandelstam.u);
-
     // To allow variable names like msq[2] we need to add [] to parser's character list
     parser.DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+
+    parser.DefineVar("_s", &mMandelstam.s);
+    parser.DefineVar("_t", &mMandelstam.t);
+    parser.DefineVar("_u", &mMandelstam.u);
 }
 
 void MatrixElement::clearParser()

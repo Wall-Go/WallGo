@@ -61,7 +61,7 @@ void interpretMatrixElement(const std::string& inputString, std::vector<int32_t>
 }
 
 // Naive check based on file extension if it's likely a .json file
-bool isJsonFile(const std::filesystem::path& filePath)
+bool isLikelyJsonFile(const std::filesystem::path& filePath)
 {
     std::string extension = filePath.extension().string();
     // make all lowercase
@@ -83,11 +83,11 @@ bool buildMatrixElementsFromFile(
     std::vector<ReadParticle> parsedParticles;
     std::vector<ReadMatrixElement> parsedMatrixElements;
 
-    bool bSuccess = true;
+    bool bReadSuccess = false;
 
-    if (isJsonFile(matrixElementFile))
+    if (isLikelyJsonFile(matrixElementFile))
     {
-        bSuccess = parseMatrixElementsJson(
+        bReadSuccess = parseMatrixElementsJson(
             matrixElementFile,
             parsedParticles,
             parsedMatrixElements);
@@ -96,6 +96,22 @@ bool buildMatrixElementsFromFile(
     {
         std::cout << "Warning: using legacy matrix element parsing. Consider using .json file format.\n";
     }
+
+    if (!bReadSuccess)
+    {
+        return false;
+    }
+
+    bool bBuildSuccess = buildMatrixElements(
+        offEqParticleIndices,
+        symbols,
+        parsedParticles,
+        parsedMatrixElements,
+        outMatrixElements
+    );
+
+    return bBuildSuccess;
+
 
     std::ifstream file(matrixElementFile);
     if (!file.is_open()) {
@@ -277,6 +293,8 @@ bool readExpressionsJson(const json& data, std::vector<ReadMatrixElement>& outMa
                     newElement.parameters.push_back(param);
                 }
             }
+
+            outMatrixElements.push_back(newElement);
         }
     }
     else
@@ -303,6 +321,13 @@ bool parseMatrixElementsJson(
     std::vector<ReadMatrixElement>& outMatrixElements)
 {
     std::ifstream file(matrixElementFile);
+    
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open matrix element file: " << matrixElementFile << std::endl;
+        return false;
+    }
+
     json data = json::parse(file);
 
     bool bSuccess = readParticlesJson(data, outParticles);
@@ -314,14 +339,13 @@ bool parseMatrixElementsJson(
     return bSuccess;
 }
 
-void buildMatrixElements(
+bool buildMatrixElements(
     const std::vector<int32_t>& modelOffEqParticleIndices,
     const std::unordered_map<std::string, double>& modelSymbols,
     const std::vector<ReadParticle>& parsedParticles,
     const std::vector<ReadMatrixElement>& parsedMatrixElements,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
-
     outMatrixElements.clear();
 
     // Iterate over all (p1, p2) off-eq particle combinations and find and init matrix elements that contribute to their Boltzmann mixing
@@ -332,7 +356,7 @@ void buildMatrixElements(
 
         for (const ReadMatrixElement& readElement : parsedMatrixElements)
         {
-            assert(!readElement.particleIndices.empty(), "Matrix element missing external particle info");
+            assert(!readElement.particleIndices.empty() && "Matrix element missing external particle info");
 
             const std::vector<int32_t>& indices = readElement.particleIndices;
 
@@ -354,7 +378,7 @@ void buildMatrixElements(
                 {
                     std::cerr << "Error: matrix element was defined to depend on symbol '" << s << "', but this symbol has not been defined in PhysicsModel.\n";
                     std::cerr << "This is very likely caused by invalid user input and almost certainly fatal, but we try to continue anyway.\n";
-                    std::cerr << "The problematic matrix element was:\n\n" << readElement.expression << std::endl;
+                    std::cerr << "The problematic matrix element was:\n" << readElement.expression << std::endl;
                     continue;
                 }
 
@@ -365,12 +389,17 @@ void buildMatrixElements(
                 symbols = modelSymbols;
             }
 
-            newElement.init(readElement.expression, readElement.particleIndices, symbols);
+            if (!newElement.init(readElement.expression, readElement.particleIndices, symbols))
+            {
+                // Failed to make the matrix element evaluatable. This is fatal, so give up here and let the caller decide what to do
+                return false;
+            }
 
             outMatrixElements.at(offEqPair).push_back(newElement);
         }
     }
 
+    return true;
 }
 
 } // namespace utils

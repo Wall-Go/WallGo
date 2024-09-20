@@ -124,7 +124,9 @@ wallgo::PhysicsModel setupQCD()
 	Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content. */
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
-	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
+	//std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
+	std::filesystem::path matrixElementFile = "MatrixElements/SMQCD.json";
+
 
 	if (!std::filesystem::exists(matrixElementFile))
 	{
@@ -202,8 +204,8 @@ int main()
 	Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done. */
 	verbosity.progressReportPercentage = 0.25;
 
-	// Very slow and verbose, intended only for debugging purposes
-	verbosity.bPrintEveryElement = false;
+	// Very slow and verbose, intended only for debugging and demonstration purposes
+	verbosity.bPrintEveryElement = true;
 
 	// Override the built-in defaults with our new settings
 	collisionTensor.setDefaultIntegrationVerbosity(verbosity);
