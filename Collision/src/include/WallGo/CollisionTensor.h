@@ -30,7 +30,7 @@
  * of parameter values, so if they change at any point, it is up to the manager to sync all built CollisionIntegral objects
  * and their stored MatrixElement objects. 
  * 
- * FIXME: Would it be better to pass the parameters to matrix elements as pointers too? 
+ * TODO: Would it be better to pass the parameters to matrix elements as pointers too? 
 */
 
 namespace wallgo

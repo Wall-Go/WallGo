@@ -41,7 +41,7 @@ struct ParticleDescription
 };
 
 
-/** FIXME Some redundancy here since ParticleSpecies is not very different from ParticleDescription.
+/** TODO Some redundancy here since ParticleSpecies is not very different from ParticleDescription.
 The most important difference is that this can cache the mass for performance,
 but if we ever generalize to grid-dependent mass then that responsibility should probably be relegated to the CollisionIntegral class.
 */
