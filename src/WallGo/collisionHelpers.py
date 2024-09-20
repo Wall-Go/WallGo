@@ -61,50 +61,52 @@ def particleToCollisionParticleDescription(
     
     return collisionParticle
 
+## Not useful now that model params are not a first-class citizen in wallgo!
+## Maybe we could have GenericModel have a getModelParameters() -> dict function that the user optionally overrides?
 
-def generateCollisionModelDefinition(wallGoModel: GenericModel, includeAllModelParameters: bool = True, parameterSymbolsToInclude: list[str] = []) -> WallGoCollision.ModelDefinition:
-    """Automatically generates a WallGoCollision.ModelDefinition object
-    with matching out-of-equilibrium particle content and model parameters as the input WallGo.GenericModel object.
-    You will need to manually add any relevant in-equilibrium particles and parameters that the collision terms depend on.
-    Currently this function defines all collision particles as ultrarelativistic.
+# def generateCollisionModelDefinition(wallGoModel: GenericModel, parameterSymbolsToInclude: list[str] = []) -> WallGoCollision.ModelDefinition:
+#     """Automatically generates a WallGoCollision.ModelDefinition object
+#     with matching out-of-equilibrium particle content and model parameters as the input WallGo.GenericModel object.
+#     You will need to manually add any relevant in-equilibrium particles and parameters that the collision terms depend on.
+#     Currently this function defines all collision particles as ultrarelativistic.
 
-    Args:
-        wallGoModel (WallGo.GenericModel):
-        WallGo physics model to use as a base for the collision model.
-        We take the model's outOfEquilibriumParticles list and create corresponding collision particle defs. 
+#     Args:
+#         wallGoModel (WallGo.GenericModel):
+#         WallGo physics model to use as a base for the collision model.
+#         We take the model's outOfEquilibriumParticles list and create corresponding collision particle defs. 
 
-        includeAllModelParameters (bool):
-        If True, the produced collision model definition will depend on all symbols
-        contained in the input model's modelParameters dict.
+#         includeAllModelParameters (bool):
+#         If True, the produced collision model definition will depend on all symbols
+#         contained in the input model's modelParameters dict.
 
-        parameterSymbolsToInclude (list[str]), optional:
-        List of symbols (model parameters) that the collision model depends on.
-        The input model must have defined a value for each symbol in its modelParameters dict.
-        This argument is ignored if includeAllModelParameters is set to True.
+#         parameterSymbolsToInclude (list[str]), optional:
+#         List of symbols (model parameters) that the collision model depends on.
+#         The input model must have defined a value for each symbol in its modelParameters dict.
+#         This argument is ignored if includeAllModelParameters is set to True.
 
         
-    Returns:
-        WallGoCollision.ModelDefinition:
-        A partically filled collision model definition that contains all out-of-eq particles from the input model
-        and has its model parameter list filled with symbols as specified by the other argumetns. 
-    """
-    modelDefinition = WallGoCollision.ModelDefinition()
+#     Returns:
+#         WallGoCollision.ModelDefinition:
+#         A partically filled collision model definition that contains all out-of-eq particles from the input model
+#         and has its model parameter list filled with symbols as specified by the other argumetns. 
+#     """
+#     modelDefinition = WallGoCollision.ModelDefinition()
 
-    for particle in wallGoModel.outOfEquilibriumParticles:
-        modelDefinition.defineParticleSpecies(
-            particleToCollisionParticleDescription(particle, False, True)
-            ) 
+#     for particle in wallGoModel.outOfEquilibriumParticles:
+#         modelDefinition.defineParticleSpecies(
+#             particleToCollisionParticleDescription(particle, False, True)
+#             ) 
     
-    if includeAllModelParameters:
-        modelDefinition.defineParameters(dictToCollisionParameters(wallGoModel.modelParameters))
+#     if includeAllModelParameters:
+#         modelDefinition.defineParameters(dictToCollisionParameters(wallGoModel.modelParameters))
 
-    else:
-        # Define just the symbols in the input list
-        for symbol in parameterSymbolsToInclude:
-            if symbol not in wallGoModel.modelParameters:
-                raise WallGoError(f"Symbol {symbol} not found in the input WallGo model")
+#     else:
+#         Define just the symbols in the input list
+#         for symbol in parameterSymbolsToInclude:
+#             if symbol not in wallGoModel.modelParameters:
+#                 raise WallGoError(f"Symbol {symbol} not found in the input WallGo model")
             
-            else:
-                modelDefinition.defineParameter(symbol, wallGoModel.modelParameters.get(symbol))
+#             else:
+#                 modelDefinition.defineParameter(symbol, wallGoModel.modelParameters.get(symbol))
 
-    return modelDefinition
+#     return modelDefinition
