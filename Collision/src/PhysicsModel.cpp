@@ -53,8 +53,9 @@ void ModelDefinition::defineParameter(const std::string& symbol, double value)
         return;
     }
 
-    // These are reserved:
-    if (symbol == "_s" || symbol == "_t" || symbol == "_u")
+    const std::vector<std::string>& reservedSymbols = MatrixElement::RESERVED_SYMBOLS;
+    bool bIsReserved = (std::find(reservedSymbols.begin(), reservedSymbols.end(), symbol) != reservedSymbols.end());
+    if (bIsReserved)
     {
         std::cerr << "Parameter name '" << symbol << "' is reserved for internal use, please choose a different symbol\n";
         return;

@@ -9,6 +9,8 @@
 namespace wallgo
 {
 
+const std::vector<std::string> MatrixElement::RESERVED_SYMBOLS = { "_s", "_t", "_u" };
+
 MatrixElement::MatrixElement() 
     : mMandelstam(0, 0, 0)
 {

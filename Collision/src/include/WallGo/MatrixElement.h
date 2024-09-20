@@ -72,6 +72,8 @@ public:
     NB: No easy way of making this const because evaluating the parsed expression requires we set internal variables. */
     double evaluate(const Mandelstam& mandelstams);
 
+    static const std::vector<std::string> RESERVED_SYMBOLS;
+
 private:
 
     mu::Parser parser;
