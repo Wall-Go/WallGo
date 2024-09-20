@@ -39,6 +39,12 @@ bool parseMatrixElementsJson(
     std::vector<ReadParticle>& outParticles,
     std::vector<ReadMatrixElement>& outMatrixElements);
 
+/* Legacy parsing of.txt based matrix elements using regex.Prefer.json format whenever possible.
+* Note that this does NOT parse particle or parameter info, just external particle indices and the associated expression.
+*/
+bool parseMatrixElementsRegexLegacy(
+    const std::filesystem::path& matrixElementFile,
+    std::vector<ReadMatrixElement>& outMatrixElements);
 
 /* Construct valid MatrixElement objects by matching read data with properties defined in a model.
 Returns false if something goes critically wrong. */

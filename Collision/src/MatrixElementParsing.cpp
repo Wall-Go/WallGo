@@ -16,50 +16,6 @@ namespace wallgo
 namespace utils
 {
 
-
-// Function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-void interpretMatrixElement(const std::string& inputString, std::vector<int32_t>& indices, std::string& mathExpression)
-{
-    // First split the string by "->""
-    std::vector<std::string> tokens(2);
-
-    std::string delimiter = "->";
-    std::string lhs = inputString.substr(0, inputString.find(delimiter));
-
-    // RHS
-    mathExpression = inputString.substr(lhs.length() + delimiter.length());
-
-    // remove whitespaces from lhs to avoid weirdness
-    lhs.erase(std::remove_if(lhs.begin(), lhs.end(), isspace), lhs.end());
-
-    // ---- Extract the abcd indices from M[a,b,c,d]
-    std::size_t start = lhs.find('[');
-    std::size_t end = lhs.find(']');
-
-    // Ensure '[' and ']' are found and the start position is before the end position
-    if (start != std::string::npos && end != std::string::npos && start < end)
-    {
-        std::string values = lhs.substr(start + 1, end - start - 1);
-
-        // Use stringstream to tokenize and extract integers
-        std::istringstream ss(values);
-        indices.clear();
-        indices.reserve(4);
-        size_t num;
-
-        while (ss >> num)
-        {
-            indices.push_back(static_cast<int32_t>(num));
-
-            // Check for the ',' separator and ignore it
-            if (ss.peek() == ',')
-            {
-                ss.ignore();
-            }
-        }
-    }
-}
-
 // Naive check based on file extension if it's likely a .json file
 bool isLikelyJsonFile(const std::filesystem::path& filePath)
 {
@@ -94,7 +50,12 @@ bool buildMatrixElementsFromFile(
     }
     else
     {
-        std::cout << "Warning: using legacy matrix element parsing. Consider using .json file format.\n";
+        std::cout << "Warning: using legacy matrix element parsing. Consider using .json file format for better data validation.\n";
+
+        bReadSuccess = parseMatrixElementsRegexLegacy(
+            matrixElementFile,
+            parsedMatrixElements
+        );
     }
 
     if (!bReadSuccess)
@@ -111,68 +72,6 @@ bool buildMatrixElementsFromFile(
     );
 
     return bBuildSuccess;
-
-
-    std::ifstream file(matrixElementFile);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open matrix element file: " << matrixElementFile << std::endl;
-        return false;
-    }
-
-    // Use regex to read all lines of form M[a,b,c,d] -> expr
-
-    std::string line;
-
-    // temp arrays
-    std::vector<std::string> readExpressions;
-    std::vector<std::vector<int32_t>> readIndices;
-
-    while (std::getline(file, line))
-    {
-        if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)")))
-        {
-            std::string expr;
-            std::vector<int32_t> indices;
-            interpretMatrixElement(line, indices, expr);
-
-            if (indices.size() < 1 || expr.empty())
-            {
-                std::cerr << "Invalid matrix element: " << line << std::endl;
-                return false;
-            }
-
-            readExpressions.push_back(expr);
-            readIndices.push_back(indices);
-        }
-    }
-
-    file.close();
-
-    bool bMatrixElementsOK = true;
-
-    /* Now create the MatrixElement objects and group them by their external off-eq indices
-    * so that we know which elements are needed for collisions of particle pair (a,b).
-    */
-    for (int32_t idx1 : offEqParticleIndices) for (int32_t idx2 : offEqParticleIndices)
-    {
-        const IndexPair offEqPair(idx1, idx2);
-        outMatrixElements.insert({ offEqPair, std::vector<MatrixElement>() });
-
-        for (int32_t elementIdx = 0; elementIdx < readExpressions.size(); ++elementIdx)
-        {
-            const auto& indices = readIndices[elementIdx];
-            if (indices[0] != idx1) continue;
-            // Any other index needs to match idx2
-            if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
-
-            MatrixElement newElement;
-            bMatrixElementsOK &= newElement.init(readExpressions[elementIdx], indices, symbols);
-
-            outMatrixElements.at(offEqPair).push_back(newElement);
-        }
-    }
-
-    return bMatrixElementsOK;
 }
 
 bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles)
@@ -329,6 +228,7 @@ bool parseMatrixElementsJson(
     }
 
     json data = json::parse(file);
+    file.close();
 
     bool bSuccess = readParticlesJson(data, outParticles);
     if (!bSuccess) return false;
@@ -339,6 +239,89 @@ bool parseMatrixElementsJson(
     return bSuccess;
 }
 
+
+// Legacy function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
+void interpretMatrixElement(const std::string& inputString, std::vector<int32_t>& indices, std::string& mathExpression)
+{
+    // First split the string by "->""
+    std::vector<std::string> tokens(2);
+
+    std::string delimiter = "->";
+    std::string lhs = inputString.substr(0, inputString.find(delimiter));
+
+    // RHS
+    mathExpression = inputString.substr(lhs.length() + delimiter.length());
+
+    // remove whitespaces from lhs to avoid weirdness
+    lhs.erase(std::remove_if(lhs.begin(), lhs.end(), isspace), lhs.end());
+
+    // ---- Extract the abcd indices from M[a,b,c,d]
+    std::size_t start = lhs.find('[');
+    std::size_t end = lhs.find(']');
+
+    // Ensure '[' and ']' are found and the start position is before the end position
+    if (start != std::string::npos && end != std::string::npos && start < end)
+    {
+        std::string values = lhs.substr(start + 1, end - start - 1);
+
+        // Use stringstream to tokenize and extract integers
+        std::istringstream ss(values);
+        indices.clear();
+        indices.reserve(4);
+        size_t num;
+
+        while (ss >> num)
+        {
+            indices.push_back(static_cast<int32_t>(num));
+
+            // Check for the ',' separator and ignore it
+            if (ss.peek() == ',')
+            {
+                ss.ignore();
+            }
+        }
+    }
+}
+
+
+bool parseMatrixElementsRegexLegacy(const std::filesystem::path& matrixElementFile, std::vector<ReadMatrixElement>& outMatrixElements)
+{
+    outMatrixElements.clear();
+
+    std::ifstream file(matrixElementFile);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open matrix element file: " << matrixElementFile << std::endl;
+        return false;
+    }
+
+    // Use regex to read all lines of form M[a,b,c,d] -> expr
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)")))
+        {
+            std::string expr;
+            std::vector<int32_t> indices;
+            interpretMatrixElement(line, indices, expr);
+
+            if (indices.size() < 1 || expr.empty())
+            {
+                std::cerr << "Invalid matrix element: " << line << std::endl;
+                return false;
+            }
+
+            ReadMatrixElement newElement;
+            newElement.expression = expr;
+            newElement.particleIndices = indices;
+
+            outMatrixElements.push_back(newElement);
+        }
+    }
+
+    return true;
+}
+
 bool buildMatrixElements(
     const std::vector<int32_t>& modelOffEqParticleIndices,
     const std::unordered_map<std::string, double>& modelSymbols,
@@ -347,6 +330,10 @@ bool buildMatrixElements(
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
 {
     outMatrixElements.clear();
+
+    // parsedParticles currently not used as the legacy parsing does not support it.
+    // It could be used for model <-> parsed expr consistency validations, but this is TODO
+    WG_UNUSED(parsedParticles);
 
     // Iterate over all (p1, p2) off-eq particle combinations and find and init matrix elements that contribute to their Boltzmann mixing
     for (int32_t idx1 : modelOffEqParticleIndices) for (int32_t idx2 : modelOffEqParticleIndices)

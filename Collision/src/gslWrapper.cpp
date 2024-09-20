@@ -54,8 +54,7 @@ void gslWrapper::clearRNG()
 double gslWrapper::integrandWrapper(double *intVars, size_t dim, void *pp)
 {
     // GSL requires size_t as input: the logic is that dim should be used to check that intVars is correct size.
-    // But I'm a badass and just do this:
-    (void)dim;
+    WG_UNUSED(dim);
 
     gslWrapper::gslFunctionParams* params = static_cast<gslWrapper::gslFunctionParams*>(pp);
 

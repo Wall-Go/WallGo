@@ -124,9 +124,7 @@ wallgo::PhysicsModel setupQCD()
 	Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content. */
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
-	//std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
-	std::filesystem::path matrixElementFile = "MatrixElements/SMQCD.json";
-
+	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
 
 	if (!std::filesystem::exists(matrixElementFile))
 	{
