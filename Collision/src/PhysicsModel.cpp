@@ -225,6 +225,10 @@ void PhysicsModel::printMatrixElements() const
 
             std::cout << "] : " << m.getExpression() << "\n";
         }
+        if (elements.empty())
+        {
+            std::cout << "No contributing processes found for (" << name1 << ", " << name2 << ")! These particles will not mix in the Boltzmann equation\n";
+        }
     }
 }
 
@@ -308,12 +312,13 @@ CollisionIntegral4 PhysicsModel::createCollisionIntegral4(size_t basisSize, cons
     // Copy our params to the integral object (hacky, currently used only for writing metadata)
     outIntegral.mModelParameters = mParameters;
 
-    assert(mMatrixElements.count(offEqIndices) > 0);
-
-    // Fill in the collision integral with CollisionElements
-    for (const MatrixElement& matrixElement : mMatrixElements.at(offEqIndices))
+    // Fill in the collision integral with CollisionElements. Empty integral is valid and can happen if no matrix elements contribute to this mixing
+    if (mMatrixElements.count(offEqIndices) > 0)
     {
-        outIntegral.addCollisionElement(createCollisionElement(offEqIndices, matrixElement));
+        for (const MatrixElement& matrixElement : mMatrixElements.at(offEqIndices))
+        {
+            outIntegral.addCollisionElement(createCollisionElement(offEqIndices, matrixElement));
+        }
     }
 
     return outIntegral;
