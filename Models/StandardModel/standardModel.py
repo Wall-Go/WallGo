@@ -390,11 +390,6 @@ class EffectivePotentialSM(EffectivePotential):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-# Current example file just runs one BM point. Should be updated to loop over multiple points, 
-# I am leaving these here so that they can included easily.
-#    valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
-#    valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
-
 class StandardModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
@@ -553,21 +548,26 @@ class StandardModelExample(WallGoExampleBase):
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
+        valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
+        valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
+
         output: list[ExampleInputPoint] = []
-        output.append(
-            ExampleInputPoint(
-                {
-                    "v0": 246.0,
-                    "mW": 80.4,
-                    "mZ": 91.2,
-                    "mt": 174.0,
-                    "g3": 1.2279920495357861,
-                    "mH": 50.0,
-                },
+
+        for i in range(len(valuesMH)):  # pylint: disable=C0200
+            output.append(
+                ExampleInputPoint(
+                    {
+                        "v0": 246.0,
+                        "mW": 80.4,
+                        "mZ": 91.2,
+                        "mt": 174.0,
+                        "g3": 1.2279920495357861,
+                        "mH": valuesMH[i],
+                    },
                 WallGo.PhaseInfo(
-                    temperature=83.426,
+                    temperature=valuesTn[i],
                     phaseLocation1=WallGo.Fields([0.0]),
-                    phaseLocation2=WallGo.Fields([83.426]),
+                    phaseLocation2=WallGo.Fields([valuesTn[i]]),
                 ),
                 WallGo.VeffDerivativeScales(
                     temperatureScale=1.0, fieldScale=[50.0]
