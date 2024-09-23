@@ -672,7 +672,7 @@ class EOM:
         if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
-        print(f"\nTrying {wallVelocity=}")
+        print(f"------------- Trying {wallVelocity=:g} -------------")
 
         # Initialize the different data class objects and arrays
         zeroPoly = Polynomial(
@@ -777,6 +777,7 @@ class EOM:
         multiplier = 1.0
 
         i = 0
+        print(f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}")
         while True:
             if improveConvergence:
                 # Use the improved algorithm (which converges better but slowly)
@@ -823,7 +824,7 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            print(f"{pressure=} {error=} {errorSolver=} {errTol=} {improveConvergence=} {multiplier=}")
+            print(f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}")
             i += 1
 
             if error < errTol or (errorSolver < errTol and improveConvergence):
@@ -863,7 +864,7 @@ class EOM:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
         
-        print(f"Final {pressure=}; Final {wallParams=}")
+        print(f"Final {pressure=:g}; Final {wallParams=}")
         return (
             pressure,
             wallParams,
