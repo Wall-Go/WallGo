@@ -524,9 +524,9 @@ class SingletStandardModelExample(WallGoExampleBase):
         )
         return argParser
 
-    @property
-    def exampleBaseDirectory(self) -> pathlib.Path:
-        return pathlib.Path(__file__).resolve().parent
+    # @property
+    # def exampleBaseDirectory(self) -> pathlib.Path:
+    #     return pathlib.Path(__file__).resolve().parent
 
     def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
         """TEMPORARY: override to load Benoit's benchmark matrix elements if only top is off-eq.

@@ -1,6 +1,8 @@
 import argparse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+import pathlib
+import sys
 import typing
 from pathlib import Path
 import copy
@@ -47,10 +49,9 @@ class WallGoExampleBase(ABC):
         pass
 
     @property
-    @abstractmethod
     def exampleBaseDirectory(self) -> Path:
         """Override to return base directory of this example."""
-        pass
+        return pathlib.Path(sys.modules['__main__'].__file__).resolve().parent
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> Path:
         """Path to the directory containing default collision data for the example."""
