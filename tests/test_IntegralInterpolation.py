@@ -3,8 +3,8 @@ import numpy.typing as npt
 import pytest
 
 from WallGo import InterpolatableFunction
-from WallGo.Integrals import JbIntegral, JfIntegral
-from WallGo.InterpolatableFunction import EExtrapolationType
+from WallGo.integrals import JbIntegral, JfIntegral
+from WallGo.interpolatableFunction import EExtrapolationType
 
 ### Test real parts of Jb, Jf integrals
 

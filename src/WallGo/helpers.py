@@ -8,6 +8,7 @@ from typing import Callable
 import numpy as np
 from scipy import integrate, special, optimize
 
+
 FIRST_DERIV_COEFF = {
     "2": np.array([[-0.5, 0.5], [-1, 1], [-1, 1]], dtype=float),
     "4": np.array(
