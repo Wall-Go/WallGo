@@ -137,7 +137,7 @@ wallgo::PhysicsModel setupQCD()
 	// Should we print each parsed matrix element to stdout? Can be useful for logging and debugging purposes
 	bool bPrintMatrixElements = true;
 
-	bool bMatrixElementsOK = model.readMatrixElements(matrixElementFile, bPrintMatrixElements);
+	bool bMatrixElementsOK = model.loadMatrixElements(matrixElementFile, bPrintMatrixElements);
 	
 	// If something in matrix element parsing went wrong we abort here
 	if (!bMatrixElementsOK)
