@@ -1,6 +1,4 @@
 import WallGoCollision
-import pathlib
-import sys
 
 
 def setupCollisionModel_QCDEW(
@@ -70,11 +68,7 @@ def setupCollisionModel_QCDEW(
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)
 
-    """Particle definitions. As described above,
-    The model needs to be aware of all particles species that appear as external legs in matrix elements.
-    Note that this includes also particles that are assumed to remain in equilibrium but have collisions with out-of-equilibrium particles.
-    Particle definition is done by filling in a ParticleDescription struct and calling the ModelDefinition.defineParticleSpecies() method
-    """
+    # Particle definitions
     topQuarkL = WallGoCollision.ParticleDescription()
     topQuarkL.name = "topL"  # String identifier, MUST be unique
     topQuarkL.index = 0  # Unique integer identifier, MUST match index that appears in matrix element file
@@ -84,23 +78,7 @@ def setupCollisionModel_QCDEW(
     topQuarkL.bInEquilibrium = (
         False  # Whether the particle species is assumed to remain in equilibrium or not
     )
-    """For each particle you can specify how its energy should be calculated during collision integration.
-    In general the dispersion relation is E^2 = p^2 + m^2, where p is the 3-momentum, and the mass will be discussed shortly.
-    Flagging a particle as ultrarelativistic means the dispersion relation is simply E(p) = |p|, which is a valid approximation at leading log order.
-    WallGoCollision is able to heavily optimize collision integrations if all particles are treated as ultrarelativistic,
-    so it's generally adviced to use this feature unless your accuracy goal excludes the ultrarelativistic approximation.
-    """
     topQuarkL.bUltrarelativistic = True
-
-    """We must also specify a function that computes the mass-squared of the particle from given ModelParameters input.
-    This mass will be used in the energy dispersion relation as described above and can be skipped for ultrarelativistic particles. Here we include it for completeness.
-    Note in particular that the mass defined here is DIFFERENT from the propagator masses we defined above as "model parameters".
-    In many model setups they may be equal, but WallGoCollision does not enforce this.
-    
-    massSqFunction must be a callable function with signature f: WallGoCollision.ModelParameters -> float
-    and should return mass squared in units of the temperature, ie. m^2 / T^2.
-    We already defined a helper function for computing the thermal quark mass from model parameters, so here we simply pass that function.
-    """
     topQuarkL.massSqFunction = quarkThermalMassSquared
 
     # Finish particle species definition
@@ -137,12 +115,7 @@ def setupCollisionModel_QCDEW(
     gluon.massSqFunction = gluonThermalMassSquared
     modelDefinition.defineParticleSpecies(gluon)
 
-
     lightQuark = topQuarkL
-    """Technical NOTE: Although WallGoCollision.ParticleDescription has an underlying C++ description, on Python side they are mutable objects and behave as you would expect from Python objects.
-    This means that the above makes "lightQuark" a reference to the "topQuark" object, instead of invoking a copy-assignment operation on the C++ side.
-    Hence we actually modify the "topQuark" object directly in the following, which is fine because the top quark definition has already been copied into the modelDefinition variable.
-    """
     lightQuark.bInEquilibrium = True
     lightQuark.name = "light quark"
     lightQuark.index = 4

@@ -165,37 +165,6 @@ class StandardModel(GenericModel):
         )
         self.addParticle(wBoson)
 
-        # TODO create collision model. Backup of in-equilibrium particles:
-        """
-        ## === SU(3) gluon ===
-        def gluonMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 * 2.0
-
-        gluon = Particle(
-            "gluon",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=gluonMsqThermal,
-            statistics="Boson",
-            totalDOFs=16,
-        )
-        self.addParticle(gluon)
-
-        ## === Light quarks, 5 of them ===
-        def lightQuarkMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
-        lightQuark = Particle(
-            "lightQuark",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=lightQuarkMsqThermal,
-            statistics="Fermion",
-            totalDOFs=60,
-        )
-        self.addParticle(lightQuark)
-        """
-
     def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
@@ -518,6 +487,7 @@ class StandardModelExample(WallGoExampleBase):
         """SM example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
@@ -548,8 +518,8 @@ class StandardModelExample(WallGoExampleBase):
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
-        valuesMH = [0.0, 50.0, 68.0, 79.0, 88.0]
-        valuesTn = [57.192, 83.426, 100.352, 111.480, 120.934]
+        valuesMH = [0.0, 34.0,50.0, 70. ,81.]
+        valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
 
         output: list[ExampleInputPoint] = []
 
