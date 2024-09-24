@@ -89,25 +89,31 @@ class WallGoExampleBase(ABC):
 
         argParser.add_argument(
             "--momentumGridSize",
-            help="""Basis size N override for momentum grid.
-            Values less than equal to 0 are ignored and we use whatever default the example has defined.""",
             type=int,
             default=0,
+            help="""Basis size N override for momentum grid.
+            Values less than equal to 0 are ignored and we use whatever default the example has defined.""",
         )
 
         argParser.add_argument(
             "--recalculateMatrixElements",
-            help="Forces full recalculation of matrix elements via DRalgo.",
             action="store_true",
+            help="Forces full recalculation of matrix elements via DRalgo.",
         )
 
         argParser.add_argument(
             "--recalculateCollisions",
+            action="store_true",
             help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
                     This is very slow and disabled by default.
                     The resulting collision data will be written to a directory labeled _UserGenerated; the default provided data will not be overwritten.
                     """,
+        )
+
+        argParser.add_argument(
+            "--includeDetonations",
             action="store_true",
+            help="""Also search for detonation solutions after deflagrations.""",
         )
 
         return argParser
@@ -316,8 +322,9 @@ class WallGoExampleBase(ABC):
             results = manager.solveWall(wallSolverSettings)
             self.processResultsForBenchmark(benchmark, results)
 
-            print("\n=== Search for detonation solution ===")
-            results = manager.solveWallDetonation(wallSolverSettings)
-            print(f"\n=== Detonation results, {len(results)} solutions found ===")
-            for res in results:
-                print(f"wallVelocity:      {res.wallVelocity}")
+            if self.cmdArgs.includeDetonations:
+                print("\n=== Search for detonation solution ===")
+                results = manager.solveWallDetonation(wallSolverSettings)
+                print(f"\n=== Detonation results, {len(results)} solutions found ===")
+                for res in results:
+                    print(f"wallVelocity:      {res.wallVelocity}")
