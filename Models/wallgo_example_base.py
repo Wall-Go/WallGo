@@ -138,6 +138,25 @@ class WallGoExampleBase(ABC):
                 str(self.cmdArgs.momentumGridSize),
             )
 
+    def processResultsForBenchmark(
+        self, benchmarkPoint: ExampleInputPoint, results: WallGo.WallGoResults
+    ) -> None:
+        """Called by runExample() inside its loop over benchmark points after the wall solver finishes.
+        You can override this to eg. write results to a file.
+        The base class version just prints some quantities of interest to stdout."""
+
+        header = (
+            "\n=== Results with out-of-equilibrium effects included ==="
+            if results.hasOutOfEquilibrium
+            else "\n=== Results with equilibrium effects only ==="
+        )
+
+        print(header)
+        print(f"wallVelocity:      {results.wallVelocity:.6f}")
+        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+        print(f"wallWidths:        {results.wallWidths}")
+        print(f"wallOffsets:       {results.wallOffsets}")
+
     def runExample(self) -> None:
         """"""
         WallGo.initialize()
@@ -207,16 +226,13 @@ class WallGoExampleBase(ABC):
             be close to the LTE result.
             """
 
+            # Take copy of the input solver settings because we will do both off-eq = True/False cases
             wallSolverSettings = copy.deepcopy(benchmark.wallSolverSettings)
             wallSolverSettings.bIncludeOffEquilibrium = False
+
             print(f"\n=== Begin EOM with off-eq effects ignored ===")
             results = manager.solveWall(wallSolverSettings)
-
-            print("\n=== Local equilibrium results ===")
-            print(f"wallVelocity:      {results.wallVelocity:.6f}")
-            print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-            print(f"wallWidths:        {results.wallWidths}")
-            print(f"wallOffsets:       {results.wallOffsets}")
+            self.processResultsForBenchmark(benchmark, results)
 
             """Solve field EOM with out-of-equilibrium effects included.
             This requires simulatenous solving of Boltzmann equations
@@ -298,12 +314,7 @@ class WallGoExampleBase(ABC):
             wallSolverSettings.bIncludeOffEquilibrium = True
             print(f"\n=== Begin EOM with off-eq effects included ===")
             results = manager.solveWall(wallSolverSettings)
-
-            print("\n=== Out-of-equilibrium results ===")
-            print(f"wallVelocity:      {results.wallVelocity:.6f}")
-            print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-            print(f"wallWidths:        {results.wallWidths}")
-            print(f"wallOffsets:       {results.wallOffsets}")
+            self.processResultsForBenchmark(benchmark, results)
 
             print("\n=== Search for detonation solution ===")
             results = manager.solveWallDetonation(wallSolverSettings)

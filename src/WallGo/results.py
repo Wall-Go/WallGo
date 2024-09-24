@@ -180,6 +180,9 @@ class WallGoResults:
     message: str
     """Description of the cause of the termination."""
 
+    hasOutOfEquilibrium: bool
+    """True if out-of-equilibrium effects were included in the wall solver."""
+
     def __init__(self) -> None:
         pass
 
