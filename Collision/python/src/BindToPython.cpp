@@ -224,15 +224,23 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
         .def("updateParameter", static_cast<void(PhysicsModel::*)(const std::string&, double)>(&PhysicsModel::updateParameter), "Updates a symbolic parameter value.The symbol must have been defined at model creation time")
         .def("updateParameters", &PhysicsModel::updateParameters, "Updates model parameter values. The parameters must have been defined at model creation time")
         // Bind lambda wrapper that takes std::string instead of std::filesystem::path
-        .def("readMatrixElements",
+        .def("loadMatrixElements",
             [](PhysicsModel& self, const std::string& filePath, bool bPrintMatrixElements)
             {
-                return(self.readMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements));
+                return(self.loadMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements));
             },
             R"(Read matrix elements from a file and stores them internally.
             This will only consider expressions where at least one currently registered out-of-equilibrium particle appears as an external particle.
             Note that this function clears any previously stored matrix elements for the model.
             Returns false if something goes wrong.)",
+            py::arg("filePath"), py::arg("bPrintMatrixElements") = false
+        )
+        .def("readMatrixElements",
+            [](PhysicsModel& self, const std::string& filePath, bool bPrintMatrixElements)
+            {
+                return(self.loadMatrixElements(std::filesystem::path(filePath), bPrintMatrixElements));
+            },
+            R"(DEPRECATED. Use loadMatrixElements().)",
             py::arg("filePath"), py::arg("bPrintMatrixElements") = false
         )
         .def("createCollisionTensor",
