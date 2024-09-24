@@ -217,10 +217,10 @@ void PhysicsModel::printMatrixElements() const
         {
             std::vector<int32_t> indices = m.getParticleIndices();
             std::cout << "[";
-            for (int32_t i = 0; i < indices.size(); ++i)
+            for (size_t i = 0; i < indices.size(); ++i)
             {
+                if (i > 0) std::cout << ", ";
                 std::cout << mParticles.at(indices[i]).getName();
-                if (i != indices.size() - 1) std::cout << ", ";
             }
 
             std::cout << "] : " << m.getExpression() << "\n";
@@ -341,7 +341,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
 
     bool bFoundAny = false;
 
-    for (int32_t i = 0; i < bDeltaF.size(); ++i)
+    for (size_t i = 0; i < bDeltaF.size(); ++i)
     {
         bDeltaF[i] = (indices[i] == offEqIndices.second);
         bFoundAny |= bDeltaF[i];
@@ -351,7 +351,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     // Copy ParticleSpecies objects to the CollisionElement
     std::array<ParticleSpecies, 4> externalParticles;
 
-    for (int32_t i = 0; i < indices.size(); ++i)
+    for (size_t i = 0; i < indices.size(); ++i)
     {
         const int32_t particleIndex = indices[i];
         externalParticles[i] = mParticles.at(particleIndex);
