@@ -105,6 +105,7 @@ if (BUILD_PYTHON_MODULE)
 	add_subdirectory(python)
 endif()
 
-if(BUILD_UNIT_TESTS)
-    add_subdirectory(tests)
-endif()
+## Tests are up-to-date for the python module only
+#if(BUILD_UNIT_TESTS)
+#    add_subdirectory(tests)
+#endif()

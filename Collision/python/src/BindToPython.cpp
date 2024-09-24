@@ -73,8 +73,13 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
 
-    py::class_<GridPoint>(m, "GridPoint", "")
-        .def(py::init<>())
+    py::class_<GridPoint>(m, "GridPoint",
+        R"(Point (m, n; j, k) on polynomial/momentum grid.
+            mn are polynomial indices, jk are momentum indices.)"
+        )
+        .def(py::init<uint32_t, uint32_t, uint32_t, uint32_t>(),
+            py::arg("m"), py::arg("n"), py::arg("j"), py::arg("k")
+        )
         .def_readwrite("m", &GridPoint::m, "First Polynomial index")
         .def_readwrite("n", &GridPoint::n, "Second polynomial index")
         .def_readwrite("j", &GridPoint::j, "First momentum index")
