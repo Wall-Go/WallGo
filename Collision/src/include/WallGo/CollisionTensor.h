@@ -48,7 +48,7 @@ public:
     CollisionTensor(PhysicsModel* creator);
     CollisionTensor(PhysicsModel* creator, size_t basisSize);
     // Destructor that calls unregisterObserver() on the creator
-    ~CollisionTensor();
+    virtual ~CollisionTensor();
 
     /* Rule of three: need custom copy/assignment operators because of the custom dtor that handles unregistration from model.
     * Not ideal, but these ensure that a copied CollisionTensor is also registered as a model observer.
