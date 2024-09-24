@@ -510,7 +510,11 @@ class SingletStandardModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
-        self.bNeedsNewCollisions = False
+        self.bShouldRecalculateCollisions = False
+
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+        )
 
     # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
@@ -524,39 +528,6 @@ class SingletStandardModelExample(WallGoExampleBase):
         )
         return argParser
 
-    # @property
-    # def exampleBaseDirectory(self) -> pathlib.Path:
-    #     return pathlib.Path(__file__).resolve().parent
-
-    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
-        """TEMPORARY: override to load Benoit's benchmark matrix elements if only top is off-eq.
-        Remove once matrix elements have been fixed."""
-
-        # ANNOYING: if we want to allow this example to run even if WallGoCollision is not available,
-        # we need to import it only in functions that really need it.
-        # TODO should come up with some centralized import inside WallGo, but it seems hard to do nicely
-        import WallGoCollision
-
-        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
-
-        if bUseBenoit:
-            matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory
-                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
-            )
-
-        else:
-            matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
-            )
-
-        bPrintMatrixElements = True
-
-        bSuccess: bool = inOutModel.readMatrixElements(
-            str(matrixElementFile), bPrintMatrixElements
-        )
-        return bSuccess
-
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
         """TEMPORARY: override to load provided collision data from Benoit's matrix elements if only top is off-eq.
         Remove once matrix elements have been fixed and correct data generated from them.
@@ -564,12 +535,12 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
         if bUseBenoit:
-            return (
+            return pathlib.Path(
                 self.exampleBaseDirectory
                 / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
             )
         else:
-            return super().getDefaultCollisionDirectory(momentumGridSize)
+            return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """"""
@@ -596,6 +567,17 @@ class SingletStandardModelExample(WallGoExampleBase):
             wallGoModel.bIsGluonOffEq,
         )
 
+        """TEMPORARY: set matrixElementFile (used by runExample()) so that we load Benoit's benchmark matrix elements if only top is off-eq.
+        Otherwise use the file that was set in __init__().
+        Remove once matrix elements have been fixed."""
+
+        bUseBenoit = not wallGoModel.bIsGluonOffEq
+        if bUseBenoit:
+            self.matrixElementFile = pathlib.Path(
+                self.exampleBaseDirectory
+                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
+            )
+
         return collisionModel
 
     def updateCollisionModel(
@@ -603,7 +585,7 @@ class SingletStandardModelExample(WallGoExampleBase):
         inWallGoModel: "SingletSMZ2",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagete changes in WallGo model to the collision model.
+        """Propagate changes in WallGo model to the collision model.
         For this example we just need to update the QCD coupling and fermion/gluon thermal masses
         """
         import WallGoCollision
@@ -672,9 +654,10 @@ class SingletStandardModelExample(WallGoExampleBase):
         This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
         so be careful not to replace that reference here.
         """
-        oldParams = model.modelParameters
+
+        # oldParams = model.modelParameters.copy()
+
         model.updateModel(inputParameters)
-        newParams = model.modelParameters
 
         """Collisions integrals for this example depend only on the QCD coupling,
         if it changes we must recompute collisions before running the wall solver.
@@ -682,15 +665,13 @@ class SingletStandardModelExample(WallGoExampleBase):
         But since we want to keep the example simple, we skip this check and assume the existing data is OK.
         (FIXME?)
         """
-        self.bNeedsNewCollisions = False
+        self.bShouldRecalculateCollisions = False
+
         """
+        newParams = model.modelParameters
         if not oldParams or newParams["g3"] != oldParams["g3"]:
             self.bNeedsNewCollisions = True
         """
-
-    def shouldRecalculateCollisions(self) -> bool:
-        """"""
-        return self.bNeedsNewCollisions
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 

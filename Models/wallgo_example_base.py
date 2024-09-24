@@ -6,6 +6,7 @@ import sys
 import typing
 from pathlib import Path
 import copy
+import inspect
 
 import WallGo
 
@@ -22,6 +23,16 @@ class ExampleInputPoint:
 
 
 class WallGoExampleBase(ABC):
+    """Base template for many WallGo examples."""
+
+    bShouldRecalculateCollisions: bool
+    """Flag used to check if new collision data should be generated inside the parameter loop.
+    Concrete example models can set this in eg. updateModelParameters() based on their needs.
+    Note that the '--recalculateCollisions' command line flag always takes priority.
+    """
+
+    matrixElementFile: pathlib.Path
+    """Where to load matrix elements from. Used by runExample() if/when the collision model is initialized."""
 
     @abstractmethod
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -50,36 +61,15 @@ class WallGoExampleBase(ABC):
 
     @property
     def exampleBaseDirectory(self) -> Path:
-        """Override to return base directory of this example."""
-        return pathlib.Path(sys.modules['__main__'].__file__).resolve().parent
+        """Returns directory of the example currently being ran."""
+        # Could use sys.modules['__main__'].__file__ to find module containing __main__,
+        # however this only works if the main module is a .py script (won't work eg. in Jupyter).
+        # The following should be safer:
+        return pathlib.Path(inspect.getfile(self.__class__)).resolve().parent
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> Path:
         """Path to the directory containing default collision data for the example."""
         return self.exampleBaseDirectory / Path(f"CollisionOutput_N{momentumGridSize}")
-
-    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
-        """Loads matrix elements into a collision model. This modifies the input model in-place.
-        Returns False if the parsing failed (missing file, undefined symbols etc).
-        By default we load from MatrixElements/MatrixElements.txt, relative to the script directory.
-        Override if your model requires special setup or a custom file path.
-        """
-        assert inOutModel
-
-        # Should we print each parsed matrix element to stdout? Can be useful for logging and debugging purposes
-        bPrintMatrixElements = True
-
-        ## Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content.
-        bSuccess: bool = inOutModel.readMatrixElements(
-            str(self.exampleBaseDirectory / "MatrixElements/MatrixElements.txt"),
-            bPrintMatrixElements,
-        )
-        return bSuccess
-
-    def shouldRecalculateCollisions(self) -> bool:
-        """Called from runExample() to check if new collision data should be generated.
-        Override with your custom condition. The base class version always returns False.
-        """
-        return False
 
     def updateCollisionModel(
         self,
@@ -87,7 +77,8 @@ class WallGoExampleBase(ABC):
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
         """Override to propagate changes from your WallGo model to the collision model.
-        The base example calls this in runExample() if new collision data needs to be generated.
+        The base example calls this in runExample() if new collision data needs to be generated
+        inside the parameter loop.
         """
         raise NotImplementedError(
             "Must override WallGoBaseExample.updateCollisionModel() to propagate changes from WallGo model to the collision model"
@@ -152,8 +143,8 @@ class WallGoExampleBase(ABC):
         WallGo.initialize()
 
         argParser = self.initCommandLineArgs()
-        self.cmdArgs = argParser.parse_args()
         # store the args so that subclasses can access them if needed
+        self.cmdArgs = argParser.parse_args()
 
         manager = WallGo.WallGoManager()
 
@@ -237,7 +228,7 @@ class WallGoExampleBase(ABC):
             pre-calculated collision data.
             """
             bNeedsNewCollisions = (
-                self.cmdArgs.recalculateCollisions or self.shouldRecalculateCollisions()
+                self.cmdArgs.recalculateCollisions or self.bShouldRecalculateCollisions
             )
 
             # Specify where to load collision files from. The manager will load them when needed by the internal Boltzmann solver.
@@ -259,12 +250,13 @@ class WallGoExampleBase(ABC):
                     collisionModel = self.initCollisionModel(model)
 
                     """Load matrix elements into the collision model.
-                    This is simply a matter of passing a valid file path to the model,
-                    but this base example defines a helper function that concrete
-                    examples can modify to suit their needs. If the load or parsing fails,
-                    we abort here. 
+                    If the load or parsing fails we abort here.
+                    Subclasses should set matrixElementFile to a valid file path.
                     """
-                    if not self.loadMatrixElements(collisionModel):
+                    bShouldPrintMatrixElements = True
+                    if not collisionModel.readMatrixElements(
+                        str(self.matrixElementFile), bShouldPrintMatrixElements
+                    ):
                         print("FATAL: Failed to load matrix elements")
                         exit()
 
