@@ -201,7 +201,7 @@ class InertDoubletModel(GenericModel):
             A dictionary of calculated model parameters.
         """
         modelParameters = {}
-        
+
         # Zero-tempreature Higgs vev
         v0 = inputParameters["v0"]
         modelParameters["v0"] = v0
@@ -239,7 +239,7 @@ class InertDoubletModel(GenericModel):
         modelParameters["lambdaL"] = inputParameters["lambdaL"]
 
         return modelParameters
-    
+
     def updateModel(self, newInputParams: dict[str, float]) -> None:
         """Computes new Lagrangian parameters from given input and caches them internally.
         These changes automatically propagate to the associated EffectivePotential, particle masses etc.
@@ -609,35 +609,18 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
-    
+
+
 class InertDoubletModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
-        self.bNeedsNewCollisions = False
+        self.bShouldRecalculateCollisions = False
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+        )
 
     # ~ Begin WallGoExampleBase interface
-
-    @property
-    def exampleBaseDirectory(self) -> pathlib.Path:
-        return pathlib.Path(__file__).resolve().parent
-
-    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
-        # ANNOYING: if we want to allow this example to run even if WallGoCollision is not available,
-        # we need to import it only in functions that really need it.
-        # TODO should come up with some centralized import inside WallGo, but it seems hard to do nicely
-        import WallGoCollision
-
-        matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
-            )
-
-        bPrintMatrixElements = True
-
-        bSuccess: bool = inOutModel.readMatrixElements(
-            str(matrixElementFile), bPrintMatrixElements
-        )
-        return bSuccess
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
 
@@ -673,8 +656,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         inWallGoModel: "InertDoubletModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagete changes in WallGo model to the collision model.
-        """
+        """Propagete changes in WallGo model to the collision model."""
         import WallGoCollision
 
         changedParams = WallGoCollision.ModelParameters()
@@ -762,12 +744,7 @@ class InertDoubletModelExample(WallGoExampleBase):
             self.bNeedsNewCollisions = True
         """
 
-    def shouldRecalculateCollisions(self) -> bool:
-        """"""
-        return self.bNeedsNewCollisions
-
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
-
 
         output: list[ExampleInputPoint] = []
 
@@ -791,9 +768,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeScales(
-                    temperatureScale=0.5, fieldScale=[10.0]
-                ),
+                WallGo.VeffDerivativeScales(temperatureScale=0.5, fieldScale=[10.0]),
                 WallGo.WallSolverSettings(
                     bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
                     meanFreePath=1.0,

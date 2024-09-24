@@ -26,7 +26,6 @@ A Study of the electroweak phase transition dynamics, Phys.Rev.D 52 (1995) 7182-
 doi:10.1103/PhysRevD.52.7182
 """
 
-import os
 import sys
 import pathlib
 import numpy as np
@@ -45,6 +44,7 @@ from wallgo_example_base import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
+
 
 class StandardModel(GenericModel):
     r"""
@@ -77,8 +77,7 @@ class StandardModel(GenericModel):
         self.defineParticles()
 
         # ~ GenericModel interface
-    
-    
+
     @property
     def fieldCount(self) -> int:
         """How many classical background fields"""
@@ -359,37 +358,20 @@ class EffectivePotentialSM(EffectivePotential):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
+
 class StandardModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
-        self.bNeedsNewCollisions = False
+        self.bShouldRecalculateCollisions = False
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+        )
 
     # ~ Begin WallGoExampleBase interface
 
-    @property
-    def exampleBaseDirectory(self) -> pathlib.Path:
-        return pathlib.Path(__file__).resolve().parent
-
-    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
-        # ANNOYING: if we want to allow this example to run even if WallGoCollision is not available,
-        # we need to import it only in functions that really need it.
-        # TODO should come up with some centralized import inside WallGo, but it seems hard to do nicely
-        import WallGoCollision
-
-        matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
-            )
-
-        bPrintMatrixElements = True
-
-        bSuccess: bool = inOutModel.readMatrixElements(
-            str(matrixElementFile), bPrintMatrixElements
-        )
-        return bSuccess
-
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-
+        """"""
         return super().getDefaultCollisionDirectory(momentumGridSize)
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -402,10 +384,6 @@ class StandardModelExample(WallGoExampleBase):
         """"""
 
         import WallGoCollision
-
-        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
-        # This is optional; by default the seed is 0.
-        WallGoCollision.setSeed(0)
 
         # This example comes with a very explicit example function on how to setup and configure the collision module.
         # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
@@ -422,8 +400,7 @@ class StandardModelExample(WallGoExampleBase):
         inWallGoModel: "StandardModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagete changes in WallGo model to the collision model.
-        """
+        """Propagete changes in WallGo model to the collision model."""
         import WallGoCollision
 
         changedParams = WallGoCollision.ModelParameters()
@@ -496,29 +473,18 @@ class StandardModelExample(WallGoExampleBase):
         This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
         so be careful not to replace that reference here.
         """
-        oldParams = model.modelParameters
         model.updateModel(inputParameters)
-        newParams = model.modelParameters
 
         """Collisions integrals for this example depend on the QCD and Electroweak coupling,
-        if it changes we must recompute collisions before running the wall solver.
-        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
+        so if these change we should mark the collision data as outdated by setting self.bNeedsNewCollisions = True.
         But since we want to keep the example simple, we skip this check and assume the existing data is OK.
         (FIXME?)
         """
         self.bNeedsNewCollisions = False
-        """
-        if not oldParams or newParams["g3"] != oldParams["g3"] or newParams["g2"] != oldParams["g2"]:
-            self.bNeedsNewCollisions = True
-        """
-
-    def shouldRecalculateCollisions(self) -> bool:
-        """"""
-        return self.bNeedsNewCollisions
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
-        valuesMH = [0.0, 34.0,50.0, 70. ,81.]
+        valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
         valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
 
         output: list[ExampleInputPoint] = []
@@ -534,21 +500,21 @@ class StandardModelExample(WallGoExampleBase):
                         "g3": 1.2279920495357861,
                         "mH": valuesMH[i],
                     },
-                WallGo.PhaseInfo(
-                    temperature=valuesTn[i],
-                    phaseLocation1=WallGo.Fields([0.0]),
-                    phaseLocation2=WallGo.Fields([valuesTn[i]]),
-                ),
-                WallGo.VeffDerivativeScales(
-                    temperatureScale=1.0, fieldScale=[50.0]
-                ),
-                WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
-                    meanFreePath=1.0,
-                    wallThicknessGuess=0.05,
-                ),
+                    WallGo.PhaseInfo(
+                        temperature=valuesTn[i],
+                        phaseLocation1=WallGo.Fields([0.0]),
+                        phaseLocation2=WallGo.Fields([valuesTn[i]]),
+                    ),
+                    WallGo.VeffDerivativeScales(
+                        temperatureScale=1.0, fieldScale=[50.0]
+                    ),
+                    WallGo.WallSolverSettings(
+                        bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                        meanFreePath=1.0,
+                        wallThicknessGuess=0.05,
+                    ),
+                )
             )
-        )
 
         return output
 

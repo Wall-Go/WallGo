@@ -291,6 +291,8 @@ class WallGoExampleBase(ABC):
                     str(manager.getCurrentCollisionDirectory())
                 )
 
+                self.bShouldRecalculateCollisions = False
+
                 ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
 
             wallSolverSettings.bIncludeOffEquilibrium = True
