@@ -22,9 +22,12 @@ def test_collisionTensorFull(
 
     resultsForPair = resultsQCD_N3.getResultsForParticlePair(particle1, particle2)
 
-    rtol = 1e-4
-
     assert resultsForPair is not None
+
+    point = WallGoCollision.GridPoint(*gridPoint)
+
+    err = resultsForPair.errorAt(point)
+
     assert resultsForPair.valueAt(
         WallGoCollision.GridPoint(*gridPoint)
-    ) == pytest.approx(expected, rel=rtol)
+    ) == pytest.approx(expected, abs=err)

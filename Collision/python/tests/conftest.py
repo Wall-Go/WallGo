@@ -45,7 +45,7 @@ def collisionModelQCD() -> WallGoCollision.PhysicsModel:
     model = WallGoCollision.PhysicsModel(defs)
 
     model.loadMatrixElements(
-        str(fileDir / "MatrixElements/MatrixElements_QCD.txt"), True
+        str(fileDir / "MatrixElements/MatrixElements_QCD.txt"), False
     )
 
     return model
