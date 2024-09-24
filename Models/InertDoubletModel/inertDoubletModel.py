@@ -27,20 +27,30 @@ phase transition in the inert doublet model, Phys.Rev.D 107 (2023) 9, 095005
 doi:10.1103/PhysRevD.107.095005
 """
 
-import pathlib
+import os
 import sys
+import pathlib
+import argparse
 import numpy as np
+from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle, WallGoManager
+from WallGo.InterpolatableFunction import EExtrapolationType
 
-# Adding the Models folder to the path and import effectivePotentialNoResum
-modelsPath = pathlib.Path(__file__).parents[1]
-sys.path.insert(0, str(modelsPath))
+# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
+sys.path.append(str(modelsBaseDir))
 from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
     EffectivePotentialNoResum,
 )
+
+from wallgo_example_base import WallGoExampleBase
+from wallgo_example_base import ExampleInputPoint
+
+if TYPE_CHECKING:
+    import WallGoCollision
 
 
 # Inert doublet model, as implemented in 2211.13142
@@ -62,39 +72,40 @@ class InertDoubletModel(GenericModel):
     methods for the WallGo package.
     """
 
-    particles: list[Particle] = []
-    outOfEquilibriumParticles: list[Particle] = []
-    modelParameters: dict[str, float] = {}
-    collisionParameters: dict[str, float] = {}
+    # ~ GenericModel interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 2
 
-    ## Specifying this is REQUIRED
-    fieldCount = 1
+    def getEffectivePotential(self) -> "EffectivePotentialIDM":
+        return self.effectivePotential
 
-    def __init__(self, initialInputParameters: dict[str, float]):
+    # ~
+
+    def __init__(self):
         """
         Initialize the InertDoubletModel.
-
-        Parameters
-        ----------
-        initialInputParameters: dict[str, float]
-            A dictionary of initial input parameters for the model.
-
-        Returns
-        ----------
-        cls: InertDoubletModel
-            An object of the InertDoubletModel class.
-
         """
 
-        self.modelParameters = self.calculateModelParameters(initialInputParameters)
+        self.modelParameters: dict[str, float] = {}
 
-        # Initialize internal Veff with our params dict.
-        self.effectivePotential = EffectivePotentialIDM(
-            self.modelParameters, self.fieldCount
-        )
+        # Initialize internal effective potential
+        self.effectivePotential = EffectivePotentialIDM(self)
 
         # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles()
+
+    # ~ GenericModel interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 1
+
+    def getEffectivePotential(self) -> "EffectivePotentialIDM":
+        return self.effectivePotential
+
+    # ~
 
     def defineParticles(self) -> None:
         """
@@ -172,43 +183,8 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(wBoson)
 
-        # In-eq particles commented out for backup
-        """
-        ## === SU(3) gluon ===
-        def gluonMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 * 2.0
-
-        gluon = Particle(
-            "gluon",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=gluonMsqThermal,
-            statistics="Boson",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=16,
-        )
-        self.addParticle(gluon)
-
-        ## === Light quarks, 5 of them ===
-        def lightQuarkMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
-        lightQuark = Particle(
-            "lightQuark",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=lightQuarkMsqThermal,
-            statistics="Fermion",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=60,
-        )
-        self.addParticle(lightQuark)
-        """
-
     ## Go from whatever input params --> action params
-    def calculateModelParameters(
+    def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
         """
@@ -224,10 +200,9 @@ class InertDoubletModel(GenericModel):
         modelParameters: dict[str, float]
             A dictionary of calculated model parameters.
         """
-        super().calculateModelParameters(inputParameters)
-
         modelParameters = {}
-
+        
+        # Zero-tempreature Higgs vev
         v0 = inputParameters["v0"]
         modelParameters["v0"] = v0
 
@@ -264,9 +239,14 @@ class InertDoubletModel(GenericModel):
         modelParameters["lambdaL"] = inputParameters["lambdaL"]
 
         return modelParameters
-
-
-# end model
+    
+    def updateModel(self, newInputParams: dict[str, float]) -> None:
+        """Computes new Lagrangian parameters from given input and caches them internally.
+        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """
+        newParams = self.calculateLagrangianParameters(newInputParams)
+        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        self.modelParameters.update(newParams)
 
 
 class EffectivePotentialIDM(EffectivePotentialNoResum):
@@ -279,31 +259,26 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
     For this benchmark model we use the 4D potential without high-temperature expansion.
     """
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+    def __init__(self, owningModel: InertDoubletModel):
         """
         Initialize the EffectivePotentialIDM.
-
-        Parameters
-        ----------
-        modelParameters: dict[str, float]
-            A dictionary of model parameters.
-        fieldCount: int
-            The number of fields undergoing the phase transition
-
-        Returns
-        ----------
-        cls: EffectivePotentialIDM
-            an object of the EffectivePotentialIDM class
         """
-        super().__init__(
-            modelParameters, fieldCount, integrals=None, useDefaultInterpolation=True
-        )
-        # The super call already gave us the model params
+        super().__init__(integrals=None, useDefaultInterpolation=True)
+
+        assert owningModel is not None, "Invalid model passed to Veff"
+
+        self.owner = owningModel
+        self.modelParameters = self.owner.modelParameters
 
         # Count particle degrees-of-freedom to facilitate inclusion of light particle
         # contributions to ideal gas pressure
         self.numBosonDof = 32
         self.numFermionDof = 90
+
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+    # ~
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
@@ -634,160 +609,205 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # Fermions contribute with a magic 7/8 prefactor as usual. Overall minus
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
+    
+class InertDoubletModelExample(WallGoExampleBase):
 
+    def __init__(self) -> None:
+        """"""
+        self.bNeedsNewCollisions = False
 
-def main() -> None:
-    """Runs WallGo for the Inert Doublet Model, computing bubble wall speed."""
+    # ~ Begin WallGoExampleBase interface
 
-    WallGo.initialize()
+    @property
+    def exampleBaseDirectory(self) -> pathlib.Path:
+        return pathlib.Path(__file__).resolve().parent
 
-    ## Modify the config, we use N=5 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
+    def loadMatrixElements(self, inOutModel: "WallGoCollision.PhysicsModel") -> bool:
+        # ANNOYING: if we want to allow this example to run even if WallGoCollision is not available,
+        # we need to import it only in functions that really need it.
+        # TODO should come up with some centralized import inside WallGo, but it seems hard to do nicely
+        import WallGoCollision
 
-    # Print WallGo config. This was read by WallGo.initialize()
-    print("=== WallGo configuration options ===")
-    print(WallGo.config)
+        matrixElementFile = pathlib.Path(
+                self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            )
 
-    # Guess of the wall thickness: (approximately) 5/Tn
-    wallThicknessIni = 0.05
+        bPrintMatrixElements = True
 
-    # Estimate of the mean free path of the particles in the plasma:
-    # (approximately) 100/Tn
-    meanFreePath = 1.0
-
-    # Create WallGo control object
-    # The following 2 parameters are used to estimate the optimal value of dT used
-    # for the finite difference derivatives of the potential.
-    # Temperature scale (in GeV) over which the potential changes by O(1).
-    # A good value would be of order Tc-Tn.
-    temperatureScale = 1.0
-    # Field scale (in GeV) over which the potential changes by O(1). A good value
-    # would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the
-    # same scale, or an array.
-    fieldScale = 10.0
-    manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureScale, fieldScale
-    )
-
-    """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input,
-    but this is likely to change in the future
-    """
-
-    ## QFT model input.
-    inputParameters = {
-        "v0": 246.22,
-        "Mt": 172.76,
-        "g1": 0.35,
-        "g2": 0.65,
-        "g3": 1.2279920495357861,
-        "lambda2": 0.1,
-        "lambdaL": 0.0015,
-        "mh": 125.0,
-        "mH": 62.66,
-        "mA": 300.0,
-        "mHp": 300.0,  # We don't use mHm as input parameter, as it is equal to mHp
-    }
-
-    model = InertDoubletModel(inputParameters)
-
-    # ---- collision integration and path specifications
-
-    # Directory name for collisions integrals defaults to "CollisionOutput/"
-    # these can be loaded or generated given the flag "generateCollisionIntegrals"
-    WallGo.config.set("Collisions", "pathName", "CollisionOutput/")
-
-    """
-    Register the model with WallGo. This needs to be done only once.
-    If you need to use multiple models during a single run,
-    we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    try:
-        scriptLocation = pathlib.Path(__file__).parent.resolve()
-        manager.loadCollisionFiles(scriptLocation / "CollisionOutput")
-    except Exception:
-        print(
-            """\nLoad of collision integrals failed!
-              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
-              """
+        bSuccess: bool = inOutModel.readMatrixElements(
+            str(matrixElementFile), bPrintMatrixElements
         )
-        exit(2)
+        return bSuccess
 
-    print("\n=== WallGo parameter scan ===")
-    # ---- This is where you'd start an input parameter
-    # loop if doing parameter-space scans ----
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
 
-    valuesmH = [62.66]
+        return super().getDefaultCollisionDirectory(momentumGridSize)
 
-    for mH in valuesmH:
+    def initWallGoModel(self) -> "WallGo.GenericModel":
+        """"""
+        return InertDoubletModel()
 
-        inputParameters["mH"] = mH
+    def initCollisionModel(
+        self, wallGoModel: "InertDoubletModel"
+    ) -> "WallGoCollision.PhysicsModel":
+        """"""
 
-        """In addition to model parameters, WallGo needs info about the phases at the
-        nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
-        The transition goes from phase1 to phase2.
-        """
+        import WallGoCollision
 
-        Tn = 117.1  # nucleation temperature
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
 
-        phaseInfo = WallGo.PhaseInfo(
-            temperature=Tn,
-            phaseLocation1=WallGo.Fields([0.0]),
-            phaseLocation2=WallGo.Fields([246.0]),
+        # This example comes with a very explicit example function on how to setup and configure the collision module.
+        # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
+        from example_collision_defs import setupCollisionModel_QCDEW
+
+        collisionModel = setupCollisionModel_QCDEW(
+            wallGoModel.modelParameters,
         )
 
-        """Give the input to WallGo. It is NOT enough to change parameters directly
-           in the GenericModel instance because
-            1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific initializations
-               of internal classes
+        return collisionModel
+
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "InertDoubletModel",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagete changes in WallGo model to the collision model.
+        """
+        import WallGoCollision
+
+        changedParams = WallGoCollision.ModelParameters()
+
+        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+        gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
+        changedParams.addOrModifyParameter("gs", gs)
+        changedParams.addOrModifyParameter("gw", gw)
+        changedParams.addOrModifyParameter(
+            "msq[0]", gs**2 / 6.0
+        )  # quark thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "msq[1]", 2.0 * gs**2
+        )  # gluon thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "msq[2]", 11.0 * gw**2 / 6.0
+        )  # W boson thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
+
+    def configureCollisionIntegration(
+        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
+    ) -> None:
+        """Non-abstract override"""
+
+        import WallGoCollision
+
+        """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
+        or skip this step entirely. Here we set everything manually to show how it's done.
+        """
+        integrationOptions = WallGoCollision.IntegrationOptions()
+        integrationOptions.calls = 50000
+        integrationOptions.maxTries = 50
+        integrationOptions.maxIntegrationMomentum = 20  # collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
+        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.relativeErrorGoal = 1e-1
+
+        inOutCollisionTensor.setIntegrationOptions(integrationOptions)
+
+        """We can also configure various verbosity settings that are useful when you want to see what is going on in long-running integrations.
+        These include progress reporting and time estimates, as well as a full result dump of each individual integral to stdout.
+        By default these are all disabled. Here we enable some for demonstration purposes.
+        """
+        verbosity = WallGoCollision.CollisionTensorVerbosity()
+        verbosity.bPrintElapsedTime = (
+            True  # report total time when finished with all integrals
+        )
+
+        """Progress report when this percentage of total integrals (approximately) have been computed.
+        Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done.
+        Note also that in multithreaded runs the progress tracking is less precise.
+        """
+        verbosity.progressReportPercentage = 0.25
+
+        # Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
+        verbosity.bPrintEveryElement = False
+
+        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
+
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """SM example uses spatial grid size = 20"""
+        super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+
+    def updateModelParameters(
+        self, model: "InertDoubletModel", inputParameters: dict[str, float]
+    ) -> None:
+        """Convert Inert Doublet Model inputs to Lagrangian params and update internal model parameters.
+        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        so be careful not to replace that reference here.
+        """
+        oldParams = model.modelParameters
+        model.updateModel(inputParameters)
+        newParams = model.modelParameters
+
+        """Collisions integrals for this example depend on the QCD and Electroweak coupling,
+        if it changes we must recompute collisions before running the wall solver.
+        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
+        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        (FIXME?)
+        """
+        self.bNeedsNewCollisions = False
+        """
+        if not oldParams or newParams["g3"] != oldParams["g3"] or newParams["g2"] != oldParams["g2"]:
+            self.bNeedsNewCollisions = True
         """
 
-        manager.setParameters(phaseInfo)
+    def shouldRecalculateCollisions(self) -> bool:
+        """"""
+        return self.bNeedsNewCollisions
 
-        """WallGo can now be used to compute wall stuff!"""
-
-        # ---- Solve wall speed in Local Thermal Equilibrium approximation
-
-        vwLTE = manager.wallSpeedLTE()
-
-        print(f"LTE wall speed:    {vwLTE:.6f}")
-
-        # ---- Solve field EOM. For illustration, first solve it without any
-        # out-of-equilibrium contributions. The resulting wall speed should
-        # be close to the LTE result
-
-        bIncludeOffEq = False
-        print(f"=== Begin EOM with {bIncludeOffEq=} ===")
-
-        results = manager.solveWall(bIncludeOffEq)
-
-        print("\n=== Local equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-
-        # Repeat with out-of-equilibrium parts included. This requires
-        # solving Boltzmann equations, invoked automatically by solveWall()
-        bIncludeOffEq = True
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
-
-        results = manager.solveWall(bIncludeOffEq)
-
-        print("\n=== Out-of-equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-
-    # end parameter-space loop
+    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
 
-# end main()
+        output: list[ExampleInputPoint] = []
+
+        output.append(
+            ExampleInputPoint(
+                {
+                    "v0": 246.22,
+                    "Mt": 172.76,
+                    "g1": 0.35,
+                    "g2": 0.65,
+                    "g3": 1.2279920495357861,
+                    "lambda2": 0.1,
+                    "lambdaL": 0.0015,
+                    "mh": 125.0,
+                    "mH": 62.66,
+                    "mA": 300.0,
+                    "mHp": 300.0,  # We don't use mHm as input parameter, as it is equal to mHp
+                },
+                WallGo.PhaseInfo(
+                    temperature=117.1,
+                    phaseLocation1=WallGo.Fields([0.0]),
+                    phaseLocation2=WallGo.Fields([246.0]),
+                ),
+                WallGo.VeffDerivativeScales(
+                    temperatureScale=0.5, fieldScale=[10.0]
+                ),
+                WallGo.WallSolverSettings(
+                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    meanFreePath=1.0,
+                    wallThicknessGuess=0.05,
+                ),
+            )
+        )
+
+        return output
+
+    # ~ End WallGoExampleBase interface
 
 
-## Don't run the main function if imported to another file
 if __name__ == "__main__":
-    main()
+
+    example = InertDoubletModelExample()
+    example.runExample()
