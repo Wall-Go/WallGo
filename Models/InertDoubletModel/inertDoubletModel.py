@@ -78,7 +78,7 @@ class InertDoubletModel(GenericModel):
         """How many classical background fields"""
         return 2
 
-    def getEffectivePotential(self) -> "EffectivePotentialxSMZ2":
+    def getEffectivePotential(self) -> "EffectivePotentialIDM":
         return self.effectivePotential
 
     # ~
@@ -263,7 +263,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """
         Initialize the EffectivePotentialIDM.
         """
-        super().__init__()
+        super().__init__(integrals=None, useDefaultInterpolation=True)
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
@@ -792,7 +792,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
                 WallGo.VeffDerivativeScales(
-                    temperatureScale=.5, fieldScale=[10.0]
+                    temperatureScale=0.5, fieldScale=[10.0]
                 ),
                 WallGo.WallSolverSettings(
                     bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
