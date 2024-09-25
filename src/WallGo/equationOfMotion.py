@@ -26,6 +26,7 @@ from .results import (
     BoltzmannResults,
     HydroResults,
     WallGoResults,
+    SolutionTypes,
 )
 
 
@@ -314,9 +315,9 @@ class EOM:
                 # be a defl/hyb, but time-dependent effects could allow it to be a
                 # runaway.
                 results.setWallVelocities(None, None, None)
-                results.setMessage(
+                results.setSuccessState(
                     True,
-                    'deflagration or runaway',
+                    SolutionTypes.DEFLAGRATION_OR_RUNAWAY,
                     "The pressure is positive at vJ and negative at 1, but there is no"\
                     " stable detonation solution. The wall could either be a "\
                     "deflagration/hybrid or a runaway."
@@ -325,9 +326,9 @@ class EOM:
                 # If pressure is always positive and is therefore too large to have a
                 # detonation solution, we return 0.
                 results.setWallVelocities(None, None, None)
-                results.setMessage(
+                results.setSuccessState(
                     True,
-                    'deflagration',
+                    SolutionTypes.DEFLAGRATION,
                     "The pressure is too large to have a detonation solution. "\
                     "The solution must be a deflagration or hybrid. Try calling "\
                     "WallGoManager.solveWall() to find it."
@@ -336,9 +337,9 @@ class EOM:
                 # If pressure is too small to have a detonation, it is a runaway and we
                 # return 1.
                 results.setWallVelocities(None, None, None)
-                results.setMessage(
+                results.setSuccessState(
                     True,
-                    'runaway',
+                    SolutionTypes.RUNAWAY,
                     "The pressure is too small to have a detonation solution. "\
                     "The solution is a runaway wall."
                 )
@@ -421,9 +422,9 @@ class EOM:
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
             results.setBoltzmannResults(boltzmannResultsMax)
-            results.setMessage(
+            results.setSuccessState(
                 True,
-                'runaway',
+                SolutionTypes.RUNAWAY,
                 "The maximum pressure on the wall is negative. "\
                 "The solution must be a detonation or a runaway wall."
             )
@@ -462,9 +463,9 @@ class EOM:
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
-                results.setMessage(
+                results.setSuccessState(
                     False,
-                    'error',
+                    SolutionTypes.ERROR,
                     "The pressure at vw=0 is positive which indicates the PT cannot "\
                     "proceed. Something might be wrong with your potential."
                 )
@@ -580,48 +581,50 @@ class EOM:
 
         # Set the message
         if not self.successTemperatureProfile:
-            results.setMessage(
-                False, 'error', "The temperature profile was not found succcessfully")
+            results.setSuccessState(
+                False,
+                SolutionTypes.ERROR,
+                "The temperature profile was not found succcessfully")
         elif (results.temperatureMinus < self.hydrodynamics.TMinLowT or
               results.temperatureMinus > self.hydrodynamics.TMaxLowT):
-            results.setMessage(
+            results.setSuccessState(
                 False,
-                'error',
+                SolutionTypes.ERROR,
                 f"Tminus={results.temperatureMinus} is not in the allowed range "\
                 f"[{self.hydrodynamics.TMinLowT},{self.hydrodynamics.TMaxLowT}]."
             )
         elif (results.temperaturePlus < self.hydrodynamics.TMinHighT or
               results.temperaturePlus > self.hydrodynamics.TMaxHighT):
-            results.setMessage(
+            results.setSuccessState(
                 False,
-                'error',
+                SolutionTypes.ERROR,
                 f"Tplus={results.temperaturePlus} is not in the allowed range "\
                 f"[{self.hydrodynamics.TMinHighT},{self.hydrodynamics.TMaxHighT}]."
             )
         elif not self.successWallPressure:
-            results.setMessage(
+            results.setSuccessState(
                 False,
-                'error',
+                SolutionTypes.ERROR,
                 "The pressure for the wall velocity has not converged to sufficient "\
                 "accuracy with the given maximum number for iterations."
             )
         elif not optimizeResult.converged:
-            results.setMessage(False, 'error', optimizeResult.flag)
+            results.setSuccessState(False, SolutionTypes.ERROR, optimizeResult.flag)
         elif (np.any(wallParams.widths == self.wallThicknessBounds[0]/self.thermo.Tnucl)
               or np.any(wallParams.offsets == self.wallOffsetBounds[0]) or
               np.any(wallParams.widths == self.wallThicknessBounds[1]/self.thermo.Tnucl)
               or np.any(wallParams.offsets == self.wallOffsetBounds[1])):
-            results.setMessage(
+            results.setSuccessState(
                 False,
-                'error',
+                SolutionTypes.ERROR,
                 f"At least one of the {wallParams=} saturates the given bounds. "\
                 "The solution is probably inaccurate."
             )
         else:
-            solutionType = 'deflagration'
+            solutionType = SolutionTypes.DEFLAGRATION
             if wallVelocity > self.hydrodynamics.vJ:
-                solutionType = 'detonation'
-            results.setMessage(True,
+                solutionType = SolutionTypes.DETONATION
+            results.setSuccessState(True,
                                solutionType,
                                "The wall velocity was found successfully.")
 

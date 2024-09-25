@@ -3,6 +3,7 @@ Data classes for compiling and returning results
 """
 
 from dataclasses import dataclass
+from enum import Enum
 import numpy as np
 from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
@@ -100,6 +101,35 @@ class HydroResults:
         self.velocityJouguet = velocityJouguet
 
 
+class SolutionTypes(Enum):
+    """
+    Enum class used to label the different types of solution WallGo can find
+    """
+
+    DEFLAGRATION = 1
+    """
+    Indicates that a solution was found while looking for a deflagration or hybrid. Can
+    also be used when the pressure was always positive while looking for a detonation.
+    """
+
+    DETONATION = 2
+    """ Indicates that a solution was found while looking for a detonation. """
+
+    RUNAWAY = 3
+    """
+    Indicates that no solution was found and that the pressure was always negative.
+    """
+
+    DEFLAGRATION_OR_RUNAWAY = 4
+    """
+    Used when no stable solution was found while looking for a detonation with a
+    positive pressure at vw=vJ and negative at vw=1.
+    """
+
+    ERROR = 5
+    """ Indicates that the calculation was not successful. """
+
+
 @dataclass
 class WallGoResults:
     """
@@ -173,16 +203,15 @@ class WallGoResults:
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
 
-    solutionType: str
+    solutionType: SolutionTypes
     """
-    String describing the type of solution obtained. Can either be 'deflagration',
-    'detonation', 'runaway', 'deflagration or runaway' or 'error'. The function 
-    WallGoManager.solveWall() will return 'deflagration' if a solution was found and
-    'runaway' otherwise. The function WallGoManager.solveWallDetonation() will return
-    'detonation' if a solution was found. Otherwise, it returns 'runaway' if the
-    pressure is negative everywhere between vJ and 1, 'deflagration' if the pressure is
-    always positive, and 'deflagration or runaway' if the pressure is positive at vJ and
-    negative at 1 and no stable solution was found. In both cases, returns 'error' if
+    Describes the type of solution obtained. Must be a SolutionTypes object. The
+    function WallGoManager.solveWall() will return DEFLAGRATION if a solution was found
+    and RUNAWAY otherwise. The function WallGoManager.solveWallDetonation() will return
+    DETONATION if a solution was found. Otherwise, it returns RUNAWAY if the pressure is
+    negative everywhere between vJ and 1, DEFLAGRATION if the pressure is always
+    positive, and DEFLAGRATION_OR_RUNAWAY if the pressure is positive at vJ and negative
+    at 1 and no stable solution was found. In both cases, returns ERROR if
     success=False.
     """
 
@@ -251,19 +280,19 @@ class WallGoResults:
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
 
-    def setMessage(self, success: bool, solutionType: str, message: str) -> None:
+    def setSuccessState(
+            self,
+            success: bool,
+            solutionType: SolutionTypes,
+            message: str,
+            ) -> None:
         """
-        Set the termination message and the success flag.
+        Set the termination message, the success flag and the solution type.
         """
         assert isinstance(success, bool), 'WallGoResults Error: success must be a bool.'
         assert isinstance(message, str), 'WallGoResults Error: message must be a str.'
-        assert solutionType in ['deflagration',
-                                'detonation',
-                                'runaway',
-                                'deflagration or runaway',
-                                'error'], "WallGoResults Error: solutionType must "\
-            "be 'deflagration', 'detonation', 'runaway', 'deflagration or runaway' or "\
-            "'error'."
+        assert isinstance(solutionType, SolutionTypes), "WallGoResults Error: "\
+            "solutionType must be a SolutionTypes object."
         self.success = success
         self.message = message
         self.solutionType = solutionType
