@@ -45,13 +45,28 @@ Collision integrals
 
 - **Can I parallelize the computation of the collision terms?**
 
-    Yes! By default the collision code is compiled with `OpenMP <https://www.openmp.org/>`_
-    parallelisation. This allows processors with shared memory to work in parallel,
-    so can make use of the multiple processors on your computer, or use up to one node
-    on a supercomputer. For example, generate the collision integrals for the Standard
-    Model example, run
+    Yes! If you have `OpenMP <https://www.openmp.org/>`_ installed, by default the collision
+    code is compiled with parallelisation. This allows processors with shared memory to work
+    in parallel, so can make use of the multiple processors on your computer, or use up to
+    one node on a supercomputer. To choose the number of threads, you need to set an
+    environment variable, as follows
 
-        [TO DO]
+        export OMP_NUM_THREADS=4
+
+    Once done, if you then run the computation of the collision integrals, they will run with
+    4 threads, which should speed up the computation by a factor of almost 4, if you have at
+    least 4 physical cores.
+
+- **Why doesn't the parallelisation work on my Mac?**
+
+    Note that for Mac users, OpenMP can be a little more tricky to set up. We recommend using
+    the Homebrew version, which requires an export statement to properly link,
+
+        brew install libomp
+        export OpenMP_ROOT=$(brew --prefix)/opt/libomp
+
+    The second line can be added to your `~/.zprofile` or `~/.zshrc` file so that it is called
+    every time you open a terminal.
 
 - **Can I reuse the same collision integrals for different models/parameter choices?**
 
