@@ -9,7 +9,6 @@ import numpy as np
 import numpy.typing as npt
 
 import scipy.optimize
-from scipy.interpolate import UnivariateSpline
 
 from .boltzmann import BoltzmannSolver
 from .fields import Fields, FieldPoint
@@ -27,7 +26,9 @@ from .results import (
     BoltzmannResults,
     HydroResults,
     WallGoResults,
+    ESolutionType,
 )
+
 
 class EOM:
     """
@@ -242,7 +243,7 @@ class EOM:
         pressure2, wallParams, boltzmannResults, _, _ = wallPressureResults2
         pressureIni = pressure2  # Only used at the end if no solutions are found
 
-        list2ndDeriv = []
+        list2ndDeriv: list[float] = []
         listResults = []
         # Prior on the scale of the 2nd derivative
         std2ndDerivPrior = abs(
@@ -260,7 +261,9 @@ class EOM:
             std2ndDeriv = std2ndDerivPrior
             n = len(list2ndDeriv)
             if n > 0:
-                std2ndDeriv = (std2ndDerivPrior + np.std(list2ndDeriv) * n) / (n + 1)
+                std2ndDeriv = float(std2ndDerivPrior + np.std(list2ndDeriv) * n) / (
+                    n + 1
+                )
 
             # Find the next position to explore
             vw3 = nextStepDeton(
@@ -288,7 +291,7 @@ class EOM:
             wallPressureResults2 = self.wallPressure(
                 vw3, wallParams, 0, rtol, boltzmannResults
             )
-            pressure3, wallParams2, boltzmannResults2, _, _ = wallPressureResults2
+            pressure3, wallParams2, _, _, _ = wallPressureResults2
 
             # Estimate the 2nd deriv by finite differences and append it to list2nDeriv
             list2ndDeriv.append(
@@ -301,7 +304,7 @@ class EOM:
                 / ((vw1 - vw2) * (vw2 - vw3) * (vw1 - vw3))
             )
 
-            if pressure3 >= 0 and pressure2 <= 0:
+            if pressure3 >= 0 >= pressure2:
                 listResults.append(
                     self.solveWall(
                         vw2,
@@ -320,27 +323,36 @@ class EOM:
             pressure2 = pressure3
 
         if len(listResults) == 0:
-            if pressureIni > 1 and pressure2 < 0:
+            results = WallGoResults()
+            if pressureIni > 0 > pressure2:
                 # The pressure is positive at vJ but negative at 1. The solution should
                 # be a defl/hyb, but time-dependent effects could allow it to be a
-                # runaway. We return an empty list.
-                return []
-            results = WallGoResults()
-            if pressureIni > 0 and pressure2 > 0:
-                # If pressure is always positive and is therefore too large to have a
-                # detonation solution, we return 0.
-                results.setWallVelocities(0, 0, 0)
-                results.setMessage(
+                # runaway.
+                results.setWallVelocities(None, None, None)
+                results.setSuccessState(
                     True,
+                    ESolutionType.DEFLAGRATION_OR_RUNAWAY,
+                    "The pressure is positive at vJ and negative at 1, but there is no"
+                    " stable detonation solution. The wall could either be a "
+                    "deflagration/hybrid or a runaway.",
+                )
+            elif pressureIni > 0 and pressure2 > 0:
+                # Pressure is always positive and is therefore too large to have a
+                # detonation solution.
+                results.setWallVelocities(None, None, None)
+                results.setSuccessState(
+                    True,
+                    ESolutionType.DEFLAGRATION,
                     "The pressure is too large to have a detonation solution. "
-                    "Try finding a deflagration or hybrid solution.",
+                    "The solution must be a deflagration or hybrid. Try calling "
+                    "WallGoManager.solveWall() to find it.",
                 )
             else:
-                # If pressure is too small to have a detonation, it is a runaway and we
-                # return 1.
-                results.setWallVelocities(1, 0, 1)
-                results.setMessage(
+                # Pressure is too small to have a detonation, it is a runaway.
+                results.setWallVelocities(None, None, None)
+                results.setSuccessState(
                     True,
+                    ESolutionType.RUNAWAY,
                     "The pressure is too small to have a detonation solution. "
                     "The solution is a runaway wall.",
                 )
@@ -398,7 +410,7 @@ class EOM:
         """
         results = WallGoResults()
         results.hasOutOfEquilibrium = self.includeOffEq
-
+        
         self.pressAbsErrTol = 1e-8
 
         # Get the pressure at vw = wallVelocityMax
@@ -427,13 +439,14 @@ class EOM:
         if pressureMax < 0:
             print("Maximum pressure on wall is negative!")
             print(f"{pressureMax=} {wallParamsMax=}")
-            results.setWallVelocities(1, 0, wallVelocityLTE)
+            results.setWallVelocities(None, None, wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
             results.setBoltzmannResults(boltzmannResultsMax)
-            results.setMessage(
+            results.setSuccessState(
                 True,
+                ESolutionType.RUNAWAY,
                 "The maximum pressure on the wall is negative. "
                 "The solution must be a detonation or a runaway wall.",
             )
@@ -467,13 +480,14 @@ class EOM:
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
                 )
-                results.setWallVelocities(0, 0, wallVelocityLTE)
+                results.setWallVelocities(None, None, wallVelocityLTE)
                 results.setWallParams(wallParamsMin)
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
-                results.setMessage(
+                results.setSuccessState(
                     False,
+                    ESolutionType.ERROR,
                     "The pressure at vw=0 is positive which indicates the PT cannot "
                     "proceed. Something might be wrong with your potential.",
                 )
@@ -494,6 +508,7 @@ class EOM:
             / 4
         )
 
+        ## This computes pressure on the wall with a given wall speed and WallParams
         def pressureWrapper(vw: float) -> float:  # pylint: disable=invalid-name
             """Small optimization here: the root finder below calls this first at the
             bracket endpoints, for which we already computed the pressure above.
@@ -594,15 +609,18 @@ class EOM:
 
         # Set the message
         if not self.successTemperatureProfile:
-            results.setMessage(
-                False, "The temperature profile was not found succcessfully"
+            results.setSuccessState(
+                False,
+                ESolutionType.ERROR,
+                "Could not determine temperature profile.",
             )
         elif (
             results.temperatureMinus < self.hydrodynamics.TMinLowT
             or results.temperatureMinus > self.hydrodynamics.TMaxLowT
         ):
-            results.setMessage(
+            results.setSuccessState(
                 False,
+                ESolutionType.ERROR,
                 f"Tminus={results.temperatureMinus} is not in the allowed range "
                 f"[{self.hydrodynamics.TMinLowT},{self.hydrodynamics.TMaxLowT}].",
             )
@@ -610,19 +628,21 @@ class EOM:
             results.temperaturePlus < self.hydrodynamics.TMinHighT
             or results.temperaturePlus > self.hydrodynamics.TMaxHighT
         ):
-            results.setMessage(
+            results.setSuccessState(
                 False,
+                ESolutionType.ERROR,
                 f"Tplus={results.temperaturePlus} is not in the allowed range "
                 f"[{self.hydrodynamics.TMinHighT},{self.hydrodynamics.TMaxHighT}].",
             )
         elif not self.successWallPressure:
-            results.setMessage(
+            results.setSuccessState(
                 False,
+                ESolutionType.ERROR,
                 "The pressure for the wall velocity has not converged to sufficient "
                 "accuracy with the given maximum number for iterations.",
             )
         elif not optimizeResult.converged:
-            results.setMessage(False, optimizeResult.flag)
+            results.setSuccessState(False, ESolutionType.ERROR, optimizeResult.flag)
         elif (
             np.any(wallParams.widths == self.wallThicknessBounds[0] / self.thermo.Tnucl)
             or np.any(wallParams.offsets == self.wallOffsetBounds[0])
@@ -631,13 +651,19 @@ class EOM:
             )
             or np.any(wallParams.offsets == self.wallOffsetBounds[1])
         ):
-            results.setMessage(
+            results.setSuccessState(
                 False,
+                ESolutionType.ERROR,
                 f"At least one of the {wallParams=} saturates the given bounds. "
                 "The solution is probably inaccurate.",
             )
         else:
-            results.setMessage(True, "The wall velocity was found successfully.")
+            solutionType = ESolutionType.DEFLAGRATION
+            if wallVelocity > self.hydrodynamics.vJ:
+                solutionType = ESolutionType.DETONATION
+            results.setSuccessState(
+                True, solutionType, "The wall velocity was found successfully."
+            )
 
         # return collected results
         return results
@@ -705,7 +731,7 @@ class EOM:
         if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
-        print(f"------------- Trying {wallVelocity=:g} -------------")
+        print(f"\nTrying {wallVelocity=}")
 
         # Initialize the different data class objects and arrays
         zeroPoly = Polynomial(
@@ -720,19 +746,13 @@ class EOM:
             Delta20=zeroPoly,
             Delta11=zeroPoly,
         )
-        deltaF = Polynomial(
-            np.zeros(
-                (
-                    len(self.particles),
-                    (self.grid.M - 1),
-                    (self.grid.N - 1),
-                    (self.grid.N - 1),
-                )
-            ),
-            self.grid,
-            basis=("Array", "Cardinal", "Chebyshev", "Chebyshev"),
-            direction=("Array", "z", "pz", "pp"),
-            endpoints=False,
+        deltaF = np.zeros(
+            (
+                len(self.particles),
+                (self.grid.M - 1),
+                (self.grid.N - 1),
+                (self.grid.N - 1),
+            )
         )
 
         boltzmannResults: BoltzmannResults
@@ -741,8 +761,8 @@ class EOM:
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
                 truncationError=0.0,
-                linearizationCriterion1=0.0,
-                linearizationCriterion2=0.0,
+                linearizationCriterion1=np.zeros(len(self.particles)),
+                linearizationCriterion2=np.zeros(len(self.particles)),
             )
         else:
             boltzmannResults = boltzmannResultsInput
@@ -808,9 +828,6 @@ class EOM:
         multiplier = 1.0
 
         i = 0
-        print(
-            f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}"
-        )
         while True:
             if improveConvergence:
                 # Use the improved algorithm (which converges better but slowly)
@@ -858,7 +875,8 @@ class EOM:
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
             print(
-                f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}"
+                f"{pressure=} {error=} {errorSolver=} {errTol=}"
+                f" {improveConvergence=} {multiplier=}"
             )
             i += 1
 
@@ -901,7 +919,7 @@ class EOM:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
 
-        print(f"Final {pressure=:g}; Final {wallParams=}")
+        print(f"Final {pressure=}; Final {wallParams=}")
         return (
             pressure,
             wallParams,
@@ -1220,7 +1238,6 @@ class EOM:
         vevHighT: Fields,
         temperatureProfile: np.ndarray,
         offEquilDelta00: Polynomial,
-        showLagrangian: bool = False,
     ) -> float:
         """
         Computes the action by using gaussian quadratrure to integrate the Lagrangian.
