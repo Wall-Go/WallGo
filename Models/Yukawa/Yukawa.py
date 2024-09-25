@@ -108,7 +108,7 @@ class YukawaModel(WallGo.GenericModel):
         )
         psiR = WallGo.Particle(
             "psiR",
-            index=1,  # old collision data has top at index 0
+            index=2,  # old collision data has top at index 0
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
@@ -253,12 +253,12 @@ class YukawaModelExample(WallGoExampleBase):
         # This is optional; by default the seed is 0.
         WallGoCollision.setSeed(0)
 
-        collisionModelDef = WallGo.collisionHelpers.generateCollisionModelDefinition(
-            wallGoModel,
-            # Do not define any model parameters yet./
-            includeAllModelParameters=False,
-            parameterSymbolsToInclude=[],
-        )
+        collisionModelDefinition = WallGoCollision.ModelDefinition()
+
+        for particle in wallGoModel.outOfEquilibriumParticles:
+            collisionModelDefinition.defineParticleSpecies(
+                WallGo.collisionHelpers.particleToCollisionParticleDescription(particle, False, True)
+                )
 
         # Add in-equilibrium particles that appear in collision processes
         phiParticle = WallGoCollision.ParticleDescription()
@@ -274,37 +274,28 @@ class YukawaModelExample(WallGoExampleBase):
                 msq + g * fields.getField(0) + lam / 2 * fields.getField(0) ** 2
             ),
         """
-        collisionModelDef.defineParticleSpecies(phiParticle)
 
-        collisionModel = WallGoCollision.PhysicsModel(collisionModelDef)
+        parameters = WallGoCollision.ModelParameters()
 
-        return collisionModel
+        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["y"])
+        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
+        parameters.addOrModifyParameter("lam", wallGoModel.modelParameters["lam"])
+        parameters.addOrModifyParameter("v", 0.0)
 
-    def updateCollisionModel(
-        self,
-        inWallGoModel: "YukawaModel",
-        inOutCollisionModel: "WallGoCollision.PhysicsModel",
-    ) -> None:
-        """Propagate changes in WallGo model to the collision model.
-        For this example we just need to update the QCD coupling and fermion/gluon thermal masses
-        """
-        import WallGoCollision
-
-        changedParams = WallGoCollision.ModelParameters()
-
-        changedParams.addOrModifyParameter("y", inWallGoModel.modelParameters["y"])
-        changedParams.addOrModifyParameter("gamma", inWallGoModel.modelParameters["gamma"])
-        changedParams.addOrModifyParameter("lam", inWallGoModel.modelParameters["lam"])
-        changedParams.addOrModifyParameter("v", 0.0)
-
-        changedParams.addOrModifyParameter(
-            "msq[0]", 1 / 16 * inWallGoModel.modelParameters["y"] ** 2
+        parameters.addOrModifyParameter(
+            "msq[0]", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
-        changedParams.addOrModifyParameter(
-            "msq[1]", inWallGoModel.modelParameters["lam"] / 24.0 + inWallGoModel.modelParameters["y"] ** 2.0 / 6.0
+        parameters.addOrModifyParameter(
+            "msq[1]", wallGoModel.modelParameters["lam"] / 24.0 + wallGoModel.modelParameters["y"] ** 2.0 / 6.0
         )  # psi thermal mass^2 in units of T
 
-        inOutCollisionModel.updateParameters(changedParams)
+
+        collisionModelDefinition.defineParticleSpecies(phiParticle)
+        collisionModelDefinition.defineParameters(parameters)
+
+        collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
+
+        return collisionModel
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Yukawa example uses spatial grid size = 20"""
