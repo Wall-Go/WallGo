@@ -9,7 +9,7 @@ import numpy.typing as npt
 import WallGo
 from WallGo import EffectivePotential
 from WallGo import Integrals
-from WallGo.InterpolatableFunction import EExtrapolationType
+from WallGo.interpolatableFunction import EExtrapolationType
 from WallGo.WallGoUtils import getSafePathToResource
 
 

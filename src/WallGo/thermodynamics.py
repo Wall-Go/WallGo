@@ -11,7 +11,7 @@ import scipy.optimize
 from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import Fields
-from .FreeEnergy import FreeEnergy
+from .freeEnergy import FreeEnergy
 
 
 class Thermodynamics:

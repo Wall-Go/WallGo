@@ -20,7 +20,7 @@ from .genericModel import GenericModel
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
-from .Integrals import Integrals
+from .integrals import Integrals
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults, HydroResults
 from .WallGoUtils import getSafePathToResource
