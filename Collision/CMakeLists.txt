@@ -54,21 +54,6 @@ else()
     add_compile_definitions(WITH_PYTHON=0)
 endif()
 
-## For MacOS, may need to manually setup OpenMP
-if(USE_OMP AND APPLE)
-    if(CMAKE_C_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_C_LIB_NAMES "libomp")
-        set(OpenMP_omp_LIBRARY omp)
-    endif()
-
-    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang\$")
-        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
-        set(OpenMP_CXX_LIB_NAMES "libomp")
-        set(OpenMP_omp_LIBRARY omp)
-    endif()
-endif()
-
 # Compiler-specific settings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
