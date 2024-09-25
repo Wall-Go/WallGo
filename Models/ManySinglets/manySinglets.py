@@ -1,4 +1,27 @@
-import os
+"""
+This Python script, manySinglets.py,
+implements a Standard Model extension via
+a N scalar singlets and incorporating a Z2 symmetry.
+Only the top quark is out of equilibrium, and only
+QCD-interactions are considered in the collisions.
+
+Features:
+- Definition of the extended model parameters including the N singlet scalar fields.
+- Definition of the out-of-equilibrium particles.
+- Implementation of the one-loop thermal potential, with high-T expansion.
+- Functions for computing the critical temperature and position of the minimum.
+
+Usage:
+- This script is intended to compute the wall speed of the model.
+
+Dependencies:
+- NumPy for numerical calculations
+- the WallGo package
+- CollisionIntegrals in read-only mode using the default path for the collision
+integrals as the "CollisonOutput" directory
+
+"""
+
 import sys
 import pathlib
 import argparse
