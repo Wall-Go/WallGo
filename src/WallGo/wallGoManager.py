@@ -3,17 +3,14 @@ Defines the WallGoManager class which initializes the different object needed fo
 wall velocity calculation.
 """
 
-from typing import Type, TYPE_CHECKING
 from dataclasses import dataclass
 import pathlib
 import numpy as np
-from deprecated import deprecated
 
 # WallGo imports
 import WallGo
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
-from .EffectivePotential import EffectivePotential
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
 from .genericModel import GenericModel
@@ -22,7 +19,7 @@ from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .integrals import Integrals
 from .thermodynamics import Thermodynamics
-from .results import WallGoResults, HydroResults
+from .results import WallGoResults
 from .WallGoUtils import getSafePathToResource
 
 
@@ -485,14 +482,9 @@ class WallGoManager:
 
         bShouldLoadCollisions = wallSolverSettings.bIncludeOffEquilibrium
         if bShouldLoadCollisions:
-
-            # Must terminate here if collision load fails, let caller handle
-            # the exception.
+            # This throws if collision load fails, let caller handle the exception.
             # TODO may be cleaner to handle it here and return an invalid solver
-            try:
-                boltzmannSolver.loadCollisions(self.collisionDirectory)
-            except CollisionLoadError:
-                raise
+            boltzmannSolver.loadCollisions(self.collisionDirectory)
 
         eom: EOM = self.buildEOM(grid, boltzmannSolver, wallSolverSettings.meanFreePath)
 
