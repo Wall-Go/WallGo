@@ -4,7 +4,6 @@ Data classes for compiling and returning results
 
 from dataclasses import dataclass
 import numpy as np
-from scipy.interpolate import UnivariateSpline
 from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
@@ -106,14 +105,15 @@ class WallGoResults:
     """
     Compiles output results for users of WallGo
     """
-    wallVelocity: float
-    """Bubble wall velocity."""
+    wallVelocity: float | None
+    """Bubble wall velocity. None if no solution was found."""
 
-    wallVelocityError: float
-    """Estimated error in bubble wall velocity."""
+    wallVelocityError: float | None
+    """Estimated error in bubble wall velocity. None if no solution was found."""
 
-    wallVelocityLTE: float
-    """Bubble wall velocity in local thermal equilibrium."""
+    wallVelocityLTE: float | None
+    """Bubble wall velocity in local thermal equilibrium. None when looking for a 
+    detonation solution, since no detonation exists in LTE."""
 
     temperaturePlus: float
     r"""Temperature in front of the bubble, :math:`T_+`,
@@ -126,10 +126,10 @@ class WallGoResults:
     velocityJouguet: float
     r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
 
-    widths: np.ndarray  # 1D array
+    wallWidths: np.ndarray  # 1D array
     """Bubble wall widths in each field direction."""
 
-    offsets: np.ndarray  # 1D array
+    wallOffsets: np.ndarray  # 1D array
     """Bubble wall offsets in each field direction."""
 
     velocityProfile: np.ndarray
@@ -172,10 +172,24 @@ class WallGoResults:
     r"""Relativistically invariant integrals over
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
-    
+
+    solutionType: str
+    """
+    String describing the type of solution obtained. Can either be 'deflagration',
+    'detonation', 'runaway', 'deflagration or runaway' or 'error'. The function 
+    WallGoManager.solveWall() will return 'deflagration' if a solution was found and
+    'runaway' otherwise. The function WallGoManager.solveWallDetonation() will return
+    'detonation' if a solution was found. Otherwise, it returns 'runaway' if the
+    pressure is negative everywhere between vJ and 1, 'deflagration' if the pressure is
+    always positive, and 'deflagration or runaway' if the pressure is positive at vJ and
+    negative at 1 and no stable solution was found. In both cases, returns 'error' if
+    success=False.
+    """
+
     success: bool
-    """Whether or not the calculation was successful."""
-    
+    """Whether or not the calculation was successful. Will still be True if no solution
+    was found, as long as no error happened along the way."""
+
     message: str
     """Description of the cause of the termination."""
 
@@ -184,9 +198,9 @@ class WallGoResults:
 
     def setWallVelocities(
         self,
-        wallVelocity: float,
-        wallVelocityError: float,
-        wallVelocityLTE: float,
+        wallVelocity: float | None,
+        wallVelocityError: float | None,
+        wallVelocityLTE: float | None,
     ) -> None:
         """
         Set wall velocity results
@@ -237,9 +251,19 @@ class WallGoResults:
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
 
-    def setMessage(self, success: bool, message: str) -> None:
+    def setMessage(self, success: bool, solutionType: str, message: str) -> None:
         """
         Set the termination message and the success flag.
         """
+        assert isinstance(success, bool), 'WallGoResults Error: success must be a bool.'
+        assert isinstance(message, str), 'WallGoResults Error: message must be a str.'
+        assert solutionType in ['deflagration',
+                                'detonation',
+                                'runaway',
+                                'deflagration or runaway',
+                                'error'], "WallGoResults Error: solutionType must "\
+            "be 'deflagration', 'detonation', 'runaway', 'deflagration or runaway' or "\
+            "'error'."
         self.success = success
         self.message = message
+        self.solutionType = solutionType
