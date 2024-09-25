@@ -218,7 +218,7 @@ class WallGoExampleBase(ABC):
             nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
             Transition goes from phase1 to phase2.
             """
-            manager.analyzeHydrodynamics(
+            manager.setupThermodynamicsHydrodynamics(
                 benchmark.phaseInfo,
                 benchmark.veffDerivativeScales,
             )
