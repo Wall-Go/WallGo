@@ -73,9 +73,8 @@ class EffectivePotential(ABC):
             raise NotImplementedError("EffectivePotential subclasses must define a class variable 'fieldCount' with value > 0.")
     
         
-    def setScalesAndError(self, temperatureScale: float,
-                          fieldScale: np.ndarray | float,
-                          potentialError: float):
+    def setScalesAndError(self, derivativeScales: VeffDerivativeScales,
+                          potentialError: float) -> None:
         """
         Sets the temperature and field scales and the potential error.
         These quantities are used to estimate the optimal step size when computing
@@ -93,7 +92,6 @@ class EffectivePotential(ABC):
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
         
         self.effectivePotentialError = potentialError
-        
         self.bScalesDefined = True
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:

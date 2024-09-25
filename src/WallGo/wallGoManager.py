@@ -121,7 +121,8 @@ class WallGoManager:
             and phaseInfo.phaseLocation2.numFields() == self.model.fieldCount
         ), "Invalid PhaseInfo input, field counts don't match those defined in model"
 
-        self.model.getEffectivePotential().setScales(veffDerivativeScales)
+        self.model.getEffectivePotential().setScalesAndError(veffDerivativeScales,
+                                                             self.config.getfloat("EffectivePotential", "potentialError"))
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
@@ -179,12 +180,6 @@ class WallGoManager:
         ), "WallGo model must contain at least one classical field"
 
         self.model = model
-
-        potentialError = self.config.getfloat("EffectivePotential", "potentialError")
-
-        ## FIXME default scales for derivatives, or just the simple ones
-        ## built-in to the Veff initializer
-        self.model.getEffectivePotential().setPotentialError(potentialError)
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
         """
