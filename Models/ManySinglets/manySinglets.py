@@ -1,4 +1,27 @@
-import os
+"""
+This Python script, manySinglets.py,
+implements a Standard Model extension via
+a N scalar singlets and incorporating a Z2 symmetry.
+Only the top quark is out of equilibrium, and only
+QCD-interactions are considered in the collisions.
+
+Features:
+- Definition of the extended model parameters including the N singlet scalar fields.
+- Definition of the out-of-equilibrium particles.
+- Implementation of the one-loop thermal potential, with high-T expansion.
+- Functions for computing the critical temperature and position of the minimum.
+
+Usage:
+- This script is intended to compute the wall speed of the model.
+
+Dependencies:
+- NumPy for numerical calculations
+- the WallGo package
+- CollisionIntegrals in read-only mode using the default path for the collision
+integrals as the "CollisonOutput" directory
+
+"""
+
 import sys
 import pathlib
 import argparse
@@ -8,9 +31,10 @@ from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
-from WallGo import Fields, GenericModel, Particle, WallGoManager, EffectivePotential
+from WallGo import Fields, GenericModel, Particle, EffectivePotential
 
-# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+# Add the Models folder to the path; need to import the base example
+# template and effectivePotentialNoResum.py
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
@@ -177,11 +201,13 @@ class NSinglets(GenericModel):
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches them internally.
-        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """Computes new Lagrangian parameters from given input and caches them
+        internally. These changes automatically propagate to the associated
+        EffectivePotential, particle masses etc.
         """
         newParams = self.calculateLagrangianParameters(newInputParams)
-        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        # Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
 
@@ -197,7 +223,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
     Implementation of the Z2-symmetric N-singlet scalars + SM model with the high-T
     1-loop thermal corrections. This model has the potential
-    :math:`V = \frac{1}{2}\sum_{i=0}^N\mu_i^2(T)\phi_i^2 + \frac{1}{4}\sum_{i,j=0}^N\lambda_{ij}\phi_i^2\phi_j^2`
+    :math:`V = \frac{1}{2}\sum_{i=0}^N\mu_i^2(T)\phi_i^2
+    + \frac{1}{4}\sum_{i,j=0}^N\lambda_{ij}\phi_i^2\phi_j^2`
     where :math:`\phi_0` is assumed to be the Higgs and :math:`\phi_{i>0}` the
     singlet scalars.
     For simplicity, we only consider models with no couplings between the different
@@ -253,7 +280,9 @@ class EffectivePotentialNSinglets(EffectivePotential):
         ):
             print("Higgs phase is not the true vacuum at T=0")
             print(
-                f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}"""
+                f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] -
+                     sum(self.modelParameters["muSsq"]**2/
+                         self.modelParameters["lSS"])=}"""
             )
             tunnel = False
 
@@ -274,7 +303,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
         ):
             print("Higgs phase is not stable at T=0")
             print(
-                f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}"""
+                f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*
+                     self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}"""
             )
             tunnel = False
 
@@ -304,7 +334,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
             ):
                 print("Higgs phase is not stable at T=Tc")
                 print(
-                    f"""{muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"]}"""
+                    f"""{muSsqT-self.modelParameters["lHS"]*
+                         muHsqT/self.modelParameters["lHH"]}"""
                 )
                 tunnel = False
 
@@ -323,7 +354,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
             ):
                 print("Singlets phase is not stable at T=Tc")
                 print(
-                    f"""{muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"])=}"""
+                    f"""{muHsqT - sum(self.modelParameters["lHS"]*
+                                      muSsqT/self.modelParameters["lSS"])=}"""
                 )
                 tunnel = False
 
@@ -468,7 +500,8 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
 
-        ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
+        # Fermions contribute with a magic 7/8 prefactor as usual.
+        # Overall minus sign since Veff(min) = -pressure
         return (
             -(self.numBosonDof + (7.0 / 8.0) * self.numFermionDof)
             * np.pi**2
@@ -528,8 +561,9 @@ class NSingletsModelExample(WallGoExampleBase):
     def updateModelParameters(
         self, model: "NSinglets", inputParameters: dict[str, float]
     ) -> None:
-        """Convert SM + singlet inputs to Lagrangian params and update internal model parameters.
-        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        """Convert SM + singlet inputs to Lagrangian params and update internal
+        model parameters. This example is constructed so that the effective
+        potential and particle mass functions refer to model.modelParameters,
         so be careful not to replace that reference here.
         """
 
@@ -539,8 +573,9 @@ class NSingletsModelExample(WallGoExampleBase):
 
         """Collisions integrals for this example depend only on the QCD coupling,
         if it changes we must recompute collisions before running the wall solver.
-        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
-        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        The bool flag here is inherited from WallGoExampleBase and checked in
+        runExample(). But since we want to keep the example simple, we skip this
+        check and assume the existing data is OK.
         (FIXME?)
         """
         self.bShouldRecalculateCollisions = False
@@ -593,7 +628,8 @@ class NSingletsModelExample(WallGoExampleBase):
                     temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    # we actually do both cases in the common example
+                    bIncludeOffEquilibrium=True,
                     meanFreePath=1.0,
                     wallThicknessGuess=0.05,
                 ),
