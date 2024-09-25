@@ -25,6 +25,8 @@ public:
     /* Returns value of the specified parameter. If the parameter is not found, returns 0 and asserts in debug builds. */
     T getParameterValue(const std::string& paramName) const;
 
+    T at(const std::string& paramName) const { return getParameterValue(paramName); }
+
     /* Returns value of the specified parameter. If the parameter is not found, returns 0 and asserts in debug builds. */
     T operator[](const std::string& paramName) const { return getParameterValue(paramName); }
 

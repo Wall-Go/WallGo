@@ -21,6 +21,24 @@ enum class WALLGO_API EParticleType
 // Data-only container for describing a particle species
 struct ParticleDescription
 {
+
+	ParticleDescription() {}
+	ParticleDescription(const std::string& inName,
+		int32_t inIndex,
+		EParticleType inType,
+		bool bIsInEquilibrium,
+		bool bIsUltrarelativistic = true,
+		std::function<double(const ModelParameters&)> inMassSqFunction = nullptr
+	)
+	: name(inName),
+	index(inIndex),
+	type(inType),
+	bInEquilibrium(bIsInEquilibrium),
+	bUltrarelativistic(bIsUltrarelativistic),
+	massSqFunction(inMassSqFunction)
+	{
+	}
+
 	// Must be unique
 	std::string name = "Unknown";
 	// Must be unique
@@ -38,6 +56,7 @@ struct ParticleDescription
 	This mass will be used in dispersion relations when computing particle energies for collision integration.
 	If the bUltrarelativistic flag is set, the mass function will not be called. */
 	std::function<double(const ModelParameters&)> massSqFunction;
+
 };
 
 

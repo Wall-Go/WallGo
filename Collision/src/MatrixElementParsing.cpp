@@ -371,7 +371,7 @@ bool buildMatrixElements(
 
                 symbols.insert({ s, modelSymbols.at(s) });
             }
-            if (symbols.empty())
+            if (symbols.empty() or true)
             {
                 symbols = modelSymbols;
             }
