@@ -14,11 +14,12 @@ from WallGo import Fields, GenericModel, Particle, WallGoManager, EffectivePoten
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallgo_example_base import WallGoExampleBase
-from wallgo_example_base import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
+
 
 class NSinglets(GenericModel):
     r"""
@@ -40,7 +41,7 @@ class NSinglets(GenericModel):
             FIXME
         Returns
         ----------
-        cls: NSinglets 
+        cls: NSinglets
             An object of the NSinglets class.
         """
         self.nbrSinglets = nbrSinglets
@@ -92,7 +93,12 @@ class NSinglets(GenericModel):
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"]**2 * np.transpose([(1 if i==0 else 0)*fields.getField(i) for i in range(self.fieldCount)])
+            return self.modelParameters["yt"] ** 2 * np.transpose(
+                [
+                    (1 if i == 0 else 0) * fields.getField(i)
+                    for i in range(self.fieldCount)
+                ]
+            )
 
         def topMsqThermal(T: float) -> float:
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
@@ -126,39 +132,47 @@ class NSinglets(GenericModel):
         """
 
         modelParameters = {}
-        
+
         # Higgs VEV
         v0 = inputParameters["v0"]
         # Higgs mass
-        mh = inputParameters["mh"] # 125 GeV
+        mh = inputParameters["mh"]  # 125 GeV
 
         # Couplings between Higgs and singlets (should be an array of length N)
         modelParameters["lHS"] = np.array(inputParameters["lHS"])
         # Singlets self-couplings (array of length N)
         modelParameters["lSS"] = np.array(inputParameters["lSS"])
-        
+
         # Higgs self-coupling
         modelParameters["lHH"] = 0.5 * mh**2 / v0**2
         # mu^2 parameters
-        modelParameters["muHsq"] = -mh**2/2
+        modelParameters["muHsq"] = -(mh**2) / 2
         modelParameters["muSsq"] = np.array(inputParameters["muSsq"])
 
         ## Then the gauge/Yukawa sector
-        Mt = inputParameters["Mt"] 
+        Mt = inputParameters["Mt"]
         MW = inputParameters["MW"]
         MZ = inputParameters["MZ"]
 
         # helper
-        g0 = 2.*MW / v0
-        modelParameters["g1"] = g0*np.sqrt((MZ/MW)**2 - 1)
+        g0 = 2.0 * MW / v0
+        modelParameters["g1"] = g0 * np.sqrt((MZ / MW) ** 2 - 1)
         modelParameters["g2"] = g0
         modelParameters["g3"] = inputParameters["g3"]
 
-        modelParameters["yt"] = np.sqrt(1./2.)*g0 * Mt/MW
-        
+        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * Mt / MW
+
         # High-T expansion coefficients
-        modelParameters["cH"] = (6*modelParameters["lHH"]+sum(modelParameters["lHS"])+6*modelParameters["yt"]**2+(9/4)*modelParameters["g2"]**2+(3/4)*modelParameters["g1"]**2)/12
-        modelParameters["cS"] = (3*modelParameters["lSS"]+4*modelParameters["lHS"])/12
+        modelParameters["cH"] = (
+            6 * modelParameters["lHH"]
+            + sum(modelParameters["lHS"])
+            + 6 * modelParameters["yt"] ** 2
+            + (9 / 4) * modelParameters["g2"] ** 2
+            + (3 / 4) * modelParameters["g1"] ** 2
+        ) / 12
+        modelParameters["cS"] = (
+            3 * modelParameters["lSS"] + 4 * modelParameters["lHS"]
+        ) / 12
 
         return modelParameters
 
@@ -170,21 +184,23 @@ class NSinglets(GenericModel):
         # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
+
 # end model
+
 
 class EffectivePotentialNSinglets(EffectivePotential):
     r"""
     Effective potential for the NSinglets model.
 
     For this benchmark model we use the UNRESUMMED 4D potential.
-    Furthermore we use customized interpolation tables for Jb/Jf 
+    Furthermore we use customized interpolation tables for Jb/Jf
 
     Implementation of the Z2-symmetric N-singlet scalars + SM model with the high-T
     1-loop thermal corrections. This model has the potential
     :math:`V = \frac{1}{2}\sum_{i=0}^N\mu_i^2(T)\phi_i^2 + \frac{1}{4}\sum_{i,j=0}^N\lambda_{ij}\phi_i^2\phi_j^2`
-    where :math:`\phi_0` is assumed to be the Higgs and :math:`\phi_{i>0}` the 
-    singlet scalars. 
-    For simplicity, we only consider models with no couplings between the different 
+    where :math:`\phi_0` is assumed to be the Higgs and :math:`\phi_{i>0}` the
+    singlet scalars.
+    For simplicity, we only consider models with no couplings between the different
     singlets; only couplings between the Higgs and the singlets are allowed.
     This means :math:`\lambda_{ij}=0` when :math:`i,j>0` and :math:`i\neq j`.
     """
@@ -209,7 +225,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
     # ~ EffectivePotential interface
     fieldCount = 3
 
-    def canTunnel(self, tunnelingTemperature: float=None) -> bool:
+    def canTunnel(self, tunnelingTemperature: float = None) -> bool:
         """
         Function used to determine if tunneling can happen with this potential.
         Verifies that the Higgs phase exists at T=0 and that it is stable and the
@@ -219,72 +235,100 @@ class EffectivePotentialNSinglets(EffectivePotential):
         Parameters
         ----------
         tunnelingTemperature : float, optional
-            Temperature at which the tunneling takes place. If None, uses Tc. 
+            Temperature at which the tunneling takes place. If None, uses Tc.
             The default is None.
 
         Returns
         -------
         tunnel : bool
-            Returns True if all the conditions mentioned above are satisfied. 
+            Returns True if all the conditions mentioned above are satisfied.
             Returns False otherwise.
 
         """
         tunnel = True
-        
+
         # Higgs phase is the true vacuum at T=0
-        if self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] <= sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"]):
+        if self.modelParameters["muHsq"] ** 2 / self.modelParameters["lHH"] <= sum(
+            self.modelParameters["muSsq"] ** 2 / self.modelParameters["lSS"]
+        ):
             print("Higgs phase is not the true vacuum at T=0")
-            print(f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}""")
+            print(
+                f"""{self.modelParameters["muHsq"]**2/self.modelParameters["lHH"] - sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])=}"""
+            )
             tunnel = False
-        
+
         # Higgs phase exists at T=0
         if self.modelParameters["muHsq"] >= 0 or self.modelParameters["lHH"] <= 0:
             print("Higgs phase doesn't exist at T=0")
-            print(f"""{self.modelParameters["muHsq"]=} {self.modelParameters["lHH"]=}""")
+            print(
+                f"""{self.modelParameters["muHsq"]=} {self.modelParameters["lHH"]=}"""
+            )
             tunnel = False
         # Higgs phase is stable at T=0
-        if np.any(self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"] <= 0):
+        if np.any(
+            self.modelParameters["muSsq"]
+            - self.modelParameters["lHS"]
+            * self.modelParameters["muHsq"]
+            / self.modelParameters["lHH"]
+            <= 0
+        ):
             print("Higgs phase is not stable at T=0")
-            print(f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}""")
+            print(
+                f"""{self.modelParameters["muSsq"]-self.modelParameters["lHS"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]=}"""
+            )
             tunnel = False
-            
-        if tunnelingTemperature is None:    
+
+        if tunnelingTemperature is None:
             # If no temperature was provided, computes and uses Tc
             T = self.findTc()
-            print(f'Tc={T}')
+            print(f"Tc={T}")
             if T is None:
                 tunnel = False
-        else: 
+        else:
             T = tunnelingTemperature
-            
+
         if T is not None:
-            muSsqT = self.modelParameters["muSsq"]+self.modelParameters["cS"]*T**2
-            muHsqT = self.modelParameters["muHsq"]+self.modelParameters["cH"]*T**2
-            
+            muSsqT = self.modelParameters["muSsq"] + self.modelParameters["cS"] * T**2
+            muHsqT = self.modelParameters["muHsq"] + self.modelParameters["cH"] * T**2
+
             # Higgs phase exists at T=Tc
             if muHsqT >= 0:
                 print("Higgs phase doesn't exist at T=Tc")
                 print(f"{muHsqT=}")
                 tunnel = False
             # Higgs phase is stable at T=Tc
-            if np.any(muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"] <= 0):
+            if np.any(
+                muSsqT
+                - self.modelParameters["lHS"] * muHsqT / self.modelParameters["lHH"]
+                <= 0
+            ):
                 print("Higgs phase is not stable at T=Tc")
-                print(f"""{muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"]}""")
+                print(
+                    f"""{muSsqT-self.modelParameters["lHS"]*muHsqT/self.modelParameters["lHH"]}"""
+                )
                 tunnel = False
-                
+
             # Singlets phase exists at T=Tc
             if np.any(muSsqT >= 0) or np.any(self.modelParameters["lSS"] <= 0):
                 print("Singlets phase doesn't exist at T=Tc")
                 print(f"{muSsqT=} {self.modelParameters['lSS']=}")
                 tunnel = False
             # Singlets phase is stable at T=Tc
-            if muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"]) <= 0:
+            if (
+                muHsqT
+                - sum(
+                    self.modelParameters["lHS"] * muSsqT / self.modelParameters["lSS"]
+                )
+                <= 0
+            ):
                 print("Singlets phase is not stable at T=Tc")
-                print(f"""{muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"])=}""")
+                print(
+                    f"""{muHsqT - sum(self.modelParameters["lHS"]*muSsqT/self.modelParameters["lSS"])=}"""
+                )
                 tunnel = False
-                
+
         return tunnel
-            
+
     def findTc(self) -> float:
         """
         Computes the critical temperature
@@ -295,20 +339,33 @@ class EffectivePotentialNSinglets(EffectivePotential):
             Value of the critical temperature. If there is no solution, returns None.
 
         """
-        A = self.modelParameters["cH"]**2/self.modelParameters["lHH"]-sum(self.modelParameters["cS"]**2/self.modelParameters["lSS"])    
-        B = 2*(self.modelParameters["cH"]*self.modelParameters["muHsq"]/self.modelParameters["lHH"]-sum(self.modelParameters["cS"]*self.modelParameters["muSsq"]/self.modelParameters["lSS"])) 
-        C = self.modelParameters["muHsq"]**2/self.modelParameters["lHH"]-sum(self.modelParameters["muSsq"]**2/self.modelParameters["lSS"])
-        
-        discr = B**2-4*A*C
+        A = self.modelParameters["cH"] ** 2 / self.modelParameters["lHH"] - sum(
+            self.modelParameters["cS"] ** 2 / self.modelParameters["lSS"]
+        )
+        B = 2 * (
+            self.modelParameters["cH"]
+            * self.modelParameters["muHsq"]
+            / self.modelParameters["lHH"]
+            - sum(
+                self.modelParameters["cS"]
+                * self.modelParameters["muSsq"]
+                / self.modelParameters["lSS"]
+            )
+        )
+        C = self.modelParameters["muHsq"] ** 2 / self.modelParameters["lHH"] - sum(
+            self.modelParameters["muSsq"] ** 2 / self.modelParameters["lSS"]
+        )
+
+        discr = B**2 - 4 * A * C
         if discr < 0:
             # The discriminant is negative, which would lead to imaginary Tc^2.
             print("No critical temperature : negative discriminant")
             return None
-        
+
         # Finds the two solutions for Tc^2, and keep the smallest positive one.
-        Tc1 = (-B+np.sqrt(discr))/(2*A)
-        Tc2 = (-B-np.sqrt(discr))/(2*A)
-        
+        Tc1 = (-B + np.sqrt(discr)) / (2 * A)
+        Tc2 = (-B - np.sqrt(discr)) / (2 * A)
+
         if Tc1 <= 0 and Tc2 <= 0:
             print("Negative critical temperature squared")
             return None
@@ -321,7 +378,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
         else:
             print("No critical temperature : both solutions are negative")
             return None
-            
+
     def findPhases(self, temperature: float) -> tuple:
         """
         Computes the position of the two phases at T=temperature.
@@ -339,15 +396,25 @@ class EffectivePotentialNSinglets(EffectivePotential):
             Array containing the position of the Higgs phase.
 
         """
-        muHsqT = self.modelParameters['muHsq']+self.modelParameters['cH']*temperature**2
-        muSsqT = self.modelParameters['muSsq']+self.modelParameters['cS']*temperature**2
-        
-        phase1 = np.sqrt(np.append([0],-muSsqT/self.modelParameters['lSS']))
-        phase2 = np.sqrt(np.append([-muHsqT/self.modelParameters['lHH']], (self.fieldCount-1)*[0]))
-        
+        muHsqT = (
+            self.modelParameters["muHsq"] + self.modelParameters["cH"] * temperature**2
+        )
+        muSsqT = (
+            self.modelParameters["muSsq"] + self.modelParameters["cS"] * temperature**2
+        )
+
+        phase1 = np.sqrt(np.append([0], -muSsqT / self.modelParameters["lSS"]))
+        phase2 = np.sqrt(
+            np.append(
+                [-muHsqT / self.modelParameters["lHH"]], (self.fieldCount - 1) * [0]
+            )
+        )
+
         return phase1, phase2
-    
-    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool=False) -> np.ndarray:
+
+    def evaluate(
+        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+    ) -> np.ndarray:
         """
         Evaluates the tree-level potential with the 1-loop high-T thermal corrections.
 
@@ -358,7 +425,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
         temperature : float or array-like
             Temperature at which the potential is evaluated.
         checkForImaginary: bool, optional
-            Has no effect because the potential is always real with the 1-loop 
+            Has no effect because the potential is always real with the 1-loop
             high-T thermal corrections with no resummation. Default is False.
 
         Returns
@@ -368,37 +435,46 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         """
 
-        h,s = fields[...,0], fields[...,1:]
+        h, s = fields[..., 0], fields[..., 1:]
         temperature = np.array(temperature)
 
-        muHsq = self.modelParameters['muHsq']
-        muSsq = self.modelParameters['muSsq']
-        lHH = self.modelParameters['lHH']
-        lHS = self.modelParameters['lHS']
-        lSS = self.modelParameters['lSS']
-        cH = self.modelParameters['cH']
-        cS = self.modelParameters['cS']
+        muHsq = self.modelParameters["muHsq"]
+        muSsq = self.modelParameters["muSsq"]
+        lHH = self.modelParameters["lHH"]
+        lHS = self.modelParameters["lHS"]
+        lSS = self.modelParameters["lSS"]
+        cH = self.modelParameters["cH"]
+        cS = self.modelParameters["cS"]
 
-        muHsqT = muHsq+cH*temperature**2
-        if len(temperature.shape) > 0: # If temperature is an array
-            muSsqT = muSsq+cS*temperature[:,None]**2
-        else: # If temperature is a float
-            muSsqT = muSsq+cS*temperature**2
+        muHsqT = muHsq + cH * temperature**2
+        if len(temperature.shape) > 0:  # If temperature is an array
+            muSsqT = muSsq + cS * temperature[:, None] ** 2
+        else:  # If temperature is a float
+            muSsqT = muSsq + cS * temperature**2
 
         # Tree level potential with high-T 1-loop thermal corrections.
-        V0 = 0.5*muHsqT*h**2 + 0.5*np.sum(muSsqT*s**2, axis=-1) + 0.25*lHH*h**4 + 0.25*np.sum(lSS*s**4, axis=-1) + 0.5*h**2*np.sum(lHS*s**2, axis=-1)
+        V0 = (
+            0.5 * muHsqT * h**2
+            + 0.5 * np.sum(muSsqT * s**2, axis=-1)
+            + 0.25 * lHH * h**4
+            + 0.25 * np.sum(lSS * s**4, axis=-1)
+            + 0.5 * h**2 * np.sum(lHS * s**2, axis=-1)
+        )
 
         # Adding the terms proportional to T^4
         VTotal = V0 + self.constantTerms(temperature)
 
         return VTotal
-    
 
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
-        return -(self.numBosonDof + (7./8.) * self.numFermionDof) * np.pi**2 * temperature**4 / 90.
-
+        return (
+            -(self.numBosonDof + (7.0 / 8.0) * self.numFermionDof)
+            * np.pi**2
+            * temperature**4
+            / 90.0
+        )
 
 
 class NSingletsModelExample(WallGoExampleBase):
@@ -427,8 +503,7 @@ class NSingletsModelExample(WallGoExampleBase):
         return argParser
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """
-        """
+        """ """
         return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -479,18 +554,18 @@ class NSingletsModelExample(WallGoExampleBase):
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
         inputParameters = {
-                    "RGScale" : 125., 
-                    "v0" : 246.0,
-                    "MW" : 80.379,
-                    "MZ" : 91.1876,
-                    "Mt" : 173.0,
-                    "g3" : 1.2279920495357861,
-                    # scalar specific
-                    "mh" : 125.0,
-                    "muSsq" : [-8000,-10000],
-                    "lHS" : [0.75,0.9],
-                    "lSS" : [0.5,0.7],
-                }
+            "RGScale": 125.0,
+            "v0": 246.0,
+            "MW": 80.379,
+            "MZ": 91.1876,
+            "Mt": 173.0,
+            "g3": 1.2279920495357861,
+            # scalar specific
+            "mh": 125.0,
+            "muSsq": [-8000, -10000],
+            "lHS": [0.75, 0.9],
+            "lSS": [0.5, 0.7],
+        }
 
         model = self.initWallGoModel()
         model.updateModel(inputParameters)
@@ -498,9 +573,9 @@ class NSingletsModelExample(WallGoExampleBase):
         Tc = model.effectivePotential.findTc()
         if Tc is None:
             return 0
-        Tn = 0.8*Tc
+        Tn = 0.8 * Tc
         if model.effectivePotential.canTunnel(Tn) == False:
-            print('Tunneling impossible. Try with different parameters.')
+            print("Tunneling impossible. Try with different parameters.")
             return 0
 
         phase1, phase2 = model.effectivePotential.findPhases(Tn)
@@ -511,8 +586,8 @@ class NSingletsModelExample(WallGoExampleBase):
                 inputParameters,
                 WallGo.PhaseInfo(
                     temperature=Tn,  # nucleation temperature
-                    phaseLocation1=WallGo.Fields(phase1[None,:]),
-                    phaseLocation2=WallGo.Fields(phase2[None,:]),
+                    phaseLocation1=WallGo.Fields(phase1[None, :]),
+                    phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
                 WallGo.VeffDerivativeScales(
                     temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]

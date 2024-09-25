@@ -39,8 +39,8 @@ from WallGo import EffectivePotential, Fields, GenericModel, Particle, WallGoMan
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallgo_example_base import WallGoExampleBase
-from wallgo_example_base import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -387,7 +387,7 @@ class StandardModelExample(WallGoExampleBase):
 
         # This example comes with a very explicit example function on how to setup and configure the collision module.
         # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
-        from example_collision_defs import setupCollisionModel_QCDEW
+        from exampleCollisionDefs import setupCollisionModel_QCDEW
 
         collisionModel = setupCollisionModel_QCDEW(
             wallGoModel.modelParameters,
