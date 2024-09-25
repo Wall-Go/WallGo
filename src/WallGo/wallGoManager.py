@@ -102,9 +102,8 @@ class WallGoManager:
 
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
-        self.model.effectivePotential.setPotentialError(potentialError)
-        self.model.effectivePotential.setScales(
-            float(self.temperatureScaleInput), self.fieldScaleInput
+        self.model.effectivePotential.setScalesAndError(
+            float(self.temperatureScaleInput), self.fieldScaleInput, potentialError
         )
 
         # Update Boltzmann off-eq particle list to match that defined in model
