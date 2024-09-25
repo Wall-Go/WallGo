@@ -1,43 +1,85 @@
+import os
+import sys
+import pathlib
+import argparse
 import numpy as np
 import numpy.typing as npt
-import pathlib
+from typing import TYPE_CHECKING
 
-## WallGo imports
-import WallGo ## Whole package, in particular we get WallGo.initialize()
-from WallGo import GenericModel
-from WallGo import Particle
-from WallGo import WallGoManager
-from WallGo import EffectivePotential
-from WallGo import Fields
+# WallGo imports
+import WallGo  # Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle, WallGoManager, EffectivePotential
 
-## Generalization of the Z2 symmetric SM + singlet model now including N singlets.
+# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
+sys.path.append(str(modelsBaseDir))
+
+from wallgo_example_base import WallGoExampleBase
+from wallgo_example_base import ExampleInputPoint
+
+if TYPE_CHECKING:
+    import WallGoCollision
+
 class NSinglets(GenericModel):
+    r"""
+    Generalization of the Z2 symmetric SM + singlet model now including N singlets.
 
-    particles: list[Particle] = []
-    outOfEquilibriumParticles: list[Particle] = []
-    modelParameters: dict[str, float] = {}
-    collisionParameters: dict[str, float] = {}
-    
-    fieldCount = 3
+    The potential is given by:
+    V = msq |phi|^2 + lam |phi|^4 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
 
+    This class inherits from the GenericModel class and implements the necessary
+    methods for the WallGo package.
+    """
 
-    def __init__(self, initialInputParameters: dict[str, float], nbrSinglets: int):
-        
-        self.fieldCount = nbrSinglets + 1 # N singlets and 1 Higgs
-        
-        self.modelParameters = self.calculateModelParameters(initialInputParameters)
+    def __init__(self, nbrSinglets: int):
+        """
+        Initialize the NSinglets model.
 
-        # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialNSinglets(self.modelParameters, self.fieldCount) 
-        
+        Parameters
+        ----------
+            FIXME
+        Returns
+        ----------
+        cls: NSinglets 
+            An object of the NSinglets class.
+        """
+        self.nbrSinglets = nbrSinglets
+
+        self.modelParameters: dict[str, float] = {}
+
+        # Initialize internal effective potential
+        self.effectivePotential = EffectivePotentialNSinglets(self, self.fieldCount)
+
+        # Create a list of particles relevant for the Boltzmann equations
         self.defineParticles()
 
+    # ~ GenericModel interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return self.nbrSinglets + 1  # N singlets and 1 Higgs
+
+    def getEffectivePotential(self) -> "EffectivePotentialNSinglets":
+        return self.effectivePotential
+
+    # ~
 
     def defineParticles(self) -> None:
-        # NB: particle multiplicity is pretty confusing because some internal DOF counting is handled internally already.
-        # Eg. for SU3 gluons the multiplicity should be 1, NOT Nc^2 - 1.
-        # But we nevertheless need something like this to avoid having to separately define up, down, charm, strange, bottom 
-        
+        """
+        Define the particles for the model.
+        Note that the particle list only needs to contain the
+        particles that are relevant for the Boltzmann equations.
+        The particles relevant to the effective potential are
+        included independently.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        None
+        """
         self.clearParticles()
 
         # === Top quark ===
@@ -66,11 +108,23 @@ class NSinglets(GenericModel):
         )
         self.addParticle(topQuark)
 
+    def calculateLagrangianParameters(
+        self, inputParameters: dict[str, float]
+    ) -> dict[str, float]:
+        """
+        Calculate Lagrangian parameters based on the input parameters.
 
-    ## Go from whatever input params --> action params
-    def calculateModelParameters(self, inputParameters: dict[str, float]) -> dict[str, float]:
-        super().calculateModelParameters(inputParameters)
-    
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
+
+        Returns
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of calculated model parameters.
+        """
+
         modelParameters = {}
         
         # Higgs VEV
@@ -108,12 +162,23 @@ class NSinglets(GenericModel):
 
         return modelParameters
 
+    def updateModel(self, newInputParams: dict[str, float]) -> None:
+        """Computes new Lagrangian parameters from given input and caches them internally.
+        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """
+        newParams = self.calculateLagrangianParameters(newInputParams)
+        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        self.modelParameters.update(newParams)
+
 # end model
 
-
-## For this benchmark model we use the UNRESUMMED 4D potential. Furthermore we use customized interpolation tables for Jb/Jf 
 class EffectivePotentialNSinglets(EffectivePotential):
     r"""
+    Effective potential for the NSinglets model.
+
+    For this benchmark model we use the UNRESUMMED 4D potential.
+    Furthermore we use customized interpolation tables for Jb/Jf 
+
     Implementation of the Z2-symmetric N-singlet scalars + SM model with the high-T
     1-loop thermal corrections. This model has the potential
     :math:`V = \frac{1}{2}\sum_{i=0}^N\mu_i^2(T)\phi_i^2 + \frac{1}{4}\sum_{i,j=0}^N\lambda_{ij}\phi_i^2\phi_j^2`
@@ -124,13 +189,25 @@ class EffectivePotentialNSinglets(EffectivePotential):
     This means :math:`\lambda_{ij}=0` when :math:`i,j>0` and :math:`i\neq j`.
     """
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        super().__init__(modelParameters, fieldCount)
-        ## ... do singlet+SM specific initialization here. The super call already gave us the model params
+    def __init__(self, owningModel: NSinglets, fieldCount: int) -> None:
+        """
+        Initialize the EffectivePotentialNSinglets.
+        """
 
-        ## Count particle degrees-of-freedom to facilitate inclusion of light particle contributions to ideal gas pressure
-        self.num_boson_dof = 27 + fieldCount
-        self.num_fermion_dof = 90 
+        super().__init__()
+
+        assert owningModel is not None, "Invalid model passed to Veff"
+
+        self.owner = owningModel
+        self.modelParameters = self.owner.modelParameters
+
+        # Count particle degrees-of-freedom to facilitate inclusion of
+        # light particle contributions to ideal gas pressure
+        self.numBosonDof = 27 + fieldCount
+        self.numFermionDof = 90
+
+    # ~ EffectivePotential interface
+    fieldCount = 3
 
     def canTunnel(self, tunnelingTemperature: float=None) -> bool:
         """
@@ -235,12 +312,15 @@ class EffectivePotentialNSinglets(EffectivePotential):
         if Tc1 <= 0 and Tc2 <= 0:
             print("Negative critical temperature squared")
             return None
-        if Tc1 > 0 and Tc2 > 0:
+        elif Tc1 > 0 and Tc2 > 0:
             return min(np.sqrt(Tc1), np.sqrt(Tc2))
-        if Tc1 > 0:
+        elif Tc1 > 0:
             return np.sqrt(Tc1)
-        if Tc2 > 0:
+        elif Tc2 > 0:
             return np.sqrt(Tc2)
+        else:
+            print("No critical temperature : both solutions are negative")
+            return None
             
     def findPhases(self, temperature: float) -> tuple:
         """
@@ -317,159 +397,140 @@ class EffectivePotentialNSinglets(EffectivePotential):
     def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
 
         ## Fermions contribute with a magic 7/8 prefactor as usual. Overall minus sign since Veff(min) = -pressure
-        return -(self.num_boson_dof + (7./8.) * self.num_fermion_dof) * np.pi**2 * temperature**4 / 90.
+        return -(self.numBosonDof + (7./8.) * self.numFermionDof) * np.pi**2 * temperature**4 / 90.
 
 
 
-def main() -> None:
+class NSingletsModelExample(WallGoExampleBase):
     #########################################
     ## Example with 1 Higgs and 2 singlets ##
     #########################################
 
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
-    
-    # Number of singlets
-    nbrSinglets = 2
+    def __init__(self) -> None:
+        """"""
+        self.bShouldRecalculateCollisions = False
 
-    WallGo.initialize()
-
-    # loading in local config file
-    WallGo.config.readINI(
-        pathlib.Path(__file__).parent.resolve() / "WallGoSettings.ini"
-    )
-
-    ## Modify the config, we use N=11 and M=25 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-    WallGo.config.config.set("PolynomialGrid", "spatialGridSize", "25")
-
-    # Print WallGo config. This was read by WallGo.initialize()
-    print("=== WallGo configuration options ===")
-    print(WallGo.config)
-
-    ## Guess of the wall thickness
-    wallThicknessIni = 0.05
-    
-    # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1.0
-
-    ## Create WallGo control object
-        # The following 2 parameters are used to estimate the optimal value of dT used 
-    # for the finite difference derivatives of the potential.
-    # Temperature scale over which the potential changes by O(1). A good value would be of order Tc-Tn.
-    temperatureScale = 10.
-    # Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the same scale, or an array.
-    fieldScale = [10.,10.,10.]
-    manager = WallGoManager(wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
-
-
-    """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input, but this is likely to change in the future
-    """
-
-    ## QFT model input. 
-    ## The parameters related to the singlets (muSsq, lHS and lSS) must be arrays
-    ## of length nbrSinglets.
-    inputParameters = {
-        "RGScale" : 125., 
-        "v0" : 246.0,
-        "MW" : 80.379,
-        "MZ" : 91.1876,
-        "Mt" : 173.0,
-        "g3" : 1.2279920495357861,
-        # scalar specific
-        "mh" : 125.0,
-        "muSsq" : [-8000,-10000],
-        "lHS" : [0.75,0.9],
-        "lSS" : [0.5,0.7]
-    }
-
-    model = NSinglets(inputParameters, nbrSinglets)
-    
-    Tc = model.effectivePotential.findTc()
-    if Tc is None:
-        return 0
-    Tn = 0.8*Tc
-    if model.effectivePotential.canTunnel(Tn) == False:
-        print('Tunneling impossible. Try with different parameters.')
-        return 0
-
-    """
-    Register the model with WallGo. This needs to be done only once.
-    If you need to use multiple models during a single run,
-    we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    collisionDirectory = scriptLocation / "CollisionOutput"
-
-    try:
-        # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
-        manager.loadCollisionFiles(collisionDirectory)
-    except Exception:
-        print(
-            """\nLoad of collision integrals failed! This example files comes with pre-generated collision files for N=11,
-              so load failure here probably means you've either moved files around or changed the grid size.
-              If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
-              """
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
         )
-        exit(2)
-    
-    phase1, phase2 = model.effectivePotential.findPhases(Tn)
 
-    phaseInfo = WallGo.PhaseInfo(temperature = Tn, 
-                                    phaseLocation1 = WallGo.Fields(phase1[None,:]), 
-                                    phaseLocation2 = WallGo.Fields(phase2[None,:]))
-    
+    # ~ Begin WallGoExampleBase interface
+    def initCommandLineArgs(self) -> argparse.ArgumentParser:
+        """Non-abstract override to add a SM + singlet specific cmd option"""
 
-    """Give the input to WallGo. It is NOT enough to change parameters directly in the GenericModel instance because
-        1) WallGo needs the PhaseInfo 
-        2) WallGoManager.setParameters() does parameter-specific initializations of internal classes
-    """ 
-    manager.setParameters(phaseInfo)
+        argParser: argparse.ArgumentParser = super().initCommandLineArgs()
+        argParser.add_argument(
+            "--outOfEquilibriumGluon",
+            help="Treat the SU(3) gluons as out-of-equilibrium particle species",
+            action="store_true",
+        )
+        return argParser
 
-    """WallGo can now be used to compute wall stuff!"""
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
+        """
+        """
+        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
 
-    ## ---- Solve wall speed in Local Thermal Equilibrium approximation
+    def initWallGoModel(self) -> "WallGo.GenericModel":
+        """"""
+        # This should run after cmdline argument parsing so safe to use them here
+        # Number of singlets
+        nbrSinglets = 2
+        return NSinglets(nbrSinglets)
 
-    vwLTE = manager.wallSpeedLTE()
+    def initCollisionModel(
+        self, wallGoModel: "NSinglets"
+    ) -> "WallGoCollision.PhysicsModel":
+        """"""
+        pass
 
-    print(f"LTE wall speed: {vwLTE}")
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """Singlet example uses spatial grid size = 25"""
+        super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "25")
 
-    ## ---- Solve field EOM. For illustration, first solve it without any out-of-equilibrium contributions. The resulting wall speed should match the LTE result:
-    
-    manager.eom.includeOffEq = False
-    
+    def updateModelParameters(
+        self, model: "NSinglets", inputParameters: dict[str, float]
+    ) -> None:
+        """Convert SM + singlet inputs to Lagrangian params and update internal model parameters.
+        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        so be careful not to replace that reference here.
+        """
 
-    bIncludeOffEq = False
-    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        # oldParams = model.modelParameters.copy()
 
-    results = manager.solveWall(bIncludeOffEq)
-    
-    wallVelocity = results.wallVelocity
-    widths = results.wallWidths
-    offsets = results.wallOffsets
+        model.updateModel(inputParameters)
 
-    print(f"{wallVelocity=}")
-    print(f"{widths=}")
-    print(f"{offsets=}")
+        """Collisions integrals for this example depend only on the QCD coupling,
+        if it changes we must recompute collisions before running the wall solver.
+        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
+        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        (FIXME?)
+        """
+        self.bShouldRecalculateCollisions = False
 
-    ## Repeat with out-of-equilibrium parts included. This requires solving Boltzmann equations, invoked automatically by solveWall()  
-    bIncludeOffEq = True
-    print(f"=== Begin EOM with {bIncludeOffEq=} ===")
+        """
+        newParams = model.modelParameters
+        if not oldParams or newParams["g3"] != oldParams["g3"]:
+            self.bNeedsNewCollisions = True
+        """
 
-    results = manager.solveWall(bIncludeOffEq)
-    wallVelocity = results.wallVelocity
-    wallVelocityError = results.wallVelocityError
-    widths = results.wallWidths
-    offsets = results.wallOffsets
+    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
 
-    print(f"{wallVelocity=}")
-    print(f"{wallVelocityError=}")
-    print(f"{widths=}")
-    print(f"{offsets=}")
+        inputParameters = {
+                    "RGScale" : 125., 
+                    "v0" : 246.0,
+                    "MW" : 80.379,
+                    "MZ" : 91.1876,
+                    "Mt" : 173.0,
+                    "g3" : 1.2279920495357861,
+                    # scalar specific
+                    "mh" : 125.0,
+                    "muSsq" : [-8000,-10000],
+                    "lHS" : [0.75,0.9],
+                    "lSS" : [0.5,0.7],
+                }
+
+        model = self.initWallGoModel()
+        model.updateModel(inputParameters)
+
+        Tc = model.effectivePotential.findTc()
+        if Tc is None:
+            return 0
+        Tn = 0.8*Tc
+        if model.effectivePotential.canTunnel(Tn) == False:
+            print('Tunneling impossible. Try with different parameters.')
+            return 0
+
+        phase1, phase2 = model.effectivePotential.findPhases(Tn)
+
+        output: list[ExampleInputPoint] = []
+        output.append(
+            ExampleInputPoint(
+                inputParameters,
+                WallGo.PhaseInfo(
+                    temperature=Tn,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields(phase1[None,:]),
+                    phaseLocation2=WallGo.Fields(phase2[None,:]),
+                ),
+                WallGo.VeffDerivativeScales(
+                    temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]
+                ),
+                WallGo.WallSolverSettings(
+                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    meanFreePath=1.0,
+                    wallThicknessGuess=0.05,
+                ),
+            )
+        )
+
+        return output
+
+    # ~ End WallGoExampleBase interface
 
 
-## Don't run the main function if imported to another file
 if __name__ == "__main__":
-    main()
+
+    example = NSingletsModelExample()
+    example.runExample()
