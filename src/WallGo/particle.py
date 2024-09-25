@@ -4,7 +4,7 @@ Module with Particle class to hold particle information
 
 import typing
 import numpy as np
-from .fields import Fields
+from .fields import Fields, FieldPoint
 
 
 class Particle:  # pylint: disable=too-few-public-methods
@@ -20,8 +20,8 @@ class Particle:  # pylint: disable=too-few-public-methods
         self,
         name: str,
         index: int,
-        msqVacuum: typing.Callable[[Fields], np.ndarray],
-        msqDerivative: typing.Callable[[Fields], np.ndarray],
+        msqVacuum: typing.Callable[[Fields | FieldPoint], np.ndarray],
+        msqDerivative: typing.Callable[[Fields | FieldPoint], np.ndarray],
         msqThermal: typing.Callable[[float], float],
         statistics: str,
         totalDOFs: int,
@@ -36,11 +36,11 @@ class Particle:  # pylint: disable=too-few-public-methods
             Integer identifier for the particle species. Must be unique
             and match the intended particle index in matrix elements.
         msqVacuum : function
-            Function :math:`m^2_0(\phi)`, should take a Fields object and
+            Function :math:`m^2_0(\phi)`, should take a Fields or FieldPoint object and
             return an array of length Fields.NumPoints().
         msqDerivative : function
-            Function :math:`d(m_0^2)/d(\phi)`, should take a Fields object and
-            return an array of shape Fields.shape.
+            Function :math:`d(m_0^2)/d(\phi)`, should take a Fields or FieldPoints
+            object and return an array of shape Fields.shape.
         msqThermal : function
             Function :math:`m^2_T(T)`, should take a float and return one.
         statistics : {\"Fermion\", \"Boson\"}
