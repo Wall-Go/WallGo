@@ -719,7 +719,7 @@ class InertDoubletModelExample(WallGoExampleBase):
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "5")
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
