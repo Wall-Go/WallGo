@@ -10,6 +10,7 @@ import typing
 from pathlib import Path
 import copy
 import inspect
+import sys
 
 import WallGo
 
@@ -29,6 +30,8 @@ class ExampleInputPoint:
 
 class WallGoExampleBase(ABC):
     """Base template for many WallGo examples."""
+
+    cmdArgs: argparse.Namespace
 
     bShouldRecalculateCollisions: bool
     """Flag used to check if new collision data should be generated inside the
@@ -163,7 +166,7 @@ class WallGoExampleBase(ABC):
                 str(self.cmdArgs.momentumGridSize),
             )
 
-    def processResultsForBenchmark( # pylint: disable=W0613
+    def processResultsForBenchmark(  # pylint: disable=W0613
         self,
         benchmarkPoint: ExampleInputPoint,
         results: WallGo.WallGoResults,
@@ -258,7 +261,7 @@ class WallGoExampleBase(ABC):
             wallSolverSettings.bIncludeOffEquilibrium = False
 
             print(
-                f"\n === Begin EOM with off-eq effects ignored ===" # pylint: disable=W1309
+                f"\n === Begin EOM with off-eq effects ignored ==="  # pylint: disable=W1309
             )
             results = manager.solveWall(wallSolverSettings)
             self.processResultsForBenchmark(benchmark, results)
@@ -306,7 +309,7 @@ class WallGoExampleBase(ABC):
                         str(self.matrixElementFile), bShouldPrintMatrixElements
                     ):
                         print("FATAL: Failed to load matrix elements")
-                        exit()
+                        sys.exit()
 
                     collisionTensor = collisionModel.createCollisionTensor(
                         momentumGridSize
@@ -350,7 +353,7 @@ class WallGoExampleBase(ABC):
 
             wallSolverSettings.bIncludeOffEquilibrium = True
             print(
-                f"\n=== Begin EOM with off-eq effects included ===" # pylint: disable = W1309
+                f"\n=== Begin EOM with off-eq effects included ==="  # pylint: disable = W1309
             )
 
             try:

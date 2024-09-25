@@ -21,11 +21,12 @@ from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
     EffectivePotentialNoResum,
 )
 
-from wallgo_example_base import WallGoExampleBase
-from wallgo_example_base import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
+
 
 class YukawaModel(WallGo.GenericModel):
     """
@@ -87,7 +88,9 @@ class YukawaModel(WallGo.GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def psiMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["mf"] + self.modelParameters["y"] * fields.getField(0) 
+            return self.modelParameters["mf"] + self.modelParameters[
+                "y"
+            ] * fields.getField(0)
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
@@ -95,7 +98,7 @@ class YukawaModel(WallGo.GenericModel):
             return self.modelParameters["y"]
 
         def psiMsqThermal(T: float) -> float:
-            return 1 / 16 * self.modelParameters["y"]**2 * T**2
+            return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
 
         psiL = WallGo.Particle(
             "psiL",
@@ -149,6 +152,7 @@ class YukawaModel(WallGo.GenericModel):
         # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
+
 class EffectivePotentialYukawa(WallGo.EffectivePotential):
     """
     Effective potential for the Yukawa model.
@@ -175,7 +179,6 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     fieldCount = 1
     """How many classical background fields"""
     # ~
-
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
@@ -234,7 +237,8 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa_massive.txt"
+            self.exampleBaseDirectory
+            / "MatrixElements/MatrixElements_Yukawa_massive.txt"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -289,7 +293,6 @@ class YukawaModelExample(WallGoExampleBase):
             "msq[1]", wallGoModel.modelParameters["lam"] / 24.0 + wallGoModel.modelParameters["y"] ** 2.0 / 6.0
         )  # psi thermal mass^2 in units of T
 
-
         collisionModelDefinition.defineParticleSpecies(phiParticle)
         collisionModelDefinition.defineParameters(parameters)
 
@@ -332,7 +335,10 @@ class YukawaModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([192.35]),
                 ),
                 WallGo.VeffDerivativeScales(
-                    temperatureScale=1.0, fieldScale=[100.0, ]
+                    temperatureScale=1.0,
+                    fieldScale=[
+                        100.0,
+                    ],
                 ),
                 WallGo.WallSolverSettings(
                     bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
@@ -345,6 +351,7 @@ class YukawaModelExample(WallGoExampleBase):
         return output
 
     # ~ End WallGoExampleBase interface
+
 
 if __name__ == "__main__":
 
