@@ -717,8 +717,9 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """SM example uses spatial grid size = 20"""
+        """"""
         super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "5")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
