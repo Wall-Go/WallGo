@@ -21,7 +21,13 @@ class EffectivePotential(ABC):
     With in mind, WallGo requires that the effective potential is defined with full T-dependence included.
 
     The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
-    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
+    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential.
+    
+    The user must call setScalesAndError() before evaluating the derivatives to set
+    temperatureScale, fieldScale and effectivePotentialError. These quantities are used
+    to estimate the optimal step size when computing derivatives with finite
+    differences. It is done by requiring that the potential error and the error from
+    finite difference calculation contribute similarly to the derivative error.
     """
 
     """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
@@ -37,9 +43,8 @@ class EffectivePotential(ABC):
     ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
     fieldLowerBound: float = 1e-8
     
-    ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
-    ## when the potential can be computed in terms of simple functions.
-    effectivePotentialError: float = 1e-15
+    ## Typical relative accuracy at which the effective potential can be computed.
+    effectivePotentialError: float
     
     ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
     temperatureScale: float
@@ -52,12 +57,9 @@ class EffectivePotential(ABC):
         self.modelParameters = modelParameters
         self.fieldCount = fieldCount
         
-        # HACK! This intitializes fieldScale and temperatureScale to 1s.
-        # Should be overriden by self.setScales, but used in some tests.
-        self.fieldScale = np.ones(fieldCount)
-        self.temperatureScale = 1.
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
-
+        # Flag used to determine if the scales have been properly initialized by calling
+        # self.setScales().
+        self.bScalesDefined = False
 
     @abstractmethod
     def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
@@ -71,16 +73,16 @@ class EffectivePotential(ABC):
     
 
     #### Non-abstract stuff from here on
-    
-    def setPotentialError(self, potentialError):
-        """
-        Sets self.effectivePotentialError to potentialError.
-        """
-        self.effectivePotentialError = potentialError
         
-    def setScales(self, temperatureScale: float, fieldScale: npt.ArrayLike):
+    def setScalesAndError(self, temperatureScale: float,
+                          fieldScale: np.ndarray | float,
+                          potentialError: float):
         """
-        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
+        Sets the temperature and field scales and the potential error.
+        These quantities are used to estimate the optimal step size when computing
+        derivatives with finite differences. It is done by requiring that the potential
+        error and the error from finite difference calculation contribute similarly to
+        the derivative error.
         """
         self.temperatureScale = temperatureScale
         
@@ -90,6 +92,10 @@ class EffectivePotential(ABC):
             self.fieldScale = np.asanyarray(fieldScale)
             assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
         self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
+        
+        self.effectivePotentialError = potentialError
+        
+        self.bScalesDefined = True
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:
         """
@@ -177,6 +183,8 @@ class EffectivePotential(ABC):
             Temperature derivative of the potential, evaluated at each
             point of the input temperature array.
         """
+        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+                                    "called before computing a derivative."
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
@@ -205,7 +213,8 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        
+        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+                                    "called before computing a derivative."
         return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                         scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
 
@@ -225,7 +234,8 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        
+        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+                                    "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                       scale=self.__combinedScales, xAxis=np.arange(self.fieldCount).tolist(), yAxis=-1)[...,0]
         
@@ -247,7 +257,8 @@ class EffectivePotential(ABC):
             Field Hessian of the potential. For each temperature, this is
             a matrix of the same size as Fields.
         """
-        
+        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+                                    "called before computing a derivative."
         axis = np.arange(self.fieldCount).tolist()
         return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                        scale=self.__combinedScales, xAxis=axis, yAxis=axis)
@@ -275,7 +286,8 @@ class EffectivePotential(ABC):
         d2VdT2 : array-like
             Temperature second derivative of the potential.
         """
-        
+        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+                                    "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, scale=self.__combinedScales)
         
         hess = res[...,:-1,:-1]
