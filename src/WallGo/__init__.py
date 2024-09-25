@@ -1,6 +1,6 @@
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
-from .exceptions import WallGoError, WallGoPhaseValidationError
+from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
 from .grid import Grid
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics

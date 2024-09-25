@@ -13,6 +13,7 @@ import h5py  # read/write hdf5 structured binary data file format
 from .particle import Particle
 from .grid import Grid
 from .polynomial import Polynomial
+from .exceptions import CollisionLoadError
 
 
 class CollisionArray:
@@ -207,10 +208,9 @@ class CollisionArray:
 
         Raises
         ------
-        FileNotFoundError
-            If any of the collision files are not found.
-        RuntimeError
-            If there is a grid size mismatch and bInterpolate is set to False.
+        CollisionLoadError
+            If any of the collision files are not found,
+            or if there is a grid size mismatch and bInterpolate is set to False.
 
         """
         collisionFileArray: np.ndarray
@@ -231,33 +231,11 @@ class CollisionArray:
                         size = metadata.attrs["Basis Size"]
 
                         if grid.N > size:
-                            raise RuntimeError(
+                            raise CollisionLoadError(
                                 f"""Target collision grid size ({grid.N}) must be smaller
                                                or equal to the grid size recorded in collision files ({size}).
                                                """
                             )
-
-                        # if grid.N > size and collision.generateCollisionIntegrals:
-                        #     # Generate temporary directory
-                        #     directoryname = tempfile.mkdtemp(
-                        #         prefix=f"N{grid.N}.", dir=directoryname
-                        #     )
-                        #     print(
-                        #         f"""CollisionArray generation warning: target collison
-                        #         grid size ({grid.N}) must be smaller than or equal to
-                        #         the exisiting collision grid size ({size}). New
-                        #         collisons are generated now at grid size ({grid.N}) in
-                        #         directory {directoryname}."""
-                        #     )
-                        #     print("Changing output directory to: ", directoryname)
-                        #     collision.setOutputDirectory(directoryname)
-                        #     # Computes collisions for all out-of-eq particles specified.
-                        #     # The last argument is optional and mainly useful for
-                        #     # debugging
-                        #     collision.calculateCollisionIntegrals(bVerbose=False)
-                        #     return CollisionArray.newFromDirectory(
-                        #         collision, grid, basisType, particles, bInterpolate
-                        #     )
 
                         btype = codecs.decode(
                             metadata.attrs["Basis Type"],
@@ -297,8 +275,9 @@ class CollisionArray:
                             (2, 3, 0, 1),
                         )
                 except FileNotFoundError:
-                    print(f"CollisionArray error: {filename} not found.")
-                    raise
+                    raise CollisionLoadError(
+                        f"CollisionArray error: {filename} not found."
+                    )
 
         collisionFileArray = collisionFileArray.reshape(
             (
@@ -338,10 +317,9 @@ class CollisionArray:
         else:
             ## Grid sizes don't match, attempt interpolation
             if not bInterpolate:
-                raise RuntimeError(
-                    "Grid size mismatch when loading collision directory: ",
-                    directoryPath,
-                    "Consider using bInterpolate=True in CollisionArray.loadFromFile().",
+                raise CollisionLoadError(
+                    f"""Grid size mismatch when loading collision directory: {directoryPath}.
+                    Consider using bInterpolate=True in CollisionArray.loadFromFile().""",
                 )
 
             dummyGrid = Grid(

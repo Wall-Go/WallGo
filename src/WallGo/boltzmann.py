@@ -13,6 +13,7 @@ from .polynomial import Polynomial
 from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
+from .exceptions import CollisionLoadError
 
 if typing.TYPE_CHECKING:
     import importlib
@@ -617,14 +618,20 @@ class BoltzmannSolver:
 
         Returns:
             None
+
+        Raises:
+            CollisionLoadError
         """
-        self.collisionArray = CollisionArray.newFromDirectory(
-            directoryPath,
-            self.grid,
-            self.basisN,
-            self.offEqParticles,
-        )
-        print(f"Loaded collision data from directory {directoryPath}")
+        try:
+            self.collisionArray = CollisionArray.newFromDirectory(
+                directoryPath,
+                self.grid,
+                self.basisN,
+                self.offEqParticles,
+            )
+            print(f"Loaded collision data from directory {directoryPath}")
+        except CollisionLoadError as e:
+            raise
 
     @staticmethod
     def _checkBasis(basis: str) -> None:

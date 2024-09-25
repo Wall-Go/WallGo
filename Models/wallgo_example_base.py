@@ -190,15 +190,6 @@ class WallGoExampleBase(ABC):
         # hacky
         momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
 
-        # TODO catch load error nicely, it's less trivial now that the loading is hidden deep in manager
-        # print(
-        #    """\nLoad of collision integrals failed! WallGo example models come with pre-generated collision files,
-        #    so load failure here probably means you've either moved files around or changed to incompatible grid size.
-        #    If you were trying to generate your own collision data, make sure you run this example script with the --recalculateCollisions command line flag.
-        #    """
-        # )
-        # exit(42)
-
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
             print(
@@ -314,13 +305,27 @@ class WallGoExampleBase(ABC):
                 )
 
                 self.bShouldRecalculateCollisions = False
-
                 ## TODO we could convert the CollisionTensorResult object from above to CollisionArray directly instead of forcing write hdf5 -> read hdf5
 
             wallSolverSettings.bIncludeOffEquilibrium = True
             print(f"\n=== Begin EOM with off-eq effects included ===")
-            results = manager.solveWall(wallSolverSettings)
-            self.processResultsForBenchmark(benchmark, results)
+
+            try:
+                results = manager.solveWall(wallSolverSettings)
+                self.processResultsForBenchmark(benchmark, results)
+
+            except Exception as e:
+                print(f"Unhandled exception from wall solver: {e}")
+                if isinstance(e, WallGo.CollisionLoadError):
+                    print(
+                        """\nLoad of collision integrals failed!
+                        WallGo example models come with pre-generated collision files,
+                        so load failure here probably means you've either moved files around
+                        or changed to incompatible grid size.
+                        If you were trying to generate your own collision data, make sure to
+                        include the --recalculateCollisions command line flag when running the example.
+                        """
+                    )
 
             if self.cmdArgs.includeDetonations:
                 print("\n=== Search for detonation solution ===")

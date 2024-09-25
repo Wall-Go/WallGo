@@ -28,8 +28,6 @@ from .results import (
     HydroResults,
     WallGoResults,
 )
-from .exceptions import WallGoError
-
 
 class EOM:
     """
@@ -496,7 +494,6 @@ class EOM:
             / 4
         )
 
-        ## This computes pressure on the wall with a given wall speed and WallParams
         def pressureWrapper(vw: float) -> float:  # pylint: disable=invalid-name
             """Small optimization here: the root finder below calls this first at the
             bracket endpoints, for which we already computed the pressure above.

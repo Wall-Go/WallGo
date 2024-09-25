@@ -15,7 +15,7 @@ from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .EffectivePotential import EffectivePotential
 from .equationOfMotion import EOM
-from .exceptions import WallGoError, WallGoPhaseValidationError
+from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
 from .genericModel import GenericModel
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
@@ -51,6 +51,8 @@ class WallSolverSettings:
 @dataclass
 class WallSolver:
     eom: EOM
+    grid: Grid3Scales
+    boltzmannSolver: BoltzmannSolver
     initialWallThickness: float
 
 
@@ -336,6 +338,9 @@ class WallGoManager:
     ) -> WallGoResults:
         """
         Solves the EOM and computes the wall velocity.
+        Must be ran after analyzeHydrodynamics() because
+        the solver depends on thermodynamical and hydrodynamical
+        info stored internally in the WallGoManager.
 
         Parameters
         ----------
@@ -349,7 +354,6 @@ class WallGoManager:
             quantities used to assess the accuracy of the solution.
         """
         solver: WallSolver = self.setupWallSolver(wallSolverSettings)
-        assert solver.initialWallThickness
 
         return solver.eom.findWallVelocityDeflagrationHybrid(
             solver.initialWallThickness
@@ -450,12 +454,18 @@ class WallGoManager:
 
         bShouldLoadCollisions = wallSolverSettings.bIncludeOffEquilibrium
         if bShouldLoadCollisions:
-            boltzmannSolver.loadCollisions(self.collisionDirectory)
+
+            # Must terminate here if collision load fails, let caller handle the exception.
+            # TODO may be cleaner to handle it here and return an invalid solver
+            try:
+                boltzmannSolver.loadCollisions(self.collisionDirectory)
+            except CollisionLoadError:
+                raise
 
         eom: EOM = self.buildEOM(grid, boltzmannSolver, wallSolverSettings.meanFreePath)
 
         eom.includeOffEq = wallSolverSettings.bIncludeOffEquilibrium
-        return WallSolver(eom, wallThickness)
+        return WallSolver(eom, grid, boltzmannSolver, wallThickness)
 
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """
