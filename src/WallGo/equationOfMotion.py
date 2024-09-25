@@ -323,8 +323,8 @@ class EOM:
                     "deflagration/hybrid or a runaway."
                 )
             elif pressureIni > 0 and pressure2 > 0:
-                # If pressure is always positive and is therefore too large to have a
-                # detonation solution, we return 0.
+                # Pressure is always positive and is therefore too large to have a
+                # detonation solution.
                 results.setWallVelocities(None, None, None)
                 results.setSuccessState(
                     True,
@@ -334,8 +334,7 @@ class EOM:
                     "WallGoManager.solveWall() to find it."
                 )
             else:
-                # If pressure is too small to have a detonation, it is a runaway and we
-                # return 1.
+                # Pressure is too small to have a detonation, it is a runaway.
                 results.setWallVelocities(None, None, None)
                 results.setSuccessState(
                     True,
