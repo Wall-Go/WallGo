@@ -4,10 +4,10 @@ wall velocity calculation.
 """
 
 from typing import Type, TYPE_CHECKING
-import numpy as np
-from deprecated import deprecated
 from dataclasses import dataclass
 import pathlib
+import numpy as np
+from deprecated import deprecated
 
 # WallGo imports
 import WallGo
@@ -24,12 +24,13 @@ from .integrals import Integrals
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults, HydroResults
 from .WallGoUtils import getSafePathToResource
-from .EffectivePotential import EffectivePotential
 
 
 @dataclass
 class WallSolverSettings:
-    """"""
+    """
+    Settings for the WallSolver.
+    """
 
     bIncludeOffEquilibrium: bool = True
     """If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).
@@ -50,6 +51,10 @@ class WallSolverSettings:
 
 @dataclass
 class WallSolver:
+    """
+    Data class containing classes and settings for the wall velocity computation.
+    """
+
     eom: EOM
     grid: Grid3Scales
     boltzmannSolver: BoltzmannSolver
@@ -74,8 +79,10 @@ class WallGoManager:
         # default to working directory
         self.collisionDirectory = pathlib.Path.cwd()
 
-        # These we currently have to keep cached, otherwise can't construct sensible WallSolver:
-        ## TODO init these to None or have other easy way of checking if they have been properly initialized
+        # These we currently have to keep cached, otherwise we can't construct
+        # a sensible WallSolver:
+        ## TODO init these to None or have other easy way of checking if they
+        ## have been properly initialized
         self.model: GenericModel
         self.hydrodynamics: Hydrodynamics
         self.phasesAtTn: PhaseInfo
@@ -97,7 +104,7 @@ class WallGoManager:
         detonation solutions).
         You are required to run this function whenever details of your
         physics model change to keep the manager's internal state up to date.
-        
+
         Parameters
         ----------
         phaseInfo : PhaseInfo
@@ -115,7 +122,7 @@ class WallGoManager:
         assert (
             phaseInfo.phaseLocation1.numFields() == self.model.fieldCount
             and phaseInfo.phaseLocation2.numFields() == self.model.fieldCount
-        ), "Invalid PhaseInfo input, field counts do not match those defined in the model"
+        ), "Invalid PhaseInfo input, field counts don't match those defined in model"
 
         self.model.getEffectivePotential().setScales(veffDerivativeScales)
 
@@ -178,7 +185,8 @@ class WallGoManager:
 
         potentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
-        ## FIXME default scales for derivatives, or just the simple ones built-in to the Veff initializer
+        ## FIXME default scales for derivatives, or just the simple ones
+        ## built-in to the Veff initializer
         self.model.getEffectivePotential().setPotentialError(potentialError)
 
     def validatePhaseInput(self, phaseInput: PhaseInfo) -> None:
@@ -248,7 +256,8 @@ class WallGoManager:
 
     def initTemperatureRange(self) -> None:
         """
-        Get initial guess for the relevant temperature range and store in internal thermodynamics object.
+        Get initial guess for the relevant temperature range and
+        store in internal thermodynamics object.
         """
 
         assert self.phasesAtTn is not None
@@ -336,7 +345,9 @@ class WallGoManager:
         self.collisionDirectory = directoryPath
 
     def getCurrentCollisionDirectory(self) -> pathlib.Path:
-        """"""
+        """
+        Returns the path to the directory with the collision files.
+        """
         return self.collisionDirectory
 
     def wallSpeedLTE(self) -> float:
@@ -438,9 +449,10 @@ class WallGoManager:
     def setupWallSolver(self, wallSolverSettings: WallSolverSettings) -> WallSolver:
         """Helper for constructing an EOM object whose state is tied to equilibrium
         and hydrodynamical information stored in the WallGoManager.
-        Specifically, uses results of setupThermodynamicsHydrodynamics() to find optimal grid settings for wall solving,
-        and creates Grid and BoltzmannSolver objects to use from within the EOM.
-        Be aware that the created EOM object can change state if its creator WallGoManager instance is modified
+        Specifically, uses results of setupThermodynamicsHydrodynamics() to find
+        optimal grid settings for wall solving, and creates Grid and BoltzmannSolver
+        objects to use from within the EOM. Be aware that the created EOM object can
+        change state if its creator WallGoManager instance is modified
         (eg. if setupThermodynamicsHydrodynamics() is called)!
         """
 
@@ -448,7 +460,7 @@ class WallGoManager:
             self.phasesAtTn.temperature is not None
             and self.isModelValid()
             and self.hydrodynamics is not None
-        ), "Must run WallGoManager.setupThermodynamicsHydrodynamics() before wall solving"
+        ), "Run WallGoManager.setupThermodynamicsHydrodynamics() before wall solving"
 
         Tnucl: float = self.phasesAtTn.temperature
 
@@ -474,7 +486,8 @@ class WallGoManager:
         bShouldLoadCollisions = wallSolverSettings.bIncludeOffEquilibrium
         if bShouldLoadCollisions:
 
-            # Must terminate here if collision load fails, let caller handle the exception.
+            # Must terminate here if collision load fails, let caller handle
+            # the exception.
             # TODO may be cleaner to handle it here and return an invalid solver
             try:
                 boltzmannSolver.loadCollisions(self.collisionDirectory)
