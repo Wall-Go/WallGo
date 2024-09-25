@@ -101,7 +101,7 @@ class HydroResults:
         self.velocityJouguet = velocityJouguet
 
 
-class SolutionTypes(Enum):
+class ESolutionType(Enum):
     """
     Enum class used to label the different types of solution WallGo can find
     """
@@ -135,6 +135,7 @@ class WallGoResults:
     """
     Compiles output results for users of WallGo
     """
+
     wallVelocity: float | None
     """Bubble wall velocity. None if no solution was found."""
 
@@ -203,9 +204,9 @@ class WallGoResults:
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
 
-    solutionType: SolutionTypes
+    solutionType: ESolutionType
     """
-    Describes the type of solution obtained. Must be a SolutionTypes object. The
+    Describes the type of solution obtained. Must be a ESolutionType object. The
     function WallGoManager.solveWall() will return DEFLAGRATION if a solution was found
     and RUNAWAY otherwise. The function WallGoManager.solveWallDetonation() will return
     DETONATION if a solution was found. Otherwise, it returns RUNAWAY if the pressure is
@@ -281,18 +282,19 @@ class WallGoResults:
         self.DeltasFiniteDifference = boltzmannResults.Deltas
 
     def setSuccessState(
-            self,
-            success: bool,
-            solutionType: SolutionTypes,
-            message: str,
-            ) -> None:
+        self,
+        success: bool,
+        solutionType: ESolutionType,
+        message: str,
+    ) -> None:
         """
         Set the termination message, the success flag and the solution type.
         """
-        assert isinstance(success, bool), 'WallGoResults Error: success must be a bool.'
-        assert isinstance(message, str), 'WallGoResults Error: message must be a str.'
-        assert isinstance(solutionType, SolutionTypes), "WallGoResults Error: "\
-            "solutionType must be a SolutionTypes object."
+        assert isinstance(success, bool), "WallGoResults Error: success must be a bool."
+        assert isinstance(message, str), "WallGoResults Error: message must be a str."
+        assert isinstance(solutionType, ESolutionType), (
+            "WallGoResults Error: " "solutionType must be a ESolutionType object."
+        )
         self.success = success
         self.message = message
         self.solutionType = solutionType
