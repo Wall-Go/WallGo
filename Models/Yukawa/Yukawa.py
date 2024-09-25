@@ -261,7 +261,7 @@ class YukawaModelExample(WallGoExampleBase):
 
         for particle in wallGoModel.outOfEquilibriumParticles:
             collisionModelDefinition.defineParticleSpecies(
-                WallGo.collisionHelpers.particleToCollisionParticleDescription(particle, False, True)
+                WallGo.collisionHelpers.generateCollisionParticle(particle, False, True)
                 )
 
         # Add in-equilibrium particles that appear in collision processes
