@@ -81,18 +81,35 @@ class WallGoManager:
         self.phasesAtTn: PhaseInfo
         self.thermodynamics: Thermodynamics
 
-    def analyzeHydrodynamics(
+    def setupThermodynamicsHydrodynamics(
         self,
         phaseInfo: WallGo.PhaseInfo,
         veffDerivativeScales: WallGo.VeffDerivativeScales,
     ) -> None:
         """Must run before solveWall() and companions.
-        This does initialization of various internal objects related to equilibrium thermodynamics and hydrodynamics.
-        Specifically, we verify that the input PhaseInfo is valid (distinct phases can be found in the effective potential),
-        estimate the relevant temperature range for wall solving and create efficient approximations
-        for phase free energies over this range using interpolation.
-        Finally, [FIXME do what related to hydrodynamics??].
-        You are required to run this function whenever details of your physics model change to keep the manager's internal state up to date.
+        Initialization of internal objects related to equilibrium thermodynamics and
+        hydrodynamics. Specifically, we verify that the input PhaseInfo is valid
+        (distinct phases can be found in the effective potential),
+        estimate the relevant temperature range for wall solving and create efficient
+        approximations for phase free energies over this range using interpolation.
+        Finally, it initializes the Hydrodynamics and confirms that it can find a
+        reasonable value for the Jouguet velocity (the transition from hybdrid to
+        detonation solutions).
+        You are required to run this function whenever details of your
+        physics model change to keep the manager's internal state up to date.
+        
+        Parameters
+        ----------
+        phaseInfo : PhaseInfo
+            WallGo object containing the approximate positions of the minima and
+            nucleation temperature.
+        veffDerativeScales : VeffDerivativeScales
+            WallGo dataclass containing the typical temprature and field scale over
+            which the potential varies.
+
+        Returns
+        -------
+
         """
 
         assert (
@@ -104,6 +121,7 @@ class WallGoManager:
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
+
         self.initTemperatureRange()
 
         ## Should we write these to a result struct?
@@ -291,6 +309,7 @@ class WallGoManager:
         enough, and the template model only provides an estimate.
         HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
+        ## TODO make a better choice for TMinHighT to speed up this function
         TMinHighT, TMaxHighT = 0, max(2 * Tn, fudgeFactor * THighTMaxTemplate)
         TMinLowT, TMaxLowT = 0, max(2 * Tn, fudgeFactor * TLowTMaxTemplate)
 
@@ -419,17 +438,17 @@ class WallGoManager:
     def setupWallSolver(self, wallSolverSettings: WallSolverSettings) -> WallSolver:
         """Helper for constructing an EOM object whose state is tied to equilibrium
         and hydrodynamical information stored in the WallGoManager.
-        Specifically, uses results of analyzeHydrodynamics() to find optimal grid settings for wall solving,
+        Specifically, uses results of setupThermodynamicsHydrodynamics() to find optimal grid settings for wall solving,
         and creates Grid and BoltzmannSolver objects to use from within the EOM.
         Be aware that the created EOM object can change state if its creator WallGoManager instance is modified
-        (eg. if analyzeHydrodynamics() is called)!
+        (eg. if setupThermodynamicsHydrodynamics() is called)!
         """
 
         assert (
             self.phasesAtTn.temperature is not None
             and self.isModelValid()
             and self.hydrodynamics is not None
-        ), "Must run WallGoManager.analyzeHydrodynamics() before wall solving"
+        ), "Must run WallGoManager.setupThermodynamicsHydrodynamics() before wall solving"
 
         Tnucl: float = self.phasesAtTn.temperature
 

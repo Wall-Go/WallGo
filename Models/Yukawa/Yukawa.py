@@ -3,207 +3,258 @@ A simple example model, of a real scalar field coupled to a Dirac fermion
 c.f. 2310.02308
 """
 
+import os
+import sys
 import pathlib
 import argparse
 import numpy as np
-import WallGo
+from typing import TYPE_CHECKING
 
+# WallGo imports
+import WallGo  # Whole package, in particular we get WallGo.initialize()
+from WallGo import Fields, GenericModel, Particle, WallGoManager
+
+# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
+sys.path.append(str(modelsBaseDir))
+from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
+    EffectivePotentialNoResum,
+)
+
+from wallgo_example_base import WallGoExampleBase
+from wallgo_example_base import ExampleInputPoint
+
+if TYPE_CHECKING:
+    import WallGoCollision
 
 class YukawaModel(WallGo.GenericModel):
     """
     The Yukawa model, inheriting from WallGo.GenericModel.
     """
 
+    def __init__(self):
+        """
+        Initialize the SingletSMZ2 model.
+
+        Parameters
+        ----------
+            FIXME
+        Returns
+        ----------
+        cls: SingletSMZ2
+            An object of the SingletSMZ2 class.
+        """
+
+        self.modelParameters: dict[str, float] = {}
+
+        # Initialize internal effective potential
+        self.effectivePotential = EffectivePotentialYukawa(self)
+
+        # Create a list of particles relevant for the Boltzmann equations
+        self.defineParticles()
+
+    # ~ GenericModel interface
     @property
     def fieldCount(self) -> int:
         """How many classical background fields"""
         return 1
 
-    def __init__(self, inputParameters: dict[str, float]):
-        """
-        Initialisation of the Yukawa model:
-            - stores modelParameters
-            - initialises effectivePotential
-            - constructs list of Particles
-        """
+    def getEffectivePotential(self) -> "EffectivePotentialYukawa":
+        return self.effectivePotential
 
+    # ~
+
+    def defineParticles(self) -> None:
+        """
+        Define the particles for the model.
+        Note that the particle list only needs to contain the
+        particles that are relevant for the Boltzmann equations.
+        The particles relevant to the effective potential are
+        included independently.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        ----------
+        None
+        """
         self.clearParticles()
 
-        # must initialise and store the model parameters with this variable name
-        self.modelParameters = inputParameters
+        # === left fermion ===
+        # The msqVacuum function of an out-of-equilibrium particle must take
+        # a Fields object and return an array of length equal to the number of
+        # points in fields.
+        def psiMsqVacuum(fields: Fields) -> Fields:
+            return self.modelParameters["mf"] + self.modelParameters["y"] * fields.getField(0) 
 
-        # must do the same for the effective potential
-        self.effectivePotential = EffectivePotentialYukawa(
-            self.modelParameters, self.fieldCount
-        )
+        # The msqDerivative function of an out-of-equilibrium particle must take
+        # a Fields object and return an array with the same shape as fields.
+        def psiMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["y"]
 
-        # constructing the list of particles, starting with psi
-        # taking its fluctuations out of equilibrium
-        y = self.modelParameters["y"]
+        def psiMsqThermal(T: float) -> float:
+            return 1 / 16 * self.modelParameters["y"]**2 * T**2
+
         psiL = WallGo.Particle(
             "psiL",
             index=1,  # old collision data has top at index 0
-            msqVacuum=lambda fields: (
-                self.modelParameters["mf"] + y * fields.getField(0)
-            ),
-            msqDerivative=lambda fields: y,
-            msqThermal=lambda T: 1 / 16 * y**2 * T**2,
+            msqVacuum=psiMsqVacuum,
+            msqDerivative=psiMsqDerivative,
+            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=4,
         )
         psiR = WallGo.Particle(
             "psiR",
-            index=2,  # old collision data has top at index 0
-            msqVacuum=lambda fields: (
-                self.modelParameters["mf"] + y * fields.getField(0)
-            ),
-            msqDerivative=lambda fields: y,
-            msqThermal=lambda T: 1 / 16 * y**2 * T**2,
+            index=1,  # old collision data has top at index 0
+            msqVacuum=psiMsqVacuum,
+            msqDerivative=psiMsqDerivative,
+            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=4,
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
 
-        # Parameters for "phi" field
-        msq = self.modelParameters["msq"]
-        gamma = self.modelParameters["gamma"]
-        lam = self.modelParameters["lam"]
+    def calculateLagrangianParameters(
+        self, inputParameters: dict[str, float]
+    ) -> dict[str, float]:
+        """
+        Calculate Lagrangian parameters based on the input parameters.
 
+        Parameters
+        ----------
+        inputParameters: dict[str, float]
+            A dictionary of input parameters for the model.
+
+        Returns
+        ----------
+        modelParameters: dict[str, float]
+            A dictionary of calculated model parameters.
+        """
+        modelParameters = {}
+
+        # Parameters for "phi" field
+        modelParameters = inputParameters
+
+        return modelParameters
+
+    def updateModel(self, newInputParams: dict[str, float]) -> None:
+        """Computes new Lagrangian parameters from given input and caches them internally.
+        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """
+        newParams = self.calculateLagrangianParameters(newInputParams)
+        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        self.modelParameters.update(newParams)
 
 class EffectivePotentialYukawa(WallGo.EffectivePotential):
     """
-    The effective potential for a specific model inherits from the
-    WallGo class EffectivePotential.
+    Effective potential for the Yukawa model.
+
+    This class inherits from the EffectivePotential class and provides the
+    necessary methods for calculating the effective potential.
     """
 
-    # HACK! not a fan of requiring checkForImaginary when manifestly real
-    def evaluate(
-        self, fields: WallGo.Fields, temperature: float, checkForImaginary: bool = False
-    ) -> float:
+    def __init__(self, owningModel: YukawaModel) -> None:
         """
-        It is necessary to define a member function called 'evaluate'
-        which returns the value of the potential.
+        Initialize the EffectivePotentialYukawa.
+        """
+
+        super().__init__()
+
+        assert owningModel is not None, "Invalid model passed to Veff"
+
+        self.owner = owningModel
+        self.modelParameters = self.owner.modelParameters
+
+        print(self.modelParameters)
+
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+    # ~
+
+
+    def evaluate(
+        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+    ) -> complex | np.ndarray:
+        """
+        Evaluate the effective potential.
+
+        Parameters
+        ----------
+        fields: Fields
+            The field configuration
+        temperature: float
+            The temperature
+        checkForImaginary: bool
+            Setting to check for imaginary parts of the potential
+
+        Returns
+        ----------
+        potentialTotal: complex | np.ndarray
+            The value of the effective potential
         """
         # getting the field from the list of fields (here just of length 1)
         fields = WallGo.Fields(fields)
         phi = fields.getField(0)
 
         # the constant term
-        f_0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
+        f0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
 
         # coefficients of the temperature and field dependent terms
         y = self.modelParameters["y"]
         mf = self.modelParameters["mf"]
-        sigma_eff = (
+        sigmaEff = (
             self.modelParameters["sigma"]
             + 1 / 24 * (self.modelParameters["gamma"] + 4 * y * mf) * temperature**2
         )
-        msq_eff = (
+        msqEff = (
             self.modelParameters["msq"]
             + 1 / 24 * (self.modelParameters["lam"] + 4 * y**2) * temperature**2
         )
 
-        # the combined result
-        return (
-            f_0
-            + sigma_eff * phi
-            + 1 / 2 * msq_eff * phi**2
+        potentialTotal = (
+            f0
+            + sigmaEff * phi
+            + 1 / 2 * msqEff * phi**2
             + 1 / 6 * self.modelParameters["gamma"] * phi**3
             + 1 / 24 * self.modelParameters["lam"] * phi**4
         )
 
+        return potentialTotal  # TODO: resolve return type.
 
-def main() -> int:
-    """The main function, run with `python3 Yukawa.py`"""
 
-    scriptLocation = pathlib.Path(__file__).parent.resolve()
+class YukawaModelExample(WallGoExampleBase):
 
-    argParser = argparse.ArgumentParser()
-    argParser.add_argument(
-        "--recalculateCollisions",
-        help="""Forces full recalculation of relevant collision integrals instead of loading the provided data files for this example.
-                This is very slow and disabled by default.
-                The resulting collision data will be written to a directory labeled _UserGenerated; the default provided data will not be overwritten.
-                """,
-        action="store_true",
-    )
+    def __init__(self) -> None:
+        """"""
+        self.bShouldRecalculateCollisions = False
 
-    args = argParser.parse_args()
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa_massive.txt"
+        )
 
-    # Initialise WallGo, including loading the default config.
-    WallGo.initialize()
+    def initWallGoModel(self) -> "WallGo.GenericModel":
+        """"""
+        # This should run after cmdline argument parsing so safe to use them here
+        return YukawaModel()
 
-    ## Modify the config, we use N=11 for this example
-    momentumBasisSize = 3
-    WallGo.config.set("PolynomialGrid", "momentumGridSize", str(momentumBasisSize))
+    def initCollisionModel(
+        self, wallGoModel: "YukawaModel"
+    ) -> "WallGoCollision.PhysicsModel":
+        """"""
 
-    # Print WallGo config. This was read by WallGo.initialize()
-    print("\n=== WallGo configuration options ===")
-    print(WallGo.config)
-
-    # Scales used for determining suitable values of dxi, dT, dphi etc in derivatives.
-
-    # Guess of the wall thickness: 5/Tn
-    wallThicknessIni = 0.05
-
-    # Estimate of the mean free path of the particles in the plasma: 100/Tn
-    meanFreePath = 1.0
-
-    # Create WallGo control object
-    # The following 2 parameters are used to estimate the optimal value of dT used
-    # for the finite difference derivatives of the potential.
-    # Temperature scale (in GeV) over which the potential changes by O(1).
-    # A good value would be of order Tc-Tn.
-    temperatureScaleInput = 1.0
-    # Field scale (in GeV) over which the potential changes by O(1). A good value
-    # would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the
-    # same scale, or an array.
-    fieldScaleInput = (100.0,)
-
-    # Create WallGo control object
-    manager = WallGo.WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureScaleInput, fieldScaleInput
-    )
-
-    # Lagrangian parameters.
-    inputParameters = {
-        "sigma": 0,
-        "msq": 1,
-        "gamma": -1.28565864794053,
-        "lam": 0.01320208496444000,
-        "y": -0.177421729274665,
-        "mf": 2.0280748307391000,
-    }
-
-    # Initialise the YukawaModel instance.
-    model = YukawaModel(inputParameters)
-
-    """
-    Register the model with WallGo. This needs to be done only once.
-    If you need to use multiple models during a single run,
-    we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    # Specify if new collision integrals should be generated by this example. Currently this option is read from WallGo.config
-    shouldGenerateCollisions = WallGo.config.getboolean(
-        "Collisions", "generateCollisionIntegrals"
-    )
-
-    if args.recalculateCollisions:
-
-        # Failsafe, in general you should not worry about the collision module being unavailable as long as it has been properly installed (eg. with pip)
-        assert WallGo.isCollisionModuleAvailable(), """WallGoCollision module could not be loaded, cannot proceed with collision integration.
-        Please verify you have successfully installed the module ('pip install WallGoCollision')"""
-
-        """Load the collision module and generate a stub collision model from the WallGo model.
-        """
         import WallGoCollision
 
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
+
         collisionModelDef = WallGo.collisionHelpers.generateCollisionModelDefinition(
-            model,
+            wallGoModel,
             # Do not define any model parameters yet./
             includeAllModelParameters=False,
             parameterSymbolsToInclude=[],
@@ -225,88 +276,86 @@ def main() -> int:
         """
         collisionModelDef.defineParticleSpecies(phiParticle)
 
-        # The parameter container used by WallGo collision routines is of WallGoCollision.ModelParameters type which behaves somewhat like a Python dict.
-        # Here we write our parameter definitions to a local ModelParameters variable and pass it to modelDefinitions later.
-        parameters = WallGoCollision.ModelParameters()
-
-        parameters.addOrModifyParameter("y", -0.177421729274665)
-        parameters.addOrModifyParameter("gamma", -1.28565864794053)
-        parameters.addOrModifyParameter("lam", 0.01320208496444000)
-        parameters.addOrModifyParameter("v", 0.0)
-
-        # For particles here we include the thermal mass only
-        def psiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-            return 1 / 16 * p["y"] ** 2
-
-        def phiThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-            return p["lam"] / 24.0 + p["y"] ** 2.0 / 6.0
-
-        parameters.addOrModifyParameter("msq[0]", phiThermalMassSquared(parameters))
-        parameters.addOrModifyParameter("msq[1]", psiThermalMassSquared(parameters))
-
-        # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
-        collisionModelDef.defineParameters(parameters)
-
         collisionModel = WallGoCollision.PhysicsModel(collisionModelDef)
 
-        matrixElementFile = (
-            scriptLocation / "MatrixElements/MatrixElements_Yukawa_massive.txt"
+        return collisionModel
+
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "YukawaModel",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagate changes in WallGo model to the collision model.
+        For this example we just need to update the QCD coupling and fermion/gluon thermal masses
+        """
+        import WallGoCollision
+
+        changedParams = WallGoCollision.ModelParameters()
+
+        changedParams.addOrModifyParameter("y", inWallGoModel.modelParameters["y"])
+        changedParams.addOrModifyParameter("gamma", inWallGoModel.modelParameters["gamma"])
+        changedParams.addOrModifyParameter("lam", inWallGoModel.modelParameters["lam"])
+        changedParams.addOrModifyParameter("v", 0.0)
+
+        changedParams.addOrModifyParameter(
+            "msq[0]", 1 / 16 * inWallGoModel.modelParameters["y"] ** 2
+        )  # phi thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "msq[1]", inWallGoModel.modelParameters["lam"] / 24.0 + inWallGoModel.modelParameters["y"] ** 2.0 / 6.0
+        )  # psi thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
+
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """Yukawa example uses spatial grid size = 20"""
+        super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+
+    def updateModelParameters(
+        self, model: "YukawaModel", inputParameters: dict[str, float]
+    ) -> None:
+        """Convert SM + singlet inputs to Lagrangian params and update internal model parameters.
+        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        so be careful not to replace that reference here.
+        """
+
+        # oldParams = model.modelParameters.copy()
+        model.updateModel(inputParameters)
+
+    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
+
+        output: list[ExampleInputPoint] = []
+        output.append(
+            ExampleInputPoint(
+                {
+                    "sigma": 0,
+                    "msq": 1,
+                    "gamma": -1.28565864794053,
+                    "lam": 0.01320208496444000,
+                    "y": -0.177421729274665,
+                    "mf": 2.0280748307391000,
+                },
+                WallGo.PhaseInfo(
+                    temperature=89.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([30.79]),
+                    phaseLocation2=WallGo.Fields([192.35]),
+                ),
+                WallGo.VeffDerivativeScales(
+                    temperatureScale=1.0, fieldScale=[100.0, ]
+                ),
+                WallGo.WallSolverSettings(
+                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    meanFreePath=1.0,
+                    wallThicknessGuess=0.05,
+                ),
+            )
         )
-        collisionModel.readMatrixElements(
-            str(matrixElementFile), bPrintMatrixElements=True
-        )
 
-        # Create a CollisionTensor object and initialize to the same grid size used elsewhere in WallGo
-        collisionTensor: WallGoCollision.CollisionTensor = (
-            collisionModel.createCollisionTensor(momentumBasisSize)
-        )
+        return output
 
-        print("Entering collision integral computation, this may take long", flush=True)
-        collisionTensorResult: WallGoCollision.CollisionTensorResult = (
-            collisionTensor.computeIntegralsAll()
-        )
+    # ~ End WallGoExampleBase interface
 
-        # Write output to a different directory than where the default data is
-        collisionDirectory = (
-            scriptLocation / f"CollisionOutput_N{momentumBasisSize}_UserGenerated"
-        )
-        collisionTensorResult.writeToIndividualHDF5(str(collisionDirectory))
-
-    else:
-        # Load pre-generated collision files
-        collisionDirectory = scriptLocation / f"CollisionOutput_N{momentumBasisSize}"
-
-    try:
-        # Load collision files and register them with the manager. They will be used by the internal Boltzmann solver
-        manager.loadCollisionFiles(collisionDirectory)
-    except Exception:
-        print(
-            """\nLoad of collision integrals failed!
-              If you were trying to generate your own collision data,
-              make sure you run this example script with the --recalculateCollisions command line flag.
-              """
-        )
-        exit(2)
-
-    # Phase information.
-    Tn = 89.0
-    phasePrevious = WallGo.Fields([30.79])
-    phaseNext = WallGo.Fields([192.35])
-
-    phaseInfo = WallGo.PhaseInfo(
-        temperature=Tn, phaseLocation1=phasePrevious, phaseLocation2=phaseNext
-    )
-
-    # Pass the input to WallGo.
-    manager.setParameters(phaseInfo)
-
-    # Solve for the wall velocity
-    results = manager.solveWall(bIncludeOffEq=True)
-    print(f"Wall speed: {results.wallVelocity}")
-
-    return 0  # return value: success
-
-
-# Don't run the main function if imported to another file
 if __name__ == "__main__":
-    main()
+
+    example = YukawaModelExample()
+    example.runExample()
