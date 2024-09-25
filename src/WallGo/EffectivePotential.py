@@ -21,7 +21,13 @@ class EffectivePotential(ABC):
     With in mind, WallGo requires that the effective potential is defined with full T-dependence included.
 
     The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
-    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
+    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential.
+    
+    The user must call setScalesAndError() before evaluating the derivatives to set
+    temperatureScale, fieldScale and effectivePotentialError. These quantities are used
+    to estimate the optimal step size when computing derivatives with finite
+    differences. It is done by requiring that the potential error and the error from
+    finite difference calculation contribute similarly to the derivative error.
     """
 
     """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
@@ -73,6 +79,10 @@ class EffectivePotential(ABC):
                           potentialError: float):
         """
         Sets the temperature and field scales and the potential error.
+        These quantities are used to estimate the optimal step size when computing
+        derivatives with finite differences. It is done by requiring that the potential
+        error and the error from finite difference calculation contribute similarly to
+        the derivative error.
         """
         self.temperatureScale = temperatureScale
         
