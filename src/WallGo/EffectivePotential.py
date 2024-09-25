@@ -3,7 +3,7 @@ import numpy.typing as npt
 from typing import Tuple, Type, Any
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import cmath # complex numbers
+import copy
 import inspect # check for ABC
 import scipy.optimize
 import scipy.interpolate
@@ -13,7 +13,7 @@ from .helpers import derivative, gradient, hessian
 from .fields import Fields, FieldPoint
 
 @dataclass
-class VeffDerivativeScales:
+class VeffDerivativeSettings:
     """Parameters used to estimate the optimal value of dT used
     for the finite difference derivatives of the effective potential."""
 
@@ -21,13 +21,11 @@ class VeffDerivativeScales:
     """Temperature scale (in GeV) over which the potential changes by O(1).
     A good value would be of order Tc-Tn."""
 
-
-    fieldScale: float | list[float]
+    fieldScale: float | list[float] | np.ndarray
     """Field scale (in GeV) over which the potential changes by O(1). A good value
     would be similar to the field VEV.
     Can either be a single float, in which case all the fields have the
     same scale, or an array of floats (one element for each classical field in the model)."""
-
 
 class EffectivePotential(ABC):
     """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
@@ -38,20 +36,29 @@ class EffectivePotential(ABC):
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
     With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
 
-    The user must call setScalesAndError() before evaluating the derivatives to set
-    temperatureScale, fieldScale and effectivePotentialError. These quantities are used
-    to estimate the optimal step size when computing derivatives with finite
+    The user must call configureDerivatives() before evaluating the derivatives to set
+    temperature and field scales of your potential, and optionally update the effectivePotentialError attribute.
+    These quantities are used to estimate the optimal step size when computing derivatives with finite
     differences. It is done by requiring that the potential error and the error from
     finite difference calculation contribute similarly to the derivative error.
+    See the VeffDerivativeSettings dataclass.
+    """
+    
+    fieldCount: int
+    """Number of background fields in your potential. Your concrete potential must set this to a nonzero positive integer."""
+
+    effectivePotentialError = 1e-8
+    """Typical relative accuracy at which the effective potential can be computed.
+    For simple polynomial potentials this is probably close to machine precision of Python floats (1e-15).
+    For loop-corrected potentials a limited factor can be the eg. accuracy of numerical integration.
+    Default is 1e-8, matching the relative error in WallGo's Jb/Jf thermal 1-loop integrals.
     """
 
-    ## Typical relative accuracy at which the effective potential can be computed.
-    effectivePotentialError: float
-    
-    fieldCount: int = 0
-    """Number of background fields in your potential. Your concrete potential must set this to a nonzero value."""
-    #NB fieldCount must now be class member because it is used in __init_subclass__, not ideal
-        
+    derivativeSettings: VeffDerivativeSettings
+
+    __combinedScales: np.ndarray
+    # Used in derivatives, combines field/temperature scales into one array
+
     @abstractmethod
     def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
         """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
@@ -61,7 +68,6 @@ class EffectivePotential(ABC):
         Pay special attention to field-independent "constant" terms such as (minus the) pressure from light fermions. 
         """
         raise NotImplementedError("You are required to give an expression for the effective potential.")
-    
 
     def __init_subclass__(cls: Type["EffectivePotential"], **kwargs: Any) -> None:
         """Called whenever a subclass is initialized.
@@ -69,30 +75,40 @@ class EffectivePotential(ABC):
         super().__init_subclass__(**kwargs)
 
         # Check that fieldCount is valid, but skip the check for subclasses that are still abstract
-        if not inspect.isabstract(cls) and cls.fieldCount < 1:
+        if inspect.isabstract(cls):
+            return
+        elif not hasattr(cls, 'fieldCount') or cls.fieldCount < 1:
             raise NotImplementedError("EffectivePotential subclasses must define a class variable 'fieldCount' with value > 0.")
     
         
-    def setScalesAndError(self, derivativeScales: VeffDerivativeScales,
-                          potentialError: float) -> None:
+    def configureDerivatives(self, settings: VeffDerivativeSettings) -> None:
         """
-        Sets the temperature and field scales and the potential error.
-        These quantities are used to estimate the optimal step size when computing
+        Sets the temperature and field scales.
+        These quantities are used together with the 'effectivePotentialError' attribute
+        to estimate the optimal step size when computing
         derivatives with finite differences. It is done by requiring that the potential
         error and the error from finite difference calculation contribute similarly to
         the derivative error.
         """
-        self.temperatureScale = derivativeScales.temperatureScale
-        
-        if isinstance(derivativeScales.fieldScale, float):
-            self.fieldScale = derivativeScales.fieldScale * np.ones(self.fieldCount)
+
+        self.derivativeSettings = copy.copy(settings)
+
+        # Interpret the field scale input and make it correct shape
+        if isinstance(settings.fieldScale, float):
+            self.derivativeSettings.fieldScale = settings.fieldScale * np.ones(self.fieldCount)
         else:
-            self.fieldScale = np.asanyarray(derivativeScales.fieldScale)
-            assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
-        
-        self.effectivePotentialError = potentialError
-        self.bScalesDefined = True
+            self.derivativeSettings.fieldScale = np.asanyarray(settings.fieldScale)
+            assert self.derivativeSettings.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
+        self.__combinedScales = np.append(self.derivativeSettings.fieldScale, self.derivativeSettings.temperatureScale)
+
+    def areDerivativesConfigured(self) -> bool:
+        """True if derivative routines are ready to use."""
+        return hasattr(self, 'derivativeSettings')
+    
+    def getInherentRelativeError(self) -> float:
+        """"""
+        return self.effectivePotentialError
+
 
     def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:
         """
@@ -180,7 +196,7 @@ class EffectivePotential(ABC):
             Temperature derivative of the potential, evaluated at each
             point of the input temperature array.
         """
-        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
@@ -188,7 +204,7 @@ class EffectivePotential(ABC):
             n=1,
             order=4,
             epsilon=self.effectivePotentialError,
-            scale=self.temperatureScale,
+            scale=self.derivativeSettings.temperatureScale,
             bounds=(0,np.inf),
         )
         return der
@@ -210,7 +226,7 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                         scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
@@ -231,7 +247,7 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                       scale=self.__combinedScales, xAxis=np.arange(self.fieldCount).tolist(), yAxis=-1)[...,0]
@@ -254,7 +270,7 @@ class EffectivePotential(ABC):
             Field Hessian of the potential. For each temperature, this is
             a matrix of the same size as Fields.
         """
-        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         axis = np.arange(self.fieldCount).tolist()
         return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
@@ -283,7 +299,7 @@ class EffectivePotential(ABC):
         d2VdT2 : array-like
             Temperature second derivative of the potential.
         """
-        assert self.bScalesDefined, "EffectivePotential Error: setScales() must be "\
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, scale=self.__combinedScales)
         

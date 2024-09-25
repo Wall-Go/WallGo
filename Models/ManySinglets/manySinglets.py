@@ -624,7 +624,7 @@ class NSingletsModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields(phase1[None, :]),
                     phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
-                WallGo.VeffDerivativeScales(
+                WallGo.VeffDerivativeSettings(
                     temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(

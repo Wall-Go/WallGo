@@ -88,7 +88,7 @@ class WallGoManager:
     def setupThermodynamicsHydrodynamics(
         self,
         phaseInfo: WallGo.PhaseInfo,
-        veffDerivativeScales: WallGo.VeffDerivativeScales,
+        veffDerivativeScales: WallGo.VeffDerivativeSettings,
     ) -> None:
         """Must run before solveWall() and companions.
         Initialization of internal objects related to equilibrium thermodynamics and
@@ -107,7 +107,7 @@ class WallGoManager:
         phaseInfo : PhaseInfo
             WallGo object containing the approximate positions of the minima and
             nucleation temperature.
-        veffDerativeScales : VeffDerivativeScales
+        veffDerativeScales : VeffDerivativeSettings
             WallGo dataclass containing the typical temprature and field scale over
             which the potential varies.
 
@@ -121,8 +121,10 @@ class WallGoManager:
             and phaseInfo.phaseLocation2.numFields() == self.model.fieldCount
         ), "Invalid PhaseInfo input, field counts don't match those defined in model"
 
-        self.model.getEffectivePotential().setScalesAndError(veffDerivativeScales,
-                                                             self.config.getfloat("EffectivePotential", "potentialError"))
+        self.model.getEffectivePotential().configureDerivatives(veffDerivativeScales)
+
+        # FIXME this will change when configs are revamped
+        self.model.getEffectivePotential().effectivePotentialError = self.config.getfloat("EffectivePotential", "potentialError")
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
@@ -254,6 +256,7 @@ class WallGoManager:
 
         assert self.phasesAtTn is not None
         assert self.isModelValid()
+        assert self.model.getEffectivePotential().areDerivativesConfigured(), "Must have called effectivePotential.configureDerivatives()"
 
         Tn = self.phasesAtTn.temperature
 
@@ -303,7 +306,7 @@ class WallGoManager:
 
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
-        dT = self.model.getEffectivePotential().temperatureScale * phaseTracerTol**0.25
+        dT = self.model.getEffectivePotential().derivativeSettings.temperatureScale * phaseTracerTol**0.25
 
         """If TMax, TMin are too close to real temperature boundaries
         the program can slow down significantly, but TMax must be large

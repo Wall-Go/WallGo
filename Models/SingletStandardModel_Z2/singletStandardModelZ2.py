@@ -695,7 +695,7 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0, 200.0]),
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
-                WallGo.VeffDerivativeScales(
+                WallGo.VeffDerivativeSettings(
                     temperatureScale=10.0, fieldScale=[10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(

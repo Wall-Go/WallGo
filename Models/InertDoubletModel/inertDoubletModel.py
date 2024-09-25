@@ -769,7 +769,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeScales(temperatureScale=0.5, fieldScale=[10.0]),
+                WallGo.VeffDerivativeSettings(temperatureScale=0.5, fieldScale=[10.0]),
                 WallGo.WallSolverSettings(
                     bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
                     meanFreePath=1.0,

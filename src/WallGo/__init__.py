@@ -14,7 +14,7 @@ from .results import WallGoResults
 from .particle import Particle
 from .fields import Fields
 from .genericModel import GenericModel
-from .EffectivePotential import EffectivePotential, VeffDerivativeScales
+from .EffectivePotential import EffectivePotential, VeffDerivativeSettings
 from .freeEnergy import FreeEnergy
 from .wallGoManager import WallGoManager, WallSolverSettings
 from .interpolatableFunction import InterpolatableFunction

@@ -24,7 +24,7 @@ class ExampleInputPoint:
 
     inputParameters: dict[str, float]
     phaseInfo: WallGo.PhaseInfo
-    veffDerivativeScales: WallGo.VeffDerivativeScales
+    veffDerivativeScales: WallGo.VeffDerivativeSettings
     wallSolverSettings: WallGo.WallSolverSettings
 
 
