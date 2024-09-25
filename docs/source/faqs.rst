@@ -109,7 +109,7 @@ Model requirements
 
     totalDOFs counts the total number of degrees of freedom for a particle species. This includes summing over e.g. spins and colors. 
     E.g. totalDOFs for the SM gluon would be 16. For a top quark with only SU(3) interactions totalDOFs would be 12,
-    but if we distinguish left-handed and right-handed top quarks both would have totalDOFs = 6
+    but if we distinguish left-handed and right-handed top quarks both would have totalDOFs = 6.
 
 Effective potentials
 --------------------

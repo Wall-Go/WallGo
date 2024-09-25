@@ -12,7 +12,7 @@ Or, if you prefer to get into contact directly, feel free to send us an email:
     | joonas.o.hirvonen@helsinki.fi
     | benoit.laurent@mail.mcgill.ca
     | lauri.b.niemi@helsinki.fi
-    | schicho@itp.uni-frankfurt.de
-    | vandevis@lorentz.leidenuniv.nl
+    | philipp.schicho@unige.ch
+    | jorinde.van.de.vis@cern.ch
 
 |
