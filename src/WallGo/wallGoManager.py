@@ -84,7 +84,14 @@ class WallGoManager:
         phaseInfo: WallGo.PhaseInfo,
         veffDerivativeScales: WallGo.VeffDerivativeScales,
     ) -> None:
-        """Must run before solveWall() and companions."""
+        """Must run before solveWall() and companions.
+        This does initialization of various internal objects related to equilibrium thermodynamics and hydrodynamics.
+        Specifically, we verify that the input PhaseInfo is valid (distinct phases can be found in the effective potential),
+        estimate the relevant temperature range for wall solving and create efficient approximations
+        for phase free energies over this range using interpolation.
+        Finally, [FIXME do what related to hydrodynamics??].
+        You are required to run this function whenever details of your physics model change to keep the manager's internal state up to date.
+        """
 
         assert (
             phaseInfo.phaseLocation1.numFields() == self.model.fieldCount
@@ -341,7 +348,7 @@ class WallGoManager:
             Object containing the wall velocity and EOM solution, as well as different
             quantities used to assess the accuracy of the solution.
         """
-        solver: WallSolver = self._setupWallSolver(wallSolverSettings)
+        solver: WallSolver = self.setupWallSolver(wallSolverSettings)
         assert solver.initialWallThickness
 
         return solver.eom.findWallVelocityDeflagrationHybrid(
@@ -378,7 +385,7 @@ class WallGoManager:
 
         """
 
-        solver: WallSolver = self._setupWallSolver(wallSolverSettings)
+        solver: WallSolver = self.setupWallSolver(wallSolverSettings)
         assert solver.initialWallThickness
 
         rtol = self.config.getfloat("EquationOfMotion", "errTol")
@@ -405,10 +412,13 @@ class WallGoManager:
             onlySmallest,
         )
 
-    def _setupWallSolver(self, wallSolverSettings: WallSolverSettings) -> WallSolver:
-        """Temporary helper for constructing an EOM with sensible configuration,
-        based on the input settings, global config and cached hydro/Veff information.
-        This is temporary because ideally we'd properly decouple many of these parts.
+    def setupWallSolver(self, wallSolverSettings: WallSolverSettings) -> WallSolver:
+        """Helper for constructing an EOM object whose state is tied to equilibrium
+        and hydrodynamical information stored in the WallGoManager.
+        Specifically, uses results of analyzeHydrodynamics() to find optimal grid settings for wall solving,
+        and creates Grid and BoltzmannSolver objects to use from within the EOM.
+        Be aware that the created EOM object can change state if its creator WallGoManager instance is modified
+        (eg. if analyzeHydrodynamics() is called)!
         """
 
         assert (
@@ -427,7 +437,7 @@ class WallGoManager:
             # Default guess: 5 / Tn
             wallThickness = 5.0 / Tnucl
 
-        grid: Grid3Scales = self._buildGrid(
+        grid: Grid3Scales = self.buildGrid(
             wallThickness,
             wallSolverSettings.meanFreePath,
             gridMomentumFalloffScale,
@@ -442,9 +452,7 @@ class WallGoManager:
         if bShouldLoadCollisions:
             boltzmannSolver.loadCollisions(self.collisionDirectory)
 
-        eom: EOM = self._buildEOM(
-            grid, boltzmannSolver, wallSolverSettings.meanFreePath
-        )
+        eom: EOM = self.buildEOM(grid, boltzmannSolver, wallSolverSettings.meanFreePath)
 
         eom.includeOffEq = wallSolverSettings.bIncludeOffEquilibrium
         return WallSolver(eom, wallThickness)
@@ -465,7 +473,7 @@ class WallGoManager:
 
         self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin, rtol, atol)
 
-    def _buildGrid(
+    def buildGrid(
         self,
         wallThicknessIni: float,
         meanFreePath: float,
@@ -511,11 +519,12 @@ class WallGoManager:
             smoothing,
         )
 
-    def _buildEOM(
+    def buildEOM(
         self, grid: Grid3Scales, boltzmannSolver: BoltzmannSolver, meanFreePath: float
     ) -> EOM:
         """
-        Constructs an EOM object.
+        Constructs an EOM object using internal state from the WallGoManager,
+        and the input Grid/BoltzmannSolver.
         """
         numberOfFields = self.model.fieldCount
 
