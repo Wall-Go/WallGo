@@ -36,4 +36,5 @@ class BenchmarkModel:
 
     def __init__(self, model: WallGo.GenericModel, benchmarkPoint: BenchmarkPoint):
         self.model = model
+        self.model.effectivePotential.setScalesAndError(1.0, 1.0, 1e-15)
         self.benchmarkPoint = benchmarkPoint
