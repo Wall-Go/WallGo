@@ -257,12 +257,9 @@ class YukawaModelExample(WallGoExampleBase):
         # This is optional; by default the seed is 0.
         WallGoCollision.setSeed(0)
 
-        collisionModelDefinition = WallGoCollision.ModelDefinition()
-
-        for particle in wallGoModel.outOfEquilibriumParticles:
-            collisionModelDefinition.defineParticleSpecies(
-                WallGo.collisionHelpers.generateCollisionParticle(particle, False, True)
-                )
+        collisionModelDefinition = WallGo.collisionHelpers.generateCollisionModelDefinition(
+            wallGoModel
+        )
 
         # Add in-equilibrium particles that appear in collision processes
         phiParticle = WallGoCollision.ParticleDescription()
