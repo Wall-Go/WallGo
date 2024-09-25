@@ -39,12 +39,6 @@ class EffectivePotential(ABC):
     With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
     """
 
-    """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
-    separating the field-dependent parts of Veff(phi, T) and the T-dependent constant terms. This was done in intermediate commits
-    but scrapped because it was too error prone (Veff appears in too many places). But let's keep this possibility in mind. 
-    If attempting this, keep full Veff as the default and use the field-only part internally when needed.
-    """
-
     ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
     ## when the potential can be computed in terms of simple functions.
     effectivePotentialError: float = 1e-15
@@ -80,8 +74,6 @@ class EffectivePotential(ABC):
         cls.fieldScale = defaultScales.fieldScale * np.ones(cls.fieldCount)
         cls.__combinedScales = np.append(cls.fieldScale, cls.temperatureScale)
     
-
-    #### Non-abstract stuff from here on
     
     def setPotentialError(self, potentialError: float) -> None:
         """

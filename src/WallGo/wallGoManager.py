@@ -221,12 +221,8 @@ class WallGoManager:
 
     def initTemperatureRange(self) -> None:
         """
-        Get initial guess for the relevant temperature range and store in internal TMin,
-        TMax.
+        Get initial guess for the relevant temperature range and store in internal thermodynamics object.
         """
-
-        # LN: this routine is probably too heavy. We could at least drop the
-        # Tc part, or find it after FreeEnergy interpolations are done
 
         assert self.phasesAtTn is not None
         assert self.isModelValid()
@@ -326,8 +322,6 @@ class WallGoManager:
         """
 
         return self.hydrodynamics.findvwLTE()
-
-    # Call after initGrid. I guess this would be the main workload function
 
     def solveWall(
         self,
