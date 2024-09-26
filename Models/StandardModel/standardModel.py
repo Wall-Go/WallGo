@@ -33,9 +33,10 @@ from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
-from WallGo import EffectivePotential, Fields, GenericModel, Particle, WallGoManager
+from WallGo import EffectivePotential, Fields, GenericModel, Particle
 
-# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+# Add the Models folder to the path; need to import the base
+# example template and effectivePotentialNoResum.py
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
@@ -55,7 +56,7 @@ class StandardModel(GenericModel):
     methods for the WallGo package.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the SM model.
 
@@ -225,11 +226,13 @@ class StandardModel(GenericModel):
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches them internally.
-        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """Computes new Lagrangian parameters from given input and caches
+        them internally. These changes automatically propagate to the associated
+        EffectivePotential, particle masses etc.
         """
         newParams = self.calculateLagrangianParameters(newInputParams)
-        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        # Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
 
@@ -262,7 +265,10 @@ class EffectivePotentialSM(EffectivePotential):
     # ~
 
     def evaluate(  # pylint: disable=R0914
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self,
+        fields: Fields,
+        temperature: float | np.ndarray,
+        checkForImaginary: bool = False,
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential. We implement the effective potential
@@ -295,12 +301,9 @@ class EffectivePotentialSM(EffectivePotential):
         mZ = self.modelParameters["mZ"]
         mt = self.modelParameters["mt"]
 
-        # FIXME type detection doesn't work here, lambdaT is interpreted as "Any".
-        # Hotfix below (specify type hints manually)
-
         # Implement finite-temperature corrections to the modelParameters lambda,
         # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
-        lambdaT: float | np.ndarray = self.modelParameters["lambda"] - 3 / (
+        lambdaT = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
         ) * (
             2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
@@ -360,6 +363,10 @@ class EffectivePotentialSM(EffectivePotential):
 
 
 class StandardModelExample(WallGoExampleBase):
+    """
+    Sets up the standard model, computes or loads the collison
+    integrals, and computes the wall velocity.
+    """
 
     def __init__(self) -> None:
         """"""
@@ -370,24 +377,33 @@ class StandardModelExample(WallGoExampleBase):
 
     # ~ Begin WallGoExampleBase interface
 
-    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """Returns the path to the directory with collisions"""
+    def getDefaultCollisionDirectory( # pylint: disable = W0246
+        self, momentumGridSize: int
+    ) -> pathlib.Path:
+        """Returns the path to the directory with collisions. Does not
+        have to be overwritten for this example, but included for completeness"""
         return super().getDefaultCollisionDirectory(momentumGridSize)
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
-        """"""
+        """
+        Initialize the model. This should run after cmdline argument parsing
+        so safe to use them here.
+        """
         return StandardModel()
 
     def initCollisionModel(
         self, wallGoModel: "StandardModel"
     ) -> "WallGoCollision.PhysicsModel":
-        """"""
+        """Initialize the Collision model and set the seed."""
 
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
-        # This example comes with a very explicit example function on how to setup and configure the collision module.
-        # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
-        from exampleCollisionDefs import setupCollisionModel_QCDEW
+        # This example comes with a very explicit example function on how to setup and
+        # configure the collision module. It is located in a separate module
+        # (same directory) to avoid bloating this file. Import and use it here.
+        from exampleCollisionDefs import (  # pylint: disable = W0246
+            setupCollisionModel_QCDEW,
+        )  # pylint: disable = C0415
 
         collisionModel = setupCollisionModel_QCDEW(
             wallGoModel.modelParameters,
@@ -401,7 +417,7 @@ class StandardModelExample(WallGoExampleBase):
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
         """Propagete changes in WallGo model to the collision model."""
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
         changedParams = WallGoCollision.ModelParameters()
 
@@ -426,36 +442,44 @@ class StandardModelExample(WallGoExampleBase):
     ) -> None:
         """Non-abstract override"""
 
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
-        """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
-        or skip this step entirely. Here we set everything manually to show how it's done.
+        """Configure the integrator. Default settings should be reasonably OK so
+        you can modify only what you need, or skip this step entirely. Here we
+        set everything manually to show how it's done.
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
         integrationOptions.maxTries = 50
-        integrationOptions.maxIntegrationMomentum = 20  # collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
+        # collision integration momentum goes from 0 to maxIntegrationMomentum.
+        # This is in units of temperature
+        integrationOptions.maxIntegrationMomentum = 20
         integrationOptions.absoluteErrorGoal = 1e-8
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
 
-        """We can also configure various verbosity settings that are useful when you want to see what is going on in long-running integrations.
-        These include progress reporting and time estimates, as well as a full result dump of each individual integral to stdout.
-        By default these are all disabled. Here we enable some for demonstration purposes.
+        """We can also configure various verbosity settings that are useful when you
+        want to see what is going on in long-running integrations. These include 
+        progress reporting and time estimates, as well as a full result dump of each
+        individual integral to stdout. By default these are all disabled. 
+        Here we enable some for demonstration purposes.
         """
         verbosity = WallGoCollision.CollisionTensorVerbosity()
         verbosity.bPrintElapsedTime = (
             True  # report total time when finished with all integrals
         )
 
-        """Progress report when this percentage of total integrals (approximately) have been computed.
-        Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done.
-        Note also that in multithreaded runs the progress tracking is less precise.
+        """Progress report when this percentage of total integrals (approximately) have
+        been computed. Note that this percentage is per-particle-pair, ie. each
+        (particle1, particle2) pair reports when this percentage of their own integrals
+        is done. Note also that in multithreaded runs the progress tracking is less 
+        precise.
         """
         verbosity.progressReportPercentage = 0.25
 
-        # Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
+        # Print every integral result to stdout? This is very slow and verbose,
+        # intended only for debugging purposes
         verbosity.bPrintEveryElement = False
 
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
@@ -470,20 +494,26 @@ class StandardModelExample(WallGoExampleBase):
         self, model: "StandardModel", inputParameters: dict[str, float]
     ) -> None:
         """Convert SM inputs to Lagrangian params and update internal model parameters.
-        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
-        so be careful not to replace that reference here.
+        This example is constructed so that the effective potential and particle mass
+        functions refer to model.modelParameters, so be careful not to replace that
+        reference here.
         """
         model.updateModel(inputParameters)
 
-        """Collisions integrals for this example depend on the QCD and Electroweak coupling,
-        so if these change we should mark the collision data as outdated by setting self.bNeedsNewCollisions = True.
-        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        """Collisions integrals for this example depend on the QCD and Electroweak
+        coupling, so if these change we should mark the collision data as outdated
+        by setting self.bNeedsNewCollisions = True. But since we want to keep
+        the example simple, we skip this check and assume the existing data is OK.
         (FIXME?)
         """
-        self.bNeedsNewCollisions = False
+        self.bNeedsNewCollisions = False  # pylint: disable = W0201
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
-
+        """
+        Input parameters, phase info, and settings for the effective potential and
+        wall solver for the standard model benchmark points, with different values
+        of the Higgs mass.
+        """
         valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
         valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
 
@@ -509,7 +539,8 @@ class StandardModelExample(WallGoExampleBase):
                         temperatureScale=1.0, fieldScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
-                        bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                        # we actually do both cases in the common example
+                        bIncludeOffEquilibrium=True,
                         meanFreePath=1.0,
                         wallThicknessGuess=0.05,
                     ),
