@@ -13,10 +13,12 @@ from .polynomial import Polynomial
 from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
+from .exceptions import CollisionLoadError
 
 if typing.TYPE_CHECKING:
     import importlib
-    
+
+
 class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
@@ -607,7 +609,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
 
-    def loadCollisions(self, directoryPath: 'pathlib.Path') -> None:
+    def loadCollisions(self, directoryPath: "pathlib.Path") -> None:
         """
         Loads collision files for use with the Boltzmann solver.
 
@@ -616,15 +618,20 @@ class BoltzmannSolver:
 
         Returns:
             None
-        """
-        self.collisionArray = CollisionArray.newFromDirectory(
-            directoryPath,
-            self.grid,
-            self.basisN,
-            self.offEqParticles,
-        )
-        print(f"Loaded collision data from directory {directoryPath}")
 
+        Raises:
+            CollisionLoadError
+        """
+        try:
+            self.collisionArray = CollisionArray.newFromDirectory(
+                directoryPath,
+                self.grid,
+                self.basisN,
+                self.offEqParticles,
+            )
+            print(f"Loaded collision data from directory {directoryPath}")
+        except CollisionLoadError as e:
+            raise
 
     @staticmethod
     def _checkBasis(basis: str) -> None:

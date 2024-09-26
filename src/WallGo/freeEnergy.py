@@ -220,8 +220,8 @@ class FreeEnergy(InterpolatableFunction):
             x,
             order,
             bUseInterpolation=bUseInterpolation,
-            epsilon=self.effectivePotential.effectivePotentialError,
-            scale=self.effectivePotential.temperatureScale,
+            epsilon=self.effectivePotential.getInherentRelativeError(),
+            scale=self.effectivePotential.derivativeSettings.temperatureScale,
         )
 
         return FreeEnergyValueType.fromArray(np.asarray(resultsArray))

@@ -2,7 +2,11 @@ import WallGoCollision
 import pathlib
 import sys
 
-def setupCollisionModel_QCD(matrixElementFile: pathlib.Path, allowGluonOutOfEquilibrium: bool = False) -> WallGoCollision.PhysicsModel:
+
+def setupCollisionModel_QCD(
+    modelParameters: dict[str, float],
+    allowGluonOutOfEquilibrium: bool = False,
+) -> WallGoCollision.PhysicsModel:
     # Helper function that configures a QCD-like model for WallGoCollision
 
     """Model definitions must be filled in to a ModelDefinition helper struct.
@@ -38,22 +42,23 @@ def setupCollisionModel_QCD(matrixElementFile: pathlib.Path, allowGluonOutOfEqui
     # Here we write our parameter definitions to a local ModelParameters variable and pass it to modelDefinitions later.
     parameters = WallGoCollision.ModelParameters()
 
-    # For defining new parameters use addOrModifyParameter(). For read-only access you can use the [] operator
-    parameters.addOrModifyParameter("gs", 1.2279920495357861)
+    # For defining new parameters use addOrModifyParameter(). For read-only access you can use the [] operator.
+    # Here we copy the value of QCD coupling as defined in the main WallGo model (names differ for historical reasons)
+    parameters.addOrModifyParameter("gs", modelParameters["g3"])
 
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
 
     # For quarks we include the thermal mass only
     def quarkThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        gs = p["gs"] # this is equivalent to: gs = p.getParameterValue("gs")
-        return gs**2 / 6.0 
+        gs = p["gs"]  # this is equivalent to: gs = p.getParameterValue("gs")
+        return gs**2 / 6.0
 
     def gluonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return 2.0 * p["gs"]**2
+        return 2.0 * p["gs"] ** 2
 
     parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters))
-    parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters))  
+    parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)
@@ -64,10 +69,14 @@ def setupCollisionModel_QCD(matrixElementFile: pathlib.Path, allowGluonOutOfEqui
     Particle definition is done by filling in a ParticleDescription struct and calling the ModelDefinition.defineParticleSpecies() method
     """
     topQuark = WallGoCollision.ParticleDescription()
-    topQuark.name = "top" # String identifier, MUST be unique
-    topQuark.index = 0 # Unique integer identifier, MUST match index that appears in matrix element file
-    topQuark.type = WallGoCollision.EParticleType.eFermion # Statistics (enum): boson or fermion
-    topQuark.bInEquilibrium = False # Whether the particle species is assumed to remain in equilibrium or not
+    topQuark.name = "top"  # String identifier, MUST be unique
+    topQuark.index = 0  # Unique integer identifier, MUST match index that appears in matrix element file
+    topQuark.type = (
+        WallGoCollision.EParticleType.eFermion
+    )  # Statistics (enum): boson or fermion
+    topQuark.bInEquilibrium = (
+        False  # Whether the particle species is assumed to remain in equilibrium or not
+    )
     """For each particle you can specify how its energy should be calculated during collision integration.
     In general the dispersion relation is E^2 = p^2 + m^2, where p is the 3-momentum, and the mass will be discussed shortly.
     Flagging a particle as ultrarelativistic means the dispersion relation is simply E(p) = |p|, which is a valid approximation at leading log order.
@@ -89,7 +98,7 @@ def setupCollisionModel_QCD(matrixElementFile: pathlib.Path, allowGluonOutOfEqui
 
     # Finish particle species definition
     modelDefinition.defineParticleSpecies(topQuark)
-    
+
     ## Repeat particle definitions for light quarks and the gluon
     gluon = WallGoCollision.ParticleDescription()
     gluon.name = "gluon"
@@ -105,63 +114,13 @@ def setupCollisionModel_QCD(matrixElementFile: pathlib.Path, allowGluonOutOfEqui
     lightQuark = topQuark
     """Technical NOTE: Although WallGoCollision.ParticleDescription has an underlying C++ description, on Python side they are mutable objects and behave as you would expect from Python objects.
     This means that the above makes "lightQuark" a reference to the "topQuark" object, instead of invoking a copy-assignment operation on the C++ side.
-    Hence we actually modify the "topQuark" object directly in the following, which is fine because the top quark definition has already been fixed and copied into the modelDefinition variable.
+    Hence we actually modify the "topQuark" object directly in the following, which is fine because the top quark definition has already been copied into the modelDefinition variable.
     """
     lightQuark.bInEquilibrium = True
     lightQuark.name = "light quark"
     lightQuark.index = 2
     modelDefinition.defineParticleSpecies(lightQuark)
-    
+
     # Create the concrete model
     model = WallGoCollision.PhysicsModel(modelDefinition)
-
-    ## Read and verify matrix elements from a file. This is done with PhysicsModel.readMatrixElements().
-	## Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content.
-
-    # Should we print each parsed matrix element to stdout? Can be useful for logging and debugging purposes
-    bPrintMatrixElements = True
-
-    # The pa§th must be passed as a string
-    bMatrixElementsOK = model.readMatrixElements(str(matrixElementFile), bPrintMatrixElements)
-	
-    # If something in matrix element parsing went wrong we abort here
-    if not bMatrixElementsOK:
-        print("CRITICAL: Matrix element parsing failed, aborting!")
-        sys.exit(1)
-
     return model
-
-def configureCollisionIntegration(inOutCollisionTensor: WallGoCollision.CollisionTensor) -> None:
-    """Example function that shows how to modify various options for collision integration.
-    These settings are a feature of CollisionTensor objects, so we write the changes directly to the input object.
-    """
-
-    """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
-    or skip this step entirely. Here we set everything manually to show how it's done.
-    """
-    integrationOptions = WallGoCollision.IntegrationOptions()
-    integrationOptions.calls = 50000
-    integrationOptions.maxTries = 50
-    integrationOptions.maxIntegrationMomentum = 20 # collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
-    integrationOptions.absoluteErrorGoal = 1e-8
-    integrationOptions.relativeErrorGoal = 1e-1
-    
-    inOutCollisionTensor.setIntegrationOptions(integrationOptions)
-    
-    """We can also configure various verbosity settings that are useful when you want to see what is going on in long-running integrations.
-    These include progress reporting and time estimates, as well as a full result dump of each individual integral to stdout.
-    By default these are all disabled. Here we enable some for demonstration purposes.
-    """
-    verbosity = WallGoCollision.CollisionTensorVerbosity()
-    verbosity.bPrintElapsedTime = True # report total time when finished with all integrals
-
-    """Progress report when this percentage of total integrals (approximately) have been computed.
-    Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done.
-    Note also that in multithreaded runs the progress tracking is less precise.
-    """
-    verbosity.progressReportPercentage = 0.25
-
-	# Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
-    verbosity.bPrintEveryElement = False
-    
-    inOutCollisionTensor.setIntegrationVerbosity(verbosity)

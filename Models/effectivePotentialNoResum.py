@@ -22,17 +22,15 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     """
 
-    integrals: Integrals
-
     def __init__(
         self,
-        modelParameters: dict[str, float],
-        fieldCount: int,
         integrals: Integrals = None,
-        useDefaultInterpolation: bool = False
+        useDefaultInterpolation: bool = False,
     ):
+        """FIXME: if we intend to have this as a ready-to-use Veff template,
+        we should do inits in __init_subclass__() instead.
+        This way the user doesn't have to worry about calling super().__init__()"""
         ##
-        super().__init__(modelParameters, fieldCount)
 
         ## Use the passed Integrals object if provided,
         ## otherwise create a new one
@@ -167,7 +165,10 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @staticmethod
     def jCW(
-        massSq: np.ndarray, degreesOfFreedom: int | np.ndarray, c: float| np.ndarray, rgScale: float| np.ndarray
+        massSq: np.ndarray,
+        degreesOfFreedom: int | np.ndarray,
+        c: float | np.ndarray,
+        rgScale: float | np.ndarray,
     ) -> float | np.ndarray:
         """
         Coleman-Weinberg potential

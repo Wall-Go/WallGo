@@ -1,12 +1,6 @@
-"""Import types here. We do this so that eg. the EOM class can be accessed as 
-WallGo.EOM. If this wasn't done, WallGo.EOM would actually refer to the MODULE EOM.py
-which we don't want, and would cause hard-to-diagnoze crashes.
-TODO Is there a better way of doing all this?! 
-"""
-
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
-from .exceptions import WallGoError, WallGoPhaseValidationError
+from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
 from .grid import Grid
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
@@ -20,9 +14,9 @@ from .results import WallGoResults
 from .particle import Particle
 from .fields import Fields
 from .genericModel import GenericModel
-from .EffectivePotential import EffectivePotential
+from .EffectivePotential import EffectivePotential, VeffDerivativeSettings
 from .freeEnergy import FreeEnergy
-from .wallGoManager import WallGoManager
+from .wallGoManager import WallGoManager, WallSolverSettings
 from .interpolatableFunction import InterpolatableFunction
 
 from .collisionArray import CollisionArray
@@ -32,22 +26,22 @@ from .Config import Config
 
 from .WallGoUtils import getSafePathToResource
 
-global _bCollisionModuleAvailable # pylint: disable=invalid-name
+global _bCollisionModuleAvailable  # pylint: disable=invalid-name
 _bCollisionModuleAvailable: bool = False
 
 try:
     import WallGoCollision
 
     print(f"Loaded WallGoCollision package from location: {WallGoCollision.__path__}")
-    _bCollisionModuleAvailable = True # pylint: disable=invalid-name
+    _bCollisionModuleAvailable = True  # pylint: disable=invalid-name
 
     from .collisionHelpers import *
 
-except ModuleNotFoundError as e:
+except ImportError as e:
     print(f"Error loading WallGoCollision module: {e}")
     print(
-        "This could indicate an issue with your installation of WallGo or "\
-        "WallGoCollision, or both. This is non-fatal, but you will not be able to"\
+        "This could indicate an issue with your installation of WallGo or "
+        "WallGoCollision, or both. This is non-fatal, but you will not be able to"
         " utilize collision integration routines."
     )
 
@@ -74,7 +68,7 @@ defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 # print("Read WallGo config:")
 # print(config)
 
-_bInitialized = False # pylint: disable=invalid-name
+_bInitialized = False  # pylint: disable=invalid-name
 """Configuration settings for WallGo"""
 config = Config()
 
@@ -94,8 +88,8 @@ def initialize() -> None:
     WallGo initializer. This should be called as early as possible in your program.
     """
 
-    global _bInitialized # pylint: disable=invalid-name
-    global config # pylint: disable=invalid-name
+    global _bInitialized  # pylint: disable=invalid-name
+    global config  # pylint: disable=invalid-name
 
     if not _bInitialized:
 
@@ -114,8 +108,8 @@ def initialize() -> None:
         raise RuntimeWarning("Warning: Repeated call to WallGo.initialize()")
 
 
-def _initalizeIntegralInterpolations() -> None: # pylint: disable=invalid-name
-    global config # pylint: disable=invalid-name
+def _initalizeIntegralInterpolations() -> None:  # pylint: disable=invalid-name
+    global config  # pylint: disable=invalid-name
 
     defaultIntegrals.Jb.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jb")),
