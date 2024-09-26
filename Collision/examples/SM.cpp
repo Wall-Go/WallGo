@@ -56,6 +56,7 @@ wallgo::ModelParameters computeMasses(const wallgo::ModelParameters& actionParam
     const double gs = actionParams.at("gs");
     const double gw = actionParams.at("gw");
     const double gY = actionParams.at("gY");
+    const double lam1H = actionParams.at("lam1H");
 
     // SU3 gluon
     outMsq.addOrModifyParameter("mg2",  gs * gs);
@@ -97,12 +98,10 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
          m_H=125.20
 
     */
-    params.addOrModifyParameter("gs", 1.21772); //Strong coupling constant at the Z pole
+    params.addOrModifyParameter("gs", 1.21772);
     params.addOrModifyParameter("gw", 0.651653);
     params.addOrModifyParameter("gY", 0.357449);
-
     params.addOrModifyParameter("yt", 1.00995);
-
     params.addOrModifyParameter("lam1H", 0.129008);
 
     auto massSquares = computeMasses(params);
