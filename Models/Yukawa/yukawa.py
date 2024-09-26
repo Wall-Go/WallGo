@@ -3,10 +3,8 @@ A simple example model, of a real scalar field coupled to a Dirac fermion
 c.f. 2310.02308
 """
 
-import os
 import sys
 import pathlib
-import argparse
 import numpy as np
 from typing import TYPE_CHECKING
 
@@ -14,12 +12,10 @@ from typing import TYPE_CHECKING
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle
 
-# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+# Add the Models folder to the path; need to import the base
+# example template and effectivePotentialNoResum.py
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
 from wallGoExampleBase import WallGoExampleBase
 from wallGoExampleBase import ExampleInputPoint
@@ -28,22 +24,22 @@ if TYPE_CHECKING:
     import WallGoCollision
 
 
-class YukawaModel(WallGo.GenericModel):
+class YukawaModel(GenericModel):
     """
     The Yukawa model, inheriting from WallGo.GenericModel.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize the SingletSMZ2 model.
+        Initialize the Yukawa model.
 
         Parameters
         ----------
-            FIXME
+
         Returns
         ----------
-        cls: SingletSMZ2
-            An object of the SingletSMZ2 class.
+        cls: YukawaModel
+            An object of the YukawaModel class.
         """
 
         self.modelParameters: dict[str, float] = {}
@@ -94,13 +90,13 @@ class YukawaModel(WallGo.GenericModel):
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
-        def psiMsqDerivative(fields: Fields) -> Fields:
+        def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
             return self.modelParameters["y"]
 
         def psiMsqThermal(T: float) -> float:
             return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
 
-        psiL = WallGo.Particle(
+        psiL = Particle(
             "psiL",
             index=1,  # old collision data has top at index 0
             msqVacuum=psiMsqVacuum,
@@ -109,7 +105,7 @@ class YukawaModel(WallGo.GenericModel):
             statistics="Fermion",
             totalDOFs=4,
         )
-        psiR = WallGo.Particle(
+        psiR = Particle(
             "psiR",
             index=2,  # old collision data has top at index 0
             msqVacuum=psiMsqVacuum,
@@ -145,11 +141,13 @@ class YukawaModel(WallGo.GenericModel):
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches them internally.
-        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """Computes new Lagrangian parameters from given input and caches
+        them internally. These changes automatically propagate to the
+        associated EffectivePotential, particle masses etc.
         """
         newParams = self.calculateLagrangianParameters(newInputParams)
-        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        # Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
 
@@ -182,7 +180,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex | np.ndarray:
+    ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
 
@@ -197,7 +195,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
 
         Returns
         ----------
-        potentialTotal: complex | np.ndarray
+        potentialTotal: float | np.ndarray
             The value of the effective potential
         """
         # getting the field from the list of fields (here just of length 1)
@@ -227,10 +225,14 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
             + 1 / 24 * self.modelParameters["lam"] * phi**4
         )
 
-        return potentialTotal  # TODO: resolve return type.
+        return np.array(potentialTotal)
 
 
 class YukawaModelExample(WallGoExampleBase):
+    """
+    Sets up the Yukawa model, computes or loads the collison
+    integrals, and computes the wall velocity.
+    """
 
     def __init__(self) -> None:
         """"""
@@ -242,23 +244,26 @@ class YukawaModelExample(WallGoExampleBase):
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
-        """"""
-        # This should run after cmdline argument parsing so safe to use them here
+        """
+        Initialize the model. This should run after cmdline argument parsing
+        so safe to use them here.
+        """
         return YukawaModel()
 
     def initCollisionModel(
         self, wallGoModel: "YukawaModel"
     ) -> "WallGoCollision.PhysicsModel":
-        """"""
+        """Initialize the Collision model and set the seed."""
 
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
-        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved.
+        # We can set the global seed for collision integrals as follows.
         # This is optional; by default the seed is 0.
         WallGoCollision.setSeed(0)
 
-        collisionModelDefinition = WallGo.collisionHelpers.generateCollisionModelDefinition(
-            wallGoModel
+        collisionModelDefinition = (
+            WallGo.collisionHelpers.generateCollisionModelDefinition(wallGoModel)
         )
 
         # Add in-equilibrium particles that appear in collision processes
@@ -268,7 +273,8 @@ class YukawaModelExample(WallGoExampleBase):
         phiParticle.bInEquilibrium = True
         phiParticle.bUltrarelativistic = True
         phiParticle.type = WallGoCollision.EParticleType.eBoson
-        # mass-sq function not required or used for UR particles, and it cannot be field-dependent for collisions.
+        # mass-sq function not required or used for UR particles,
+        # and it cannot be field-dependent for collisions.
         # Backup of what the vacuum mass was intended to be:
         """
         msqVacuum=lambda fields: (
@@ -287,7 +293,9 @@ class YukawaModelExample(WallGoExampleBase):
             "msq[0]", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
-            "msq[1]", wallGoModel.modelParameters["lam"] / 24.0 + wallGoModel.modelParameters["y"] ** 2.0 / 6.0
+            "msq[1]",
+            wallGoModel.modelParameters["lam"] / 24.0
+            + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
         )  # psi thermal mass^2 in units of T
 
         collisionModelDefinition.defineParticleSpecies(phiParticle)
@@ -305,15 +313,19 @@ class YukawaModelExample(WallGoExampleBase):
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]
     ) -> None:
-        """Convert SM + singlet inputs to Lagrangian params and update internal model parameters.
-        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
-        so be careful not to replace that reference here.
+        """Update internal model parameters. This example is constructed so
+        that the effective potential and particle mass functions refer to
+        model.modelParameters, so be careful not to replace that reference here.
         """
 
         # oldParams = model.modelParameters.copy()
         model.updateModel(inputParameters)
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
+        """
+        Input parameters, phase info, and settings for the effective potential and
+        wall solver for the Yukawa benchmark point.
+        """
 
         output: list[ExampleInputPoint] = []
         output.append(
@@ -338,7 +350,8 @@ class YukawaModelExample(WallGoExampleBase):
                     ],
                 ),
                 WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    # we actually do both cases in the common example
+                    bIncludeOffEquilibrium=True,
                     meanFreePath=1.0,
                     wallThicknessGuess=0.05,
                 ),
