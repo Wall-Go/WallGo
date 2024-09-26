@@ -57,6 +57,7 @@ wallgo::ModelParameters computeMasses(const wallgo::ModelParameters& actionParam
     const double gw = actionParams.at("gw");
     const double gY = actionParams.at("gY");
     const double lam1H = actionParams.at("lam1H");
+    const double yt = actionParams.at("yt");
 
     // SU3 gluon
     outMsq.addOrModifyParameter("mg2",  gs * gs);
