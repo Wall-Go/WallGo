@@ -26,7 +26,6 @@ import sys
 import pathlib
 import argparse
 import numpy as np
-import numpy.typing as npt
 from typing import TYPE_CHECKING
 
 # WallGo imports
@@ -173,18 +172,18 @@ class NSinglets(GenericModel):
         modelParameters["muHsq"] = -(mh**2) / 2
         modelParameters["muSsq"] = np.array(inputParameters["muSsq"])
 
-        ## Then the gauge/Yukawa sector
-        Mt = inputParameters["Mt"]
-        MW = inputParameters["MW"]
-        MZ = inputParameters["MZ"]
+        # Then the gauge and Yukawa sector
+        massT = inputParameters["Mt"]
+        massW = inputParameters["MW"]
+        massZ = inputParameters["MZ"]
 
         # helper
-        g0 = 2.0 * MW / v0
-        modelParameters["g1"] = g0 * np.sqrt((MZ / MW) ** 2 - 1)
+        g0 = 2.0 * massW / v0
+        modelParameters["g1"] = g0 * np.sqrt((massZ / massW) ** 2 - 1)
         modelParameters["g2"] = g0
         modelParameters["g3"] = inputParameters["g3"]
 
-        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * Mt / MW
+        modelParameters["yt"] = np.sqrt(1.0 / 2.0) * g0 * massT / massW
 
         # High-T expansion coefficients
         modelParameters["cH"] = (
@@ -371,10 +370,10 @@ class EffectivePotentialNSinglets(EffectivePotential):
             Value of the critical temperature. If there is no solution, returns None.
 
         """
-        A = self.modelParameters["cH"] ** 2 / self.modelParameters["lHH"] - sum(
+        a = self.modelParameters["cH"] ** 2 / self.modelParameters["lHH"] - sum(
             self.modelParameters["cS"] ** 2 / self.modelParameters["lSS"]
         )
-        B = 2 * (
+        b = 2 * (
             self.modelParameters["cH"]
             * self.modelParameters["muHsq"]
             / self.modelParameters["lHH"]
@@ -384,32 +383,32 @@ class EffectivePotentialNSinglets(EffectivePotential):
                 / self.modelParameters["lSS"]
             )
         )
-        C = self.modelParameters["muHsq"] ** 2 / self.modelParameters["lHH"] - sum(
+        c = self.modelParameters["muHsq"] ** 2 / self.modelParameters["lHH"] - sum(
             self.modelParameters["muSsq"] ** 2 / self.modelParameters["lSS"]
         )
 
-        discr = B**2 - 4 * A * C
+        discr = b**2 - 4 * a * c
         if discr < 0:
             # The discriminant is negative, which would lead to imaginary Tc^2.
             print("No critical temperature : negative discriminant")
             return None
 
         # Finds the two solutions for Tc^2, and keep the smallest positive one.
-        Tc1 = (-B + np.sqrt(discr)) / (2 * A)
-        Tc2 = (-B - np.sqrt(discr)) / (2 * A)
+        Tc1 = (-b + np.sqrt(discr)) / (2 * a)
+        Tc2 = (-b - np.sqrt(discr)) / (2 * a)
 
         if Tc1 <= 0 and Tc2 <= 0:
             print("Negative critical temperature squared")
             return None
-        elif Tc1 > 0 and Tc2 > 0:
+        if Tc1 > 0 and Tc2 > 0:
             return min(np.sqrt(Tc1), np.sqrt(Tc2))
-        elif Tc1 > 0:
+        if Tc1 > 0:
             return np.sqrt(Tc1)
-        elif Tc2 > 0:
+        if Tc2 > 0:
             return np.sqrt(Tc2)
-        else:
-            print("No critical temperature : both solutions are negative")
-            return None
+
+        print("No critical temperature : both solutions are negative")
+        return None
 
     def findPhases(self, temperature: float) -> tuple:
         """
@@ -444,7 +443,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         return phase1, phase2
 
-    def evaluate(
+    def evaluate( #pylint: disable = R0914
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
     ) -> np.ndarray:
         """
@@ -485,7 +484,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
             muSsqT = muSsq + cS * temperature**2
 
         # Tree level potential with high-T 1-loop thermal corrections.
-        V0 = (
+        potentialTree = (
             0.5 * muHsqT * h**2
             + 0.5 * np.sum(muSsqT * s**2, axis=-1)
             + 0.25 * lHH * h**4
@@ -494,11 +493,28 @@ class EffectivePotentialNSinglets(EffectivePotential):
         )
 
         # Adding the terms proportional to T^4
-        VTotal = V0 + self.constantTerms(temperature)
+        potentialTotal = potentialTree + self.constantTerms(temperature)
 
-        return VTotal
+        return potentialTotal
 
-    def constantTerms(self, temperature: npt.ArrayLike) -> npt.ArrayLike:
+    def constantTerms(self,  temperature: np.ndarray | float) -> np.ndarray | float:
+        """Need to explicitly compute field-independent but T-dependent parts
+        that we don't already get from field-dependent loops. At leading order in high-T
+        expansion these are just (minus) the ideal gas pressure of light particles that
+        were not integrated over in the one-loop part.
+
+        See Eq. (39) in hep-ph/0510375 for general LO formula
+
+        Parameters
+        ----------
+        temperature: array-like (float)
+            The temperature
+
+        Returns
+        ----------
+        constantTerms: array-like (float)
+            The value of the field-independent contribution to the effective potential
+        """
 
         # Fermions contribute with a magic 7/8 prefactor as usual.
         # Overall minus sign since Veff(min) = -pressure
@@ -511,9 +527,10 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
 
 class NSingletsModelExample(WallGoExampleBase):
-    #########################################
-    ## Example with 1 Higgs and 2 singlets ##
-    #########################################
+    """
+    Sets up the standard model coupled to two singlets,
+    computes or loads the collison integrals, and computes the wall velocity.
+    """
 
     def __init__(self) -> None:
         """"""
@@ -536,12 +553,14 @@ class NSingletsModelExample(WallGoExampleBase):
         return argParser
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """ """
+        """Returns the path to the directory with collisions."""
         return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
-        """"""
-        # This should run after cmdline argument parsing so safe to use them here
+        """
+        Initialize the model. This should run after cmdline argument parsing
+        so safe to use them here.
+        """
         # Number of singlets
         nbrSinglets = 2
         return NSinglets(nbrSinglets)
@@ -549,8 +568,7 @@ class NSingletsModelExample(WallGoExampleBase):
     def initCollisionModel(
         self, wallGoModel: "NSinglets"
     ) -> "WallGoCollision.PhysicsModel":
-        """"""
-        pass
+        """Initialize the Collision model and set the seed."""
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Singlet example uses spatial grid size = 25"""
@@ -587,7 +605,10 @@ class NSingletsModelExample(WallGoExampleBase):
         """
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
-
+        """
+        Input parameters, phase info, and settings for the effective potential and
+        wall solver for the manySinglets benchmark points.
+        """
         inputParameters = {
             "RGScale": 125.0,
             "v0": 246.0,
@@ -609,7 +630,7 @@ class NSingletsModelExample(WallGoExampleBase):
         if Tc is None:
             return 0
         Tn = 0.8 * Tc
-        if model.effectivePotential.canTunnel(Tn) == False:
+        if model.effectivePotential.canTunnel(Tn) is False:
             print("Tunneling impossible. Try with different parameters.")
             return 0
 
