@@ -58,25 +58,25 @@ wallgo::ModelParameters computeMasses(const wallgo::ModelParameters& actionParam
     const double gY = actionParams.at("gY");
 
     // SU3 gluon
-    outMsq.addOrModifyParameter("mg2", 2.0 * gs * gs);
+    outMsq.addOrModifyParameter("mg2",  gs * gs);
 
-    // FIXME dunno what these should be:
     
     // W boson
-    outMsq.addOrModifyParameter("mw2", 1.0);
+    outMsq.addOrModifyParameter("mw2", 11./12.*gw*gw);
     
-    // Bottom quark
-    outMsq.addOrModifyParameter("mb2", 1.0);
-    // Generic light quark
-    outMsq.addOrModifyParameter("mq2", 1.0);
+    // U(1) boson
+    outMsq.addOrModifyParameter("mb2", 11./12.*gY*gY);
 
-    // leptons
-    outMsq.addOrModifyParameter("ml2", 1.0);
+    // Generic light quark - The mass is esimated as the asymptotic mass for a SU(3)_c fundamental fermion
+    outMsq.addOrModifyParameter("mq2", gs*gs/3.);
 
-    // Higgs
-    outMsq.addOrModifyParameter("mH2", 1.0);
-    // "Goldstones"
-    outMsq.addOrModifyParameter("mG2", 1.0);
+    // leptons - The mass is esimated as the asymptotic mass for a SU(2)_L fundamental fermion
+    outMsq.addOrModifyParameter("ml2", 3./16.*gw*gw);
+
+    // Higgs - The mass is estimated as the one-loop thermal mass
+    outMsq.addOrModifyParameter("mH2", 1./16.*(3*gw*gw+gY*gY+8*lam1H+4*yt*yt));
+    // "Goldstones"- The mass is estimated as the one-loop thermal mass
+    outMsq.addOrModifyParameter("mG2", 1./16.*(3*gw*gw+gY*gY+8*lam1H+4*yt*yt));
 
     return outMsq;
 }
@@ -85,15 +85,25 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
 {
     wallgo::ModelParameters params;
     
-    // COMMENT HERE: what are these params
 
-    params.addOrModifyParameter("gs", 1.3);
-    params.addOrModifyParameter("gw", 0.6);
-    params.addOrModifyParameter("gY", 0.3);
+    /*
+        Input values for pdg at mu=M_Z:
 
-    params.addOrModifyParameter("yt", 1.0);
+         Sw2=0.23129
+         alpha_e=1/(127.944)
+         alpha_s=0.1180
+         G_F=1.16393
+         m_t=172.57
+         m_H=125.20
 
-    params.addOrModifyParameter("lam1H", 0.15);
+    */
+    params.addOrModifyParameter("gs", 1.21772); //Strong coupling constant at the Z pole
+    params.addOrModifyParameter("gw", 0.651653);
+    params.addOrModifyParameter("gY", 0.357449);
+
+    params.addOrModifyParameter("yt", 1.00995);
+
+    params.addOrModifyParameter("lam1H", 0.129008);
 
     auto massSquares = computeMasses(params);
 
@@ -104,7 +114,7 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
 
 int main() 
 {
-	std::cout << "### Running WallGo collision example : SM ###" << std::endl;
+    std::cout << "### Running WallGo collision example : SM ###" << std::endl;
 
     wallgo::initializeRNG();
 
@@ -114,9 +124,9 @@ int main()
 
     wallgo::PhysicsModel model(modelDef);
     model.loadMatrixElements("MatrixElements/SM.json", /*print*/ false);
-	
+    
     // Use trivially small grid size to make the example run fast
-	const int basisSizeN = 3;
+    const int basisSizeN = 3;
     wallgo::CollisionTensor collisionTensor = model.createCollisionTensor(basisSizeN);
 
 
