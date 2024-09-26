@@ -498,6 +498,9 @@ class StandardModelExample(WallGoExampleBase):
         functions refer to model.modelParameters, so be careful not to replace that
         reference here.
         """
+
+        # oldParams = model.modelParameters.copy()
+        
         model.updateModel(inputParameters)
 
         """Collisions integrals for this example depend on the QCD and Electroweak
@@ -507,6 +510,15 @@ class StandardModelExample(WallGoExampleBase):
         (FIXME?)
         """
         self.bNeedsNewCollisions = False  # pylint: disable = W0201
+
+        """
+        if (
+            not oldParams
+            or newParams["g3"] != oldParams["g3"]
+            or newParams["g2"] != oldParams["g2"]
+        ):
+            self.bNeedsNewCollisions = True
+        """
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
         """
