@@ -371,7 +371,7 @@ class StandardModelExample(WallGoExampleBase):
     # ~ Begin WallGoExampleBase interface
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """"""
+        """Returns the path to the directory with collisions"""
         return super().getDefaultCollisionDirectory(momentumGridSize)
 
     def initWallGoModel(self) -> "WallGo.GenericModel":

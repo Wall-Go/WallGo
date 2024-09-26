@@ -27,19 +27,17 @@ phase transition in the inert doublet model, Phys.Rev.D 107 (2023) 9, 095005
 doi:10.1103/PhysRevD.107.095005
 """
 
-import os
 import sys
 import pathlib
-import argparse
 import numpy as np
 from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle
-from WallGo.interpolatableFunction import EExtrapolationType
 
-# Add the Models folder to the path; need to import the base example template and effectivePotentialNoResum.py
+# Add the Models folder to the path; need to import the base example
+# template and effectivePotentialNoResum.py
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
@@ -72,18 +70,9 @@ class InertDoubletModel(GenericModel):
     methods for the WallGo package.
     """
 
-    # ~ GenericModel interface
-    @property
-    def fieldCount(self) -> int:
-        """How many classical background fields"""
-        return 2
-
-    def getEffectivePotential(self) -> "EffectivePotentialIDM":
-        return self.effectivePotential
-
     # ~
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the InertDoubletModel.
         """
@@ -241,11 +230,13 @@ class InertDoubletModel(GenericModel):
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches them internally.
-        These changes automatically propagate to the associated EffectivePotential, particle masses etc.
+        """Computes new Lagrangian parameters from given input and caches
+        them internally. These changes automatically propagate to the
+        associated EffectivePotential, particle masses etc.
         """
         newParams = self.calculateLagrangianParameters(newInputParams)
-        # Copy to the model dict, do NOT replace the reference. This way the changes propagate to Veff and particles
+        # Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
 
 
@@ -612,6 +603,10 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
 
 class InertDoubletModelExample(WallGoExampleBase):
+    """
+    Sets up the Inert doublet model, computes or loads the collison
+    integrals, and computes the wall velocity.
+    """
 
     def __init__(self) -> None:
         """"""
@@ -623,27 +618,34 @@ class InertDoubletModelExample(WallGoExampleBase):
     # ~ Begin WallGoExampleBase interface
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-
+        """Returns the path to the directory with collisions"""
         return super().getDefaultCollisionDirectory(momentumGridSize)
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
-        """"""
+        """
+        Initialize the model. This should run after cmdline argument parsing
+        so safe to use them here.
+        """
         return InertDoubletModel()
 
     def initCollisionModel(
         self, wallGoModel: "InertDoubletModel"
     ) -> "WallGoCollision.PhysicsModel":
-        """"""
+        """Initialize the Collision model and set the seed."""
 
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
-        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can set the global seed for collision integrals as follows.
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved. We can
+        # set the global seed for collision integrals as follows.
         # This is optional; by default the seed is 0.
         WallGoCollision.setSeed(0)
 
-        # This example comes with a very explicit example function on how to setup and configure the collision module.
-        # It is located in a separate module (same directory) to avoid bloating this file. Import and use it here.
-        from exampleCollisionDefs import setupCollisionModel_QCDEW
+        # This example comes with a very explicit example function on how to setup and
+        # configure the collision module. It is located in a separate module (same
+        # directory) to avoid bloating this file. Import and use it here.
+        from exampleCollisionDefs import (
+            setupCollisionModel_QCDEW,
+        )  # pylint: disable = C0415
 
         collisionModel = setupCollisionModel_QCDEW(
             wallGoModel.modelParameters,
@@ -657,7 +659,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
         """Propagete changes in WallGo model to the collision model."""
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
         changedParams = WallGoCollision.ModelParameters()
 
@@ -682,42 +684,50 @@ class InertDoubletModelExample(WallGoExampleBase):
     ) -> None:
         """Non-abstract override"""
 
-        import WallGoCollision
+        import WallGoCollision  # pylint: disable = C0415
 
-        """Configure the integrator. Default settings should be reasonably OK so you can modify only what you need,
-        or skip this step entirely. Here we set everything manually to show how it's done.
+        """Configure the integrator. Default settings should be reasonably OK
+        so you can modify only what you need, or skip this step entirely. 
+        Here we set everything manually to show how it's done.
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
         integrationOptions.maxTries = 50
-        integrationOptions.maxIntegrationMomentum = 20  # collision integration momentum goes from 0 to maxIntegrationMomentum. This is in units of temperature
+        # collision integration momentum goes from 0 to maxIntegrationMomentum.
+        # This is in units of temperature
+        integrationOptions.maxIntegrationMomentum = 20
         integrationOptions.absoluteErrorGoal = 1e-8
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
 
-        """We can also configure various verbosity settings that are useful when you want to see what is going on in long-running integrations.
-        These include progress reporting and time estimates, as well as a full result dump of each individual integral to stdout.
-        By default these are all disabled. Here we enable some for demonstration purposes.
+        """We can also configure various verbosity settings that are useful when
+        you want to see what is going on in long-running integrations. These include
+        progress reporting and time estimates, as well as a full result dump of each
+        individual integral to stdout. By default these are all disabled. Here we
+        enable some for demonstration purposes.
         """
         verbosity = WallGoCollision.CollisionTensorVerbosity()
         verbosity.bPrintElapsedTime = (
             True  # report total time when finished with all integrals
         )
 
-        """Progress report when this percentage of total integrals (approximately) have been computed.
-        Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done.
-        Note also that in multithreaded runs the progress tracking is less precise.
+        """Progress report when this percentage of total integrals (approximately
+        have been computed. Note that this percentage is per-particle-pair, ie. 
+        each (particle1, particle2) pair reports when this percentage of their own 
+        integrals is done. Note also that in multithreaded runs the progress tracking
+        is less precise.
         """
         verbosity.progressReportPercentage = 0.25
 
-        # Print every integral result to stdout? This is very slow and verbose, intended only for debugging purposes
+        # Print every integral result to stdout? This is very slow and verbose,
+        # intended only for debugging purposes
         verbosity.bPrintEveryElement = False
 
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """"""
+        """Inert doublet model example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
@@ -725,28 +735,38 @@ class InertDoubletModelExample(WallGoExampleBase):
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]
     ) -> None:
-        """Convert Inert Doublet Model inputs to Lagrangian params and update internal model parameters.
-        This example is constructed so that the effective potential and particle mass functions refer to model.modelParameters,
+        """Convert Inert Doublet Model inputs to Lagrangian params and update
+        internal model parameters. This example is constructed so that the
+        effective potential and particle mass functions refer to model.modelParameters,
         so be careful not to replace that reference here.
         """
-        oldParams = model.modelParameters
+        oldParams = model.modelParameters  # pylint: disable = W0612
         model.updateModel(inputParameters)
-        newParams = model.modelParameters
+        newParams = model.modelParameters  # pylint: disable = W0612
 
-        """Collisions integrals for this example depend on the QCD and Electroweak coupling,
-        if it changes we must recompute collisions before running the wall solver.
-        The bool flag here is inherited from WallGoExampleBase and checked in runExample().
-        But since we want to keep the example simple, we skip this check and assume the existing data is OK.
+        """Collisions integrals for this example depend on the QCD and Electroweak
+        coupling, if it changes we must recompute collisions before running the
+        wall solver. The bool flag here is inherited from WallGoExampleBase and 
+        checked in runExample(). But since we want to keep the example simple, we 
+        skip this check and assume the existing data is OK.
         (FIXME?)
         """
-        self.bNeedsNewCollisions = False
+        self.bNeedsNewCollisions = False  # pylint: disable = W0201
+
         """
-        if not oldParams or newParams["g3"] != oldParams["g3"] or newParams["g2"] != oldParams["g2"]:
+        if (
+            not oldParams
+            or newParams["g3"] != oldParams["g3"]
+            or newParams["g2"] != oldParams["g2"]
+        ):
             self.bNeedsNewCollisions = True
         """
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
-
+        """
+        Input parameters, phase info, and settings for the effective potential and
+        wall solver for the inert doublet model benchmark point.
+        """
         output: list[ExampleInputPoint] = []
 
         output.append(
@@ -762,7 +782,8 @@ class InertDoubletModelExample(WallGoExampleBase):
                     "mh": 125.0,
                     "mH": 62.66,
                     "mA": 300.0,
-                    "mHp": 300.0,  # We don't use mHm as input parameter, as it is equal to mHp
+                    "mHp": 300.0,
+                    # We don't use mHm as input parameter, as it is equal to mHp
                 },
                 WallGo.PhaseInfo(
                     temperature=117.1,
@@ -771,7 +792,8 @@ class InertDoubletModelExample(WallGoExampleBase):
                 ),
                 WallGo.VeffDerivativeSettings(temperatureScale=0.5, fieldScale=[10.0]),
                 WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=True,  # we actually do both cases in the common example
+                    # we actually do both cases in the common example
+                    bIncludeOffEquilibrium=True,
                     meanFreePath=1.0,
                     wallThicknessGuess=0.05,
                 ),
