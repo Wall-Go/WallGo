@@ -16,8 +16,6 @@ void defineParticlesSM(wallgo::ModelDefinition& inOutModelDef)
     using wallgo::ParticleDescription;
     using wallgo::EParticleType;
 
-    std::vector<ParticleDescription> particles;
-
     // Make everything ultrarelativistic. Last argument is flag for in-equilibrium.
     // We take top/gluon/W to be out-of-eq, although the example runs even if everything is allowed to deviate from equilibrium.
 
@@ -59,26 +57,28 @@ wallgo::ModelParameters computeMasses(const wallgo::ModelParameters& actionParam
     const double lam1H = actionParams.at("lam1H");
     const double yt = actionParams.at("yt");
 
-    // SU3 gluon
+    // SU3 gluon - Use asymptotic thermal mass (Debye mass divided by 2). See WallGo paper for details
     outMsq.addOrModifyParameter("mg2",  gs * gs);
 
     
     // W boson
-    outMsq.addOrModifyParameter("mw2", 11./12.*gw*gw);
+    outMsq.addOrModifyParameter("mw2", 11. / 12. * gw * gw);
     
     // U(1) boson
-    outMsq.addOrModifyParameter("mb2", 11./12.*gY*gY);
+    outMsq.addOrModifyParameter("mb2", 11. / 12. * gY * gY);
 
     // Generic light quark - The mass is esimated as the asymptotic mass for a SU(3)_c fundamental fermion
-    outMsq.addOrModifyParameter("mq2", gs*gs/3.);
+    outMsq.addOrModifyParameter("mq2", gs * gs / 3.);
 
     // leptons - The mass is esimated as the asymptotic mass for a SU(2)_L fundamental fermion
-    outMsq.addOrModifyParameter("ml2", 3./16.*gw*gw);
+    outMsq.addOrModifyParameter("ml2", 3. / 16. * gw * gw);
 
     // Higgs - The mass is estimated as the one-loop thermal mass
-    outMsq.addOrModifyParameter("mH2", 1./16.*(3*gw*gw+gY*gY+8*lam1H+4*yt*yt));
+    const double mHsqThermal = 1. / 16. * (3 * gw * gw + gY * gY + 8 * lam1H + 4 * yt * yt);
+
+    outMsq.addOrModifyParameter("mH2", mHsqThermal);
     // "Goldstones"- The mass is estimated as the one-loop thermal mass
-    outMsq.addOrModifyParameter("mG2", 1./16.*(3*gw*gw+gY*gY+8*lam1H+4*yt*yt));
+    outMsq.addOrModifyParameter("mG2", mHsqThermal);
 
     return outMsq;
 }
@@ -87,7 +87,6 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
 {
     wallgo::ModelParameters params;
     
-
     /*
         Input values for pdg at mu=M_Z:
 
@@ -97,13 +96,12 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
          G_F=1.16393
          m_t=172.57
          m_H=125.20
-
     */
-    params.addOrModifyParameter("gs", 1.21772);
-    params.addOrModifyParameter("gw", 0.651653);
-    params.addOrModifyParameter("gY", 0.357449);
-    params.addOrModifyParameter("yt", 1.00995);
-    params.addOrModifyParameter("lam1H", 0.129008);
+    params.addOrModifyParameter("gs", 1.21772); // QCD coupling at Z pole
+    params.addOrModifyParameter("gw", 0.651653); // SU2 coupling
+    params.addOrModifyParameter("gY", 0.357449); // hypercharge coupling
+    params.addOrModifyParameter("yt", 1.00995); // top Yukawa
+    params.addOrModifyParameter("lam1H", 0.129008); // Higgs self quartic
 
     auto massSquares = computeMasses(params);
 
