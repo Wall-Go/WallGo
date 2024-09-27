@@ -40,8 +40,8 @@ from WallGo import EffectivePotential, Fields, GenericModel, Particle
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallGoExampleBase import WallGoExampleBase
-from wallGoExampleBase import ExampleInputPoint
+from wallGoExampleBaseSavevw import WallGoExampleBase
+from wallGoExampleBaseSavevw import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -488,7 +488,7 @@ class StandardModelExample(WallGoExampleBase):
         """SM example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "15")
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
