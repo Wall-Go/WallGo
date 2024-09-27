@@ -206,10 +206,11 @@ class HydrodynamicsTemplateModel:
             :math:`w_+`.
 
         """
-        # Add 1e-100 to avoid having something like 0/0
         sign = np.sign((1-3*self.alN)*self.mu-self.nu)*np.sign((1-3*al)*self.mu-self.nu)
-        return sign*(abs((1 - 3 * self.alN) * self.mu - self.nu) + 1e-100) / (
-            abs((1 - 3 * al) * self.mu - self.nu) + 1e-100
+        return (
+            sign
+            * (abs((1 - 3 * self.alN) * self.mu - self.nu))
+            / (abs((1 - 3 * al) * self.mu - self.nu))
         )
 
     def _findTm(self, vm: float, vp: float, Tp: float) -> float:
