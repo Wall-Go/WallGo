@@ -280,6 +280,13 @@ class WallGoManager:
             hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
             print(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
 
+            print(f"T- and T+ as a function of the velocity")
+
+            for vw in np.arange(0.01,0.95,0.025):
+                _,_, Tp,Tm=hydrodynamicsTemplate.findMatching(vw)
+                print(f" vw: {vw:.4f} Tp: {Tp:.4f} Tm: {Tm:.4f}")
+
+
         except WallGoError as error:
             # Throw new error with more info
             raise WallGoPhaseValidationError(
