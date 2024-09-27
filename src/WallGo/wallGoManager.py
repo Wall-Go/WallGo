@@ -304,10 +304,15 @@ class WallGoManager:
             0.99 * hydrodynamicsTemplate.vJ
         )
 
+        _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3) 
+
         if THighTMaxTemplate is None:
             THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
         if TLowTMaxTemplate is None:
             TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
+
+        if TLowTMinTemplate is None:
+            TLowTMinTemplate = 0
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
@@ -321,8 +326,8 @@ class WallGoManager:
         HACK! fudgeFactor, see issue #145 """
         fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
         ## TODO make a better choice for TMinHighT to speed up this function
-        TMinHighT, TMaxHighT = 0, max(2 * Tn, fudgeFactor * THighTMaxTemplate)
-        TMinLowT, TMaxLowT = 0, max(2 * Tn, fudgeFactor * TLowTMaxTemplate)
+        TMinHighT, TMaxHighT = Tn/fudgeFactor, max(2 * Tn, fudgeFactor * THighTMaxTemplate)
+        TMinLowT, TMaxLowT = TLowTMinTemplate, max(2 * Tn, fudgeFactor * TLowTMaxTemplate)
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
