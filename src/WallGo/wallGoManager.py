@@ -250,7 +250,8 @@ class WallGoManager:
 
     def initTemperatureRange(self) -> None:
         """
-        Get initial guess for the relevant temperature range and
+        Determine the relevant temperature range and trace the phases
+        over this range. Inerpolate the free energy in both phases and
         store in internal thermodynamics object.
         """
 
@@ -271,21 +272,12 @@ class WallGoManager:
         self.thermodynamics.freeEnergyHigh.disableAdaptiveInterpolation()
         self.thermodynamics.freeEnergyLow.disableAdaptiveInterpolation()
 
-        # Use the template model to find an estimate of the minimum and
-        # maximum required temperatures
-
         try:
-            ## Use the template model to find an estimate of the minimum and maximum
-            ## required temperature
+            # Use the template model to find an estimate of the minimum and maximum
+            # required temperature. We do not solve hydrodynamics inside the bubble, so
+            # we are only interested in T- (the temperature right at the wall).
             hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
             print(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
-
-            print(f"T- and T+ as a function of the velocity")
-
-            for vw in np.arange(0.01,0.95,0.025):
-                _,_, Tp,Tm=hydrodynamicsTemplate.findMatching(vw)
-                print(f" vw: {vw:.4f} Tp: {Tp:.4f} Tm: {Tm:.4f}")
-
 
         except WallGoError as error:
             # Throw new error with more info
@@ -300,19 +292,24 @@ class WallGoManager:
                 "positive."
             )
 
+        # Maximum values for T+ and T- are reached at the Jouguet velocity 
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
 
+        # Minimum value for T- is reached at small wall velocity. The minimum value
+        # for T+ is the nucleation temperature.
         _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3) 
 
+        # FIXME this will change when configs are revamped
         if THighTMaxTemplate is None:
             THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
         if TLowTMaxTemplate is None:
             TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
 
         if TLowTMinTemplate is None:
-            TLowTMinTemplate = 0
+            TLowTMinTemplate = self.config.getfloat("Hydrodynamics", "tmin") * Tn
+
 
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
@@ -320,14 +317,16 @@ class WallGoManager:
         # the error of a cubic spline scales like dT**4.
         dT = self.model.getEffectivePotential().derivativeSettings.temperatureScale * phaseTracerTol**0.25
 
-        """If TMax, TMin are too close to real temperature boundaries
-        the program can slow down significantly, but TMax must be large
-        enough, and the template model only provides an estimate.
-        HACK! fudgeFactor, see issue #145 """
-        fudgeFactor = 1.2  # should be bigger than 1, but not known a priori
-        ## TODO make a better choice for TMinHighT to speed up this function
-        TMinHighT, TMaxHighT = Tn/fudgeFactor, max(2 * Tn, fudgeFactor * THighTMaxTemplate)
-        TMinLowT, TMaxLowT = TLowTMinTemplate, max(2 * Tn, fudgeFactor * TLowTMaxTemplate)
+        """Since the template model is an approximation of the full model, 
+        and since the temperature profile in the wall could be non-monotonous,
+        we should not take exactly the TMin and TMax from the template model.
+        We use a configuration parameter to determine the TMin and TMax that we
+        use in the phase tracing.
+        """
+        TMinHighT = Tn*self.config.getfloat("Thermodynamics", "tmin")
+        TMaxHighT = THighTMaxTemplate*self.config.getfloat("Thermodynamics", "tmax")
+        TMinLowT = TLowTMinTemplate*self.config.getfloat("Thermodynamics", "tmin")
+        TMaxLowT = TLowTMaxTemplate*self.config.getfloat("Thermodynamics", "tmax")
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
