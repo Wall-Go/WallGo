@@ -168,11 +168,12 @@ class EOM:
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
 
         if vmax < self.hydrodynamics.vJ and (
-            self.hydrodynamics.doesPhaseTraceLimitvmax[0] or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
+            self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
+            or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
             print(
-                """\n Warning: vmax is limited by the maximum temperature chosen in the phase tracing.
-                WallGo might be unable to find the wall velocity.
+                """\n Warning: vmax is limited by the maximum temperature chosen in
+                the phase tracing. WallGo might be unable to find the wall velocity.
                 Try increasing the maximum temperature! \n"""
             )
 

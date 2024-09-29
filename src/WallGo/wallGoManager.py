@@ -124,7 +124,9 @@ class WallGoManager:
         self.model.getEffectivePotential().configureDerivatives(veffDerivativeScales)
 
         # FIXME this will change when configs are revamped
-        self.model.getEffectivePotential().effectivePotentialError = self.config.getfloat("EffectivePotential", "potentialError")
+        self.model.getEffectivePotential().effectivePotentialError = (
+            self.config.getfloat("EffectivePotential", "potentialError")
+        )
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
@@ -257,7 +259,9 @@ class WallGoManager:
 
         assert self.phasesAtTn is not None
         assert self.isModelValid()
-        assert self.model.getEffectivePotential().areDerivativesConfigured(), "Must have called effectivePotential.configureDerivatives()"
+        assert (
+            self.model.getEffectivePotential().areDerivativesConfigured()
+        ), "Must have called effectivePotential.configureDerivatives()"
 
         Tn = self.phasesAtTn.temperature
 
@@ -292,14 +296,14 @@ class WallGoManager:
                 "positive."
             )
 
-        # Maximum values for T+ and T- are reached at the Jouguet velocity 
+        # Maximum values for T+ and T- are reached at the Jouguet velocity
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
             0.99 * hydrodynamicsTemplate.vJ
         )
 
         # Minimum value for T- is reached at small wall velocity. The minimum value
         # for T+ is the nucleation temperature.
-        _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3) 
+        _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3)
 
         # FIXME this will change when configs are revamped
         if THighTMaxTemplate is None:
@@ -310,12 +314,14 @@ class WallGoManager:
         if TLowTMinTemplate is None:
             TLowTMinTemplate = self.config.getfloat("Hydrodynamics", "tmin") * Tn
 
-
         phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
 
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
-        dT = self.model.getEffectivePotential().derivativeSettings.temperatureScale * phaseTracerTol**0.25
+        dT = (
+            self.model.getEffectivePotential().derivativeSettings.temperatureScale
+            * phaseTracerTol**0.25
+        )
 
         """Since the template model is an approximation of the full model, 
         and since the temperature profile in the wall could be non-monotonous,
@@ -323,10 +329,10 @@ class WallGoManager:
         We use a configuration parameter to determine the TMin and TMax that we
         use in the phase tracing.
         """
-        TMinHighT = Tn*self.config.getfloat("Thermodynamics", "tmin")
-        TMaxHighT = THighTMaxTemplate*self.config.getfloat("Thermodynamics", "tmax")
-        TMinLowT = TLowTMinTemplate*self.config.getfloat("Thermodynamics", "tmin")
-        TMaxLowT = TLowTMaxTemplate*self.config.getfloat("Thermodynamics", "tmax")
+        TMinHighT = Tn * self.config.getfloat("Thermodynamics", "tmin")
+        TMaxHighT = THighTMaxTemplate * self.config.getfloat("Thermodynamics", "tmax")
+        TMinLowT = TLowTMinTemplate * self.config.getfloat("Thermodynamics", "tmin")
+        TMaxLowT = TLowTMaxTemplate * self.config.getfloat("Thermodynamics", "tmax")
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
