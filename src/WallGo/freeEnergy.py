@@ -13,6 +13,7 @@ from .interpolatableFunction import (InterpolatableFunction,
                                      inputType,
                                      outputType)
 from .EffectivePotential import EffectivePotential
+from .exceptions import WallGoError
 from .fields import FieldPoint, Fields
 
 @dataclass
@@ -152,7 +153,16 @@ class FreeEnergy(InterpolatableFunction):
             field value that minimizes the potential.
 
         """
-        return self.evaluate(x, bUseInterpolatedValues)
+
+        try:
+            return self.evaluate(x, bUseInterpolatedValues)
+        
+        except ValueError:
+            if self.maxPossibleTemperature[1] and self.minPossibleTemperature[1]:
+                raise WallGoError("Trying to evaluate the FreeEnergy outside of its range of existence")
+            else:
+                raise WallGoError("""\n Trying to evaluate the FreeEnergy outside of its allowed range,
+                                  try increasing/decreasing Tmax/Tmin.""")
 
     def _functionImplementation(
             self,
