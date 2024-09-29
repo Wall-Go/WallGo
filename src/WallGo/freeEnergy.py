@@ -340,7 +340,6 @@ class FreeEnergy(InterpolatableFunction):
                     )
                     ode.y = phaset[0]
                 if spinodalEvent(ode.t, ode.y) <= 0:
-                    print(f"Phase ends at T={ode.t}, vev={ode.y}")
                     break
                 if not paranoid:
                     # check if extremum is still accurate
@@ -406,9 +405,6 @@ class FreeEnergy(InterpolatableFunction):
 
         if max(TFullList) < TMax:
             self.maxPossibleTemperature[1] = True
-        
-        print(f"{TMin =} {self.minPossibleTemperature[0]=} {min(TFullList)=}" )
-        print(f"{TMax =} {self.maxPossibleTemperature[0]=} {max(TFullList)=}" )
 
 
         # Now to construct the interpolation

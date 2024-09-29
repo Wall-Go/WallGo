@@ -135,13 +135,13 @@ class WallGoManager:
         print("Temperature ranges:")
         print(
             "High-T phase: TMin = "
-            f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature}, "
-            f"TMax = {self.thermodynamics.freeEnergyHigh.maxPossibleTemperature}"
+            f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature[0]}, "
+            f"TMax = {self.thermodynamics.freeEnergyHigh.maxPossibleTemperature[0]}"
         )
         print(
             "Low-T phase: TMin = "
-            f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature}, "
-            f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature}"
+            f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature[0]}, "
+            f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature[0]}"
         )
 
         self.thermodynamics.setExtrapolate()
