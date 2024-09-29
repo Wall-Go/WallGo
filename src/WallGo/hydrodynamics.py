@@ -80,9 +80,9 @@ class Hydrodynamics:
         # Minimum velocity that allows a shock with the given nucleation temperature
         self.vMin = max(self.vBracketLow, self.minVelocity())
 
-        # Bool which is set to true if the upper/lower temperature in the phase tracing
-        # limits the allowed temperature range.
-        self.doesPhaseTraceLimitvmin = [False, False]
+        # Bool which is set to true if the upper temperature in the phase tracing 
+        # limits the allowed velocity range. First (second) value corresponds to
+        # the high (low )temperature phase
         self.doesPhaseTraceLimitvmax = [False, False]
 
         self.success = False
@@ -208,7 +208,9 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
+            print(f"{self.thermodynamics.freeEnergyLow.maxPossibleTemperature =}")
             if not self.thermodynamics.freeEnergyLow.maxPossibleTemperature[1]:
+                print('hello')
                 self.doesPhaseTraceLimitvmax[1] = True
 
         except ValueError:
@@ -229,7 +231,7 @@ class Hydrodynamics:
             ).root
             if not self.thermodynamics.freeEnergyHigh.maxPossibleTemperature[1]:
                 self.doesPhaseTraceLimitvmax[0] = True
-                
+
         except ValueError:
             vmax2 = self.vJ
             self.doesPhaseTraceLimitvmax[0] = False
