@@ -728,8 +728,8 @@ class SingletStandardModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0,
-                    wallThicknessGuess=5.0,
+                    meanFreePath=100.0, # In units of 1/Tnucl
+                    wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
         )
