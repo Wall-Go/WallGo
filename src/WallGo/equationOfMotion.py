@@ -168,14 +168,14 @@ class EOM:
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
 
         if vmax < self.hydrodynamics.vJ and (
-            self.thermo.freeEnergyLow.maxPossibleTemperature[1] is False
-            or self.thermo.freeEnergyHigh.maxPossibleTemperature
+            self.hydrodynamics.doesPhaseTraceLimitvmax[0] or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
             print(
                 """\n Warning: vmax is smaller than the Jouguet velocity.
                 WallGo might be unable to find the wall velocity.
                 Try increasing the maximum temperature in the phase tracing! \n"""
             )
+            print(f"{vmax = } {self.thermo.freeEnergyLow.maxPossibleTemperature[1]=} {self.thermo.freeEnergyHigh.maxPossibleTemperature[1]=}")
 
         return self.solveWall(vmin, vmax, wallParams)
 

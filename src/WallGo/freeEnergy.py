@@ -410,11 +410,13 @@ class FreeEnergy(InterpolatableFunction):
             self.maxPossibleTemperature > self.minPossibleTemperature
         ), f"Temperature range negative: decrease dT from {dT}"
 
-        if min(TFullList) > TMin:
+        if min(TFullList) >= TMin:
             self.minPossibleTemperature[1] = True
 
-        if max(TFullList) < TMax:
+        if max(TFullList) <= TMax:
             self.maxPossibleTemperature[1] = True
+
+        print(f"{self.minPossibleTemperature[0]=} {TMin=} {min(TFullList)=} {self.maxPossibleTemperature[0]=} {TMax =} {max(TFullList)=}")
 
 
         # Now to construct the interpolation

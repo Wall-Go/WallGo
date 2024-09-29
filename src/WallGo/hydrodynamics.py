@@ -80,6 +80,11 @@ class Hydrodynamics:
         # Minimum velocity that allows a shock with the given nucleation temperature
         self.vMin = max(self.vBracketLow, self.minVelocity())
 
+        # Bool which is set to true if the upper/lower temperature in the phase tracing
+        # limits the allowed temperature range.
+        self.doesPhaseTraceLimitvmin = [False, False]
+        self.doesPhaseTraceLimitvmax = [False, False]
+
         self.success = False
 
     def findJouguetVelocity(self) -> float:
@@ -203,9 +208,13 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
+            if not self.thermodynamics.freeEnergyLow.maxPossibleTemperature[1]:
+                self.doesPhaseTraceLimitvmax[1] = True
 
         except ValueError:
             vmax1 = self.vJ
+            self.doesPhaseTraceLimitvmax[1] = False
+
 
         def TpMax(vw: float) -> float:
             return TpTm(vw)[0] - self.TMaxHighT
@@ -218,8 +227,14 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
+            if not self.thermodynamics.freeEnergyHigh.maxPossibleTemperature[1]:
+                self.doesPhaseTraceLimitvmax[0] = True
+                
         except ValueError:
             vmax2 = self.vJ
+            self.doesPhaseTraceLimitvmax[0] = False
+
+        print(f"TMaxLowT {vmax1 = } TMaxHighT {vmax2 =}")
 
         return float(min(vmax1, vmax2))
 
