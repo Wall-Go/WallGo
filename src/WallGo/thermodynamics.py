@@ -170,12 +170,12 @@ class Thermodynamics:
             The minimum and maximum temperature of phase coexistence
         """
         TMin = max(
-            self.freeEnergyHigh.minPossibleTemperature,
-            self.freeEnergyLow.minPossibleTemperature,
+            self.freeEnergyHigh.minPossibleTemperature[0],
+            self.freeEnergyLow.minPossibleTemperature[0],
         )
         TMax = min(
-            self.freeEnergyHigh.maxPossibleTemperature,
-            self.freeEnergyLow.maxPossibleTemperature,
+            self.freeEnergyHigh.maxPossibleTemperature[0],
+            self.freeEnergyLow.maxPossibleTemperature[0],
         )
         return (TMin, TMax)
 
