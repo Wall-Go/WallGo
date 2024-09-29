@@ -794,8 +794,8 @@ class InertDoubletModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=1.0,
-                    wallThicknessGuess=0.05,
+                    meanFreePath=100.0,
+                    wallThicknessGuess=5.0,
                 ),
             )
         )
