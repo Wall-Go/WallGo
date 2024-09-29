@@ -92,10 +92,14 @@ class FreeEnergy(InterpolatableFunction):
         # Approx field values where the phase lies at starting temperature
         self.startingPhaseLocationGuess = startingPhaseLocationGuess
 
-        # Lowest possible temperature so that the phase is still (meta)stable
-        self.minPossibleTemperature = 0.0
-        # Highest possible temperature so that the phase is still (meta)stable
-        self.maxPossibleTemperature = np.inf
+        # List with lowest possible temperature for which the interpolated freeEnergy
+        # is available, and bool which is true when the lowest possible temperature is
+        # also the minimum temperature when the phase is still (meta)stable
+        self.minPossibleTemperature = [0.0, False]
+        # List with highest possible temperature for which the interpolated freeEnergy
+        # is available, and bool which is true when the highest possible temperature is
+        # also the maximum temperature when the phase is still (meta)stable
+        self.maxPossibleTemperature = [np.inf, False]
 
     def evaluate(
         self,
@@ -306,8 +310,8 @@ class FreeEnergy(InterpolatableFunction):
         potentialEffList = np.full((1, 1), [potential0])
 
         # maximum temperature range
-        TMin = max(self.minPossibleTemperature, TMin)
-        TMax = min(self.maxPossibleTemperature, TMax)
+        TMin = max(self.minPossibleTemperature[0], TMin)
+        TMax = min(self.maxPossibleTemperature[0], TMax)
 
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
@@ -391,11 +395,21 @@ class FreeEnergy(InterpolatableFunction):
 
         # overwriting temperature range
         ## HACK! Hard-coded 2*dT, see issue #145
-        self.minPossibleTemperature = min(TFullList) + 2 * dT
-        self.maxPossibleTemperature = max(TFullList) - 2 * dT
+        self.minPossibleTemperature[0] = min(TFullList) + 2 * dT
+        self.maxPossibleTemperature[0] = max(TFullList) - 2 * dT
         assert (
             self.maxPossibleTemperature > self.minPossibleTemperature
         ), f"Temperature range negative: decrease dT from {dT}"
+
+        if min(TFullList) > TMin:
+            self.minPossibleTemperature[1] = True
+
+        if max(TFullList) < TMax:
+            self.maxPossibleTemperature[1] = True
+        
+        print(f"{TMin =} {self.minPossibleTemperature[0]=} {min(TFullList)=}" )
+        print(f"{TMax =} {self.maxPossibleTemperature[0]=} {max(TFullList)=}" )
+
 
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, potentialEffFullList), axis=1)

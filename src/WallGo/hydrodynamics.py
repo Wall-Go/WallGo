@@ -55,10 +55,10 @@ class Hydrodynamics:
         self.thermodynamics = thermodynamics
         self.Tnucl = thermodynamics.Tnucl
 
-        self.TMaxHighT = thermodynamics.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT = thermodynamics.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature
+        self.TMaxHighT = thermodynamics.freeEnergyHigh.maxPossibleTemperature[0]
+        self.TMinHighT = thermodynamics.freeEnergyHigh.minPossibleTemperature[0]
+        self.TMaxLowT = thermodynamics.freeEnergyLow.maxPossibleTemperature[0]
+        self.TMinLowT = thermodynamics.freeEnergyLow.minPossibleTemperature[0]
 
         self.TMaxHydro = tmax * self.Tnucl
         self.TMinHydro = tmin * self.Tnucl
