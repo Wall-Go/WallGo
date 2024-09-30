@@ -93,6 +93,8 @@ private:
     
     size_t mElementsPerDimension;  // equals basisSize - 1
 
+    /* The actual data, stored as 4D array with index order : (momentum1, momentum2, poly1, poly2).
+    This ordering matches that used in the Python-side WallGo */
     Array4D mData;
     // Statistical errors of integrations. Has large memory cost, so we keep this empty if not needed
     Array4D mErrors;

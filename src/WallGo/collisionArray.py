@@ -270,10 +270,6 @@ class CollisionArray:
                             ), """CollisionArray error: All the collision files must
                             have the same basis type."""
 
-                        collisionFileArray[i, :, :, j, :, :] = np.transpose(
-                            np.flip(collisionDataset, (2, 3)),
-                            (2, 3, 0, 1),
-                        )
                 except FileNotFoundError:
                     raise CollisionLoadError(
                         f"CollisionArray error: {filename} not found."

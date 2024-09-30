@@ -18,13 +18,13 @@ CollisionResultsGrid::CollisionResultsGrid(const ParticleNamePair& particlePair,
 double CollisionResultsGrid::valueAt(const GridPoint& gridPoint) const
 {
     assert(validateGridPoint(gridPoint));
-    return mData[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mData[gridPoint.j - 1][gridPoint.k - 1][gridPoint.m - 2][gridPoint.n - 1];
 }
 
 double& CollisionResultsGrid::valueAt(const GridPoint& gridPoint)
 {
     assert(validateGridPoint(gridPoint));
-    return mData[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mData[gridPoint.j - 1][gridPoint.k - 1][gridPoint.m - 2][gridPoint.n - 1];
 }
 
 double CollisionResultsGrid::errorAt(const GridPoint& gridPoint) const
@@ -38,7 +38,7 @@ double CollisionResultsGrid::errorAt(const GridPoint& gridPoint) const
         return 0.0;
     }
 
-    return mErrors[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mErrors[gridPoint.j - 1][gridPoint.k - 1][gridPoint.m - 2][gridPoint.n - 1];
 }
 
 double& CollisionResultsGrid::errorAt(const GridPoint& gridPoint)
@@ -54,7 +54,7 @@ double& CollisionResultsGrid::errorAt(const GridPoint& gridPoint)
         std::exit(444);
     }
 
-    return mErrors[gridPoint.m - 2][gridPoint.n - 1][gridPoint.j - 1][gridPoint.k - 1];
+    return mErrors[gridPoint.j - 1][gridPoint.k - 1][gridPoint.m - 2][gridPoint.n - 1];
 }
 
 void CollisionResultsGrid::updateValue(const GridPoint& gridPoint, double newValue, double newError)
