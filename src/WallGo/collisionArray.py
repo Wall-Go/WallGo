@@ -270,6 +270,8 @@ class CollisionArray:
                             ), """CollisionArray error: All the collision files must
                             have the same basis type."""
 
+                        collisionFileArray = collisionDataset
+                        
                 except FileNotFoundError:
                     raise CollisionLoadError(
                         f"CollisionArray error: {filename} not found."
