@@ -253,7 +253,7 @@ class WallGoManager:
     def initTemperatureRange(self) -> None:
         """
         Determine the relevant temperature range and trace the phases
-        over this range. Inerpolate the free energy in both phases and
+        over this range. Interpolate the free energy in both phases and
         store in internal thermodynamics object.
         """
 
