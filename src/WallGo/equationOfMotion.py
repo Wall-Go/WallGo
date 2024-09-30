@@ -166,6 +166,17 @@ class EOM:
         # (which is computed by Hydrodynamics) instead of the naive interval [0,vJ].
         vmin = self.hydrodynamics.vMin
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
+
+        if vmax < self.hydrodynamics.vJ and (
+            self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
+            or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
+        ):
+            print(
+                """\n Warning: vmax is limited by the maximum temperature chosen in
+                the phase tracing. WallGo might be unable to find the wall velocity.
+                Try increasing the maximum temperature! \n"""
+            )
+
         return self.solveWall(vmin, vmax, wallParams)
 
     def findWallVelocityDetonation(
@@ -828,7 +839,9 @@ class EOM:
         multiplier = 1.0
 
         i = 0
-        print(f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}")
+        print(
+            f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}"
+        )
         while True:
             if improveConvergence:
                 # Use the improved algorithm (which converges better but slowly)
@@ -875,7 +888,9 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            print(f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}")
+            print(
+                f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}"
+            )
             i += 1
 
             if error < errTol or (errorSolver < errTol and improveConvergence):
