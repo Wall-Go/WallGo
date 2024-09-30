@@ -8,13 +8,16 @@ import numpy as np
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
 
-from .interpolatableFunction import (InterpolatableFunction,
-                                     EExtrapolationType,
-                                     inputType,
-                                     outputType)
+from .interpolatableFunction import (
+    InterpolatableFunction,
+    EExtrapolationType,
+    inputType,
+    outputType,
+)
 from .EffectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import FieldPoint, Fields
+
 
 @dataclass
 class FreeEnergyValueType:
@@ -22,6 +25,7 @@ class FreeEnergyValueType:
     Data class containing the field value that minimizes the potential and the value of
     the potential in the minimum.
     """
+
     # Value of the effective potential at the free-energy minimum
     veffValue: np.ndarray
     # Values of background fields at the free-energy minimum
@@ -103,9 +107,7 @@ class FreeEnergy(InterpolatableFunction):
         self.maxPossibleTemperature = [np.inf, False]
 
     def evaluate(
-        self,
-        x: inputType,
-        bUseInterpolatedValues: bool=True
+        self, x: inputType, bUseInterpolatedValues: bool = True
     ) -> "FreeEnergyValueType":
         """
         Evaluate the free energy.
@@ -131,9 +133,7 @@ class FreeEnergy(InterpolatableFunction):
         return FreeEnergyValueType.fromArray(np.asarray(resultsArray))
 
     def __call__(
-        self,
-        x: inputType,
-        bUseInterpolatedValues: bool=True
+        self, x: inputType, bUseInterpolatedValues: bool = True
     ) -> "FreeEnergyValueType":
         """
         Evaluate the free energy.
@@ -156,18 +156,18 @@ class FreeEnergy(InterpolatableFunction):
 
         try:
             return self.evaluate(x, bUseInterpolatedValues)
-        
+
         except ValueError:
             if self.maxPossibleTemperature[1] and self.minPossibleTemperature[1]:
-                raise WallGoError("Trying to evaluate the FreeEnergy outside of its range of existence")
-            else:
-                raise WallGoError("""\n Trying to evaluate the FreeEnergy outside of its allowed range,
-                                  try increasing/decreasing Tmax/Tmin.""")
+                raise WallGoError(
+                    "Trying to evaluate FreeEnergy outside of its range of existence"
+                )
+            raise WallGoError(
+                    """\n Trying to evaluate FreeEnergy outside of its allowed range,
+                        try increasing/decreasing Tmax/Tmin."""
+                )
 
-    def _functionImplementation(
-            self,
-            temperature: inputType | float
-            ) -> outputType:
+    def _functionImplementation(self, temperature: inputType | float) -> outputType:
         """
         Internal implementation of free energy computation.
         You should NOT call this directly!
@@ -205,16 +205,13 @@ class FreeEnergy(InterpolatableFunction):
         return np.asarray(result)
 
     def derivative(
-        self,
-        x: inputType,
-        order: int = 1,
-        bUseInterpolation: bool=True
+        self, x: inputType, order: int = 1, bUseInterpolation: bool = True
     ) -> "FreeEnergyValueType":
         """
         Override of InterpolatableFunction.derivative() function. Specifies accuracy
         based on our internal variables and puts the results in FreeEnergyValueType
         format. Otherwise similar to the parent function.
-        
+
         Parameters
         ----------
         x : list[float] or np.ndarray
@@ -228,7 +225,7 @@ class FreeEnergy(InterpolatableFunction):
         FreeEnergyValueType
             FreeEnergyValueType object containing the value of the free energy's
             derivative and the field value that minimizes the potential.
-        
+
         """
         resultsArray = super().derivative(
             x,
@@ -309,8 +306,7 @@ class FreeEnergy(InterpolatableFunction):
             if not spinodal:
                 return 1.0  # don't bother testing
             # tests for if an eigenvalue of V'' goes through zero
-            d2V = self.effectivePotential.deriv2Field2(FieldPoint(field),
-                                                       temperature)
+            d2V = self.effectivePotential.deriv2Field2(FieldPoint(field), temperature)
             eigs = scipylinalg.eigvalsh(d2V)
             return float(min(eigs))
 
@@ -356,22 +352,25 @@ class FreeEnergy(InterpolatableFunction):
                     dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                     err = np.linalg.norm(dVt) / T0**3
                     if err > rTol:
-                        phaset,potentialEffT = self.effectivePotential.findLocalMinimum(
-                            Fields((ode.y)),
-                            ode.t,
-                            tol=extraTol,
+                        phaset, potentialEffT = (
+                            self.effectivePotential.findLocalMinimum(
+                                Fields((ode.y)),
+                                ode.t,
+                                tol=extraTol,
+                            )
                         )
                         ode.y = phaset[0]
                     else:
                         # compute Veff
                         potentialEffT = np.asarray(
-                            self.effectivePotential.evaluate(Fields((ode.y)), ode.t))
+                            self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
+                        )
                 # check if step size is still okay to continue
                 if ode.step_size < 1e-16 * T0 or (
                     TList.size > 0 and ode.t == TList[-1]
                 ):
                     print(
-                        f"Step size {ode.step_size} shrunk too small at T={ode.t}, "\
+                        f"Step size {ode.step_size} shrunk too small at T={ode.t}, "
                         f"vev={ode.y}"
                     )
                     break
@@ -416,6 +415,16 @@ class FreeEnergy(InterpolatableFunction):
         if max(TFullList) < TMax:
             self.maxPossibleTemperature[1] = True
 
+        if (
+            self.maxPossibleTemperature[0]
+            < ode.step_size * 10 + self.startingTemperature
+            or self.minPossibleTemperature[0]
+            > self.startingTemperature - ode.step_size * 10
+        ):
+            print(
+                """Warning: the temperature step size seems too large.
+                Try decreasing temperatureScale."""
+            )
 
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, potentialEffFullList), axis=1)

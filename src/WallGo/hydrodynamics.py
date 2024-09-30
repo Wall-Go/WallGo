@@ -207,9 +207,8 @@ class Hydrodynamics:
                 xtol=self.atol,
                 rtol=self.rtol,
             ).root
-            print(f"{self.thermodynamics.freeEnergyLow.maxPossibleTemperature =}")
+
             if not self.thermodynamics.freeEnergyLow.maxPossibleTemperature[1]:
-                print("hello")
                 self.doesPhaseTraceLimitvmax[1] = True
 
         except ValueError:
@@ -233,8 +232,6 @@ class Hydrodynamics:
         except ValueError:
             vmax2 = self.vJ
             self.doesPhaseTraceLimitvmax[0] = False
-
-        print(f"TMaxLowT {vmax1 = } TMaxHighT {vmax2 =}")
 
         return float(min(vmax1, vmax2))
 
