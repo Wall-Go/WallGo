@@ -78,8 +78,7 @@ Describes a Boltzmann collision integral for 2 -> 2 scattering process. This is 
 so that only processes relevant for Boltzmann mixing of those particles are included in a given CollisionIntegral4 object.
 "Particle1" refers to the "incoming" particle whose momentum is NOT integrated over; this has 3-momentum p1 and index 'a'.
 This is always assumed to be the first particle in each stored CollisionElement.
-"Particle2" refers to the other particle that is kept fixed but has its momentum integrated over.
-One particle is fixed as the "incoming" particle whose momentum is NOT integrated over.
+"Particle2" refers to the other particle to mix with, that is kept fixed but has its momentum integrated over.
 
 Our collision integrals are:
     C_a[\delta f] = 1/4 \sum{bcd} \int d^3p_2 d^3p_3 d^3p_4 / ((2pi)^5 (2E_2 2E_3 2E_4)) * \delta^4(P1 + P2 - P3 - P4) * |M_{ab->cd}|^2 P_{ab->cd}[\delta f]
