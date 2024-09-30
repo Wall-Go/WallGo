@@ -107,9 +107,13 @@ public:
 
     void changePolynomialBasis(size_t newBasisSize);
 
-    /* Calculates the whole collision integrand as defined in eq. (A1) of 2204.13120 (linearized P). 
-    Includes the 1/(2N) prefactor. Kinematics is solved (from delta functions) separately for each 
-    CollisionElement in our collisionElements array. For ultrarelativistic CollElems we heavily optimize the kinematic part. */
+    /* Calculates the whole collision integrand as defined in the "Collision terms" section of WallGo paper [TODO equation number].
+    Specifically, our collision integrals are
+        C_a[\delta f] = 1/(4N_a) \sum{bcd} \int d^3p_2 d^3p_3 d^3p_4 / (2pi)^5 (2E_2 2E_3 2E_4) * \delta^4(P1 + P2 - P3 - P4) * |M_{ab->cd}|^2 P_{ab->cd}[\delta f],
+    and this routine computes the full integrand including the sum over {bcd} particles.
+    The index 'a' is fixed to that of our "particle1" and we only include terms where the "\delta f" of "particle2" appears.
+    Matrix elements are assumed to include the 1/N_a factor, ie. when constructing collision integrals we obtained |M|^2 / N_a from the PhysicsModel.
+    For ultrarelativistic CollisionElements we heavily optimize the kinematic part. */
     double calculateIntegrand(
         double p2,
         double phi2,
@@ -117,6 +121,15 @@ public:
         double cosTheta2,
         double cosTheta3, 
         const IntegrandParameters &integrandParameters);
+
+    /* Calculates the full integrand on a given GridPoint. */
+    double calculateIntegrand(
+        double p2,
+        double phi2,
+        double phi3,
+        double cosTheta2,
+        double cosTheta3,
+        const GridPoint& gridPoint);
 
     // Calculate the integral C[m,n; j,k] with Monte Carlo vegas. As always, mn = polynomial indices, jk = grid momentum indices
     IntegrationResult integrate(const GridPoint& gridPoint, const IntegrationOptions& options);
