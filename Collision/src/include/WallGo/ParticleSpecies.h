@@ -21,10 +21,28 @@ enum class WALLGO_API EParticleType
 // Data-only container for describing a particle species
 struct ParticleDescription
 {
+
+	ParticleDescription() {}
+	ParticleDescription(const std::string& inName,
+		int32_t inIndex,
+		EParticleType inType,
+		bool bIsInEquilibrium,
+		bool bIsUltrarelativistic = true,
+		std::function<double(const ModelParameters&)> inMassSqFunction = nullptr
+	)
+	: name(inName),
+	index(inIndex),
+	type(inType),
+	bInEquilibrium(bIsInEquilibrium),
+	bUltrarelativistic(bIsUltrarelativistic),
+	massSqFunction(inMassSqFunction)
+	{
+	}
+
 	// Must be unique
 	std::string name = "Unknown";
 	// Must be unique
-	uint32_t index = 0;
+	int32_t index = 0;
 
 	EParticleType type = EParticleType::eNone;
 
@@ -38,10 +56,11 @@ struct ParticleDescription
 	This mass will be used in dispersion relations when computing particle energies for collision integration.
 	If the bUltrarelativistic flag is set, the mass function will not be called. */
 	std::function<double(const ModelParameters&)> massSqFunction;
+
 };
 
 
-/** FIXME Some redundancy here since ParticleSpecies is not very different from ParticleDescription.
+/** TODO Some redundancy here since ParticleSpecies is not very different from ParticleDescription.
 The most important difference is that this can cache the mass for performance,
 but if we ever generalize to grid-dependent mass then that responsibility should probably be relegated to the CollisionIntegral class.
 */
@@ -86,7 +105,7 @@ public:
 	inline bool isInEquilibrium() const { return mDescription.bInEquilibrium; }
 	inline std::string_view getName() const { return mDescription.name; }
 	inline EParticleType getStatistics() const { return mDescription.type; }
-	inline uint32_t getIndex() const { return mDescription.index; }
+	inline int32_t getIndex() const { return mDescription.index; }
 
 	// Equilibrium distribution function for the particle species
 	double fEq(double energy) const

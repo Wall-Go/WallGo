@@ -2,17 +2,246 @@
 #include <sstream>
 #include <regex>
 #include <map>
+#include <algorithm>
+
+#include "nlohmann/json.hpp"
 
 #include "MatrixElementParsing.h"
 #include "Common.h"
+
+using json = nlohmann::json;
 
 namespace wallgo
 {
 namespace utils
 {
 
-// Function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
-void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t>& indices, std::string& mathExpression)
+// Naive check based on file extension if it's likely a .json file
+bool isLikelyJsonFile(const std::filesystem::path& filePath)
+{
+    std::string extension = filePath.extension().string();
+    // make all lowercase
+    std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+    return extension == ".json";
+}
+
+bool buildMatrixElementsFromFile(
+    const std::filesystem::path& matrixElementFile,
+    const std::vector<int32_t>& offEqParticleIndices,
+    const std::unordered_map<std::string, double>& symbols,
+    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
+{
+    if (offEqParticleIndices.size() < 1) return false;
+
+    outMatrixElements.clear();
+
+    std::vector<ReadParticle> parsedParticles;
+    std::vector<ReadMatrixElement> parsedMatrixElements;
+
+    bool bReadSuccess = false;
+
+    if (isLikelyJsonFile(matrixElementFile))
+    {
+        bReadSuccess = parseMatrixElementsJson(
+            matrixElementFile,
+            parsedParticles,
+            parsedMatrixElements);
+    }
+    else
+    {
+        std::cout << "Warning: using legacy matrix element parsing. Consider using .json file format for better data validation.\n";
+
+        bReadSuccess = parseMatrixElementsRegexLegacy(
+            matrixElementFile,
+            parsedMatrixElements
+        );
+    }
+
+    if (!bReadSuccess)
+    {
+        return false;
+    }
+
+    bool bBuildSuccess = buildMatrixElements(
+        offEqParticleIndices,
+        symbols,
+        parsedParticles,
+        parsedMatrixElements,
+        outMatrixElements
+    );
+
+    return bBuildSuccess;
+}
+
+bool readParticlesJson(const json& data, std::vector<ReadParticle>& outParticles)
+{
+    bool bSuccess = true;
+    std::vector<std::string> errorReasons;
+    outParticles.clear();
+
+    if (data.contains("particles") && data["particles"].is_array())
+    {
+        for (const auto& particleEntry : data["particles"])
+        {
+
+            bool bHasName = particleEntry.contains("name") && particleEntry["name"].is_string();
+            bool bHasIndex = particleEntry.contains("index") && particleEntry["index"].is_number_integer();
+            
+            if (!bHasName)
+            {
+                errorReasons.push_back("Invalid name (missing or incomprehensible)");
+            }
+
+            if (!bHasIndex)
+            {
+                errorReasons.push_back("Invalid index (missing or incomprehensible)");
+            }
+
+            if (!bHasName || !bHasIndex)
+            {
+                std::cerr << "Invalid particle entry: " << particleEntry.dump() << std::endl;
+                bSuccess = false;
+                break;
+            }
+
+            ReadParticle particle;
+            particle.name = particleEntry["name"];
+            particle.index = particleEntry["index"];
+
+            outParticles.push_back(particle);
+        }
+    }
+    else
+    {
+        errorReasons.push_back("Missing or invalid entry: \"particles\"");
+        bSuccess = false;
+    }
+
+    if (!bSuccess)
+    {
+        std::cerr << "\nParticle parsing from JSON failed. Reasons:\n";
+        for (const std::string& errorMsg : errorReasons)
+        {
+            std::cerr << errorMsg << std::endl;
+        }
+    }
+
+    return bSuccess;
+}
+
+bool readExpressionsJson(const json& data, std::vector<ReadMatrixElement>& outMatrixElements)
+{
+    std::vector<std::string> errorReasons;
+    outMatrixElements.clear();
+
+    if (data.contains("matrixElements") && data["matrixElements"].is_array())
+    {
+        for (const auto& entry : data["matrixElements"])
+        {
+            bool bHasIndices = entry.contains("externalParticles") && entry["externalParticles"].is_array();
+            // lack of parameters is non-fatal
+            bool bHasParameters = entry.contains("parameters") && entry["parameters"].is_array();
+            bool bHasExpression = entry.contains("expression") && entry["expression"].is_string();
+
+            ReadMatrixElement newElement;
+
+            if (!bHasIndices)
+            {
+                errorReasons.push_back("Invalid particle indices (missing or incomprehensible)");            }
+            else
+            {
+                for (const auto& idx : entry["externalParticles"])
+                {
+                    if (!idx.is_number_integer())
+                    {
+                        errorReasons.push_back("Non-integer particle index");
+                        newElement.particleIndices.clear();
+                        break;
+                    }
+
+                    newElement.particleIndices.push_back(idx);
+                }
+            }
+
+            if (!bHasExpression)
+            {
+                errorReasons.push_back("Invalid matrix element expression (missing or incomprehensible");
+            }
+
+            if (errorReasons.size() > 0)
+            {
+                std::cerr << "Invalid matrix element entry: " << entry.dump() << std::endl;
+                break;
+            }
+
+            newElement.expression = entry["expression"];
+
+            // Read parameter symbols associated with the expression
+            if (bHasParameters)
+            {
+                for (const auto& param : entry["parameters"])
+                {
+                    if (!param.is_string())
+                    {
+                        errorReasons.push_back("Invalid model parameter (must be string)");
+                        newElement.parameters.clear();
+                        break;
+                    }
+
+                    newElement.parameters.push_back(param);
+                }
+            }
+
+            outMatrixElements.push_back(newElement);
+        }
+    }
+    else
+    {
+        errorReasons.push_back("Missing or invalid entry: \"matrixElements\"");
+    }
+
+    bool bSuccess = errorReasons.size() == 0;
+    if (!bSuccess)
+    {
+        std::cerr << "\nMatrix element parsing from JSON failed. Reasons:\n";
+        for (const std::string& errorMsg : errorReasons)
+        {
+            std::cerr << errorMsg << std::endl;
+        }
+    }
+
+    return bSuccess;
+}
+
+bool parseMatrixElementsJson(
+    const std::filesystem::path& matrixElementFile,
+    std::vector<ReadParticle>& outParticles,
+    std::vector<ReadMatrixElement>& outMatrixElements)
+{
+    std::ifstream file(matrixElementFile);
+    
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open matrix element file: " << matrixElementFile << std::endl;
+        return false;
+    }
+
+    json data = json::parse(file);
+    file.close();
+
+    bool bSuccess = readParticlesJson(data, outParticles);
+    if (!bSuccess) return false;
+
+    bSuccess &= readExpressionsJson(data, outMatrixElements);
+    if (!bSuccess) return false;
+
+    return bSuccess;
+}
+
+
+// Legacy function for this file only. Processes string of form "M[a,b,c,d] -> some funct" and stores in the arguments
+void interpretMatrixElement(const std::string& inputString, std::vector<int32_t>& indices, std::string& mathExpression)
 {
     // First split the string by "->""
     std::vector<std::string> tokens(2);
@@ -43,7 +272,7 @@ void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t
 
         while (ss >> num)
         {
-            indices.push_back(static_cast<uint32_t>(num));
+            indices.push_back(static_cast<int32_t>(num));
 
             // Check for the ',' separator and ignore it
             if (ss.peek() == ',')
@@ -54,11 +283,8 @@ void interpretMatrixElement(const std::string& inputString, std::vector<uint32_t
     }
 }
 
-bool parseMatrixElements(
-    const std::filesystem::path& matrixElementFile,
-    std::vector<uint32_t> offEqParticleIndices,
-    const std::unordered_map<std::string, double>& symbols,
-    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
+
+bool parseMatrixElementsRegexLegacy(const std::filesystem::path& matrixElementFile, std::vector<ReadMatrixElement>& outMatrixElements)
 {
     outMatrixElements.clear();
 
@@ -69,25 +295,14 @@ bool parseMatrixElements(
     }
 
     // Use regex to read all lines of form M[a,b,c,d] -> expr
-
-    /* Big TODO. Change matrix element file format so that
-    1. It's easier to parse without regex hacks. Eg: JSON format
-    2. Each matrix element could be associated with a list of symbols needed to evaluate it.
-    This would make it possible to safely define just enough symbols needed for each matrix element.
-    */
-
     std::string line;
-
-    // temp arrays
-    std::vector<std::string> readExpressions;
-    std::vector<std::vector<uint32_t>> readIndices;
 
     while (std::getline(file, line))
     {
         if (std::regex_search(line, std::regex("M\\[.*\\] -> (.*)")))
         {
             std::string expr;
-            std::vector<uint32_t> indices;
+            std::vector<int32_t> indices;
             interpretMatrixElement(line, indices, expr);
 
             if (indices.size() < 1 || expr.empty())
@@ -96,38 +311,82 @@ bool parseMatrixElements(
                 return false;
             }
 
-            readExpressions.push_back(expr);
-            readIndices.push_back(indices);
+            ReadMatrixElement newElement;
+            newElement.expression = expr;
+            newElement.particleIndices = indices;
+
+            outMatrixElements.push_back(newElement);
         }
     }
 
-    file.close();
+    return true;
+}
 
-    bool bMatrixElementsOK = true;
+bool buildMatrixElements(
+    const std::vector<int32_t>& modelOffEqParticleIndices,
+    const std::unordered_map<std::string, double>& modelSymbols,
+    const std::vector<ReadParticle>& parsedParticles,
+    const std::vector<ReadMatrixElement>& parsedMatrixElements,
+    std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
+{
+    outMatrixElements.clear();
 
-    /* Now create the MatrixElement objects and group them by their external off-eq indices
-    * so that we know which elements are needed for collisions of particle pair (a,b).
-    */
-    for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
+    // parsedParticles currently not used as the legacy parsing does not support it.
+    // It could be used for model <-> parsed expr consistency validations, but this is TODO
+    WG_UNUSED(parsedParticles);
+
+    // Iterate over all (p1, p2) off-eq particle combinations and find and init matrix elements that contribute to their Boltzmann mixing
+    for (int32_t idx1 : modelOffEqParticleIndices) for (int32_t idx2 : modelOffEqParticleIndices)
     {
         const IndexPair offEqPair(idx1, idx2);
         outMatrixElements.insert({ offEqPair, std::vector<MatrixElement>() });
 
-        for (uint32_t elementIdx = 0; elementIdx < readExpressions.size(); ++elementIdx)
+        for (const ReadMatrixElement& readElement : parsedMatrixElements)
         {
-            const auto& indices = readIndices[elementIdx];
-            if (indices[0] != idx1) continue;
+            assert(!readElement.particleIndices.empty() && "Matrix element missing external particle info");
+
+            const std::vector<int32_t>& indices = readElement.particleIndices;
+
+            if (indices.front() != idx1) continue;
             // Any other index needs to match idx2
             if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
 
+            // Indices found, so this matrix element contributes. Now create it
+
             MatrixElement newElement;
-            bMatrixElementsOK &= newElement.init(readExpressions[elementIdx], indices, symbols);
+
+            // Define the numerical matrix element to only depend on symbols that were parsed together with the expression.
+            // If empty, define it to depend on all model parameters
+            std::unordered_map<std::string, double> symbols;
+
+            for (const std::string& s : readElement.parameters)
+            {
+                if (modelSymbols.count(s) < 1)
+                {
+                    std::cerr << "Error: matrix element was defined to depend on symbol '" << s << "', but this symbol has not been defined in PhysicsModel.\n";
+                    std::cerr << "This is very likely caused by invalid user input and almost certainly fatal, but we try to continue anyway.\n";
+                    std::cerr << "The problematic matrix element was:\n" << readElement.expression << std::endl;
+                    continue;
+                }
+
+                symbols.insert({ s, modelSymbols.at(s) });
+            }
+            if (symbols.empty() or true)
+            {
+                symbols = modelSymbols;
+            }
+
+            if (!newElement.init(readElement.expression, readElement.particleIndices, symbols))
+            {
+                // Failed to make the matrix element evaluatable. This is fatal, so give up here and let the caller decide what to do
+                return false;
+            }
 
             outMatrixElements.at(offEqPair).push_back(newElement);
         }
     }
 
-    return bMatrixElementsOK;
+    return true;
 }
 
 } // namespace utils

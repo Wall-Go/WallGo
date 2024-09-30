@@ -9,6 +9,8 @@
 namespace wallgo
 {
 
+const std::vector<std::string> MatrixElement::RESERVED_SYMBOLS = { "_s", "_t", "_u" };
+
 MatrixElement::MatrixElement() 
     : mMandelstam(0, 0, 0)
 {
@@ -35,7 +37,7 @@ MatrixElement& MatrixElement::operator=(const MatrixElement &other)
 
 bool MatrixElement::init(
     const std::string& expression,
-    const std::vector<uint32_t> externalParticleIndices,
+    const std::vector<int32_t> externalParticleIndices,
     const std::unordered_map<std::string, double>& symbols)
 {
     mSymbols.clear();
@@ -117,12 +119,12 @@ void MatrixElement::initParser()
 {
     parser.SetExpr("0");
 
-    parser.DefineVar("s", &mMandelstam.s);
-    parser.DefineVar("t", &mMandelstam.t);
-    parser.DefineVar("u", &mMandelstam.u);
-
     // To allow variable names like msq[2] we need to add [] to parser's character list
     parser.DefineNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]");
+
+    parser.DefineVar("_s", &mMandelstam.s);
+    parser.DefineVar("_t", &mMandelstam.t);
+    parser.DefineVar("_u", &mMandelstam.u);
 }
 
 void MatrixElement::clearParser()
