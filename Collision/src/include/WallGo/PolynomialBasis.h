@@ -27,9 +27,10 @@ static inline double T(uint32_t n, double x) { return std::cos(n* std::acos(x));
 static inline double Tbar(uint32_t m, double x) { return (m % 2 == 0 ? T(m, x) - 1.0 : T(m, x) - x); }
 static inline double Ttilde(uint32_t n, double x) { return T(n, x) - 1.0; }
     
-// Construct "rho" momenta on the grid. N is the basis size
-static inline double rhoZGrid(uint32_t j, size_t N) { return std::cos(j * constants::pi / static_cast<double>(N)); }
-static inline double rhoParGrid(uint32_t k, size_t N) { return std::cos(k * constants::pi / static_cast<double>(N-1)); }
+/* Construct "rho" momenta on the grid. This is like eq. (34) in 2204.13120, but NOTE:
+We have inverted the index ordering. */
+static inline double rhoZGrid(uint32_t j, size_t N) { return std::cos((N - j) * constants::pi / static_cast<double>(N)); }
+static inline double rhoParGrid(uint32_t k, size_t N) { return std::cos((N - k) * constants::pi / static_cast<double>(N-1)); }
 
 // Convert p_z and p_par to rho_z, rho_par
 static inline double pZ_to_rhoZ(double pZ) { return std::tanh(pZ / 2.0); }
