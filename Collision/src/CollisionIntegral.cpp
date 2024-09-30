@@ -662,10 +662,11 @@ double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi
     
     if (!bDoneUR) for (CollisionElement<4> &CollisionElement : collisionElements_ultrarelativistic) fullIntegrand += evaluateNonUR(CollisionElement);
 
-    // Common numerical prefactor: 1/4 * 1/(2pi)^5 * 1/8, the last 1/8 is from 1/(2E2*2E3*2E4)
+    // Common numerical prefactor: 1/4 * 1/(2pi)^5 * 1/2 * 1/2, the last 1/2s are from 1/(2E2*2E3). 1/(2E4) is gone due to the 9D -> 5D reduction.
     constexpr double PI = constants::pi;
-    constexpr double prefactorDenum = (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * 8.0 * 4;
-    return fullIntegrand / prefactorDenum;
+    constexpr double pi2pow5 = (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI) * (2.0 * PI);
+    constexpr double prefactor = 1.0 / pi2pow5 / 4. / 4.;
+    return fullIntegrand * prefactor;
 }
 
 double CollisionIntegral4::calculateIntegrand(double p2, double phi2, double phi3, double cosTheta2, double cosTheta3, const GridPoint& gridPoint)
