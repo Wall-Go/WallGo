@@ -72,6 +72,8 @@ public:
     NB: does NOT perform sensibility checks on the input integral.*/
     void addCollisionIntegral(const ParticleNamePair& particleNames, const CollisionIntegral4& inIntegral);
 
+    // Get pointer to specified CollisionIntegral4. Will be null if the integral is not found.
+    CollisionIntegral4* getIntegralForPair(const ParticleNamePair& particleNames);
 
     /* Calculate collision integrals for particle pair (particle1, particle2) everywhere on the grid. */
     CollisionResultsGrid computeIntegralsForPair(

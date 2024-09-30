@@ -2,6 +2,14 @@ import pytest
 
 import WallGoCollision
 
+def test_getIntegralForPair(collisionTensorQCD: WallGoCollision.CollisionTensor) -> None:
+    """"""
+    integral = collisionTensorQCD.getIntegralForPair("top", "top")
+    assert integral is not None
+    assert isinstance(integral, WallGoCollision.CollisionIntegral4)
+    
+    nonExistentIntegral = collisionTensorQCD.getIntegralForPair("dumb1", "dumb2")
+    assert nonExistentIntegral is None
 
 @pytest.mark.slow
 @pytest.mark.parametrize(

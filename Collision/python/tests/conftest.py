@@ -6,7 +6,7 @@ import WallGoCollision
 fileDir = pathlib.Path(__file__).parent.resolve()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def collisionModelQCD() -> WallGoCollision.PhysicsModel:
     """SU(3) model with 1 off-eq quark, off-eq gluon and 5 in-eq light quarks.
     All ultrarelativistic. Also loads matrix elements"""
@@ -48,18 +48,27 @@ def collisionModelQCD() -> WallGoCollision.PhysicsModel:
         str(fileDir / "MatrixElements/MatrixElements_QCD.txt"), False
     )
 
-    return model
+    yield model
 
+@pytest.fixture()
+def collisionTensorQCD(
+    collisionModelQCD: WallGoCollision.PhysicsModel
+) -> WallGoCollision.CollisionTensor:
+    """Collision tensor for QCD model, top/gluon are off eq.
+    Initialized to N=11."""
 
-@pytest.fixture(scope="session")
+    collisionTensor = collisionModelQCD.createCollisionTensor(11)
+    yield collisionTensor
+
+@pytest.fixture()
 def resultsQCD_N3(
-    collisionModelQCD: WallGoCollision.PhysicsModel,
+    collisionTensorQCD: WallGoCollision.CollisionTensor,
 ) -> WallGoCollision.CollisionTensorResult:
     """Collision integration results at N=3 for QCD model"""
 
     WallGoCollision.setSeed(0)
 
-    collisionTensor = collisionModelQCD.createCollisionTensor(3)
+    collisionTensorQCD.changePolynomialBasisSize(3)
 
     options = WallGoCollision.IntegrationOptions()
     options.maxIntegrationMomentum = 20
@@ -69,8 +78,8 @@ def resultsQCD_N3(
     options.calls = 50000
     options.bIncludeStatisticalErrors = True
 
-    collisionTensor.setIntegrationOptions(options)
+    collisionTensorQCD.setIntegrationOptions(options)
 
-    resultTensor = collisionTensor.computeIntegralsAll()
+    resultTensor = collisionTensorQCD.computeIntegralsAll()
 
-    return resultTensor
+    yield resultTensor

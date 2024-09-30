@@ -107,6 +107,18 @@ void CollisionTensor::addCollisionIntegral(const ParticleNamePair& particleNames
     mCachedIntegrals[particleNames] = inIntegral;
 }
 
+CollisionIntegral4* CollisionTensor::getIntegralForPair(const ParticleNamePair& particleNames)
+{
+    if (mCachedIntegrals.count(particleNames) > 0)
+    {
+        return &mCachedIntegrals.at(particleNames);
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 
 CollisionResultsGrid CollisionTensor::computeIntegralsForPair(
     const std::string& particle1,
