@@ -218,6 +218,7 @@ class WallGoExampleBase(ABC):
 
         # hacky
         momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
+        spatialGridSize = manager.config.getint("PolynomialGrid", "spatialGridSize")
 
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
@@ -250,6 +251,8 @@ class WallGoExampleBase(ABC):
                 benchmark.phaseInfo,
                 benchmark.veffDerivativeScales,
             )
+
+            temperatureScale = benchmark.veffDerivativeScales.temperatureScale
 
             vwresults[counter, 0] = benchmark.inputParameters["mH"]
 
@@ -398,4 +401,6 @@ class WallGoExampleBase(ABC):
 
             counter = counter +1
 
-        np.savetxt('WallVelocitySM_N{momentumGridSize}.txt', vwresults, delimiter=' ', fmt='%.6f')
+        #hacky
+        filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + '.txt'
+        np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')

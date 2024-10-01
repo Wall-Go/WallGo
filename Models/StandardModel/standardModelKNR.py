@@ -21,9 +21,7 @@ integrals as the "CollisonOutput" directory
 
 Note:
 This benchmark is used to compare against the results of
-G. Moore and T. Prokopec, How fast can the wall move?
-A Study of the electroweak phase transition dynamics, Phys.Rev.D 52 (1995) 7182-7204
-doi:10.1103/PhysRevD.52.7182
+Konstandin, Nardini, Rues, From Boltzmann equations to steady wall velocities, 2014
 """
 
 import sys
@@ -208,19 +206,17 @@ class StandardModel(GenericModel):
 
         modelParameters["lambda"] = inputParameters["mH"] ** 2 / (2 * v0**2)
 
+
         # The following parameters are defined on page 6 of hep-ph/9506475
         bconst = 3 / (64 * np.pi**2 * v0**4) * (2 * massW**4 + massZ**4 - 4 * massT**4)
 
         modelParameters["D"] = (
             1 / (8 * v0**2) * (2 * massW**2 + massZ**2 + 2 * massT**2)
         )
-        modelParameters["E0"] = 1 / (12 * np.pi * v0**3) * (4 * massW**3 + 2 * massZ**3)
+        modelParameters["E"] = 1 / (4 * np.pi * v0**3) * (2 * massW**3 +  massZ**3)
 
         modelParameters["T0sq"] = (
             1 / 4 / modelParameters["D"] * (massH**2 - 8 * bconst * v0**2)
-        )
-        modelParameters["C0"] = (
-            1 / (16 * np.pi**2) * (1.42 * modelParameters["g2"] ** 4)
         )
 
         return modelParameters
@@ -303,31 +299,11 @@ class EffectivePotentialSM(EffectivePotential):
 
         # Implement finite-temperature corrections to the modelParameters lambda,
         # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
-        lambdaT = self.modelParameters["lambda"] - 3 / (
-            16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
-        ) * (
-            2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
-            + mZ**4 * np.log(mZ**2 / (ab * T**2) + 1e-100)
-            - 4 * mt**4 * np.log(mt**2 / (af * T**2) + 1e-100)
-        )
+        lambdaT = self.modelParameters["lambda"] - 3/(16*np.pi*np.pi*self.modelParameters["v0"]**4)*(2*mW**4*np.log(mW**2/(ab*T**2))+ mZ**4*np.log(mZ**2/(ab*T**2)) -4*mt**4*np.log(mt**2/(af*T**2)))
 
-        cT: float | np.ndarray = self.modelParameters["C0"] + 1 / (
-            16 * np.pi * np.pi
-        ) * (4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2)
 
-        # HACK: take the absolute value of lambdaT here,
-        # to avoid taking the square root of a negative number
-        eT: float | np.ndarray = (
-            self.modelParameters["E0"]
-            + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT) ** 1.5
-        )
+        potentialT: float | np.ndarray = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - self.modelParameters["E"]*T*pow(v,3) + lambdaT/4*pow(v,4)
 
-        potentialT: float | np.ndarray = (
-            self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
-            - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T))
-            - eT * T * pow(v, 3)
-            + lambdaT / 4 * pow(v, 4)
-        )
 
         potentialTotal = np.real(potentialT + self.constantTerms(T))
 
@@ -487,8 +463,8 @@ class StandardModelExample(WallGoExampleBase):
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """SM example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "5")
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "30")
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "15")
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
@@ -527,7 +503,7 @@ class StandardModelExample(WallGoExampleBase):
         of the Higgs mass.
         """
         valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
-        valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
+        valuesTn = [57.692, 71.179, 84.105, 103.138, 114.443]
 
         output: list[ExampleInputPoint] = []
 
