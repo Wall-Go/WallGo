@@ -52,9 +52,18 @@ class WallSolver:
     """
 
     eom: EOM
+    """EOM object"""
+
     grid: Grid3Scales
+    """Grid3Scales object used to describe the mapping between the physical
+    coordinates to the compact ones."""
+
     boltzmannSolver: BoltzmannSolver
+    """ BoltzmannSolver object used to solve the Boltzmann equation."""
+
     initialWallThickness: float
+    """Initial wall thickness used by the solver. Should be expressed in physical
+    units (the units used in EffectivePotential)."""
 
 
 class WallGoManager:
@@ -460,8 +469,8 @@ class WallGoManager:
 
         gridMomentumFalloffScale = Tnucl
 
-        wallThickness = wallSolverSettings.wallThicknessGuess / Tnucl
-        meanFreePath = wallSolverSettings.meanFreePath / Tnucl
+        wallThickness = wallSolverSettings.wallThicknessGuess
+        meanFreePath = wallSolverSettings.meanFreePath
 
         grid: Grid3Scales = self.buildGrid(
             wallThickness,
@@ -483,7 +492,7 @@ class WallGoManager:
         eom: EOM = self.buildEOM(grid, boltzmannSolver, meanFreePath)
 
         eom.includeOffEq = wallSolverSettings.bIncludeOffEquilibrium
-        return WallSolver(eom, grid, boltzmannSolver, wallThickness)
+        return WallSolver(eom, grid, boltzmannSolver, wallThickness / Tnucl)
 
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
         """
@@ -514,9 +523,10 @@ class WallGoManager:
         ----------
         wallThicknessIni : float
             Initial guess of the wall thickness that will be used to solve the EOM.
+            Should be expressed in units of 1/Tnucl.
         meanFreePath : float
             Estimate of the mean free path of the plasma. This will be used to set the
-            tail lengths in the Grid object.
+            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
         initialMomentumFalloffScale : float
             TODO documentation. Should be close to temperature at the wall
         """
@@ -525,10 +535,13 @@ class WallGoManager:
         gridM = self.config.getint("PolynomialGrid", "spatialGridSize")
         ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
         smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
+        
+        Tnucl = self.phasesAtTn.temperature
 
+        # We divide by Tnucl to get it in physical units of length
         tailLength = max(
             meanFreePath, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
-        )
+        ) / Tnucl
 
         if gridN % 2 == 0:
             raise ValueError(
@@ -541,7 +554,7 @@ class WallGoManager:
             gridN,
             tailLength,
             tailLength,
-            wallThicknessIni,
+            wallThicknessIni / Tnucl,
             initialMomentumFalloffScale,
             ratioPointsWall,
             smoothing,
@@ -553,6 +566,23 @@ class WallGoManager:
         """
         Constructs an EOM object using internal state from the WallGoManager,
         and the input Grid/BoltzmannSolver.
+
+        Parameters
+        ----------
+        grid : Grid3Scales
+            Grid3Scales object used to describe the mapping between the physical
+            coordinates to the compact ones.
+        boltzmannSolver : BoltzmannSolver
+            BoltzmannSolver object used to solve the Boltzmann equation.
+        meanFreePath : float
+            Estimate of the mean free path of the plasma. This will be used to set the
+            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
+
+        Returns
+        -------
+        EOM
+            EOM object.
+
         """
         numberOfFields = self.model.fieldCount
 
@@ -568,6 +598,8 @@ class WallGoManager:
             self.config.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
             self.config.getfloat("EquationOfMotion", "wallOffsetUpperBound"),
         )
+        
+        Tnucl = self.phasesAtTn.temperature
 
         return EOM(
             boltzmannSolver,
@@ -575,7 +607,7 @@ class WallGoManager:
             self.hydrodynamics,
             grid,
             numberOfFields,
-            meanFreePath,
+            meanFreePath / Tnucl, # We divide by Tnucl to get physical units
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,

@@ -78,12 +78,15 @@ class Grid3Scales(Grid):
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
         tailLengthInside : float
             Decay length of the solution's tail inside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall
+            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            expressed in physical units (the units used in EffectivePotential).
         tailLengthOutside : float
             Decay length of the solution's tail outside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall
+            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            expressed in physical units (the units used in EffectivePotential).
         wallThickness : float
-            Thickness of the wall.
+            Thickness of the wall. Should be expressed in physical units
+            (the units used in EffectivePotential).
         momentumFalloffT : float
             Temperature scale determining transform in momentum directions. 
             Should be close to the plasma temperature.
