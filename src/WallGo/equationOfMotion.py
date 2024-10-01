@@ -68,7 +68,8 @@ class EOM:
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
         meanFreePath : float
-            Estimate of the mean free path of the particles in the plasma.
+            Estimate of the mean free path of the particles in the plasma. Should be
+            expressed in physical units (the units used in EffectivePotential).
         wallThicknessBounds : tuple
             Tuple containing the bounds the wall thickness (in units of 1/Tnucl).
             The solver will never explore outside of this interval.
@@ -142,7 +143,8 @@ class EOM:
         Parameters
         ----------
         wallThicknessIni : float or None, optional
-            Initial thickness used for all the walls. If None, uses 5/Tnucl.
+            Initial thickness used for all the walls. Should be expressed in physical
+            units (the units used in EffectivePotential). If None, uses 5/Tnucl.
             Default is None.
 
         Returns
@@ -207,7 +209,8 @@ class EOM:
         vmax : float
             Largest wall velocity probed. Must be between vmin and 1.
         wallThicknessIni : float | None, optional
-            Initial value of the wall thickness. If None, it is set to 5/Tnucl.
+            Initial value of the wall thickness. Should be expressed in physical units
+            (the units used in EffectivePotential). If None, it is set to 5/Tnucl.
             The default is None.
         nbrPointsMin : int, optional
             Minimal number of points to bracket the roots. The default is 5.

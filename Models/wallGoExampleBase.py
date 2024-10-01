@@ -182,10 +182,16 @@ class WallGoExampleBase(ABC):
         )
 
         print(header)
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
+        if results.wallVelocity is not None:
+            print(f"wallVelocity:      {results.wallVelocity:.6f}")
+            print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+            print(f"wallWidths:        {results.wallWidths}")
+            print(f"wallOffsets:       {results.wallOffsets}")
+        else:
+            print("wallVelocity: None")
+            print(f"success:      {results.success}")
+            print(f"solutionType: {results.solutionType}")
+            print(f"message:      {results.message}")
 
     def runExample(self) -> None:  # pylint: disable = R0914, R0915
         """
