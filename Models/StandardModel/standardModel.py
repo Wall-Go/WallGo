@@ -488,7 +488,7 @@ class StandardModelExample(WallGoExampleBase):
         """SM example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "5")
+        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
@@ -548,7 +548,7 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureScale=1.0, fieldScale=[50.0]
+                        temperatureScale=1., fieldScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example

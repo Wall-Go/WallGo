@@ -253,6 +253,7 @@ class WallGoExampleBase(ABC):
             )
 
             temperatureScale = benchmark.veffDerivativeScales.temperatureScale
+            fieldScale = benchmark.veffDerivativeScales.fieldScale[0]
 
             vwresults[counter, 0] = benchmark.inputParameters["mH"]
 
@@ -402,5 +403,5 @@ class WallGoExampleBase(ABC):
             counter = counter +1
 
         #hacky
-        filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + '.txt'
+        filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + 'fieldScale' + str(fieldScale) + '.txt'
         np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')
