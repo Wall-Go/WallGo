@@ -33,16 +33,15 @@ class WallSolverSettings:
     """If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).
     """
 
-    meanFreePath: float = 1.0
-    """Estimate of the mean free path of the plasma. This will be used to set the
-    tail lengths in the Grid object.
-    [FIXME which units? what is a good default value?]
+    meanFreePath: float = 100.0
+    """Estimate of the mean free path of the plasma in units of 1/Tn. This will be used
+    to set the tail lengths in the Grid object. Default is 100.
     """
 
-    wallThicknessGuess: float | None = None
-    """Initial guess of the wall thickness that will be used to solve the EOM.
-    If None, we use value of 5/Tnucl. Default is None.
-    [FIXME which units? Are we happy with None as the default?]
+    wallThicknessGuess: float = 5.0
+    """
+    Initial guess of the wall thickness that will be used to solve the EOM, in units
+    1/Tn. Default is 5.
     """
 
 
@@ -478,15 +477,12 @@ class WallGoManager:
 
         gridMomentumFalloffScale = Tnucl
 
-        wallThickness = wallSolverSettings.wallThicknessGuess
-
-        if wallThickness is None:
-            # Default guess: 5 / Tn
-            wallThickness = 5.0 / Tnucl
+        wallThickness = wallSolverSettings.wallThicknessGuess / Tnucl
+        meanFreePath = wallSolverSettings.meanFreePath / Tnucl
 
         grid: Grid3Scales = self.buildGrid(
             wallThickness,
-            wallSolverSettings.meanFreePath,
+            meanFreePath,
             gridMomentumFalloffScale,
         )
 
@@ -501,7 +497,7 @@ class WallGoManager:
             # TODO may be cleaner to handle it here and return an invalid solver
             boltzmannSolver.loadCollisions(self.collisionDirectory)
 
-        eom: EOM = self.buildEOM(grid, boltzmannSolver, wallSolverSettings.meanFreePath)
+        eom: EOM = self.buildEOM(grid, boltzmannSolver, meanFreePath)
 
         eom.includeOffEq = wallSolverSettings.bIncludeOffEquilibrium
         return WallSolver(eom, grid, boltzmannSolver, wallThickness)
