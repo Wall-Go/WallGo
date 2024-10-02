@@ -51,7 +51,8 @@ class EffectivePotential(ABC):
     """Typical relative accuracy at which the effective potential can be computed.
     For simple polynomial potentials this is probably close to machine precision of Python floats (1e-15).
     For loop-corrected potentials a limited factor can be the eg. accuracy of numerical integration.
-    Default is 1e-8, matching the relative error in WallGo's Jb/Jf thermal 1-loop integrals.
+    Default is 1e-8, matching the relative error in Jb/Jf thermal 1-loop integrals
+    from PotentialTools.
     """
 
     derivativeSettings: VeffDerivativeSettings

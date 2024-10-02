@@ -41,8 +41,8 @@ class InterpolatableFunction(ABC):
         - Validating that what was read from a file makes sense, ie. matches the result
           given by _evaluate().
 
-    WallGo uses this class for the thermal Jb, Jf integrals and for evaluating the free
-    energy as function of the temperature.
+    WallGo uses this class for evaluating the free energy as function of the
+    temperature. It can also be used for the thermal Jb, Jf integrals.
 
     This also works for functions returning many numbers, ie. vector functions
     V(x) = [V1, V2, ...]. In this case each component gets its own interpolation table.

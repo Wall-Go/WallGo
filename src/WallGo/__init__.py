@@ -21,7 +21,6 @@ from .interpolatableFunction import InterpolatableFunction
 
 from .collisionArray import CollisionArray
 
-from .integrals import Integrals
 from .Config import Config
 
 from .WallGoUtils import getSafePathToResource
@@ -59,24 +58,10 @@ def isCollisionModuleAvailable() -> bool:
 
 defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
 
-# config = loadConfig(defaultConfigFile)
-
-# if (config == {}):
-#    errorMessage = "Failed to load WallGo config file: " + defaultConfigFile
-#    raise RuntimeError(errorMessage)
-
-# print("Read WallGo config:")
-# print(config)
-
 _bInitialized = False  # pylint: disable=invalid-name
+
 """Configuration settings for WallGo"""
 config = Config()
-
-"""Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by
-replacing their direct computation with precomputed interpolation tables."""
-defaultIntegrals = Integrals()
-defaultIntegrals.Jb.disableAdaptiveInterpolation()
-defaultIntegrals.Jf.disableAdaptiveInterpolation()
 
 
 # Define a separate initializer function that does NOT get called automatically.
@@ -92,30 +77,11 @@ def initialize() -> None:
     global config  # pylint: disable=invalid-name
 
     if not _bInitialized:
-
-        ## read default config
+        # read default configs
         config.readINI(getSafePathToResource("Config/WallGoDefaults.ini"))
         config.readINI(getSafePathToResource("Config/CollisionDefaults.ini"))
-
         # print(config)
-
-        ## Initialize interpolations for our default integrals
-        _initalizeIntegralInterpolations()
-
         _bInitialized = True
-
     else:
         raise RuntimeWarning("Warning: Repeated call to WallGo.initialize()")
 
-
-def _initalizeIntegralInterpolations() -> None:  # pylint: disable=invalid-name
-    global config  # pylint: disable=invalid-name
-
-    defaultIntegrals.Jb.readInterpolationTable(
-        getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jb")),
-        bVerbose=False,
-    )
-    defaultIntegrals.Jf.readInterpolationTable(
-        getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")),
-        bVerbose=False,
-    )
