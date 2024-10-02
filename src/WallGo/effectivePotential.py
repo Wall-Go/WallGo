@@ -1,10 +1,13 @@
-import numpy as np
-import numpy.typing as npt
+"""
+EffectivePotential class definition.
+"""
 from typing import Tuple, Type, Any
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import copy
 import inspect # check for ABC
+import numpy as np
+import numpy.typing as npt
 import scipy.optimize
 import scipy.interpolate
 
@@ -28,20 +31,23 @@ class VeffDerivativeSettings:
     same scale, or an array of floats (one element for each classical field in the model)."""
 
 class EffectivePotential(ABC):
-    """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
+    r"""Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
     and computing free energies (pressures) in the two phases.
     
-    Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
-    However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
+    Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is :math:`p = -V_{\rm eff}(\phi)` if :math:`\phi` is a local minimum.
+    However for phase transitions it is common to neglect field-independent parts of :math:`V_{\rm eff}`, for example one may choose normalization so that :math:`V_{\rm eff}(0) = 0`.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
     With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
 
-    The user must call configureDerivatives() before evaluating the derivatives to set
+    The effective potential defined here is assumed to be real. That is, the
+    :py:meth:`evaluate()` function is assumed to return a real value.
+
+    The user must call :py:meth:`configureDerivatives()` before evaluating the derivatives to set
     temperature and field scales of your potential, and optionally update the effectivePotentialError attribute.
     These quantities are used to estimate the optimal step size when computing derivatives with finite
     differences. It is done by requiring that the potential error and the error from
     finite difference calculation contribute similarly to the derivative error.
-    See the VeffDerivativeSettings dataclass.
+    See the :py:class:`VeffDerivativeSettings` dataclass.
     """
     
     fieldCount: int
@@ -61,8 +67,8 @@ class EffectivePotential(ABC):
     # Used in derivatives, combines field/temperature scales into one array
 
     @abstractmethod
-    def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
-        """Implement the actual computation of Veff(phi) here. The return value should be (the UV-finite part of) Veff 
+    def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike) -> npt.ArrayLike:
+        r"""Implement the actual computation of :math:`V_{\rm eff}(\phi)` here. The return value should be (the UV-finite part of)  :math:`V_{\rm eff}` 
         at the input field configuration and temperature. 
         
         Normalization of the potential DOES matter: You have to ensure that full T-dependence is included.
@@ -141,12 +147,12 @@ class EffectivePotential(ABC):
             """Numerically minimize the potential wrt. fields. 
             We can pass a fields array to scipy routines normally, but scipy seems to forcibly convert back to standard ndarray
             causing issues in the Veff evaluate function if it uses extended functionality from the Fields class. 
-            So we need a wrapper that casts back to Fields type. It also needs to fix the temperature, and we only minimize the real part
+            So we need a wrapper that casts back to Fields type. It also needs to fix the temperature.
             """
 
             def evaluateWrapper(fieldArray: np.ndarray):
                 fields = Fields.castFromNumpy(fieldArray)
-                return self.evaluate(fields, T[i]).real
+                return self.evaluate(fields, T[i])
 
             guess = guesses.getFieldPoint(i)
 
@@ -156,7 +162,7 @@ class EffectivePotential(ABC):
             resValue[i] = res.fun
 
             # Check for presenece of imaginary parts at minimum
-            self.evaluate(Fields((res.x)), T[i], checkForImaginary=True)
+            self.evaluate(Fields((res.x)), T[i])
 
         ## Need to cast the field location
         return Fields.castFromNumpy(resLocation), resValue
@@ -181,7 +187,7 @@ class EffectivePotential(ABC):
         return combinedInput
 
     def derivT(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike):
-        """Calculate derivative of (real part of) the effective potential with
+        """Calculate derivative of the effective potential with
         respect to temperature.
 
         Parameters
@@ -200,7 +206,7 @@ class EffectivePotential(ABC):
         assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
                                     "called before computing a derivative."
         der = derivative(
-            lambda T: self.evaluate(fields, T).real,
+            lambda T: self.evaluate(fields, T),
             temperature,
             n=1,
             order=4,
