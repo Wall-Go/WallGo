@@ -12,7 +12,7 @@ from .interpolatableFunction import (InterpolatableFunction,
                                      EExtrapolationType,
                                      inputType,
                                      outputType)
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .fields import FieldPoint, Fields
 
 @dataclass

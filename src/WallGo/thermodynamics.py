@@ -8,7 +8,7 @@ from typing import Tuple
 import numpy as np
 import scipy.optimize
 
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import Fields
 from .freeEnergy import FreeEnergy
