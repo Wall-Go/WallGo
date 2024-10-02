@@ -183,10 +183,16 @@ class WallGoExampleBase(ABC):
         )
 
         print(header)
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
+        if results.wallVelocity is not None:
+            print(f"wallVelocity:      {results.wallVelocity:.6f}")
+            print(f"wallVelocityError: {results.wallVelocityError:.6f}")
+            print(f"wallWidths:        {results.wallWidths}")
+            print(f"wallOffsets:       {results.wallOffsets}")
+        else:
+            print("wallVelocity: None")
+            print(f"success:      {results.success}")
+            print(f"solutionType: {results.solutionType}")
+            print(f"message:      {results.message}")
 
     def runExample(self) -> None:  # pylint: disable = R0914, R0915
         """
@@ -387,9 +393,15 @@ class WallGoExampleBase(ABC):
                         """
                     )
 
-            vwresults[counter, 2] = results.wallVelocity
-            vwresults[counter, 3] = results.wallVelocityError
-            vwresults[counter, 4] = results.wallWidths
+            if results.wallVelocity is not None:
+                vwresults[counter, 2] = results.wallVelocity
+                vwresults[counter, 3] = results.wallVelocityError
+                vwresults[counter, 4] = results.wallWidths
+            
+            else:
+                vwresults[counter, 2] = 0
+                vwresults[counter, 3] = 0
+                vwresults[counter, 4] = 0
 
 
             # comment out detonations for this example

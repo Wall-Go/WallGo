@@ -33,5 +33,21 @@ plt.xlabel(r"$m_H$", fontsize=15)
 plt.ylabel(r"$v_w$", fontsize=15)
 plt.grid()
 #plt.legend(loc='center right')
-plt.savefig('Compare.eps', format='eps')
+#plt.savefig('Compare.eps', format='eps')
+plt.show()
+
+
+# Check how the results depend on temperatureScale and fieldScale
+
+L1phi50 = np.loadtxt("./ResultsMPPotential/N11M20tempScale1.0fieldScale50.0.txt", float)
+L05phi50 = np.loadtxt("./ResultsMPPotential/N11M20tempScale0.5fieldScale50.0.txt", float)
+L2phi50 = np.loadtxt("./ResultsMPPotential/N11M20tempScale2.0fieldScale50.0.txt", float)
+
+plt.errorbar(mHs, L1phi50[:,2], yerr = L1phi50[:,3], capsize = 5, label = 'Tscale = 1. GeV, Fieldscale = 50 GeV')
+plt.errorbar(mHs, L05phi50[:,2], yerr = L05phi50[:,3], capsize = 5, label = 'Tscale = 0.5 GeV, Fieldscale = 50 GeV', linestyle = '-.')
+plt.errorbar(mHs, L2phi50[:,2], yerr = L2phi50[:,3], capsize = 5, label = 'Tscale = 2.0 GeV, Fieldscale = 50 GeV', linestyle = '-.')
+
+plt.xlabel(r"$m_H$", fontsize=15)
+plt.ylabel(r"$v_w$", fontsize=15)
+
 plt.show()
