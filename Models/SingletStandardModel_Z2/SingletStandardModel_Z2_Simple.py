@@ -12,24 +12,32 @@ class SingletSM_Z2_Simple(SingletSMZ2):
 
     def __init__(self, initialInputParameters: dict[str, float]):
 
-        super().__init__(initialInputParameters)
-
-        # Initialize internal Veff with our params dict. @todo will it be annoying to keep these in sync if our params change?
-        self.effectivePotential = EffectivePotentialxSM_Z2_Simple(
-            self.modelParameters, self.fieldCount
+        self.modelParameters = self.calculateLagrangianParameters(
+            initialInputParameters
         )
+
+        self.effectivePotential = EffectivePotentialxSM_Z2_Simple(self)
 
 
 # Overwrite more complicated effective potential keeping only O(g^2T^4) bits
 class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
 
+    fieldCount = 2
+
+    def __init__(self, owningModel: SingletSMZ2) -> None:
+        self.owner = owningModel
+        self.modelParameters = owningModel.modelParameters
+
     def evaluate(
-        self, fields: Fields, temperature: float, checkForImaginary=False,
+        self,
+        fields: Fields,
+        temperature: float,
+        checkForImaginary: bool = False,
     ) -> float:
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # 4D units
         thermalParameters = self.getThermalParameters(temperature)
@@ -52,7 +60,7 @@ class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
         return V0 + self.constantTerms(temperature)
 
     def constantTerms(self, temperature: float) -> float:
-        return -107.75 * np.pi ** 2 / 90 * temperature ** 4
+        return -107.75 * np.pi**2 / 90 * temperature**4
 
     # Calculates thermally corrected parameters to use in Veff. So basically 3D effective params but keeping 4D units
     def getThermalParameters(self, temperature: float) -> dict[str, float]:

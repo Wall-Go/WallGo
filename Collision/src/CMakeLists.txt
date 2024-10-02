@@ -59,6 +59,7 @@ target_include_directories(${WALLGO_LIB} PUBLIC
 
 target_include_directories(${WALLGO_LIB} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include/WallGo"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/thirdparty"
     HDF5::HDF5
     GSL::gsl
     muparser::muparser

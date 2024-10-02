@@ -40,8 +40,8 @@ class HydrodynamicsTemplateModel:
         self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-10
     ) -> None:
         r"""
-        Initialize the HydroTemplateModel class. 
-        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics 
+        Initialize the HydroTemplateModel class.
+        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics
         quantities (see [ALvdV23]_ for the definitions of these variables).
 
         Parameters
@@ -50,7 +50,7 @@ class HydrodynamicsTemplateModel:
         rtol : float, optional
             Default value is 1e-6.
         atol : float, optional
-            Default value is 1e-6.
+            Default value is 1e-10.
 
         Returns
         -------

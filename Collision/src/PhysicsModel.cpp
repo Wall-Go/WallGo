@@ -53,10 +53,11 @@ void ModelDefinition::defineParameter(const std::string& symbol, double value)
         return;
     }
 
-    // These are reserved:
-    if (symbol == "s" || symbol == "t" || symbol == "u")
+    const std::vector<std::string>& reservedSymbols = MatrixElement::RESERVED_SYMBOLS;
+    bool bIsReserved = (std::find(reservedSymbols.begin(), reservedSymbols.end(), symbol) != reservedSymbols.end());
+    if (bIsReserved)
     {
-        std::cerr << "Parameter name " << symbol << " is reserved for internal use, please choose a different symbol\n";
+        std::cerr << "Parameter name '" << symbol << "' is reserved for internal use, please choose a different symbol\n";
         return;
     }
 
@@ -162,14 +163,19 @@ void PhysicsModel::updateParameters(const ModelParameters& newValues)
     notifyModelChange(changeContext);
 }
 
-bool PhysicsModel::readMatrixElements(
+bool PhysicsModel::loadMatrixElements(
     const std::filesystem::path& matrixElementFile,
     bool bPrintMatrixElements)
 {
     mMatrixElements.clear();
 
-    const bool bReadOK = utils::parseMatrixElements(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
-    if (!bReadOK) return false;
+    const bool bReadOK = utils::buildMatrixElementsFromFile(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
+    if (!bReadOK)
+    {
+        // On failure, leave cached matrix elements empty so that we know it's invalid
+        mMatrixElements.clear();
+        return false;
+    }
 
     if (bPrintMatrixElements)
     {
@@ -209,15 +215,19 @@ void PhysicsModel::printMatrixElements() const
 
         for (const MatrixElement& m : elements)
         {
-            std::vector<uint32_t> indices = m.getParticleIndices();
+            std::vector<int32_t> indices = m.getParticleIndices();
             std::cout << "[";
-            for (uint32_t i = 0; i < indices.size(); ++i)
+            for (size_t i = 0; i < indices.size(); ++i)
             {
+                if (i > 0) std::cout << ", ";
                 std::cout << mParticles.at(indices[i]).getName();
-                if (i != indices.size() - 1) std::cout << ", ";
             }
 
             std::cout << "] : " << m.getExpression() << "\n";
+        }
+        if (elements.empty())
+        {
+            std::cout << "No contributing processes found for (" << name1 << ", " << name2 << ")! These particles will not mix in the Boltzmann equation\n";
         }
     }
 }
@@ -245,10 +255,16 @@ void PhysicsModel::notifyModelChange(const ModelChangeContext& context) const
     }
 }
 
-CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<uint32_t>& offEqParticleIndices)
+CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std::vector<int32_t>& offEqParticleIndices)
 {
+    if (!hasValidMatrixElements())
+    {
+        std::cerr << "PhysicsModel has no valid matrix elements cache, CollisionTensor will be invalid!" << std::endl;
+        return CollisionTensor(this);
+    }
+
     // Sanity checks
-    for (uint32_t idx : offEqParticleIndices)
+    for (int32_t idx : offEqParticleIndices)
     {
         if (mParticles.count(idx) == 0)
         {
@@ -267,7 +283,7 @@ CollisionTensor PhysicsModel::createCollisionTensor(size_t basisSize, const std:
     CollisionTensor outTensor(this, basisSize);
 
 
-    for (uint32_t idx1 : offEqParticleIndices) for (uint32_t idx2 : offEqParticleIndices)
+    for (int32_t idx1 : offEqParticleIndices) for (int32_t idx2 : offEqParticleIndices)
     {
         IndexPair indexPair(idx1, idx2);
         ParticleNamePair namePair(mParticles.at(idx1).getName(), mParticles.at(idx2).getName());
@@ -296,12 +312,13 @@ CollisionIntegral4 PhysicsModel::createCollisionIntegral4(size_t basisSize, cons
     // Copy our params to the integral object (hacky, currently used only for writing metadata)
     outIntegral.mModelParameters = mParameters;
 
-    assert(mMatrixElements.count(offEqIndices) > 0);
-
-    // Fill in the collision integral with CollisionElements
-    for (const MatrixElement& matrixElement : mMatrixElements.at(offEqIndices))
+    // Fill in the collision integral with CollisionElements. Empty integral is valid and can happen if no matrix elements contribute to this mixing
+    if (mMatrixElements.count(offEqIndices) > 0)
     {
-        outIntegral.addCollisionElement(createCollisionElement(offEqIndices, matrixElement));
+        for (const MatrixElement& matrixElement : mMatrixElements.at(offEqIndices))
+        {
+            outIntegral.addCollisionElement(createCollisionElement(offEqIndices, matrixElement));
+        }
     }
 
     return outIntegral;
@@ -315,7 +332,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     * so need to find which "position" indices are this particle:
     */
 
-    std::vector<uint32_t> indices = matrixElement.getParticleIndices();
+    std::vector<int32_t> indices = matrixElement.getParticleIndices();
     assert(indices.size() == 4);
     // Cannot happen if matrix elements are setup properly:
     assert(indices[0] == offEqIndices.first && "Invalid particle1 index in matrix element");
@@ -324,7 +341,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
 
     bool bFoundAny = false;
 
-    for (uint32_t i = 0; i < bDeltaF.size(); ++i)
+    for (size_t i = 0; i < bDeltaF.size(); ++i)
     {
         bDeltaF[i] = (indices[i] == offEqIndices.second);
         bFoundAny |= bDeltaF[i];
@@ -334,9 +351,9 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     // Copy ParticleSpecies objects to the CollisionElement
     std::array<ParticleSpecies, 4> externalParticles;
 
-    for (uint32_t i = 0; i < indices.size(); ++i)
+    for (size_t i = 0; i < indices.size(); ++i)
     {
-        const uint32_t particleIndex = indices[i];
+        const int32_t particleIndex = indices[i];
         externalParticles[i] = mParticles.at(particleIndex);
     }
 

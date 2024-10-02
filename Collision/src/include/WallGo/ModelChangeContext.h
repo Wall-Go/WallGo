@@ -10,7 +10,7 @@ namespace wallgo
 struct ParticleChangeContext
 {
     // Index of the changed particle
-    uint32_t particleIndex;
+    int32_t particleIndex;
     double newMassSq;
 };
 

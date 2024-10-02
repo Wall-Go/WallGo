@@ -137,7 +137,7 @@ wallgo::PhysicsModel setupQCD()
 	// Should we print each parsed matrix element to stdout? Can be useful for logging and debugging purposes
 	bool bPrintMatrixElements = true;
 
-	bool bMatrixElementsOK = model.readMatrixElements(matrixElementFile, bPrintMatrixElements);
+	bool bMatrixElementsOK = model.loadMatrixElements(matrixElementFile, bPrintMatrixElements);
 	
 	// If something in matrix element parsing went wrong we abort here
 	if (!bMatrixElementsOK)
@@ -202,8 +202,8 @@ int main()
 	Note that this percentage is per-particle-pair, ie. each (particle1, particle2) pair reports when this percentage of their own integrals is done. */
 	verbosity.progressReportPercentage = 0.25;
 
-	// Very slow and verbose, intended only for debugging purposes
-	verbosity.bPrintEveryElement = false;
+	// Very slow and verbose, intended only for debugging and demonstration purposes
+	verbosity.bPrintEveryElement = true;
 
 	// Override the built-in defaults with our new settings
 	collisionTensor.setDefaultIntegrationVerbosity(verbosity);

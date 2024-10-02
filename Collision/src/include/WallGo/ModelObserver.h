@@ -15,6 +15,8 @@ public:
     virtual void handleModelChange(const ModelChangeContext& context) = 0;
     // Used to avoid dangling pointers to a destroyed model
     virtual void handleModelDestruction() = 0;
+protected:
+    ~IModelObserver() = default;
 };
 
 

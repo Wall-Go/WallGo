@@ -29,6 +29,9 @@ AND manually mark appropriate class members for exporting (not done). */
     #define WG_DEBUG 1
 #endif
 
+// Use to silence unused parameter compiler warning
+#define WG_UNUSED(expr) do { (void)(expr); } while (0)
+
 // NB: For MSVC the default OMP version is only 2.X, so some newer features may not be available
 #if WITH_OMP && _OPENMP >= 200805 // OMP >= 3.0
     #define WG_OMP_SUPPORTS_COLLAPSE 1

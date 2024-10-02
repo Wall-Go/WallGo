@@ -23,6 +23,15 @@ namespace wallgo
 IntegrationResult CollisionIntegral4::integrate(const GridPoint& gridPoint, const IntegrationOptions& options)
 {
     assert(isValidGridPoint(gridPoint));
+
+    if (isEmpty())
+    {   
+        // Nothing to integrate
+        IntegrationResult emptyResult;
+        emptyResult.result = 0.0;
+        emptyResult.error = 0.0;
+        return emptyResult;
+    }
     
     IntegrandParameters integrandParameters = initializeIntegrandParameters(gridPoint);
 
@@ -128,7 +137,7 @@ CollisionResultsGrid CollisionIntegral4::evaluateOnGrid(const IntegrationOptions
     CollisionResultsGrid result(mParticlePair, metadata);
 
     // ---- Setup progress reporting
-    const bool bCanEverReportProgress = (verbosity.progressReportPercentage > 0 && verbosity.progressReportPercentage < 1.f);;
+    const bool bCanEverReportProgress = (verbosity.progressReportPercentage > 0 && verbosity.progressReportPercentage < 1.f);
     uint32_t progressCounter = 0; // shared counter for all threads, resets every report interval
     const bool bNeedsTiming = verbosity.bPrintElapsedTime || bCanEverReportProgress;
 
@@ -369,8 +378,8 @@ size_t CollisionIntegral4::countIndependentIntegrals() const
 
 bool CollisionIntegral4::isEmpty() const
 {
-    return collisionElements_nonUltrarelativistic.size() == 0
-        && collisionElements_ultrarelativistic.size() == 0;
+    return collisionElements_nonUltrarelativistic.empty()
+        && collisionElements_ultrarelativistic.empty();
 }
 
 bool CollisionIntegral4::isValidGridPoint(const GridPoint& gridPoint) const
