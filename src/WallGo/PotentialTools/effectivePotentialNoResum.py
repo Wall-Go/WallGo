@@ -255,7 +255,9 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 msqBMin = np.min(massSqB)
                 msqFMin = np.min(massSqF)
                 raise ValueError(
-                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}"
+                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
+                    "Choose imaginaryOption != EImaginaryOption.ERROR "
+                    "when initialising EffectivePotentialNoResum."
                 )
         else:
             # no imaginary parts arise if masses are all nonnegative
@@ -329,8 +331,12 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             elif self.imaginaryOption == EImaginaryOption.ABS_RESULT:
                 potential = abs(potential)
             elif self.imaginaryOption == EImaginaryOption.ERROR:
+                msqBMin = np.min(massSqB)
+                msqFMin = np.min(massSqF)
                 raise ValueError(
-                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}"
+                    f"Im(VT)={potential.imag}, Re(VT)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
+                    "Choose imaginaryOption != EImaginaryOption.ERROR "
+                    "when initialising EffectivePotentialNoResum."
                 )
         else:
             # no imaginary parts arise if masses are all nonnegative
