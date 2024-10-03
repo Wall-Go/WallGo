@@ -159,11 +159,6 @@ def test_Jb_extrapolation_constant(Jb_interpolated: JbIntegral) -> None:
     relativeTolerance = 1e-6
 
     x = -100.0
-    print("HI")
-    print(f"{Jb(1.0)=}")
-    print(f"{Jb(0.0)=}")
-    print(f"{Jb(-1.0)=}")
-    print(f"{Jb(x)=}")
     np.testing.assert_allclose(Jb(x), Jb(1.0), rtol=relativeTolerance)
 
     ## Check that we didn't modify the input for whatever reason
@@ -174,12 +169,12 @@ def test_Jb_extrapolation_constant(Jb_interpolated: JbIntegral) -> None:
     assert isinstance(x, np.ndarray)
 
     x = np.array([-100.0])
-    np.testing.assert_allclose(Jb(x), Jb(1.0), rtol=relativeTolerance)
+    np.testing.assert_allclose(Jb(x), Jb([1.0]), rtol=relativeTolerance)
     assert isinstance(x, np.ndarray)
 
     x = np.array([-20.0, 7.0, 12.0])
     np.testing.assert_allclose(
-        Jb(x), np.array([Jb(1.0), [-0.700785264789041, 0], -0.4074674546874202]), rtol=relativeTolerance
+        Jb(x), np.array([Jb(1.0), [-0.700785264789041, 0], [-0.4074674546874202, 0]]), rtol=relativeTolerance
     )
 
     Jb.setExtrapolationType(

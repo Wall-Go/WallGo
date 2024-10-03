@@ -137,7 +137,7 @@ class JbIntegral(InterpolatableFunction):
 
         if np.isscalar(x):
             res = wrapper(float(x))
-            return np.asarray([[res.real, res.imag]])
+            return np.asarray([res.real, res.imag])
 
         # one extra axis on x
         results = np.empty(np.asarray(x).shape + (2,), dtype=float)
