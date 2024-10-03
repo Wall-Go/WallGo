@@ -36,7 +36,7 @@ import numpy as np
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle
 
-from PotentialTools import EffectivePotentialNoResum
+from PotentialTools import EffectivePotentialNoResum, EImaginaryOption
 
 # Add the Models folder to the path; need to import the base example
 # template
@@ -253,7 +253,11 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """
         Initialize the EffectivePotentialIDM.
         """
-        super().__init__(integrals=None, useDefaultInterpolation=True)
+        super().__init__(
+            integrals=None,
+            useDefaultInterpolation=True,
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
