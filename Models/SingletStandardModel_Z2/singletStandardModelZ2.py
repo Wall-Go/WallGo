@@ -253,7 +253,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         super().__init__(
             imaginaryOption=EImaginaryOption.ABS_ARGUMENT,
-            useDefaultInterpolation=True,
+            useDefaultInterpolation=False,
         )
 
         assert owningModel is not None, "Invalid model passed to Veff"
@@ -271,7 +271,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         with integrals from CosmoTransitions. In real applications we recommend 
         using the WallGo default implementations.
         """
-        # self._configureBenchmarkIntegrals()
+        self._configureBenchmarkIntegrals()
 
     # ~ EffectivePotential interface
     fieldCount = 2
