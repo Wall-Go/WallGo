@@ -36,7 +36,7 @@ def test_directJb_derivative(x: float, expectedResult: float) -> None:
 
 @pytest.mark.parametrize(
     "x, expectedResult",
-    [(800, [-1.0463212165594027, 0]), (-20.5, [11.913574189883063, 4.962444471425764])],
+    [(800, [-1.047038003943492e-10, 0]), (-20.5, [11.913574189883063, 4.962444471425764])],
 )
 def test_directJf(x: float, expectedResult: float) -> None:
 
