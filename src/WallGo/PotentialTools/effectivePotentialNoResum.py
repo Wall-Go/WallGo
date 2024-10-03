@@ -61,7 +61,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             # interpolation tables provided by WallGo are used.
             if useDefaultInterpolation:
                 # TODO: find better way of doing this
-                import PotentialTools  # import statement here to avoid circular import
+                from WallGo import PotentialTools  # import statement here to avoid circular import
 
                 # TODO: this could be tidier
                 PotentialTools.initialize()
