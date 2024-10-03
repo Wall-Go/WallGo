@@ -3,12 +3,28 @@ Class for the one-loop effective potential without high-temperature expansion
 """
 
 from abc import ABC, abstractmethod
+from enum import Enum, auto
 import numpy as np
 
 from WallGo import EffectivePotential, EExtrapolationType
 
 from .integrals import Integrals
 from .utils import getSafePathToResource
+
+
+class EImaginaryOption(Enum):
+    """
+    Enums for what to do with imaginary parts in the effective potential.
+    """
+
+    # Throw an error if imaginary part nonzero
+    ERROR = auto()
+    # Take absolute value of argument
+    ABS_ARGUMENT = auto()
+    # Take absolute value of result
+    ABS_RESULT = auto()
+    # Principal part
+    PRINCIPAL_PART = auto()
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
@@ -24,41 +40,32 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         self,
         integrals: Integrals = None,
         useDefaultInterpolation: bool = False,
+        imaginaryOption: EImaginaryOption = EImaginaryOption.ERROR,
     ):
         """FIXME: if we intend to have this as a ready-to-use Veff template,
         we should do inits in __init_subclass__() instead.
         This way the user doesn't have to worry about calling super().__init__()"""
-        ##
+        # Option for how to deal with imaginary parts
+        self.imaginaryOption = imaginaryOption
 
-        ## Use the passed Integrals object if provided,
-        ## otherwise create a new one
+        # Use the passed Integrals object if provided,
+        # otherwise create a new one
         if integrals:
             self.integrals = integrals
         else:
-            ## The default is an integral object without interpolation
+            # The default is an integral object without interpolation
             self.integrals = Integrals()
 
-            ## For the sake of speed, one can use interpolated integrals.
-            ## By setting useDefaultInterpolation to True, the default
-            ## interpolation tables provided by WallGo are used.
+            # For the sake of speed, one can use interpolated integrals.
+            # By setting useDefaultInterpolation to True, the default
+            # interpolation tables provided by WallGo are used.
             if useDefaultInterpolation:
                 # TODO: find better way of doing this
                 import PotentialTools  # import statement here to avoid circular import
 
-                ## Load interpolation tables for Jb/Jf.
-                self.integrals.Jb.readInterpolationTable(
-                    getSafePathToResource(
-                        PotentialTools.config.get("DataFiles", "InterpolationTable_Jb")
-                    ),
-                    bVerbose=False,
-                )
-
-                self.integrals.Jf.readInterpolationTable(
-                    getSafePathToResource(
-                        PotentialTools.config.get("DataFiles", "InterpolationTable_Jf")
-                    ),
-                    bVerbose=False,
-                )
+                # TODO: this could be tidier
+                PotentialTools.initialize()
+                self.integrals = PotentialTools.defaultIntegrals
 
                 self.integrals.Jb.disableAdaptiveInterpolation()
                 self.integrals.Jf.disableAdaptiveInterpolation()
@@ -201,10 +208,9 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         # do we want to take abs of the mass??
         return (
             degreesOfFreedom
-            * massSq
-            * massSq
-            * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
-        )
+            * massSq**2
+            * (np.log(massSq / rgScale**2 + 1e-100 * (1 + 1j)) - c)
+        ) / (64 * np.pi * np.pi)
 
     def potentialOneLoop(
         self, bosons: tuple, fermions: tuple, checkForImaginary: bool = False
@@ -227,24 +233,35 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         potential : float
         """
 
-        ## LN: should the return value actually be complex in general?
+        massSqB, nB, cB, rgScaleB = bosons
+        massSqF, nF, cF, rgScaleF = fermions
 
-        massSq, nb, c, rgScale = bosons
-        potential = np.sum(self.jCW(massSq, nb, c, rgScale), axis=-1)
+        if self.imaginaryOption == EImaginaryOption.ABS_ARGUMENT:
+            # one way to drop imaginary parts, replace x with |x|
+            massSqB = abs(massSqB)
+            massSqF = abs(massSqF)
 
-        massSq, nf, c, rgScale = fermions
-        potential -= np.sum(self.jCW(massSq, nf, c, rgScale), axis=-1)
+        # constructing the potential
+        potential = np.sum(self.jCW(massSqB, nB, cB, rgScaleB), axis=-1)
+        potential -= np.sum(self.jCW(massSqF, nF, cF, rgScaleF), axis=-1)
 
-        if checkForImaginary and np.any(massSq < 0):
-            try:
-                potentialImag = (
-                    potential.imag / (64 * np.pi * np.pi)[np.any(massSq < 0, axis=0)]
+        # checking for imaginary parts
+        if np.any(massSqB < 0) or np.any(massSqF < 0):
+            if self.imaginaryOption == EImaginaryOption.PRINCIPAL_PART:
+                potential = potential.real
+            elif self.imaginaryOption == EImaginaryOption.ABS_RESULT:
+                potential = abs(potential)
+            elif self.imaginaryOption == EImaginaryOption.ERROR:
+                msqBMin = np.min(massSqB)
+                msqFMin = np.min(massSqF)
+                raise ValueError(
+                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}"
                 )
-            except IndexError:
-                potentialImag = potential.imag / (64 * np.pi * np.pi)
-            print(f"Im(potentialOneLoop)={potentialImag}")
+        else:
+            # no imaginary parts arise if masses are all nonnegative
+            potential = potential.real
 
-        return potential / (64 * np.pi * np.pi)
+        return potential
 
     def potentialOneLoopThermal(
         self,
@@ -270,41 +287,53 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         potential : 4d 1loop thermal potential
         """
 
-        ## m2 is shape (len(T), 5), so to divide by T we need to transpose T,
-        ## or add new axis in this case.
-        ## But make sure we don't modify the input temperature array here.
+        # m2 is shape (len(T), 5), so to divide by T we need to transpose T,
+        # or add new axis in this case.
+        # But make sure we don't modify the input temperature array here.
         temperature = np.asanyarray(temperature)
 
         temperatureSq = temperature * temperature + 1e-100
 
-        ## Need reshaping mess for numpy broadcasting to work
+        # Need reshaping mess for numpy broadcasting to work
         if temperatureSq.ndim > 0:
             temperatureSq = temperatureSq[:, np.newaxis]
 
-        ## Jb, Jf take (mass/T)^2 as input, np.array is OK.
-        ## Do note that for negative m^2 the integrals become wild and convergence
-        ## is both slow and bad, so you may want to consider taking the absolute
-        ## value of m^2. We will not enforce this however
+        # Jb, Jf take (mass/T)^2 as input, np.array is OK.
+        # Do note that for negative m^2 the integrals become wild and convergence
+        # is both slow and bad, so you may want to consider taking the absolute
+        # value of m^2. We will not enforce this however
 
-        ## Careful with the sum, it needs to be column-wise.
-        ## Otherwise things go horribly wrong with array T input.
-        ## TODO really not a fan of hardcoded axis index
+        massSqB, nB, _, _ = bosons
+        massSqF, nF, _, _ = fermions
 
-        massSq, nb, _, _ = bosons
-        potential = np.sum(nb * self.integrals.Jb(massSq / temperatureSq), axis=-1)
+        if self.imaginaryOption == EImaginaryOption.ABS_ARGUMENT:
+            # one way to drop imaginary parts, replace x with |x|
+            massSqB = abs(massSqB)
+            massSqF = abs(massSqF)
 
-        massSq, nf, _, _ = fermions
-        potential += np.sum(nf * self.integrals.Jf(massSq / temperatureSq), axis=-1)
+        # Careful with the sum, it needs to be column-wise.
+        # Otherwise things go horribly wrong with array T input.
+        # TODO: really not a fan of hardcoded axis index
 
-        if checkForImaginary and np.any(massSq < 0):
-            try:
-                potentialImag = (
-                    potential.imag
-                    * temperature**4
-                    / (2 * np.pi * np.pi)[np.any(massSq < 0, axis=-1)]
+        # constructing the potential
+        JbList = self.integrals.Jb(massSqB / temperatureSq)
+        JfList = self.integrals.Jf(massSqF / temperatureSq)
+        potential = np.sum(nB * np.asarray(JbList)[..., 0], axis=-1)
+        potential += np.sum(nF * np.asarray(JfList)[..., 0], axis=-1)
+        potential = potential * temperature**4 / (2 * np.pi * np.pi)
+
+        # checking for imaginary parts
+        if np.any(massSqB < 0) or np.any(massSqF < 0):
+            if self.imaginaryOption == EImaginaryOption.PRINCIPAL_PART:
+                potential = potential.real
+            elif self.imaginaryOption == EImaginaryOption.ABS_RESULT:
+                potential = abs(potential)
+            elif self.imaginaryOption == EImaginaryOption.ERROR:
+                raise ValueError(
+                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}"
                 )
-            except IndexError:
-                potentialImag = potential.imag * temperature**4 / (2 * np.pi * np.pi)
-            print(f"Im(V1T)={potentialImag}")
+        else:
+            # no imaginary parts arise if masses are all nonnegative
+            potential = potential.real
 
-        return potential * temperature**4 / (2 * np.pi * np.pi)
+        return potential

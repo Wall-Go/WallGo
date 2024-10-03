@@ -2,7 +2,7 @@
 Initialisation for PotentialTools module, includes loading of Jb/Jf integral data
 """
 from WallGo import Config
-from .effectivePotentialNoResum import EffectivePotentialNoResum
+from .effectivePotentialNoResum import EffectivePotentialNoResum, EImaginaryOption
 from .integrals import Integrals, JbIntegral, JfIntegral
 from .utils import getSafePathToResource
 

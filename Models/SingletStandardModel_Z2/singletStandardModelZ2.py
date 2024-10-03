@@ -40,10 +40,10 @@ import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle
 from WallGo.interpolatableFunction import EExtrapolationType
 
-from PotentialTools import EffectivePotentialNoResum
+from PotentialTools import EffectivePotentialNoResum, EImaginaryOption
 
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
@@ -251,7 +251,10 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         Initialize the EffectivePotentialxSMZ2.
         """
 
-        super().__init__()
+        super().__init__(
+            imaginaryOption=EImaginaryOption.ABS_ARGUMENT,
+            useDefaultInterpolation=True,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
@@ -268,7 +271,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         with integrals from CosmoTransitions. In real applications we recommend 
         using the WallGo default implementations.
         """
-        self._configureBenchmarkIntegrals()
+        # self._configureBenchmarkIntegrals()
 
     # ~ EffectivePotential interface
     fieldCount = 2
