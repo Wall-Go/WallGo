@@ -3,7 +3,7 @@
 Internal use only, do NOT package this file! 
 """
 
-import PotentialTools
+from WallGo import PotentialTools
 
 
 def makeDefaultInterpolationTables():
