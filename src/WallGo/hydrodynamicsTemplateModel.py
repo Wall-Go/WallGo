@@ -86,6 +86,7 @@ class HydrodynamicsTemplateModel:
         self.psiN = float(wLowT / wHighT)
         self.cb = np.sqrt(self.cb2)
         self.cs = np.sqrt(self.cs2)
+        print(f"alpha = {self.alN}, cb = {self.cb}, cs = {self.cs}")
         ## Enthalpy outside the bubble at Tn
         self.wN = float(wHighT)
         ## Pressure outside the bubble at Tn
@@ -414,7 +415,7 @@ class HydrodynamicsTemplateModel:
         vwLTE : float
             Wall velocity in local thermal equilibrium.
         """
-
+        print(f"Jouguet velocity in the template model {self.vJ}")
         def shootingInLTE(vw: float) -> float:
             vm = min(self.cb, vw)
             al = self.solveAlpha(vw)
@@ -427,6 +428,7 @@ class HydrodynamicsTemplateModel:
             # alpha is too small
             return 0.0
         if self.alN > self.maxAl(100) or shootingInLTE(self.vJ) < 0:
+            print('hello')
             # alpha is too large
             return 1.0
 

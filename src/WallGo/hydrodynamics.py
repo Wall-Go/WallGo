@@ -155,7 +155,10 @@ class Hydrodynamics:
                 rtol=self.rtol,
             )
 
-        if rootResult.converged:
+        derivdenom = (self.thermodynamics.eLowT(rootResult.root) - eHighT)**2*(eHighT + self.thermodynamics.pLowT(rootResult.root))**2
+        print(f"{np.abs(vpDerivNum(rootResult.root)/derivdenom)=}")
+
+        if rootResult.converged and np.abs(vpDerivNum(rootResult.root)/derivdenom) < self.rtol:
             tmSol = rootResult.root
         else:
             raise WallGoError(
@@ -163,6 +166,7 @@ class Hydrodynamics:
                               input temperature!",
                 data={"flag": rootResult.flag, "Root result": rootResult},
             )
+
 
         vp = np.sqrt(
             (pHighT - self.thermodynamics.pLowT(tmSol))

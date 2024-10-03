@@ -490,6 +490,10 @@ class StandardModelExample(WallGoExampleBase):
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
         inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
 
+        #Added on October 2, 15.41:
+        #inOutManager.config.set("EffectivePotential", "potentialError", "1e-10")
+
+    
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
     ) -> None:
@@ -529,6 +533,7 @@ class StandardModelExample(WallGoExampleBase):
         valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
         valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
 
+
         output: list[ExampleInputPoint] = []
 
         for i in range(len(valuesMH)):  # pylint: disable=C0200
@@ -548,7 +553,7 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureScale=1., fieldScale=[100.0]
+                        temperatureScale=0.5, fieldScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example

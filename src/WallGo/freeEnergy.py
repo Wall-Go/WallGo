@@ -429,3 +429,11 @@ class FreeEnergy(InterpolatableFunction):
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, potentialEffFullList), axis=1)
         self.newInterpolationTableFromValues(TFullList, result)
+
+        # test if interpolation works well for three values:
+        #testTemperatures = [self.minPossibleTemperature[0] + 0.327*dT, (self.minPossibleTemperature[0]+self.maxPossibleTemperature[0])/2. + 0.327*dT, self.maxPossibleTemperature[0]-0.327*dT]
+        #guessMinima = [Fields([self.evaluateInterpolation(testTemperatures[0])[0]]),Fields([self.evaluateInterpolation(testTemperatures[1])[0]]),Fields([self.evaluateInterpolation(testTemperatures[2])[0]])]
+
+        #minimumTemperatures = [self.effectivePotential.findLocalMinimum(guessMinima[0],testTemperatures[0],tol=rTol),self.effectivePotential.findLocalMinimum(guessMinima[1],testTemperatures[1],tol=rTol),self.effectivePotential.findLocalMinimum(guessMinima[2],testTemperatures[2],tol=rTol)]
+        #print(f"{minimumTemperatures=} {self.evaluateInterpolation(testTemperatures)=}")
+        #print(f"{minimumTemperatures[0,1,0]-}")

@@ -162,6 +162,7 @@ class WallGoManager:
             )
 
         print(f"Jouguet: {self.hydrodynamics.vJ}")
+        print(f"vmax: {self.hydrodynamics.fastestDeflag()}")
         # TODO return some results struct
 
     def isModelValid(self) -> bool:
