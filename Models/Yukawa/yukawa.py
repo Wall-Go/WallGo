@@ -5,8 +5,8 @@ c.f. 2310.02308
 
 import sys
 import pathlib
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
