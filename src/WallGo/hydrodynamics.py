@@ -157,11 +157,23 @@ class Hydrodynamics:
 
         if rootResult.converged:
             tmSol = rootResult.root
+
         else:
             raise WallGoError(
                 "Failed to solve Jouguet velocity at \
                               input temperature!",
                 data={"flag": rootResult.flag, "Root result": rootResult},
+            )
+        
+        # Denominator of the derivative of vp^2 
+        vpDerivDenom = (self.thermodynamics.eLowT(tmSol) - eHighT)**2*(eHighT + self.thermodynamics.pLowT(tmSol))**2
+
+        # Additional check if solution meets some tolerance requirement
+        # HACK value 1e-3 is a bit arbitrary. Figure out more robust estimate.
+        if np.abs(vpDerivNum(tmSol)/vpDerivDenom)*tmSol > 1e-3:
+            raise WallGoError(
+                "Failed to solve Jouguet velocity at sufficient precision!",
+                data={"rtol": self.rtol, "vpDerivNum/vpDerivDenom": vpDerivNum(tmSol)/vpDerivDenom},
             )
 
         vp = np.sqrt(
