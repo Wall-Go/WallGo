@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from typing import Tuple
 
-from tests.testsWallGo.BenchmarkPoint import BenchmarkPoint
+from tests.BenchmarkPoint import BenchmarkPoint
 
 import WallGo
 

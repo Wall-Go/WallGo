@@ -3,7 +3,7 @@ import numpy as np
 
 # WallGo imports
 import WallGo
-from tests.testsWallGo.BenchmarkPoint import BenchmarkModel
+from tests.BenchmarkPoint import BenchmarkModel
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 import WallGo.fields
 
-from tests.testsWallGo.BenchmarkPoint import BenchmarkPoint
+from tests.BenchmarkPoint import BenchmarkPoint
 
 ## BM1 = _the_ Benoit benchmark point
 BM1 = BenchmarkPoint(

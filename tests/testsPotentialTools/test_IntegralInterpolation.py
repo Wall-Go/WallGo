@@ -5,8 +5,8 @@ import pytest
 
 from WallGo import InterpolatableFunction, EExtrapolationType
 
-import PotentialTools
-from PotentialTools import JbIntegral, JfIntegral
+from WallGo import PotentialTools
+from WallGo.PotentialTools import JbIntegral, JfIntegral
 
 ### Test real parts of Jb, Jf integrals
 

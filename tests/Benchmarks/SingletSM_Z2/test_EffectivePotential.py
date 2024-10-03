@@ -3,7 +3,7 @@ import numpy as np
 from typing import Tuple
 
 import WallGo
-from tests.testsWallGo.BenchmarkPoint import BenchmarkPoint
+from tests.BenchmarkPoint import BenchmarkPoint
 
 
 @pytest.mark.parametrize("T", [90, 110])
