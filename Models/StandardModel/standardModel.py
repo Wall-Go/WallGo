@@ -36,12 +36,12 @@ import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import EffectivePotential, Fields, GenericModel, Particle
 
 # Add the Models folder to the path; need to import the base
-# example template and effectivePotentialNoResum.py
+# example template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallGoExampleBase import WallGoExampleBase
-from wallGoExampleBase import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
+from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413, E0401
 
 if TYPE_CHECKING:
     import WallGoCollision

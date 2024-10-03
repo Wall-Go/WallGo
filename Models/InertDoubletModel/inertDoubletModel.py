@@ -29,22 +29,21 @@ doi:10.1103/PhysRevD.107.095005
 
 import sys
 import pathlib
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle
 
+from PotentialTools import EffectivePotentialNoResum
+
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
-from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
 from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:

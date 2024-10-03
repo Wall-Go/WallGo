@@ -17,7 +17,7 @@ from .genericModel import GenericModel
 from .effectivePotential import EffectivePotential, VeffDerivativeSettings
 from .freeEnergy import FreeEnergy
 from .wallGoManager import WallGoManager, WallSolverSettings
-from .interpolatableFunction import InterpolatableFunction
+from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
 
 from .collisionArray import CollisionArray
 

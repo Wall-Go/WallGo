@@ -7,7 +7,7 @@ import numpy as np
 import WallGo
 
 ## should clean these imports...
-from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
+from .Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 from .BenchmarkPoint import BenchmarkPoint
 
 

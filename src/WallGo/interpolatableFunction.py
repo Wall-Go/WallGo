@@ -348,29 +348,33 @@ class InterpolatableFunction(ABC):
 
             xLower = x <= self._rangeMin
             xUpper = x >= self._rangeMax
-            res = np.empty_like(x)
+            if self._RETURN_VALUE_COUNT > 1:
+                resShape = x.shape + (self._RETURN_VALUE_COUNT,)
+            else:
+                resShape = x.shape
+            res = np.empty(resShape)
 
             ## Lower range
             match self.extrapolationTypeLower:
                 case EExtrapolationType.ERROR:
                     raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
                 case EExtrapolationType.NONE:
-                    res[xLower] = self._evaluateDirectly(x[xLower])
+                    res[xLower, :] = self._evaluateDirectly(x[xLower])
                 case EExtrapolationType.CONSTANT:
-                    res[xLower] = self.evaluateInterpolation(self._rangeMin)
+                    res[xLower, :] = self.evaluateInterpolation(self._rangeMin)
                 case EExtrapolationType.FUNCTION:
-                    res[xLower] = self.evaluateInterpolation(x[xLower])
+                    res[xLower, :] = self.evaluateInterpolation(x[xLower])
 
             ## Upper range
             match self.extrapolationTypeUpper:
                 case EExtrapolationType.ERROR:
                     raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
                 case EExtrapolationType.NONE:
-                    res[xUpper] = self._evaluateDirectly(x[xUpper])
+                    res[xUpper, :] = self._evaluateDirectly(x[xUpper])
                 case EExtrapolationType.CONSTANT:
-                    res[xUpper] = self.evaluateInterpolation(self._rangeMax)
+                    res[xUpper, :] = self.evaluateInterpolation(self._rangeMax)
                 case EExtrapolationType.FUNCTION:
-                    res[xUpper] = self.evaluateInterpolation(x[xUpper])
+                    res[xUpper, :] = self.evaluateInterpolation(x[xUpper])
 
         return res
 

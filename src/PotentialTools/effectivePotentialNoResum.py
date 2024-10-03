@@ -5,8 +5,7 @@ Class for the one-loop effective potential without high-temperature expansion
 from abc import ABC, abstractmethod
 import numpy as np
 
-from WallGo import EffectivePotential
-from WallGo.interpolatableFunction import EExtrapolationType
+from WallGo import EffectivePotential, EExtrapolationType
 
 from .integrals import Integrals
 from .utils import getSafePathToResource

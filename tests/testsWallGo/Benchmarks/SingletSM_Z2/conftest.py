@@ -4,7 +4,7 @@ from typing import Tuple
 
 import WallGo
 
-from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
+from tests.testsWallGo.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
 from .Benchmarks_singlet import BM1
 

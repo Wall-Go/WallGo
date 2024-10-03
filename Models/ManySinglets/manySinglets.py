@@ -33,7 +33,7 @@ import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import Fields, GenericModel, Particle, EffectivePotential
 
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 

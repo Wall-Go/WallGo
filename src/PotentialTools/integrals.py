@@ -40,6 +40,18 @@ class JbIntegral(InterpolatableFunction):
 
     SMALL_NUMBER: typing.Final[float] = 1e-100
 
+    def __init__(
+        self,
+        bUseAdaptiveInterpolation: bool = True,
+        initialInterpolationPointCount: int = 1000,
+        returnValueCount: int = 2,
+    ) -> None:
+        super().__init__(
+            bUseAdaptiveInterpolation,
+            initialInterpolationPointCount,
+            returnValueCount,
+        )
+
     ## This doesn't vectorize nicely for numpy due to combination of piecewise
     ## scipy.integrate.quad and conditionals on x.
     # So for array input, let's just do a simple for loop
@@ -143,6 +155,18 @@ class JfIntegral(InterpolatableFunction):
     """
 
     SMALL_NUMBER: typing.Final[float] = 1e-100
+
+    def __init__(
+        self,
+        bUseAdaptiveInterpolation: bool = True,
+        initialInterpolationPointCount: int = 1000,
+        returnValueCount: int = 2,
+    ) -> None:
+        super().__init__(
+            bUseAdaptiveInterpolation,
+            initialInterpolationPointCount,
+            returnValueCount,
+        ) 
 
     def _functionImplementation(self, x: inputType | float) -> outputType:
         """
