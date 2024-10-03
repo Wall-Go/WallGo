@@ -33,6 +33,21 @@ import scipy.integrate
 from WallGo.interpolatableFunction import InterpolatableFunction, inputType, outputType
 
 
+def _integrator(
+    func: typing.Callable, a: float, b: float
+) -> float:
+    """
+    Simple wrapper for scipy.integrate.quad with defaults inbuilt
+    """
+    res = scipy.integrate.quad(
+        func,
+        a,
+        b,
+        limit=100,
+    )
+    return float(res[0])
+
+
 class JbIntegral(InterpolatableFunction):
     """
     Bosonic Jb(x), in practice use with x = m^2 / T^2.
@@ -87,8 +102,7 @@ class JbIntegral(InterpolatableFunction):
                 )
 
             if xWrapper >= 0:
-
-                resReal = scipy.integrate.quad(integrandPositive, 0.0, np.inf)[0]
+                resReal = _integrator(integrandPositive, 0.0, np.inf)
                 resImag = 0
             else:
 
@@ -122,16 +136,16 @@ class JbIntegral(InterpolatableFunction):
                     )
 
                 resReal = (
-                    scipy.integrate.quad(
+                    _integrator(
                         integrandPrincipalLogReal, 0.0, np.sqrt(np.abs(xWrapper))
-                    )[0]
-                    + scipy.integrate.quad(
+                    )
+                    + _integrator(
                         integrandPositive, np.sqrt(np.abs(xWrapper)), np.inf
-                    )[0]
+                    )
                 )
-                resImag = scipy.integrate.quad(
+                resImag = _integrator(
                     integrandPrincipalLogImag, 0.0, np.sqrt(np.abs(xWrapper))
-                )[0]
+                )
 
             return complex(resReal + 1j * resImag)
 
@@ -197,7 +211,7 @@ class JfIntegral(InterpolatableFunction):
                 )
 
             if xWrapper >= 0:
-                resReal = scipy.integrate.quad(integrandPositive, 0.0, np.inf)[0]
+                resReal = _integrator(integrandPositive, 0.0, np.inf)
                 resImag = 0
 
             else:
@@ -224,16 +238,16 @@ class JfIntegral(InterpolatableFunction):
                     )
 
                 resReal = (
-                    scipy.integrate.quad(
+                    _integrator(
                         integrandPrincipalLogReal, 0.0, np.sqrt(np.abs(xWrapper))
-                    )[0]
-                    + scipy.integrate.quad(
+                    )
+                    + _integrator(
                         integrandPositive, np.sqrt(np.abs(xWrapper)), np.inf
-                    )[0]
+                    )
                 )
-                resImag = scipy.integrate.quad(
+                resImag = _integrator(
                     integrandPrincipalLogImag, 0.0, np.sqrt(np.abs(xWrapper))
-                )[0]
+                )
 
             # overall minus sign for Jf
             return complex(resReal + 1j * resImag)

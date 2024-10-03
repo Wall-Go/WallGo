@@ -252,7 +252,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         """
 
         super().__init__(
-            imaginaryOption=EImaginaryOption.ABS_ARGUMENT,
+            imaginaryOption=EImaginaryOption.ABS_ARGUMENT,  # Following CosmoTransitions
             useDefaultInterpolation=False,
         )
 
