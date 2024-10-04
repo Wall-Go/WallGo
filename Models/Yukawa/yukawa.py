@@ -240,7 +240,7 @@ class YukawaModelExample(WallGoExampleBase):
 
         self.matrixElementFile = pathlib.Path(
             self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.json"
+            / "MatrixElements/MatrixElements_Yukawa.txt"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -290,11 +290,11 @@ class YukawaModelExample(WallGoExampleBase):
         parameters.addOrModifyParameter("v", 0.0)
 
         parameters.addOrModifyParameter(
-            "msq[0]", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
+            "ms2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
-            "msq[1]",
-            wallGoModel.modelParameters["lam"] / 24.0
+            "mf2",
+            + wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
         )  # psi thermal mass^2 in units of T
 

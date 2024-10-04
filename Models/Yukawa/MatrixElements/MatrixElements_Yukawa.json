@@ -23,9 +23,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_t^2*y^4)\/(ms - _t)^2 + (2*_u^2*y^4)\/(ms - _u)^2"
+			"expression":"(2*_t^2*y^4)\/(ms2 - _t)^2 + (2*_u^2*y^4)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -36,9 +36,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_u^2*y^4)\/(ms - _u)^2"
+			"expression":"(2*_u^2*y^4)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -49,9 +49,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_t^2*y^4)\/(ms - _t)^2"
+			"expression":"(2*_t^2*y^4)\/(ms2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -62,9 +62,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_t^2*y^4)\/(ms - _t)^2"
+			"expression":"(2*_t^2*y^4)\/(ms2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -75,9 +75,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_u^2*y^4)\/(ms - _u)^2"
+			"expression":"(2*_u^2*y^4)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -88,9 +88,9 @@
 			],
 			"parameters":[
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(2*_t^2*y^4)\/(ms - _t)^2 + (2*_u^2*y^4)\/(ms - _u)^2"
+			"expression":"(2*_t^2*y^4)\/(ms2 - _t)^2 + (2*_u^2*y^4)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -101,9 +101,9 @@
 			],
 			"parameters":[
 				"gamma",
-				"ms"
+				"ms2"
 			],
-			"expression":"gamma^4\/(ms - _t)^2 + gamma^4\/(ms - _u)^2"
+			"expression":"gamma^4\/(ms2 - _t)^2 + gamma^4\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -114,9 +114,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(2*_t*_u*y^4)\/(mf - _t)^2 + (2*_t*_u*y^4)\/(mf - _u)^2"
+			"expression":"(2*_t*_u*y^4)\/(mf2 - _t)^2 + (2*_t*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -127,9 +127,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(2*_t*_u*y^4)\/(mf - _t)^2 + (2*_t*_u*y^4)\/(mf - _u)^2"
+			"expression":"(2*_t*_u*y^4)\/(mf2 - _t)^2 + (2*_t*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -140,9 +140,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(_t*_u*y^4)\/(mf - _t)^2 + (_t*_u*y^4)\/(mf - _u)^2"
+			"expression":"(_t*_u*y^4)\/(mf2 - _t)^2 + (_t*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -153,9 +153,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(_t*_u*y^4)\/(mf - _t)^2 + (_t*_u*y^4)\/(mf - _u)^2"
+			"expression":"(_t*_u*y^4)\/(mf2 - _t)^2 + (_t*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -166,9 +166,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(-2*_s*_u*y^4)\/(mf - _u)^2"
+			"expression":"(-2*_s*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -180,9 +180,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(-2*gamma^2*_t*y^2)\/(ms - _t)^2"
+			"expression":"(-2*gamma^2*_t*y^2)\/(ms2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -193,9 +193,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(-2*_s*_t*y^4)\/(mf - _t)^2"
+			"expression":"(-2*_s*_t*y^4)\/(mf2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -207,9 +207,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(-2*gamma^2*_u*y^2)\/(ms - _u)^2"
+			"expression":"(-2*gamma^2*_u*y^2)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -221,9 +221,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(-2*gamma^2*_t*y^2)\/(ms - _t)^2"
+			"expression":"(-2*gamma^2*_t*y^2)\/(ms2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -234,9 +234,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(-2*_s*_u*y^4)\/(mf - _u)^2"
+			"expression":"(-2*_s*_u*y^4)\/(mf2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -248,9 +248,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"(-2*gamma^2*_u*y^2)\/(ms - _u)^2"
+			"expression":"(-2*gamma^2*_u*y^2)\/(ms2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -261,9 +261,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"(-2*_s*_t*y^4)\/(mf - _t)^2"
+			"expression":"(-2*_s*_t*y^4)\/(mf2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -274,9 +274,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"-((_s*_t*y^4)\/(mf - _t)^2)"
+			"expression":"-((_s*_t*y^4)\/(mf2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -288,9 +288,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"-((gamma^2*_u*y^2)\/(ms - _u)^2)"
+			"expression":"-((gamma^2*_u*y^2)\/(ms2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -301,9 +301,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"-((_s*_u*y^4)\/(mf - _u)^2)"
+			"expression":"-((_s*_u*y^4)\/(mf2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -315,9 +315,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"-((gamma^2*_t*y^2)\/(ms - _t)^2)"
+			"expression":"-((gamma^2*_t*y^2)\/(ms2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -329,9 +329,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"-((gamma^2*_u*y^2)\/(ms - _u)^2)"
+			"expression":"-((gamma^2*_u*y^2)\/(ms2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -342,9 +342,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"-((_s*_t*y^4)\/(mf - _t)^2)"
+			"expression":"-((_s*_t*y^4)\/(mf2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -356,9 +356,9 @@
 			"parameters":[
 				"gamma",
 				"y",
-				"ms"
+				"ms2"
 			],
-			"expression":"-((gamma^2*_t*y^2)\/(ms - _t)^2)"
+			"expression":"-((gamma^2*_t*y^2)\/(ms2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -369,9 +369,9 @@
 			],
 			"parameters":[
 				"y",
-				"mf"
+				"mf2"
 			],
-			"expression":"-((_s*_u*y^4)\/(mf - _u)^2)"
+			"expression":"-((_s*_u*y^4)\/(mf2 - _u)^2)"
 		}
 	]
 }
