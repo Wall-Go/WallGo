@@ -57,8 +57,8 @@ def setupCollisionModel_QCD(
     def gluonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 2.0 * p["gs"] ** 2
 
-    parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters))
-    parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)

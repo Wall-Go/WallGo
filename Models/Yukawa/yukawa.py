@@ -240,7 +240,7 @@ class YukawaModelExample(WallGoExampleBase):
 
         self.matrixElementFile = pathlib.Path(
             self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.txt"
+            / "MatrixElements/MatrixElements_Yukawa.json"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":

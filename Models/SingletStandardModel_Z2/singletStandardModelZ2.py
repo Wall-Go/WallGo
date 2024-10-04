@@ -608,10 +608,10 @@ class SingletStandardModelExample(WallGoExampleBase):
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
