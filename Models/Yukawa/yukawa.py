@@ -304,6 +304,38 @@ class YukawaModelExample(WallGoExampleBase):
         collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
 
         return collisionModel
+    
+    def configureCollisionIntegration(
+        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
+    ) -> None:
+        """Non-abstract override"""
+
+        import WallGoCollision  # pylint: disable = C0415
+
+        """We can also configure various verbosity settings that are useful when
+        you want to see what is going on in long-running integrations. These 
+        include progress reporting and time estimates, as well as a full result dump
+        of each individual integral to stdout. By default these are all disabled. 
+        Here we enable some for demonstration purposes.
+        """
+        verbosity = WallGoCollision.CollisionTensorVerbosity()
+        verbosity.bPrintElapsedTime = (
+            True  # report total time when finished with all integrals
+        )
+
+        """Progress report when this percentage of total integrals (approximately)
+        have been computed. Note that this percentage is per-particle-pair, ie. 
+        each (particle1, particle2) pair reports when this percentage of their
+        own integrals is done. Note also that in multithreaded runs the 
+        progress tracking is less precise.
+        """
+        verbosity.progressReportPercentage = 0.25
+
+        # Print every integral result to stdout? This is very slow and
+        # verbose, intended only for debugging purposes
+        verbosity.bPrintEveryElement = False
+
+        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Yukawa example uses spatial grid size = 20"""
