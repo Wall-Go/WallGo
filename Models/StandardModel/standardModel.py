@@ -553,7 +553,7 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureScale=0.5, fieldScale=[50.0]
+                        temperatureScale=0.1, fieldScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
