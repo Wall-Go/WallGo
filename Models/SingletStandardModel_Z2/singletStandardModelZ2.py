@@ -517,12 +517,12 @@ class SingletStandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.json"
         )
 
     # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
-        """Non-abstract override to add a SM + singlet specific cmd option"""
+        """Non-abstract override to add a SM + singlet specific command line option"""
 
         argParser: argparse.ArgumentParser = super().initCommandLineArgs()
         argParser.add_argument(
@@ -579,19 +579,6 @@ class SingletStandardModelExample(WallGoExampleBase):
             wallGoModel.bIsGluonOffEq,
         )
 
-        """TEMPORARY: set matrixElementFile (used by runExample()) so that we load 
-        Benoit's benchmark matrix elements if only top is off-eq.
-        Otherwise use the file that was set in __init__().
-        Remove once matrix elements have been fixed."""
-
-        """
-        bUseBenoit = not wallGoModel.bIsGluonOffEq
-        if bUseBenoit:
-            self.matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory
-                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
-            )
-        """
         return collisionModel
 
     def updateCollisionModel(
