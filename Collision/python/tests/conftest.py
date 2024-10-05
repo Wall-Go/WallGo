@@ -16,8 +16,8 @@ def collisionModelQCD() -> WallGoCollision.PhysicsModel:
     gs = 1.2279920495357861
 
     defs.defineParameter("gs", 1.2279920495357861)
-    defs.defineParameter("msq[0]", gs**2 / 6.0)
-    defs.defineParameter("msq[1]", 2.0 * gs**2)
+    defs.defineParameter("mq2", gs**2 / 6.0)
+    defs.defineParameter("mg2", 2.0 * gs**2)
 
     topQuark = WallGoCollision.ParticleDescription()
     topQuark.name = "top"
@@ -45,7 +45,7 @@ def collisionModelQCD() -> WallGoCollision.PhysicsModel:
     model = WallGoCollision.PhysicsModel(defs)
 
     model.loadMatrixElements(
-        str(fileDir / "MatrixElements/MatrixElements_QCD.txt"), False
+        str(fileDir / "MatrixElements/MatrixElements_QCD.json"), False
     )
 
     yield model

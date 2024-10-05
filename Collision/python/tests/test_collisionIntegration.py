@@ -15,8 +15,8 @@ def test_getIntegralForPair(collisionTensorQCD: WallGoCollision.CollisionTensor)
 @pytest.mark.parametrize(
     "particle1, particle2, gridPoint, expected",
     [
-        ("top", "top", (2, 1, 2, 2), 0.0878282),
-        ("gluon", "gluon", (2, 1, 2, 2), 0.0626843),
+        ("top", "top", (2, 1, 1, 1), 0.27469),
+        ("gluon", "gluon", (3, 2, 1, 2), -0.235728),
     ],
 )
 def test_collisionTensorFull(
