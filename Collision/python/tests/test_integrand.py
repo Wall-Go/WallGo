@@ -5,7 +5,8 @@ import WallGoCollision
 @pytest.mark.parametrize(
     "particle1, particle2, basisSize, p2, phi2, phi3, cosTheta2, cosTheta3, gridPoint, expected",
     [
-        ("top", "top", 11, 1.0, 1.0, 1.0, 0.5, 0.5, WallGoCollision.GridPoint(2, 1, 1, 1), 0.0877125),
+        ("top", "top", 11, 1.5, 0.7, 1.1, 0.5, -0.23, WallGoCollision.GridPoint(2, 1, 1, 1), 0.00013467407975999778),
+        ("top", "top", 11, 0.2, 0.7, 1.0, 0.2, 0.7, WallGoCollision.GridPoint(3, 6, 4, 5), -1.1779156688217067e-06)
     ],
 )
 def test_integrandValue(
@@ -26,4 +27,4 @@ def test_integrandValue(
     integral = collisionTensorQCD.getIntegralForPair(particle1, particle2)
 
     res = integral.calculateIntegrand(p2, phi2, phi3, cosTheta2, cosTheta3, gridPoint)
-    assert res == expected
+    assert res == pytest.approx(expected, rel=1e-3)

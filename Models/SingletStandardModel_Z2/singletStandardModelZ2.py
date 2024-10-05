@@ -546,7 +546,8 @@ class SingletStandardModelExample(WallGoExampleBase):
             )
 
         return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
-
+    
+        
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
         Initialize the model. This should run after cmdline argument parsing
@@ -583,13 +584,14 @@ class SingletStandardModelExample(WallGoExampleBase):
         Otherwise use the file that was set in __init__().
         Remove once matrix elements have been fixed."""
 
+        """
         bUseBenoit = not wallGoModel.bIsGluonOffEq
         if bUseBenoit:
             self.matrixElementFile = pathlib.Path(
                 self.exampleBaseDirectory
                 / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
             )
-
+        """
         return collisionModel
 
     def updateCollisionModel(
