@@ -233,8 +233,8 @@ class CollisionArray:
                         if grid.N > size:
                             raise CollisionLoadError(
                                 f"""Target collision grid size ({grid.N}) must be smaller
-                                               or equal to the grid size recorded in collision files ({size}).
-                                               """
+                                or equal to the grid size recorded in collision files ({size}).
+                                """
                             )
 
                         btype = codecs.decode(
@@ -270,7 +270,7 @@ class CollisionArray:
                             ), """CollisionArray error: All the collision files must
                             have the same basis type."""
 
-                        collisionFileArray = collisionDataset
+                        collisionFileArray[i, :, :, j, :, :] = collisionDataset
                         
                 except FileNotFoundError:
                     raise CollisionLoadError(

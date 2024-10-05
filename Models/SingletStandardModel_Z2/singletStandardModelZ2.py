@@ -531,22 +531,6 @@ class SingletStandardModelExample(WallGoExampleBase):
             action="store_true",
         )
         return argParser
-
-    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """TEMPORARY: override to load provided collision data from Benoit's matrix
-        elements if only top is off-eq. Remove once matrix elements have been fixed
-        and correct data generated from them.
-        """
-
-        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
-        if bUseBenoit:
-            return pathlib.Path(
-                self.exampleBaseDirectory
-                / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
-            )
-
-        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
-    
         
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
@@ -580,7 +564,7 @@ class SingletStandardModelExample(WallGoExampleBase):
         )
 
         return collisionModel
-
+    
     def updateCollisionModel(
         self,
         inWallGoModel: "SingletSMZ2",
