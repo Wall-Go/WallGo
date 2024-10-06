@@ -39,30 +39,30 @@ wallgo::PhysicsModel setupQCD()
 	However the helper functions are needed later when defining particle content anyway (assuming non-ultrarelativistic particles), see below.
 	*/
 
-	/* The parameter container used by WallGo collision routines is of wallgo::ModelParameters type, which is a wrapper around std::map.
+	/* The parameter container used by WallGo collision routines is of wallgo::ModelParameters type, which is a wrapper around std::unordered_map.
 	Here we write our parameter definitions to a ModelParameters variable and pass it to modelDefinitions later. */
 	wallgo::ModelParameters parameters;
 
-	parameters.addOrModifyParameter("gs", 1.2279920495357861);
+	parameters.add("gs", 1.2279920495357861);
 
 	/* Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
-	These should take in a wallgo::ModelParameters object and return a double value
-
-	Here we use a C++11 lambda expression, with explicit return type, to define the mass function: */
+	These should take in a wallgo::ModelParameters object and return a double value.
+	Here we use lambda expressions with an explicit return types to define the mass functions: */
 	auto quarkThermalMassSquared = [](const wallgo::ModelParameters& params) -> double
 		{
-			const double gs = params.getParameterValue("gs");
+			// Read-only access to ModelParameters is through the at() function. operator[] is for write access, so cannot be used here
+			const double gs = params.at("gs");
 			return gs * gs / 6.0;
 		};
 
 	auto gluonThermalMassSquared = [](const wallgo::ModelParameters& params) -> double
 		{
-			const double gs = params.getParameterValue("gs");
+			const double gs = params.at("gs");
 			return 2.0 * gs * gs;
 		};
 
-	parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters));
-	parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters));
+	parameters.add("mq2", quarkThermalMassSquared(parameters));
+	parameters.add("mg2", gluonThermalMassSquared(parameters));
 
 	modelDefinition.defineParameters(parameters);
 
@@ -224,8 +224,8 @@ int main()
 
 	// Can also pack the new parameters in a wallgo::ModelParameters object and pass it to the model:
 	wallgo::ModelParameters changedParams;
-	changedParams.addOrModifyParameter("gs", 0.5);
-	changedParams.addOrModifyParameter("msq[1]", 0.3);
+	changedParams.add("gs", 0.5);
+	changedParams.add("mg", 0.3);
 	model.updateParameters(changedParams);
 
 	/* We can also request to compute integrals only for a specific off-equilibrium particle pair.

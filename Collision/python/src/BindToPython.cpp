@@ -199,20 +199,33 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
 
     py::class_<ModelParameters>(m, "ModelParameters", "Container for physics model-dependent parameters (couplings etc)")
         .def(py::init<>())
-        .def("addOrModifyParameter", &ModelParameters::addOrModifyParameter, "Define a new named parameter or modify value of an existing one.", py::arg("name"), py::arg("value"))
-        .def("getParameterValue", &ModelParameters::getParameterValue, "Get current value of specified parameter. Returns 0 if the parameter is not found (prefer the contains() method if unsure)", py::arg("name"))
+        .def("add", &ModelParameters::add, "Define a new named parameter or modify value of an existing one.", py::arg("name"), py::arg("value"))
+        .def("addOrModifyParameter", &ModelParameters::add, "DEPRECATED. Use ModelParameters.add().", py::arg("name"), py::arg("value"))
         .def("contains", &ModelParameters::contains, "Returns True if the specified parameter has been defined, otherwise returns False", py::arg("name"))
+        .def("remove", &ModelParameters::remove, "Removes the specified parameter. Does nothing if the parameter does not exist.", py::arg("name"))
         .def("clear", &ModelParameters::clear, "Empties the parameter container")
-        .def("getNumParams", &ModelParameters::getNumParams, "Returns number of contained parameters")
+        .def("size", &ModelParameters::size, "Returns number of contained parameters")
         .def("getParameterNames", &ModelParameters::getParameterNames, "Returns list containing names of parameters that have been defined")
-        // Operator[] on Python side is __getitem__. Bind a helper lambda to achieve this
+        .def("at",
+            static_cast<double& (ModelParameters::*)(const std::string&)>(&ModelParameters::at),
+            "Get reference to the specified parameter. Raises IndexError if the parameter is not found.",
+            py::arg("name"),
+            py::return_value_policy::reference_internal)
+        // Operator [] on Python side is __getitem__ (read) or __setitem__ (write), bind both accordingly
         .def("__getitem__",
-            [](const ModelParameters& self, const std::string& paramName)
-            {
-                return self[paramName];
-            },
-            "Get current value of specified parameter. Returns 0 if the parameter is not found (prefer the contains() method if unsure)",
-            py::arg("name")
+            static_cast<double& (ModelParameters::*)(const std::string&)>(&ModelParameters::at),
+            "Get reference to the specified parameter. Raises IndexError if the parameter is not found.",
+            py::arg("name"),
+            py::return_value_policy::reference_internal)
+        .def("__setitem__",
+            [](TModelParameters<double>& self, const std::string& key, const double& value) {
+                self.add(key, value);
+            })
+        .def("getParameterValue",
+            static_cast<double& (ModelParameters::*)(const std::string&)>(&ModelParameters::at),
+            "DEPRECATED. Use the operator [] for parameter access.",
+            py::arg("name"),
+            py::return_value_policy::reference_internal
         );
 
 

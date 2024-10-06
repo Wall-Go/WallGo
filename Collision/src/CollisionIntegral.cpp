@@ -350,7 +350,7 @@ void CollisionIntegral4::handleModelChange(const ModelChangeContext& changeConte
     {
         if (mModelParameters.contains(name))
         {
-            mModelParameters.addOrModifyParameter(name, newValue);
+            mModelParameters.add(name, newValue);
         }
     }
 }
