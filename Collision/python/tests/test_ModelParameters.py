@@ -12,13 +12,22 @@ def test_addAndGet() -> None:
     
     assert params.size() == 1
     assert params.contains("p1")
-    assert params["p1"] == 1
+    assert params["p1"] == 1.0
 
     params.add("p2", 2.0)
     assert params.size() == 2
     assert params.contains("p2")
-    assert params["p2"] == 2
+    assert params["p2"] == 2.0
 
+def test_bracketOperator() -> None:
+    """Tests that the [] operator can be used in place of add()"""
+    params = ModelParameters()
+
+    params["p1"] = 1.0
+    
+    assert params.contains("p1")
+    assert params["p1"] == 1.0
+    
 
 def test_modifyParam() -> None:
     """"""
