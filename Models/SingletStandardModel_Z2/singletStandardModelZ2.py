@@ -32,8 +32,8 @@ import os
 import sys
 import pathlib
 import argparse
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
@@ -733,8 +733,8 @@ class SingletStandardModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=1.0,
-                    wallThicknessGuess=0.05,
+                    meanFreePath=100.0, # In units of 1/Tnucl
+                    wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
         )

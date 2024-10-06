@@ -9,8 +9,8 @@ import WallGo
 
 @dataclass
 class FreeEnergyHack:
-    minPossibleTemperature: float
-    maxPossibleTemperature: float 
+    minPossibleTemperature: [float, bool]
+    maxPossibleTemperature: [float, bool] 
 
 
 class TestModel2Step(WallGo.Thermodynamics):
@@ -26,8 +26,8 @@ class TestModel2Step(WallGo.Thermodynamics):
         self.Tnucl = Tn
         self.Tc = 1
 
-        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=5.)
-        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=5.)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[5., False])
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[5., False])
 
         self.TMinLowT = 0.01
         self.TMaxLowT = 5.
@@ -73,8 +73,8 @@ class TestModelBag(WallGo.Thermodynamics):
         self.Tnucl = Tn
         self.Tc = 1
 
-        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=500.)
-        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.1, maxPossibleTemperature=500.)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=[0.1, False], maxPossibleTemperature=[500.,False])
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=[0.1, False], maxPossibleTemperature=[500., False])
 
         self.TMinLowT = 0.01
         self.TMaxLowT = 5.

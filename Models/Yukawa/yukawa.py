@@ -352,8 +352,8 @@ class YukawaModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=1.0,
-                    wallThicknessGuess=0.05,
+                    meanFreePath=100.0, # In units of 1/Tnucl
+                    wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
         )
