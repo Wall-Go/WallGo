@@ -251,8 +251,10 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         Initialize the EffectivePotentialxSMZ2.
         """
 
+        # TODO: Understand why we need PRINCIPAL_PART here and not ABS_ARGUMENT,
+        # given the latter is what is done in CosmoTransitions.
         super().__init__(
-            imaginaryOption=EImaginaryOption.ABS_ARGUMENT,  # Following CosmoTransitions
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
             useDefaultInterpolation=False,
         )
 

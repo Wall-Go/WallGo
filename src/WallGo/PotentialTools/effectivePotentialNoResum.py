@@ -4,6 +4,7 @@ Class for the one-loop effective potential without high-temperature expansion
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
+import typing
 import numpy as np
 
 from WallGo import EffectivePotential, EExtrapolationType
@@ -35,6 +36,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
     In some literature this would be the "4D effective potential".
 
     """
+
+    SMALL_NUMBER: typing.Final[float] = 1e-100
 
     def __init__(
         self,
@@ -205,11 +208,11 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         jCW : float or array_like
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
-        # do we want to take abs of the mass??
+        smallImagNumber = EffectivePotentialNoResum.SMALL_NUMBER * 1j
         return (
             degreesOfFreedom
             * massSq**2
-            * (np.log(massSq / rgScale**2 + 1e-100 * (1 + 1j)) - c)
+            * (np.log(massSq / rgScale**2 + smallImagNumber) - c)
         ) / (64 * np.pi * np.pi)
 
     def potentialOneLoop(
@@ -294,7 +297,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         # But make sure we don't modify the input temperature array here.
         temperature = np.asanyarray(temperature)
 
-        temperatureSq = temperature * temperature + 1e-100
+        temperatureSq = temperature**2 + self.SMALL_NUMBER
 
         # Need reshaping mess for numpy broadcasting to work
         if temperatureSq.ndim > 0:
@@ -310,8 +313,8 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
         if self.imaginaryOption == EImaginaryOption.ABS_ARGUMENT:
             # one way to drop imaginary parts, replace x with |x|
-            massSqB = abs(massSqB)
-            massSqF = abs(massSqF)
+            massSqB = np.abs(massSqB)
+            massSqF = np.abs(massSqF)
 
         # Careful with the sum, it needs to be column-wise.
         # Otherwise things go horribly wrong with array T input.

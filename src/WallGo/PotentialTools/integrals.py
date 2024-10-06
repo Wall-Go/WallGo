@@ -90,13 +90,13 @@ class JbIntegral(InterpolatableFunction):
             """Wrapper for treating x>=0 and x<0 separately"""
 
             def integrandPositive(y: float) -> float:
-                """This is the integrand if always y^2 + x >= 0. Taking abs of
-                this and adding a small number inside log to help with numerics"""
+                """This is the integrand if always y^2 + x >= 0.
+                Adding a small number inside log to help with numerics"""
                 return float(
                     y**2
                     * np.log(
                         1.0
-                        - np.exp(-np.sqrt(np.abs(y**2 + xWrapper)))
+                        - np.exp(-np.sqrt(y**2 + xWrapper))
                         + self.SMALL_NUMBER
                     )
                 )
@@ -201,8 +201,8 @@ class JfIntegral(InterpolatableFunction):
         def wrapper(xWrapper: float) -> complex:
 
             def integrandPositive(y: float) -> float:
-                """This is the integrand if always y^2 + x >= 0. Taking abs of this and
-                adding a small number inside log to help with numerics."""
+                """This is the integrand if always y^2 + x >= 0.
+                Adding a small number inside log to help with numerics."""
                 return float(
                     -(y**2)
                     * np.log(
