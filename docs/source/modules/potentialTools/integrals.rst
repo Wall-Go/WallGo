@@ -1,8 +1,8 @@
 ======================================
-Integrals
+PotentialTools.Integrals
 ======================================
 
-.. automodule:: WallGo.Integrals
+.. automodule:: WallGo.PotentialTools.integrals
     :members:
     :inherited-members:
     :special-members: __init__

@@ -14,8 +14,8 @@ If you use WallGo, please cite arXiv:....
 
     intro
     installation
-    first_example
-    collected_examples
+    firstExample
+    examples
     faqs
 
 
@@ -58,7 +58,6 @@ If you use WallGo, please cite arXiv:....
     modules/helpers
     modules/hydrodynamics
     modules/hydrodynamicsTemplateModel
-    modules/integrals
     modules/interpolatableFunction
     modules/manager
     modules/particle
@@ -66,3 +65,6 @@ If you use WallGo, please cite arXiv:....
     modules/results
     modules/thermodynamics
     modules/utilities
+    modules/potentialTools/effectivePotentialNoResum
+    modules/potentialTools/integrals
+    modules/potentialTools/utilities

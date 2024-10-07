@@ -38,6 +38,7 @@ tests = [
 ]
 docs = [
     "graphviz",
+    "myst_parser",
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-automodapi",

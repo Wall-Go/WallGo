@@ -1,6 +1,6 @@
 ======================================
-N-Singlet Scalars Extension
+Standard Model
 ======================================
 
-.. literalinclude:: ../../../Models/NSinglets/NSingletsModel.py
+.. literalinclude:: ../../../Models/StandardModel/standardModel.py
    :language: py
