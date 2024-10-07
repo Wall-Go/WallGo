@@ -22,9 +22,10 @@ def setupCollisionModel_QCDEW(
     In this example the symbols needed by matrix elements are:
     gs -- QCD coupling
     gw -- electroweak couplings
-    msq[0] -- Mass of a fermion propagator (thermal part only, and only QCD-contribution to thermal mass, so no distinction between quark types)
-    msq[1] -- Mass of a gluon propagator.
-    msq[2] -- Mass of a W propagator.
+    mq2 -- Mass of a fermion propagator (thermal part only, and only QCD-contribution to thermal mass, so no distinction between quark types)
+    mg2 -- Mass of a gluon propagator.
+    mw2 -- Mass of a W propagator.
+    ms2 -- Mass of a Higgs propagator.
 
     Thermal masses depend on the QCD coupling, however the model definition always needs a numerical value for each symbol.
     This adds some complexity to the model setup, and therefore we do the symbol definitions in stages: 
