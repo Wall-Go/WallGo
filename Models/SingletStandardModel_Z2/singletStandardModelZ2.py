@@ -269,9 +269,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
         This is because the benchmark points we're comparing with were originally done
-        with integrals from CosmoTransitions. These take the absolute argument of the
-        integrals. In real applications we recommend using the WallGo default
-        implementations.
+        with integrals from CosmoTransitions. In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
 
