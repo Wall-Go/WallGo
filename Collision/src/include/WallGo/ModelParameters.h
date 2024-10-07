@@ -37,7 +37,7 @@ public:
     Can be used as: myParams["key"] = newValue; */
     Value_t& operator[](const std::string& paramName) { return mParams[paramName]; }
 
-    [[deprecated("TModelParameters::getParameterValue() is deprecated. Use TModelParameters::getParameter()")]]
+    [[deprecated("TModelParameters::getParameterValue() is deprecated. Use TModelParameters::at()")]]
     Value_t& getParameterValue(const std::string& paramName) const { return getParameter(paramName); }
     
     // Removes a parameter if it exists. Note that this will invalidate existing iterators to the object
