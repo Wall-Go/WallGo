@@ -14,7 +14,7 @@ def getSafePathToResource(relativePathToResource: str) -> str:
     Path to the resource file: str.
     """
 
-    ## fallback to "WallGo" if the package call fails for some reason
+    # fallback to "PotentialTools" if the package call fails for some reason
     packageName = __package__ or "PotentialTools"
 
     return importlib.resources.files(packageName) / relativePathToResource
