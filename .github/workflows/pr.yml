@@ -2,7 +2,6 @@ name: WallGo pull request tests
 
 on:
   pull_request:
-    branches: [ main ]
 
 jobs:
   build:
