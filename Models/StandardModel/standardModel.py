@@ -123,7 +123,7 @@ class StandardModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            name="topL",
+            name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -134,7 +134,7 @@ class StandardModel(GenericModel):
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            name="topR",
+            name="TopR",
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -416,7 +416,7 @@ class StandardModelExample(WallGoExampleBase):
         inWallGoModel: "StandardModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagete changes in WallGo model to the collision model."""
+        """Propagate changes in WallGo model to the collision model."""
         import WallGoCollision  # pylint: disable = C0415
 
         changedParams = WallGoCollision.ModelParameters()
@@ -450,11 +450,11 @@ class StandardModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 50
+        integrationOptions.maxTries = 10
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.absoluteErrorGoal = 1e-5
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -488,7 +488,6 @@ class StandardModelExample(WallGoExampleBase):
         """SM example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]

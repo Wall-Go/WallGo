@@ -250,6 +250,9 @@ std::vector<ParticleChangeContext> PhysicsModel::computeParticleChanges()
     outContext.reserve(mParticles.size());
     for (auto& [index, particle] : mParticles)
     {
+        // Ultrarelativistic particles have nothing to re-compute 
+        if (particle.isUltrarelativistic()) continue;
+
         ParticleChangeContext context;
         context.particleIndex = index;
         // Re-evaluate particle mass and let the particle cache it
