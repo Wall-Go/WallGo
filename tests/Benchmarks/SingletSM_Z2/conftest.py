@@ -254,7 +254,7 @@ def singletBenchmarkCollisionArray(
     import pathlib
 
     fileDir = pathlib.Path(__file__).parent.resolve()
-    collisionPath = fileDir / "../../Testdata/N11/"
+    collisionPath = fileDir / "../../TestData/N11/"
 
     return WallGo.CollisionArray.newFromDirectory(
         collisionPath, singletBenchmarkGrid, "Chebyshev", particles, bInterpolate=False
@@ -291,7 +291,7 @@ def singletBenchmarkEOM_equilibrium(
     hydrodynamics, _ = singletBenchmarkHydrodynamics
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
-    meanFreePath = 0
+    meanFreePathScale = 0
 
     fieldCount = 2
 
@@ -302,7 +302,7 @@ def singletBenchmarkEOM_equilibrium(
         hydrodynamics,
         grid,
         fieldCount,
-        meanFreePath,
+        meanFreePathScale,
         (0.1, 100.0),
         (-10.0, 10.0),
         includeOffEq=False,

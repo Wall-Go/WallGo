@@ -32,24 +32,23 @@ import os
 import sys
 import pathlib
 import argparse
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 from WallGo.interpolatableFunction import EExtrapolationType
 
+from WallGo.PotentialTools import EffectivePotentialNoResum, EImaginaryOption
+
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
-from wallGoExampleBase import WallGoExampleBase
-from wallGoExampleBase import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
+from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413, E0401
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -252,7 +251,11 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         Initialize the EffectivePotentialxSMZ2.
         """
 
-        super().__init__()
+        # Not using default Jb/Jf interpolation tables here
+        super().__init__(
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+            useDefaultInterpolation=False,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
@@ -266,8 +269,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
         This is because the benchmark points we're comparing with were originally done
-        with integrals from CosmoTransitions. In real applications we recommend 
-        using the WallGo default implementations.
+        with integrals from CosmoTransitions. In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
 
@@ -365,15 +367,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuff, fermionStuff, temperature, checkForImaginary
+                bosonInformation, fermionInformation, temperature, checkForImaginary
             )
         )
 
@@ -408,7 +410,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -467,7 +469,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(
+    def fermionInformation(
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -696,12 +698,12 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

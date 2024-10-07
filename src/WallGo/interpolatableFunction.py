@@ -19,7 +19,7 @@ class EExtrapolationType(Enum):
     Enums for extrapolation. Default is NONE, no extrapolation at all.
     """
 
-    ## Throw and error
+    ## Throw ValueError if attempting to evaluate out of bounds
     ERROR = auto()
     ## Re-evaluate
     NONE = auto()
@@ -41,8 +41,8 @@ class InterpolatableFunction(ABC):
         - Validating that what was read from a file makes sense, ie. matches the result
           given by _evaluate().
 
-    WallGo uses this class for the thermal Jb, Jf integrals and for evaluating the free
-    energy as function of the temperature.
+    WallGo uses this class for evaluating the free energy as function of the
+    temperature. It can also be used for the thermal Jb, Jf integrals.
 
     This also works for functions returning many numbers, ie. vector functions
     V(x) = [V1, V2, ...]. In this case each component gets its own interpolation table.
@@ -348,29 +348,39 @@ class InterpolatableFunction(ABC):
 
             xLower = x <= self._rangeMin
             xUpper = x >= self._rangeMax
-            res = np.empty_like(x)
+
+            # Figure out shape of the result. If we are vector valued, need an extra axis
+            if self._RETURN_VALUE_COUNT > 1:
+                resShape = x.shape + (self._RETURN_VALUE_COUNT,)
+            else:
+                resShape = x.shape
+            res = np.empty(resShape)
 
             ## Lower range
-            match self.extrapolationTypeLower:
-                case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
-                case EExtrapolationType.NONE:
-                    res[xLower] = self._evaluateDirectly(x[xLower])
-                case EExtrapolationType.CONSTANT:
-                    res[xLower] = self.evaluateInterpolation(self._rangeMin)
-                case EExtrapolationType.FUNCTION:
-                    res[xLower] = self.evaluateInterpolation(x[xLower])
+            if np.any(xLower):
+                match self.extrapolationTypeLower:
+                    case EExtrapolationType.ERROR:
+                        # TODO better error message, this is nonsensible if x is array or list
+                        raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
+                    case EExtrapolationType.NONE:
+                        res[xLower, :] = self._evaluateDirectly(x[xLower])
+                    case EExtrapolationType.CONSTANT:
+                        res[xLower, :] = self.evaluateInterpolation(self._rangeMin)
+                    case EExtrapolationType.FUNCTION:
+                        res[xLower, :] = self.evaluateInterpolation(x[xLower])
 
             ## Upper range
-            match self.extrapolationTypeUpper:
-                case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
-                case EExtrapolationType.NONE:
-                    res[xUpper] = self._evaluateDirectly(x[xUpper])
-                case EExtrapolationType.CONSTANT:
-                    res[xUpper] = self.evaluateInterpolation(self._rangeMax)
-                case EExtrapolationType.FUNCTION:
-                    res[xUpper] = self.evaluateInterpolation(x[xUpper])
+            if np.any(xUpper):
+                match self.extrapolationTypeUpper:
+                    case EExtrapolationType.ERROR:
+                        # TODO better error message, this is nonsensible if x is array or list
+                        raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
+                    case EExtrapolationType.NONE:
+                        res[xUpper, :] = self._evaluateDirectly(x[xUpper])
+                    case EExtrapolationType.CONSTANT:
+                        res[xUpper, :] = self.evaluateInterpolation(self._rangeMax)
+                    case EExtrapolationType.FUNCTION:
+                        res[xUpper, :] = self.evaluateInterpolation(x[xUpper])
 
         return res
 

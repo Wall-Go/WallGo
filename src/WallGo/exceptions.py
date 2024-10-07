@@ -53,4 +53,8 @@ class WallGoPhaseValidationError(WallGoError):
 
 
 class CollisionLoadError(Exception):
-    """"""
+    """Raised when collision integrals fail to load"""
+    pass
+
+
+

@@ -3,7 +3,7 @@
 Internal use only, do NOT package this file! 
 """
 
-import WallGo
+from WallGo import PotentialTools
 
 
 def makeDefaultInterpolationTables():
@@ -12,8 +12,8 @@ def makeDefaultInterpolationTables():
 
     pointCount = 10000
 
-    Jb = WallGo.Integrals.JbIntegral(bUseAdaptiveInterpolation=False)
-    Jf = WallGo.Integrals.JfIntegral(bUseAdaptiveInterpolation=False)
+    Jb = PotentialTools.JbIntegral(bUseAdaptiveInterpolation=False)
+    Jf = PotentialTools.JfIntegral(bUseAdaptiveInterpolation=False)
 
     ## Range of (m/T)^2 that we interpolate over. After 1400 Jb/Jf are basically zero though.
     ## Do note that for negative input these need analytical continuation and are increasingly oscillatory,

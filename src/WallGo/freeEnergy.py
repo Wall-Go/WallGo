@@ -14,7 +14,7 @@ from .interpolatableFunction import (
     inputType,
     outputType,
 )
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import FieldPoint, Fields
 
@@ -232,7 +232,7 @@ class FreeEnergy(InterpolatableFunction):
             order,
             bUseInterpolation=bUseInterpolation,
             epsilon=self.effectivePotential.getInherentRelativeError(),
-            scale=self.effectivePotential.derivativeSettings.temperatureScale,
+            scale=self.effectivePotential.derivativeSettings.temperatureVariationScale,
         )
 
         return FreeEnergyValueType.fromArray(np.asarray(resultsArray))
@@ -423,7 +423,7 @@ class FreeEnergy(InterpolatableFunction):
         ):
             print(
                 """Warning: the temperature step size seems too large.
-                Try decreasing temperatureScale."""
+                Try decreasing temperatureVariationScale."""
             )
 
         # Now to construct the interpolation

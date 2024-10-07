@@ -5,20 +5,20 @@ c.f. 2310.02308
 
 import sys
 import pathlib
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 
 # Add the Models folder to the path; need to import the base
-# example template and effectivePotentialNoResum.py
+# example template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallGoExampleBase import WallGoExampleBase
-from wallGoExampleBase import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
+from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413, E0401
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -376,15 +376,15 @@ class YukawaModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([192.35]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=1.0,
-                    fieldScale=[
+                    temperatureVariationScale=1.0,
+                    fieldValueVariationScale=[
                         100.0,
                     ],
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
