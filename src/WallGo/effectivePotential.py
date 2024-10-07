@@ -20,11 +20,11 @@ class VeffDerivativeSettings:
     """Parameters used to estimate the optimal value of dT used
     for the finite difference derivatives of the effective potential."""
 
-    temperatureScale: float
+    temperatureVariationScale: float
     """Temperature scale (in GeV) over which the potential changes by O(1).
     A good value would be of order Tc-Tn."""
 
-    fieldScale: float | list[float] | np.ndarray
+    fieldValueVariationScale: float | list[float] | np.ndarray
     """Field scale (in GeV) over which the potential changes by O(1). A good value
     would be similar to the field VEV.
     Can either be a single float, in which case all the fields have the
@@ -101,12 +101,12 @@ class EffectivePotential(ABC):
         self.derivativeSettings = copy.copy(settings)
 
         # Interpret the field scale input and make it correct shape
-        if isinstance(settings.fieldScale, float):
-            self.derivativeSettings.fieldScale = settings.fieldScale * np.ones(self.fieldCount)
+        if isinstance(settings.fieldValueVariationScale, float):
+            self.derivativeSettings.fieldValueVariationScale = settings.fieldValueVariationScale * np.ones(self.fieldCount)
         else:
-            self.derivativeSettings.fieldScale = np.asanyarray(settings.fieldScale)
-            assert self.derivativeSettings.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
-        self.__combinedScales = np.append(self.derivativeSettings.fieldScale, self.derivativeSettings.temperatureScale)
+            self.derivativeSettings.fieldValueVariationScale = np.asanyarray(settings.fieldValueVariationScale)
+            assert self.derivativeSettings.fieldValueVariationScale.size == self.fieldCount, "EffectivePotential error: fieldValueVariationScale must have a size of self.fieldCount."
+        self.__combinedScales = np.append(self.derivativeSettings.fieldValueVariationScale, self.derivativeSettings.temperatureVariationScale)
 
     def areDerivativesConfigured(self) -> bool:
         """True if derivative routines are ready to use."""
@@ -211,7 +211,7 @@ class EffectivePotential(ABC):
             n=1,
             order=4,
             epsilon=self.effectivePotentialError,
-            scale=self.derivativeSettings.temperatureScale,
+            scale=self.derivativeSettings.temperatureVariationScale,
             bounds=(0,np.inf),
         )
         return der

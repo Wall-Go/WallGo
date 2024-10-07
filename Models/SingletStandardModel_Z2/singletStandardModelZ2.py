@@ -367,15 +367,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuff, fermionStuff, temperature, checkForImaginary
+                bosonInformation, fermionInformation, temperature, checkForImaginary
             )
         )
 
@@ -410,7 +410,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -469,7 +469,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(
+    def fermionInformation(
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -519,12 +519,12 @@ class SingletStandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.json"
         )
 
     # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
-        """Non-abstract override to add a SM + singlet specific cmd option"""
+        """Non-abstract override to add a SM + singlet specific command line option"""
 
         argParser: argparse.ArgumentParser = super().initCommandLineArgs()
         argParser.add_argument(
@@ -533,22 +533,7 @@ class SingletStandardModelExample(WallGoExampleBase):
             action="store_true",
         )
         return argParser
-
-    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """TEMPORARY: override to load provided collision data from Benoit's matrix
-        elements if only top is off-eq. Remove once matrix elements have been fixed
-        and correct data generated from them.
-        """
-
-        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
-        if bUseBenoit:
-            return pathlib.Path(
-                self.exampleBaseDirectory
-                / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
-            )
-
-        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
-
+        
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
         Initialize the model. This should run after cmdline argument parsing
@@ -580,20 +565,8 @@ class SingletStandardModelExample(WallGoExampleBase):
             wallGoModel.bIsGluonOffEq,
         )
 
-        """TEMPORARY: set matrixElementFile (used by runExample()) so that we load 
-        Benoit's benchmark matrix elements if only top is off-eq.
-        Otherwise use the file that was set in __init__().
-        Remove once matrix elements have been fixed."""
-
-        bUseBenoit = not wallGoModel.bIsGluonOffEq
-        if bUseBenoit:
-            self.matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory
-                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
-            )
-
         return collisionModel
-
+    
     def updateCollisionModel(
         self,
         inWallGoModel: "SingletSMZ2",
@@ -610,10 +583,10 @@ class SingletStandardModelExample(WallGoExampleBase):
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -725,12 +698,12 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

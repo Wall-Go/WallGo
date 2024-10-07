@@ -28,6 +28,7 @@ bool isLikelyJsonFile(const std::filesystem::path& filePath)
 
 bool buildMatrixElementsFromFile(
     const std::filesystem::path& matrixElementFile,
+    const std::vector<int32_t>& particleIndices,
     const std::vector<int32_t>& offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements)
@@ -64,6 +65,7 @@ bool buildMatrixElementsFromFile(
     }
 
     bool bBuildSuccess = buildMatrixElements(
+        particleIndices,
         offEqParticleIndices,
         symbols,
         parsedParticles,
@@ -323,6 +325,7 @@ bool parseMatrixElementsRegexLegacy(const std::filesystem::path& matrixElementFi
 }
 
 bool buildMatrixElements(
+    const std::vector<int32_t>& modelParticleIndices,
     const std::vector<int32_t>& modelOffEqParticleIndices,
     const std::unordered_map<std::string, double>& modelSymbols,
     const std::vector<ReadParticle>& parsedParticles,
@@ -351,8 +354,27 @@ bool buildMatrixElements(
             // Any other index needs to match idx2
             if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
 
-            // Indices found, so this matrix element contributes. Now create it
+            // Off-eq indices found, next verify that all other external particles are also allowed (as specified by the input index list).
+            bool bExternalsOK = true;
+            for (int32_t externalIdx : indices)
+            {
+                if (std::find(modelParticleIndices.begin(), modelParticleIndices.end(), externalIdx) == modelParticleIndices.end())
+                {
+                    std::cout << "Warning: found process with external particles [";
+                    for (size_t i = 0; i < indices.size(); ++i)
+                    {
+                        if (i > 0) std::cout << ", ";
+                        std::cout << indices[i];
+                    }
+                    std::cout << "], but particle with index " << externalIdx << " has not been defined. This process will be ignored.\n";
+                    bExternalsOK = false;
+                    break;
+                }
+            }
 
+            if (!bExternalsOK) continue;
+
+            // All external particles OK, so the matrix element contributes. Now create it
             MatrixElement newElement;
 
             // Define the numerical matrix element to only depend on symbols that were parsed together with the expression.

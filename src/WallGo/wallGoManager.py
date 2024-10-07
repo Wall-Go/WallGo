@@ -31,7 +31,7 @@ class WallSolverSettings:
     """If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).
     """
 
-    meanFreePath: float = 100.0
+    meanFreePathScale: float = 100.0
     """Estimate of the mean free path of the plasma in units of 1/Tn. This will be used
     to set the tail lengths in the Grid object. Default is 100.
     """
@@ -325,7 +325,7 @@ class WallGoManager:
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
         dT = (
-            self.model.getEffectivePotential().derivativeSettings.temperatureScale
+            self.model.getEffectivePotential().derivativeSettings.temperatureVariationScale
             * phaseTracerTol**0.25
         )
 
@@ -485,11 +485,11 @@ class WallGoManager:
         gridMomentumFalloffScale = Tnucl
 
         wallThickness = wallSolverSettings.wallThicknessGuess
-        meanFreePath = wallSolverSettings.meanFreePath
+        meanFreePathScale = wallSolverSettings.meanFreePathScale
 
         grid: Grid3Scales = self.buildGrid(
             wallThickness,
-            meanFreePath,
+            meanFreePathScale,
             gridMomentumFalloffScale,
         )
 
@@ -504,7 +504,7 @@ class WallGoManager:
             # TODO may be cleaner to handle it here and return an invalid solver
             boltzmannSolver.loadCollisions(self.collisionDirectory)
 
-        eom: EOM = self.buildEOM(grid, boltzmannSolver, meanFreePath)
+        eom: EOM = self.buildEOM(grid, boltzmannSolver, meanFreePathScale)
 
         eom.includeOffEq = wallSolverSettings.bIncludeOffEquilibrium
         return WallSolver(eom, grid, boltzmannSolver, wallThickness / Tnucl)
@@ -528,7 +528,7 @@ class WallGoManager:
     def buildGrid(
         self,
         wallThicknessIni: float,
-        meanFreePath: float,
+        meanFreePathScale: float,
         initialMomentumFalloffScale: float,
     ) -> Grid3Scales:
         r"""
@@ -539,7 +539,7 @@ class WallGoManager:
         wallThicknessIni : float
             Initial guess of the wall thickness that will be used to solve the EOM.
             Should be expressed in units of 1/Tnucl.
-        meanFreePath : float
+        meanFreePathScale : float
             Estimate of the mean free path of the plasma. This will be used to set the
             tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
         initialMomentumFalloffScale : float
@@ -555,7 +555,7 @@ class WallGoManager:
 
         # We divide by Tnucl to get it in physical units of length
         tailLength = max(
-            meanFreePath, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
+            meanFreePathScale, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
         ) / Tnucl
 
         if gridN % 2 == 0:
@@ -576,7 +576,7 @@ class WallGoManager:
         )
 
     def buildEOM(
-        self, grid: Grid3Scales, boltzmannSolver: BoltzmannSolver, meanFreePath: float
+        self, grid: Grid3Scales, boltzmannSolver: BoltzmannSolver, meanFreePathScale: float
     ) -> EOM:
         """
         Constructs an EOM object using internal state from the WallGoManager,
@@ -589,7 +589,7 @@ class WallGoManager:
             coordinates to the compact ones.
         boltzmannSolver : BoltzmannSolver
             BoltzmannSolver object used to solve the Boltzmann equation.
-        meanFreePath : float
+        meanFreePathScale : float
             Estimate of the mean free path of the plasma. This will be used to set the
             tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
 
@@ -622,7 +622,7 @@ class WallGoManager:
             self.hydrodynamics,
             grid,
             numberOfFields,
-            meanFreePath / Tnucl, # We divide by Tnucl to get physical units
+            meanFreePathScale / Tnucl, # We divide by Tnucl to get physical units
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,

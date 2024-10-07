@@ -134,6 +134,13 @@ class WallGoExampleBase(ABC):
             help="""Also search for detonation solutions after deflagrations.""",
         )
 
+        argParser.add_argument(
+            "--skipEquilibriumEOM",
+            action="store_true",
+            help="""Only run wall solver with out-of-equilibrium contributions included,
+            skip the simpler setup where these are absent."""
+        )
+
         return argParser
 
     def assertCollisionModuleAvailable(self) -> None:
@@ -263,13 +270,15 @@ class WallGoExampleBase(ABC):
             # Take copy of the input solver settings because we will do
             # both off-eq = True/False cases
             wallSolverSettings = copy.deepcopy(benchmark.wallSolverSettings)
-            wallSolverSettings.bIncludeOffEquilibrium = False
 
-            print(
-                f"\n === Begin EOM with off-eq effects ignored ==="  # pylint: disable=W1309
-            )
-            results = manager.solveWall(wallSolverSettings)
-            self.processResultsForBenchmark(benchmark, results)
+            if not self.cmdArgs.skipEquilibriumEOM:
+                
+                wallSolverSettings.bIncludeOffEquilibrium = False
+                print(
+                    f"\n === Begin EOM with off-eq effects ignored ==="
+                )
+                results = manager.solveWall(wallSolverSettings)
+                self.processResultsForBenchmark(benchmark, results)
 
             """Solve field EOM with out-of-equilibrium effects included.
             This requires simulatenous solving of Boltzmann equations
@@ -310,7 +319,7 @@ class WallGoExampleBase(ABC):
                     Subclasses should set matrixElementFile to a valid file path.
                     """
                     bShouldPrintMatrixElements = True
-                    if not collisionModel.readMatrixElements(
+                    if not collisionModel.loadMatrixElements(
                         str(self.matrixElementFile), bShouldPrintMatrixElements
                     ):
                         print("FATAL: Failed to load matrix elements")

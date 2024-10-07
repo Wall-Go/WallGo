@@ -569,11 +569,11 @@ class NSingletsModelExample(WallGoExampleBase):
         self, wallGoModel: "NSinglets"
     ) -> "WallGoCollision.PhysicsModel":
         """Initialize the Collision model and set the seed."""
+        None # TODO
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Singlet example uses spatial grid size = 25"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "25")
 
     def updateModelParameters(
@@ -646,12 +646,12 @@ class NSingletsModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

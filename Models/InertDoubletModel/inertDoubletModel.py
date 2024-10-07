@@ -129,7 +129,7 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            name="topL",
+            name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -140,7 +140,7 @@ class InertDoubletModel(GenericModel):
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            name="topR",
+            name="TopR",
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -311,18 +311,18 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         potentialTree = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         # Particle masses and coefficients for the one-loop thermal potential
-        bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
+        bosonInformationResummed = self.bosonInformationResummed(fields, temperature)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuffResummed, fermionStuff, temperature, checkForImaginary
+                bosonInformationResummed, fermionInformation, temperature, checkForImaginary
             )
         )
 
@@ -369,7 +369,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             + 2 * massSq * rgScale**2
         )
 
-    def fermionStuff(self, fields: Fields) -> tuple[
+    def fermionInformation(self, fields: Fields) -> tuple[
         np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
@@ -409,7 +409,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -475,7 +475,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def bosonStuffResummed(  # pylint: disable=too-many-locals
+    def bosonInformationResummed(  # pylint: disable=too-many-locals
         self, fields: Fields, temperature: float | np.ndarray
     ) -> tuple[np.ndarray, np.ndarray | float, np.ndarray | float, np.ndarray | float]:
         """
@@ -615,7 +615,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -671,13 +671,13 @@ class InertDoubletModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[2]", 11.0 * gw**2 / 6.0
+            "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -695,11 +695,11 @@ class InertDoubletModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 50
+        integrationOptions.maxTries = 10
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.absoluteErrorGoal = 1e-5
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -732,7 +732,6 @@ class InertDoubletModelExample(WallGoExampleBase):
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Inert doublet model example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
@@ -793,11 +792,11 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeSettings(temperatureScale=0.5, fieldScale=[10.0]),
+                WallGo.VeffDerivativeSettings(temperatureVariationScale=0.5, fieldValueVariationScale=[10.0]),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
