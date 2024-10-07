@@ -169,7 +169,14 @@ bool PhysicsModel::loadMatrixElements(
 {
     mMatrixElements.clear();
 
-    const bool bReadOK = utils::buildMatrixElementsFromFile(matrixElementFile, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
+    // Indices of all particles, needed to validate matrix elements (can't have unknown particles as external legs)
+    std::vector<int32_t> particleIndices;
+    for (auto const& [key, _] : mParticles)
+    {
+        particleIndices.push_back(key);
+    }
+
+    const bool bReadOK = utils::buildMatrixElementsFromFile(matrixElementFile, particleIndices, mOffEqIndices, mParameters.getParameterMap(), mMatrixElements);
     if (!bReadOK)
     {
         // On failure, leave cached matrix elements empty so that we know it's invalid
@@ -220,6 +227,11 @@ void PhysicsModel::printMatrixElements() const
             for (size_t i = 0; i < indices.size(); ++i)
             {
                 if (i > 0) std::cout << ", ";
+
+                // This assumes that the model has been made aware of all particles appearing as external legs, prior to reading matrix elements.
+                // So we assert here. Matrix element creation routines are responsible for ensuring this.
+                assert(mParticles.count(indices[i]) > 0 && "Found external particle that has not been defined in the PhysicsModel");
+
                 std::cout << mParticles.at(indices[i]).getName();
             }
 
