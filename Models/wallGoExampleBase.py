@@ -198,7 +198,6 @@ class WallGoExampleBase(ABC):
         Initializes WallGo and runs the entire model set-up, computation of
         collision integrals (if enabled) and computation of the wall velocity.
         """
-        WallGo.initialize()
 
         argParser = self.initCommandLineArgs()
         # store the args so that subclasses can access them if needed

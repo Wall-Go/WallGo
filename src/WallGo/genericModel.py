@@ -5,7 +5,7 @@ from typing import Type, Any
 
 ## WallGo imports
 from .particle import Particle
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 
 
 class GenericModel(ABC):

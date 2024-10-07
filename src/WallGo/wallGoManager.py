@@ -12,15 +12,13 @@ import WallGo
 from .boltzmann import BoltzmannSolver
 from .containers import PhaseInfo
 from .equationOfMotion import EOM
-from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
+from .exceptions import WallGoError, WallGoPhaseValidationError
 from .genericModel import GenericModel
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
-from .integrals import Integrals
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults
-from .WallGoUtils import getSafePathToResource
 
 
 @dataclass
@@ -634,27 +632,3 @@ class WallGoManager:
             pressRelErrTol=pressRelErrTol,
         )
 
-    def _initalizeIntegralInterpolations(self, integrals: Integrals) -> None:
-        """
-        Initialize the interpolation of the thermal integrals.
-
-        Parameters
-        ----------
-        integrals : Integrals
-            Integrals object.
-        """
-
-        assert self.config is not None
-
-        integrals.Jb.readInterpolationTable(
-            getSafePathToResource(
-                self.config.get("DataFiles", "InterpolationTable_Jb")
-            ),
-            bVerbose=False,
-        )
-        integrals.Jf.readInterpolationTable(
-            getSafePathToResource(
-                self.config.get("DataFiles", "InterpolationTable_Jf")
-            ),
-            bVerbose=False,
-        )
