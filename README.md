@@ -1,19 +1,14 @@
-===========================================
-WallGo
-===========================================
+# WallGo
 
 WallGo is open-source scientific software for computing the bubble wall speed for cosmological phase transitions.
 
-|
 
-Status
-===========================================
+## Status
 
-.. image:: badge.svg
-    :target: https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/
+![build and pytest](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/)
 
-Installation
-===========================================
+
+## Installation
 
 WallGo can be installed as a Python package (in developer mode) with pip, using::
 
@@ -26,27 +21,21 @@ instead run
 
     python -m pip install -e ".[docs,lint,tests]""
 
-|
 
-Requirements
--------------------------------------------
+### Requirements
 
 WallGo is based on Python 3. Necessary requirements are installed automatically with
 pip. They can be found in the file `pyproject.toml`.
 
-|
 
-Tests
-===========================================
+## Tests
 
 Tests can be run from the base directory with::
 
     pytest -v
 
-|
 
-Examples
-===========================================
+## Examples
 
 A number of example models are collected in the directory `Models/`, include the
 Standard Model with light Higgs, singlet and doublet scalar extensions of the
@@ -57,8 +46,7 @@ in::
     python3 Models/SingletStandardModel_Z2/singletStandardModelZ2.py
 
 
-License
-===========================================
+## License
 
 Copyright (c) 2024 Andreas Ekstedt, Oliver Gould, Joonas Hirvonen,
 Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.
@@ -74,5 +62,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-|
