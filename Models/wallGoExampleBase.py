@@ -320,7 +320,7 @@ class WallGoExampleBase(ABC):
                     Subclasses should set matrixElementFile to a valid file path.
                     """
                     bShouldPrintMatrixElements = True
-                    if not collisionModel.readMatrixElements(
+                    if not collisionModel.loadMatrixElements(
                         str(self.matrixElementFile), bShouldPrintMatrixElements
                     ):
                         print("FATAL: Failed to load matrix elements")

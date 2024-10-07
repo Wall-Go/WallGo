@@ -364,7 +364,7 @@ class EffectivePotentialSM(EffectivePotential):
 
 class StandardModelExample(WallGoExampleBase):
     """
-    Sets up the standard model, computes or loads the collison
+    Sets up the standard model, computes or loads the collision
     integrals, and computes the wall velocity.
     """
 
@@ -372,7 +372,7 @@ class StandardModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -426,13 +426,13 @@ class StandardModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[2]", 11.0 * gw**2 / 6.0
+            "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)

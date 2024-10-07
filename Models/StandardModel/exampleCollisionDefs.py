@@ -45,6 +45,7 @@ def setupCollisionModel_QCDEW(
     # Here we copy the value of QCD and EW couplings as defined in the main WallGo model (names differ for historical reasons)
     parameters.addOrModifyParameter("gs", modelParameters["g3"])
     parameters.addOrModifyParameter("gw", modelParameters["g2"])
+    parameters.addOrModifyParameter("yt", modelParameters["yt"])
 
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
@@ -61,16 +62,16 @@ def setupCollisionModel_QCDEW(
         return 11.0 * p["gw"] ** 2 / 6.0
 
 
-    parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters))
-    parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters))
-    parameters.addOrModifyParameter("msq[2]", wBosonThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("mw2", wBosonThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)
 
     # Particle definitions
     topQuarkL = WallGoCollision.ParticleDescription()
-    topQuarkL.name = "topL"  # String identifier, MUST be unique
+    topQuarkL.name = "TopL"  # String identifier, MUST be unique
     topQuarkL.index = 0  # Unique integer identifier, MUST match index that appears in matrix element file
     topQuarkL.type = (
         WallGoCollision.EParticleType.eFermion
@@ -81,33 +82,38 @@ def setupCollisionModel_QCDEW(
     topQuarkL.bUltrarelativistic = True
     topQuarkL.massSqFunction = quarkThermalMassSquared
 
-    # Finish particle species definition
     modelDefinition.defineParticleSpecies(topQuarkL)
 
-    ## Repeat particle definitions for right-handed top quark and W-boson
     topQuarkR = WallGoCollision.ParticleDescription()
-    topQuarkR.name = "topR"
+    topQuarkR.name = "TopR"
     topQuarkR.index = 1
-    topQuarkR.type = (WallGoCollision.EParticleType.eFermion)
+    topQuarkR.type = WallGoCollision.EParticleType.eFermion
     topQuarkR.bInEquilibrium = False
     topQuarkR.bUltrarelativistic = True
     topQuarkR.massSqFunction = quarkThermalMassSquared
     modelDefinition.defineParticleSpecies(topQuarkR)
 
+    bottomQuarkR = WallGoCollision.ParticleDescription()
+    bottomQuarkR.name = "BotR"
+    bottomQuarkR.index = 2
+    bottomQuarkR.type = WallGoCollision.EParticleType.eFermion
+    bottomQuarkR.bInEquilibrium = True
+    bottomQuarkR.bUltrarelativistic = True
+    bottomQuarkR.massSqFunction = quarkThermalMassSquared
+    modelDefinition.defineParticleSpecies(bottomQuarkR)
+
     wBoson = WallGoCollision.ParticleDescription()
     wBoson.name = "W"
-    wBoson.index = 2
-    wBoson.type = (WallGoCollision.EParticleType.eBoson)
+    wBoson.index = 4
+    wBoson.type = WallGoCollision.EParticleType.eBoson
     wBoson.bInEquilibrium = False
     wBoson.bUltrarelativistic = True
     wBoson.massSqFunction = wBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(wBoson)
 
 
-    # Light quarks and gluons remain in equilibrium but appear as external particles in collision processes, so define a gluon and a generic light quark
-
     gluon = WallGoCollision.ParticleDescription()
-    gluon.name = "gluon"
+    gluon.name = "Gluon"
     gluon.index = 3
     gluon.type = WallGoCollision.EParticleType.eBoson
     gluon.bInEquilibrium = True
@@ -115,10 +121,20 @@ def setupCollisionModel_QCDEW(
     gluon.massSqFunction = gluonThermalMassSquared
     modelDefinition.defineParticleSpecies(gluon)
 
-    lightQuark = topQuarkL
+    higgs = WallGoCollision.ParticleDescription()
+    higgs.name = "H"
+    higgs.index = 5
+    higgs.type = WallGoCollision.EParticleType.eBoson
+    higgs.bInEquilibrium = True
+    higgs.bUltrarelativistic = True
+    modelDefinition.defineParticleSpecies(higgs)
+
+    lightQuark = WallGoCollision.ParticleDescription()
+    lightQuark.name = "lightQuark"
+    lightQuark.index = 6
+    lightQuark.type = WallGoCollision.EParticleType.eFermion
     lightQuark.bInEquilibrium = True
-    lightQuark.name = "light quark"
-    lightQuark.index = 4
+    lightQuark.bUltrarelativistic = True
     modelDefinition.defineParticleSpecies(lightQuark)
 
     # Create the concrete model
