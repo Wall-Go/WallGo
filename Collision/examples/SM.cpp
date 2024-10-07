@@ -58,27 +58,27 @@ wallgo::ModelParameters computeMasses(const wallgo::ModelParameters& actionParam
     const double yt = actionParams.at("yt");
 
     // SU3 gluon - Use asymptotic thermal mass (Debye mass divided by 2). See WallGo paper for details
-    outMsq.addOrModifyParameter("mg2",  gs * gs);
+    outMsq.add("mg2",  gs * gs);
 
     
     // W boson
-    outMsq.addOrModifyParameter("mw2", 11. / 12. * gw * gw);
+    outMsq.add("mw2", 11. / 12. * gw * gw);
     
     // U(1) boson
-    outMsq.addOrModifyParameter("mb2", 11. / 12. * gY * gY);
+    outMsq.add("mb2", 11. / 12. * gY * gY);
 
     // Generic light quark - The mass is esimated as the asymptotic mass for a SU(3)_c fundamental fermion
-    outMsq.addOrModifyParameter("mq2", gs * gs / 3.);
+    outMsq.add("mq2", gs * gs / 3.);
 
     // leptons - The mass is esimated as the asymptotic mass for a SU(2)_L fundamental fermion
-    outMsq.addOrModifyParameter("ml2", 3. / 16. * gw * gw);
+    outMsq.add("ml2", 3. / 16. * gw * gw);
 
     // Higgs - The mass is estimated as the one-loop thermal mass
     const double mHsqThermal = 1. / 16. * (3 * gw * gw + gY * gY + 8 * lam1H + 4 * yt * yt);
 
-    outMsq.addOrModifyParameter("mH2", mHsqThermal);
+    outMsq.add("mH2", mHsqThermal);
     // "Goldstones"- The mass is estimated as the one-loop thermal mass
-    outMsq.addOrModifyParameter("mG2", mHsqThermal);
+    outMsq.add("mG2", mHsqThermal);
 
     return outMsq;
 }
@@ -97,11 +97,11 @@ void defineParametersSM(wallgo::ModelDefinition& inOutModelDef)
          m_t=172.57
          m_H=125.20
     */
-    params.addOrModifyParameter("gs", 1.21772); // QCD coupling at Z pole
-    params.addOrModifyParameter("gw", 0.651653); // SU2 coupling
-    params.addOrModifyParameter("gY", 0.357449); // hypercharge coupling
-    params.addOrModifyParameter("yt", 1.00995); // top Yukawa
-    params.addOrModifyParameter("lam1H", 0.129008); // Higgs self quartic
+    params.add("gs", 1.21772); // QCD coupling at Z pole
+    params.add("gw", 0.651653); // SU2 coupling
+    params.add("gY", 0.357449); // hypercharge coupling
+    params.add("yt", 1.00995); // top Yukawa
+    params.add("lam1H", 0.129008); // Higgs self quartic
 
     auto massSquares = computeMasses(params);
 

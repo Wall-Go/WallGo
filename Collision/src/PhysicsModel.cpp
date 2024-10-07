@@ -61,7 +61,7 @@ void ModelDefinition::defineParameter(const std::string& symbol, double value)
         return;
     }
 
-    mParameters.addOrModifyParameter(symbol, value);
+    mParameters.add(symbol, value);
 }
 
 void ModelDefinition::defineParameters(const ModelParameters& inParams)
@@ -136,10 +136,10 @@ void PhysicsModel::updateParameter(const std::string& symbol, double value)
         std::cerr << "Attempted to update undefined parameter: " << symbol << "\n";
         return;
     }
-    mParameters.addOrModifyParameter(symbol, value);
+    mParameters.add(symbol, value);
     
     ModelChangeContext changeContext;
-    changeContext.changedParams.addOrModifyParameter(symbol, value);
+    changeContext.changedParams.add(symbol, value);
     changeContext.changedParticles = computeParticleChanges();
 
     notifyModelChange(changeContext);
@@ -153,7 +153,7 @@ void PhysicsModel::updateParameters(const ModelParameters& newValues)
         {
             std::cerr << "Attempted to update undefined parameter: " << symbol << "\n";
         }
-        mParameters.addOrModifyParameter(symbol, value);
+        mParameters.add(symbol, value);
     }
 
     ModelChangeContext changeContext;
