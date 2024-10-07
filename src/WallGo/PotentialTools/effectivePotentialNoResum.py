@@ -11,7 +11,6 @@ from ..effectivePotential import EffectivePotential
 from ..interpolatableFunction import EExtrapolationType
 
 from .integrals import Integrals
-from .utils import getSafePathToResource
 
 
 class EImaginaryOption(Enum):
