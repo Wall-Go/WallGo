@@ -500,9 +500,9 @@ def main() -> None:
     # A good value would be similar to the field VEV.
     # Can either be a single float, in which case all
     # the fields have the same scale, or an array.
-    fieldScale = [10.,10.]
+    fieldValueVariationScale = [10.,10.]
     manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureVariationScale, fieldScale)
+        wallThicknessIni, meanFreePath, temperatureVariationScale, fieldValueVariationScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input,

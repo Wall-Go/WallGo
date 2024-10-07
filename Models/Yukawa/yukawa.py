@@ -345,7 +345,7 @@ class YukawaModelExample(WallGoExampleBase):
                 ),
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
-                    fieldScale=[
+                    fieldValueVariationScale=[
                         100.0,
                     ],
                 ),
