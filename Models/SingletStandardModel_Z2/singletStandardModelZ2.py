@@ -367,15 +367,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuff, fermionStuff, temperature, checkForImaginary
+                bosonInformation, fermionInformation, temperature, checkForImaginary
             )
         )
 
@@ -410,7 +410,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -469,7 +469,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(
+    def fermionInformation(
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -725,12 +725,12 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

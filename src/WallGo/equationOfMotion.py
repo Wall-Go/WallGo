@@ -43,7 +43,7 @@ class EOM:
         hydrodynamics: Hydrodynamics,
         grid: Grid3Scales,
         nbrFields: int,
-        meanFreePath: float,
+        meanFreePathScale: float,
         wallThicknessBounds: tuple[float, float],
         wallOffsetBounds: tuple[float, float],
         includeOffEq: bool = False,
@@ -67,7 +67,7 @@ class EOM:
             Object of the class Grid3Scales.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
-        meanFreePath : float
+        meanFreePathScale : float
             Estimate of the mean free path of the particles in the plasma. Should be
             expressed in physical units (the units used in EffectivePotential).
         wallThicknessBounds : tuple
@@ -108,7 +108,7 @@ class EOM:
         self.boltzmannSolver = boltzmannSolver
         self.grid = grid
         self.nbrFields = nbrFields
-        self.meanFreePath = meanFreePath
+        self.meanFreePathScale = meanFreePathScale
         self.wallThicknessBounds = wallThicknessBounds
         self.wallOffsetBounds = wallOffsetBounds
         self.includeOffEq = includeOffEq
@@ -1232,13 +1232,13 @@ class EOM:
         outside like 1/gamma. We take the max because the tail lengths must be larger
         than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
         tailInside = max(
-            self.meanFreePath * gammaWall * self.includeOffEq,
+            self.meanFreePathScale * gammaWall * self.includeOffEq,
             wallThicknessGrid
             * (1 + 2.1 * self.grid.smoothing)
             / self.grid.ratioPointsWall,
         )
         tailOutside = max(
-            self.meanFreePath / gammaWall * self.includeOffEq,
+            self.meanFreePathScale / gammaWall * self.includeOffEq,
             wallThicknessGrid
             * (1 + 2.1 * self.grid.smoothing)
             / self.grid.ratioPointsWall,

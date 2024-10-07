@@ -344,15 +344,15 @@ class YukawaModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([192.35]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=1.0,
-                    fieldScale=[
+                    temperatureVariationScale=1.0,
+                    fieldValueVariationScale=[
                         100.0,
                     ],
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

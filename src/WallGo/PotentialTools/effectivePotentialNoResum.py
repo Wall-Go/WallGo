@@ -11,7 +11,6 @@ from ..effectivePotential import EffectivePotential
 from ..interpolatableFunction import EExtrapolationType
 
 from .integrals import Integrals
-from .utils import getSafePathToResource
 
 
 class EImaginaryOption(Enum):
@@ -83,7 +82,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 )
 
     @abstractmethod
-    def bosonStuff(
+    def bosonInformation(
         self, fields: np.ndarray, __temperature: float | np.ndarray
     ) -> tuple[
         np.ndarray,
@@ -132,7 +131,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         """
 
     @abstractmethod
-    def fermionStuff(
+    def fermionInformation(
         self, fields: np.ndarray, __temperature: float | np.ndarray
     ) -> tuple[
         np.ndarray,
