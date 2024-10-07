@@ -38,6 +38,7 @@ increasing reference count on Python side.
 */
 
 
+
 /* Module definition.This block gets executed when the module is imported.
 Module name is passed from cmake. */
 PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
@@ -72,6 +73,9 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
 
     // Bind GSL seed setter
     m.def("setSeed", &wallgo::setSeed, py::arg("seed"), "Set seed used by Monte Carlo integration. Default is 0.");
+
+    // Will need to do static_casts to specific function signatures when binding overloaded functions,
+    // see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods 
 
     py::class_<GridPoint>(m, "GridPoint",
         R"(Point (m, n; j, k) on polynomial/momentum grid.
@@ -148,6 +152,16 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
             Can be None if the pair is not found)",
             py::arg("particle1"), py::arg("particle2")
         );
+    
+    py::class_<CollisionIntegral4>(m,
+        "CollisionIntegral4",
+        R"(Describes a collision integral for 2 -> 2 scattering process.
+        Has a pair of off-eq particles fixed so that only processes relevant for the Boltzmann mixing of those particles are included.)"
+    ).def("calculateIntegrand",
+        static_cast<double(CollisionIntegral4::*)(double, double, double, double, double, const GridPoint&)>(&CollisionIntegral4::calculateIntegrand),
+        R"(Computes the full integrand at the given GridPoint and integration variables.)",
+        py::arg("p2"), py::arg("phi2"), py::arg("phi3"), py::arg("cosTheta2"), py::arg("cosTheta3"), py::arg("gridPoint")
+    );
 
     py::class_<CollisionTensor>(m,
         "CollisionTensor",
@@ -171,7 +185,16 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
             FIXME How safe is this actually? Currently we do not do any thread-unsafe changes to Python state, and at least it seems to work.
             */
             py::call_guard<py::gil_scoped_release>(),
-            R"(Calculates all collision integrals associated with this tensor.)"
+            R"(Calculates all collision integrals associated with this tensor.)")
+        .def("getIntegralForPair",
+            [](CollisionTensor& self, const std::string& particle1, const std::string& particle2) -> CollisionIntegral4*
+            {
+                const ParticleNamePair pair(particle1, particle2);
+                return self.getIntegralForPair(pair);
+            },
+            py::return_value_policy::reference_internal,
+            R"(Get reference to specified CollisionIntegral4 object. Intended mainly for debugging purposes,
+            eg. if you need the value of the integrand at a specific point for comparison with other codes.)"
         );
 
     py::class_<ModelParameters>(m, "ModelParameters", "Container for physics model-dependent parameters (couplings etc)")
@@ -220,7 +243,6 @@ PYBIND11_MODULE(WG_PYTHON_MODULE_NAME, m)
     )
         .def(py::init<>())
         .def("defineParticleSpecies", &ModelDefinition::defineParticleSpecies, "Registers a new ParticleDescription with the model")
-        // Bind the right overload by explicitly casting to specific signature, see https://pybind11.readthedocs.io/en/stable/classes.html#overloaded-methods
         .def("defineParameter", static_cast<void(ModelDefinition::*)(const std::string&, double)>(&ModelDefinition::defineParameter), "Defines a new symbolic parameter and its initial value")
         .def("defineParameters", &ModelDefinition::defineParameters, "Defines new symbolic parameters and their initial values");
 

@@ -26,9 +26,13 @@ struct ReadMatrixElement
 };
 
 /* Reads matrix elements from file and groups them for each out-of-equilibrium particle pair.
+The particleIndices input specifies which particles are valid external particles.
+The function ignores processes that contain unknown particles, but warns about them with a message to stdout.
+The offEqParticleIndices inputs specifies which particles are out-of-equilibrium.
 Returns false if something goes wrong. */
 bool buildMatrixElementsFromFile(
     const std::filesystem::path& matrixElementFile,
+    const std::vector<int32_t>& particleIndices,
     const std::vector<int32_t>& offEqParticleIndices,
     const std::unordered_map<std::string, double>& symbols,
     std::map<IndexPair, std::vector<MatrixElement>>& outMatrixElements);
@@ -49,6 +53,7 @@ bool parseMatrixElementsRegexLegacy(
 /* Construct valid MatrixElement objects by matching read data with properties defined in a model.
 Returns false if something goes critically wrong. */
 bool buildMatrixElements(
+    const std::vector<int32_t>& modelParticleIndices,
     const std::vector<int32_t>& modelOffEqParticleIndices,
     const std::unordered_map<std::string, double>& modelSymbols,
     const std::vector<ReadParticle>& parsedParticles,

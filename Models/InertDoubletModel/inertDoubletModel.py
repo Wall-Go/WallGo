@@ -129,7 +129,7 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            name="topL",
+            name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -140,7 +140,7 @@ class InertDoubletModel(GenericModel):
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            name="topR",
+            name="TopR",
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -615,7 +615,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -671,13 +671,13 @@ class InertDoubletModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[2]", 11.0 * gw**2 / 6.0
+            "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -695,11 +695,11 @@ class InertDoubletModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 50
+        integrationOptions.maxTries = 10
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.absoluteErrorGoal = 1e-5
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -732,7 +732,6 @@ class InertDoubletModelExample(WallGoExampleBase):
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Inert doublet model example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(

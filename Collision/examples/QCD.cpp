@@ -26,8 +26,8 @@ wallgo::PhysicsModel setupQCD()
 	
 	In this example the symbols needed by matrix elements are:
 		gs -- QCD coupling
-		msq[0] -- Mass of a fermion propagator (thermal part only, so no distinction between quark types)
-		msq[1] -- Mass of a gluon propagator.
+		mq2 -- Mass-square of a fermion propagator (thermal part only, so no distinction between quark types)
+		mg2 -- Mass-square of a gluon propagator.
 
 	Thermal masses depend on the QCD coupling, however the model definition always needs a numerical value for each symbol.
 	This adds some complexity to the model setup, and therefore we do the symbol definitions in stages: 
@@ -61,8 +61,8 @@ wallgo::PhysicsModel setupQCD()
 			return 2.0 * gs * gs;
 		};
 
-	parameters.addOrModifyParameter("msq[0]", quarkThermalMassSquared(parameters));
-	parameters.addOrModifyParameter("msq[1]", gluonThermalMassSquared(parameters));
+	parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters));
+	parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters));
 
 	modelDefinition.defineParameters(parameters);
 
@@ -124,12 +124,12 @@ wallgo::PhysicsModel setupQCD()
 	Note that the model will only read matrix elements that are relevant for its out-of-equilibrium particle content. */
 
 	/* Where to load matrix elements from. In this example the path is hardcoded relative to the working directory for simplicity. */
-	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.txt";
+	std::filesystem::path matrixElementFile = "MatrixElements/MatrixElements_QCD.json";
 
 	if (!std::filesystem::exists(matrixElementFile))
 	{
 		std::cerr << "It seems you may be running this example program from a nonstandard location.\n"
-			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.txt which is hardcoded as a relative path for simplicity.\n"
+			"The matrix elements for this example are in MatrixElements/MatrixElements_QCD.json which is hardcoded as a relative path for simplicity.\n"
 			"Please run the example program inside the 'examples' directory.\n"
 			<< std::endl;
 	}
