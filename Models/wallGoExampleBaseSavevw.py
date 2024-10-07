@@ -376,9 +376,8 @@ class WallGoExampleBase(ABC):
             )
 
             try:
-                1+1
-                #results = manager.solveWall(wallSolverSettings)
-                #self.processResultsForBenchmark(benchmark, results)
+                results = manager.solveWall(wallSolverSettings)
+                self.processResultsForBenchmark(benchmark, results)
 
             except Exception as e:  # pylint: disable = W0718
                 print(f"Unhandled exception from wall solver: {e}")
@@ -417,4 +416,4 @@ class WallGoExampleBase(ABC):
 
         #hacky
         filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + 'fieldScale' + str(fieldScale) + '.txt'
-        #np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')
+        np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')

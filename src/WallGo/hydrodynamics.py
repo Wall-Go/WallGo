@@ -161,21 +161,21 @@ class Hydrodynamics:
         print(f"{np.abs(vpDerivNum(rootResult.root)/derivdenom)=}")
         print(f"{rootResult.root = }")
 
-        temp = np.arange(max(0.95*rootResult.root, self.Tnucl), 1.05*rootResult.root, rootResult.root/10000)
-        deriv = np.ones(len(temp))
-        for i in range(len(temp)):
-            deriv[i] = vpDerivNum(temp[i])
-        plt.plot(temp, deriv )
-        plt.xlabel("T")
-        plt.ylabel("vpDerivNum(T)")
+        # temp = np.arange(max(0.95*rootResult.root, self.Tnucl), 1.05*rootResult.root, rootResult.root/10000)
+        # deriv = np.ones(len(temp))
+        # for i in range(len(temp)):
+        #     deriv[i] = vpDerivNum(temp[i])
+        # plt.plot(temp, deriv )
+        # plt.xlabel("T")
+        # plt.ylabel("vpDerivNum(T)")
 
-        # Add horizontal line at y=0
-        plt.axhline(y=0, color='gray', linestyle='--')
+        # # Add horizontal line at y=0
+        # plt.axhline(y=0, color='gray', linestyle='--')
 
-        # Add vertical line at rootResult.root
-        plt.axvline(x=rootResult.root, color='gray', linestyle='--')
+        # # Add vertical line at rootResult.root
+        # plt.axvline(x=rootResult.root, color='gray', linestyle='--')
 
-        plt.show()
+        # plt.show()
 
         if rootResult.converged and rootResult.root*np.abs(vpDerivNum(rootResult.root)/derivdenom) < 1e-3:
             tmSol = rootResult.root
