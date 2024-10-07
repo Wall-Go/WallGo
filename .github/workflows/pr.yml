@@ -1,7 +1,7 @@
-name: WallGo main tests
+name: WallGo pull request tests
 
 on:
-  push:
+  pull_request:
     branches: [ main ]
 
 jobs:
