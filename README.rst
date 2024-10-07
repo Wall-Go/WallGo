@@ -9,7 +9,8 @@ WallGo is open-source scientific software for computing the bubble wall speed fo
 Status
 ===========================================
 
-:link-badge:`https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/badge.svg`
+.. image:: /badge.svg
+    :target: https://github.com/Wall-Go/WallGo/actions/workflows/main.yml
 
 Installation
 ===========================================
