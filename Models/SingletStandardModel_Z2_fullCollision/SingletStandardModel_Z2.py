@@ -27,7 +27,7 @@ import pathlib
 import sys
 
 ## WallGo imports
-import WallGo ## Whole package, in particular we get WallGo.initialize()
+import WallGo ## Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
@@ -475,12 +475,10 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
 def main() -> None:
 
-    WallGo.initialize()
-
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
-    # Print WallGo config. This was read by WallGo.initialize()
+    # Print WallGo config. This was read by WallGo._initializeInternal()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 

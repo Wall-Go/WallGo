@@ -1,29 +1,32 @@
+"""Initialising WallGo package"""
+
+# subpackage
+from . import PotentialTools
+
+# package level modules
 from .boltzmann import BoltzmannSolver
+from .collisionArray import CollisionArray
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
+from .effectivePotential import EffectivePotential, VeffDerivativeSettings
 from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
+from .fields import Fields
+from .freeEnergy import FreeEnergy
+from .genericModel import GenericModel
 from .grid import Grid
 from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
+from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
+from .particle import Particle
 from .polynomial import Polynomial
 from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
 from .results import WallGoResults
-
-
-from .particle import Particle
-from .fields import Fields
-from .genericModel import GenericModel
-from .effectivePotential import EffectivePotential, VeffDerivativeSettings
-from .freeEnergy import FreeEnergy
 from .wallGoManager import WallGoManager, WallSolverSettings
-from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
-
-from .collisionArray import CollisionArray
 
 from .Config import Config
-
 from .WallGoUtils import getSafePathToResource
+
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
 _bCollisionModuleAvailable: bool = False
@@ -63,12 +66,11 @@ _bInitialized = False  # pylint: disable=invalid-name
 """Configuration settings for WallGo"""
 config = Config()
 
-
 # Define a separate initializer function that does NOT get called automatically.
 # This is good for preventing heavy startup operations from running if the user just
 # wants a one part of WallGo and not the full framework, eg. `import WallGo.Integrals`.
 # Downside is that programs need to manually call this, preferably as early as possible.
-def initialize() -> None:
+def _initializeInternal() -> None:
     """
     WallGo initializer. This should be called as early as possible in your program.
     """
@@ -83,5 +85,8 @@ def initialize() -> None:
         # print(config)
         _bInitialized = True
     else:
-        raise RuntimeWarning("Warning: Repeated call to WallGo.initialize()")
+        raise RuntimeWarning("Warning: Repeated call to WallGo._initializeInternal()")
 
+
+"""Initialising WallGo"""
+_initializeInternal()

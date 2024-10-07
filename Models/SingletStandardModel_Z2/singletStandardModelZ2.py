@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 from WallGo.interpolatableFunction import EExtrapolationType
 

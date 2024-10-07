@@ -1,7 +1,7 @@
 """
 Initialisation for PotentialTools module, includes loading of Jb/Jf integral data
 """
-from WallGo import Config
+from ..Config import Config
 from .effectivePotentialNoResum import EffectivePotentialNoResum, EImaginaryOption
 from .integrals import Integrals, JbIntegral, JfIntegral
 from .utils import getSafePathToResource
@@ -23,7 +23,7 @@ defaultIntegrals.Jf.disableAdaptiveInterpolation()
 # This is good for preventing heavy startup operations from running if the user just
 # wants a one part of WallGo and not the full framework, eg. `import WallGo.Integrals`.
 # Downside is that programs need to manually call this, preferably as early as possible.
-def initialize() -> None:
+def _initializeInternal() -> None:
     """
     WallGo initializer. This should be called as early as possible in your program.
     """
@@ -44,7 +44,7 @@ def initialize() -> None:
         _bInitialized = True
 
     else:
-        raise RuntimeWarning("Warning: Repeated call to PotentialTools.initialize()")
+        raise RuntimeWarning("Warning: Repeated call to PotentialTools._initializeInternal()")
 
 
 def _initalizeIntegralInterpolations() -> None:  # pylint: disable=invalid-name
@@ -61,3 +61,7 @@ def _initalizeIntegralInterpolations() -> None:  # pylint: disable=invalid-name
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")),
         bVerbose=False,
     )
+
+
+# Initialising integrals
+_initializeInternal()

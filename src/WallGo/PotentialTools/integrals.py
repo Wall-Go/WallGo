@@ -30,7 +30,7 @@ import typing
 import numpy as np
 import scipy.integrate
 
-from WallGo.interpolatableFunction import InterpolatableFunction, inputType, outputType
+from ..interpolatableFunction import InterpolatableFunction, inputType, outputType
 
 
 def _integrator(

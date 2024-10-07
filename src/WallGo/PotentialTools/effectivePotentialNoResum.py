@@ -7,7 +7,8 @@ from enum import Enum, auto
 import typing
 import numpy as np
 
-from WallGo import EffectivePotential, EExtrapolationType
+from ..effectivePotential import EffectivePotential
+from ..interpolatableFunction import EExtrapolationType
 
 from .integrals import Integrals
 from .utils import getSafePathToResource
@@ -66,8 +67,6 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
                 # TODO: find better way of doing this
                 from WallGo import PotentialTools  # import statement here to avoid circular import
 
-                # TODO: this could be tidier
-                PotentialTools.initialize()
                 self.integrals = PotentialTools.defaultIntegrals
 
                 self.integrals.Jb.disableAdaptiveInterpolation()
