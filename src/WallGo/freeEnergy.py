@@ -14,7 +14,7 @@ from .interpolatableFunction import (
     inputType,
     outputType,
 )
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import FieldPoint, Fields
 

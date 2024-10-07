@@ -29,22 +29,21 @@ doi:10.1103/PhysRevD.107.095005
 
 import sys
 import pathlib
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 
+from WallGo.PotentialTools import EffectivePotentialNoResum, EImaginaryOption
+
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
-from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
 from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
@@ -254,7 +253,11 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """
         Initialize the EffectivePotentialIDM.
         """
-        super().__init__(integrals=None, useDefaultInterpolation=True)
+        super().__init__(
+            integrals=None,
+            useDefaultInterpolation=True,
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
