@@ -359,7 +359,7 @@ CollisionElement<4> PhysicsModel::createCollisionElement(const IndexPair& offEqI
     for (size_t i = 0; i < bDeltaF.size(); ++i)
     {
         bDeltaF[i] = (indices[i] == offEqIndices.second);
-        bFoundAny |= bDeltaF[i];
+        bFoundAny = bFoundAny || bDeltaF[i];
     }
     assert(bFoundAny && "Matrix element had no particle2");
 
