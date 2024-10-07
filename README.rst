@@ -10,7 +10,7 @@ Status
 ===========================================
 
 .. image:: badge.svg
-    :target: https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/badge.svg
+    :target: https://github.com/Wall-Go/WallGo/actions/workflows/main.yml
 
 Installation
 ===========================================
