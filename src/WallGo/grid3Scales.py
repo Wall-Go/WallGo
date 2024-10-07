@@ -78,12 +78,15 @@ class Grid3Scales(Grid):
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
         tailLengthInside : float
             Decay length of the solution's tail inside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall
+            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            expressed in physical units (the units used in EffectivePotential).
         tailLengthOutside : float
             Decay length of the solution's tail outside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall
+            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            expressed in physical units (the units used in EffectivePotential).
         wallThickness : float
-            Thickness of the wall.
+            Thickness of the wall. Should be expressed in physical units
+            (the units used in EffectivePotential).
         momentumFalloffT : float
             Temperature scale determining transform in momentum directions. 
             Should be close to the plasma temperature.
@@ -149,7 +152,7 @@ class Grid3Scales(Grid):
         wallCenter: float,
     ) -> None:
         assert wallThickness > 0, "Grid3Scales error: wallThickness must be positive."
-        assert smoothing >= 0, "Grid3Scales error: smoothness must be positive."
+        assert smoothing > 0, "Grid3Scales error: smoothness must be positive."
         assert (
             tailLengthInside > wallThickness * (1 + 2 * smoothing) / ratioPointsWall
         ), """Grid3Scales error: tailLengthInside must be greater than
@@ -159,7 +162,7 @@ class Grid3Scales(Grid):
         ), """Grid3Scales error: tailLengthOutside must be greater than
         wallThickness*(1+2*smoothness)/ratioPointsWall."""
         assert (
-            0 <= ratioPointsWall <= 1
+            0 < ratioPointsWall < 1
         ), "Grid3Scales error: ratioPointsWall must be between 0 and 1."
 
         self.tailLengthInside = tailLengthInside
@@ -173,35 +176,23 @@ class Grid3Scales(Grid):
         # These are set to insure that the smoothed step functions used to get
         # the right decay length have a value of smoothing*L/ratioPointsWall
         # at the origin.
-        self.aIn = (
-            np.sqrt(
-                4
-                * smoothing
-                * wallThickness
-                * ratioPointsWall**2
-                * (ratioPointsWall * tailLengthInside - wallThickness * (1 + smoothing))
-            )
-            / abs(
-                ratioPointsWall * tailLengthInside - wallThickness * (1 + 2 * smoothing)
-            )
-            + 1e-50
+        self.aIn = np.sqrt(
+            4
+            * smoothing
+            * wallThickness
+            * ratioPointsWall**2
+            * (ratioPointsWall * tailLengthInside - wallThickness * (1 + smoothing))
+        ) / abs(
+            ratioPointsWall * tailLengthInside - wallThickness * (1 + 2 * smoothing)
         )
-        self.aOut = (
-            np.sqrt(
-                4
-                * smoothing
-                * wallThickness
-                * ratioPointsWall**2
-                * (
-                    ratioPointsWall * tailLengthOutside
-                    - wallThickness * (1 + smoothing)
-                )
-            )
-            / abs(
-                ratioPointsWall * tailLengthOutside
-                - wallThickness * (1 + 2 * smoothing)
-            )
-            + 1e-50
+        self.aOut = np.sqrt(
+            4
+            * smoothing
+            * wallThickness
+            * ratioPointsWall**2
+            * (ratioPointsWall * tailLengthOutside - wallThickness * (1 + smoothing))
+        ) / abs(
+            ratioPointsWall * tailLengthOutside - wallThickness * (1 + 2 * smoothing)
         )
 
     def decompactify(

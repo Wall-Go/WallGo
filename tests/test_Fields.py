@@ -14,10 +14,10 @@ from typing import Tuple
 def test_FieldsFromTuple(fieldSpacePoints: Tuple[list], numFields: int, numPoints: int):
     fields = Fields(fieldSpacePoints)
 
-    assert fields.NumFields() == numFields
-    assert fields.NumPoints() == numPoints
-    assert len(fields.GetField(0)) == numPoints
-    assert len(fields.GetFieldPoint(0)) == numFields
+    assert fields.numFields() == numFields
+    assert fields.numPoints() == numPoints
+    assert len(fields.getField(0)) == numPoints
+    assert len(fields.getFieldPoint(0)) == numFields
 
 
 @pytest.mark.parametrize("fieldArray, numFields, numPoints", [
@@ -28,12 +28,12 @@ def test_FieldsFromTuple(fieldSpacePoints: Tuple[list], numFields: int, numPoint
 def test_FieldsFromNumpy(fieldArray: Tuple[list], numFields: int, numPoints: int):
     
     fieldArray = np.asanyarray(fieldArray)
-    fields = Fields.CastFromNumpy(fieldArray)
+    fields = Fields.castFromNumpy(fieldArray)
 
-    assert fields.NumFields() == numFields
-    assert fields.NumPoints() == numPoints
-    assert len(fields.GetField(0)) == numPoints
-    assert len(fields.GetFieldPoint(0)) == numFields
+    assert fields.numFields() == numFields
+    assert fields.numPoints() == numPoints
+    assert len(fields.getField(0)) == numPoints
+    assert len(fields.getFieldPoint(0)) == numFields
 
 
 @pytest.mark.parametrize("fieldArrays", [
@@ -52,8 +52,8 @@ def test_Fields_invalid(fieldArrays):
     (Fields( [[1, 2, 3]] ), 1, np.asarray([10])) ,
     (Fields( [[1, 2, 3], [4, 5, 6], [7, 8, 9]] ), 1, np.asarray([10, 11, 12]))    
 ])
-def test_SetField(fields, fieldNumber, newField):
+def test_setField(fields, fieldNumber, newField):
 
-    fields.SetField(fieldNumber, newField)
-    np.testing.assert_array_equal( fields.GetField(fieldNumber), newField)
+    fields.setField(fieldNumber, newField)
+    np.testing.assert_array_equal( fields.getField(fieldNumber), newField)
     

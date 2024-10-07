@@ -69,8 +69,8 @@ class SingletSM_Z2(GenericModel):
         self.clearParticles()
 
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
+        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.getField(0)**2
+        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.getField(0),0*fields.getField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuarkL = Particle("topL",
@@ -96,7 +96,7 @@ class SingletSM_Z2(GenericModel):
 
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
-        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.getField(0))
         # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
         gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
@@ -265,7 +265,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -415,7 +415,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
     def bosonStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # TODO: numerical determination of scalar masses from V0
 
@@ -456,7 +456,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
     def fermionStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
-        v = fields.GetField(0)
+        v = fields.getField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]

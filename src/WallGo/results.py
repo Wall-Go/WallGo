@@ -3,9 +3,9 @@ Data classes for compiling and returning results
 """
 
 from dataclasses import dataclass
+from enum import Enum
 import numpy as np
-from scipy.interpolate import UnivariateSpline
-from .Fields import Fields
+from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
 
@@ -101,19 +101,50 @@ class HydroResults:
         self.velocityJouguet = velocityJouguet
 
 
+class ESolutionType(Enum):
+    """
+    Enum class used to label the different types of solution WallGo can find
+    """
+
+    DEFLAGRATION = 1
+    """
+    Indicates that a solution was found while looking for a deflagration or hybrid. Can
+    also be used when the pressure was always positive while looking for a detonation.
+    """
+
+    DETONATION = 2
+    """ Indicates that a solution was found while looking for a detonation. """
+
+    RUNAWAY = 3
+    """
+    Indicates that no solution was found and that the pressure was always negative.
+    """
+
+    DEFLAGRATION_OR_RUNAWAY = 4
+    """
+    Used when no stable solution was found while looking for a detonation with a
+    positive pressure at vw=vJ and negative at vw=1.
+    """
+
+    ERROR = 5
+    """ Indicates that the calculation was not successful. """
+
+
 @dataclass
 class WallGoResults:
     """
     Compiles output results for users of WallGo
     """
-    wallVelocity: float
-    """Bubble wall velocity."""
 
-    wallVelocityError: float
-    """Estimated error in bubble wall velocity."""
+    wallVelocity: float | None
+    """Bubble wall velocity. None if no solution was found."""
 
-    wallVelocityLTE: float
-    """Bubble wall velocity in local thermal equilibrium."""
+    wallVelocityError: float | None
+    """Estimated error in bubble wall velocity. None if no solution was found."""
+
+    wallVelocityLTE: float | None
+    """Bubble wall velocity in local thermal equilibrium. None when looking for a 
+    detonation solution, since no detonation exists in LTE."""
 
     temperaturePlus: float
     r"""Temperature in front of the bubble, :math:`T_+`,
@@ -126,10 +157,10 @@ class WallGoResults:
     velocityJouguet: float
     r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
 
-    widths: np.ndarray  # 1D array
+    wallWidths: np.ndarray  # 1D array
     """Bubble wall widths in each field direction."""
 
-    offsets: np.ndarray  # 1D array
+    wallOffsets: np.ndarray  # 1D array
     """Bubble wall offsets in each field direction."""
 
     velocityProfile: np.ndarray
@@ -173,14 +204,33 @@ class WallGoResults:
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
 
+    solutionType: ESolutionType
+    """
+    Describes the type of solution obtained. Must be a ESolutionType object. The
+    function WallGoManager.solveWall() will return DEFLAGRATION if a solution was found
+    and RUNAWAY otherwise. The function WallGoManager.solveWallDetonation() will return
+    DETONATION if a solution was found. Otherwise, it returns RUNAWAY if the pressure is
+    negative everywhere between vJ and 1, DEFLAGRATION if the pressure is always
+    positive, and DEFLAGRATION_OR_RUNAWAY if the pressure is positive at vJ and negative
+    at 1 and no stable solution was found. In both cases, returns ERROR if
+    success=False.
+    """
+
+    success: bool
+    """Whether or not the calculation was successful. Will still be True if no solution
+    was found, as long as no error happened along the way."""
+
+    message: str
+    """Description of the cause of the termination."""
+
     def __init__(self) -> None:
         pass
 
     def setWallVelocities(
         self,
-        wallVelocity: float,
-        wallVelocityError: float,
-        wallVelocityLTE: float,
+        wallVelocity: float | None,
+        wallVelocityError: float | None,
+        wallVelocityLTE: float | None,
     ) -> None:
         """
         Set wall velocity results
@@ -231,35 +281,20 @@ class WallGoResults:
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
 
-
-@dataclass
-class WallGoInterpolationResults:
-    """
-    Used when interpolating the pressure. Like WallGoResults but expanded to lists.
-    """
-    wallVelocities: list[float]
-    """List of stable wall velocities."""
-
-    unstableWallVelocities: list[float]
-    """List of unstable wall velocities."""
-
-    velocityGrid: list[float]
-    """Velocity grid on which the pressures were computed."""
-
-    pressures: list[float]
-    """Pressures evaluated at velocityGrid."""
-
-    pressureSpline: UnivariateSpline
-    """Spline of the pressure."""
-
-    wallParams: list[WallParams]
-    """WallParams objects evaluated at velocityGrid."""
-
-    boltzmannResults: list[BoltzmannResults]
-    """BoltzmannResults objects evaluated at velocityGrid."""
-
-    boltzmannBackgrounds: list[BoltzmannBackground]
-    """BoltzmannBackground objects evaluated at velocityGrid."""
-
-    hydroResults: list[HydroResults]
-    """HydroResults objects evaluated at velocityGrid."""
+    def setSuccessState(
+        self,
+        success: bool,
+        solutionType: ESolutionType,
+        message: str,
+    ) -> None:
+        """
+        Set the termination message, the success flag and the solution type.
+        """
+        assert isinstance(success, bool), "WallGoResults Error: success must be a bool."
+        assert isinstance(message, str), "WallGoResults Error: message must be a str."
+        assert isinstance(solutionType, ESolutionType), (
+            "WallGoResults Error: " "solutionType must be a ESolutionType object."
+        )
+        self.success = success
+        self.message = message
+        self.solutionType = solutionType

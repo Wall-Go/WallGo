@@ -1,6 +1,7 @@
 """
 A collection of fixtures for tests not using real model
 """
+
 import pytest
 import numpy as np
 import WallGo
@@ -18,7 +19,7 @@ def boltzmannTestBackground(spatialGridSize: int) -> WallGo.BoltzmannBackground:
     BoltzmannBackground with simple analytic v(z), T(z) and field(z) profiles
     """
 
-    v = - np.ones(spatialGridSize + 1) / np.sqrt(3)
+    v = -np.ones(spatialGridSize + 1) / np.sqrt(3)
     v += 0.01 * np.sin(10 * 2 * np.pi * np.arange(spatialGridSize + 1))
     velocityMid = 0.5 * (v[0] + v[-1])
 
@@ -27,9 +28,9 @@ def boltzmannTestBackground(spatialGridSize: int) -> WallGo.BoltzmannBackground:
     # So give a 2D list.
 
     field = np.ones((spatialGridSize + 1,))
-    field[spatialGridSize // 2:]  = 0
+    field[spatialGridSize // 2 :] = 0
     field += 0.1 * np.sin(7 * 2 * np.pi * np.arange(spatialGridSize + 1) + 6)
-    field = WallGo.Fields( field[:, np.newaxis] )
+    field = WallGo.Fields(field[:, np.newaxis])
     temperature = 100 * np.ones(spatialGridSize + 1)
 
     return WallGo.BoltzmannBackground(
@@ -48,13 +49,14 @@ def particle() -> WallGo.Particle:
     """
     return WallGo.Particle(
         name="top",
-        msqVacuum=lambda phi: 0.5 * phi.GetField(0)**2,
-        msqDerivative = lambda fields: np.transpose([fields.GetField(0),0*fields.GetField(1)]),
+        index=0,
+        msqVacuum=lambda phi: 0.5 * phi.getField(0) ** 2,
+        msqDerivative=lambda fields: np.transpose(
+            [fields.getField(0), 0 * fields.getField(1)]
+        ),
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
-        inEquilibrium=False,
-        ultrarelativistic=False,
-        totalDOFs = 12
+        totalDOFs=12,
     )
 
 
@@ -79,14 +81,16 @@ TODO should we use autouse=True for the benchmark fixtures?
 def singletModelBenchmarkPoint(request) -> BenchmarkPoint:
     yield request.param
 
+
 ## NB: fixture argument name needs to be 'request'. This is due to magic
 
-## Fixture model objects for benchmarks for tests that would rather start from a model than from the inputs.  
+
+## Fixture model objects for benchmarks for tests that would rather start from a model than from the inputs.
 @pytest.fixture(scope="module", params=singletBenchmarks)
 def singletModelZ2_fixture(request: BenchmarkPoint):
     """Gives a model object for Standard Model + singlet with Z2 symmetry.
-    Also returns the expected results for that benchmark. 
-    Note that our model contains an effective potential object, so no need to have separate fixtures for the Veff. 
+    Also returns the expected results for that benchmark.
+    Note that our model contains an effective potential object, so no need to have separate fixtures for the Veff.
     """
 
     yield SingletSM_Z2(request.param.inputParams), request.param.expectedResults

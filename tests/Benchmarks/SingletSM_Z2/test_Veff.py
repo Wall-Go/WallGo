@@ -26,7 +26,7 @@ def test_singletModelVeffValue(
     model = singletBenchmarkModel.model
 
     # This tests real part only!!
-    res = model.effectivePotential.evaluate(fields, temperature)
+    res = model.getEffectivePotential().evaluate(fields, temperature)
     assert res == pytest.approx(expectedVeffValue, rel=1e-6)
 
 
@@ -52,7 +52,7 @@ def test_singletModelVeffValue_manyFieldPoints(
     model = singletBenchmarkModel.model
 
     # This tests real part only!!
-    res = model.effectivePotential.evaluate(fields, temperature)
+    res = model.getEffectivePotential().evaluate(fields, temperature)
     np.testing.assert_allclose(res, expectedVeffValue, rtol=1e-6)
 
 
@@ -83,12 +83,12 @@ def test_singletModelVeffMinimization(
 
     model = singletBenchmarkModel.model
 
-    resMinimum, resValue = model.effectivePotential.findLocalMinimum(
+    resMinimum, resValue = model.getEffectivePotential().findLocalMinimum(
         initialGuess, temperature
     )
 
     # The expected value is for full V(phi) + constants(T) so include that
-    resValue = model.effectivePotential.evaluate(resMinimum, temperature)
+    resValue = model.getEffectivePotential().evaluate(resMinimum, temperature)
 
     np.testing.assert_allclose(resMinimum, expectedMinimum, rtol=1e-3)
     np.testing.assert_allclose(resValue, expectedVeffValue, rtol=1e-3)
@@ -120,7 +120,7 @@ def test_singletModelDerivField(
 ):
     model = singletBenchmarkModel.model
 
-    res = model.effectivePotential.derivField(fields, temperature)
+    res = model.getEffectivePotential().derivField(fields, temperature)
 
     assert res == pytest.approx(expectedVeffValue, rel=1e-4)
 
@@ -141,6 +141,6 @@ def test_singletModelDerivT(
 
     model = singletBenchmarkModel.model
 
-    res = model.effectivePotential.derivT(fields, temperature)
+    res = model.getEffectivePotential().derivT(fields, temperature)
 
     assert res == pytest.approx(expectedVeffValue, rel=1e-4)

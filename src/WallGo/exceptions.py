@@ -1,6 +1,7 @@
 """
 Specific Exception types used in WallGo
 """
+
 import typing
 from .containers import PhaseInfo
 
@@ -9,10 +10,9 @@ class WallGoError(Exception):
     """
     Generic Exception type for WallGo errors.
     """
+
     def __init__(
-        self,
-        message: str,
-        data: typing.Optional[dict[str, typing.Any]] = None
+        self, message: str, data: typing.Optional[dict[str, typing.Any]] = None
     ) -> None:
         # Use the data dict for reporting arbitrary data with the error message
         self.message = message
@@ -28,6 +28,7 @@ class WallGoError(Exception):
 
         return msg
 
+
 class WallGoPhaseValidationError(WallGoError):
     """
     Exception for failures related to phase input.
@@ -36,8 +37,8 @@ class WallGoPhaseValidationError(WallGoError):
     def __init__(
         self,
         message: str,
-        phaseInfo: 'PhaseInfo',
-        data: typing.Optional[dict[str, typing.Any]] = None
+        phaseInfo: "PhaseInfo",
+        data: typing.Optional[dict[str, typing.Any]] = None,
     ) -> None:
         # Additional phaseInfo
         super().__init__(message, data)
@@ -49,3 +50,7 @@ class WallGoPhaseValidationError(WallGoError):
             msg += "\nAdditional info:\n" + str(self.data)
 
         return msg
+
+
+class CollisionLoadError(Exception):
+    """"""

@@ -91,7 +91,8 @@ class Grid:
             Number of basis functions in the :math:`p_z` and :math:`p_\Vert`
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
         positionFalloff : float
-            Length scale determining transform in :math:`\xi` direction.
+            Length scale determining transform in :math:`\xi` direction. Should be
+            expressed in physical units (the units used in EffectivePotential).
         momentumFalloffT : float
             Temperature scale determining transform in momentum directions. 
             Should be close to the plasma temperature.

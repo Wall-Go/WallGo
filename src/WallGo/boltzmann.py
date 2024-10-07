@@ -13,6 +13,10 @@ from .polynomial import Polynomial
 from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
+from .exceptions import CollisionLoadError
+
+if typing.TYPE_CHECKING:
+    import importlib
 
 
 class BoltzmannSolver:
@@ -37,7 +41,7 @@ class BoltzmannSolver:
         derivatives: str = "Spectral",
     ):
         """
-        Initialsation of BoltzmannSolver
+        Initialisation of BoltzmannSolver
 
         Parameters
         ----------
@@ -148,7 +152,7 @@ class BoltzmannSolver:
 
         # Take all field-space points, but throw the boundary points away
         # TODO: LN: why throw away boundary points?
-        field = self.background.fieldProfiles.TakeSlice(
+        field = self.background.fieldProfiles.takeSlice(
             1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
 
@@ -605,21 +609,29 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
 
-    def readCollisions(self, collision: "Collision") -> None:
+    def loadCollisions(self, directoryPath: "pathlib.Path") -> None:
         """
-        Reads collision integrals from file.
+        Loads collision files for use with the Boltzmann solver.
 
         Args:
-            collision (Collision): The collision object containing the collision integrals.
+            directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.
+
         Returns:
             None
+
+        Raises:
+            CollisionLoadError
         """
-        self.collisionArray = CollisionArray.newFromDirectory(
-            collision,
-            self.grid,
-            self.basisN,
-            self.offEqParticles,
-        )
+        try:
+            self.collisionArray = CollisionArray.newFromDirectory(
+                directoryPath,
+                self.grid,
+                self.basisN,
+                self.offEqParticles,
+            )
+            print(f"Loaded collision data from directory {directoryPath}")
+        except CollisionLoadError as e:
+            raise
 
     @staticmethod
     def _checkBasis(basis: str) -> None:

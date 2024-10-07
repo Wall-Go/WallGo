@@ -29,21 +29,30 @@ Jb/Jf.
 """
 
 import os
-import pathlib
 import sys
+import pathlib
+import argparse
 import numpy as np
+from typing import TYPE_CHECKING
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo.initialize()
-from WallGo import Fields, GenericModel, Particle, WallGoManager
-from WallGo.InterpolatableFunction import EExtrapolationType
+from WallGo import Fields, GenericModel, Particle
+from WallGo.interpolatableFunction import EExtrapolationType
 
-# Adding the Models folder to the path and import effectivePotentialNoResum
-modelsPath = pathlib.Path(__file__).parents[1]
-sys.path.insert(0, str(modelsPath))
+# Add the Models folder to the path; need to import the base example
+# template and effectivePotentialNoResum.py
+modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
+sys.path.append(str(modelsBaseDir))
 from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
     EffectivePotentialNoResum,
 )
+
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
+
+if TYPE_CHECKING:
+    import WallGoCollision
 
 
 class SingletSMZ2(GenericModel):
@@ -57,43 +66,40 @@ class SingletSMZ2(GenericModel):
     methods for the WallGo package.
     """
 
-    particles: list[Particle] = []
-    outOfEquilibriumParticles: list[Particle] = []
-    modelParameters: dict[str, float] = {}
-    collisionParameters: dict[str, float] = {}
-
-    # Specifying this is REQUIRED
-    fieldCount = 2
-
-    def __init__(self, initialInputParameters: dict[str, float]):
+    def __init__(self, allowOutOfEquilibriumGluon: bool = False):
         """
         Initialize the SingletSMZ2 model.
 
         Parameters
         ----------
-        initialInputParameters: dict[str, float]
-            A dictionary of initial input parameters for the model.
-
+            FIXME
         Returns
         ----------
         cls: SingletSMZ2
             An object of the SingletSMZ2 class.
         """
 
-        self.modelParameters = self.calculateModelParameters(initialInputParameters)
-        self.collisionParameters = self.calculateCollisionParameters(
-            self.modelParameters
-        )
+        self.modelParameters: dict[str, float] = {}
 
-        # Initialize internal effective potential with our params dict.
-        self.effectivePotential = EffectivePotentialxSMZ2(
-            self.modelParameters, self.fieldCount
-        )
+        # Initialize internal effective potential
+        self.effectivePotential = EffectivePotentialxSMZ2(self)
 
         # Create a list of particles relevant for the Boltzmann equations
-        self.defineParticles()
+        self.defineParticles(allowOutOfEquilibriumGluon)
+        self.bIsGluonOffEq = allowOutOfEquilibriumGluon
 
-    def defineParticles(self) -> None:
+    # ~ GenericModel interface
+    @property
+    def fieldCount(self) -> int:
+        """How many classical background fields"""
+        return 2
+
+    def getEffectivePotential(self) -> "EffectivePotentialxSMZ2":
+        return self.effectivePotential
+
+    # ~
+
+    def defineParticles(self, includeGluon: bool) -> None:
         """
         Define the particles for the model.
         Note that the particle list only needs to contain the
@@ -116,68 +122,59 @@ class SingletSMZ2(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def topMsqVacuum(fields: Fields) -> Fields:
-            return 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
+            return 0.5 * self.modelParameters["yt"] ** 2 * fields.getField(0) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def topMsqDerivative(fields: Fields) -> Fields:
-            return self.modelParameters["yt"]**2 * np.transpose(
-                [fields.GetField(0), 0 * fields.GetField(1)]
+            return self.modelParameters["yt"] ** 2 * np.transpose(
+                [fields.getField(0), 0 * fields.getField(1)]
             )
 
         def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"]**2 * T**2 / 6.0
+            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuark = Particle(
             "top",
+            index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
             statistics="Fermion",
-            inEquilibrium=False,
-            ultrarelativistic=True,
             totalDOFs=12,
         )
         self.addParticle(topQuark)
 
-        # === SU(3) gluon ===
-        def gluonMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"]**2 * T**2 * 2.0
+        if includeGluon:
 
-        gluon = Particle(
-            "gluon",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=gluonMsqThermal,
-            statistics="Boson",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=16,
-        )
-        self.addParticle(gluon)
+            # === SU(3) gluon ===
+            # The msqVacuum function must take a Fields object and return an
+            # array of length equal to the number of points in fields.
+            def gluonMsqVacuum(fields: Fields) -> Fields:
+                return np.zeros_like(fields.getField(0))
 
-        # === Light quarks, 5 of them ===
-        def lightQuarkMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"]**2 * T**2 / 6.0
+            def gluonMsqDerivative(fields: Fields) -> Fields:
+                return np.zeros_like(fields)
 
-        lightQuark = Particle(
-            "lightQuark",
-            msqVacuum=0.0,
-            msqDerivative=0.0,
-            msqThermal=lightQuarkMsqThermal,
-            statistics="Fermion",
-            inEquilibrium=True,
-            ultrarelativistic=True,
-            totalDOFs=60,
-        )
-        self.addParticle(lightQuark)
+            def gluonMsqThermal(T: float) -> float:
+                return self.modelParameters["g3"] ** 2 * T**2 * 2.0
 
-    # Go from input parameters --> action parameters
-    def calculateModelParameters(
+            gluon = Particle(
+                "gluon",
+                index=1,
+                msqVacuum=gluonMsqVacuum,
+                msqDerivative=gluonMsqDerivative,
+                msqThermal=gluonMsqThermal,
+                statistics="Boson",
+                totalDOFs=16,
+            )
+            self.addParticle(gluon)
+
+    def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
     ) -> dict[str, float]:
         """
-        Calculate the model parameters based on the input parameters.
+        Calculate Lagrangian parameters based on the input parameters.
 
         Parameters
         ----------
@@ -189,7 +186,6 @@ class SingletSMZ2(GenericModel):
         modelParameters: dict[str, float]
             A dictionary of calculated model parameters.
         """
-        super().calculateModelParameters(inputParameters)
 
         modelParameters = {}
 
@@ -217,7 +213,7 @@ class SingletSMZ2(GenericModel):
         # helper
         g0 = 2.0 * massW / v0
 
-        modelParameters["g1"] = g0 * np.sqrt((massZ / massW)**2 - 1)
+        modelParameters["g1"] = g0 * np.sqrt((massZ / massW) ** 2 - 1)
         modelParameters["g2"] = g0
         # Just take QCD coupling as input
         modelParameters["g3"] = inputParameters["g3"]
@@ -226,28 +222,15 @@ class SingletSMZ2(GenericModel):
 
         return modelParameters
 
-    def calculateCollisionParameters(
-        self, inputParameters: dict[str, float]
-    ) -> dict[str, float]:
+    def updateModel(self, newInputParams: dict[str, float]) -> None:
+        """Computes new Lagrangian parameters from given input and caches
+        them internally. These changes automatically propagate to the
+        associated EffectivePotential, particle masses etc.
         """
-        Calculate collision couplings (Lagrangian parameters) from the input parameters.
-        List as they appear in the MatrixElements file.
-
-        Parameters
-        ----------
-        inputParameters: dict[str, float]
-            A dictionary of input parameters for the model.
-
-        Returns
-        ----------
-        collisionParameters: dict[str, float]
-            A dictionary of model parameters for the collision.
-        """
-        collisionParameters = {}
-
-        collisionParameters["g3"] = inputParameters["g3"]
-
-        return collisionParameters
+        newParams = self.calculateLagrangianParameters(newInputParams)
+        # Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
+        self.modelParameters.update(newParams)
 
 
 # end model
@@ -264,24 +247,17 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
+    def __init__(self, owningModel: SingletSMZ2) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
-
-        Parameters
-        ----------
-        modelParameters: dict[str, float]
-            A dictionary of model parameters.
-        fieldCount: int
-            The number of fields undergoing the phase transition
-
-        Returns
-        ----------
-        cls: EffectivePotentialxSMZ2
-            an object of the EffectivePotentialxSMZ2 class
         """
-        super().__init__(modelParameters, fieldCount)
-        # The super call already gave us the model params
+
+        super().__init__()
+
+        assert owningModel is not None, "Invalid model passed to Veff"
+
+        self.owner = owningModel
+        self.modelParameters = self.owner.modelParameters
 
         # Count particle degrees-of-freedom to facilitate inclusion of
         # light particle contributions to ideal gas pressure
@@ -294,6 +270,11 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
+
+    # ~ EffectivePotential interface
+    fieldCount = 2
+    """How many classical background fields"""
+    # ~
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
@@ -342,7 +323,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def evaluate(
         self, fields: Fields, temperature: float, checkForImaginary: bool = False
-    ) -> complex | np.ndarray:
+    ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
 
@@ -366,7 +347,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -396,7 +377,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             )
         )
 
-        return potentialTotal  # TODO: resolve return type.
+        return np.array(potentialTotal)
 
     def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
@@ -405,6 +386,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         were not integrated over in the one-loop part.
 
         See Eq. (39) in hep-ph/0510375 for general LO formula
+
 
         Parameters
         ----------
@@ -428,7 +410,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def bosonStuff(  # pylint: disable=too-many-locals
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -449,7 +431,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             Renormalization scale in the one-loop zero-temperature effective
             potential
         """
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
         mass00 = (
@@ -463,13 +445,13 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             + 3 * self.modelParameters["b4"] * x**2
         )
         mass01 = self.modelParameters["a2"] * v * x
-        thingUnderSqrt = (mass00 - mass11)**2 + 4 * mass01**2
+        thingUnderSqrt = (mass00 - mass11) ** 2 + 4 * mass01**2
 
         msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
         msqEig2 = 0.5 * (mass00 + mass11 + np.sqrt(thingUnderSqrt))
 
-        mWsq = self.modelParameters["g2"]**2 * v**2 / 4
-        mZsq = mWsq + self.modelParameters["g1"]**2 * v**2 / 4
+        mWsq = self.modelParameters["g2"] ** 2 * v**2 / 4
+        mZsq = mWsq + self.modelParameters["g1"] ** 2 * v**2 / 4
         # Goldstones
         mGsq = (
             self.modelParameters["msq"]
@@ -487,7 +469,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
     def fermionStuff(
         self, fields: Fields
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:  # TODO: fix return type inheritance error
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         Computes parameters for the one-loop potential (Coleman-Weinberg and thermal).
 
@@ -509,7 +491,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             potential
         """
 
-        v = fields.GetField(0)
+        v = fields.getField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
@@ -524,157 +506,240 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
 
 
-def main() -> None:
-    """Runs WallGo for xSM, computing bubble wall speed."""
-
-    WallGo.initialize()
-
-    # Modify the config, we use N=11 for this example
-    WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "11")
-
-    # Print WallGo config. This was read by WallGo.initialize()
-    print("\n=== WallGo configuration options ===")
-    print(WallGo.config)
-
-    # Guess of the wall thickness: 5/Tn
-    wallThicknessIni = 0.05
-
-    # Estimate of the mean free path of the particles in the plasma: 100/Tn
-    meanFreePath = 1.0
-
-    # Create WallGo control object
-    # The following 2 parameters are used to estimate the optimal value of dT used
-    # for the finite difference derivatives of the potential.
-    # Temperature scale (in GeV) over which the potential changes by O(1).
-    # A good value would be of order Tc-Tn.
-    temperatureScale = 10.0
-    # Field scale (in GeV) over which the potential changes by O(1). A good value
-    # would be similar to the field VEV.
-    # Can either be a single float, in which case all the fields have the
-    # same scale, or an array.
-    fieldScale = [10.0, 10.0]
-    manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureScale, fieldScale
-    )
-
-    """Initialize your GenericModel instance. 
-    The constructor currently requires an initial parameter input,
-    but this is likely to change in the future
+class SingletStandardModelExample(WallGoExampleBase):
+    """
+    Sets up the Standard Model + singlet, computes or loads the collison
+    integrals, and computes the wall velocity.
     """
 
-    # QFT model input.
-    inputParameters = {
-        "RGScale": 125.0,
-        "v0": 246.0,
-        "MW": 80.379,
-        "MZ": 91.1876,
-        "Mt": 173.0,
-        "g3": 1.2279920495357861,
-        "mh1": 125.0,
-        "mh2": 120.0,
-        "a2": 0.9,
-        "b4": 1.0,
-    }
+    def __init__(self) -> None:
+        """"""
+        self.bShouldRecalculateCollisions = False
 
-    model = SingletSMZ2(inputParameters)
-
-    # ---- collision integration and path specifications
-
-    # Automatic generation of collision integrals is disabled by default.
-    # Set to "False" or comment if collision integrals already exist
-    # Set to "True" to invoke automatic collision integral generation
-    WallGo.config.config.set("Collisions", "generateCollisionIntegrals", "False")
-
-    """
-    Register the model with WallGo. This needs to be done only once.
-    If you need to use multiple models during a single run,
-    we recommend creating a separate WallGoManager instance for each model. 
-    """
-    manager.registerModel(model)
-
-    # Generates or reads collision integrals
-    manager.generateCollisionFiles()
-
-    print("\n=== WallGo parameter scan ===")
-    # ---- This is where you'd start an input parameter
-    # loop if doing parameter-space scans ----
-
-    """ Example mass loop that just does one value of mh2. Note that the WallGoManager
-    class is NOT thread safe internally, so it is NOT safe to parallelize this loop 
-    eg. with OpenMP. We recommend ``embarrassingly parallel`` runs for large-scale
-    parameter scans. 
-    """
-    valuesMh2 = [120.0]
-    for mh2 in valuesMh2:
-
-        inputParameters["mh2"] = mh2
-
-        """In addition to model parameters, WallGo needs info about the phases at
-        nucleation temperature. Use the WallGo.PhaseInfo dataclass for this purpose.
-        Transition goes from phase1 to phase2.
-        """
-        Tn = 100.0  # nucleation temperature
-        phaseInfo = WallGo.PhaseInfo(
-            temperature=Tn,
-            phaseLocation1=WallGo.Fields([0.0, 200.0]),
-            phaseLocation2=WallGo.Fields([246.0, 0.0]),
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
         )
 
-        """Give the input to WallGo. It is NOT enough to change parameters
-           directly in the GenericModel instance because
-            1) WallGo needs the PhaseInfo 
-            2) WallGoManager.setParameters() does parameter-specific
-               initializations of internal classes
+    # ~ Begin WallGoExampleBase interface
+    def initCommandLineArgs(self) -> argparse.ArgumentParser:
+        """Non-abstract override to add a SM + singlet specific cmd option"""
+
+        argParser: argparse.ArgumentParser = super().initCommandLineArgs()
+        argParser.add_argument(
+            "--outOfEquilibriumGluon",
+            help="Treat the SU(3) gluons as out-of-equilibrium particle species",
+            action="store_true",
+        )
+        return argParser
+
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
+        """TEMPORARY: override to load provided collision data from Benoit's matrix
+        elements if only top is off-eq. Remove once matrix elements have been fixed
+        and correct data generated from them.
         """
-        manager.setParameters(phaseInfo)
 
-        """WallGo can now be used to compute wall stuff!"""
+        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
+        if bUseBenoit:
+            return pathlib.Path(
+                self.exampleBaseDirectory
+                / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
+            )
 
-        # ---- Solve wall speed in Local Thermal Equilibrium approximation
+        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
 
-        vwLTE = manager.wallSpeedLTE()
+    def initWallGoModel(self) -> "WallGo.GenericModel":
+        """
+        Initialize the model. This should run after cmdline argument parsing
+        so safe to use them here.
+        """
+        return SingletSMZ2(self.cmdArgs.outOfEquilibriumGluon)
 
-        print(f"LTE wall speed:    {vwLTE:.6f}")
+    def initCollisionModel(
+        self, wallGoModel: "SingletSMZ2"
+    ) -> "WallGoCollision.PhysicsModel":
+        """Initialize the Collision model and set the seed."""
 
-        # ---- Solve field EOM. For illustration, first solve it without any
-        # out-of-equilibrium contributions. The resulting wall speed should
-        # be close to the LTE result
+        import WallGoCollision  # pylint: disable = C0415
 
-        bIncludeOffEq = False
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved.
+        # We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
 
-        results = manager.solveWall(bIncludeOffEq)
+        # This example comes with a very explicit example function on how to setup and
+        # configure the collision module. It is located in a separate module
+        # (same directory) to avoid bloating this file. Import and use it here.
+        from exampleCollisionDefs import (
+            setupCollisionModel_QCD,
+        )  # pylint: disable = C0415
 
-        print("\n=== Local equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
+        collisionModel = setupCollisionModel_QCD(
+            wallGoModel.modelParameters,
+            wallGoModel.bIsGluonOffEq,
+        )
 
-        # Repeat with out-of-equilibrium parts included. This requires
-        # solving Boltzmann equations, invoked automatically by solveWall()
-        bIncludeOffEq = True
-        print(f"\n=== Begin EOM with {bIncludeOffEq = } ===")
+        """TEMPORARY: set matrixElementFile (used by runExample()) so that we load 
+        Benoit's benchmark matrix elements if only top is off-eq.
+        Otherwise use the file that was set in __init__().
+        Remove once matrix elements have been fixed."""
 
-        results = manager.solveWall(bIncludeOffEq)
+        bUseBenoit = not wallGoModel.bIsGluonOffEq
+        if bUseBenoit:
+            self.matrixElementFile = pathlib.Path(
+                self.exampleBaseDirectory
+                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
+            )
 
-        print("\n=== Out-of-equilibrium results ===")
-        print(f"wallVelocity:      {results.wallVelocity:.6f}")
-        print(f"wallVelocityError: {results.wallVelocityError:.6f}")
-        print(f"wallWidths:        {results.wallWidths}")
-        print(f"wallOffsets:       {results.wallOffsets}")
+        return collisionModel
 
-        print("\n=== Search for detonation solution ===")
-        wallGoInterpolationResults = manager.solveWallDetonation()
-        print("\n=== Detonation results ===")
-        print(f"wallVelocity:      {wallGoInterpolationResults.wallVelocities}")
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "SingletSMZ2",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagate changes in WallGo model to the collision model.
+        For this example we just need to update the QCD coupling and
+        fermion/gluon thermal masses.
+        """
+        import WallGoCollision  # pylint: disable = C0415
 
-    # end parameter-space loop
+        changedParams = WallGoCollision.ModelParameters()
+
+        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+        changedParams.addOrModifyParameter("gs", gs)
+        changedParams.addOrModifyParameter(
+            "msq[0]", gs**2 / 6.0
+        )  # quark thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "msq[1]", 2.0 * gs**2
+        )  # gluon thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
+
+    def configureCollisionIntegration(
+        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
+    ) -> None:
+        """Non-abstract override"""
+
+        import WallGoCollision  # pylint: disable = C0415
+
+        """Configure the integrator. Default settings should be reasonably OK so you
+        can modify only what you need, or skip this step entirely. Here we set
+        everything manually to show how it's done.
+        """
+        integrationOptions = WallGoCollision.IntegrationOptions()
+        integrationOptions.calls = 50000
+        integrationOptions.maxTries = 50
+        # collision integration momentum goes from 0 to maxIntegrationMomentum.
+        # This is in units of temperature
+        integrationOptions.maxIntegrationMomentum = 20
+        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.relativeErrorGoal = 1e-1
+
+        inOutCollisionTensor.setIntegrationOptions(integrationOptions)
+
+        """We can also configure various verbosity settings that are useful when
+        you want to see what is going on in long-running integrations. These 
+        include progress reporting and time estimates, as well as a full result dump
+        of each individual integral to stdout. By default these are all disabled. 
+        Here we enable some for demonstration purposes.
+        """
+        verbosity = WallGoCollision.CollisionTensorVerbosity()
+        verbosity.bPrintElapsedTime = (
+            True  # report total time when finished with all integrals
+        )
+
+        """Progress report when this percentage of total integrals (approximately)
+        have been computed. Note that this percentage is per-particle-pair, ie. 
+        each (particle1, particle2) pair reports when this percentage of their
+        own integrals is done. Note also that in multithreaded runs the 
+        progress tracking is less precise.
+        """
+        verbosity.progressReportPercentage = 0.25
+
+        # Print every integral result to stdout? This is very slow and
+        # verbose, intended only for debugging purposes
+        verbosity.bPrintEveryElement = False
+
+        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
+
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """Singlet example uses spatial grid size = 20"""
+        super().configureManager(inOutManager)
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+
+    def updateModelParameters(
+        self, model: "SingletSMZ2", inputParameters: dict[str, float]
+    ) -> None:
+        """Convert SM + singlet inputs to Lagrangian params and update internal
+        model parameters. This example is constructed so that the effective
+        potential and particle mass functions refer to model.modelParameters,
+        so be careful not to replace that reference here.
+        """
+
+        # oldParams = model.modelParameters.copy()
+
+        model.updateModel(inputParameters)
+
+        """Collisions integrals for this example depend only on the QCD coupling,
+        if it changes we must recompute collisions before running the wall solver.
+        The bool flag here is inherited from WallGoExampleBase and checked
+        in runExample(). But since we want to keep the example simple, we skip
+        this check and assume the existing data is OK.
+        (FIXME?)
+        """
+        self.bShouldRecalculateCollisions = False
+
+        """
+        newParams = model.modelParameters
+        if not oldParams or newParams["g3"] != oldParams["g3"]:
+            self.bNeedsNewCollisions = True
+        """
+
+    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
+        """
+        Input parameters, phase info, and settings for the effective potential and
+        wall solver for the xSM benchmark point.
+        """
+
+        output: list[ExampleInputPoint] = []
+        output.append(
+            ExampleInputPoint(
+                {
+                    "RGScale": 125.0,
+                    "v0": 246.0,
+                    "MW": 80.379,
+                    "MZ": 91.1876,
+                    "Mt": 173.0,
+                    "g3": 1.2279920495357861,
+                    "mh1": 125.0,
+                    "mh2": 120.0,
+                    "a2": 0.9,
+                    "b4": 1.0,
+                },
+                WallGo.PhaseInfo(
+                    temperature=100.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([0.0, 200.0]),
+                    phaseLocation2=WallGo.Fields([246.0, 0.0]),
+                ),
+                WallGo.VeffDerivativeSettings(
+                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                ),
+                WallGo.WallSolverSettings(
+                    # we actually do both cases in the common example
+                    bIncludeOffEquilibrium=True,
+                    meanFreePath=100.0, # In units of 1/Tnucl
+                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                ),
+            )
+        )
+
+        return output
+
+    # ~ End WallGoExampleBase interface
 
 
-# end main()
-
-
-# Don't run the main function if imported to another file
 if __name__ == "__main__":
-    main()
+
+    example = SingletStandardModelExample()
+    example.runExample()

@@ -1,15 +1,31 @@
 import numpy as np
 import numpy.typing as npt
-from typing import Tuple
-from abc import ABC, abstractmethod ## Abstract Base Class
-import cmath # complex numbers
+from typing import Tuple, Type, Any
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+import copy
+import inspect # check for ABC
 import scipy.optimize
 import scipy.interpolate
 
 from .helpers import derivative, gradient, hessian
 
-from .Fields import Fields, FieldPoint
+from .fields import Fields, FieldPoint
 
+@dataclass
+class VeffDerivativeSettings:
+    """Parameters used to estimate the optimal value of dT used
+    for the finite difference derivatives of the effective potential."""
+
+    temperatureScale: float
+    """Temperature scale (in GeV) over which the potential changes by O(1).
+    A good value would be of order Tc-Tn."""
+
+    fieldScale: float | list[float] | np.ndarray
+    """Field scale (in GeV) over which the potential changes by O(1). A good value
+    would be similar to the field VEV.
+    Can either be a single float, in which case all the fields have the
+    same scale, or an array of floats (one element for each classical field in the model)."""
 
 class EffectivePotential(ABC):
     """Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
@@ -18,46 +34,30 @@ class EffectivePotential(ABC):
     Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is p = -Veff(phi) if phi is a local minimum.
     However for phase transitions it is common to neglect field-independent parts of Veff, for example one may choose normalization so that Veff(0) = 0.
     Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
-    With in mind, WallGo requires that the effective potential is defined with full T-dependence included.
+    With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
 
-    The final technicality you should be aware of is the variable fieldLowerBound, which is used as a cutoff for avoiding spurious behavior at phi = 0.
-    You may need to adjust this to suit your needs, especially if using a complicated 2-loop potential. 
+    The user must call configureDerivatives() before evaluating the derivatives to set
+    temperature and field scales of your potential, and optionally update the effectivePotentialError attribute.
+    These quantities are used to estimate the optimal step size when computing derivatives with finite
+    differences. It is done by requiring that the potential error and the error from
+    finite difference calculation contribute similarly to the derivative error.
+    See the VeffDerivativeSettings dataclass.
     """
-
-    """TODO we could optimize some routines that only depend on free-energy differences ( dV/dField, findTc ) by
-    separating the field-dependent parts of Veff(phi, T) and the T-dependent constant terms. This was done in intermediate commits
-    but scrapped because it was too error prone (Veff appears in too many places). But let's keep this possibility in mind. 
-    If attempting this, keep full Veff as the default and use the field-only part internally when needed.
-    """
-
-
-    ## How many background fields. This is explicitly required so that we can have better control over array shapes 
+    
     fieldCount: int
+    """Number of background fields in your potential. Your concrete potential must set this to a nonzero positive integer."""
 
-    ## Lower bound for field values, used in normalize(). Using a small but nonzero value to avoid spurious divergences from eg. logarithms
-    fieldLowerBound: float = 1e-8
-    
-    ## Typical relative accuracy at which the effective potential can be computed. Is set close to the machine precision here which is appropriate
-    ## when the potential can be computed in terms of simple functions.
-    effectivePotentialError: float = 1e-15
-    
-    ## Typical temperature scale over which the effective potential changes by O(1). A reasonable value would be of order Tc-Tn.
-    temperatureScale: float
-    
-    ## Field scale over which the potential changes by O(1). A good value would be similar to the field VEV.
-    fieldScale: npt.ArrayLike
+    effectivePotentialError = 1e-8
+    """Typical relative accuracy at which the effective potential can be computed.
+    For simple polynomial potentials this is probably close to machine precision of Python floats (1e-15).
+    For loop-corrected potentials a limited factor can be the eg. accuracy of numerical integration.
+    Default is 1e-8, matching the relative error in WallGo's Jb/Jf thermal 1-loop integrals.
+    """
 
-    ## In practice we'll get the model params from a GenericModel subclass 
-    def __init__(self, modelParameters: dict[str, float], fieldCount: int):
-        self.modelParameters = modelParameters
-        self.fieldCount = fieldCount
-        
-        # HACK! This intitializes fieldScale and temperatureScale to 1s.
-        # Should be overriden by self.setScales, but used in some tests.
-        self.fieldScale = np.ones(fieldCount)
-        self.temperatureScale = 1.
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
+    derivativeSettings: VeffDerivativeSettings
 
+    __combinedScales: np.ndarray
+    # Used in derivatives, combines field/temperature scales into one array
 
     @abstractmethod
     def evaluate(self, fields: Fields | FieldPoint, temperature: npt.ArrayLike, checkForImaginary: bool = False) -> npt.ArrayLike:
@@ -68,30 +68,49 @@ class EffectivePotential(ABC):
         Pay special attention to field-independent "constant" terms such as (minus the) pressure from light fermions. 
         """
         raise NotImplementedError("You are required to give an expression for the effective potential.")
-    
 
-    #### Non-abstract stuff from here on
+    def __init_subclass__(cls: Type["EffectivePotential"], **kwargs: Any) -> None:
+        """Called whenever a subclass is initialized.
+        """
+        super().__init_subclass__(**kwargs)
+
+        # Check that fieldCount is valid, but skip the check for subclasses that are still abstract
+        if inspect.isabstract(cls):
+            return
+        elif not hasattr(cls, 'fieldCount') or cls.fieldCount < 1:
+            raise NotImplementedError("EffectivePotential subclasses must define a class variable 'fieldCount' with value > 0.")
     
-    def setPotentialError(self, potentialError):
-        """
-        Sets self.effectivePotentialError to potentialError.
-        """
-        self.effectivePotentialError = potentialError
         
-    def setScales(self, temperatureScale: float, fieldScale: npt.ArrayLike):
+    def configureDerivatives(self, settings: VeffDerivativeSettings) -> None:
         """
-        Sets self.temperatureScale to temperatureScale and self.fieldScale to fieldScale
+        Sets the temperature and field scales.
+        These quantities are used together with the 'effectivePotentialError' attribute
+        to estimate the optimal step size when computing
+        derivatives with finite differences. It is done by requiring that the potential
+        error and the error from finite difference calculation contribute similarly to
+        the derivative error.
         """
-        self.temperatureScale = temperatureScale
-        
-        if isinstance(fieldScale, float):
-            self.fieldScale = fieldScale * np.ones(self.fieldCount)
+
+        self.derivativeSettings = copy.copy(settings)
+
+        # Interpret the field scale input and make it correct shape
+        if isinstance(settings.fieldScale, float):
+            self.derivativeSettings.fieldScale = settings.fieldScale * np.ones(self.fieldCount)
         else:
-            self.fieldScale = np.asanyarray(fieldScale)
-            assert self.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
-        self.__combinedScales = np.append(self.fieldScale, self.temperatureScale)
+            self.derivativeSettings.fieldScale = np.asanyarray(settings.fieldScale)
+            assert self.derivativeSettings.fieldScale.size == self.fieldCount, "EffectivePotential error: fieldScale must have a size of self.fieldCount."
+        self.__combinedScales = np.append(self.derivativeSettings.fieldScale, self.derivativeSettings.temperatureScale)
 
-    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, npt.ArrayLike]:
+    def areDerivativesConfigured(self) -> bool:
+        """True if derivative routines are ready to use."""
+        return hasattr(self, 'derivativeSettings')
+    
+    def getInherentRelativeError(self) -> float:
+        """"""
+        return self.effectivePotentialError
+
+
+    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.
@@ -107,10 +126,10 @@ class EffectivePotential(ABC):
         # I think we'll need to manually vectorize this in case we got many field/temperature points
         T = np.atleast_1d(temperature)
 
-        numPoints = max(T.shape[0], initialGuess.NumPoints())
+        numPoints = max(T.shape[0], initialGuess.numPoints())
 
         ## Reshape for broadcasting
-        guesses = initialGuess.Resize(numPoints, initialGuess.NumFields())
+        guesses = initialGuess.resizeFields(numPoints, initialGuess.numFields())
         T = np.resize(T, (numPoints))
 
         resValue = np.empty_like(T)
@@ -125,10 +144,10 @@ class EffectivePotential(ABC):
             """
 
             def evaluateWrapper(fieldArray: np.ndarray):
-                fields = Fields.CastFromNumpy(fieldArray)
+                fields = Fields.castFromNumpy(fieldArray)
                 return self.evaluate(fields, T[i]).real
 
-            guess = guesses.GetFieldPoint(i)
+            guess = guesses.getFieldPoint(i)
 
             res = scipy.optimize.minimize(evaluateWrapper, guess, tol=tol)
 
@@ -139,7 +158,7 @@ class EffectivePotential(ABC):
             self.evaluate(Fields((res.x)), T[i], checkForImaginary=True)
 
         ## Need to cast the field location
-        return Fields.CastFromNumpy(resLocation), resValue
+        return Fields.castFromNumpy(resLocation), resValue
     
     def __wrapperPotential(self, X):
         """
@@ -177,13 +196,15 @@ class EffectivePotential(ABC):
             Temperature derivative of the potential, evaluated at each
             point of the input temperature array.
         """
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
+                                    "called before computing a derivative."
         der = derivative(
             lambda T: self.evaluate(fields, T).real,
             temperature,
             n=1,
             order=4,
             epsilon=self.effectivePotentialError,
-            scale=self.temperatureScale,
+            scale=self.derivativeSettings.temperatureScale,
             bounds=(0,np.inf),
         )
         return der
@@ -205,7 +226,8 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
+                                    "called before computing a derivative."
         return gradient(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                         scale=self.__combinedScales, axis=np.arange(self.fieldCount).tolist())
 
@@ -225,7 +247,8 @@ class EffectivePotential(ABC):
             Field derivatives of the potential, one Fields object for each
             temperature. They are of Fields type since the shapes match nicely.
         """
-        
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
+                                    "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                       scale=self.__combinedScales, xAxis=np.arange(self.fieldCount).tolist(), yAxis=-1)[...,0]
         
@@ -247,7 +270,8 @@ class EffectivePotential(ABC):
             Field Hessian of the potential. For each temperature, this is
             a matrix of the same size as Fields.
         """
-        
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
+                                    "called before computing a derivative."
         axis = np.arange(self.fieldCount).tolist()
         return hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, 
                        scale=self.__combinedScales, xAxis=axis, yAxis=axis)
@@ -275,7 +299,8 @@ class EffectivePotential(ABC):
         d2VdT2 : array-like
             Temperature second derivative of the potential.
         """
-        
+        assert self.areDerivativesConfigured(), "EffectivePotential Error: configureDerivatives() must be "\
+                                    "called before computing a derivative."
         res = hessian(self.__wrapperPotential, self.__combineInputs(fields, temperature), epsilon=self.effectivePotentialError, scale=self.__combinedScales)
         
         hess = res[...,:-1,:-1]

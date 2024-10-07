@@ -25,6 +25,7 @@ dependencies = [
     "h5py>=3.8.0",
     "numpy>=1.21.5",
     "scipy>=1.9.0",
+    "deprecated>=1.2.14",
 ]
 readme = "README.rst"
 
@@ -77,7 +78,7 @@ indent-string = "    "
 [tool.pylint.basic]
 # naming styles: PEP8 except camelCase instead of snake_case
 argument-rgx='^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
-attr-rgx = '^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
+attr-rgx = '^[_a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 class-naming-style = "PascalCase"
 class-attribute-naming-style = "camelCase"
 class-const-naming-style = "UPPER_CASE"

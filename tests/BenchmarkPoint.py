@@ -36,4 +36,6 @@ class BenchmarkModel:
 
     def __init__(self, model: WallGo.GenericModel, benchmarkPoint: BenchmarkPoint):
         self.model = model
+        self.model.getEffectivePotential().configureDerivatives(WallGo.VeffDerivativeSettings(1.0, 1.0))
+        self.model.getEffectivePotential().effectivePotentialError = 1e-15
         self.benchmarkPoint = benchmarkPoint

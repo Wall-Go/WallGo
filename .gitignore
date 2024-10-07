@@ -11,13 +11,14 @@ docs/_build
 dist/
 *.hdf5
 .vscode/
+.vs/
 *.code-workspace
 .ropeproject/
 Collision/bin/
-Collision/pybind/lib/
 Collision/examples/bin/
 Collision/run/
 Collision/testrun/
+Collision/python/package_standalone/WallGoCollision/*
 data/
 old/
 *.eps
@@ -27,4 +28,10 @@ out*
 .ropeproject/
 run/
 old/
-Collision/CMakeUserPresets.json
+*generated.h
+CMakeUserPresets.json
+CMakeCache.txt
+*.pyd
+*.pyi
+*.pdb
+*.so
