@@ -5,6 +5,7 @@ Classes for solving the hydrodynamic equations for the fluid velocity and temper
 from typing import Tuple
 import numpy as np
 import numpy.typing as npt
+import matplotlib.pyplot as plt
 from scipy.optimize import root_scalar, root, minimize_scalar
 from scipy.integrate import solve_ivp
 from .exceptions import WallGoError
@@ -140,6 +141,7 @@ class Hydrodynamics:
             rootResult = root_scalar(
                 vpDerivNum,
                 bracket=[self.Tnucl, Tmax],
+                x0 = self.Tnucl+1e-3,
                 method="brentq",
                 xtol=self.atol,
                 rtol=self.rtol,
@@ -157,6 +159,23 @@ class Hydrodynamics:
 
         derivdenom = (self.thermodynamics.eLowT(rootResult.root) - eHighT)**2*(eHighT + self.thermodynamics.pLowT(rootResult.root))**2
         print(f"{np.abs(vpDerivNum(rootResult.root)/derivdenom)=}")
+        print(f"{rootResult.root = }")
+
+        temp = np.arange(max(0.95*rootResult.root, self.Tnucl), 1.05*rootResult.root, rootResult.root/10000)
+        deriv = np.ones(len(temp))
+        for i in range(len(temp)):
+            deriv[i] = vpDerivNum(temp[i])
+        plt.plot(temp, deriv )
+        plt.xlabel("T")
+        plt.ylabel("vpDerivNum(T)")
+
+        # Add horizontal line at y=0
+        plt.axhline(y=0, color='gray', linestyle='--')
+
+        # Add vertical line at rootResult.root
+        plt.axvline(x=rootResult.root, color='gray', linestyle='--')
+
+        plt.show()
 
         if rootResult.converged and rootResult.root*np.abs(vpDerivNum(rootResult.root)/derivdenom) < 1e-3:
             tmSol = rootResult.root

@@ -48,7 +48,7 @@ plt.errorbar(mHs, L01phi50[:,2], yerr = L01phi50[:,3], capsize = 5, label = 'Tsc
 plt.errorbar(mHs, L05phi50[:,2], yerr = L05phi50[:,3], capsize = 5, label = 'Tscale = 0.5 GeV, Fieldscale = 50 GeV', linestyle = ':')
 plt.errorbar(mHs, L1phi50[:,2], yerr = L1phi50[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 50 GeV', linestyle = '-.')
 plt.errorbar(mHs, L2phi50[:,2], yerr = L2phi50[:,3], capsize = 5, label = 'Tscale = 2.0 GeV, Fieldscale = 50 GeV', linestyle = '--')
-plt.errorbar(mHs, L5phi50[:,2], yerr = L2phi50[:,3], capsize = 5, label = 'Tscale = 5.0 GeV, Fieldscale = 50 GeV', linestyle = ':')
+plt.errorbar(mHs, L5phi50[:,2], yerr = L5phi50[:,3], capsize = 5, label = 'Tscale = 5.0 GeV, Fieldscale = 50 GeV', linestyle = ':')
 
 plt.legend(loc='lower left')
 
@@ -59,16 +59,21 @@ plt.savefig('CompareTempScale.eps', format='eps')
 
 plt.show()
 
+L1phi1 = np.loadtxt("./ResultsMPPotential/N11M20tempScale1.0fieldScale1.0.txt", float)
+L1phi200 = np.loadtxt("./ResultsMPPotential/N11M20tempScale1.0fieldScale200.0.txt", float)
 L1phi10 = np.loadtxt("./ResultsMPPotential/N11M20tempScale1.0fieldScale10.0.txt", float)
 L1phi100 = np.loadtxt("./ResultsMPPotential/N11M20tempScale1.0fieldScale100.0.txt", float)
 
+plt.errorbar(mHs, L1phi1[:,2], yerr = L1phi1[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 1.0 GeV')
 plt.errorbar(mHs, L1phi10[:,2], yerr = L1phi10[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 10 GeV')
 plt.errorbar(mHs, L1phi50[:,2], yerr = L1phi50[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 50 GeV', linestyle = ':')
 plt.errorbar(mHs, L1phi100[:,2], yerr = L1phi100[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 100 GeV', linestyle = '-.')
+plt.errorbar(mHs, L1phi200[:,2], yerr = L1phi200[:,3], capsize = 5, label = 'Tscale = 1.0 GeV, Fieldscale = 200 GeV', linestyle = '-.')
 
 plt.legend(loc='upper left')
 
 plt.xlabel(r"$m_H$", fontsize=15)
 plt.ylabel(r"$v_w$", fontsize=15)
 
+plt.savefig('CompareFieldScale.eps', format='eps')
 plt.show()

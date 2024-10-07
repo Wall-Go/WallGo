@@ -416,6 +416,5 @@ class WallGoExampleBase(ABC):
             counter = counter +1
 
         #hacky
-        #filename = 'Models/StandardModel/ResultsMPPotential/SmallerPotentialErrorN' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + 'fieldScale' + str(fieldScale) + '.txt'
         filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + 'fieldScale' + str(fieldScale) + '.txt'
         #np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')
