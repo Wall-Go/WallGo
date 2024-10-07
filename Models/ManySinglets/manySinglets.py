@@ -646,7 +646,7 @@ class NSingletsModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldScale=[10.0, 10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example

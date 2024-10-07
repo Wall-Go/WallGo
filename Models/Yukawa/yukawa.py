@@ -344,7 +344,7 @@ class YukawaModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([192.35]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=1.0,
+                    temperatureVariationScale=1.0,
                     fieldScale=[
                         100.0,
                     ],

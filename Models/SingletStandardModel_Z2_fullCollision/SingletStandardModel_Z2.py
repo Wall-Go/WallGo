@@ -495,14 +495,14 @@ def main() -> None:
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1).
     # A good value would be of order Tc-Tn.
-    temperatureScale = 10.
+    temperatureVariationScale = 10.
     # Field scale over which the potential changes by O(1).
     # A good value would be similar to the field VEV.
     # Can either be a single float, in which case all
     # the fields have the same scale, or an array.
     fieldScale = [10.,10.]
     manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
+        wallThicknessIni, meanFreePath, temperatureVariationScale, fieldScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input,

@@ -327,7 +327,7 @@ class WallGoManager:
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
         dT = (
-            self.model.getEffectivePotential().derivativeSettings.temperatureScale
+            self.model.getEffectivePotential().derivativeSettings.temperatureVariationScale
             * phaseTracerTol**0.25
         )
 
