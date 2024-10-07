@@ -354,7 +354,6 @@ bool buildMatrixElements(
             // Any other index needs to match idx2
             if (std::find(indices.begin(), indices.end(), idx2) == indices.end()) continue;
 
-            
             // Off-eq indices found, next verify that all other external particles are also allowed (as specified by the input index list).
             bool bExternalsOK = true;
             for (int32_t externalIdx : indices)
@@ -368,9 +367,9 @@ bool buildMatrixElements(
                         std::cout << indices[i];
                     }
                     std::cout << "], but particle with index " << externalIdx << " has not been defined. This process will be ignored.\n";
+                    bExternalsOK = false;
                     break;
                 }
-                bExternalsOK = false;
             }
 
             if (!bExternalsOK) continue;
