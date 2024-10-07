@@ -282,14 +282,14 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
             + 0.25*a2*v**2 *x**2)
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.bosonStuff(fields, temperature)
-        fermionStuff = self.fermionStuff(fields, temperature)
+        bosonInformation = self.bosonInformation(fields, temperature)
+        fermionInformation = self.fermionInformation(fields, temperature)
 
         VTotal = (
             + V0
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
-            + self.potentialOneLoopThermal(bosonStuff, fermionStuff, temperature, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
+            + self.potentialOneLoopThermal(bosonInformation, fermionInformation, temperature, checkForImaginary)
         )
 
         return VTotal   
@@ -413,7 +413,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return thermalParameters
     """
 
-    def bosonStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def bosonInformation(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         
         v, x = fields.getField(0), fields.getField(1)
 
@@ -454,7 +454,7 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermionStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def fermionInformation(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
         v = fields.getField(0)
 

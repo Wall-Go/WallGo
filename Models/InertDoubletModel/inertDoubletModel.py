@@ -308,18 +308,18 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         potentialTree = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         # Particle masses and coefficients for the one-loop thermal potential
-        bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
+        bosonInformationResummed = self.bosonInformationResummed(fields, temperature)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
             + self.potentialOneLoopThermal(
-                bosonStuffResummed, fermionStuff, temperature, checkForImaginary
+                bosonInformationResummed, fermionInformation, temperature, checkForImaginary
             )
         )
 
@@ -366,7 +366,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             + 2 * massSq * rgScale**2
         )
 
-    def fermionStuff(self, fields: Fields) -> tuple[
+    def fermionInformation(self, fields: Fields) -> tuple[
         np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
@@ -406,7 +406,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -472,7 +472,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def bosonStuffResummed(  # pylint: disable=too-many-locals
+    def bosonInformationResummed(  # pylint: disable=too-many-locals
         self, fields: Fields, temperature: float | np.ndarray
     ) -> tuple[np.ndarray, np.ndarray | float, np.ndarray | float, np.ndarray | float]:
         """
