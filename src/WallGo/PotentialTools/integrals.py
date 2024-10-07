@@ -67,6 +67,44 @@ class JbIntegral(InterpolatableFunction):
             returnValueCount,
         )
 
+    @classmethod
+    def _integrandPositiveReal(cls, x: float, y: float) -> float:
+        """
+        The real part of integrand of the Jb function, for positive y.
+        Note the imaginary part for positive y is just zero.
+        """
+        return float(
+            y**2 * np.log(
+                1.0 - np.exp(-np.sqrt(y**2 + x)) + cls.SMALL_NUMBER
+            )
+        )
+
+    @classmethod
+    def _integrandNegativeReal(cls, x: float, y: float) -> float:
+        """
+        The (principal) real part of integrand of the Jb function, for negative y,
+        slighly deformed into the y upper-half plane.
+        """
+        return float(
+            y**2 * np.log(
+                2 * np.abs(np.sin(0.5 * np.sqrt(-y**2 - x))) + cls.SMALL_NUMBER
+            )
+        )
+
+    @classmethod
+    def _integrandNegativeImaginary(cls, x: float, y: float) -> float:
+        """
+        The imaginary part of integrand of the Jb function, for negative y,
+        slighly deformed into the y upper-half plane.
+        """
+        return float(
+            y**2 * np.arctan(
+                1 / (
+                    np.tan(0.5 * np.sqrt(-y**2 - x)) + cls.SMALL_NUMBER
+                )
+            )
+        )
+
     ## This doesn't vectorize nicely for numpy due to combination of piecewise
     ## scipy.integrate.quad and conditionals on x.
     # So for array input, let's just do a simple for loop
@@ -89,62 +127,30 @@ class JbIntegral(InterpolatableFunction):
         def wrapper(xWrapper: float) -> complex:
             """Wrapper for treating x>=0 and x<0 separately"""
 
-            def integrandPositive(y: float) -> float:
-                """This is the integrand if always y^2 + x >= 0.
-                Adding a small number inside log to help with numerics"""
-                return float(
-                    y**2
-                    * np.log(
-                        1.0
-                        - np.exp(-np.sqrt(y**2 + xWrapper))
-                        + self.SMALL_NUMBER
-                    )
-                )
-
             if xWrapper >= 0:
-                resReal = _integrator(integrandPositive, 0.0, np.inf)
-                resImag = 0
+                resReal = _integrator(
+                    lambda y: JbIntegral._integrandPositiveReal(xWrapper, y),
+                    0.0,
+                    np.inf,
+                )
+                resImag = 0.0
             else:
-
-                def integrandPrincipalLogReal(y: float) -> float:
-                    """Now need to analytically continue, split the integral into
-                    two parts: branch cut for y < sqrt(-x). Do some algebra to find
-                    the principal log.
-                    """
-                    return float(
-                        y**2
-                        * np.log(
-                            2 * np.abs(np.sin(0.5 * np.sqrt(-(y**2) - xWrapper)))
-                            + self.SMALL_NUMBER
-                        )
-                    )
-
-                def integrandPrincipalLogImag(y: float) -> float:
-                    """Now need to analytically continue, split the integral into
-                    two parts: branch cut for y < sqrt(-x). Here giving the result
-                    for y^2 + x deformed slightly into the upper half complex plane.
-                    """
-                    return float(
-                        y**2
-                        * np.arctan(
-                            1
-                            / (
-                                np.tan(0.5 * np.sqrt(-(y**2) - xWrapper))
-                                + self.SMALL_NUMBER
-                            )
-                        )
-                    )
-
                 resReal = (
                     _integrator(
-                        integrandPrincipalLogReal, 0.0, np.sqrt(np.abs(xWrapper))
+                        lambda y: JbIntegral._integrandNegativeReal(xWrapper, y),
+                        0.0,
+                        np.sqrt(np.abs(xWrapper))
                     )
                     + _integrator(
-                        integrandPositive, np.sqrt(np.abs(xWrapper)), np.inf
+                        lambda y: JbIntegral._integrandPositiveReal(xWrapper, y),
+                        np.sqrt(np.abs(xWrapper)),
+                        np.inf
                     )
                 )
                 resImag = _integrator(
-                    integrandPrincipalLogImag, 0.0, np.sqrt(np.abs(xWrapper))
+                    lambda y: JbIntegral._integrandNegativeImaginary(xWrapper, y),
+                    0.0,
+                    np.sqrt(np.abs(xWrapper))
                 )
 
             return complex(resReal + 1j * resImag)
@@ -180,7 +186,43 @@ class JfIntegral(InterpolatableFunction):
             bUseAdaptiveInterpolation,
             initialInterpolationPointCount,
             returnValueCount,
-        ) 
+        )
+
+    @classmethod
+    def _integrandPositiveReal(cls, x: float, y: float) -> float:
+        """
+        The real part of integrand of the Jb function, for positive y.
+        Note the imaginary part for positive y is just zero.
+        """
+        return float(
+            -y**2 * np.log(
+                1 + np.exp(-np.sqrt((y**2) + x)) + cls.SMALL_NUMBER
+            )
+        )
+
+    @classmethod
+    def _integrandNegativeReal(cls, x: float, y: float) -> float:
+        """
+        The (principal) real part of integrand of the Jb function, for negative y,
+        slighly deformed into the y upper-half plane.
+        """
+        return float(
+            -y**2 * np.log(
+                2 * np.abs(np.cos(0.5 * np.sqrt(-y**2 - x))) + cls.SMALL_NUMBER
+            )
+        )
+
+    @classmethod
+    def _integrandNegativeImaginary(cls, x: float, y: float) -> float:
+        """
+        The imaginary part of integrand of the Jb function, for negative y,
+        slighly deformed into the y upper-half plane.
+        """
+        return float(
+            y**2 * np.arctan(
+                np.tan(0.5 * np.sqrt(-(y**2) - x)) + cls.SMALL_NUMBER
+            )
+        )
 
     def _functionImplementation(self, x: inputType | float) -> outputType:
         """
@@ -198,58 +240,36 @@ class JfIntegral(InterpolatableFunction):
 
         """
 
-        def wrapper(xWrapper: float) -> complex:
 
-            def integrandPositive(y: float) -> float:
-                """This is the integrand if always y^2 + x >= 0.
-                Adding a small number inside log to help with numerics."""
-                return float(
-                    -(y**2)
-                    * np.log(
-                        1 + np.exp(-np.sqrt((y**2) + xWrapper)) + self.SMALL_NUMBER
-                    )
-                )
+        def wrapper(xWrapper: float) -> complex:
+            """Wrapper for treating x>=0 and x<0 separately"""
 
             if xWrapper >= 0:
-                resReal = _integrator(integrandPositive, 0.0, np.inf)
-                resImag = 0
-
+                resReal = _integrator(
+                    lambda y: JfIntegral._integrandPositiveReal(xWrapper, y),
+                    0.0,
+                    np.inf,
+                )
+                resImag = 0.0
             else:
-
-                def integrandPrincipalLogReal(y: float) -> float:
-                    """Principal log, similar to Jb."""
-                    return float(
-                        -(y**2)
-                        * np.log(
-                            2 * np.abs(np.cos(0.5 * np.sqrt(-(y**2) - xWrapper)))
-                            + self.SMALL_NUMBER
-                        )
-                    )
-
-                def integrandPrincipalLogImag(y: float) -> float:
-                    """Imaginary part for y^2 + x deformed slightly into the upper
-                    half complex plane."""
-                    return float(
-                        y**2
-                        * np.arctan(
-                            np.tan(0.5 * np.sqrt(-(y**2) - xWrapper))
-                            + self.SMALL_NUMBER
-                        )
-                    )
-
                 resReal = (
                     _integrator(
-                        integrandPrincipalLogReal, 0.0, np.sqrt(np.abs(xWrapper))
+                        lambda y: JfIntegral._integrandNegativeReal(xWrapper, y),
+                        0.0,
+                        np.sqrt(np.abs(xWrapper))
                     )
                     + _integrator(
-                        integrandPositive, np.sqrt(np.abs(xWrapper)), np.inf
+                        lambda y: JfIntegral._integrandPositiveReal(xWrapper, y),
+                        np.sqrt(np.abs(xWrapper)),
+                        np.inf
                     )
                 )
                 resImag = _integrator(
-                    integrandPrincipalLogImag, 0.0, np.sqrt(np.abs(xWrapper))
+                    lambda y: JfIntegral._integrandNegativeImaginary(xWrapper, y),
+                    0.0,
+                    np.sqrt(np.abs(xWrapper))
                 )
 
-            # overall minus sign for Jf
             return complex(resReal + 1j * resImag)
 
         if np.isscalar(x):
