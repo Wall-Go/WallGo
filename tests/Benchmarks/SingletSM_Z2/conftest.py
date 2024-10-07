@@ -291,7 +291,7 @@ def singletBenchmarkEOM_equilibrium(
     hydrodynamics, _ = singletBenchmarkHydrodynamics
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
-    meanFreePath = 0
+    meanFreePathScale = 0
 
     fieldCount = 2
 
@@ -302,7 +302,7 @@ def singletBenchmarkEOM_equilibrium(
         hydrodynamics,
         grid,
         fieldCount,
-        meanFreePath,
+        meanFreePathScale,
         (0.1, 100.0),
         (-10.0, 10.0),
         includeOffEq=False,

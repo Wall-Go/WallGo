@@ -488,7 +488,7 @@ def main() -> None:
     wallThicknessIni = 0.05
 
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1
+    meanFreePathScale = 1
 
     ## Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
@@ -502,7 +502,7 @@ def main() -> None:
     # the fields have the same scale, or an array.
     fieldValueVariationScale = [10.,10.]
     manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureVariationScale, fieldValueVariationScale)
+        wallThicknessIni, meanFreePathScale, temperatureVariationScale, fieldValueVariationScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input,
