@@ -569,11 +569,11 @@ class NSingletsModelExample(WallGoExampleBase):
         self, wallGoModel: "NSinglets"
     ) -> "WallGoCollision.PhysicsModel":
         """Initialize the Collision model and set the seed."""
+        None # TODO
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Singlet example uses spatial grid size = 25"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "25")
 
     def updateModelParameters(
