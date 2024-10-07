@@ -60,11 +60,15 @@ def setupCollisionModel_QCDEW(
     
     def wBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 11.0 * p["gw"] ** 2 / 6.0
+    
+    def HiggsBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
+        return (9 * p["gw"] ** 2 / 4 + 3 * p["yt"]) / 12.0
 
 
     parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mw2", wBosonThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("ms2", HiggsBosonThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)
@@ -127,6 +131,7 @@ def setupCollisionModel_QCDEW(
     higgs.type = WallGoCollision.EParticleType.eBoson
     higgs.bInEquilibrium = True
     higgs.bUltrarelativistic = True
+    higgs.massSqFunction = HiggsBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(higgs)
 
     lightQuark = WallGoCollision.ParticleDescription()
