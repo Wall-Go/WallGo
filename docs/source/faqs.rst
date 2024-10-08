@@ -82,7 +82,8 @@ Model requirements
 
 - **What is the parameter fieldCount?**
 
-    This is the number of background scalar fields values that the effective potential depends on.
+    This is the number of scalar background fields that your effective potential depends on and must be specified when
+    subclassing EffectivePotential. It is used internally to reshape various helper arrays.
 
 - **What is the msqVacuum in the Particle definition?**
 
