@@ -14,14 +14,17 @@ from .integrals import Integrals
 class EImaginaryOption(Enum):
     """Enums for what to do with imaginary parts in the effective potential."""
 
-    # Throw an error if imaginary part nonzero
     ERROR = auto()
-    # Take absolute value of argument
+    """Throw an error if imaginary part nonzero"""
+
     ABS_ARGUMENT = auto()
-    # Take absolute value of result
+    """Absolute value of argument of integral"""
+
     ABS_RESULT = auto()
-    # Principal part
+    """Absolute value of analytically continued integral"""
+
     PRINCIPAL_PART = auto()
+    """Principal part of analytically continued integral"""
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
