@@ -29,12 +29,11 @@ class EImaginaryOption(Enum):
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
-    r"""Class EffectivePotential_NoResum -- Specialization of the abstract
+    r"""Specialization of the abstract
     EffectivePotential class that implements common functions for computing
     the 1-loop potential at finite temperature, without any
     assumptions regarding the temperature (no high- or low-T approximations).
-    In some literature this would be the "4D effective potential".
-
+    In some literature this would be the _4D effective potential_.
     """
 
     SMALL_NUMBER: typing.Final[float] = 1e-100
@@ -45,9 +44,33 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         useDefaultInterpolation: bool = False,
         imaginaryOption: EImaginaryOption = EImaginaryOption.ERROR,
     ):
-        """FIXME: if we intend to have this as a ready-to-use Veff template,
-        we should do inits in __init_subclass__() instead.
-        This way the user doesn't have to worry about calling super().__init__()"""
+        r"""Initialisation of EffectivePotentialNoResum
+
+        Parameters
+        ----------
+        integrals : Integrals, optional
+            An object of the Integrals class. Default is `None` in which case
+            the integrals will be done without interpolation. Beware this may
+            be slow.
+        useDefaultInterpolation : bool, optional
+            If `True` the default integration data will be loaded and used for
+            interpolation.
+        imaginaryOption : EImaginaryOption
+            Default is :py:attr:`EImaginaryOption.ERROR` which throws an error if
+            nonzero imaginary parts arise. Alternatives are
+            :py:attr:`EImaginaryOption.PRINCIPAL_PART` for the principal part of the
+            integrals, :py:attr:`EImaginaryOption.ABS_RESULT` for taking the absolute
+            part of the result, and :py:attr:`EImaginaryOption.ABS_ARGUMENT` for taking
+            the absolute part of the argument.
+
+        Returns
+        -------
+        cls : EffectivePotentialNoResum
+            An object of the EffectivePotentialNoResum class.
+        """
+        # FIXME: if we intend to have this as a ready-to-use Veff template,
+        # we should do inits in __init_subclass__() instead.
+        # This way the user doesn't have to worry about calling super().__init__()
         # Option for how to deal with imaginary parts
         self.imaginaryOption = imaginaryOption
 
