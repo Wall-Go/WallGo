@@ -1,6 +1,4 @@
-"""
-Class for the one-loop effective potential without high-temperature expansion
-"""
+"""Class for the one-loop effective potential without high-temperature expansion"""
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
@@ -14,9 +12,7 @@ from .integrals import Integrals
 
 
 class EImaginaryOption(Enum):
-    """
-    Enums for what to do with imaginary parts in the effective potential.
-    """
+    """Enums for what to do with imaginary parts in the effective potential."""
 
     # Throw an error if imaginary part nonzero
     ERROR = auto()
@@ -29,7 +25,9 @@ class EImaginaryOption(Enum):
 
 
 class EffectivePotentialNoResum(EffectivePotential, ABC):
-    r"""Specialization of the abstract
+    r"""One-loop thermal effective potential
+    
+    Specialization of the abstract
     EffectivePotential class that implements common functions for computing
     the 1-loop potential at finite temperature, without any
     assumptions regarding the temperature (no high- or low-T approximations).
@@ -106,15 +104,14 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @abstractmethod
     def bosonInformation(
-        self, fields: np.ndarray, __temperature: float | np.ndarray
+        self, fields: np.ndarray, temperature: float | np.ndarray
     ) -> tuple[
         np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
     ]:
-        """
-        Calculate the boson particle spectrum. Should be overridden by
+        """Calculate the boson particle spectrum. Should be overridden by
         subclasses.
 
         Parameters
@@ -125,16 +122,16 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         temperature : float or array_like
             The temperature at which to calculate the boson masses. Can be used
             for including thermal mass corrrections. The shapes of `fields` and
-            `temperature` should be such that ``fields.shape[:-1]`` and
-            ``temperature.shape`` are broadcastable
-            (that is, ``fields[0,...]*T`` is a valid operation).
+            `temperature` should be such that `fields.shape[:-1]` and
+            `temperature.shape` are broadcastable
+            (that is, `fields[0,...]*T` is a valid operation).
 
         Returns
         -------
         massSq : array_like
             A list of the boson particle masses at each input point `X`. The
             shape should be such that
-            ``massSq.shape == (X[...,0]*T).shape + (Nbosons,)``.
+            `massSq.shape == (X[...,0]*T).shape + (Nbosons,)`.
             That is, the particle index is the *last* index in the output array
             if the input array(s) are multidimensional.
         degreesOfFreedom : float or array_like
@@ -155,15 +152,14 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     @abstractmethod
     def fermionInformation(
-        self, fields: np.ndarray, __temperature: float | np.ndarray
+        self, fields: np.ndarray, temperature: float | np.ndarray
     ) -> tuple[
         np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
     ]:
-        """
-        Calculate the fermion particle spectrum. Should be overridden by
+        """Calculate the fermion particle spectrum. Should be overridden by
         subclasses.
 
         Parameters
@@ -177,7 +173,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         -------
         massSq : array_like
             A list of the fermion particle masses at each input point `field`. The
-            shape should be such that  ``massSq.shape == (field[...,0]).shape``.
+            shape should be such that  `massSq.shape == (field[...,0]).shape`.
             That is, the particle index is the *last* index in the output array
             if the input array(s) are multidimensional.
         degreesOfFreedom : float or array_like
@@ -202,8 +198,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         c: float | np.ndarray,
         rgScale: float | np.ndarray,
     ) -> float | np.ndarray:
-        """
-        Coleman-Weinberg potential
+        """Coleman-Weinberg potential
 
         Parameters
         ----------
@@ -237,24 +232,23 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         ) / (64 * np.pi * np.pi)
 
     def potentialOneLoop(
-        self, bosons: tuple, fermions: tuple, checkForImaginary: bool = False
+        self, bosons: tuple, fermions: tuple
     ) -> float | np.ndarray:
-        """
-        One-loop corrections to the zero-temperature effective potential
+        """One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
 
         Parameters
         ----------
-        bosons : array of floats
+        bosons : tuple
             bosonic particle spectrum (here: masses, number of dofs, ci)
-        fermions : array of floats
+        fermions : tuple
             fermionic particle spectrum (here: masses, number of dofs)
         RGscale: float
             RG scale of the effective potential
 
         Returns
         -------
-        potential : float
+        potential : float or array_like
         """
 
         massSqB, nB, cB, rgScaleB = bosons
@@ -293,24 +287,22 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         self,
         bosons: tuple,
         fermions: tuple,
-        temperature: np.ndarray | float,
-        checkForImaginary: bool = False,
+        temperature: float | np.ndarray,
     ) -> float | np.ndarray:
-        """
-        One-loop thermal correction to the effective potential without any
+        """One-loop thermal correction to the effective potential without any
         temperature expansions.
 
         Parameters
         ----------
-        bosons : ArrayLike
+        bosons : tuple
             bosonic particle spectrum (here: masses, number of dofs, ci)
-        fermions : ArrayLike
+        fermions : tuple
             fermionic particle spectrum (here: masses, number of dofs)
-        temperature: ArrayLike
+        temperature: float or array_like
 
         Returns
         -------
-        potential : 4d 1loop thermal potential
+        potential : float or array_like
         """
 
         # m2 is shape (len(T), 5), so to divide by T we need to transpose T,

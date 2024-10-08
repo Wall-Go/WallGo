@@ -83,7 +83,7 @@ html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     'logo_only': True,
-    'display_version': True,
+    # 'display_version': True,
     'titles_only': True,
     'style_nav_header_background': '#efefef'
 }

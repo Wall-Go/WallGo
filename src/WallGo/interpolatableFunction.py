@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import Callable, Tuple
 import numpy as np
-from scipy:interpolate import CubicSpline
+from scipy.interpolate import CubicSpline
 
 from . import helpers
 
