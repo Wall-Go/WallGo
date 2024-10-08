@@ -336,9 +336,15 @@ class YukawaModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Yukawa example uses spatial grid size = 20"""
+        """
+        Yukawa example uses spatial grid size = 50 and conservation of energy and
+        momentum is not enforced to increase stability.
+        """
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "50")
+        inOutManager.config.set("EquationOfMotion", "conserveEnergyMomentum", "0")
+        inOutManager.config.set("EffectivePotential", "potentialError", "1e-14")
+        inOutManager.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
 
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]
@@ -382,8 +388,8 @@ class YukawaModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                    meanFreePathScale=1000000.0, # In units of 1/Tnucl
+                    wallThicknessGuess=80.0, # In units of 1/Tnucl
                 ),
             )
         )

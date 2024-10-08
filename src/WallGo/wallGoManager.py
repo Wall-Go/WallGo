@@ -604,6 +604,8 @@ class WallGoManager:
         errTol = self.config.getfloat("EquationOfMotion", "errTol")
         maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
         pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
+        conserveEnergy = bool(self.config.getint(
+            "EquationOfMotion", "conserveEnergyMomentum"))
 
         wallThicknessBounds = (
             self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
@@ -626,6 +628,7 @@ class WallGoManager:
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,
+            forceEnergyConservation=conserveEnergy,
             forceImproveConvergence=False,
             errTol=errTol,
             maxIterations=maxIterations,
