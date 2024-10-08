@@ -1,8 +1,8 @@
 ======================================
-Collision
+Collision Helpers
 ======================================
 
-.. autoclass:: WallGo.Collision
+.. autoclass:: WallGo.collisionHelpers
     :members:
     :inherited-members:
     :special-members: __init__

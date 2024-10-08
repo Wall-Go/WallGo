@@ -239,7 +239,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     def potentialOneLoop(
         self, bosons: tuple, fermions: tuple
-    ) -> float | np.ndarray:
+    ) -> float:
         """One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
 
@@ -272,22 +272,22 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         # checking for imaginary parts
         if np.any(massSqB < 0) or np.any(massSqF < 0):
             if self.imaginaryOption == EImaginaryOption.PRINCIPAL_PART:
-                potential = potential.real
+                potential = np.real(potential)
             elif self.imaginaryOption == EImaginaryOption.ABS_RESULT:
                 potential = abs(potential)
             elif self.imaginaryOption == EImaginaryOption.ERROR:
                 msqBMin = np.min(massSqB)
                 msqFMin = np.min(massSqF)
                 raise ValueError(
-                    f"Im(Veff)={potential.imag}, Re(Veff)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
+                    f"Im(Veff)={potential.imag}, Re(Veff)={np.real(potential)}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
                     "Choose imaginaryOption != EImaginaryOption.ERROR "
                     "when initialising EffectivePotentialNoResum."
                 )
         else:
             # no imaginary parts arise if masses are all nonnegative
-            potential = potential.real
+            potential = np.real(potential)
 
-        return potential
+        return float(potential)
 
     def potentialOneLoopThermal(
         self,
@@ -349,19 +349,21 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
         # checking for imaginary parts
         if np.any(massSqB < 0) or np.any(massSqF < 0):
             if self.imaginaryOption == EImaginaryOption.PRINCIPAL_PART:
-                potential = potential.real
+                potential = np.real(potential)
             elif self.imaginaryOption == EImaginaryOption.ABS_RESULT:
                 potential = abs(potential)
             elif self.imaginaryOption == EImaginaryOption.ERROR:
                 msqBMin = np.min(massSqB)
                 msqFMin = np.min(massSqF)
                 raise ValueError(
-                    f"Im(VT)={potential.imag}, Re(VT)={potential.real}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
+                    f"Im(VT)={potential.imag}, Re(VT)={np.real(potential)}, min(msqB)={msqBMin}, min(msqF)={msqFMin}. "
                     "Choose imaginaryOption != EImaginaryOption.ERROR "
                     "when initialising EffectivePotentialNoResum."
                 )
         else:
             # no imaginary parts arise if masses are all nonnegative
-            potential = potential.real
+            potential = np.real(potential)
 
-        return potential
+        if np.isscalar(temperature):
+            return float(potential)
+        return np.asarray(potential)
