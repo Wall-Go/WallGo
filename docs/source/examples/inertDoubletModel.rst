@@ -2,5 +2,5 @@
 Two Higgs Doublet Model
 ======================================
 
-.. literalinclude:: ../../../Models/TwoHiggsDoubletModel/TwoHiggsDoubletModel.py
+.. literalinclude:: ../../../Models/InertDoubletModel/inertDoubletModel.py
    :language: py

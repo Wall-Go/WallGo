@@ -30,30 +30,31 @@ class EExtrapolationType(Enum):
 
 
 class InterpolatableFunction(ABC):
-    """
+    r"""
     This is a totally-not-overengineered base class for defining optimized functions
-    f(x) that, in addition to normal evaluation, support the following:
-        - Producing and using interpolation tables in favor of direct evaluation, where
-          applicable.
-        - Automatic adaptive updating of the interpolation table.
-        - Reading interpolation tables from a file.
-        - Producing said file for some range of inputs.
-        - Validating that what was read from a file makes sense, ie. matches the result
-          given by _evaluate().
+    :math:`f(x)` that, in addition to normal evaluation, support the following:
+
+    - Producing and using interpolation tables in favor of direct evaluation, where
+        applicable.
+    - Automatic adaptive updating of the interpolation table.
+    - Reading interpolation tables from a file.
+    - Producing said file for some range of inputs.
+    - Validating that what was read from a file makes sense, ie. matches the result
+        given by :py:meth:`_evaluate()`.
 
     WallGo uses this class for evaluating the free energy as function of the
-    temperature. It can also be used for the thermal Jb, Jf integrals.
+    temperature. It can also be used for the thermal :math:`J_b, J_f` integrals.
 
     This also works for functions returning many numbers, ie. vector functions
-    V(x) = [V1, V2, ...]. In this case each component gets its own interpolation table.
+    :math:`V(x) = [V1, V2, ...]`. In this case each component gets its own interpolation table.
 
     Works with numpy array input and applying the function element-wise, but it is the
-    user's responsibility to ensure that the implementation of _functionImplementation
+    user's responsibility to ensure that the implementation of :py:meth:`_functionImplementation`
     is compatible with this behavior. The logic is such that if x is an array and idx is
-    a index-tuple for an element in x, then fx[idx] is the value of f(x) at x[idx]. Note
-    that the shapes of fx and x will NOT match IF f(x) is vector valued.
+    a index-tuple for an element in `x`, then `fx[idx]` is the value of `f(x)` at `x[idx]`. Note
+    that the shapes of `fx` and `x` will NOT match IF `f(x)` is vector valued.
 
-    Special care is needed if the function evaluation fails for some input x, eg. if the
+    Special care is needed if the function evaluation fails for some input `x`, eg. if the
     function is evaluated only on some interval. In this case it is the user's
     responsibility to return np.nan from _functionImplementation() for these input
     values; this will mark these points as invalid and they will not be included in

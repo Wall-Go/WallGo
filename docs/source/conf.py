@@ -42,6 +42,7 @@ extensions = [
     "sphinx.ext.mathjax", # support for mathjax
     "sphinx.ext.ifconfig", # if statements for including content
     "sphinx.ext.viewcode", # add links to highlighted source code
+    "myst_parser",  # for markdown
 ]
 #numpydoc_show_class_members = True # automodapi
 #autosummary_generate = True
@@ -53,7 +54,7 @@ bibtex_bibfiles = ['refs.bib']
 templates_path = ["_templates"]
 
 # Include both markdown and rst files
-source_suffix = [".rst"]
+source_suffix = [".rst", ".md"]
 
 # The master toctree document.
 master_doc = "index"
@@ -82,7 +83,7 @@ html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     'logo_only': True,
-    'display_version': True,
+    # 'display_version': True,
     'titles_only': True,
     'style_nav_header_background': '#efefef'
 }

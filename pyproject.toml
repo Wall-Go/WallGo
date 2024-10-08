@@ -14,10 +14,24 @@ authors = [
     {name = "Philipp Schicho", email = "schicho@itp.uni-frankfurt.de"},
     {name = "Jorinde van de Vis", email = "vandevis@lorentz.leidenuniv.nl"},
 ]
-description = "A package for computing the bubble wall speed"
-license = {text = "MIT"}
+description = "A package for computing the bubble wall speed in cosmological phase transitions."
+license = {text = "GPL v3.0"}
 classifiers = [
+    # Audience and topic
+    "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Physics",
+
+    # License
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+
+    # Status
+    "Development Status :: 3 - Alpha",
+
+    # Python versions supported
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -27,7 +41,7 @@ dependencies = [
     "scipy>=1.9.0",
     "deprecated>=1.2.14",
 ]
-readme = "README.rst"
+readme = "README.md"
 
 [project.optional-dependencies]
 collisions = [
@@ -38,6 +52,7 @@ tests = [
 ]
 docs = [
     "graphviz",
+    "myst_parser",
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-automodapi",
@@ -50,8 +65,10 @@ lint = [
 ]
 
 [project.urls]
-"Homepage" = "https://wallspeed.readthedocs.io/"
-"Repository" = "https://github.com/Wall-Go/WallGo"
+Homepage = "https://wallspeed.readthedocs.io/"
+Repository = "https://github.com/Wall-Go/WallGo"
+Issues = "https://github.com/Wall-Go/WallGo/issues"
+Changelog = "https://github.com/Wall-Go/WallGo/blob/main/CHANGELOG.rst"
 
 [tool.setuptools]
 include-package-data = true

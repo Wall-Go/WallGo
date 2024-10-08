@@ -444,7 +444,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
         return phase1, phase2
 
     def evaluate( #pylint: disable = R0914
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self, fields: Fields, temperature: float
     ) -> np.ndarray:
         """
         Evaluates the tree-level potential with the 1-loop high-T thermal corrections.
@@ -455,9 +455,6 @@ class EffectivePotentialNSinglets(EffectivePotential):
             Fields object containing the VEVs of the fields.
         temperature : float or array-like
             Temperature at which the potential is evaluated.
-        checkForImaginary: bool, optional
-            Has no effect because the potential is always real with the 1-loop
-            high-T thermal corrections with no resummation. Default is False.
 
         Returns
         -------

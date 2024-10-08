@@ -268,7 +268,6 @@ class EffectivePotentialSM(EffectivePotential):
         self,
         fields: Fields,
         temperature: float | np.ndarray,
-        checkForImaginary: bool = False,
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential. We implement the effective potential
@@ -280,8 +279,6 @@ class EffectivePotentialSM(EffectivePotential):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
