@@ -5,6 +5,7 @@ Changelog
 0.1.0 (2024-10-08)
 ==================
 
+* WallGoCollision code migrated to a separate repository.
 * Alpha version goes public.
 
 0.0.1 (2023-05-18)
