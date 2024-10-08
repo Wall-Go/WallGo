@@ -324,7 +324,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
     def evaluate(
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
@@ -335,8 +335,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
@@ -373,9 +371,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonInformation, fermionInformation, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation)
             + self.potentialOneLoopThermal(
-                bosonInformation, fermionInformation, temperature, checkForImaginary
+                bosonInformation, fermionInformation, temperature
             )
         )
 
@@ -658,7 +656,7 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         """Collisions integrals for this example depend only on the QCD coupling,
         if it changes we must recompute collisions before running the wall solver.
-        The bool flag here is inherited from WallGoExampleBase and checked
+        The bool flag here is inherited from WallGoExampleBase and temperatureed
         in runExample(). But since we want to keep the example simple, we skip
         this check and assume the existing data is OK.
         (FIXME?)

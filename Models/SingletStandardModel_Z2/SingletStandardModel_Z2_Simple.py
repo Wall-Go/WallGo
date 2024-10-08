@@ -32,7 +32,6 @@ class EffectivePotentialxSM_Z2_Simple(EffectivePotential):
         self,
         fields: Fields,
         temperature: float,
-        checkForImaginary: bool = False,
     ) -> float:
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x

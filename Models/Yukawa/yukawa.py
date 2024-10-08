@@ -179,7 +179,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     # ~
 
     def evaluate(
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
@@ -190,8 +190,6 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
