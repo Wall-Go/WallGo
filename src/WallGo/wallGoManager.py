@@ -223,8 +223,6 @@ class WallGoManager:
             phaseInput.phaseLocation2, T
         )
 
-        print(f"{self.model.getEffectivePotential().evaluate(Fields([10.]),100.)=}")
-
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {effPotValue2}")
 
