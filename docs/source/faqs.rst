@@ -82,12 +82,7 @@ Model requirements
 
 - **What is the parameter fieldCount?**
 
-    This is the number of scalar fields that the effective potential depends on. 
-    For example, if the Standard Model is coupled to a gauge singlet scalar, and the
-    phase transition is two-step, fieldCount = 2. If the singlet would only give a radiative correction to the effective potential, and the phase transition is
-    one-step, it is possible to either integrate the singlet out, or set it to zero,
-    in which case fieldCount = 1. Alternatively, you could always keep the singlet in
-    the potential and keep fieldCount = 2.
+    This is the number of background scalar fields values that the effective potential depends on.
 
 - **What is the msqVacuum in the Particle definition?**
 
