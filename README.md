@@ -34,7 +34,7 @@ WallGo can be installed as a Python package (in developer mode) with pip, using:
 To also install the requirements for tests, linting and the documentation
 instead run
 
-    python -m pip install -e ".[docs,lint,tests]""
+    python -m pip install -e ".[docs,lint,tests]"
 
 
 ### Requirements
