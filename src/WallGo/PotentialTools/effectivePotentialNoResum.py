@@ -1,4 +1,7 @@
-"""Class for the one-loop effective potential without high-temperature expansion"""
+"""Class for the one-loop thermal effective potential.
+
+Defined without high-temperature expansion and without resummation.
+"""
 
 from abc import ABC, abstractmethod
 from enum import Enum, auto
