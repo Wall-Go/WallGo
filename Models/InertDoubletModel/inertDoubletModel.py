@@ -256,7 +256,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         super().__init__(
             integrals=None,
             useDefaultInterpolation=True,
-            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+            imaginaryOption=EImaginaryOption.ABS_ARGUMENT,
         )
 
         assert owningModel is not None, "Invalid model passed to Veff"
@@ -324,6 +324,10 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             )
         )
 
+        if v == 10.:
+            print(f"{bosonInformation = }")
+            print(f"{potentialTree =} {self.potentialOneLoop(bosonInformation, fermionInformation)=} {self.potentialOneLoopThermal(bosonInformationResummed, fermionInformation, temperature)} {potentialTotal=}")
+
         return np.array(potentialTotal)
 
     def jCW(
@@ -363,7 +367,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         """
 
         return degreesOfFreedom * np.array(
-            massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
+            massSq * massSq * (np.log(massSq / rgScale**2) - c)
             + 2 * massSq * rgScale**2
         )
 
@@ -525,8 +529,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
         # Scalar masses including thermal contribution
-        mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
-        mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
+        mhsq = msq + 3 * lam * v**2 + piPhi
+        mGsq = msq + lam * v**2 + piPhi  # Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
         mAsq = msq2 + (lam3 + lam4 - lam5) / 2 * v**2 + piEta
         mHpmsq = msq2 + lam3 / 2 * v**2 + piEta

@@ -20,6 +20,8 @@ from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 
+from .fields import Fields
+
 
 @dataclass
 class WallSolverSettings:
@@ -220,6 +222,8 @@ class WallGoManager:
         ) = self.model.getEffectivePotential().findLocalMinimum(
             phaseInput.phaseLocation2, T
         )
+
+        print(f"{self.model.getEffectivePotential().evaluate(Fields([10.]),100.)=}")
 
         print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
         print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {effPotValue2}")
