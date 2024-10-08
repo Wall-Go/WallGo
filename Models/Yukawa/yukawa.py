@@ -389,7 +389,7 @@ class YukawaModelExample(WallGoExampleBase):
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
                     meanFreePathScale=1000000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=80.0, # In units of 1/Tnucl
+                    wallThicknessGuess=50.0, # In units of 1/Tnucl
                 ),
             )
         )

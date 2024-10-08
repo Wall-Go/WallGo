@@ -493,8 +493,15 @@ class WallGoManager:
             gridMomentumFalloffScale,
         )
 
+        collisionMultiplier = self.config.getfloat("BoltzmannSolver",
+                                                   "collisionMultiplier")
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
-        boltzmannSolver = BoltzmannSolver(grid, basisM="Cardinal", basisN="Chebyshev")
+        boltzmannSolver = BoltzmannSolver(
+            grid,
+            basisM="Cardinal",
+            basisN="Chebyshev",
+            collisionMultiplier=collisionMultiplier,
+            )
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
 
