@@ -20,8 +20,6 @@ from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults
 
-from .fields import Fields
-
 
 @dataclass
 class WallSolverSettings:
