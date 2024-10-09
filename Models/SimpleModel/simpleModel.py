@@ -100,7 +100,7 @@ class SimpleModel(GenericModel):
 
         psiL = Particle(
             "psiL",
-            index=1,  # old collision data has top at index 0
+            index=1,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
@@ -109,7 +109,7 @@ class SimpleModel(GenericModel):
         )
         psiR = Particle(
             "psiR",
-            index=2,  # old collision data has top at index 0
+            index=2,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
@@ -163,7 +163,7 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
 
     def __init__(self, owningModel: SimpleModel) -> None:
         """
-        Initialize the EffectivePotentialYukawa.
+        Initialize the EffectivePotentialSimple.
         """
 
         super().__init__()
@@ -223,7 +223,7 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
 
 class SimpleModelExample(WallGoExampleBase):
     """
-    Sets up the Yukawa model, computes or loads the collison
+    Sets up the model, computes or loads the collison
     integrals, and computes the wall velocity.
     """
 
@@ -231,6 +231,7 @@ class SimpleModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
 
+        # We take the matrix elements from the Yukawa model
         self.matrixElementFile = pathlib.Path(
             self.exampleBaseDirectory
             / "MatrixElements/MatrixElements_Yukawa.json"
@@ -268,11 +269,11 @@ class SimpleModelExample(WallGoExampleBase):
         phiParticle.type = WallGoCollision.EParticleType.eBoson
         # mass-sq function not required or used for UR particles,
         # and it cannot be field-dependent for collisions.
-        # Backup of what the vacuum mass was intended to be:
-
 
         parameters = WallGoCollision.ModelParameters()
 
+        # We use a different "y" in the collisions than the Yukawa model,
+        # therefore, we rename it to kappa
         parameters.addOrModifyParameter("y", wallGoModel.modelParameters["kappa"])
         parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
 
@@ -323,10 +324,9 @@ class SimpleModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Yukawa example uses spatial grid size = 20"""
+        """We use a spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        #inOutManager.config.set("BoltzmannSolver", "collisionMultiplier", "100.0")
 
     def updateModelParameters(
         self, model: "SimpleModel", inputParameters: dict[str, float]
@@ -335,8 +335,6 @@ class SimpleModelExample(WallGoExampleBase):
         that the effective potential and particle mass functions refer to
         model.modelParameters, so be careful not to replace that reference here.
         """
-
-        # oldParams = model.modelParameters.copy()
         model.updateModel(inputParameters)
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
