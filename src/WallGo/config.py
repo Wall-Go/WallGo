@@ -142,7 +142,46 @@ class ConfigBoltzmannSolver:
     WARNING: THIS CHANGES THE COLLISION TERMS WRT TO THEIR PHYSICAL VALUE.
     """
 
+@dataclass
 class Config:
+    """
+    Data class that holds all the model-independent configs.
+    It contains objects of the data classes ConfigGrid, ConfigEOM,
+    ConfigEffectivePotential, ConfigHydrodynamics, ConfigThermodynamics and
+    ConfigBoltzmannSolver.
+    It can also load the configs from an .ini file.
+    """
+
+    configGrid: ConfigGrid = ConfigGrid()
+    """ Holds the config of the Grid3Scales class. """
+
+    configEOM: ConfigEOM = ConfigEOM()
+    """ Holds the config of the EOM class. """
+
+    configEffectivePotential: ConfigEffectivePotential = ConfigEffectivePotential()
+    """ Holds the config of the EffectivePotential class. """
+
+    configHydrodynamics: ConfigHydrodynamics = ConfigHydrodynamics()
+    """ Holds the config of the Hydrodynamics class. """
+
+    configThermodynamics: ConfigThermodynamics = ConfigThermodynamics()
+    """ Holds the config of the Thermodynamics class. """
+
+    configBoltzmannSolver: ConfigBoltzmannSolver = ConfigBoltzmannSolver()
+    """ Holds the config of the BoltzmannSolver class. """
+
+    def loadConfigFromFile(self, filePath: str) -> None:
+        """
+        Load the configs from a file.
+
+        Parameters
+        ----------
+        filePath : str
+            Path of the file where the configs are.
+
+        """
+
+class ConfigParser:
     """class Config -- Manages configuration variables for WallGo. This is essentially a wrapper around ConfigParser.
     Accessing variables works as with ConfigParser: 
     config.get("Section", "someKey")
