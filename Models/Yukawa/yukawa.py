@@ -341,9 +341,20 @@ class YukawaModelExample(WallGoExampleBase):
         momentum is not enforced to increase stability.
         """
         super().configureManager(inOutManager)
+        
+        # Increase the number of grid points to increase stability
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "50")
+        
+        # In the Yukawa model, most degrees of freedom are treated as out-of-equilibrium
+        # This creates an approximate degeneracy in the definition of f_{eq} vs \delta f
+        # If we enforce conservation of EM, this will lead to a divergence of the
+        # iteration procedure. So we don't enforce it.
         inOutManager.config.set("EquationOfMotion", "conserveEnergyMomentum", "0")
+        
+        # The potential is polynomial, so it has a smaller error
         inOutManager.config.set("EffectivePotential", "potentialError", "1e-14")
+        
+        # Decrease the phase tracer tolerance to improve stability
         inOutManager.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
 
     def updateModelParameters(
@@ -388,6 +399,8 @@ class YukawaModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
+                    # meanFreePathScale is determined here by the annihilation channels,
+                    # which go like y^4~1e-3. This is why it has to be small.
                     meanFreePathScale=1000000.0, # In units of 1/Tnucl
                     wallThicknessGuess=50.0, # In units of 1/Tnucl
                 ),
