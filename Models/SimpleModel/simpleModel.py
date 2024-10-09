@@ -267,25 +267,18 @@ class SimpleModelExample(WallGoExampleBase):
         # mass-sq function not required or used for UR particles,
         # and it cannot be field-dependent for collisions.
         # Backup of what the vacuum mass was intended to be:
-        """
-        msqVacuum=lambda fields: (
-                msq + g * fields.getField(0) + lam / 2 * fields.getField(0) ** 2
-            ),
-        """
+
 
         parameters = WallGoCollision.ModelParameters()
 
-        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["y"])
-        parameters.addOrModifyParameter("lam", wallGoModel.modelParameters["lam"])
-        parameters.addOrModifyParameter("v", 0.0)
+        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["kappa"])
+        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
 
         parameters.addOrModifyParameter(
-            "ms2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
+            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
-            "mf2",
-            + wallGoModel.modelParameters["lam"] / 24.0
-            + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
+            "ms2", wallGoModel.modelParameters["msqTh"]
         )  # psi thermal mass^2 in units of T
 
         collisionModelDefinition.defineParticleSpecies(phiParticle)
@@ -331,7 +324,7 @@ class SimpleModelExample(WallGoExampleBase):
         """Yukawa example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("BoltzmannSolver", "collisionMultiplier", "100.0")
+        #inOutManager.config.set("BoltzmannSolver", "collisionMultiplier", "100.0")
 
     def updateModelParameters(
         self, model: "SimpleModel", inputParameters: dict[str, float]
@@ -354,18 +347,19 @@ class SimpleModelExample(WallGoExampleBase):
         output.append(
             ExampleInputPoint(
                 {
-                    "lam": 0.01320208496444000,
-                    "y": -0.177421729274665,
-                    "mf": 2.0280748307391000,
-                    "msq": 1,
-                    "msqTh": 2./115.,
+                    "y": -0.18,
+                    "mf": 2.0,
+                    "gamma": -1.0,
+                    "kappa": 1.0,
+                    "msq": 2.,
+                    "msqTh": 0.0055,
                     "cubic": -0.77,
                     "quartic": 0.0055,
                 },
                 WallGo.PhaseInfo(
-                    temperature=51.0,  # nucleation temperature
+                    temperature=84.0,  # nucleation temperature
                     phaseLocation1=WallGo.Fields([0.]),
-                    phaseLocation2=WallGo.Fields([78.0865]),
+                    phaseLocation2=WallGo.Fields([82.5223]),
                 ),
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
