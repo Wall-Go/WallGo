@@ -1,6 +1,8 @@
 """
-A modified and simplified version of the Yukawa model.
-The model contains a scalar field and two out-of-equilibrium fermions.
+A simple model of a scalar coupled to an out-of-equilibrium
+fermion. The model is based on the Yukawa model, but the masses
+and interactions are treated as independent (this is not
+physical, but makes the computation simpler).
 """
 
 import sys
@@ -85,16 +87,16 @@ class SimpleModel(GenericModel):
         # points in fields.
         def psiMsqVacuum(fields: Fields) -> Fields:
             return self.modelParameters["mf"] + self.modelParameters[
-                "y"
+                "yf"
             ] * fields.getField(0)
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
-            return self.modelParameters["y"]
+            return self.modelParameters["yf"]
 
         def psiMsqThermal(T: float) -> float:
-            return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
+            return 1 / 16 * self.modelParameters["yf"] ** 2 * T**2
 
         psiL = Particle(
             "psiL",
@@ -275,7 +277,7 @@ class SimpleModelExample(WallGoExampleBase):
         parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
 
         parameters.addOrModifyParameter(
-            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
+            "mf2", 1 / 16 * wallGoModel.modelParameters["yf"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
             "ms2", wallGoModel.modelParameters["msqTh"]
@@ -347,17 +349,17 @@ class SimpleModelExample(WallGoExampleBase):
         output.append(
             ExampleInputPoint(
                 {
-                    "y": -0.18,
+                    "yf": -0.18,
                     "mf": 2.0,
-                    "gamma": -1.0,
-                    "kappa": 1.0,
-                    "msq": 2.,
-                    "msqTh": 0.0055,
+                    "gamma": -4.0,
+                    "kappa": -0.6,
+                    "msq": 1,
+                    "msqTh": 2./115.,
                     "cubic": -0.77,
                     "quartic": 0.0055,
                 },
                 WallGo.PhaseInfo(
-                    temperature=84.0,  # nucleation temperature
+                    temperature=51.0,  # nucleation temperature
                     phaseLocation1=WallGo.Fields([0.]),
                     phaseLocation2=WallGo.Fields([82.5223]),
                 ),
