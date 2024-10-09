@@ -47,6 +47,7 @@ class EOM:
         wallThicknessBounds: tuple[float, float],
         wallOffsetBounds: tuple[float, float],
         includeOffEq: bool = False,
+        forceEnergyConservation: bool = True,
         forceImproveConvergence: bool = False,
         errTol: float = 1e-3,
         maxIterations: int = 10,
@@ -79,6 +80,9 @@ class EOM:
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
+        forceEnergyConservation : bool, optional
+            If True, enforce energy-momentum conservation by solving for the appropriate
+            T and vpl profiles. If false, use fixed T and vpl profiles. Default is True.
         forceImproveConvergence : bool, optional
             If True, uses a slower algorithm that improves the convergence when
             computing the pressure. The improved algorithm is automatically used
@@ -112,6 +116,7 @@ class EOM:
         self.wallThicknessBounds = wallThicknessBounds
         self.wallOffsetBounds = wallOffsetBounds
         self.includeOffEq = includeOffEq
+        self.forceEnergyConservation = forceEnergyConservation
         self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
@@ -828,6 +833,15 @@ class EOM:
             Tplus,
             Tminus,
         )
+        temperatureProfile = None
+        velocityProfile = None
+        if not self.forceEnergyConservation:
+            # If conservation of energy and momentum is not enforced, fix the velocity
+            # and temperature to the following profiles, which are the profiles computed
+            # at the first iteration. Otherwise, they will be evaluated at each
+            # iteration.
+            temperatureProfile = boltzmannBackground.temperatureProfile[1:-1]
+            velocityProfile = boltzmannBackground.velocityProfile[1:-1]
 
         pressures = [pressure]
 
@@ -865,6 +879,8 @@ class EOM:
                     boltzmannResults,
                     Tplus,
                     Tminus,
+                    temperatureProfile=temperatureProfile,
+                    velocityProfile=velocityProfile,
                     multiplier=multiplier,
                 )
             else:
@@ -883,6 +899,8 @@ class EOM:
                     boltzmannResults,
                     Tplus,
                     Tminus,
+                    temperatureProfileInput=temperatureProfile,
+                    velocityProfileInput=velocityProfile,
                     multiplier=multiplier,
                 )
                 errorSolver = 0
