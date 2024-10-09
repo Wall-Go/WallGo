@@ -493,8 +493,15 @@ class WallGoManager:
             gridMomentumFalloffScale,
         )
 
+        collisionMultiplier = self.config.getfloat("BoltzmannSolver",
+                                                   "collisionMultiplier")
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
-        boltzmannSolver = BoltzmannSolver(grid, basisM="Cardinal", basisN="Chebyshev")
+        boltzmannSolver = BoltzmannSolver(
+            grid,
+            basisM="Cardinal",
+            basisN="Chebyshev",
+            collisionMultiplier=collisionMultiplier,
+            )
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
 
@@ -604,6 +611,8 @@ class WallGoManager:
         errTol = self.config.getfloat("EquationOfMotion", "errTol")
         maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
         pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
+        conserveEnergy = bool(self.config.getint(
+            "EquationOfMotion", "conserveEnergyMomentum"))
 
         wallThicknessBounds = (
             self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
@@ -626,6 +635,7 @@ class WallGoManager:
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,
+            forceEnergyConservation=conserveEnergy,
             forceImproveConvergence=False,
             errTol=errTol,
             maxIterations=maxIterations,

@@ -387,6 +387,7 @@ class WallGoExampleBase(ABC):
                         the example.
                         """
                     )
+                raise e
 
             if self.cmdArgs.includeDetonations:
                 print("\n=== Search for detonation solution ===")
