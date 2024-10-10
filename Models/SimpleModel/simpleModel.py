@@ -11,11 +11,10 @@ provided. The corresponding collisions can be obtained with
 simpleModelWithCollisionGeneration.py.
 """
 import pathlib
-from pathlib import Path
 import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
+import WallGo
 from WallGo import Fields, GenericModel, Particle
 
 
@@ -142,7 +141,7 @@ def main() -> None:
     manager = WallGo.WallGoManager()
     manager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
-    pathtoCollisions = pathlib.Path(__file__).resolve().parent/ Path(f"CollisionOutput_N11")
+    pathtoCollisions = pathlib.Path(__file__).resolve().parent/ pathlib.Path(f"CollisionOutput_N11")
     manager.setPathToCollisionData(pathtoCollisions)
 
     model = SimpleModel()

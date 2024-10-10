@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
+import WallGo
 
 # Add the SimpleModel folder to the path to import SimpleModel
 sys.path.append(str(pathlib.Path(__file__).resolve().parent))
