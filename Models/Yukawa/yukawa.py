@@ -288,10 +288,10 @@ class YukawaModelExample(WallGoExampleBase):
         parameters.addOrModifyParameter("v", 0.0)
 
         parameters.addOrModifyParameter(
-            "ms2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
+            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
-            "mf2",
+            "ms2",
             + wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
         )  # psi thermal mass^2 in units of T
