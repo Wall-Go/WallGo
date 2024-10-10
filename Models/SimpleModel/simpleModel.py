@@ -80,26 +80,14 @@ class SimpleModel(GenericModel):
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
-
-    def calculateLagrangianParameters(
-        self, inputParameters: dict[str, float]
-    ) -> dict[str, float]:
-        """
-        Calculate parameters for potential and collisions, based on the input
-        parameters. Here the model parameters are direct input.
-        """
-        modelParameters = {}
-
-        modelParameters = inputParameters
-
-        return modelParameters
     
     def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches
+        """Takes the new parameters from given input and caches
         them internally. These changes automatically propagate to the
         associated EffectivePotential, particle masses etc.
+        In this case the model paramaters are direct input.
         """
-        newParams = self.calculateLagrangianParameters(newInputParams)
+        newParams = newInputParams
         # Copy to the model dict, do NOT replace the reference.
         # This way the changes propagate to Veff and particles
         self.modelParameters.update(newParams)
