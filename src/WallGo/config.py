@@ -1,5 +1,4 @@
 import configparser
-import io
 from dataclasses import dataclass
 
 @dataclass
@@ -77,21 +76,6 @@ class ConfigEOM:
     """
 
 @dataclass
-class ConfigEffectivePotential:
-    """ Holds the config of the EffectivePotential class. """
-
-    potentialError: float = 1e-8
-    """
-    Relative accuracy at which the potential can be evaluated. If the potential is
-    polynomial, should be set at the machine precision ~1e-15.
-    """
-
-    phaseTracerTol: float = 1e-6
-    """
-    Desired accuracy of the phase tracer and the resulting FreeEnergy interpolation.
-    """
-
-@dataclass
 class ConfigHydrodynamics:
     """ Holds the config of the Hydrodynamics class. """
     
@@ -104,7 +88,7 @@ class ConfigHydrodynamics:
     relativeTol: float = 1e-6
     """ Relative tolerance used in Hydrodynamics. """
     
-    absolutionTol: float = 1e-10
+    absoluteTol: float = 1e-10
     """ Absolute tolerance used in Hydrodynamics. """
 
 @dataclass
@@ -121,6 +105,11 @@ class ConfigThermodynamics:
     """
     Maximum temperature used in the phase tracing (in units of the estimate for the
     maximum temperature obtained in the template model). 
+    """
+
+    phaseTracerTol: float = 1e-6
+    """
+    Desired accuracy of the phase tracer and the resulting FreeEnergy interpolation.
     """
 
 @dataclass
@@ -158,9 +147,6 @@ class Config:
     configEOM: ConfigEOM = ConfigEOM()
     """ Holds the config of the EOM class. """
 
-    configEffectivePotential: ConfigEffectivePotential = ConfigEffectivePotential()
-    """ Holds the config of the EffectivePotential class. """
-
     configHydrodynamics: ConfigHydrodynamics = ConfigHydrodynamics()
     """ Holds the config of the Hydrodynamics class. """
 
@@ -180,10 +166,64 @@ class Config:
             Path of the file where the configs are.
 
         """
+        parser = ConfigParser()
+        parser.readINI(filePath)
+        
+        # Read the Grid configs
+        self.configGrid = ConfigGrid(
+            spatialGridSize=parser.getint("Grid", "spatialGridSize"),
+            momentumGridSize=parser.getint("Grid", "momentumGridSize"),
+            ratioPointsWall=parser.getfloat("Grid", "ratioPointsWall"),
+            smoothing=parser.getfloat("Grid", "smoothing"),
+        )
+
+        # Read the EOM configs
+        self.configEOM = ConfigEOM(
+            errTol=parser.getfloat("EquationOfMotion", "errTol"),
+            pressRelErrTol=parser.getfloat("EquationOfMotion", "pressRelErrTol"),
+            maxIterations=parser.getint("EquationOfMotion", "maxIterations"),
+            conserveEnergyMomentum=parser.getboolean(
+                "EquationOfMotion", "conserveEnergyMomentum"),
+            wallThicknessLowerBound=parser.getfloat(
+                "EquationOfMotion", "wallThicknessLowerBound"),
+            wallThicknessUpperBound=parser.getfloat(
+                "EquationOfMotion", "wallThicknessUpperBound"),
+            wallOffsetLowerBound=parser.getfloat(
+                "EquationOfMotion", "wallOffsetLowerBound"),
+            wallOffsetUpperBound=parser.getfloat(
+                "EquationOfMotion", "wallOffsetUpperBound"),
+            vwMaxDeton=parser.getfloat("EquationOfMotion", "vwMaxDeton"),
+            nbrPointsMinDeton=parser.getint("EquationOfMotion", "nbrPointsMinDeton"),
+            nbrPointsMaxDeton=parser.getint("EquationOfMotion", "nbrPointsMaxDeton"),
+            overshootProbDeton=parser.getfloat("EquationOfMotion","overshootProbDeton"),
+        )
+
+        # Read the Hydrodynamics configs
+        self.configHydrodynamics = ConfigHydrodynamics(
+            tmin=parser.getfloat("Hydrodynamics", "tmin"),
+            tmax=parser.getfloat("Hydrodynamics", "tmax"),
+            relativeTol=parser.getfloat("Hydrodynamics", "relativeTol"),
+            absoluteTol=parser.getfloat("Hydrodynamics", "absoluteTol"),
+        )
+
+        # Read the Thermodynamics configs
+        self.configThermodynamics = ConfigThermodynamics(
+            tmin=parser.getfloat("Thermodynamics", "tmin"),
+            tmax=parser.getfloat("Thermodynamics", "tmax"),
+            phaseTracerTol=parser.getfloat("Thermodynamics", "phaseTracerTol"),
+        )
+
+        # Read the BoltzmannSolver configs
+        self.configBoltzmannSolver = ConfigBoltzmannSolver(
+            collisionMultiplier=parser.getfloat(
+                "BoltzmannSolver", "collisionMultiplier"),
+            basisM=parser.get("BoltzmannSolver", "basisM"),
+            basisN=parser.get("BoltzmannSolver", "basisN"),
+        )
 
 class ConfigParser:
-    """class Config -- Manages configuration variables for WallGo. This is essentially a wrapper around ConfigParser.
-    Accessing variables works as with ConfigParser: 
+    """class Config -- Manages configuration variables for WallGo. This is essentially a
+    wrapper around ConfigParser. Accessing variables works as with ConfigParser: 
     config.get("Section", "someKey")
     """
 
@@ -208,18 +248,5 @@ class ConfigParser:
     def getfloat(self, section: str, key: str) -> float:
         return self.config.getfloat(section, key)
     
-    def set(self, section: str, key: str, value: str):
-        self.config.set(section, key, value)
-    
     def getboolean(self, section: str, key: str) -> bool:
         return self.config.getboolean(section, key)
-    
-    def __str__(self) -> str:
-        """Print the content in similar format as an .ini file would be.
-        """
-
-        ## Do magic by writing the contents into a file-like string buffer
-        buffer = io.StringIO()
-        self.config.write(buffer)
-        
-        return buffer.getvalue()
