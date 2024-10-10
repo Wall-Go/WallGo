@@ -5,6 +5,7 @@ c.f. 2310.02308
 
 import sys
 import pathlib
+import argparse
 from typing import TYPE_CHECKING
 import numpy as np
 
@@ -237,9 +238,20 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.json"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa.json"
         )
+
+     # ~ Begin WallGoExampleBase interface
+    def initCommandLineArgs(self) -> argparse.ArgumentParser:
+        """Non-abstract override to add a SM + singlet specific cmd option"""
+
+        argParser: argparse.ArgumentParser = super().initCommandLineArgs()
+        return argParser
+
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
+        """Returns the path to the directory with collisions."""
+        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
+
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
@@ -260,46 +272,13 @@ class YukawaModelExample(WallGoExampleBase):
         # This is optional; by default the seed is 0.
         WallGoCollision.setSeed(0)
 
-        collisionModelDefinition = (
-            WallGo.collisionHelpers.generateCollisionModelDefinition(wallGoModel)
-        )
+        # The configuration of the collision module is located in a separate module
+        # (same directory) to avoid bloating this file. Import and use it here.
+        from exampleCollisionDefs import (
+            setupCollisionModel_Yukawa,
+        )  # pylint: disable = C0415
 
-        # Add in-equilibrium particles that appear in collision processes
-        phiParticle = WallGoCollision.ParticleDescription()
-        phiParticle.name = "phi"
-        phiParticle.index = 0
-        phiParticle.bInEquilibrium = True
-        phiParticle.bUltrarelativistic = True
-        phiParticle.type = WallGoCollision.EParticleType.eBoson
-        # mass-sq function not required or used for UR particles,
-        # and it cannot be field-dependent for collisions.
-        # Backup of what the vacuum mass was intended to be:
-        """
-        msqVacuum=lambda fields: (
-                msq + g * fields.getField(0) + lam / 2 * fields.getField(0) ** 2
-            ),
-        """
-
-        parameters = WallGoCollision.ModelParameters()
-
-        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["y"])
-        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
-        parameters.addOrModifyParameter("lam", wallGoModel.modelParameters["lam"])
-        parameters.addOrModifyParameter("v", 0.0)
-
-        parameters.addOrModifyParameter(
-            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
-        )  # phi thermal mass^2 in units of T
-        parameters.addOrModifyParameter(
-            "ms2",
-            + wallGoModel.modelParameters["lam"] / 24.0
-            + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
-        )  # psi thermal mass^2 in units of T
-
-        collisionModelDefinition.defineParticleSpecies(phiParticle)
-        collisionModelDefinition.defineParameters(parameters)
-
-        collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
+        collisionModel = setupCollisionModel_Yukawa(wallGoModel.modelParameters)
 
         return collisionModel
     
