@@ -87,9 +87,11 @@ class SimpleModel(GenericModel):
         Calculate parameters for potential and collisions, based on the input
         parameters. Here the model parameters are direct input.
         """
-        self.modelParameters = inputParameters
+        modelParameters = {}
 
-        return self.modelParameters
+        modelParameters = inputParameters
+
+        return modelParameters
     
     def updateModel(self, newInputParams: dict[str, float]) -> None:
         """Computes new Lagrangian parameters from given input and caches
@@ -130,19 +132,7 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
         self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
         """
-        Evaluate the effective potential.
-
-        Parameters
-        ----------
-        fields: Fields
-            The field configuration
-        temperature: float
-            The temperature
-
-        Returns
-        ----------
-        potentialTotal: float | np.ndarray
-            The value of the effective potential
+        Evaluate the effective potential as a function of the fields and temperature.
         """
         # getting the field from the list of fields (here just of length 1)
         fields = WallGo.Fields(fields)
@@ -152,10 +142,10 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
         f0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
 
         # coefficients of the temperature and field dependent terms
-        msq = self.owner.modelParameters["msq"]
-        msqTh = self.owner.modelParameters["msqTh"]
-        cubic = self.owner.modelParameters["cubic"]
-        quartic = self.owner.modelParameters["quartic"]
+        msq = self.modelParameters["msq"]
+        msqTh = self.modelParameters["msqTh"]
+        cubic = self.modelParameters["cubic"]
+        quartic = self.modelParameters["quartic"]
 
         potentialTotal = (
             f0
@@ -184,22 +174,13 @@ def main() -> None:
                     }
     
     model.updateModel(inputParameters)
-
-    phaseInfo = WallGo.PhaseInfo(
+    
+    manager.setupThermodynamicsHydrodynamics(
+                WallGo.PhaseInfo(
                     temperature=51.0,  # nucleation temperature
                     phaseLocation1=WallGo.Fields([0.]),
                     phaseLocation2=WallGo.Fields([82.5223]),
-                )
-    
-    veffDerivativeScales = WallGo.VeffDerivativeSettings(
-                    temperatureVariationScale=1.0,
-                    fieldValueVariationScale=[
-                        50.0,
-                    ],
                 ),
-    
-    manager.setupThermodynamicsHydrodynamics(
-                phaseInfo,
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
                     fieldValueVariationScale=[
@@ -208,32 +189,34 @@ def main() -> None:
                 )
             )
     
-    momentumGridSize = 11
-    pathtoCollisions = pathlib.Path(__file__).resolve().parent/ Path(f"CollisionOutput_N{momentumGridSize}")
+    manager.config.set("PolynomialGrid", "spatialGridSize", "20")
     
+    pathtoCollisions = pathlib.Path(__file__).resolve().parent/ Path(f"CollisionOutput_N11")
     manager.setPathToCollisionData(pathtoCollisions)
     
     # ---- Solve wall speed in Local Thermal Equilibrium (LTE) approximation
     vwLTE = manager.wallSpeedLTE()
     print(f"LTE wall speed:    {vwLTE:.6f}")
 
-    results = manager.solveWall(WallGo.WallSolverSettings(
+    solverSettings = WallGo.WallSolverSettings(
                     bIncludeOffEquilibrium=False,
                     meanFreePathScale=1000.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 )
+
+    results = manager.solveWall(
+                    solverSettings
     )
 
-    print(f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity}")
+    print(f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity:.6f}")
 
-    results = manager.solveWall(WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=True,
-                    meanFreePathScale=1000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
-                )
+    solverSettings.bIncludeOffEquilibrium = True
+
+    results = manager.solveWall(
+                    solverSettings
     )
 
-    print(f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity}")
+    print(f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity:.6f}")
 
 
 

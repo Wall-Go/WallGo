@@ -136,6 +136,8 @@ class SimpleModel(GenericModel):
             A dictionary of calculated model parameters.
         """
 
+        modelParameters = {}
+
         # Parameters for "phi" field
         modelParameters = inputParameters
 
