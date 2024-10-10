@@ -38,6 +38,7 @@ class SimpleModel(GenericModel):
 
     def getEffectivePotential(self) -> "EffectivePotentialSimple":
         return self.effectivePotential
+    # ~
 
     def defineParticles(self) -> None:
         """
