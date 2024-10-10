@@ -46,17 +46,11 @@ class ConfigEOM:
     results.
     """
 
-    wallThicknessLowerBound: float = 0.1
-    """ Lower bound on wall thickness (in units of 1/Tnucl). """
+    wallThicknessBounds: tuple[float,float] = (0.1, 100.0)
+    """ Lower and upper bounds on wall thickness (in units of 1/Tnucl). """
 
-    wallThicknessUpperBound: float = 100.0
-    """ Upper bound on wall thickness (in units of 1/Tnucl). """
-
-    wallOffsetLowerBound: float = -10.0
-    """ Lower bound on wall offset. """
-
-    wallOffsetUpperBound: float = 10.0
-    """ Upper bound on wall offset. """
+    wallOffsetBounds: tuple[float,float] = (-10.0, 10.0)
+    """ Lower and upper bounds on wall offset. """
 
     ## The following parameters are only used for detonation solutions ##
     vwMaxDeton: float = 0.99
@@ -184,14 +178,12 @@ class Config:
             maxIterations=parser.getint("EquationOfMotion", "maxIterations"),
             conserveEnergyMomentum=parser.getboolean(
                 "EquationOfMotion", "conserveEnergyMomentum"),
-            wallThicknessLowerBound=parser.getfloat(
-                "EquationOfMotion", "wallThicknessLowerBound"),
-            wallThicknessUpperBound=parser.getfloat(
-                "EquationOfMotion", "wallThicknessUpperBound"),
-            wallOffsetLowerBound=parser.getfloat(
-                "EquationOfMotion", "wallOffsetLowerBound"),
-            wallOffsetUpperBound=parser.getfloat(
-                "EquationOfMotion", "wallOffsetUpperBound"),
+            wallThicknessBounds=(
+                parser.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
+                parser.getfloat("EquationOfMotion", "wallThicknessUpperBound")),
+            wallOffsetBounds=(
+                parser.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
+                parser.getfloat("EquationOfMotion", "wallOffsetUpperBound")),
             vwMaxDeton=parser.getfloat("EquationOfMotion", "vwMaxDeton"),
             nbrPointsMinDeton=parser.getint("EquationOfMotion", "nbrPointsMinDeton"),
             nbrPointsMaxDeton=parser.getint("EquationOfMotion", "nbrPointsMaxDeton"),

@@ -1,7 +1,7 @@
 """
 Initialisation for PotentialTools module, includes loading of Jb/Jf integral data
 """
-from ..Config import Config
+from ..config import ConfigParser
 from .effectivePotentialNoResum import EffectivePotentialNoResum, EImaginaryOption
 from .integrals import Integrals, JbIntegral, JfIntegral
 from .utils import getSafePathToResource
@@ -10,7 +10,7 @@ from .utils import getSafePathToResource
 
 _bInitialized = False  # pylint: disable=invalid-name
 """Configuration settings, using class from WallGo"""
-config = Config()
+config = ConfigParser()
 
 """Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by
 replacing their direct computation with precomputed interpolation tables."""

@@ -276,7 +276,12 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     # ~ EffectivePotential interface
     fieldCount = 2
     """How many classical background fields"""
-    # ~
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
@@ -636,10 +641,10 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
-    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+    def updateConfig(self, inOutConfig: "WallGo.Config") -> None:
         """Singlet example uses spatial grid size = 20"""
-        super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        super().updateConfig(inOutConfig)
+        inOutConfig.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]

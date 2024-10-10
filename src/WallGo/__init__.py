@@ -24,7 +24,7 @@ from .equationOfMotion import EOM
 from .results import WallGoResults
 from .wallGoManager import WallGoManager, WallSolverSettings
 
-from .Config import Config
+from .config import Config
 from .WallGoUtils import getSafePathToResource
 
 
@@ -58,13 +58,7 @@ def isCollisionModuleAvailable() -> bool:
     """
     return _bCollisionModuleAvailable
 
-
-defaultConfigFile = getSafePathToResource("Config/WallGoDefaults.ini")
-
 _bInitialized = False  # pylint: disable=invalid-name
-
-"""Configuration settings for WallGo"""
-config = Config()
 
 # Define a separate initializer function that does NOT get called automatically.
 # This is good for preventing heavy startup operations from running if the user just
@@ -76,13 +70,8 @@ def _initializeInternal() -> None:
     """
 
     global _bInitialized  # pylint: disable=invalid-name
-    global config  # pylint: disable=invalid-name
 
     if not _bInitialized:
-        # read default configs
-        config.readINI(getSafePathToResource("Config/WallGoDefaults.ini"))
-        config.readINI(getSafePathToResource("Config/CollisionDefaults.ini"))
-        # print(config)
         _bInitialized = True
     else:
         raise RuntimeWarning("Warning: Repeated call to WallGo._initializeInternal()")
