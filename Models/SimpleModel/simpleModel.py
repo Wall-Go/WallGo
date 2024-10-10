@@ -1,8 +1,14 @@
 """
-A simple model of a scalar coupled to an out-of-equilibrium
-fermion. The model is based on the Yukawa model, but the masses
-and interactions are treated as independent (this is not
-physical, but makes the computation simpler).
+A simple model of a scalar coupled to an out-of-equilibrium fermion. 
+The model uses the same matrix elements as the Yukawa model,
+but the potential has been modified (the coefficients no longer
+correspond to a real physical model).
+The couplings entering in the matrix elements are also chosen differently
+from the real Yukawa model.
+
+This model file only computes the wall velocity if the collision terms are
+provided. The corresponding collisions can be obtained with 
+simpleModelWithCollisionGeneration.py.
 """
 import pathlib
 from pathlib import Path
@@ -80,7 +86,7 @@ class SimpleModel(GenericModel):
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
-        
+
 
 class EffectivePotentialSimple(WallGo.EffectivePotential):
     """
