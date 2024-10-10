@@ -72,10 +72,11 @@ class WallGoManager:
     details from the user.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self) -> None:
         """"""
 
-        self.config = config
+        # Initialise the configs with the default values
+        self.config = Config()
 
         # default to working directory
         self.collisionDirectory = pathlib.Path.cwd()
@@ -88,6 +89,12 @@ class WallGoManager:
         self.hydrodynamics: Hydrodynamics
         self.phasesAtTn: PhaseInfo
         self.thermodynamics: Thermodynamics
+
+    def getMomentumGridSize(self) -> int:
+        """
+        Returns the momentum grid size.
+        """
+        return self.config.configGrid.momentumGridSize
 
     def setupThermodynamicsHydrodynamics(
         self,

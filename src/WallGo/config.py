@@ -160,85 +160,107 @@ class Config:
             Path of the file where the configs are.
 
         """
-        parser = ConfigParser()
-        parser.readINI(filePath)
+        parser = configparser.ConfigParser()
+        parser.optionxform = str
+        parser.read(filePath)
         
         # Read the Grid configs
-        self.configGrid = ConfigGrid(
-            spatialGridSize=parser.getint("Grid", "spatialGridSize"),
-            momentumGridSize=parser.getint("Grid", "momentumGridSize"),
-            ratioPointsWall=parser.getfloat("Grid", "ratioPointsWall"),
-            smoothing=parser.getfloat("Grid", "smoothing"),
-        )
+        if 'Grid' in parser.sections():
+            keys = parser['Grid'].keys()
+            if 'spatialGridSize' in keys:
+                self.configGrid.spatialGridSize = parser.getint("Grid",
+                                                                "spatialGridSize")
+            if 'momentumGridSize' in keys:
+                self.configGrid.moemtnumGridSize = parser.getint("Grid",
+                                                                "momentumGridSize")
+            if 'ratioPointsWall' in keys:
+                self.configGrid.ratioPointsWall = parser.getfloat("Grid",
+                                                                "ratioPointsWall")
+            if 'smoothing' in keys:
+                self.configGrid.smoothing = parser.getfloat("Grid", "smoothing")
 
         # Read the EOM configs
-        self.configEOM = ConfigEOM(
-            errTol=parser.getfloat("EquationOfMotion", "errTol"),
-            pressRelErrTol=parser.getfloat("EquationOfMotion", "pressRelErrTol"),
-            maxIterations=parser.getint("EquationOfMotion", "maxIterations"),
-            conserveEnergyMomentum=parser.getboolean(
-                "EquationOfMotion", "conserveEnergyMomentum"),
-            wallThicknessBounds=(
-                parser.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
-                parser.getfloat("EquationOfMotion", "wallThicknessUpperBound")),
-            wallOffsetBounds=(
-                parser.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
-                parser.getfloat("EquationOfMotion", "wallOffsetUpperBound")),
-            vwMaxDeton=parser.getfloat("EquationOfMotion", "vwMaxDeton"),
-            nbrPointsMinDeton=parser.getint("EquationOfMotion", "nbrPointsMinDeton"),
-            nbrPointsMaxDeton=parser.getint("EquationOfMotion", "nbrPointsMaxDeton"),
-            overshootProbDeton=parser.getfloat("EquationOfMotion","overshootProbDeton"),
-        )
+        if 'EquationOfMotion' in parser.sections():
+            keys = parser['EquationOfMotion'].keys()
+            if 'errTol' in keys:
+                self.configEOM.errTol = parser.getfloat("EquationOfMotion", "errTol")
+            if 'pressRelErrTol' in keys:
+                self.configEOM.pressRelErrTol = parser.getfloat("EquationOfMotion",
+                                                                "pressRelErrTol")
+            if 'maxIterations' in keys:
+                self.configEOM.maxIterations = parser.getint("EquationOfMotion",
+                                                             "maxIterations")
+            if 'conserveEnergyMomentum' in keys:
+                self.configEOM.conserveEnergyMomentum = parser.getboolean(
+                    "EquationOfMotion",
+                    "conserveEnergyMomentum")
+            if 'wallThicknessLowerBound' in keys:
+                self.configEOM.wallThicknessBounds[0] = parser.getfloat(
+                    "EquationOfMotion",
+                    "wallThicknessLowerBound")
+            if 'wallThicknessUpperBound' in keys:
+                self.configEOM.wallThicknessBounds[1] = parser.getfloat(
+                    "EquationOfMotion",
+                    "wallThicknessUpperBound")
+            if 'wallOffsetLowerBound' in keys:
+                self.configEOM.wallOffsetBounds[0] = parser.getfloat(
+                    "EquationOfMotion",
+                    "wallOffsetLowerBound")
+            if 'wallOffsetUpperBound' in keys:
+                self.configEOM.wallOffsetBounds[1] = parser.getfloat(
+                    "EquationOfMotion",
+                    "wallOffsetUpperBound")
+            if 'vwMaxDeton' in keys:
+                self.configEOM.vwMaxDeton = parser.getfloat("EquationOfMotion",
+                                                            "vwMaxDeton")
+            if 'nbrPointsMinDeton' in keys:
+                self.configEOM.nbrPointsMinDeton = parser.getint("EquationOfMotion",
+                                                                 "nbrPointsMinDeton")
+            if 'nbrPointsMaxDeton' in keys:
+                self.configEOM.nbrPointsMaxDeton = parser.getint("EquationOfMotion",
+                                                                 "nbrPointsMaxDeton")
+            if 'overshootProbDeton' in keys:
+                self.configEOM.overshootProbDeton = parser.getfloat("EquationOfMotion",
+                                                                "overshootProbDeton")
 
         # Read the Hydrodynamics configs
-        self.configHydrodynamics = ConfigHydrodynamics(
-            tmin=parser.getfloat("Hydrodynamics", "tmin"),
-            tmax=parser.getfloat("Hydrodynamics", "tmax"),
-            relativeTol=parser.getfloat("Hydrodynamics", "relativeTol"),
-            absoluteTol=parser.getfloat("Hydrodynamics", "absoluteTol"),
-        )
+        if 'Hydrodynamics' in parser.sections():
+            keys = parser['Hydrodynamics'].keys()
+            if 'tmin' in keys:
+                self.configHydrodynamics.tmin = parser.getfloat("Hydrodynamics", "tmin")
+            if 'tmax' in keys:
+                self.configHydrodynamics.tmax = parser.getfloat("Hydrodynamics", "tmax")
+            if 'relativeTol' in keys:
+                self.configHydrodynamics.relativeTol = parser.getfloat("Hydrodynamics",
+                                                                       "relativeTol")
+            if 'absoluteTol' in keys:
+                self.configHydrodynamics.absoluteTol = parser.getfloat("Hydrodynamics",
+                                                                       "absoluteTol")
 
         # Read the Thermodynamics configs
-        self.configThermodynamics = ConfigThermodynamics(
-            tmin=parser.getfloat("Thermodynamics", "tmin"),
-            tmax=parser.getfloat("Thermodynamics", "tmax"),
-            phaseTracerTol=parser.getfloat("Thermodynamics", "phaseTracerTol"),
-        )
+        if 'Thermodynamics' in parser.sections():
+            keys = parser['Thermodynamics'].keys()
+            if 'tmin' in keys:
+                self.configThermodynamics.tmin = parser.getfloat("Thermodynamics",
+                                                                  "tmin")
+            if 'tmax' in keys:
+                self.configThermodynamics.tmax = parser.getfloat("Thermodynamics",
+                                                                 "tmax")
+            if 'phaseTracerTol' in keys:
+                self.configThermodynamics.phaseTracerTol = parser.getfloat(
+                    "Thermodynamics",
+                    "phaseTracerTol")
 
         # Read the BoltzmannSolver configs
-        self.configBoltzmannSolver = ConfigBoltzmannSolver(
-            collisionMultiplier=parser.getfloat(
-                "BoltzmannSolver", "collisionMultiplier"),
-            basisM=parser.get("BoltzmannSolver", "basisM"),
-            basisN=parser.get("BoltzmannSolver", "basisN"),
-        )
-
-class ConfigParser:
-    """class Config -- Manages configuration variables for WallGo. This is essentially a
-    wrapper around ConfigParser. Accessing variables works as with ConfigParser: 
-    config.get("Section", "someKey")
-    """
-
-    configParser: configparser.ConfigParser
-
-    def __init__(self):
-
-        self.config = configparser.ConfigParser()
-        self.config.optionxform = str ## preserve case 
-
-
-    def readINI(self, filePath: str):
-        self.config.read(filePath)
-
-
-    def get(self, section: str, key: str) -> any:
-        return self.config.get(section, key)
-    
-    def getint(self, section: str, key: str) -> int:
-        return self.config.getint(section, key)
-    
-    def getfloat(self, section: str, key: str) -> float:
-        return self.config.getfloat(section, key)
-    
-    def getboolean(self, section: str, key: str) -> bool:
-        return self.config.getboolean(section, key)
+        if 'BoltzmannSolver' in parser.sections():
+            keys = parser['BoltzmannSolver'].keys()
+            if 'collisionMultiplier' in keys:
+                self.configBoltzmannSolver.collisionMultiplier = parser.getfloat(
+                    "BoltzmannSolver",
+                    "collisionMultiplier")
+            if 'basisM' in keys:
+                self.configBoltzmannSolver.basisM = parser.get("BoltzmannSolver",
+                                                               "basisM")
+            if 'basisN' in keys:
+                self.configBoltzmannSolver.basisN = parser.get("BoltzmannSolver",
+                                                               "basisN")

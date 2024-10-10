@@ -162,12 +162,14 @@ class WallGoExampleBase(ABC):
         """
         return
 
-    def updateConfig(self, inOutConfig: "WallGo.Config") -> None:
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Override to do model-specific configuration of the WallGo manager."""
 
         # Override basis size if it was passed via command line
         if self.cmdArgs.momentumGridSize > 0:
-            inOutConfig.configGrid.momentumGridSize = self.cmdArgs.momentumGridSize
+            inOutManager.config.configGrid.momentumGridSize = (
+                self.cmdArgs.momentumGridSize
+            )
 
     def processResultsForBenchmark(  # pylint: disable=W0613
         self,
@@ -206,13 +208,11 @@ class WallGoExampleBase(ABC):
         # store the args so that subclasses can access them if needed
         self.cmdArgs = argParser.parse_args()
 
-        # Initialise the configs
-        config = WallGo.Config()
-        # Do model-dependent configuration
-        self.updateConfig(config)
-
         # Initialise the manager
-        manager = WallGo.WallGoManager(config)
+        manager = WallGo.WallGoManager()
+
+        # Update the configs
+        self.configureManager(manager)
 
         model = self.initWallGoModel()
         manager.registerModel(model)

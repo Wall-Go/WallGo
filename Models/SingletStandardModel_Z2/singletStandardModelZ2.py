@@ -641,10 +641,10 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
-    def updateConfig(self, inOutConfig: "WallGo.Config") -> None:
+    def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Singlet example uses spatial grid size = 20"""
-        super().updateConfig(inOutConfig)
-        inOutConfig.configGrid.spatialGridSize = 20
+        super().configureManager(inOutManager)
+        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]

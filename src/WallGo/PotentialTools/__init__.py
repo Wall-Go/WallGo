@@ -1,7 +1,7 @@
 """
 Initialisation for PotentialTools module, includes loading of Jb/Jf integral data
 """
-from ..config import ConfigParser
+import configparser
 from .effectivePotentialNoResum import EffectivePotentialNoResum, EImaginaryOption
 from .integrals import Integrals, JbIntegral, JfIntegral
 from .utils import getSafePathToResource
@@ -10,7 +10,8 @@ from .utils import getSafePathToResource
 
 _bInitialized = False  # pylint: disable=invalid-name
 """Configuration settings, using class from WallGo"""
-config = ConfigParser()
+config = configparser.ConfigParser()
+config.optionxform = str
 
 """Default integral objects for WallGo. Calling WallGo.initialize() optimizes these by
 replacing their direct computation with precomputed interpolation tables."""
@@ -34,7 +35,7 @@ def _initializeInternal() -> None:
     if not _bInitialized:
 
         ## read default config
-        config.readINI(getSafePathToResource("Config/PotentialToolsDefaults.ini"))
+        config.read(getSafePathToResource("Config/PotentialToolsDefaults.ini"))
 
         # print(config)
 
