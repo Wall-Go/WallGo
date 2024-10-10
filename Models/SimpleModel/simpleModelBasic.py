@@ -70,14 +70,6 @@ class SimpleModel(GenericModel):
         particles that are relevant for the Boltzmann equations.
         The particles relevant to the effective potential are
         included independently.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        ----------
-        None
         """
         self.clearParticles()
 
@@ -124,19 +116,9 @@ class SimpleModel(GenericModel):
     ) -> dict[str, float]:
         """
         Calculate Lagrangian parameters based on the input parameters.
-
-        Parameters
-        ----------
-        inputParameters: dict[str, float]
-            A dictionary of input parameters for the model.
-
-        Returns
-        ----------
-        modelParameters: dict[str, float]
-            A dictionary of calculated model parameters.
+        Here the model parameters are direct input.
         """
-
-        # Parameters for "phi" field
+        # Parameters for the potential and the collisions
         modelParameters = inputParameters
 
         return modelParameters
@@ -230,11 +212,6 @@ class SimpleModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
 
-        # We take the matrix elements from the Yukawa model
-        self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.json"
-        )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
@@ -247,80 +224,6 @@ class SimpleModelExample(WallGoExampleBase):
         self, wallGoModel: "SimpleModel"
     ) -> "WallGoCollision.PhysicsModel":
         """Initialize the Collision model and set the seed."""
-
-        import WallGoCollision  # pylint: disable = C0415
-
-        # Collision integrations utilize Monte Carlo methods, so RNG is involved.
-        # We can set the global seed for collision integrals as follows.
-        # This is optional; by default the seed is 0.
-        WallGoCollision.setSeed(0)
-
-        collisionModelDefinition = (
-            WallGo.collisionHelpers.generateCollisionModelDefinition(wallGoModel)
-        )
-
-        # Add in-equilibrium particles that appear in collision processes
-        phiParticle = WallGoCollision.ParticleDescription()
-        phiParticle.name = "phi"
-        phiParticle.index = 0
-        phiParticle.bInEquilibrium = True
-        phiParticle.bUltrarelativistic = True
-        phiParticle.type = WallGoCollision.EParticleType.eBoson
-        # mass-sq function not required or used for UR particles,
-        # and it cannot be field-dependent for collisions.
-
-        parameters = WallGoCollision.ModelParameters()
-
-        # We use a different "y" in the collisions than the Yukawa model,
-        # therefore, we rename it to kappa
-        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["kappa"])
-        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
-
-        parameters.addOrModifyParameter(
-            "mf2", 1 / 16 * wallGoModel.modelParameters["yf"] ** 2
-        )  # phi thermal mass^2 in units of T
-        parameters.addOrModifyParameter(
-            "ms2", wallGoModel.modelParameters["msqTh"]
-        )  # psi thermal mass^2 in units of T
-
-        collisionModelDefinition.defineParticleSpecies(phiParticle)
-        collisionModelDefinition.defineParameters(parameters)
-
-        collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
-
-        return collisionModel
-    
-    def configureCollisionIntegration(
-        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
-    ) -> None:
-        """Non-abstract override"""
-
-        import WallGoCollision  # pylint: disable = C0415
-
-        """We can also configure various verbosity settings that are useful when
-        you want to see what is going on in long-running integrations. These 
-        include progress reporting and time estimates, as well as a full result dump
-        of each individual integral to stdout. By default these are all disabled. 
-        Here we enable some for demonstration purposes.
-        """
-        verbosity = WallGoCollision.CollisionTensorVerbosity()
-        verbosity.bPrintElapsedTime = (
-            True  # report total time when finished with all integrals
-        )
-
-        """Progress report when this percentage of total integrals (approximately)
-        have been computed. Note that this percentage is per-particle-pair, ie. 
-        each (particle1, particle2) pair reports when this percentage of their
-        own integrals is done. Note also that in multithreaded runs the 
-        progress tracking is less precise.
-        """
-        verbosity.progressReportPercentage = 0.25
-
-        # Print every integral result to stdout? This is very slow and
-        # verbose, intended only for debugging purposes
-        verbosity.bPrintEveryElement = False
-
-        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """We use a spatial grid size = 20"""
