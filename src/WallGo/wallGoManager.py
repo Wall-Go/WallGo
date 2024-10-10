@@ -608,10 +608,18 @@ class WallGoManager:
         """
         numberOfFields = self.model.fieldCount
 
+<<<<<<< HEAD
         errTol = self.config.configEOM.errTol
         maxIterations = self.config.configEOM.maxIterations
         pressRelErrTol = self.config.configEOM.pressRelErrTol
         conserveEnergy = self.config.configEOM.conserveEnergyMomentum
+=======
+        errTol = self.config.getfloat("EquationOfMotion", "errTol")
+        maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
+        pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
+        conserveEnergy = bool(self.config.getint(
+            "EquationOfMotion", "conserveEnergyMomentum"))
+>>>>>>> main
 
         wallThicknessBounds = self.config.configEOM.wallThicknessBounds
         wallOffsetBounds = self.config.configEOM.wallOffsetBounds

@@ -367,10 +367,13 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
 
-        return degreesOfFreedom * np.array(
-            massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
+        # Note that we are taking the absolute value of the mass in the log here,
+        # instead of using EImaginaryOption = ABS_ARGUMENT, because we do not 
+        # want the absolute value in the product of massSq ans rgScale
+        return degreesOfFreedom*np.array( 
+            massSq * massSq * (np.log(np.abs(massSq / rgScale**2)) - c)
             + 2 * massSq * rgScale**2
-        )
+        ) / (64 * np.pi * np.pi)
 
     def fermionInformation(self, fields: Fields) -> tuple[
         np.ndarray,
@@ -530,6 +533,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
         # Scalar masses including thermal contribution
+        # Need to take the absolute value because we can not
+        # use EImaginaryOption = ABS_ARGUMENT for the full potential
         mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
         mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
