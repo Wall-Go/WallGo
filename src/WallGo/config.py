@@ -1,5 +1,7 @@
+""" Dataclasses to store the configs """
+
 import configparser
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class ConfigGrid:
@@ -46,10 +48,10 @@ class ConfigEOM:
     results.
     """
 
-    wallThicknessBounds: tuple[float,float] = (0.1, 100.0)
+    wallThicknessBounds: list[float] = field(default_factory=lambda: [0.1, 100.0])
     """ Lower and upper bounds on wall thickness (in units of 1/Tnucl). """
 
-    wallOffsetBounds: tuple[float,float] = (-10.0, 10.0)
+    wallOffsetBounds: list[float] = field(default_factory=lambda: [-10.0, 10.0])
     """ Lower and upper bounds on wall offset. """
 
     ## The following parameters are only used for detonation solutions ##
@@ -72,29 +74,29 @@ class ConfigEOM:
 @dataclass
 class ConfigHydrodynamics:
     """ Holds the config of the Hydrodynamics class. """
-    
+
     tmin: float = 0.01
     """ Minimum temperature that is probed in Hydrodynamics (in units of Tnucl). """
-    
+
     tmax: float = 10.0
     """ Maximum temperature that is probed in Hydrodynamics (in units of Tnucl). """
-    
+
     relativeTol: float = 1e-6
     """ Relative tolerance used in Hydrodynamics. """
-    
+
     absoluteTol: float = 1e-10
     """ Absolute tolerance used in Hydrodynamics. """
 
 @dataclass
 class ConfigThermodynamics:
     """ Holds the config of the Hydrodynamics class. """
-    
+
     tmin: float = 0.8
     """
     Minimum temperature used in the phase tracing (in units of the estimate for the
     minimum temperature obtained in the template model). 
     """
-    
+
     tmax: float = 1.2
     """
     Maximum temperature used in the phase tracing (in units of the estimate for the
@@ -109,13 +111,13 @@ class ConfigThermodynamics:
 @dataclass
 class ConfigBoltzmannSolver:
     """ Holds the config of the BoltzmannSolver class. """
-    
+
     basisM: str = 'Cardinal'
     """ The position polynomial basis type, either 'Cardinal' or 'Chebyshev'. """
-    
+
     basisN: str = 'Chebyshev'
     """ The momentum polynomial basis type, either 'Cardinal' or 'Chebyshev'. """
-    
+
     collisionMultiplier: float = 1.0
     """
     Factor multiplying the collision term in the Boltzmann equation. Can be used for
@@ -163,7 +165,7 @@ class Config:
         parser = configparser.ConfigParser()
         parser.optionxform = str
         parser.read(filePath)
-        
+
         # Read the Grid configs
         if 'Grid' in parser.sections():
             keys = parser['Grid'].keys()
@@ -171,7 +173,7 @@ class Config:
                 self.configGrid.spatialGridSize = parser.getint("Grid",
                                                                 "spatialGridSize")
             if 'momentumGridSize' in keys:
-                self.configGrid.moemtnumGridSize = parser.getint("Grid",
+                self.configGrid.momentumGridSize = parser.getint("Grid",
                                                                 "momentumGridSize")
             if 'ratioPointsWall' in keys:
                 self.configGrid.ratioPointsWall = parser.getfloat("Grid",

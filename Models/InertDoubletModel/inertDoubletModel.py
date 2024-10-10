@@ -249,6 +249,16 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
     For this benchmark model we use the 4D potential without high-temperature expansion.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: InertDoubletModel):
         """
         Initialize the EffectivePotentialIDM.
@@ -268,11 +278,6 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # contributions to ideal gas pressure
         self.numBosonDof = 32
         self.numFermionDof = 90
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
 
     def evaluate(
         self, fields: Fields, temperature: float
@@ -728,9 +733,9 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Inert doublet model example uses spatial grid size = 20"""
+        """Singlet example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]

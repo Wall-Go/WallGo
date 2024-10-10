@@ -231,6 +231,16 @@ class EffectivePotentialNSinglets(EffectivePotential):
     This means :math:`\lambda_{ij}=0` when :math:`i,j>0` and :math:`i\neq j`.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 3
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: NSinglets, fieldCount: int) -> None:
         """
         Initialize the EffectivePotentialNSinglets.
@@ -247,9 +257,6 @@ class EffectivePotentialNSinglets(EffectivePotential):
         # light particle contributions to ideal gas pressure
         self.numBosonDof = 27 + fieldCount
         self.numFermionDof = 90
-
-    # ~ EffectivePotential interface
-    fieldCount = 3
 
     def canTunnel(self, tunnelingTemperature: float = None) -> bool:
         """
@@ -569,9 +576,12 @@ class NSingletsModelExample(WallGoExampleBase):
         None # TODO
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Singlet example uses spatial grid size = 25"""
+        """We load the configs from a file for this example."""
+        inOutManager.config.loadConfigFromFile(pathlib.Path(
+            self.exampleBaseDirectory
+            / "manySingletsConfig.ini"
+        ))
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "25")
 
     def updateModelParameters(
         self, model: "NSinglets", inputParameters: dict[str, float]
