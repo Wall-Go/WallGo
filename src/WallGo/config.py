@@ -138,19 +138,22 @@ class Config:
     It can also load the configs from an .ini file.
     """
 
-    configGrid: ConfigGrid = ConfigGrid()
+    configGrid: ConfigGrid = field(default_factory=lambda: ConfigGrid())
     """ Holds the config of the Grid3Scales class. """
 
-    configEOM: ConfigEOM = ConfigEOM()
+    configEOM: ConfigEOM = field(default_factory=lambda: ConfigEOM())
     """ Holds the config of the EOM class. """
 
-    configHydrodynamics: ConfigHydrodynamics = ConfigHydrodynamics()
+    configHydrodynamics: ConfigHydrodynamics = field(
+        default_factory=lambda: ConfigHydrodynamics())
     """ Holds the config of the Hydrodynamics class. """
 
-    configThermodynamics: ConfigThermodynamics = ConfigThermodynamics()
+    configThermodynamics: ConfigThermodynamics = field(
+        default_factory=lambda: ConfigThermodynamics())
     """ Holds the config of the Thermodynamics class. """
 
-    configBoltzmannSolver: ConfigBoltzmannSolver = ConfigBoltzmannSolver()
+    configBoltzmannSolver: ConfigBoltzmannSolver = field(
+        default_factory=lambda: ConfigBoltzmannSolver())
     """ Holds the config of the BoltzmannSolver class. """
 
     def loadConfigFromFile(self, filePath: str) -> None:
