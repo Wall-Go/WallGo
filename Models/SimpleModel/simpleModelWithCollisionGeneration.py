@@ -12,7 +12,10 @@ import numpy as np
 
 # WallGo imports
 import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
-from WallGo import Fields, GenericModel, Particle
+
+# Add the SimpleModel folder to the path to import SimpleModel
+sys.path.append(str(pathlib.Path(__file__).resolve().parent))
+from simpleModel import SimpleModel
 
 # Add the Models folder to the path; need to import the base
 # example template
@@ -24,202 +27,6 @@ from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413,
 
 if TYPE_CHECKING:
     import WallGoCollision
-
-
-class SimpleModel(GenericModel):
-    """
-    The simple model, inheriting from WallGo.GenericModel.
-    """
-
-    def __init__(self) -> None:
-        """
-        Initialize the simple model.
-
-        Parameters
-        ----------
-
-        Returns
-        ----------
-        cls: SimpleModel
-            An object of the SimpleModel class.
-        """
-
-        self.modelParameters: dict[str, float] = {}
-
-        # Initialize internal effective potential
-        self.effectivePotential = EffectivePotentialSimple(self)
-
-        # Create a list of particles relevant for the Boltzmann equations
-        self.defineParticles()
-
-    # ~ GenericModel interface
-    @property
-    def fieldCount(self) -> int:
-        """How many classical background fields"""
-        return 1
-
-    def getEffectivePotential(self) -> "EffectivePotentialSimple":
-        return self.effectivePotential
-
-    # ~
-
-    def defineParticles(self) -> None:
-        """
-        Define the particles for the model.
-        Note that the particle list only needs to contain the
-        particles that are relevant for the Boltzmann equations.
-        The particles relevant to the effective potential are
-        included independently.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        ----------
-        None
-        """
-        self.clearParticles()
-
-        # === left fermion ===
-        # The msqVacuum function of an out-of-equilibrium particle must take
-        # a Fields object and return an array of length equal to the number of
-        # points in fields.
-        def psiMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["mf"] + self.modelParameters[
-                "yf"
-            ] * fields.getField(0)
-
-        # The msqDerivative function of an out-of-equilibrium particle must take
-        # a Fields object and return an array with the same shape as fields.
-        def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
-            return self.modelParameters["yf"]
-
-        def psiMsqThermal(T: float) -> float:
-            return 1 / 16 * self.modelParameters["yf"] ** 2 * T**2
-
-        psiL = Particle(
-            "psiL",
-            index=1,
-            msqVacuum=psiMsqVacuum,
-            msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
-            statistics="Fermion",
-            totalDOFs=4,
-        )
-        psiR = Particle(
-            "psiR",
-            index=2,
-            msqVacuum=psiMsqVacuum,
-            msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
-            statistics="Fermion",
-            totalDOFs=4,
-        )
-        self.addParticle(psiL)
-        self.addParticle(psiR)
-
-    def calculateLagrangianParameters(
-        self, inputParameters: dict[str, float]
-    ) -> dict[str, float]:
-        """
-        Calculate Lagrangian parameters based on the input parameters.
-
-        Parameters
-        ----------
-        inputParameters: dict[str, float]
-            A dictionary of input parameters for the model.
-
-        Returns
-        ----------
-        modelParameters: dict[str, float]
-            A dictionary of calculated model parameters.
-        """
-
-        modelParameters = {}
-
-        # Parameters for "phi" field
-        modelParameters = inputParameters
-
-        return modelParameters
-
-    def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Computes new Lagrangian parameters from given input and caches
-        them internally. These changes automatically propagate to the
-        associated EffectivePotential, particle masses etc.
-        """
-        newParams = self.calculateLagrangianParameters(newInputParams)
-        # Copy to the model dict, do NOT replace the reference.
-        # This way the changes propagate to Veff and particles
-        self.modelParameters.update(newParams)
-
-
-class EffectivePotentialSimple(WallGo.EffectivePotential):
-    """
-    Effective potential for the simple model.
-
-    This class inherits from the EffectivePotential class and provides the
-    necessary methods for calculating the effective potential.
-    """
-
-    def __init__(self, owningModel: SimpleModel) -> None:
-        """
-        Initialize the EffectivePotentialSimple.
-        """
-
-        super().__init__()
-
-        assert owningModel is not None, "Invalid model passed to Veff"
-
-        self.owner = owningModel
-        self.modelParameters = self.owner.modelParameters
-
-        print(self.modelParameters)
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
-
-    def evaluate(
-        self, fields: Fields, temperature: float
-    ) -> float | np.ndarray:
-        """
-        Evaluate the effective potential.
-
-        Parameters
-        ----------
-        fields: Fields
-            The field configuration
-        temperature: float
-            The temperature
-
-        Returns
-        ----------
-        potentialTotal: float | np.ndarray
-            The value of the effective potential
-        """
-        # getting the field from the list of fields (here just of length 1)
-        fields = WallGo.Fields(fields)
-        phi = fields.getField(0)
-
-        # the constant term
-        f0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
-
-        # coefficients of the temperature and field dependent terms
-        msq = self.modelParameters["msq"]
-        msqTh = self.modelParameters["msqTh"]
-        cubic = self.modelParameters["cubic"]
-        quartic = self.modelParameters["quartic"]
-
-        potentialTotal = (
-            f0
-            + 1 / 2 * (msq + msqTh * temperature**2) * phi**2
-            + cubic * phi**3
-            + quartic * phi**4
-        )
-
-        return np.array(potentialTotal)
 
 
 class SimpleModelExample(WallGoExampleBase):
@@ -336,7 +143,11 @@ class SimpleModelExample(WallGoExampleBase):
         that the effective potential and particle mass functions refer to
         model.modelParameters, so be careful not to replace that reference here.
         """
-        model.updateModel(inputParameters)
+        newParams = inputParameters
+        #Copy to the model dict, do NOT replace the reference.
+        # This way the changes propagate to Veff and particles
+        model.modelParameters.update(newParams)
+
 
     def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
         """
