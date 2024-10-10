@@ -180,7 +180,7 @@ Warnings and errors
     (alpha positive, the speeds of sound real and positive and the ratio of enthalpies smaller than 1). 
     Make sure that the field-independent contributions are also included in the effective potential 
     (e.g. the T^4 contribution from light fermions).
-    Also make sure that you provided the WallGoManager with a temperature scale
+    Also make sure that you provided the WallGoManager with a temperature variation scale
     that was not too large, as this might prevent finding a correct tracing of (one of) the phases.
 
 - **Why do I get the warning "Truncation error large, increase N or M"?**
