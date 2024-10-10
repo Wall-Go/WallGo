@@ -12,7 +12,10 @@ class ConfigGrid:
     """ Number of grid points in the spatial direction (M in 2204.13120). """
 
     momentumGridSize: int = 11
-    """ Number of grid points in the momentum directions (N in 2204.13120). """
+    """
+    Number of grid points in the momentum directions (N in 2204.13120).
+    MUST BE ODD.
+    """
 
     ratioPointsWall: float = 0.5
     """
