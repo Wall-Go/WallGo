@@ -101,7 +101,7 @@ Model requirements
 - **What is the msqThermal in the Particle defintion?**
 
     This is the (field-independent) thermal mass of the particle. It is used in the propagator in the matrix elements, and
-    regularizes the IV-divergence in the limit of vanishing Mandelstam variables t and u.
+    regularizes the IR-divergence in the limit of vanishing Mandelstam variables t and u.
 
 - **How do I cound the totalDOFs in the Particle definition?**
 
