@@ -1,5 +1,6 @@
 """ Dataclasses to store the configs """
 
+import os
 import configparser
 from dataclasses import dataclass, field
 
@@ -162,6 +163,10 @@ class Config:
             Path of the file where the configs are.
 
         """
+        # Make sure that the file exists
+        if not os.path.isfile(filePath):
+            raise FileNotFoundError(filePath)
+
         parser = configparser.ConfigParser()
         parser.optionxform = str
         parser.read(filePath)
