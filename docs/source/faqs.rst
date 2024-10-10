@@ -34,7 +34,7 @@ Matrix elements
     Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
     we used this to cross check our results. We have included an example in the repository
     for the `WallGo MatrixElements package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
-    a look at `tests/feyn`.
+    a look at `tests/FeynCalc`.
 
 - **I do not have a Mathematica license, can I still generate matrix elements?**
 
@@ -130,7 +130,7 @@ Effective potentials
 
 - **My effective potential is complex, what should I do?**
 
-    To do
+    [To do]
 
 
 Settings
