@@ -493,6 +493,7 @@ class WallGoManager:
             gridMomentumFalloffScale,
         )
 
+        # Factor that multiplies the collision term in the Boltzmann equation.
         collisionMultiplier = self.config.getfloat("BoltzmannSolver",
                                                    "collisionMultiplier")
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp

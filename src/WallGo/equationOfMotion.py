@@ -837,8 +837,9 @@ class EOM:
         velocityProfile = None
         if not self.forceEnergyConservation:
             # If conservation of energy and momentum is not enforced, fix the velocity
-            # and temperature to the following profiles. Otherwise, they will be
-            # evaluated at each iteration.
+            # and temperature to the following profiles, which are the profiles computed
+            # at the first iteration. Otherwise, they will be evaluated at each
+            # iteration.
             temperatureProfile = boltzmannBackground.temperatureProfile[1:-1]
             velocityProfile = boltzmannBackground.velocityProfile[1:-1]
 
