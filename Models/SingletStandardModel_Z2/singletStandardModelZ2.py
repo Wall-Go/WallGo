@@ -246,6 +246,16 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 2
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: SingletSMZ2) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
@@ -272,16 +282,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         with integrals from CosmoTransitions. In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
-
-    # ~ EffectivePotential interface
-    fieldCount = 2
-    """How many classical background fields"""
-
-    effectivePotentialError = 1e-8
-    """
-    Relative accuracy at which the potential can be computed. Here it is set by the
-    error tolerance of the thermal integrals Jf/Jb.
-    """
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
