@@ -8,6 +8,7 @@ physical, but makes the computation simpler).
 import sys
 import pathlib
 from typing import TYPE_CHECKING
+from pathlib import Path
 import numpy as np
 
 # WallGo imports
@@ -34,16 +35,7 @@ class SimpleModel(GenericModel):
     def __init__(self) -> None:
         """
         Initialize the simple model.
-
-        Parameters
-        ----------
-
-        Returns
-        ----------
-        cls: SimpleModel
-            An object of the SimpleModel class.
         """
-
         self.modelParameters: dict[str, float] = {}
 
         # Initialize internal effective potential
@@ -119,10 +111,10 @@ class SimpleModel(GenericModel):
         Here the model parameters are direct input.
         """
         # Parameters for the potential and the collisions
-        modelParameters = inputParameters
+        self.modelParameters = inputParameters
 
-        return modelParameters
-
+        return self.modelParameters
+    
     def updateModel(self, newInputParams: dict[str, float]) -> None:
         """Computes new Lagrangian parameters from given input and caches
         them internally. These changes automatically propagate to the
@@ -146,15 +138,12 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
         """
         Initialize the EffectivePotentialSimple.
         """
-
         super().__init__()
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
         self.owner = owningModel
         self.modelParameters = self.owner.modelParameters
-
-        print(self.modelParameters)
 
     # ~ EffectivePotential interface
     fieldCount = 1
@@ -187,10 +176,10 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
         f0 = -np.pi**2 / 90 * (1 + 4 * 7 / 8) * temperature**4
 
         # coefficients of the temperature and field dependent terms
-        msq = self.modelParameters["msq"]
-        msqTh = self.modelParameters["msqTh"]
-        cubic = self.modelParameters["cubic"]
-        quartic = self.modelParameters["quartic"]
+        msq = self.owner.modelParameters["msq"]
+        msqTh = self.owner.modelParameters["msqTh"]
+        cubic = self.owner.modelParameters["cubic"]
+        quartic = self.owner.modelParameters["quartic"]
 
         potentialTotal = (
             f0
@@ -202,7 +191,7 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
         return np.array(potentialTotal)
 
 
-class SimpleModelExample(WallGoExampleBase):
+class SimpleModelExample():
     """
     Sets up the model, computes or loads the collison
     integrals, and computes the wall velocity.
@@ -215,40 +204,29 @@ class SimpleModelExample(WallGoExampleBase):
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
-        Initialize the model. This should run after cmdline argument parsing
-        so safe to use them here.
+        Initialize the model.
         """
         return SimpleModel()
 
-    def initCollisionModel(
-        self, wallGoModel: "SimpleModel"
-    ) -> "WallGoCollision.PhysicsModel":
-        """Initialize the Collision model and set the seed."""
+    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> Path:
+        """Path to the directory containing default collision data for the example."""
+        return self.exampleBaseDirectory / Path(f"CollisionOutput_N{momentumGridSize}")
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """We use a spatial grid size = 20"""
         super().configureManager(inOutManager)
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
-    def updateModelParameters(
-        self, model: "SimpleModel", inputParameters: dict[str, float]
-    ) -> None:
-        """Update internal model parameters. This example is constructed so
-        that the effective potential and particle mass functions refer to
-        model.modelParameters, so be careful not to replace that reference here.
-        """
-        model.updateModel(inputParameters)
+    # ~ End WallGoExampleBase interface
 
-    def getBenchmarkPoints(self) -> list[ExampleInputPoint]:
-        """
-        Input parameters, phase info, and settings for the effective potential and
-        wall solver for the Yukawa benchmark point.
-        """
 
-        output: list[ExampleInputPoint] = []
-        output.append(
-            ExampleInputPoint(
-                {
+def main() -> None:
+
+    manager = WallGo.WallGoManager()
+    model = SimpleModel()
+    manager.registerModel(model)
+
+    inputParameters = {
                     "yf": -0.18,
                     "mf": 2.0,
                     "gamma": -4.0,
@@ -257,33 +235,38 @@ class SimpleModelExample(WallGoExampleBase):
                     "msqTh": 2./115.,
                     "cubic": -0.77,
                     "quartic": 0.0055,
-                },
-                WallGo.PhaseInfo(
+                    }
+    
+    model.updateModel(inputParameters)
+
+    phaseInfo = WallGo.PhaseInfo(
                     temperature=51.0,  # nucleation temperature
                     phaseLocation1=WallGo.Fields([0.]),
                     phaseLocation2=WallGo.Fields([82.5223]),
-                ),
-                WallGo.VeffDerivativeSettings(
+                )
+    
+    veffDerivativeScales = WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
                     fieldValueVariationScale=[
                         50.0,
                     ],
                 ),
-                WallGo.WallSolverSettings(
-                    # we actually do both cases in the common example
-                    bIncludeOffEquilibrium=True,
-                    meanFreePathScale=1000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
-                ),
+
+    print(veffDerivativeScales)
+    
+    manager.setupThermodynamicsHydrodynamics(
+                phaseInfo,
+                WallGo.VeffDerivativeSettings(
+                    temperatureVariationScale=1.0,
+                    fieldValueVariationScale=[
+                        50.0,
+                    ],
+                )
             )
-        )
-
-        return output
-
-    # ~ End WallGoExampleBase interface
 
 
+
+
+## Don't run the main function if imported to another file
 if __name__ == "__main__":
-
-    example = SimpleModelExample()
-    example.runExample()
+    main()
