@@ -275,13 +275,13 @@ class SimpleModelExample(WallGoExampleBase):
 
         # We use a different "y" in the collisions than the Yukawa model,
         # therefore, we rename it to kappa
-        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["kappa"])
-        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
+        parameters.add("y", wallGoModel.modelParameters["kappa"])
+        parameters.add("gamma", wallGoModel.modelParameters["gamma"])
 
-        parameters.addOrModifyParameter(
+        parameters.add(
             "mf2", 1 / 16 * wallGoModel.modelParameters["yf"] ** 2
         )  # phi thermal mass^2 in units of T
-        parameters.addOrModifyParameter(
+        parameters.add(
             "ms2", wallGoModel.modelParameters["msqTh"]
         )  # psi thermal mass^2 in units of T
 
