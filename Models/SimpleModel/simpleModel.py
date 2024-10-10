@@ -80,17 +80,7 @@ class SimpleModel(GenericModel):
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
-    
-    def updateModel(self, newInputParams: dict[str, float]) -> None:
-        """Takes the new parameters from given input and caches
-        them internally. These changes automatically propagate to the
-        associated EffectivePotential, particle masses etc.
-        In this case the model paramaters are direct input.
-        """
-        newParams = newInputParams
-        # Copy to the model dict, do NOT replace the reference.
-        # This way the changes propagate to Veff and particles
-        self.modelParameters.update(newParams)
+        
 
 class EffectivePotentialSimple(WallGo.EffectivePotential):
     """
@@ -163,7 +153,7 @@ def main() -> None:
                     "quartic": 0.0055,
                     }
     
-    model.updateModel(inputParameters)
+    model.modelParameters.update(inputParameters)
     
     manager.setupThermodynamicsHydrodynamics(
                 WallGo.PhaseInfo(
