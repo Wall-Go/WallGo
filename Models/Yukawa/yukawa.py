@@ -378,16 +378,16 @@ class YukawaModelExample(WallGoExampleBase):
             ExampleInputPoint(
                 {
                     "sigma": 0.0,
-                    "msq": -1.0,
+                    "msq": 1.0,
                     "gamma": -1.2,
                     "lam": 0.10,
                     "y": 0.55,
                     "mf": 0.30,
                 },
                 WallGo.PhaseInfo(
-                    temperature=9.0,  # nucleation temperature
-                    phaseLocation1=WallGo.Fields([0.6]),
-                    phaseLocation2=WallGo.Fields([29.0]),
+                    temperature=8.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([0.4]),
+                    phaseLocation2=WallGo.Fields([27.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,

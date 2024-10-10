@@ -159,7 +159,7 @@ def main() -> None:
         "mf": 2.0,
         "gamma": -4.0,
         "kappa": -0.6,
-        "msq": -1.0,
+        "msq": 1.0,
         "msqTh": 2.0 / 115.0,
         "cubic": -0.77,
         "quartic": 0.0055,
@@ -171,13 +171,11 @@ def main() -> None:
         WallGo.PhaseInfo(
             temperature=51.0,  # nucleation temperature
             phaseLocation1=WallGo.Fields([0.0]),
-            phaseLocation2=WallGo.Fields([82.5223]),
+            phaseLocation2=WallGo.Fields([78.]),
         ),
         WallGo.VeffDerivativeSettings(
             temperatureVariationScale=1.0,
-            fieldValueVariationScale=[
-                50.0,
-            ],
+            fieldValueVariationScale=[50.0],
         ),
     )
 
