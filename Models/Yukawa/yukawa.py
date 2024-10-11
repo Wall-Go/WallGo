@@ -158,6 +158,16 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     necessary methods for calculating the effective potential.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-15
+    """
+    Relative accuracy at which the potential can be computed. Here the potential is
+    polynomial so we can set it to the machine precision.
+    """
+
     def __init__(self, owningModel: YukawaModel) -> None:
         """
         Initialize the EffectivePotentialYukawa.
@@ -171,11 +181,6 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         self.modelParameters = self.owner.modelParameters
 
         print(self.modelParameters)
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
 
     def evaluate(
         self, fields: Fields, temperature: float
@@ -341,20 +346,17 @@ class YukawaModelExample(WallGoExampleBase):
         super().configureManager(inOutManager)
         
         # Increase the number of grid points to increase stability
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "50")
+        inOutManager.config.configGrid.spatialGridSize = 50
         
         # Note that if all degrees of freedom are treated as out-of-equilibrium,
         # this creates a degeneracy in the definition of f_{eq} vs \delta f
         # If we enforce conservation of EM, this can lead to a divergence of the
         # iteration procedure. But here the scalar is treated as in-equilibrium,
         # so we do impose conserveEnergyMomentum.
-        inOutManager.config.set("EquationOfMotion", "conserveEnergyMomentum", "1")
-        
-        # The potential is polynomial, so it has a smaller error
-        inOutManager.config.set("EffectivePotential", "potentialError", "1e-14")
+        inOutManager.config.configEOM.conserveEnergyMomentum = True
         
         # Decrease the phase tracer tolerance to improve stability
-        inOutManager.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
+        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
 
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]

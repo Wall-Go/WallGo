@@ -167,10 +167,8 @@ class WallGoExampleBase(ABC):
 
         # Override basis size if it was passed via command line
         if self.cmdArgs.momentumGridSize > 0:
-            inOutManager.config.set(
-                "PolynomialGrid",
-                "momentumGridSize",
-                str(self.cmdArgs.momentumGridSize),
+            inOutManager.config.configGrid.momentumGridSize = (
+                self.cmdArgs.momentumGridSize
             )
 
     def processResultsForBenchmark(  # pylint: disable=W0613
@@ -210,9 +208,10 @@ class WallGoExampleBase(ABC):
         # store the args so that subclasses can access them if needed
         self.cmdArgs = argParser.parse_args()
 
+        # Initialise the manager
         manager = WallGo.WallGoManager()
 
-        # Do model-dependent configuration of the manager
+        # Update the configs
         self.configureManager(manager)
 
         model = self.initWallGoModel()
@@ -228,7 +227,7 @@ class WallGoExampleBase(ABC):
         collisionTensor: "WallGoCollision.CollisionTensor" | None = None
 
         # hacky
-        momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
+        momentumGridSize = manager.getMomentumGridSize()
 
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
