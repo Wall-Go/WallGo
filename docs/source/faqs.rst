@@ -132,7 +132,7 @@ Effective potentials
 
         from WallGo import PotentialTools
 
-    For a model using this see the singlet scalar extension example.
+    For a model using PotentialTools see the singlet scalar extension example.
 
 - **My effective potential is complex, what should I do?**
 
