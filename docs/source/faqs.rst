@@ -34,7 +34,7 @@ Matrix elements
     Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
     we used this to cross check our results. We have included an example in the repository
     for the `WallGo MatrixElements package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
-    a look at `tests/feyn`.
+    a look at `tests/FeynCalc`.
 
 - **I do not have a Mathematica license, can I still generate matrix elements?**
 
@@ -101,7 +101,7 @@ Model requirements
 - **What is the msqThermal in the Particle defintion?**
 
     This is the (field-independent) thermal mass of the particle. It is used in the propagator in the matrix elements, and
-    regularizes the IV-divergence in the limit of vanishing Mandelstam variables t and u.
+    regularizes the IR-divergence in the limit of vanishing Mandelstam variables t and u.
 
 - **How do I cound the totalDOFs in the Particle definition?**
 
@@ -126,11 +126,25 @@ Effective potentials
 
 - **I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?**
 
-    [To do]
+    WallGo has predefined methods to compute the fermionic and bosonic one-loop
+    sum-integrals. It also has a default table of precomputed values. These are
+    located in the sub-package called PotentialTools, and can be imported as
+
+        from WallGo import PotentialTools
+
+    For a model using PotentialTools see the singlet scalar extension example.
 
 - **My effective potential is complex, what should I do?**
 
-    To do
+    In a self-consistent calculation, the equations of motion for the scalar field/s
+    should be real, and hence so the relevant effective potential should be real too. 
+    Yet, computations of the effective potential can yield complex values. The same issue arises in the context of the bubble nucleation rate, and can resolved using
+    effective field theory. :footcite:p:`Gould:2021ccf`
+
+    By default WallGo requires a real effective potential, so it is up to the user to ensure this. For the one-loop PotentialTools sub-package of WallGo gives four
+    different options for how to remove unwanted imaginary parts, listed in the
+    enum :py:class:`WallGo.PotentialTools.EImaginaryOption`. See the docs for more
+    details.
 
 
 Settings
@@ -180,7 +194,7 @@ Warnings and errors
     (alpha positive, the speeds of sound real and positive and the ratio of enthalpies smaller than 1). 
     Make sure that the field-independent contributions are also included in the effective potential 
     (e.g. the T^4 contribution from light fermions).
-    Also make sure that you provided the WallGoManager with a temperature scale
+    Also make sure that you provided the WallGoManager with a temperature variation scale
     that was not too large, as this might prevent finding a correct tracing of (one of) the phases.
 
 - **Why do I get the warning "Truncation error large, increase N or M"?**
