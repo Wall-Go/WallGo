@@ -237,13 +237,15 @@ class YukawaModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
 
+        # We take the matrix elements from the Yukawa model
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa.json"
+            self.exampleBaseDirectory
+            / "MatrixElements/MatrixElements_Yukawa.json"
         )
 
      # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
-        """Non-abstract override to add a SM + singlet specific cmd option"""
+        """Non-abstract override to add a Yukawa specific cmd option"""
 
         argParser: argparse.ArgumentParser = super().initCommandLineArgs()
         return argParser
