@@ -336,19 +336,19 @@ class YukawaModelExample(WallGoExampleBase):
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """
-        Yukawa example uses spatial grid size = 50 and conservation of energy and
-        momentum is not enforced to increase stability.
+        Yukawa example uses spatial grid size = 50.
         """
         super().configureManager(inOutManager)
         
         # Increase the number of grid points to increase stability
         inOutManager.config.set("PolynomialGrid", "spatialGridSize", "50")
         
-        # In the Yukawa model, most degrees of freedom are treated as out-of-equilibrium
-        # This creates an approximate degeneracy in the definition of f_{eq} vs \delta f
-        # If we enforce conservation of EM, this will lead to a divergence of the
-        # iteration procedure. So we don't enforce it.
-        inOutManager.config.set("EquationOfMotion", "conserveEnergyMomentum", "0")
+        # Note that if all degrees of freedom are treated as out-of-equilibrium,
+        # this creates a degeneracy in the definition of f_{eq} vs \delta f
+        # If we enforce conservation of EM, this can lead to a divergence of the
+        # iteration procedure. But here the scalar is treated as in-equilibrium,
+        # so we do impose conserveEnergyMomentum.
+        inOutManager.config.set("EquationOfMotion", "conserveEnergyMomentum", "1")
         
         # The potential is polynomial, so it has a smaller error
         inOutManager.config.set("EffectivePotential", "potentialError", "1e-14")
