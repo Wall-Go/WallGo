@@ -311,7 +311,6 @@ class WallGoManager:
         # for T+ is the nucleation temperature.
         _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3)
 
-        # FIXME this will change when configs are revamped
         if THighTMaxTemplate is None:
             THighTMaxTemplate = self.config.configHydrodynamics.tmax * Tn
         if TLowTMaxTemplate is None:

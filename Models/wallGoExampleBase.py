@@ -227,7 +227,7 @@ class WallGoExampleBase(ABC):
         collisionTensor: "WallGoCollision.CollisionTensor" | None = None
 
         # hacky
-        momentumGridSize = manager.config.configGrid.momentumGridSize
+        momentumGridSize = manager.getMomentumGridSize()
 
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
