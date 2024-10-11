@@ -126,11 +126,25 @@ Effective potentials
 
 - **I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?**
 
-    [To do]
+    WallGo has predefined methods to compute the fermionic and bosonic one-loop
+    sum-integrals. It also has a default table of precomputed values. These are
+    located in the sub-package called PotentialTools, and can be imported as
+
+        from WallGo import PotentialTools
+
+    For a model using this see the singlet scalar extension example.
 
 - **My effective potential is complex, what should I do?**
 
-    [To do]
+    In a self-consistent calculation, the equations of motion for the scalar field/s
+    should be real, and hence so the relevant effective potential should be real too. 
+    Yet, computations of the effective potential can yield complex values. The same issue arises in the context of the bubble nucleation rate, and can resolved using
+    effective field theory. :footcite:p:`Gould:2021ccf`
+
+    By default WallGo requires a real effective potential, so it is up to the user to ensure this. For the one-loop PotentialTools sub-package of WallGo gives four
+    different options for how to remove unwanted imaginary parts, listed in the
+    enum :py:class:`WallGo.PotentialTools.EImaginaryOption`. See the docs for more
+    details.
 
 
 Settings
