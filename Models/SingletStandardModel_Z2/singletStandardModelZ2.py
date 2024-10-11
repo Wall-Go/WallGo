@@ -246,6 +246,16 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 2
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: SingletSMZ2) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
@@ -272,11 +282,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         with integrals from CosmoTransitions. In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
-
-    # ~ EffectivePotential interface
-    fieldCount = 2
-    """How many classical background fields"""
-    # ~
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
@@ -639,7 +644,7 @@ class SingletStandardModelExample(WallGoExampleBase):
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """Singlet example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]

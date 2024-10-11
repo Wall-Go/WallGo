@@ -249,6 +249,16 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
     For this benchmark model we use the 4D potential without high-temperature expansion.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: InertDoubletModel):
         """
         Initialize the EffectivePotentialIDM.
@@ -268,11 +278,6 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         # contributions to ideal gas pressure
         self.numBosonDof = 32
         self.numFermionDof = 90
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
 
     def evaluate(
         self, fields: Fields, temperature: float
@@ -362,10 +367,13 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
 
-        return degreesOfFreedom * np.array(
-            massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
+        # Note that we are taking the absolute value of the mass in the log here,
+        # instead of using EImaginaryOption = ABS_ARGUMENT, because we do not 
+        # want the absolute value in the product of massSq ans rgScale
+        return degreesOfFreedom*np.array( 
+            massSq * massSq * (np.log(np.abs(massSq / rgScale**2)) - c)
             + 2 * massSq * rgScale**2
-        )
+        ) / (64 * np.pi * np.pi)
 
     def fermionInformation(self, fields: Fields) -> tuple[
         np.ndarray,
@@ -525,6 +533,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
         # Scalar masses including thermal contribution
+        # Need to take the absolute value because we can not
+        # use EImaginaryOption = ABS_ARGUMENT for the full potential
         mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
         mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
@@ -728,9 +738,9 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Inert doublet model example uses spatial grid size = 20"""
+        """Singlet example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]

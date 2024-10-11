@@ -51,14 +51,17 @@ class EffectivePotential(ABC):
     """
     
     fieldCount: int
-    """Number of background fields in your potential. Your concrete potential must set this to a nonzero positive integer."""
+    """
+    Number of background fields in your potential.
+    IMPORTANT: YOUR CONCRETE POTENTIAL MUST SET THIS TO A NONZERO POSITIVE INTEGER.
+    """
 
-    effectivePotentialError = 1e-8
-    """Typical relative accuracy at which the effective potential can be computed.
+    effectivePotentialError: float
+    """
+    Typical relative accuracy at which the effective potential can be computed.
     For simple polynomial potentials this is probably close to machine precision of Python floats (1e-15).
     For loop-corrected potentials a limited factor can be the eg. accuracy of numerical integration.
-    Default is 1e-8, matching the relative error in Jb/Jf thermal 1-loop integrals
-    from PotentialTools.
+    IMPORTANT: YOUR CONCRETE POTENTIAL MUST SET THIS TO A NONZERO POSITIVE FLOAT.
     """
 
     derivativeSettings: VeffDerivativeSettings

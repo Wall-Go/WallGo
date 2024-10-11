@@ -84,14 +84,13 @@ class YukawaModel(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def psiMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["mf"] + self.modelParameters[
-                "y"
-            ] * fields.getField(0)
+            return (self.modelParameters["mf"] + self.modelParameters["y"] * fields.getField(0)) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
-            return self.modelParameters["y"]
+            return 2 * self.modelParameters["y"] * (self.modelParameters["mf"]
+            + self.modelParameters["y"] * fields.getField(0))
 
         def psiMsqThermal(T: float) -> float:
             return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
@@ -103,7 +102,7 @@ class YukawaModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         psiR = Particle(
             "psiR",
@@ -112,7 +111,7 @@ class YukawaModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
@@ -159,6 +158,16 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     necessary methods for calculating the effective potential.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-15
+    """
+    Relative accuracy at which the potential can be computed. Here the potential is
+    polynomial so we can set it to the machine precision.
+    """
+
     def __init__(self, owningModel: YukawaModel) -> None:
         """
         Initialize the EffectivePotentialYukawa.
@@ -172,11 +181,6 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         self.modelParameters = self.owner.modelParameters
 
         print(self.modelParameters)
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
 
     def evaluate(
         self, fields: Fields, temperature: float
@@ -288,10 +292,10 @@ class YukawaModelExample(WallGoExampleBase):
         parameters.addOrModifyParameter("v", 0.0)
 
         parameters.addOrModifyParameter(
-            "ms2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
+            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
         parameters.addOrModifyParameter(
-            "mf2",
+            "ms2",
             + wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
         )  # psi thermal mass^2 in units of T
@@ -336,9 +340,23 @@ class YukawaModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Yukawa example uses spatial grid size = 20"""
+        """
+        Yukawa example uses spatial grid size = 50.
+        """
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        
+        # Increase the number of grid points to increase stability
+        inOutManager.config.configGrid.spatialGridSize = 50
+        
+        # Note that if all degrees of freedom are treated as out-of-equilibrium,
+        # this creates a degeneracy in the definition of f_{eq} vs \delta f
+        # If we enforce conservation of EM, this can lead to a divergence of the
+        # iteration procedure. But here the scalar is treated as in-equilibrium,
+        # so we do impose conserveEnergyMomentum.
+        inOutManager.config.configEOM.conserveEnergyMomentum = True
+        
+        # Decrease the phase tracer tolerance to improve stability
+        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
 
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]
@@ -361,17 +379,17 @@ class YukawaModelExample(WallGoExampleBase):
         output.append(
             ExampleInputPoint(
                 {
-                    "sigma": 0,
-                    "msq": 1,
-                    "gamma": -1.28565864794053,
-                    "lam": 0.01320208496444000,
-                    "y": -0.177421729274665,
-                    "mf": 2.0280748307391000,
+                    "sigma": 0.0,
+                    "msq": 1.0,
+                    "gamma": -1.2,
+                    "lam": 0.10,
+                    "y": 0.55,
+                    "mf": 0.30,
                 },
                 WallGo.PhaseInfo(
-                    temperature=89.0,  # nucleation temperature
-                    phaseLocation1=WallGo.Fields([30.79]),
-                    phaseLocation2=WallGo.Fields([192.35]),
+                    temperature=8.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([0.4]),
+                    phaseLocation2=WallGo.Fields([27.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
@@ -382,8 +400,11 @@ class YukawaModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                    # meanFreePathScale is determined here by the annihilation channels,
+                    # and scales inversely with y^4 or lam^2. This is why
+                    # meanFreePathScale has to be so large.
+                    meanFreePathScale=10000.0, # In units of 1/Tnucl
+                    wallThicknessGuess=10.0, # In units of 1/Tnucl
                 ),
             )
         )

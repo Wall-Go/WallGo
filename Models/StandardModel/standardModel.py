@@ -243,6 +243,16 @@ class EffectivePotentialSM(EffectivePotential):
     This class inherits from the EffectivePotential class.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-15
+    """
+    Relative accuracy at which the potential can be computed. Here the potential is
+    polynomial so we can set it to the machine precision.
+    """
+
     def __init__(self, owningModel: StandardModel) -> None:
         """
         Initialize the EffectivePotentialSM.
@@ -258,11 +268,6 @@ class EffectivePotentialSM(EffectivePotential):
         # light particle contributions to ideal gas pressure
         self.numBosonDof = 28
         self.numFermionDof = 90
-
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
 
     def evaluate(  # pylint: disable=R0914
         self,
@@ -482,9 +487,9 @@ class StandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """SM example uses spatial grid size = 20"""
+        """Singlet example uses spatial grid size = 20"""
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
+        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]

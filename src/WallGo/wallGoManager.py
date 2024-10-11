@@ -19,6 +19,7 @@ from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .thermodynamics import Thermodynamics
 from .results import WallGoResults
+from .config import Config
 
 
 @dataclass
@@ -74,10 +75,8 @@ class WallGoManager:
     def __init__(self) -> None:
         """"""
 
-        # TODO cleanup, should not read the config here if we have a global WallGo
-        # config object
-
-        self.config = WallGo.config
+        # Initialise the configs with the default values
+        self.config = Config()
 
         # default to working directory
         self.collisionDirectory = pathlib.Path.cwd()
@@ -90,6 +89,12 @@ class WallGoManager:
         self.hydrodynamics: Hydrodynamics
         self.phasesAtTn: PhaseInfo
         self.thermodynamics: Thermodynamics
+
+    def getMomentumGridSize(self) -> int:
+        """
+        Returns the momentum grid size.
+        """
+        return self.config.configGrid.momentumGridSize
 
     def setupThermodynamicsHydrodynamics(
         self,
@@ -128,11 +133,6 @@ class WallGoManager:
         ), "Invalid PhaseInfo input, field counts don't match those defined in model"
 
         self.model.getEffectivePotential().configureDerivatives(veffDerivativeScales)
-
-        # FIXME this will change when configs are revamped
-        self.model.getEffectivePotential().effectivePotentialError = (
-            self.config.getfloat("EffectivePotential", "potentialError")
-        )
 
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
@@ -311,16 +311,15 @@ class WallGoManager:
         # for T+ is the nucleation temperature.
         _, _, TLowTMinTemplate, _ = hydrodynamicsTemplate.findMatching(1e-3)
 
-        # FIXME this will change when configs are revamped
         if THighTMaxTemplate is None:
-            THighTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
+            THighTMaxTemplate = self.config.configHydrodynamics.tmax * Tn
         if TLowTMaxTemplate is None:
-            TLowTMaxTemplate = self.config.getfloat("Hydrodynamics", "tmax") * Tn
+            TLowTMaxTemplate = self.config.configHydrodynamics.tmax * Tn
 
         if TLowTMinTemplate is None:
-            TLowTMinTemplate = self.config.getfloat("Hydrodynamics", "tmin") * Tn
+            TLowTMinTemplate = self.config.configHydrodynamics.tmin * Tn
 
-        phaseTracerTol = self.config.getfloat("EffectivePotential", "phaseTracerTol")
+        phaseTracerTol = self.config.configThermodynamics.phaseTracerTol
 
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
@@ -335,10 +334,10 @@ class WallGoManager:
         We use a configuration parameter to determine the TMin and TMax that we
         use in the phase tracing.
         """
-        TMinHighT = Tn * self.config.getfloat("Thermodynamics", "tmin")
-        TMaxHighT = THighTMaxTemplate * self.config.getfloat("Thermodynamics", "tmax")
-        TMinLowT = TLowTMinTemplate * self.config.getfloat("Thermodynamics", "tmin")
-        TMaxLowT = TLowTMaxTemplate * self.config.getfloat("Thermodynamics", "tmax")
+        TMinHighT = Tn * self.config.configThermodynamics.tmin
+        TMaxHighT = THighTMaxTemplate * self.config.configThermodynamics.tmax
+        TMinLowT = TLowTMinTemplate * self.config.configThermodynamics.tmin
+        TMaxLowT = TLowTMaxTemplate * self.config.configThermodynamics.tmax
 
         # Interpolate phases and check that they remain stable in this range
         fHighT = self.thermodynamics.freeEnergyHigh
@@ -440,12 +439,12 @@ class WallGoManager:
         solver: WallSolver = self.setupWallSolver(wallSolverSettings)
         assert solver.initialWallThickness
 
-        rtol = self.config.getfloat("EquationOfMotion", "errTol")
-        nbrPointsMin = self.config.getint("EquationOfMotion", "nbrPointsMinDeton")
-        nbrPointsMax = self.config.getint("EquationOfMotion", "nbrPointsMaxDeton")
-        overshootProb = self.config.getfloat("EquationOfMotion", "overshootProbDeton")
+        rtol = self.config.configEOM.errTol
+        nbrPointsMin = self.config.configEOM.nbrPointsMinDeton
+        nbrPointsMax = self.config.configEOM.nbrPointsMaxDeton
+        overshootProb = self.config.configEOM.overshootProbDeton
         vmin = max(self.hydrodynamics.vJ + 1e-3, self.hydrodynamics.slowestDeton())
-        vmax = self.config.getfloat("EquationOfMotion", "vwMaxDeton")
+        vmax = self.config.configEOM.vwMaxDeton
 
         if vmin >= vmax:
             raise WallGoError(
@@ -493,8 +492,15 @@ class WallGoManager:
             gridMomentumFalloffScale,
         )
 
+        # Factor that multiplies the collision term in the Boltzmann equation.
+        collisionMultiplier = self.config.configBoltzmannSolver.collisionMultiplier
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
-        boltzmannSolver = BoltzmannSolver(grid, basisM="Cardinal", basisN="Chebyshev")
+        boltzmannSolver = BoltzmannSolver(
+            grid,
+            basisM="Cardinal",
+            basisN="Chebyshev",
+            collisionMultiplier=collisionMultiplier,
+            )
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
 
@@ -518,10 +524,10 @@ class WallGoManager:
         thermodynamics : Thermodynamics
             Thermodynamics object.
         """
-        tmax = self.config.getfloat("Hydrodynamics", "tmax")
-        tmin = self.config.getfloat("Hydrodynamics", "tmin")
-        rtol = self.config.getfloat("Hydrodynamics", "relativeTol")
-        atol = self.config.getfloat("Hydrodynamics", "absoluteTol")
+        tmax = self.config.configHydrodynamics.tmax
+        tmin = self.config.configHydrodynamics.tmin
+        rtol = self.config.configHydrodynamics.relativeTol
+        atol = self.config.configHydrodynamics.absoluteTol
 
         self.hydrodynamics = Hydrodynamics(thermodynamics, tmax, tmin, rtol, atol)
 
@@ -546,10 +552,10 @@ class WallGoManager:
             TODO documentation. Should be close to temperature at the wall
         """
 
-        gridN = self.config.getint("PolynomialGrid", "momentumGridSize")
-        gridM = self.config.getint("PolynomialGrid", "spatialGridSize")
-        ratioPointsWall = self.config.getfloat("PolynomialGrid", "ratioPointsWall")
-        smoothing = self.config.getfloat("PolynomialGrid", "smoothing")
+        gridN = self.config.configGrid.momentumGridSize
+        gridM = self.config.configGrid.spatialGridSize
+        ratioPointsWall = self.config.configGrid.ratioPointsWall
+        smoothing = self.config.configGrid.smoothing
         
         Tnucl = self.phasesAtTn.temperature
 
@@ -601,18 +607,13 @@ class WallGoManager:
         """
         numberOfFields = self.model.fieldCount
 
-        errTol = self.config.getfloat("EquationOfMotion", "errTol")
-        maxIterations = self.config.getint("EquationOfMotion", "maxIterations")
-        pressRelErrTol = self.config.getfloat("EquationOfMotion", "pressRelErrTol")
+        errTol = self.config.configEOM.errTol
+        maxIterations = self.config.configEOM.maxIterations
+        pressRelErrTol = self.config.configEOM.pressRelErrTol
+        conserveEnergy = self.config.configEOM.conserveEnergyMomentum
 
-        wallThicknessBounds = (
-            self.config.getfloat("EquationOfMotion", "wallThicknessLowerBound"),
-            self.config.getfloat("EquationOfMotion", "wallThicknessUpperBound"),
-        )
-        wallOffsetBounds = (
-            self.config.getfloat("EquationOfMotion", "wallOffsetLowerBound"),
-            self.config.getfloat("EquationOfMotion", "wallOffsetUpperBound"),
-        )
+        wallThicknessBounds = self.config.configEOM.wallThicknessBounds
+        wallOffsetBounds = self.config.configEOM.wallOffsetBounds
         
         Tnucl = self.phasesAtTn.temperature
 
@@ -626,6 +627,7 @@ class WallGoManager:
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,
+            forceEnergyConservation=conserveEnergy,
             forceImproveConvergence=False,
             errTol=errTol,
             maxIterations=maxIterations,
