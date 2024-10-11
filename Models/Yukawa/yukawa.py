@@ -84,14 +84,13 @@ class YukawaModel(GenericModel):
         # a Fields object and return an array of length equal to the number of
         # points in fields.
         def psiMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["mf"] + self.modelParameters[
-                "y"
-            ] * fields.getField(0)
+            return (self.modelParameters["mf"] + self.modelParameters["y"] * fields.getField(0)) ** 2
 
         # The msqDerivative function of an out-of-equilibrium particle must take
         # a Fields object and return an array with the same shape as fields.
         def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
-            return self.modelParameters["y"]
+            return 2 * self.modelParameters["y"] * (self.modelParameters["mf"]
+            + self.modelParameters["y"] * fields.getField(0))
 
         def psiMsqThermal(T: float) -> float:
             return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
@@ -103,7 +102,7 @@ class YukawaModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         psiR = Particle(
             "psiR",
@@ -112,7 +111,7 @@ class YukawaModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
@@ -342,19 +341,19 @@ class YukawaModelExample(WallGoExampleBase):
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """
-        Yukawa example uses spatial grid size = 50 and conservation of energy and
-        momentum is not enforced to increase stability.
+        Yukawa example uses spatial grid size = 50.
         """
         super().configureManager(inOutManager)
         
         # Increase the number of grid points to increase stability
         inOutManager.config.configGrid.spatialGridSize = 50
         
-        # In the Yukawa model, most degrees of freedom are treated as out-of-equilibrium
-        # This creates an approximate degeneracy in the definition of f_{eq} vs \delta f
-        # If we enforce conservation of EM, this will lead to a divergence of the
-        # iteration procedure. So we don't enforce it.
-        inOutManager.config.configEOM.conserveEnergyMomentum = False
+        # Note that if all degrees of freedom are treated as out-of-equilibrium,
+        # this creates a degeneracy in the definition of f_{eq} vs \delta f
+        # If we enforce conservation of EM, this can lead to a divergence of the
+        # iteration procedure. But here the scalar is treated as in-equilibrium,
+        # so we do impose conserveEnergyMomentum.
+        inOutManager.config.configEOM.conserveEnergyMomentum = True
         
         # Decrease the phase tracer tolerance to improve stability
         inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
@@ -380,17 +379,17 @@ class YukawaModelExample(WallGoExampleBase):
         output.append(
             ExampleInputPoint(
                 {
-                    "sigma": 0,
-                    "msq": 1,
-                    "gamma": -1.28565864794053,
-                    "lam": 0.01320208496444000,
-                    "y": -0.177421729274665,
-                    "mf": 2.0280748307391000,
+                    "sigma": 0.0,
+                    "msq": 1.0,
+                    "gamma": -1.2,
+                    "lam": 0.10,
+                    "y": 0.55,
+                    "mf": 0.30,
                 },
                 WallGo.PhaseInfo(
-                    temperature=89.0,  # nucleation temperature
-                    phaseLocation1=WallGo.Fields([30.79]),
-                    phaseLocation2=WallGo.Fields([192.35]),
+                    temperature=8.0,  # nucleation temperature
+                    phaseLocation1=WallGo.Fields([0.4]),
+                    phaseLocation2=WallGo.Fields([27.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
                     temperatureVariationScale=1.0,
@@ -402,9 +401,10 @@ class YukawaModelExample(WallGoExampleBase):
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
                     # meanFreePathScale is determined here by the annihilation channels,
-                    # which go like y^4~1e-3. This is why it has to be small.
-                    meanFreePathScale=1000000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=50.0, # In units of 1/Tnucl
+                    # and scales inversely with y^4 or lam^2. This is why
+                    # meanFreePathScale has to be so large.
+                    meanFreePathScale=10000.0, # In units of 1/Tnucl
+                    wallThicknessGuess=10.0, # In units of 1/Tnucl
                 ),
             )
         )

@@ -10,6 +10,7 @@ This model file only computes the wall velocity if the collision terms are
 provided. The corresponding collisions can be obtained with 
 simpleModelWithCollisionGeneration.py.
 """
+
 import pathlib
 import numpy as np
 
@@ -43,6 +44,7 @@ class SimpleModel(GenericModel):
 
     def getEffectivePotential(self) -> "EffectivePotentialSimple":
         return self.effectivePotential
+
     # ~
 
     def defineParticles(self) -> None:
@@ -53,13 +55,17 @@ class SimpleModel(GenericModel):
 
         # Vacuum mass squared
         def psiMsqVacuum(fields: Fields) -> Fields:
-            return self.modelParameters["mf"] + self.modelParameters[
-                "yf"
-            ] * fields.getField(0)
-        
+            return (
+                self.modelParameters["mf"]
+                + self.modelParameters["yf"] * fields.getField(0)
+            ) ** 2
+
         # Field-derivative of the vacuum mass squared
         def psiMsqDerivative(fields: Fields) -> Fields:  # pylint: disable = W0613
-            return self.modelParameters["yf"]
+            return 2 * (
+                self.modelParameters["yf"] * self.modelParameters["mf"]
+                + self.modelParameters["yf"] ** 2 * fields.getField(0)
+            )
 
         # Thermal lass
         def psiMsqThermal(T: float) -> float:
@@ -72,7 +78,7 @@ class SimpleModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         psiR = Particle(
             "psiR",
@@ -81,7 +87,7 @@ class SimpleModel(GenericModel):
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
             statistics="Fermion",
-            totalDOFs=4,
+            totalDOFs=2,
         )
         self.addParticle(psiL)
         self.addParticle(psiR)
@@ -108,9 +114,7 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
     """How many classical background fields"""
     # ~
 
-    def evaluate(
-        self, fields: Fields, temperature: float
-    ) -> float | np.ndarray:
+    def evaluate(self, fields: Fields, temperature: float) -> float | np.ndarray:
         """
         Evaluate the effective potential as a function of the fields and temperature.
         """
@@ -136,67 +140,68 @@ class EffectivePotentialSimple(WallGo.EffectivePotential):
 
         return np.array(potentialTotal)
 
+
 def main() -> None:
 
     manager = WallGo.WallGoManager()
     manager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
-    pathtoCollisions = pathlib.Path(__file__).resolve().parent/ pathlib.Path(f"CollisionOutput_N11")
+    pathtoCollisions = pathlib.Path(__file__).resolve().parent / pathlib.Path(
+        f"CollisionOutput_N11"
+    )
     manager.setPathToCollisionData(pathtoCollisions)
 
     model = SimpleModel()
     manager.registerModel(model)
 
     inputParameters = {
-                    "yf": -0.18,
-                    "mf": 2.0,
-                    "gamma": -4.0,
-                    "kappa": -0.6,
-                    "msq": 1,
-                    "msqTh": 2./115.,
-                    "cubic": -0.77,
-                    "quartic": 0.0055,
-                    }
-    
+        "yf": -0.18,
+        "mf": 2.0,
+        "gamma": -4.0,
+        "kappa": -0.6,
+        "msq": 1.0,
+        "msqTh": 2.0 / 115.0,
+        "cubic": -0.77,
+        "quartic": 0.0055,
+    }
+
     model.modelParameters.update(inputParameters)
-    
+
     manager.setupThermodynamicsHydrodynamics(
-                WallGo.PhaseInfo(
-                    temperature=51.0,  # nucleation temperature
-                    phaseLocation1=WallGo.Fields([0.]),
-                    phaseLocation2=WallGo.Fields([82.5223]),
-                ),
-                WallGo.VeffDerivativeSettings(
-                    temperatureVariationScale=1.0,
-                    fieldValueVariationScale=[
-                        50.0,
-                    ],
-                )
-            )
-    
+        WallGo.PhaseInfo(
+            temperature=51.0,  # nucleation temperature
+            phaseLocation1=WallGo.Fields([0.0]),
+            phaseLocation2=WallGo.Fields([78.]),
+        ),
+        WallGo.VeffDerivativeSettings(
+            temperatureVariationScale=1.0,
+            fieldValueVariationScale=[50.0],
+        ),
+    )
+
     # ---- Solve wall speed in Local Thermal Equilibrium (LTE) approximation
     vwLTE = manager.wallSpeedLTE()
     print(f"LTE wall speed:    {vwLTE:.6f}")
 
     solverSettings = WallGo.WallSolverSettings(
-                    bIncludeOffEquilibrium=False,
-                    meanFreePathScale=1000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
-                )
-
-    results = manager.solveWall(
-                    solverSettings
+        bIncludeOffEquilibrium=False,
+        meanFreePathScale=1000.0,  # In units of 1/Tnucl
+        wallThicknessGuess=5.0,  # In units of 1/Tnucl
     )
 
-    print(f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity:.6f}")
+    results = manager.solveWall(solverSettings)
+
+    print(
+        f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity:.6f}"
+    )
 
     solverSettings.bIncludeOffEquilibrium = True
 
-    results = manager.solveWall(
-                    solverSettings
-    )
+    results = manager.solveWall(solverSettings)
 
-    print(f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity:.6f}")
+    print(
+        f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity:.6f}"
+    )
 
 
 ## Don't run the main function if imported to another file
