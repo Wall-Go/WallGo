@@ -491,6 +491,8 @@ class StandardModelExample(WallGoExampleBase):
         super().configureManager(inOutManager)
         inOutManager.config.configGrid.spatialGridSize = 20
 
+        inOutManager.config.ConfigThermodynamics.phaseTracerTol = 1e-8
+
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
     ) -> None:
