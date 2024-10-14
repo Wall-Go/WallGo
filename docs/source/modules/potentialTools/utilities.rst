@@ -1,8 +1,8 @@
 ======================================
-Collision
+PotentialTools.Utils
 ======================================
 
-.. autoclass:: WallGo.Collision
+.. automodule:: WallGo.PotentialTools.utils
     :members:
     :inherited-members:
     :special-members: __init__

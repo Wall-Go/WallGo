@@ -8,7 +8,7 @@ dynamic = ["version"]
 authors = [
     {name = "Andreas Ekstedt", email = "andreas.ekstedt@desy.de"},
     {name = "Oliver Gould", email = "oliver.gould@nottingham.ac.uk"},
-    {name = "Joonas Hirvonen", email = "joonas.o.hirvonen@helsinki.fi"},
+    {name = "Joonas Hirvonen", email = "joonas.hirvonen@nottingham.ac.uk"},
     {name = "Benoit Laurent", email = "benoit.laurent@mail.mcgill.ca"},
     {name = "Lauri Niemi", email = "lauri.b.niemi@helsinki.fi"},
     {name = "Philipp Schicho", email = "schicho@itp.uni-frankfurt.de"},
