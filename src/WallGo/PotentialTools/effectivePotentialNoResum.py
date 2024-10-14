@@ -239,7 +239,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
 
     def potentialOneLoop(
         self, bosons: tuple, fermions: tuple
-    ) -> float:
+    ) -> float | np.ndarray:
         """One-loop corrections to the zero-temperature effective potential
         in dimensional regularization.
 
@@ -287,7 +287,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
             # no imaginary parts arise if masses are all nonnegative
             potential = np.real(potential)
 
-        return float(potential)
+        return potential
 
     def potentialOneLoopThermal(
         self,
