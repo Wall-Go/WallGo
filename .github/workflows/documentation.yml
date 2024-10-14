@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-
 permissions:
   contents: write
 
@@ -15,11 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pip install ".[docs]"
       - name: Sphinx build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd docs; make html
       - name: Deploy to GitHub Pages
