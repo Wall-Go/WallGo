@@ -30,21 +30,13 @@ If you use WallGo, please cite arXiv:....
     license
 
 .. toctree::
-    :caption: C++ API Reference
-    :maxdepth: 4
-    :hidden:
-
-    collision
-
-
-.. toctree::
     :caption: Python API Reference
     :maxdepth: 4
     :hidden:
 
     modules/boltzmann
     modules/collisionArray
-    modules/collisionWrapper
+    modules/collisionHelpers
     modules/config
     modules/containers
     modules/effectivePotential
