@@ -2,7 +2,7 @@ import pathlib
 import subprocess
 import sys
 
-# Put common matheamtica and DRalgo related functions here.
+# Put common matheamtica and WallGoMatrix related functions here.
 # Common physics/math functions should go into helpers.py
 
 def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: pathlib.Path) -> None:
@@ -12,9 +12,9 @@ def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: p
 
     # Command to execute with the given file path, adjusting for platform
     if sys.platform == "win32":
-        command = ["wolframscript", "-script", filePathStr, "--outputFile", outFilePathStr]
+        command = ["wolframscript", "-script", filePathStr, outFilePathStr]
     else:  # For Linux and macOS
-        command = ["wolframscript", "-script", filePathStr, "--outputFile", outFilePathStr]
+        command = ["wolframscript", "-script", filePathStr, outFilePathStr]
 
     try:
         # run wolframscript
@@ -27,5 +27,5 @@ def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: p
 
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
-        print("Fatal: Error when generating matrix elements from mathematica via DRalgo")
+        print("Fatal: Error when generating matrix elements from mathematica via WallGoMatrix")
         print(e.stderr.decode("utf-8"))
