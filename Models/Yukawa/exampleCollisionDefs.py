@@ -45,7 +45,7 @@ def setupCollisionModel_Yukawa(
         return 1 / 16 * p["y"] ** 2
 
     def scalarThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return p["lam"] / 24.0 * p["y"] ** 2.0 / 6.0
+        return p["lam"] / 24.0 + p["y"] ** 2.0 / 6.0
 
     parameters.add("mf2", fermionThermalMass(parameters))
     parameters.add("ms2", scalarThermalMassSquared(parameters))

@@ -322,6 +322,7 @@ class WallGoExampleBase(ABC):
                         str(self.matrixElementFile), bShouldPrintMatrixElements
                     ):
                         print("FATAL: Failed to load matrix elements")
+                        print(str(self.matrixElementFile))
                         sys.exit()
 
                     collisionTensor = collisionModel.createCollisionTensor(

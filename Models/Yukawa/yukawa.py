@@ -242,10 +242,7 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         # We take the matrix elements from the Yukawa model
-        self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.json"
-        )
+        self.matrixElementFile = pathlib.Path(self.exampleBaseDirectory/ "MatrixElements/MatrixElements_Yukawa.json")
 
      # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
@@ -287,6 +284,31 @@ class YukawaModelExample(WallGoExampleBase):
         collisionModel = setupCollisionModel_Yukawa(wallGoModel.modelParameters)
 
         return collisionModel
+    
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "Yukawa",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagate changes in WallGo model to the collision model."""
+        import WallGoCollision  # pylint: disable = C0415
+
+        changedParams = WallGoCollision.ModelParameters()
+
+        y = inWallGoModel.modelParameters["y"]
+        gamma = inWallGoModel.modelParameters["gamma"]
+        lam = inWallGoModel.modelParameters["lam"]
+        changedParams.addOrModifyParameter("y", y)
+        changedParams.addOrModifyParameter("gamma", gamma)
+        changedParams.addOrModifyParameter("lam", lam)
+        changedParams.addOrModifyParameter(
+            "mf2", 1 / 16 * y ** 2
+        )  # fermion thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "ms2", lam / 24.0 + y ** 2.0 / 6.0
+        )  # scalar thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
     
     def configureCollisionIntegration(
         self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
