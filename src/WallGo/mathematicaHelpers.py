@@ -5,15 +5,16 @@ import sys
 # Put common matheamtica and DRalgo related functions here.
 # Common physics/math functions should go into helpers.py
 
-def generateMatrixElementsViaSubprocess(filePath: pathlib.Path) -> None:
+def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: pathlib.Path) -> None:
     # Ensure filePath is string representation of the path
-    filePathStr = str(filePath)
+    filePathStr = str(inFilePath)
+    outFilePathStr = str(outFilePath)
 
     # Command to execute with the given file path, adjusting for platform
     if sys.platform == "win32":
-        command = ["wolframscript", "-file", filePathStr]
+        command = ["wolframscript", "-script", filePathStr, "--outputFile", outFilePathStr]
     else:  # For Linux and macOS
-        command = ["wolframscript", "-file", filePathStr]
+        command = ["wolframscript", "-script", filePathStr, "--outputFile", outFilePathStr]
 
     try:
         # run wolframscript
