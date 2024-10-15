@@ -1,0 +1,32 @@
+name: WallGo pull request tests
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      
+      # If true, Github will cancel all other jobs in the matrix if any of them fails 
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11"]
+
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install WallGo Python package
+        run: pip install .[tests]
+
+      - name: Test with pytest
+        run: cd ${{ github.workspace }} && pytest -vs

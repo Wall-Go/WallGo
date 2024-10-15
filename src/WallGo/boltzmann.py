@@ -13,10 +13,12 @@ from .polynomial import Polynomial
 from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
+from .exceptions import CollisionLoadError
 
 if typing.TYPE_CHECKING:
     import importlib
-    
+
+
 class BoltzmannSolver:
     """
     Class for solving Boltzmann equations for small deviations from equilibrium.
@@ -37,6 +39,7 @@ class BoltzmannSolver:
         basisM: str = "Cardinal",
         basisN: str = "Chebyshev",
         derivatives: str = "Spectral",
+        collisionMultiplier: float = 1.0,
     ):
         """
         Initialisation of BoltzmannSolver
@@ -45,16 +48,19 @@ class BoltzmannSolver:
         ----------
         grid : Grid
             An object of the Grid class.
-        collisionArray : CollisionArray
-            An object of the CollisionArray class containing the collision
             integrals.
-        derivatives : {'Spectral', 'Finite Difference'}
+        basisM : str, optional
+            The position polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+            Default is 'Cardinal'.
+        basisN : str, optional
+            The momentum polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+            Default is 'Chebyshev'.
+        derivatives : {'Spectral', 'Finite Difference'}, optional
             Choice of method for computing derivatives. Default is 'Spectral'
             which is expected to be more accurate.
-        basisM : str
-            The position polynomial basis type, either 'Cardinal' or 'Chebyshev'.
-        basisN : str
-            The momentum polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+        collisionMultiplier : float, optional
+            Factor by which the collision term is multiplied. Can be used for testing.
+            Default is 1.0.
 
         Returns
         -------
@@ -76,6 +82,8 @@ class BoltzmannSolver:
         self.basisM = basisM
         # Momentum polynomial type
         self.basisN = basisN
+        
+        self.collisionMultiplier = collisionMultiplier
 
         # These are set, and can be updated, by our member functions
         # TODO: are these None types the best way to go?
@@ -150,7 +158,7 @@ class BoltzmannSolver:
 
         # Take all field-space points, but throw the boundary points away
         # TODO: LN: why throw away boundary points?
-        field = self.background.fieldProfiles.TakeSlice(
+        field = self.background.fieldProfiles.takeSlice(
             1, -1, axis=self.background.fieldProfiles.overFieldPoints
         )
 
@@ -589,7 +597,7 @@ class BoltzmannSolver:
         """
 
         # including factored-out T^2 in collision integrals
-        collision = (
+        collision = self.collisionMultiplier * (
             (temperature**2)[:, :, :, :, None, None, None, None]
             * intertwinerChiMat[None, :, None, None, None, :, None, None]
             * self.collisionArray[:, None, :, :, :, None, :, :]
@@ -607,7 +615,7 @@ class BoltzmannSolver:
         # returning results
         return operator, source, liouville, collision
 
-    def loadCollisions(self, directoryPath: 'pathlib.Path') -> None:
+    def loadCollisions(self, directoryPath: "pathlib.Path") -> None:
         """
         Loads collision files for use with the Boltzmann solver.
 
@@ -616,15 +624,20 @@ class BoltzmannSolver:
 
         Returns:
             None
-        """
-        self.collisionArray = CollisionArray.newFromDirectory(
-            directoryPath,
-            self.grid,
-            self.basisN,
-            self.offEqParticles,
-        )
-        print(f"Loaded collision data from directory {directoryPath}")
 
+        Raises:
+            CollisionLoadError
+        """
+        try:
+            self.collisionArray = CollisionArray.newFromDirectory(
+                directoryPath,
+                self.grid,
+                self.basisN,
+                self.offEqParticles,
+            )
+            print(f"Loaded collision data from directory {directoryPath}")
+        except CollisionLoadError as e:
+            raise
 
     @staticmethod
     def _checkBasis(basis: str) -> None:

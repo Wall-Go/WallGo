@@ -3,7 +3,7 @@ Data classes passed around WallGo
 """
 from dataclasses import dataclass
 import numpy as np
-from .Fields import Fields
+from .fields import Fields
 from .helpers import boostVelocity
 from .polynomial import Polynomial
 
@@ -30,7 +30,8 @@ class WallParams:
     """
 
     widths: np.ndarray  # 1D array
-    """Bubble wall widths in each field direction."""
+    """Bubble wall widths in each field direction. Should be expressed in physical units
+    (the units used in EffectivePotential)."""
 
     offsets: np.ndarray  # 1D array
     """Bubble wall offsets in each field direction."""

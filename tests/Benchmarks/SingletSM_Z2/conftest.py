@@ -43,7 +43,8 @@ def singletBenchmarkPoint() -> BenchmarkPoint:
 @pytest.fixture(scope="session")
 def singletBenchmarkModel(singletBenchmarkPoint: BenchmarkPoint) -> BenchmarkModel:
     inputs = singletBenchmarkPoint.inputParams
-    model = SingletSMZ2(inputs)
+    model = SingletSMZ2()
+    model.updateModel(inputs)
 
     yield BenchmarkModel(model, singletBenchmarkPoint)
 
@@ -78,16 +79,19 @@ def singletBenchmarkThermo(
     # I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
     # so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletBenchmarkModel.model.effectivePotential, Tn, phase2, phase1,
+        singletBenchmarkModel.model.getEffectivePotential(),
+        Tn,
+        phase2,
+        phase1,
     )
 
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
 
-    thermo.freeEnergyHigh.minPossibleTemperature = 50.
-    thermo.freeEnergyHigh.maxPossibleTemperature = 200.
-    thermo.freeEnergyLow.minPossibleTemperature = 50.
-    thermo.freeEnergyLow.maxPossibleTemperature = 200.
+    thermo.freeEnergyHigh.minPossibleTemperature = 50.0
+    thermo.freeEnergyHigh.maxPossibleTemperature = 200.0
+    thermo.freeEnergyLow.minPossibleTemperature = 50.0
+    thermo.freeEnergyLow.maxPossibleTemperature = 200.0
 
     thermo.setExtrapolate()
 
@@ -109,7 +113,7 @@ def singletBenchmarkThermo_interpolate(
     ## I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
     ## so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletBenchmarkModel.model.effectivePotential, Tn, phase2, phase1
+        singletBenchmarkModel.model.getEffectivePotential(), Tn, phase2, phase1
     )
 
     ## Let's turn these off so that things are more transparent
@@ -135,7 +139,7 @@ def singletSimpleBenchmarkEffectivePotential(
 
     # shorthand
     BM = singletSimpleBenchmarkModel.benchmarkPoint
-    Veff = singletSimpleBenchmarkModel.model.effectivePotential
+    Veff = singletSimpleBenchmarkModel.model.getEffectivePotential()
 
     yield Veff, BM
 
@@ -154,15 +158,15 @@ def singletSimpleBenchmarkFreeEnergy(
 
     # free energies for both phases
     freeEnergy1 = WallGo.FreeEnergy(
-        singletSimpleBenchmarkModel.model.effectivePotential, Tn, phase1
+        singletSimpleBenchmarkModel.model.getEffectivePotential(), Tn, phase1
     )
     freeEnergy2 = WallGo.FreeEnergy(
-        singletSimpleBenchmarkModel.model.effectivePotential, Tn, phase2
+        singletSimpleBenchmarkModel.model.getEffectivePotential(), Tn, phase2
     )
 
     # interpolation range
-    TMin = 50.
-    TMax = 150.
+    TMin = 50.0
+    TMax = 150.0
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
@@ -177,7 +181,7 @@ def singletSimpleBenchmarkFreeEnergy(
 def singletSimpleBenchmarkThermodynamics(
     singletSimpleBenchmarkModel: BenchmarkModel,
 ) -> Tuple[WallGo.Thermodynamics, BenchmarkPoint]:
-    
+
     BM = singletSimpleBenchmarkModel.benchmarkPoint
 
     Tn = BM.phaseInfo["Tn"]
@@ -185,15 +189,15 @@ def singletSimpleBenchmarkThermodynamics(
     phase2 = BM.expectedResults["phaseLocation2"]
 
     # interpolation range
-    TMin = 50.
-    TMax = 150.
+    TMin = 50.0
+    TMax = 150.0
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
     # I assume phase1 = high-T, phase2 = low-T. Would prefer to drop these labels though,
     # so WallGo could safely assume that the transition is always phase1 -> phase2
     thermo = WallGo.Thermodynamics(
-        singletSimpleBenchmarkModel.model.effectivePotential,
+        singletSimpleBenchmarkModel.model.getEffectivePotential(),
         Tn,
         phase2,
         phase1,
@@ -219,7 +223,7 @@ def singletBenchmarkHydrodynamics(
 
     thermo, BM = singletBenchmarkThermo_interpolate
 
-    yield WallGo.Hydrodynamics(thermo, 10., 0.01, 1e-6, 1e-6), BM
+    yield WallGo.Hydrodynamics(thermo, 10.0, 0.01, 1e-6, 1e-6), BM
 
 
 ## This wouldn't need to be singlet-specific tbh. But it's here for now
@@ -233,7 +237,9 @@ def singletBenchmarkGrid() -> Tuple[WallGo.Grid, WallGo.Polynomial]:
     wallThickness = 0.05
     momentumFalloffT = 100
 
-    grid = WallGo.grid3Scales.Grid3Scales(M, N, tailInside, tailOutside, wallThickness, momentumFalloffT)
+    grid = WallGo.grid3Scales.Grid3Scales(
+        M, N, tailInside, tailOutside, wallThickness, momentumFalloffT
+    )
 
     return grid
 
@@ -248,10 +254,11 @@ def singletBenchmarkCollisionArray(
     import pathlib
 
     fileDir = pathlib.Path(__file__).parent.resolve()
-    collisionPath = fileDir / "../../Testdata/N11/"
+    collisionPath = fileDir / "../../TestData/N11/"
 
-    return WallGo.CollisionArray.newFromDirectory(collisionPath, singletBenchmarkGrid, "Chebyshev", 
-                                      particles, bInterpolate=False)
+    return WallGo.CollisionArray.newFromDirectory(
+        collisionPath, singletBenchmarkGrid, "Chebyshev", particles, bInterpolate=False
+    )
 
 
 @pytest.fixture(scope="session")
@@ -284,13 +291,21 @@ def singletBenchmarkEOM_equilibrium(
     hydrodynamics, _ = singletBenchmarkHydrodynamics
     grid = singletBenchmarkGrid
     boltzmannSolver = singletBenchmarkBoltzmannSolver
-    meanFreePath = 0
+    meanFreePathScale = 0
 
     fieldCount = 2
 
     ## TODO fix error tolerance?
     eom = WallGo.EOM(
-        boltzmannSolver, thermo, hydrodynamics, grid, fieldCount, meanFreePath, (0.1,100.), (-10.,10.), includeOffEq=False
+        boltzmannSolver,
+        thermo,
+        hydrodynamics,
+        grid,
+        fieldCount,
+        meanFreePathScale,
+        (0.1, 100.0),
+        (-10.0, 10.0),
+        includeOffEq=False,
     )
 
     return eom, BM

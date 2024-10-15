@@ -27,7 +27,7 @@ import pathlib
 import sys
 
 ## WallGo imports
-import WallGo ## Whole package, in particular we get WallGo.initialize()
+import WallGo ## Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import GenericModel
 from WallGo import Particle
 from WallGo import WallGoManager
@@ -69,8 +69,8 @@ class SingletSM_Z2(GenericModel):
         self.clearParticles()
 
         ## === Top quark ===
-        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.GetField(0)**2
-        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.GetField(0),0*fields.GetField(1)])
+        topMsqVacuum = lambda fields: 0.5 * self.modelParameters["yt"]**2 * fields.getField(0)**2
+        topMsqDerivative = lambda fields: self.modelParameters["yt"]**2 * np.transpose([fields.getField(0),0*fields.getField(1)])
         topMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 / 6.0
 
         topQuarkL = Particle("topL",
@@ -96,7 +96,7 @@ class SingletSM_Z2(GenericModel):
 
         ## === SU(3) gluon ===
         # The msqVacuum function must take a Fields object and return an array of length equal to the number of points in fields.
-        gluonMsqVacuum = lambda fields: np.zeros_like(fields.GetField(0))
+        gluonMsqVacuum = lambda fields: np.zeros_like(fields.getField(0))
         # The msqDerivative function must take a Fields object and return an array with the same shape as fields.
         gluonMsqDerivative = lambda fields: np.zeros_like(fields)
         gluonMsqThermal = lambda T: self.modelParameters["g3"]**2 * T**2 * 2.0
@@ -258,14 +258,14 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
     # The user needs to define evaluate(), which has to return value of the effective potential when evaluated at a given field configuration, temperature pair. 
     # Remember to include full T-dependence, including eg. the free energy contribution from photons (which is field-independent!)
 
-    def evaluate(self, fields: Fields, temperature: float, checkForImaginary: bool = False) -> complex:
+    def evaluate(self, fields: Fields, temperature: float) -> complex:
 
         # for Benoit benchmark we don't use high-T approx and no resummation:
         # just Coleman-Weinberg with numerically evaluated thermal 1-loop
 
         # phi ~ 1/sqrt(2) (0, v), S ~ x
         fields = Fields(fields)
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         msq = self.modelParameters["msq"]
         b2 = self.modelParameters["b2"]
@@ -282,14 +282,14 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
             + 0.25*a2*v**2 *x**2)
 
         # TODO should probably use the list of defined particles here?
-        bosonStuff = self.bosonStuff(fields, temperature)
-        fermionStuff = self.fermionStuff(fields, temperature)
+        bosonInformation = self.bosonInformation(fields, temperature)
+        fermionInformation = self.fermionInformation(fields, temperature)
 
         VTotal = (
             + V0
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
-            + self.potentialOneLoopThermal(bosonStuff, fermionStuff, temperature, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation)
+            + self.potentialOneLoopThermal(bosonInformation, fermionInformation, temperature)
         )
 
         return VTotal   
@@ -413,9 +413,9 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return thermalParameters
     """
 
-    def bosonStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def bosonInformation(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         
-        v, x = fields.GetField(0), fields.GetField(1)
+        v, x = fields.getField(0), fields.getField(1)
 
         # TODO: numerical determination of scalar masses from V0
 
@@ -454,9 +454,9 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
         return massSq, degreesOfFreedom, c, rgScale
     
 
-    def fermionStuff(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def fermionInformation(self, fields: Fields, temperature: float) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
 
-        v = fields.GetField(0)
+        v = fields.getField(0)
 
         # Just top quark, others are taken massless
         yt = self.modelParameters["yt"]
@@ -475,12 +475,10 @@ class EffectivePotentialxSM_Z2(EffectivePotentialNoResum):
 
 def main() -> None:
 
-    WallGo.initialize()
-
     ## Modify the config, we use N=5 for this example
     WallGo.config.config.set("PolynomialGrid", "momentumGridSize", "5")
 
-    # Print WallGo config. This was read by WallGo.initialize()
+    # Print WallGo config. This was read by WallGo._initializeInternal()
     print("=== WallGo configuration options ===")
     print(WallGo.config)
 
@@ -488,21 +486,21 @@ def main() -> None:
     wallThicknessIni = 0.05
 
     # Estimate of the mean free path of the particles in the plasma
-    meanFreePath = 1
+    meanFreePathScale = 1
 
     ## Create WallGo control object
     # The following 2 parameters are used to estimate the optimal value of dT used
     # for the finite difference derivatives of the potential.
     # Temperature scale over which the potential changes by O(1).
     # A good value would be of order Tc-Tn.
-    temperatureScale = 10.
+    temperatureVariationScale = 10.
     # Field scale over which the potential changes by O(1).
     # A good value would be similar to the field VEV.
     # Can either be a single float, in which case all
     # the fields have the same scale, or an array.
-    fieldScale = [10.,10.]
+    fieldValueVariationScale = [10.,10.]
     manager = WallGoManager(
-        wallThicknessIni, meanFreePath, temperatureScale, fieldScale)
+        wallThicknessIni, meanFreePathScale, temperatureVariationScale, fieldValueVariationScale)
 
     """Initialize your GenericModel instance. 
     The constructor currently requires an initial parameter input,

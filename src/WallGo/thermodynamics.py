@@ -8,10 +8,10 @@ from typing import Tuple
 import numpy as np
 import scipy.optimize
 
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
-from .Fields import Fields
-from .FreeEnergy import FreeEnergy
+from .fields import Fields
+from .freeEnergy import FreeEnergy
 
 
 class Thermodynamics:
@@ -70,10 +70,10 @@ class Thermodynamics:
             self.phaseLowT,
         )
 
-        self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature
+        self.TMaxHighT: float = self.freeEnergyHigh.maxPossibleTemperature[0]
+        self.TMinHighT: float = self.freeEnergyHigh.minPossibleTemperature[0]
+        self.TMaxLowT: float = self.freeEnergyLow.maxPossibleTemperature[0]
+        self.TMinLowT: float = self.freeEnergyLow.minPossibleTemperature[0]
 
         # These parameters are set by setExtrapolate
         self.muMinHighT = 0.0
@@ -111,10 +111,10 @@ class Thermodynamics:
 
         """
 
-        self.TMaxHighT = self.freeEnergyHigh.maxPossibleTemperature
-        self.TMinHighT = self.freeEnergyHigh.minPossibleTemperature
-        self.TMaxLowT = self.freeEnergyLow.maxPossibleTemperature
-        self.TMinLowT = self.freeEnergyLow.minPossibleTemperature
+        self.TMaxHighT = self.freeEnergyHigh.maxPossibleTemperature[0]
+        self.TMinHighT = self.freeEnergyHigh.minPossibleTemperature[0]
+        self.TMaxLowT = self.freeEnergyLow.maxPossibleTemperature[0]
+        self.TMinLowT = self.freeEnergyLow.minPossibleTemperature[0]
 
         self.muMinHighT = float(1 + 1 / self.csqHighT(self.TMinHighT))
         self.aMinHighT = float(
@@ -170,12 +170,12 @@ class Thermodynamics:
             The minimum and maximum temperature of phase coexistence
         """
         TMin = max(
-            self.freeEnergyHigh.minPossibleTemperature,
-            self.freeEnergyLow.minPossibleTemperature,
+            self.freeEnergyHigh.minPossibleTemperature[0],
+            self.freeEnergyLow.minPossibleTemperature[0],
         )
         TMax = min(
-            self.freeEnergyHigh.maxPossibleTemperature,
-            self.freeEnergyLow.maxPossibleTemperature,
+            self.freeEnergyHigh.maxPossibleTemperature[0],
+            self.freeEnergyLow.maxPossibleTemperature[0],
         )
         return (TMin, TMax)
 

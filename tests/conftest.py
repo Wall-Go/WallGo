@@ -7,8 +7,7 @@ import numpy as np
 import WallGo
 
 ## should clean these imports...
-from Models.SingletStandardModel_Z2.singletStandardModelZ2 import SingletSMZ2
-from tests.Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
+from .Benchmarks.SingletSM_Z2.Benchmarks_singlet import singletBenchmarks
 from .BenchmarkPoint import BenchmarkPoint
 
 
@@ -50,9 +49,9 @@ def particle() -> WallGo.Particle:
     return WallGo.Particle(
         name="top",
         index=0,
-        msqVacuum=lambda phi: 0.5 * phi.GetField(0) ** 2,
+        msqVacuum=lambda phi: 0.5 * phi.getField(0) ** 2,
         msqDerivative=lambda fields: np.transpose(
-            [fields.GetField(0), 0 * fields.GetField(1)]
+            [fields.getField(0), 0 * fields.getField(1)]
         ),
         msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",

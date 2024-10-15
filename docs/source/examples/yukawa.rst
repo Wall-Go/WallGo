@@ -2,5 +2,5 @@
 Yukawa
 ======================================
 
-.. literalinclude:: ../../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../../Models/Yukawa/yukawa.py
    :language: py

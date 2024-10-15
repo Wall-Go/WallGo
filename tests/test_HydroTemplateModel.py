@@ -6,8 +6,8 @@ import WallGo
 
 @dataclass
 class FreeEnergyHack:
-    minPossibleTemperature: float
-    maxPossibleTemperature: float 
+    minPossibleTemperature: [float, bool]
+    maxPossibleTemperature: [float, bool] 
 
 class TestModelTemplate(WallGo.Thermodynamics):
     __test__ = False
@@ -27,8 +27,8 @@ class TestModelTemplate(WallGo.Thermodynamics):
         self.am = 3*wn*psiN/(self.nu*Tn**self.nu)
         self.eps = 0
         self.eps = (self.pHighT(Tn)-self.pLowT(Tn)-cb2*(self.eHighT(Tn)-self.eLowT(Tn)-3*wn*alN))/(1+cb2)
-        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
-        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=10.)
+        self.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[10., False])
+        self.freeEnergyLow =FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[10., False])
 
         self.TMinLowT = 0.01
         self.TMaxLowT = 10.
@@ -164,10 +164,10 @@ def test_fastestDeflag():
         res1[i] = vw
         if i%2 == 0:
             _,_,_,Tm = hydroTemplate.findMatching(vw)
-            model.freeEnergyLow=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tm)
+            model.freeEnergyLow=FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[Tm, False])
         else:
             _,_,Tp,_ = hydroTemplate.findMatching(vw)
-            model.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=0.01, maxPossibleTemperature=Tp)
+            model.freeEnergyHigh=FreeEnergyHack(minPossibleTemperature=[0.01, False], maxPossibleTemperature=[Tp, False])
 
         hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-6,1e-6)
         res2[i] = hydrodynamics.fastestDeflag()

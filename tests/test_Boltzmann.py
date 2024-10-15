@@ -36,7 +36,7 @@ def test_Delta00(
     # that works because argument name here matches that used in fixture def
     bg = boltzmannTestBackground
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 100)
-    collisionPath = dir_path / "Testdata/N19"
+    collisionPath = dir_path / "TestData/N19"
     boltzmann = WallGo.BoltzmannSolver(grid, "Cardinal", "Cardinal", "Spectral")
 
     boltzmann.updateParticleList([particle])
@@ -100,7 +100,7 @@ def test_solution(
     bg = boltzmannTestBackground
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 1)
 
-    collisionPath = dir_path / "Testdata/N11"
+    collisionPath = dir_path / "TestData/N11"
     boltzmann = WallGo.BoltzmannSolver(grid)
     boltzmann.updateParticleList([particle])
     boltzmann.setBackground(bg)

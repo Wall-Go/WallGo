@@ -8,16 +8,30 @@ dynamic = ["version"]
 authors = [
     {name = "Andreas Ekstedt", email = "andreas.ekstedt@desy.de"},
     {name = "Oliver Gould", email = "oliver.gould@nottingham.ac.uk"},
-    {name = "Joonas Hirvonen", email = "joonas.o.hirvonen@helsinki.fi"},
+    {name = "Joonas Hirvonen", email = "joonas.hirvonen@nottingham.ac.uk"},
     {name = "Benoit Laurent", email = "benoit.laurent@mail.mcgill.ca"},
     {name = "Lauri Niemi", email = "lauri.b.niemi@helsinki.fi"},
     {name = "Philipp Schicho", email = "schicho@itp.uni-frankfurt.de"},
     {name = "Jorinde van de Vis", email = "vandevis@lorentz.leidenuniv.nl"},
 ]
-description = "A package for computing the bubble wall speed"
-license = {text = "MIT"}
+description = "A package for computing the bubble wall speed in cosmological phase transitions."
+license = {text = "GPL v3.0"}
 classifiers = [
+    # Audience and topic
+    "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Physics",
+
+    # License
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+
+    # Status
+    "Development Status :: 3 - Alpha",
+
+    # Python versions supported
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -27,17 +41,15 @@ dependencies = [
     "scipy>=1.9.0",
     "deprecated>=1.2.14",
 ]
-readme = "README.rst"
+readme = "README.md"
 
 [project.optional-dependencies]
-collisions = [
-    "pybind11[global]>=0.1.35"
-]
 tests = [
     "pytest>=7.2.2",
 ]
 docs = [
     "graphviz",
+    "myst_parser",
     "sphinx",
     "sphinx-rtd-theme",
     "sphinx-automodapi",
@@ -50,8 +62,10 @@ lint = [
 ]
 
 [project.urls]
-"Homepage" = "https://wallspeed.readthedocs.io/"
-"Repository" = "https://github.com/Wall-Go/WallGo"
+Homepage = "https://wallspeed.readthedocs.io/"
+Repository = "https://github.com/Wall-Go/WallGo"
+Issues = "https://github.com/Wall-Go/WallGo/issues"
+Changelog = "https://github.com/Wall-Go/WallGo/blob/main/CHANGELOG.rst"
 
 [tool.setuptools]
 include-package-data = true
@@ -78,7 +92,7 @@ indent-string = "    "
 [tool.pylint.basic]
 # naming styles: PEP8 except camelCase instead of snake_case
 argument-rgx='^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
-attr-rgx = '^[a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
+attr-rgx = '^[_a-z][a-zA-Z0-9]*$|^T[a-zA-Z0-9]*$'
 class-naming-style = "PascalCase"
 class-attribute-naming-style = "camelCase"
 class-const-naming-style = "UPPER_CASE"
