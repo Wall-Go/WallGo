@@ -64,7 +64,25 @@ def setupCollisionModel_Yukawa(
 
     modelDefinition.defineParticleSpecies(phiParticle)
 
+    psiLParticle = WallGoCollision.ParticleDescription()
+    psiLParticle.name = "psiL"
+    psiLParticle.index = 1
+    psiLParticle.bInEquilibrium = False
+    psiLParticle.bUltrarelativistic = True
+    psiLParticle.type = WallGoCollision.EParticleType.eFermion
+
+    psiRParticle = WallGoCollision.ParticleDescription()
+    psiRParticle.name = "psiR"
+    psiRParticle.index = 2
+    psiRParticle.bInEquilibrium = False 
+    psiRParticle.bUltrarelativistic = True
+    psiRParticle.type = WallGoCollision.EParticleType.eFermion
+
+    modelDefinition.defineParticleSpecies(psiLParticle)
+    modelDefinition.defineParticleSpecies(psiRParticle)
+
 
     # Create the concrete model
     model = WallGoCollision.PhysicsModel(modelDefinition)
+
     return model

@@ -242,7 +242,10 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         # We take the matrix elements from the Yukawa model
-        self.matrixElementFile = pathlib.Path(self.exampleBaseDirectory/ "MatrixElements/MatrixElements_Yukawa.json")
+        self.matrixElementFile = pathlib.Path(
+            self.exampleBaseDirectory
+            / "MatrixElements/MatrixElements_Yukawa.json"
+            )
 
      # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
@@ -287,7 +290,7 @@ class YukawaModelExample(WallGoExampleBase):
     
     def updateCollisionModel(
         self,
-        inWallGoModel: "Yukawa",
+        inWallGoModel: "YukawaModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
         """Propagate changes in WallGo model to the collision model."""
