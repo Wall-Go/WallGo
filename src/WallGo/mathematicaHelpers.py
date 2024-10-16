@@ -5,7 +5,10 @@ import sys
 # Put common Wolfram Mathematica and WallGoMatrix related functions here.
 # Common physics/math functions should go into helpers.py
 
-def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: pathlib.Path) -> None:
+
+def generateMatrixElementsViaSubprocess(
+    inFilePath: pathlib.Path, outFilePath: pathlib.Path, bVerbose: bool = False
+) -> None:
     """
     Generates matrix elements by executing a Mathematica script via a subprocess.
 
@@ -24,25 +27,44 @@ def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: p
         subprocess.CalledProcessError: If the subprocess command fails.
     """
     # Ensure filePath is string representation of the path
-    filePathStr = str(inFilePath)
+
+    inFilePathStr = str(inFilePath)
     outFilePathStr = str(outFilePath)
+
+    banner = f"""\n
+================================================
+    WallGoMatrix: Recomputing Matrix Elements
+================================================
+
+    Matrix elements are being recomputed from
+    Input file  : {inFilePathStr}
+
+    Matrix elements are being stored at 
+    Output path: {outFilePathStr}
+    using WallGoMatrix.
+    
+    Please wait while the computation is in progress...
+================================================
+"""
+    print(banner)
 
     # Command to execute with the given file path, adjusting for platform
     if sys.platform == "win32":
-        command = ["wolframscript", "-script", filePathStr, outFilePathStr]
+        command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
     else:  # For Linux and macOS
-        command = ["wolframscript", "-script", filePathStr, outFilePathStr]
+        command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
 
     try:
         # run wolframscript
         result = subprocess.run(
-            command, check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        print(result.stdout.decode('utf-8'))  # If you want to print the output
+        if bVerbose:
+            print(result.stdout.decode("utf-8"))  # If you want to print the output
 
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
-        print("Fatal: Error when generating matrix elements from mathematica via WallGoMatrix")
+        print(
+            "Fatal: Error when generating matrix elements from Mathematica via WallGoMatrix"
+        )
         print(e.stderr.decode("utf-8"))
