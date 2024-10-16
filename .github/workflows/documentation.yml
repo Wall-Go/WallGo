@@ -38,7 +38,10 @@ jobs:
           make html
           mkdir ../docs
           mv _build/html/* ../docs
-          echo "The HTML pages have been moved to docs"
+          echo "The HTML pages have been moved to docs."
+          cd ..
+          pwd
+          ls -l docs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -46,5 +49,5 @@ jobs:
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/
+          publish_dir: docs
           force_orphan: true
