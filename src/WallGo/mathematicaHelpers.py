@@ -2,10 +2,27 @@ import pathlib
 import subprocess
 import sys
 
-# Put common matheamtica and WallGoMatrix related functions here.
+# Put common Wolfram Mathematica and WallGoMatrix related functions here.
 # Common physics/math functions should go into helpers.py
 
 def generateMatrixElementsViaSubprocess(inFilePath: pathlib.Path, outFilePath: pathlib.Path) -> None:
+    """
+    Generates matrix elements by executing a Mathematica script via a subprocess.
+
+    This function takes the input and output file paths, converts them to string representations,
+    and constructs a command to run a Mathematica script using `wolframscript`. The command is
+    executed using the `subprocess.run` method, and the output is printed to the console. If the
+    command fails, an error message is printed.
+
+    This requires an active WolframKernel.
+
+    Args:
+        inFilePath (pathlib.Path): The path to the input file containing the Mathematica script.
+        outFilePath (pathlib.Path): The path to the output file where the results will be saved.
+
+    Raises:
+        subprocess.CalledProcessError: If the subprocess command fails.
+    """
     # Ensure filePath is string representation of the path
     filePathStr = str(inFilePath)
     outFilePathStr = str(outFilePath)

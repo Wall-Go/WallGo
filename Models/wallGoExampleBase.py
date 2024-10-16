@@ -234,6 +234,7 @@ class WallGoExampleBase(ABC):
                 self.exampleBaseDirectory / "MatrixElements/UserGenerated"
             )
             self.matrixElementFile = newMatrixElementFile
+            # this subprocess requires wolframscript and an active WolframKernel.
             mathematicaHelpers.generateMatrixElementsViaSubprocess(self.matrixElementInput,self.matrixElementFile)
 
 
