@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       
@@ -37,7 +37,8 @@ jobs:
           cd docsrc
           make html
           mkdir ../docs
-          mv _build/html ../docs
+          mv _build/html/* ../docs
+          echo "The HTML pages have been moved to docs"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

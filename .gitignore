@@ -8,7 +8,6 @@ temp/
 build
 docsrc/_build
 docs/_build
-docs/
 *.egg-info
 dist/
 *.hdf5
