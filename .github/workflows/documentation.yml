@@ -34,20 +34,15 @@ jobs:
       - name: Sphinx build
         run: |
           cd ${{ github.workspace }}
-          cd docsrc
-          make html
-          mkdir ../docs
-          mv _build/html/* ../docs
-          echo "The HTML pages have been moved to docs."
-          cd ..
+          sphinx-build docs/source docs/_build
+          cd docs
           pwd
-          ls -l docs
+          ls -l
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: peaceiris/actions-gh-pages@v3
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs
+          publish_dir: docs/_build/
           force_orphan: true
