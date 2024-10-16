@@ -78,8 +78,9 @@ class WallGoManager:
 
         # Initialise the configs with the default values
         self.config = Config()
-        
-        logging.basicConfig(format='%(message)s', level=logging.INFO, force=True)
+
+        # Set the default verbosity level to logging.INFO
+        self.setVerbosity(logging.INFO)
 
         # default to working directory
         self.collisionDirectory = pathlib.Path.cwd()
@@ -98,6 +99,9 @@ class WallGoManager:
         Returns the momentum grid size.
         """
         return self.config.configGrid.momentumGridSize
+
+    def setVerbosity(self, verbosityLevel: int) -> None:
+        logging.basicConfig(format='%(message)s', level=verbosityLevel, force=True)
 
     def setupThermodynamicsHydrodynamics(
         self,

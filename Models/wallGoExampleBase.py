@@ -11,6 +11,7 @@ from pathlib import Path
 import copy
 import inspect
 import sys
+import logging
 
 import WallGo
 
@@ -109,6 +110,15 @@ class WallGoExampleBase(ABC):
             default=0,
             help="""Basis size N override for momentum grid. Values less than equal
             to 0 are ignored and we use whatever default the example has defined.""",
+        )
+        
+        argParser.add_argument(
+            "-v",
+            "--verbose",
+            type=int,
+            default=logging.DEBUG,
+            help="""Set the verbosity level. Must an int: DEBUG=10, INFO=20, WARNING=30,
+                     ERROR=40. Default is DEBUG.""",
         )
 
         argParser.add_argument(
@@ -210,6 +220,8 @@ class WallGoExampleBase(ABC):
 
         # Initialise the manager
         manager = WallGo.WallGoManager()
+
+        manager.setVerbosity(self.cmdArgs.verbose)
 
         # Update the configs
         self.configureManager(manager)
