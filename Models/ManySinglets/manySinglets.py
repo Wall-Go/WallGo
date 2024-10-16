@@ -450,7 +450,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         return phase1, phase2
 
-    def evaluate( #pylint: disable = R0914
+    def evaluate(  # pylint: disable = R0914
         self, fields: Fields, temperature: float
     ) -> np.ndarray:
         """
@@ -501,7 +501,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         return potentialTotal
 
-    def constantTerms(self,  temperature: np.ndarray | float) -> np.ndarray | float:
+    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
@@ -586,7 +586,7 @@ class NSingletsModelExample(WallGoExampleBase):
         collisionModel = setupCollisionModel_QCD(wallGoModel.modelParameters)
 
         return collisionModel
-    
+
     def updateCollisionModel(
         self,
         inWallGoModel: "SingletSMZ2",
@@ -658,13 +658,11 @@ class NSingletsModelExample(WallGoExampleBase):
 
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
-
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """We load the configs from a file for this example."""
-        inOutManager.config.loadConfigFromFile(pathlib.Path(
-            self.exampleBaseDirectory
-            / "manySingletsConfig.ini"
-        ))
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "manySingletsConfig.ini")
+        )
         super().configureManager(inOutManager)
 
     def updateModelParameters(
@@ -737,13 +735,14 @@ class NSingletsModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0, 10.0]
+                    temperatureVariationScale=10.0,
+                    fieldValueVariationScale=[10.0, 10.0, 10.0],
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0,  # In units of 1/Tnucl
+                    wallThicknessGuess=5.0,  # In units of 1/Tnucl
                 ),
             )
         )
