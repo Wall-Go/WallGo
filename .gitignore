@@ -5,8 +5,10 @@ temp/
 *.DS_Store
 */.DS_Store
 *.png
-build/
+build
+docsrc/_build
 docs/_build
+docs/
 *.egg-info
 dist/
 *.hdf5

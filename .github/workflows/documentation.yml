@@ -33,7 +33,11 @@ jobs:
 
       - name: Sphinx build
         run: |
-          cd ${{ github.workspace }} && cd docs && make html
+          cd ${{ github.workspace }}
+          cd docsrc
+          make html
+          mkdir ../docs
+          mv _build/html ../docs
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -41,5 +45,5 @@ jobs:
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/build/
+          publish_dir: docs/
           force_orphan: true
