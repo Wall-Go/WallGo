@@ -1,5 +1,7 @@
 """Initialising WallGo package"""
 
+import warnings
+
 # subpackage
 from . import PotentialTools
 
@@ -40,7 +42,7 @@ try:
     from .collisionHelpers import *
 
 except ImportError as e:
-    RuntimeWarning(f"Error loading WallGoCollision module: {e}"
+    warnings.warn(f"Error loading WallGoCollision module: {e}"
         "This could indicate an issue with your installation of WallGo or "
         "WallGoCollision, or both. This is non-fatal, but you will not be able to"
         " utilize collision integration routines."
