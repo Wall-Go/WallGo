@@ -17,7 +17,7 @@ def generateMatrixElementsViaSubprocess(
     executed using the `subprocess.run` method, and the output is printed to the console. If the
     command fails, an error message is printed.
 
-    This requires an active WolframKernel.
+    This requires a licensed installation of WolframEngine.
 
     Args:
         inFilePath (pathlib.Path): The path to the input file containing the Mathematica script.
@@ -33,25 +33,14 @@ def generateMatrixElementsViaSubprocess(
 
     banner = f"""\n
 ================================================
-    WallGoMatrix: Recomputing Matrix Elements
-================================================
-
-    Matrix elements are being recomputed from
+    WallGoMatrix recomputing Matrix Elements:
     Input file  : {inFilePathStr}
-
-    Matrix elements are being stored at 
     Output path : {outFilePathStr}
-    
-    Please wait while the computation is in progress...
 ================================================
 """
     print(banner)
 
-    # Command to execute with the given file path, adjusting for platform
-    if sys.platform == "win32":
-        command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
-    else:  # For Linux and macOS
-        command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
+    command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
 
     try:
         # run wolframscript
@@ -64,6 +53,6 @@ def generateMatrixElementsViaSubprocess(
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
         print(
-            "Fatal: Error when generating matrix elements from Mathematica via WallGoMatrix"
+            "Fatal: Error when generating matrix elements from Mathematica via WallGoMatrix. Ensure a licensed installation of WolframEngine."
         )
         print(e.stderr.decode("utf-8"))

@@ -13,10 +13,10 @@ import inspect
 import sys
 
 import WallGo
+from WallGo import mathematicaHelpers   
 
 if typing.TYPE_CHECKING:
     import WallGoCollision
-
 
 @dataclass
 class ExampleInputPoint:
@@ -229,12 +229,11 @@ class WallGoExampleBase(ABC):
             )
         
         if bNeedsNewMatrixElements:
-            from WallGo import mathematicaHelpers   
             newMatrixElementFile =  pathlib.Path(
                 self.exampleBaseDirectory / "MatrixElements/UserGenerated"
             )
             self.matrixElementFile = newMatrixElementFile
-            # this subprocess requires wolframscript and an active WolframKernel.
+            # this subprocess requires wolframscript and a licensed installation of WolframEngine.
             mathematicaHelpers.generateMatrixElementsViaSubprocess(self.matrixElementInput,self.matrixElementFile)
 
 
