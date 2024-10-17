@@ -1,5 +1,6 @@
 import subprocess
 import pathlib
+import logging
 
 ## Put common matheamtica and DRalgo related functions here. Common physics/math functions should go into helpers.py
 
@@ -16,7 +17,7 @@ def generateMatrixElementsViaSubprocess(filePath: pathlib.Path) -> None:
 
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
-        print(
+        logging.error(
             "Fatal: Error when generating matrix elements from mathematica via DRalgo"
         )
-        print(e.stderr.decode("utf-8"))
+        logging.error(e.stderr.decode("utf-8"))

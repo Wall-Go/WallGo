@@ -56,11 +56,9 @@ def _initalizeIntegralInterpolations() -> None:  # pylint: disable=invalid-name
 
     defaultIntegrals.Jb.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jb")),
-        bVerbose=False,
     )
     defaultIntegrals.Jf.readInterpolationTable(
         getSafePathToResource(config.get("DataFiles", "InterpolationTable_Jf")),
-        bVerbose=False,
     )
 
 

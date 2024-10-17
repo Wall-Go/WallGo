@@ -1,5 +1,7 @@
 """Conversion between WallGo and WallGoCollision types"""
 
+import logging
+
 from .particle import Particle
 from .genericModel import GenericModel
 from .exceptions import WallGoError
@@ -28,7 +30,7 @@ def convertParticleStatistics(statisticsName: str) -> WallGoCollision.EParticleT
     elif statisticsName == "Boson":
         return WallGoCollision.EParticleType.eBoson
     else:
-        print(
+        logging.warning(
             f'Invalid particle statistic: {statisticsName}. Must be "Fermion" or "Boson".'
         )
         return WallGoCollision.EParticleType.eNone

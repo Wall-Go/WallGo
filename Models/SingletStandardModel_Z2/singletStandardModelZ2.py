@@ -300,11 +300,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
         self.integrals.Jb.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            bVerbose=False,
         )
         self.integrals.Jf.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            bVerbose=False,
         )
 
         self.integrals.Jb.disableAdaptiveInterpolation()

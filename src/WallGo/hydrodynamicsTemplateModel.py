@@ -4,6 +4,7 @@ approximating the equation of state by the template model.
 """
 
 import warnings
+import logging
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
@@ -566,7 +567,7 @@ class HydrodynamicsTemplateModel:
             to find a solution, returns a tuple of None.
         """
         if vwTry < self.vMin:
-            print(
+            logging.warning(
                 """This wall velocity is too small for the chosen nucleation
                 temperature. findHydroBoundaries will return zero."""
             )
