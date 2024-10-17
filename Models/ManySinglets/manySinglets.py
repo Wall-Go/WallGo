@@ -450,7 +450,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         return phase1, phase2
 
-    def evaluate( #pylint: disable = R0914
+    def evaluate(  # pylint: disable = R0914
         self, fields: Fields, temperature: float
     ) -> np.ndarray:
         """
@@ -501,7 +501,7 @@ class EffectivePotentialNSinglets(EffectivePotential):
 
         return potentialTotal
 
-    def constantTerms(self,  temperature: np.ndarray | float) -> np.ndarray | float:
+    def constantTerms(self, temperature: np.ndarray | float) -> np.ndarray | float:
         """Need to explicitly compute field-independent but T-dependent parts
         that we don't already get from field-dependent loops. At leading order in high-T
         expansion these are just (minus) the ideal gas pressure of light particles that
@@ -541,7 +541,7 @@ class NSingletsModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -549,11 +549,6 @@ class NSingletsModelExample(WallGoExampleBase):
         """Non-abstract override to add a SM + singlet specific cmd option"""
 
         argParser: argparse.ArgumentParser = super().initCommandLineArgs()
-        argParser.add_argument(
-            "--outOfEquilibriumGluon",
-            help="Treat the SU(3) gluons as out-of-equilibrium particle species",
-            action="store_true",
-        )
         return argParser
 
     def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
@@ -573,14 +568,101 @@ class NSingletsModelExample(WallGoExampleBase):
         self, wallGoModel: "NSinglets"
     ) -> "WallGoCollision.PhysicsModel":
         """Initialize the Collision model and set the seed."""
-        None # TODO
+
+        import WallGoCollision  # pylint: disable = C0415
+
+        # Collision integrations utilize Monte Carlo methods, so RNG is involved.
+        # We can set the global seed for collision integrals as follows.
+        # This is optional; by default the seed is 0.
+        WallGoCollision.setSeed(0)
+
+        # This example comes with a very explicit example function on how to setup and
+        # configure the collision module. It is located in a separate module
+        # (same directory) to avoid bloating this file. Import and use it here.
+        from exampleCollisionDefs import (
+            setupCollisionModel_QCD,
+        )  # pylint: disable = C0415
+
+        collisionModel = setupCollisionModel_QCD(wallGoModel.modelParameters)
+
+        return collisionModel
+
+    def updateCollisionModel(
+        self,
+        inWallGoModel: "SingletSMZ2",
+        inOutCollisionModel: "WallGoCollision.PhysicsModel",
+    ) -> None:
+        """Propagate changes in WallGo model to the collision model.
+        For this example we just need to update the QCD coupling and
+        fermion/gluon thermal masses.
+        """
+        import WallGoCollision  # pylint: disable = C0415
+
+        changedParams = WallGoCollision.ModelParameters()
+
+        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+        changedParams.addOrModifyParameter("gs", gs)
+        changedParams.addOrModifyParameter(
+            "mq2", gs**2 / 6.0
+        )  # quark thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "mg2", 2.0 * gs**2
+        )  # gluon thermal mass^2 in units of T
+
+        inOutCollisionModel.updateParameters(changedParams)
+
+    def configureCollisionIntegration(
+        self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
+    ) -> None:
+        """Non-abstract override"""
+
+        import WallGoCollision  # pylint: disable = C0415
+
+        """Configure the integrator. Default settings should be reasonably OK so you
+        can modify only what you need, or skip this step entirely. Here we set
+        everything manually to show how it's done.
+        """
+        integrationOptions = WallGoCollision.IntegrationOptions()
+        integrationOptions.calls = 50000
+        integrationOptions.maxTries = 50
+        # collision integration momentum goes from 0 to maxIntegrationMomentum.
+        # This is in units of temperature
+        integrationOptions.maxIntegrationMomentum = 20
+        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.relativeErrorGoal = 1e-1
+
+        inOutCollisionTensor.setIntegrationOptions(integrationOptions)
+
+        """We can also configure various verbosity settings that are useful when
+        you want to see what is going on in long-running integrations. These 
+        include progress reporting and time estimates, as well as a full result dump
+        of each individual integral to stdout. By default these are all disabled. 
+        Here we enable some for demonstration purposes.
+        """
+        verbosity = WallGoCollision.CollisionTensorVerbosity()
+        verbosity.bPrintElapsedTime = (
+            True  # report total time when finished with all integrals
+        )
+
+        """Progress report when this percentage of total integrals (approximately)
+        have been computed. Note that this percentage is per-particle-pair, ie. 
+        each (particle1, particle2) pair reports when this percentage of their
+        own integrals is done. Note also that in multithreaded runs the 
+        progress tracking is less precise.
+        """
+        verbosity.progressReportPercentage = 0.25
+
+        # Print every integral result to stdout? This is very slow and
+        # verbose, intended only for debugging purposes
+        verbosity.bPrintEveryElement = False
+
+        inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
         """We load the configs from a file for this example."""
-        inOutManager.config.loadConfigFromFile(pathlib.Path(
-            self.exampleBaseDirectory
-            / "manySingletsConfig.ini"
-        ))
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "manySingletsConfig.ini")
+        )
         super().configureManager(inOutManager)
 
     def updateModelParameters(
@@ -653,13 +735,14 @@ class NSingletsModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields(phase2[None, :]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0, 10.0]
+                    temperatureVariationScale=10.0,
+                    fieldValueVariationScale=[10.0, 10.0, 10.0],
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0,  # In units of 1/Tnucl
+                    wallThicknessGuess=5.0,  # In units of 1/Tnucl
                 ),
             )
         )
