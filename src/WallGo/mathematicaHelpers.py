@@ -40,8 +40,7 @@ def generateMatrixElementsViaSubprocess(
     Input file  : {inFilePathStr}
 
     Matrix elements are being stored at 
-    Output path: {outFilePathStr}
-    using WallGoMatrix.
+    Output path : {outFilePathStr}
     
     Please wait while the computation is in progress...
 ================================================
