@@ -34,14 +34,13 @@ _bCollisionModuleAvailable: bool = False
 try:
     import WallGoCollision
 
-    print(f"Loaded WallGoCollision package from location: {WallGoCollision.__path__}")
+    #print(f"Loaded WallGoCollision package from location: {WallGoCollision.__path__}")
     _bCollisionModuleAvailable = True  # pylint: disable=invalid-name
 
     from .collisionHelpers import *
 
 except ImportError as e:
-    print(f"Error loading WallGoCollision module: {e}")
-    print(
+    RuntimeWarning(f"Error loading WallGoCollision module: {e}"
         "This could indicate an issue with your installation of WallGo or "
         "WallGoCollision, or both. This is non-fatal, but you will not be able to"
         " utilize collision integration routines."
@@ -75,7 +74,3 @@ def _initializeInternal() -> None:
         _bInitialized = True
     else:
         raise RuntimeWarning("Warning: Repeated call to WallGo._initializeInternal()")
-
-
-"""Initialising WallGo"""
-_initializeInternal()

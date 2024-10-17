@@ -117,8 +117,8 @@ class WallGoExampleBase(ABC):
             "--verbose",
             type=int,
             default=logging.DEBUG,
-            help="""Set the verbosity level. Must an int: DEBUG=10, INFO=20, WARNING=30,
-                     ERROR=40. Default is DEBUG.""",
+            help="""Set the verbosity level. Must be an int: DEBUG=10, INFO=20,
+             WARNING=30, ERROR=40. Default is DEBUG.""",
         )
 
         argParser.add_argument(
