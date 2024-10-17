@@ -1,0 +1,305 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Containers &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="EffectivePotential" href="effectivePotential.html" />
+    <link rel="prev" title="Config" href="config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Containers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/containers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-WallGo.containers">
+<span id="containers"></span><h1>Containers<a class="headerlink" href="#module-WallGo.containers" title="Link to this heading"></a></h1>
+<p>Data classes passed around WallGo</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.containers.</span></span><span class="sig-name descname"><span class="pre">BoltzmannBackground</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">velocityMid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityProfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fieldProfiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatureProfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polynomialBasis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Cardinal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/containers.html#BoltzmannBackground"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.BoltzmannBackground" title="Link to this definition"></a></dt>
+<dd><p>Container for holding velocity, temperature and field backgrounds on which
+out-of-equilibrium fluctuations live.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">velocityMid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityProfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fieldProfiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatureProfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polynomialBasis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Cardinal'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/containers.html#BoltzmannBackground.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.boostToPlasmaFrame">
+<span class="sig-name descname"><span class="pre">boostToPlasmaFrame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/containers.html#BoltzmannBackground.boostToPlasmaFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.boostToPlasmaFrame" title="Link to this definition"></a></dt>
+<dd><p>Boosts background to the plasma frame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.boostToWallFrame">
+<span class="sig-name descname"><span class="pre">boostToWallFrame</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/containers.html#BoltzmannBackground.boostToWallFrame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.boostToWallFrame" title="Link to this definition"></a></dt>
+<dd><p>Boosts background to the wall frame</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.fieldProfiles">
+<span class="sig-name descname"><span class="pre">fieldProfiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Fields</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.fieldProfiles" title="Link to this definition"></a></dt>
+<dd><p>Field profile as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.polynomialBasis">
+<span class="sig-name descname"><span class="pre">polynomialBasis</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.polynomialBasis" title="Link to this definition"></a></dt>
+<dd><p>Type of polynomial basis used, e.g. Chebyshev, Cardinal.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.temperatureProfile">
+<span class="sig-name descname"><span class="pre">temperatureProfile</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.temperatureProfile" title="Link to this definition"></a></dt>
+<dd><p>Temperarture profile as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.velocityMid">
+<span class="sig-name descname"><span class="pre">velocityMid</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.velocityMid" title="Link to this definition"></a></dt>
+<dd><p>The average between the asymptotic velocities inside and outside the bubble.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.velocityProfile">
+<span class="sig-name descname"><span class="pre">velocityProfile</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.velocityProfile" title="Link to this definition"></a></dt>
+<dd><p>Fluid velocity as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannBackground.velocityWall">
+<span class="sig-name descname"><span class="pre">velocityWall</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.containers.BoltzmannBackground.velocityWall" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall velocity.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.containers.</span></span><span class="sig-name descname"><span class="pre">BoltzmannDeltas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Delta00</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta02</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta20</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta11</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/containers.html#BoltzmannDeltas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas" title="Link to this definition"></a></dt>
+<dd><p>Integrals of the out-of-equilibrium particle densities,
+defined in equation (15) of arXiv:2204.13120.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas.Delta00">
+<span class="sig-name descname"><span class="pre">Delta00</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></em><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas.Delta00" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integral over <span class="math notranslate nohighlight">\(\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas.Delta02">
+<span class="sig-name descname"><span class="pre">Delta02</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></em><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas.Delta02" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integral over
+<span class="math notranslate nohighlight">\(\mathcal{P}^2_\text{pl}\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas.Delta11">
+<span class="sig-name descname"><span class="pre">Delta11</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></em><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas.Delta11" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integral over
+<span class="math notranslate nohighlight">\(\mathcal{E}_\text{pl}\mathcal{P}_\text{pl}\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas.Delta20">
+<span class="sig-name descname"><span class="pre">Delta20</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></em><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas.Delta20" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integral over
+<span class="math notranslate nohighlight">\(\mathcal{E}^2_\text{pl}\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.BoltzmannDeltas.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Delta00</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta02</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta20</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Delta11</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.containers.BoltzmannDeltas.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.containers.PhaseInfo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.containers.</span></span><span class="sig-name descname"><span class="pre">PhaseInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phaseLocation1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phaseLocation2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/containers.html#PhaseInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.PhaseInfo" title="Link to this definition"></a></dt>
+<dd><p>Object describing coexisting phases.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.PhaseInfo.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phaseLocation1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phaseLocation2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.containers.PhaseInfo.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.PhaseInfo.phaseLocation1">
+<span class="sig-name descname"><span class="pre">phaseLocation1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Fields</span></em><a class="headerlink" href="#WallGo.containers.PhaseInfo.phaseLocation1" title="Link to this definition"></a></dt>
+<dd><p>Field value of the starting phase.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.PhaseInfo.phaseLocation2">
+<span class="sig-name descname"><span class="pre">phaseLocation2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Fields</span></em><a class="headerlink" href="#WallGo.containers.PhaseInfo.phaseLocation2" title="Link to this definition"></a></dt>
+<dd><p>Field value of the ending phase.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.PhaseInfo.temperature">
+<span class="sig-name descname"><span class="pre">temperature</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.containers.PhaseInfo.temperature" title="Link to this definition"></a></dt>
+<dd><p>Temperature of transition.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.containers.WallParams">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.containers.</span></span><span class="sig-name descname"><span class="pre">WallParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/containers.html#WallParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.containers.WallParams" title="Link to this definition"></a></dt>
+<dd><p>Holds wall widths and wall offsets for all fields</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.containers.WallParams.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">widths</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.containers.WallParams.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.WallParams.offsets">
+<span class="sig-name descname"><span class="pre">offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.containers.WallParams.offsets" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall offsets in each field direction.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.containers.WallParams.widths">
+<span class="sig-name descname"><span class="pre">widths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.containers.WallParams.widths" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall widths in each field direction. Should be expressed in physical units
+(the units used in EffectivePotential).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config.html" class="btn btn-neutral float-left" title="Config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="effectivePotential.html" class="btn btn-neutral float-right" title="EffectivePotential" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

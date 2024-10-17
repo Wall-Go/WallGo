@@ -1,0 +1,471 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Thermodynamics" href="thermodynamics.html" />
+    <link rel="prev" title="Polynomial" href="polynomial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Results</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/results.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-WallGo.results">
+<span id="results"></span><h1>Results<a class="headerlink" href="#module-WallGo.results" title="Link to this heading"></a></h1>
+<p>Data classes for compiling and returning results</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.results.</span></span><span class="sig-name descname"><span class="pre">BoltzmannResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltaF</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Deltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncationError</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearizationCriterion1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearizationCriterion2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/results.html#BoltzmannResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.BoltzmannResults" title="Link to this definition"></a></dt>
+<dd><p>Holds results to be returned by BoltzmannSolver</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.Deltas">
+<span class="sig-name descname"><span class="pre">Deltas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></em><a class="headerlink" href="#WallGo.results.BoltzmannResults.Deltas" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integrals over
+<span class="math notranslate nohighlight">\(\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltaF</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Deltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncationError</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearizationCriterion1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linearizationCriterion2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.results.BoltzmannResults.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.deltaF">
+<span class="sig-name descname"><span class="pre">deltaF</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.BoltzmannResults.deltaF" title="Link to this definition"></a></dt>
+<dd><p>Deviation of probability density function from equilibrium,
+<span class="math notranslate nohighlight">\(\delta f(z, p_z, p_\parallel)\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.linearizationCriterion1">
+<span class="sig-name descname"><span class="pre">linearizationCriterion1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.BoltzmannResults.linearizationCriterion1" title="Link to this definition"></a></dt>
+<dd><p>Ratio of out-of-equilibrium and equilibrium pressures,
+<span class="math notranslate nohighlight">\(|P[\delta f]| / |P[f_\text{eq}]|\)</span>. One element for each
+out-of-equilibrium particle.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.linearizationCriterion2">
+<span class="sig-name descname"><span class="pre">linearizationCriterion2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.BoltzmannResults.linearizationCriterion2" title="Link to this definition"></a></dt>
+<dd><p>Ratio of collision and Liouville operators in Boltzmann equation,
+<span class="math notranslate nohighlight">\(|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|\)</span>. One element for each
+out-of-equilibrium particle.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.BoltzmannResults.truncationError">
+<span class="sig-name descname"><span class="pre">truncationError</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.BoltzmannResults.truncationError" title="Link to this definition"></a></dt>
+<dd><p>Estimated relative error in <span class="math notranslate nohighlight">\(\delta f\)</span> due to truncation
+of spectral expansion.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.results.</span></span><span class="sig-name descname"><span class="pre">ESolutionType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/results.html#ESolutionType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.ESolutionType" title="Link to this definition"></a></dt>
+<dd><p>Enum class used to label the different types of solution WallGo can find</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType.DEFLAGRATION">
+<span class="sig-name descname"><span class="pre">DEFLAGRATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#WallGo.results.ESolutionType.DEFLAGRATION" title="Link to this definition"></a></dt>
+<dd><p>Indicates that a solution was found while looking for a deflagration or hybrid. Can
+also be used when the pressure was always positive while looking for a detonation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType.DEFLAGRATION_OR_RUNAWAY">
+<span class="sig-name descname"><span class="pre">DEFLAGRATION_OR_RUNAWAY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#WallGo.results.ESolutionType.DEFLAGRATION_OR_RUNAWAY" title="Link to this definition"></a></dt>
+<dd><p>Used when no stable solution was found while looking for a detonation with a
+positive pressure at vw=vJ and negative at vw=1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType.DETONATION">
+<span class="sig-name descname"><span class="pre">DETONATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#WallGo.results.ESolutionType.DETONATION" title="Link to this definition"></a></dt>
+<dd><p>Indicates that a solution was found while looking for a detonation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#WallGo.results.ESolutionType.ERROR" title="Link to this definition"></a></dt>
+<dd><p>Indicates that the calculation was not successful.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.ESolutionType.RUNAWAY">
+<span class="sig-name descname"><span class="pre">RUNAWAY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#WallGo.results.ESolutionType.RUNAWAY" title="Link to this definition"></a></dt>
+<dd><p>Indicates that no solution was found and that the pressure was always negative.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.results.HydroResults">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.results.</span></span><span class="sig-name descname"><span class="pre">HydroResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperaturePlus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatureMinus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityJouguet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/results.html#HydroResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.HydroResults" title="Link to this definition"></a></dt>
+<dd><p>Holds results to be returned by Hydro</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.HydroResults.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperaturePlus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatureMinus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityJouguet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/results.html#HydroResults.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.HydroResults.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.HydroResults.temperatureMinus">
+<span class="sig-name descname"><span class="pre">temperatureMinus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.HydroResults.temperatureMinus" title="Link to this definition"></a></dt>
+<dd><p>Temperature behind the bubble, <span class="math notranslate nohighlight">\(T_-\)</span>,
+from hydrodynamic matching conditions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.HydroResults.temperaturePlus">
+<span class="sig-name descname"><span class="pre">temperaturePlus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.HydroResults.temperaturePlus" title="Link to this definition"></a></dt>
+<dd><p>Temperature in front of the bubble, <span class="math notranslate nohighlight">\(T_+\)</span>,
+from hydrodynamic matching conditions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.HydroResults.velocityJouguet">
+<span class="sig-name descname"><span class="pre">velocityJouguet</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.HydroResults.velocityJouguet" title="Link to this definition"></a></dt>
+<dd><p>Jouguet velocity, <span class="math notranslate nohighlight">\(v_J\)</span>, the smallest velocity for a detonation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.results.</span></span><span class="sig-name descname"><span class="pre">WallGoResults</span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults" title="Link to this definition"></a></dt>
+<dd><p>Compiles output results for users of WallGo</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.Deltas">
+<span class="sig-name descname"><span class="pre">Deltas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></em><a class="headerlink" href="#WallGo.results.WallGoResults.Deltas" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integrals over
+<span class="math notranslate nohighlight">\(\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.DeltasFiniteDifference">
+<span class="sig-name descname"><span class="pre">DeltasFiniteDifference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></em><a class="headerlink" href="#WallGo.results.WallGoResults.DeltasFiniteDifference" title="Link to this definition"></a></dt>
+<dd><p>Relativistically invariant integrals over
+<span class="math notranslate nohighlight">\(\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f\)</span>,
+using finite differences instead of spectral expansion.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.deltaF">
+<span class="sig-name descname"><span class="pre">deltaF</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.deltaF" title="Link to this definition"></a></dt>
+<dd><p>Deviation of probability density function from equilibrium,
+<span class="math notranslate nohighlight">\(\delta f(z, p_z, p_\parallel)\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.deltaFFiniteDifference">
+<span class="sig-name descname"><span class="pre">deltaFFiniteDifference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.deltaFFiniteDifference" title="Link to this definition"></a></dt>
+<dd><p>Deviation of probability density function from equilibrium,
+<span class="math notranslate nohighlight">\(\delta f(z, p_z, p_\parallel)\)</span>, using finite differences instead
+of spectral expansion.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.fieldProfiles">
+<span class="sig-name descname"><span class="pre">fieldProfiles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Fields</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.fieldProfiles" title="Link to this definition"></a></dt>
+<dd><p>Field profile as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.linearizationCriterion1">
+<span class="sig-name descname"><span class="pre">linearizationCriterion1</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.linearizationCriterion1" title="Link to this definition"></a></dt>
+<dd><p>Ratio of out-of-equilibrium and equilibrium pressures,
+<span class="math notranslate nohighlight">\(|P[\delta f]| / |P[f_\text{eq}]|\)</span>. One element for each
+out-of-equilibrium particle.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.linearizationCriterion2">
+<span class="sig-name descname"><span class="pre">linearizationCriterion2</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.linearizationCriterion2" title="Link to this definition"></a></dt>
+<dd><p>Ratio of collision and Liouville operators in Boltzmann equation,
+<span class="math notranslate nohighlight">\(|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|\)</span>. One element for each
+out-of-equilibrium particle.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.message" title="Link to this definition"></a></dt>
+<dd><p>Description of the cause of the termination.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setBoltzmannBackground">
+<span class="sig-name descname"><span class="pre">setBoltzmannBackground</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boltzmannBackground</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannBackground" title="WallGo.containers.BoltzmannBackground"><span class="pre">BoltzmannBackground</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setBoltzmannBackground"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setBoltzmannBackground" title="Link to this definition"></a></dt>
+<dd><p>Set Boltzmann background results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setBoltzmannResults">
+<span class="sig-name descname"><span class="pre">setBoltzmannResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boltzmannResults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setBoltzmannResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setBoltzmannResults" title="Link to this definition"></a></dt>
+<dd><p>Set Boltzmann results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setFiniteDifferenceBoltzmannResults">
+<span class="sig-name descname"><span class="pre">setFiniteDifferenceBoltzmannResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boltzmannResults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setFiniteDifferenceBoltzmannResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setFiniteDifferenceBoltzmannResults" title="Link to this definition"></a></dt>
+<dd><p>Set finite difference Boltzmann results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setHydroResults">
+<span class="sig-name descname"><span class="pre">setHydroResults</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hydroResults</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.results.HydroResults" title="WallGo.results.HydroResults"><span class="pre">HydroResults</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setHydroResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setHydroResults" title="Link to this definition"></a></dt>
+<dd><p>Set hydrodynamics results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setSuccessState">
+<span class="sig-name descname"><span class="pre">setSuccessState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solutionType</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.results.ESolutionType" title="WallGo.results.ESolutionType"><span class="pre">ESolutionType</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setSuccessState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setSuccessState" title="Link to this definition"></a></dt>
+<dd><p>Set the termination message, the success flag and the solution type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setWallParams">
+<span class="sig-name descname"><span class="pre">setWallParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallParams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setWallParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setWallParams" title="Link to this definition"></a></dt>
+<dd><p>Set wall parameters results</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.setWallVelocities">
+<span class="sig-name descname"><span class="pre">setWallVelocities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallVelocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallVelocityError</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallVelocityLTE</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/results.html#WallGoResults.setWallVelocities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.results.WallGoResults.setWallVelocities" title="Link to this definition"></a></dt>
+<dd><p>Set wall velocity results</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.solutionType">
+<span class="sig-name descname"><span class="pre">solutionType</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#WallGo.results.ESolutionType" title="WallGo.results.ESolutionType"><span class="pre">ESolutionType</span></a></em><a class="headerlink" href="#WallGo.results.WallGoResults.solutionType" title="Link to this definition"></a></dt>
+<dd><p>Describes the type of solution obtained. Must be a ESolutionType object. The
+function WallGoManager.solveWall() will return DEFLAGRATION if a solution was found
+and RUNAWAY otherwise. The function WallGoManager.solveWallDetonation() will return
+DETONATION if a solution was found. Otherwise, it returns RUNAWAY if the pressure is
+negative everywhere between vJ and 1, DEFLAGRATION if the pressure is always
+positive, and DEFLAGRATION_OR_RUNAWAY if the pressure is positive at vJ and negative
+at 1 and no stable solution was found. In both cases, returns ERROR if
+success=False.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.success">
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.success" title="Link to this definition"></a></dt>
+<dd><p>Whether or not the calculation was successful. Will still be True if no solution
+was found, as long as no error happened along the way.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.temperatureMinus">
+<span class="sig-name descname"><span class="pre">temperatureMinus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.temperatureMinus" title="Link to this definition"></a></dt>
+<dd><p>Temperature behind the bubble, <span class="math notranslate nohighlight">\(T_-\)</span>,
+from hydrodynamic matching conditions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.temperaturePlus">
+<span class="sig-name descname"><span class="pre">temperaturePlus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.temperaturePlus" title="Link to this definition"></a></dt>
+<dd><p>Temperature in front of the bubble, <span class="math notranslate nohighlight">\(T_+\)</span>,
+from hydrodynamic matching conditions.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.temperatureProfile">
+<span class="sig-name descname"><span class="pre">temperatureProfile</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.temperatureProfile" title="Link to this definition"></a></dt>
+<dd><p>Temperarture profile as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.truncationError">
+<span class="sig-name descname"><span class="pre">truncationError</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.truncationError" title="Link to this definition"></a></dt>
+<dd><p>Estimated relative error in <span class="math notranslate nohighlight">\(\delta f\)</span> due to truncation
+of spectral expansion.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.velocityJouguet">
+<span class="sig-name descname"><span class="pre">velocityJouguet</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.velocityJouguet" title="Link to this definition"></a></dt>
+<dd><p>Jouguet velocity, <span class="math notranslate nohighlight">\(v_J\)</span>, the smallest velocity for a detonation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.velocityProfile">
+<span class="sig-name descname"><span class="pre">velocityProfile</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.velocityProfile" title="Link to this definition"></a></dt>
+<dd><p>Fluid velocity as a function of position.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.wallOffsets">
+<span class="sig-name descname"><span class="pre">wallOffsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.wallOffsets" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall offsets in each field direction.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.wallVelocity">
+<span class="sig-name descname"><span class="pre">wallVelocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.wallVelocity" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall velocity. None if no solution was found.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.wallVelocityError">
+<span class="sig-name descname"><span class="pre">wallVelocityError</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.wallVelocityError" title="Link to this definition"></a></dt>
+<dd><p>Estimated error in bubble wall velocity. None if no solution was found.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.wallVelocityLTE">
+<span class="sig-name descname"><span class="pre">wallVelocityLTE</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.wallVelocityLTE" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall velocity in local thermal equilibrium. None when looking for a
+detonation solution, since no detonation exists in LTE.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.results.WallGoResults.wallWidths">
+<span class="sig-name descname"><span class="pre">wallWidths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#WallGo.results.WallGoResults.wallWidths" title="Link to this definition"></a></dt>
+<dd><p>Bubble wall widths in each field direction.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="polynomial.html" class="btn btn-neutral float-left" title="Polynomial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="thermodynamics.html" class="btn btn-neutral float-right" title="Thermodynamics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

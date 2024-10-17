@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.PotentialTools.integrals &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.PotentialTools.integrals</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.PotentialTools.integrals</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">One-loop thermal integrals used to compute the effective potential.</span>
+
+<span class="sd">For 1-loop thermal potential WITHOUT high-T approximations, need to calculate</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        J_b(x) =  \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) )) \text{ (bosonic),}</span>
+
+<span class="sd">        J_f(x) = -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) )) \text{ (fermionic)}.</span>
+
+<span class="sd">The thermal 1-loop correction from one particle species with N degrees of freedom is</span>
+<span class="sd">then</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    V_1(T) = T^4/(2\pi^2) N J(m^2 / T^2).</span>
+
+<span class="sd">See e.g. CosmoTransitions (arXiv:1109.4189, eq. (12)). </span>
+
+<span class="sd">Particularly for scalars the :math:`m^2` can be negative so we allow :math:`x &lt; 0`, </span>
+<span class="sd">but we calculate the real parts of integrals only. </span>
+<span class="sd">NB: for large negative :math:`x` the integrals are slow to compute and good convergence</span>
+<span class="sd">is not guaranteed by the quad integrator used here.</span>
+
+<span class="sd">Note also that the while the analytical continuation to :math:`x &lt; 0` makes sense</span>
+<span class="sd">mathematically, it is physically less clear whether this is the right thing to use.</span>
+<span class="sd">Here we just provide implementations of :math:`J_b(x)` and :math:`J_f(x)`; it is up to the user to</span>
+<span class="sd">decide how to deal with negative input.</span>
+
+<span class="sd">Usage: We define :py:class:`JbIntegral` and :py:class:`JbIntegral` are defined as :py:class:`InterpolatableFunction` to allow optimized</span>
+<span class="sd">evaluation. The individual integrals are then collected in the :py:class:`Integrals` class</span>
+<span class="sd">below. `WallGo` provides a default Integrals object defined in WallGo&#39;s :py:mod:`__init__.py`,</span>
+<span class="sd">accessible as :py:data:`WallGo.defaultIntegrals`. Once :py:meth:`WallGo.initialize()` is called, we optimize</span>
+<span class="sd">Jb and Jf in :py:data:`WallGo.defaultIntegrals` by loading their interpolation tables. </span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.integrate</span>
+
+<span class="kn">from</span> <span class="nn">..interpolatableFunction</span> <span class="kn">import</span> <span class="n">InterpolatableFunction</span><span class="p">,</span> <span class="n">inputType</span><span class="p">,</span> <span class="n">outputType</span>
+
+
+<span class="k">def</span> <span class="nf">_integrator</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Simple wrapper for scipy.integrate.quad with defaults inbuilt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+        <span class="n">func</span><span class="p">,</span>
+        <span class="n">a</span><span class="p">,</span>
+        <span class="n">b</span><span class="p">,</span>
+        <span class="n">limit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="JbIntegral">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.JbIntegral">[docs]</a>
+<span class="k">class</span> <span class="nc">JbIntegral</span><span class="p">(</span><span class="n">InterpolatableFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bosonic Jb(x), in practice use with x = m^2 / T^2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SMALL_NUMBER</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-100</span>
+
+<div class="viewcode-block" id="JbIntegral.__init__">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.JbIntegral.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bUseAdaptiveInterpolation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">initialInterpolationPointCount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">returnValueCount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">bUseAdaptiveInterpolation</span><span class="p">,</span>
+            <span class="n">initialInterpolationPointCount</span><span class="p">,</span>
+            <span class="n">returnValueCount</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandPositiveReal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The real part of integrand of the Jb function, for positive y.</span>
+<span class="sd">        Note the imaginary part for positive y is just zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandNegativeReal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The (principal) real part of integrand of the Jb function, for negative y,</span>
+<span class="sd">        slighly deformed into the y upper-half plane.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">)))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandNegativeImaginary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The imaginary part of integrand of the Jb function, for negative y,</span>
+<span class="sd">        slighly deformed into the y upper-half plane.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1">## This doesn&#39;t vectorize nicely for numpy due to combination of piecewise</span>
+    <span class="c1">## scipy.integrate.quad and conditionals on x.</span>
+    <span class="c1"># So for array input, let&#39;s just do a simple for loop</span>
+    <span class="k">def</span> <span class="nf">_functionImplementation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">inputType</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">outputType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the bosonic one-loop thermal function Jb.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : list[float] or np.ndarray or float</span>
+<span class="sd">            Points where the funct`````ion will be evaluated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[float | np.ndarray] or np.ndarray</span>
+<span class="sd">            Value of the thermal function</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Wrapper for treating x&gt;=0 and x&lt;0 separately&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="n">xWrapper</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">resReal</span> <span class="o">=</span> <span class="n">_integrator</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JbIntegral</span><span class="o">.</span><span class="n">_integrandPositiveReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">resImag</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">resReal</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">_integrator</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JbIntegral</span><span class="o">.</span><span class="n">_integrandNegativeReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="mf">0.0</span><span class="p">,</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">))</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="n">_integrator</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JbIntegral</span><span class="o">.</span><span class="n">_integrandPositiveReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">)),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">resImag</span> <span class="o">=</span> <span class="n">_integrator</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JbIntegral</span><span class="o">.</span><span class="n">_integrandNegativeImaginary</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">))</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">resReal</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">resImag</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">wrapper</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">res</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+
+        <span class="c1"># one extra axis on x</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">wrapper</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">res</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="JfIntegral">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.JfIntegral">[docs]</a>
+<span class="k">class</span> <span class="nc">JfIntegral</span><span class="p">(</span><span class="n">InterpolatableFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fermionic Jf(x), in practice use with x = m^2 / T^2. This is very similar to the</span>
+<span class="sd">    bosonic counterpart Jb.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SMALL_NUMBER</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-100</span>
+
+<div class="viewcode-block" id="JfIntegral.__init__">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.JfIntegral.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bUseAdaptiveInterpolation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">initialInterpolationPointCount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+        <span class="n">returnValueCount</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">bUseAdaptiveInterpolation</span><span class="p">,</span>
+            <span class="n">initialInterpolationPointCount</span><span class="p">,</span>
+            <span class="n">returnValueCount</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandPositiveReal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The real part of integrand of the Jb function, for positive y.</span>
+<span class="sd">        Note the imaginary part for positive y is just zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandNegativeReal</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The (principal) real part of integrand of the Jb function, for negative y,</span>
+<span class="sd">        slighly deformed into the y upper-half plane.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+                <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">)))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_integrandNegativeImaginary</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The imaginary part of integrand of the Jb function, for negative y,</span>
+<span class="sd">        slighly deformed into the y upper-half plane.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_functionImplementation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">inputType</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">outputType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the fermionic one-loop thermal function Jf.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : list[float] or np.ndarray or float</span>
+<span class="sd">            Points where the function will be evaluated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[float | np.ndarray] or np.ndarray</span>
+<span class="sd">            Value of the thermal function</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">complex</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Wrapper for treating x&gt;=0 and x&lt;0 separately&quot;&quot;&quot;</span>
+
+            <span class="k">if</span> <span class="n">xWrapper</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">resReal</span> <span class="o">=</span> <span class="n">_integrator</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JfIntegral</span><span class="o">.</span><span class="n">_integrandPositiveReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">resImag</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">resReal</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">_integrator</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JfIntegral</span><span class="o">.</span><span class="n">_integrandNegativeReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="mf">0.0</span><span class="p">,</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">))</span>
+                    <span class="p">)</span>
+                    <span class="o">+</span> <span class="n">_integrator</span><span class="p">(</span>
+                        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JfIntegral</span><span class="o">.</span><span class="n">_integrandPositiveReal</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">)),</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">resImag</span> <span class="o">=</span> <span class="n">_integrator</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">JfIntegral</span><span class="o">.</span><span class="n">_integrandNegativeImaginary</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="mf">0.0</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xWrapper</span><span class="p">))</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">resReal</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">resImag</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">wrapper</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([[</span><span class="n">res</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">imag</span><span class="p">]])</span>
+
+        <span class="c1"># one extra axis on x</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">wrapper</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">res</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">imag</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="Integrals">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.Integrals">[docs]</a>
+<span class="k">class</span> <span class="nc">Integrals</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class Integrals -- Just collects common integrals in one place.</span>
+<span class="sd">    This is better than using global objects since in some cases</span>
+<span class="sd">    we prefer their interpolated versions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Jb</span><span class="p">:</span> <span class="n">JbIntegral</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Thermal 1-loop integral (bosonic):</span>
+<span class="sd">        :math:`J_b(x) = \int_0^\infty dy y^2 \ln( 1 - \exp(-\sqrt(y^2 + x) ))`&quot;&quot;&quot;</span>
+
+    <span class="n">Jf</span><span class="p">:</span> <span class="n">JfIntegral</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Thermal 1-loop integral (fermionic):</span>
+<span class="sd">        :math:`J_f(x) = -\int_0^\infty dy y^2 \ln( 1 + \exp(-\sqrt(y^2 + x) ))`&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Integrals.__init__">
+<a class="viewcode-back" href="../../../modules/potentialTools/integrals.html#WallGo.PotentialTools.integrals.Integrals.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Jb</span> <span class="o">=</span> <span class="n">JbIntegral</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">bUseAdaptiveInterpolation</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Jf</span> <span class="o">=</span> <span class="n">JfIntegral</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">bUseAdaptiveInterpolation</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
