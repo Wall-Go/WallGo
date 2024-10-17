@@ -101,6 +101,19 @@ class WallGoManager:
         return self.config.configGrid.momentumGridSize
 
     def setVerbosity(self, verbosityLevel: int) -> None:
+        """
+        Set the verbosity level.
+
+        Parameters
+        ----------
+        verbosityLevel : int
+            Verbosity level. Follows the standard convention of the logging module where
+            DEBUG=10, INFO=20, WARNING=30 and ERROR=40. In WallGo, most of the
+            information is shown at the INFO level. At the DEBUG level, more
+            information about the calculation of the pressure at each iteration is
+            shown.
+
+        """
         logging.basicConfig(format='%(message)s', level=verbosityLevel, force=True)
 
     def setupThermodynamicsHydrodynamics(

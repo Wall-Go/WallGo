@@ -286,7 +286,7 @@ class WallGoExampleBase(ABC):
                 
                 wallSolverSettings.bIncludeOffEquilibrium = False
                 print(
-                    f"\n === Begin EOM with off-eq effects ignored ==="
+                    f"\n=== Begin EOM with off-eq effects ignored ==="
                 )
                 results = manager.solveWall(wallSolverSettings)
                 self.processResultsForBenchmark(benchmark, results)
