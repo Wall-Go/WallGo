@@ -52,6 +52,8 @@ def generateMatrixElementsViaSubprocess(
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
         print(
-            "Fatal: Error when generating matrix elements from Mathematica via WallGoMatrix. Ensure a licensed installation of WolframEngine."
+            """
+            Fatal: Error when generating matrix elements from Mathematica via WallGoMatrix.
+            Ensure a licensed installation of WolframEngine."""
         )
         print(e.stderr.decode("utf-8"))
