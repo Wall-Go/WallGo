@@ -3,6 +3,7 @@ Classes for solving the hydrodynamic equations for the fluid velocity and temper
 """
 
 from typing import Tuple
+import logging
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
@@ -69,7 +70,7 @@ class Hydrodynamics:
         try:
             self.vJ = self.findJouguetVelocity()
         except WallGoError:
-            print(
+            logging.warning(
                 "Couldn't find Jouguet velocity, we continue "
                 "with the Jouguet velocity of the template model"
             )
@@ -812,7 +813,7 @@ class Hydrodynamics:
 
         """
         if vwTry < self.vMin:
-            print(
+            logging.warning(
                 "This wall velocity is too small for the chosen nucleation temperature,"
                 " findHydroBoundaries will return zero."
             )
