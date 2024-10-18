@@ -338,23 +338,10 @@ class YukawaModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """
-        Yukawa example uses spatial grid size = 50.
-        """
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "yukawaConfig.ini")
+        )
         super().configureManager(inOutManager)
-        
-        # Increase the number of grid points to increase stability
-        inOutManager.config.configGrid.spatialGridSize = 50
-        
-        # Note that if all degrees of freedom are treated as out-of-equilibrium,
-        # this creates a degeneracy in the definition of f_{eq} vs \delta f
-        # If we enforce conservation of EM, this can lead to a divergence of the
-        # iteration procedure. But here the scalar is treated as in-equilibrium,
-        # so we do impose conserveEnergyMomentum.
-        inOutManager.config.configEOM.conserveEnergyMomentum = True
-        
-        # Decrease the phase tracer tolerance to improve stability
-        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
 
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]
