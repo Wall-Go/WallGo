@@ -5,6 +5,7 @@ Classes for solving the Boltzmann equations for out-of-equilibrium particles.
 import sys
 import typing
 from copy import deepcopy
+import logging
 import numpy as np
 import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
@@ -635,7 +636,7 @@ class BoltzmannSolver:
                 self.basisN,
                 self.offEqParticles,
             )
-            print(f"Loaded collision data from directory {directoryPath}")
+            logging.debug(f"Loaded collision data from directory {directoryPath}")
         except CollisionLoadError as e:
             raise
 

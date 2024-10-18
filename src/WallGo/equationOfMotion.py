@@ -5,6 +5,7 @@ Class for solving the EOM and the hydrodynamic equations.
 import warnings
 from typing import Tuple
 import copy  # for deepcopy
+import logging
 import numpy as np
 import numpy.typing as npt
 
@@ -178,7 +179,7 @@ class EOM:
             self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
             or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
-            print(
+            logging.warning(
                 """\n Warning: vmax is limited by the maximum temperature chosen in
                 the phase tracing. WallGo might be unable to find the wall velocity.
                 Try increasing the maximum temperature! \n"""
@@ -456,8 +457,8 @@ class EOM:
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
         if pressureMax < 0:
-            print("Maximum pressure on wall is negative!")
-            print(f"{pressureMax=} {wallParamsMax=}")
+            logging.info("Maximum pressure on wall is negative!")
+            logging.info(f"{pressureMax=} {wallParamsMax=}")
             results.setWallVelocities(None, None, wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
@@ -494,7 +495,7 @@ class EOM:
             # until it's negative.
             wallVelocityMin *= 2
             if wallVelocityMin >= wallVelocityMax:
-                print(
+                logging.warning(
                     """EOM warning: the pressure at vw = 0 is positive which indicates
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
@@ -750,7 +751,7 @@ class EOM:
         if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
-        print(f"------------- Trying {wallVelocity=:g} -------------")
+        logging.info(f"------------- Trying {wallVelocity=:g} -------------")
 
         # Initialize the different data class objects and arrays
         zeroPoly = Polynomial(
@@ -856,7 +857,7 @@ class EOM:
         multiplier = 1.0
 
         i = 0
-        print(
+        logging.debug(
             f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}"
         )
         while True:
@@ -909,7 +910,7 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            print(
+            logging.debug(
                 f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}"
             )
             i += 1
@@ -929,7 +930,7 @@ class EOM:
                 else:
                     break
             elif i >= self.maxIterations - 1:
-                print(
+                logging.warning(
                     "Pressure for a wall velocity has not converged to "
                     "sufficient accuracy with the given maximum number "
                     "for iterations."
@@ -953,7 +954,9 @@ class EOM:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
 
-        print(f"Final {pressure=:g}; Final {wallParams=}")
+        logging.info(f"Final {pressure=:g}")
+        logging.debug(f"Final {wallParams=}")
+        
         return (
             pressure,
             wallParams,

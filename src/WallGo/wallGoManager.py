@@ -5,6 +5,7 @@ wall velocity calculation.
 
 from dataclasses import dataclass
 import pathlib
+import logging
 import numpy as np
 
 # WallGo imports
@@ -78,6 +79,9 @@ class WallGoManager:
         # Initialise the configs with the default values
         self.config = Config()
 
+        # Set the default verbosity level to logging.INFO
+        self.setVerbosity(logging.INFO)
+
         # default to working directory
         self.collisionDirectory = pathlib.Path.cwd()
 
@@ -95,6 +99,22 @@ class WallGoManager:
         Returns the momentum grid size.
         """
         return self.config.configGrid.momentumGridSize
+
+    def setVerbosity(self, verbosityLevel: int) -> None:
+        """
+        Set the verbosity level.
+
+        Parameters
+        ----------
+        verbosityLevel : int
+            Verbosity level. Follows the standard convention of the logging module where
+            DEBUG=10, INFO=20, WARNING=30 and ERROR=40. In WallGo, most of the
+            information is shown at the INFO level. At the DEBUG level, more
+            information about the calculation of the pressure at each iteration is
+            shown.
+
+        """
+        logging.basicConfig(format='%(message)s', level=verbosityLevel, force=True)
 
     def setupThermodynamicsHydrodynamics(
         self,
@@ -140,13 +160,13 @@ class WallGoManager:
         self.initTemperatureRange()
 
         ## Should we write these to a result struct?
-        print("Temperature ranges:")
-        print(
+        logging.info("Temperature ranges:")
+        logging.info(
             "High-T phase: TMin = "
             f"{self.thermodynamics.freeEnergyHigh.minPossibleTemperature[0]}, "
             f"TMax = {self.thermodynamics.freeEnergyHigh.maxPossibleTemperature[0]}"
         )
-        print(
+        logging.info(
             "Low-T phase: TMin = "
             f"{self.thermodynamics.freeEnergyLow.minPossibleTemperature[0]}, "
             f"TMax = {self.thermodynamics.freeEnergyLow.maxPossibleTemperature[0]}"
@@ -168,7 +188,7 @@ class WallGoManager:
                 },
             )
 
-        print(f"Jouguet: {self.hydrodynamics.vJ}")
+        logging.info(f"Jouguet: {self.hydrodynamics.vJ}")
         # TODO return some results struct
 
     def isModelValid(self) -> bool:
@@ -221,8 +241,8 @@ class WallGoManager:
             phaseInput.phaseLocation2, T
         )
 
-        print(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
-        print(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {effPotValue2}")
+        logging.info(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
+        logging.info(f"Found phase 2: phi = {phaseLocation2}, Veff(phi) = {effPotValue2}")
 
         if np.allclose(phaseLocation1, phaseLocation2, rtol=1e-05, atol=1e-05):
             raise WallGoPhaseValidationError(
@@ -287,7 +307,7 @@ class WallGoManager:
             # required temperature. We do not solve hydrodynamics inside the bubble, so
             # we are only interested in T- (the temperature right at the wall).
             hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
-            print(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
+            logging.info(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
 
         except WallGoError as error:
             # Throw new error with more info

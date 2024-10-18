@@ -180,8 +180,6 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
         self.owner = owningModel
         self.modelParameters = self.owner.modelParameters
 
-        print(self.modelParameters)
-
     def evaluate(
         self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
