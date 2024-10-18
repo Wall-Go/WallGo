@@ -487,9 +487,10 @@ class StandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Singlet example uses spatial grid size = 20"""
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "standardModelConfig.ini")
+        )
         super().configureManager(inOutManager)
-        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "StandardModel", inputParameters: dict[str, float]
@@ -549,7 +550,7 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureVariationScale=.5, fieldValueVariationScale=[50.0]
+                        temperatureVariationScale=1., fieldValueVariationScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
