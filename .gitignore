@@ -5,7 +5,8 @@ temp/
 *.DS_Store
 */.DS_Store
 *.png
-build/
+build
+docsrc/_build
 docs/_build
 *.egg-info
 dist/
