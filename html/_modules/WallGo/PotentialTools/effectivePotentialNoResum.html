@@ -1,0 +1,536 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.PotentialTools.effectivePotentialNoResum &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.PotentialTools.effectivePotentialNoResum</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.PotentialTools.effectivePotentialNoResum</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Class for the one-loop thermal effective potential.</span>
+
+<span class="sd">Defined without high-temperature expansion and without resummation.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..effectivePotential</span> <span class="kn">import</span> <span class="n">EffectivePotential</span>
+<span class="kn">from</span> <span class="nn">..interpolatableFunction</span> <span class="kn">import</span> <span class="n">EExtrapolationType</span>
+
+<span class="kn">from</span> <span class="nn">.integrals</span> <span class="kn">import</span> <span class="n">Integrals</span>
+
+
+<div class="viewcode-block" id="EImaginaryOption">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption">[docs]</a>
+<span class="k">class</span> <span class="nc">EImaginaryOption</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enums for what to do with imaginary parts in the effective potential.&quot;&quot;&quot;</span>
+
+    <span class="n">ERROR</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Throw an error if imaginary part nonzero&quot;&quot;&quot;</span>
+
+    <span class="n">ABS_ARGUMENT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Absolute value of argument of integral&quot;&quot;&quot;</span>
+
+    <span class="n">ABS_RESULT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Absolute value of analytically continued integral&quot;&quot;&quot;</span>
+
+    <span class="n">PRINCIPAL_PART</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Principal part of analytically continued integral&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum">[docs]</a>
+<span class="k">class</span> <span class="nc">EffectivePotentialNoResum</span><span class="p">(</span><span class="n">EffectivePotential</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;One-loop thermal effective potential</span>
+<span class="sd">    </span>
+<span class="sd">    Specialization of the abstract</span>
+<span class="sd">    EffectivePotential class that implements common functions for computing</span>
+<span class="sd">    the 1-loop potential at finite temperature, without any</span>
+<span class="sd">    assumptions regarding the temperature (no high- or low-T approximations).</span>
+<span class="sd">    In some literature this would be the _4D effective potential_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SMALL_NUMBER</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-100</span>
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.__init__">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">integrals</span><span class="p">:</span> <span class="n">Integrals</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">useDefaultInterpolation</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">imaginaryOption</span><span class="p">:</span> <span class="n">EImaginaryOption</span> <span class="o">=</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialisation of EffectivePotentialNoResum</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        integrals : Integrals, optional</span>
+<span class="sd">            An object of the Integrals class. Default is `None` in which case</span>
+<span class="sd">            the integrals will be done without interpolation. Beware this may</span>
+<span class="sd">            be slow.</span>
+<span class="sd">        useDefaultInterpolation : bool, optional</span>
+<span class="sd">            If `True` the default integration data will be loaded and used for</span>
+<span class="sd">            interpolation.</span>
+<span class="sd">        imaginaryOption : EImaginaryOption</span>
+<span class="sd">            Default is :py:attr:`EImaginaryOption.ERROR` which throws an error if</span>
+<span class="sd">            nonzero imaginary parts arise. Alternatives are</span>
+<span class="sd">            :py:attr:`EImaginaryOption.PRINCIPAL_PART` for the principal part of the</span>
+<span class="sd">            integrals, :py:attr:`EImaginaryOption.ABS_RESULT` for taking the absolute</span>
+<span class="sd">            part of the result, and :py:attr:`EImaginaryOption.ABS_ARGUMENT` for taking</span>
+<span class="sd">            the absolute part of the argument.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cls : EffectivePotentialNoResum</span>
+<span class="sd">            An object of the EffectivePotentialNoResum class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># FIXME: if we intend to have this as a ready-to-use Veff template,</span>
+        <span class="c1"># we should do inits in __init_subclass__() instead.</span>
+        <span class="c1"># This way the user doesn&#39;t have to worry about calling super().__init__()</span>
+        <span class="c1"># Option for how to deal with imaginary parts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">=</span> <span class="n">imaginaryOption</span>
+
+        <span class="c1"># Use the passed Integrals object if provided,</span>
+        <span class="c1"># otherwise create a new one</span>
+        <span class="k">if</span> <span class="n">integrals</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span> <span class="o">=</span> <span class="n">integrals</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The default is an integral object without interpolation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span> <span class="o">=</span> <span class="n">Integrals</span><span class="p">()</span>
+
+            <span class="c1"># For the sake of speed, one can use interpolated integrals.</span>
+            <span class="c1"># By setting useDefaultInterpolation to True, the default</span>
+            <span class="c1"># interpolation tables provided by WallGo are used.</span>
+            <span class="k">if</span> <span class="n">useDefaultInterpolation</span><span class="p">:</span>
+                <span class="c1"># TODO: find better way of doing this</span>
+                <span class="kn">from</span> <span class="nn">WallGo</span> <span class="kn">import</span> <span class="n">PotentialTools</span>  <span class="c1"># import statement here to avoid circular import</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span> <span class="o">=</span> <span class="n">PotentialTools</span><span class="o">.</span><span class="n">defaultIntegrals</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jb</span><span class="o">.</span><span class="n">disableAdaptiveInterpolation</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jf</span><span class="o">.</span><span class="n">disableAdaptiveInterpolation</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jb</span><span class="o">.</span><span class="n">setExtrapolationType</span><span class="p">(</span>
+                    <span class="n">extrapolationTypeLower</span><span class="o">=</span><span class="n">EExtrapolationType</span><span class="o">.</span><span class="n">CONSTANT</span><span class="p">,</span>
+                    <span class="n">extrapolationTypeUpper</span><span class="o">=</span><span class="n">EExtrapolationType</span><span class="o">.</span><span class="n">CONSTANT</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jf</span><span class="o">.</span><span class="n">setExtrapolationType</span><span class="p">(</span>
+                    <span class="n">extrapolationTypeLower</span><span class="o">=</span><span class="n">EExtrapolationType</span><span class="o">.</span><span class="n">CONSTANT</span><span class="p">,</span>
+                    <span class="n">extrapolationTypeUpper</span><span class="o">=</span><span class="n">EExtrapolationType</span><span class="o">.</span><span class="n">CONSTANT</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.bosonInformation">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.bosonInformation">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">bosonInformation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the boson particle spectrum. Should be overridden by</span>
+<span class="sd">        subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fields : array_like</span>
+<span class="sd">            Field value(s).</span>
+<span class="sd">            Either a single point (with length `Ndim`), or an array of points.</span>
+<span class="sd">        temperature : float or array_like</span>
+<span class="sd">            The temperature at which to calculate the boson masses. Can be used</span>
+<span class="sd">            for including thermal mass corrrections. The shapes of `fields` and</span>
+<span class="sd">            `temperature` should be such that `fields.shape[:-1]` and</span>
+<span class="sd">            `temperature.shape` are broadcastable</span>
+<span class="sd">            (that is, `fields[0,...]*T` is a valid operation).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        massSq : array_like</span>
+<span class="sd">            A list of the boson particle masses at each input point `X`. The</span>
+<span class="sd">            shape should be such that</span>
+<span class="sd">            `massSq.shape == (X[...,0]*T).shape + (Nbosons,)`.</span>
+<span class="sd">            That is, the particle index is the *last* index in the output array</span>
+<span class="sd">            if the input array(s) are multidimensional.</span>
+<span class="sd">        degreesOfFreedom : float or array_like</span>
+<span class="sd">            The number of degrees of freedom for each particle. If an array</span>
+<span class="sd">            (i.e., different particles have different d.o.f.), it should have</span>
+<span class="sd">            length `Ndim`.</span>
+<span class="sd">        c : float or array_like</span>
+<span class="sd">            A constant used in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Generally</span>
+<span class="sd">            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all</span>
+<span class="sd">            other bosons.</span>
+<span class="sd">        rgScale : float or array_like</span>
+<span class="sd">            Renormalization scale in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Typically, one</span>
+<span class="sd">            takes the same rgScale for all particles, but different scales</span>
+<span class="sd">            for each particle are possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.fermionInformation">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.fermionInformation">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">fermionInformation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">fields</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the fermion particle spectrum. Should be overridden by</span>
+<span class="sd">        subclasses.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fields : array_like</span>
+<span class="sd">            Field value(s).</span>
+<span class="sd">            Either a single point (with length `Ndim`), or an array of points.</span>
+<span class="sd">        temperature : float or array_like</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        massSq : array_like</span>
+<span class="sd">            A list of the fermion particle masses at each input point `field`. The</span>
+<span class="sd">            shape should be such that  `massSq.shape == (field[...,0]).shape`.</span>
+<span class="sd">            That is, the particle index is the *last* index in the output array</span>
+<span class="sd">            if the input array(s) are multidimensional.</span>
+<span class="sd">        degreesOfFreedom : float or array_like</span>
+<span class="sd">            The number of degrees of freedom for each particle. If an array</span>
+<span class="sd">            (i.e., different particles have different d.o.f.), it should have</span>
+<span class="sd">            length `Ndim`.</span>
+<span class="sd">        c : float or array_like</span>
+<span class="sd">            A constant used in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Generally</span>
+<span class="sd">            `c = 3/2` for all fermions.</span>
+<span class="sd">        rgScale : float or array_like</span>
+<span class="sd">            Renormalization scale in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Typically, one</span>
+<span class="sd">            takes the same rgScale for all particles, but different scales</span>
+<span class="sd">            for each particle are possible.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.jCW">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.jCW">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">jCW</span><span class="p">(</span>
+        <span class="n">massSq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">degreesOfFreedom</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">rgScale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Coleman-Weinberg potential</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        msq : array_like</span>
+<span class="sd">            A list of the boson particle masses at each input point `X`.</span>
+<span class="sd">        degreesOfFreedom : float or array_like</span>
+<span class="sd">            The number of degrees of freedom for each particle. If an array</span>
+<span class="sd">            (i.e., different particles have different d.o.f.), it should have</span>
+<span class="sd">            length `Ndim`.</span>
+<span class="sd">        c: float or array_like</span>
+<span class="sd">            A constant used in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Generally</span>
+<span class="sd">            `c = 1/2` for gauge boson transverse modes, and `c = 3/2` for all</span>
+<span class="sd">            other bosons.</span>
+<span class="sd">        rgScale : float or array_like</span>
+<span class="sd">            Renormalization scale in the one-loop zero-temperature effective</span>
+<span class="sd">            potential. If an array, it should have length `Ndim`. Typically, one</span>
+<span class="sd">            takes the same rgScale for all particles, but different scales</span>
+<span class="sd">            for each particle are possible.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        jCW : float or array_like</span>
+<span class="sd">            One-loop Coleman-Weinberg potential for given particle spectrum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">smallImagNumber</span> <span class="o">=</span> <span class="n">EffectivePotentialNoResum</span><span class="o">.</span><span class="n">SMALL_NUMBER</span> <span class="o">*</span> <span class="mi">1</span><span class="n">j</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">degreesOfFreedom</span>
+            <span class="o">*</span> <span class="n">massSq</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">massSq</span> <span class="o">/</span> <span class="n">rgScale</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">smallImagNumber</span><span class="p">)</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.potentialOneLoop">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoop">[docs]</a>
+    <span class="k">def</span> <span class="nf">potentialOneLoop</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">bosons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">fermions</span><span class="p">:</span> <span class="nb">tuple</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;One-loop corrections to the zero-temperature effective potential</span>
+<span class="sd">        in dimensional regularization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bosons : tuple</span>
+<span class="sd">            bosonic particle spectrum (here: masses, number of dofs, ci)</span>
+<span class="sd">        fermions : tuple</span>
+<span class="sd">            fermionic particle spectrum (here: masses, number of dofs)</span>
+<span class="sd">        RGscale: float</span>
+<span class="sd">            RG scale of the effective potential</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        potential : float or array_like</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">massSqB</span><span class="p">,</span> <span class="n">nB</span><span class="p">,</span> <span class="n">cB</span><span class="p">,</span> <span class="n">rgScaleB</span> <span class="o">=</span> <span class="n">bosons</span>
+        <span class="n">massSqF</span><span class="p">,</span> <span class="n">nF</span><span class="p">,</span> <span class="n">cF</span><span class="p">,</span> <span class="n">rgScaleF</span> <span class="o">=</span> <span class="n">fermions</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ABS_ARGUMENT</span><span class="p">:</span>
+            <span class="c1"># one way to drop imaginary parts, replace x with |x|</span>
+            <span class="n">massSqB</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">massSqB</span><span class="p">)</span>
+            <span class="n">massSqF</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">massSqF</span><span class="p">)</span>
+
+        <span class="c1"># constructing the potential</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jCW</span><span class="p">(</span><span class="n">massSqB</span><span class="p">,</span> <span class="n">nB</span><span class="p">,</span> <span class="n">cB</span><span class="p">,</span> <span class="n">rgScaleB</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jCW</span><span class="p">(</span><span class="n">massSqF</span><span class="p">,</span> <span class="n">nF</span><span class="p">,</span> <span class="n">cF</span><span class="p">,</span> <span class="n">rgScaleF</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># checking for imaginary parts</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">massSqB</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">massSqF</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">PRINCIPAL_PART</span><span class="p">:</span>
+                <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ABS_RESULT</span><span class="p">:</span>
+                <span class="n">potential</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+                <span class="n">msqBMin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">massSqB</span><span class="p">)</span>
+                <span class="n">msqFMin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">massSqF</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Im(Veff)=</span><span class="si">{</span><span class="n">potential</span><span class="o">.</span><span class="n">imag</span><span class="si">}</span><span class="s2">, Re(Veff)=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span><span class="si">}</span><span class="s2">, min(msqB)=</span><span class="si">{</span><span class="n">msqBMin</span><span class="si">}</span><span class="s2">, min(msqF)=</span><span class="si">{</span><span class="n">msqFMin</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;Choose imaginaryOption != EImaginaryOption.ERROR &quot;</span>
+                    <span class="s2">&quot;when initialising EffectivePotentialNoResum.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># no imaginary parts arise if masses are all nonnegative</span>
+            <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">potential</span></div>
+
+
+<div class="viewcode-block" id="EffectivePotentialNoResum.potentialOneLoopThermal">
+<a class="viewcode-back" href="../../../modules/potentialTools/effectivePotentialNoResum.html#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoopThermal">[docs]</a>
+    <span class="k">def</span> <span class="nf">potentialOneLoopThermal</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">bosons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">fermions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;One-loop thermal correction to the effective potential without any</span>
+<span class="sd">        temperature expansions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bosons : tuple</span>
+<span class="sd">            bosonic particle spectrum (here: masses, number of dofs, ci)</span>
+<span class="sd">        fermions : tuple</span>
+<span class="sd">            fermionic particle spectrum (here: masses, number of dofs)</span>
+<span class="sd">        temperature: float or array_like</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        potential : float or array_like</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># m2 is shape (len(T), 5), so to divide by T we need to transpose T,</span>
+        <span class="c1"># or add new axis in this case.</span>
+        <span class="c1"># But make sure we don&#39;t modify the input temperature array here.</span>
+        <span class="n">temperature</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+
+        <span class="n">temperatureSq</span> <span class="o">=</span> <span class="n">temperature</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SMALL_NUMBER</span>
+
+        <span class="c1"># Need reshaping mess for numpy broadcasting to work</span>
+        <span class="k">if</span> <span class="n">temperatureSq</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">temperatureSq</span> <span class="o">=</span> <span class="n">temperatureSq</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+        <span class="c1"># Jb, Jf take (mass/T)^2 as input, np.array is OK.</span>
+        <span class="c1"># Do note that for negative m^2 the integrals become wild and convergence</span>
+        <span class="c1"># is both slow and bad, so you may want to consider taking the absolute</span>
+        <span class="c1"># value of m^2. We will not enforce this however</span>
+
+        <span class="n">massSqB</span><span class="p">,</span> <span class="n">nB</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bosons</span>
+        <span class="n">massSqF</span><span class="p">,</span> <span class="n">nF</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fermions</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ABS_ARGUMENT</span><span class="p">:</span>
+            <span class="c1"># one way to drop imaginary parts, replace x with |x|</span>
+            <span class="n">massSqB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">massSqB</span><span class="p">)</span>
+            <span class="n">massSqF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">massSqF</span><span class="p">)</span>
+
+        <span class="c1"># Careful with the sum, it needs to be column-wise.</span>
+        <span class="c1"># Otherwise things go horribly wrong with array T input.</span>
+        <span class="c1"># TODO: really not a fan of hardcoded axis index</span>
+
+        <span class="c1"># constructing the potential</span>
+        <span class="n">JbList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jb</span><span class="p">(</span><span class="n">massSqB</span> <span class="o">/</span> <span class="n">temperatureSq</span><span class="p">)</span>
+        <span class="n">JfList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrals</span><span class="o">.</span><span class="n">Jf</span><span class="p">(</span><span class="n">massSqF</span> <span class="o">/</span> <span class="n">temperatureSq</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nB</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">JbList</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">nF</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">JfList</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="n">potential</span> <span class="o">*</span> <span class="n">temperature</span><span class="o">**</span><span class="mi">4</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+        <span class="c1"># checking for imaginary parts</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">massSqB</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">massSqF</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">PRINCIPAL_PART</span><span class="p">:</span>
+                <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ABS_RESULT</span><span class="p">:</span>
+                <span class="n">potential</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">imaginaryOption</span> <span class="o">==</span> <span class="n">EImaginaryOption</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+                <span class="n">msqBMin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">massSqB</span><span class="p">)</span>
+                <span class="n">msqFMin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">massSqF</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Im(VT)=</span><span class="si">{</span><span class="n">potential</span><span class="o">.</span><span class="n">imag</span><span class="si">}</span><span class="s2">, Re(VT)=</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span><span class="si">}</span><span class="s2">, min(msqB)=</span><span class="si">{</span><span class="n">msqBMin</span><span class="si">}</span><span class="s2">, min(msqF)=</span><span class="si">{</span><span class="n">msqFMin</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;Choose imaginaryOption != EImaginaryOption.ERROR &quot;</span>
+                    <span class="s2">&quot;when initialising EffectivePotentialNoResum.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># no imaginary parts arise if masses are all nonnegative</span>
+            <span class="n">potential</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">temperature</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">potential</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

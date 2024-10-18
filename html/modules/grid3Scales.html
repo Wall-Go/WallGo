@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grid3Scales &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Helpers" href="helpers.html" />
+    <link rel="prev" title="Grid" href="grid.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Grid3Scales</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/grid3Scales.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="grid3scales">
+<h1>Grid3Scales<a class="headerlink" href="#grid3scales" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.</span></span><span class="sig-name descname"><span class="pre">Grid3Scales</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tailLengthInside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tailLengthOutside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentumFalloffT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratioPointsWall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallCenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/grid3Scales.html#Grid3Scales"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.Grid3Scales" title="Link to this definition"></a></dt>
+<dd><p>Redefinition of the Grid class to take into account the different scales present in
+the z direction. More specifically, the <span class="math notranslate nohighlight">\(z\)</span> mapping function should scale as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}z(\chi \to -1) &amp;= \lambda_- \log(1+\chi),\\
+z(\chi \to 1) &amp;= -\lambda_+ \log(1-\chi),\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\lambda_-\)</span> and <span class="math notranslate nohighlight">\(\lambda_+\)</span> are the lengths of the solution's
+tails inside and outside the bubble, respectively. Furthermore, the mapping
+should be approximately linear in the region <span class="math notranslate nohighlight">\(-r&lt;\chi&lt;r\)</span>, where <span class="math notranslate nohighlight">\(r\)</span>
+is roughly the ratio of points that are used to resolve the wall's interior.
+The slope in that region should be <span class="math notranslate nohighlight">\(L/r\)</span>, where <span class="math notranslate nohighlight">\(L\)</span> is the wall
+thickness, so that</p>
+<div class="math notranslate nohighlight">
+\[z'(\chi) \approx \frac{L}{r}\chi, \quad \chi \in [-r, r].\]</div>
+<p>It is easier to find the derivative of a function that has these properties,
+and then integrate it. We choose here</p>
+<div class="math notranslate nohighlight">
+\[z'(\chi)=\frac{f(\chi)}{1-\chi^2},\]</div>
+<p>where <span class="math notranslate nohighlight">\(f(\chi)\)</span> is a smoothed step function equal to</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f(\chi) \approx \begin{cases}
+    \lambda_-,&amp; \chi&lt;-r,\\
+    L/r,&amp; -r&lt;\chi&lt;r,\\
+    \lambda_+,&amp; \chi&gt;r.
+\end{cases}\end{split}\]</div>
+<p>We choose <span class="math notranslate nohighlight">\(f(\chi)\)</span> to be a sum of functions like
+<span class="math notranslate nohighlight">\(\frac{\chi-\chi_0}{\sqrt{a^2+(\chi-\chi_0)^2}}\)</span>, which allows us to find
+analytically the mapping function with</p>
+<div class="math notranslate nohighlight">
+\[z(\chi) - z(\chi_0) =\int^\chi_{\chi_0} \frac{f(\chi')}{1-\chi'^2}  d\chi'.\]</div>
+<p>The parameter <span class="math notranslate nohighlight">\(a\)</span> can be adjusted to control the smoothness of the mapping
+function.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">M</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tailLengthInside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tailLengthOutside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentumFalloffT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratioPointsWall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallCenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Spectral'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/grid3Scales.html#Grid3Scales.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.Grid3Scales.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>M</strong> (<em>int</em>) -- Number of basis functions in the <span class="math notranslate nohighlight">\(\xi\)</span> (and <span class="math notranslate nohighlight">\(\chi\)</span>)
+direction.</p></li>
+<li><p><strong>N</strong> (<em>int</em>) -- Number of basis functions in the <span class="math notranslate nohighlight">\(p_z\)</span> and <span class="math notranslate nohighlight">\(p_\Vert\)</span>
+(and <span class="math notranslate nohighlight">\(\rho_z\)</span> and <span class="math notranslate nohighlight">\(\rho_\Vert\)</span>) directions.</p></li>
+<li><p><strong>tailLengthInside</strong> (<em>float</em>) -- Decay length of the solution's tail inside the wall. Should be larger
+than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+expressed in physical units (the units used in EffectivePotential).</p></li>
+<li><p><strong>tailLengthOutside</strong> (<em>float</em>) -- Decay length of the solution's tail outside the wall. Should be larger
+than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+expressed in physical units (the units used in EffectivePotential).</p></li>
+<li><p><strong>wallThickness</strong> (<em>float</em>) -- Thickness of the wall. Should be expressed in physical units
+(the units used in EffectivePotential).</p></li>
+<li><p><strong>momentumFalloffT</strong> (<em>float</em>) -- Temperature scale determining transform in momentum directions.
+Should be close to the plasma temperature.</p></li>
+<li><p><strong>ratioPointsWall</strong> (<em>float</em><em>, </em><em>optional</em>) -- Ratio of grid points inside the wall. The remaining points are
+distributed equally between the 2 tails. The default is 0.5.</p></li>
+<li><p><strong>smoothing</strong> (<em>float</em><em>, </em><em>optional</em>) -- Controls the smoothness of the mapping function. Its first derivative
+becomes discontinuous at <span class="math notranslate nohighlight">\(\chi=\pm r\)</span> when smoothness is 0.
+Should be smaller than 1, otherwise the function would not be linear
+at <span class="math notranslate nohighlight">\(\chi=0\)</span> anymore. As explained above, the decay length is
+controlled by adding 2 smoothed step functions. 'smoothing' is the
+value of these functions at the origin, in units of <span class="math notranslate nohighlight">\(L/r\)</span>.
+The default is 0.1.</p></li>
+<li><p><strong>wallCenter</strong> (<em>float</em><em>, </em><em>optional</em>) -- Position of the wall's center (in the z coordinates). Default is 0.</p></li>
+<li><p><strong>spacing</strong> (<em>{'Spectral'</em><em>, </em><em>'Uniform'}</em>) -- Choose 'Spectral' for the Gauss-Lobatto collocation points, as
+required for WallGo's spectral representation, or 'Uniform' for
+a uniform grid. Default is 'Spectral'.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.changeMomentumFalloffScale">
+<span class="sig-name descname"><span class="pre">changeMomentumFalloffScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.Grid3Scales.changeMomentumFalloffScale" title="Link to this definition"></a></dt>
+<dd><p>Change the momentum falloff scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>newScale</strong> (<em>float</em>) -- New momentum falloff scale.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.changePositionFalloffScale">
+<span class="sig-name descname"><span class="pre">changePositionFalloffScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tailLengthInside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tailLengthOutside</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallCenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/grid3Scales.html#Grid3Scales.changePositionFalloffScale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.Grid3Scales.changePositionFalloffScale" title="Link to this definition"></a></dt>
+<dd><p>Change the position falloff scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>newScale</strong> (<em>float</em>) -- New position falloff scale.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.compactificationDerivatives">
+<span class="sig-name descname"><span class="pre">compactificationDerivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pzCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ppCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/grid3Scales.html#Grid3Scales.compactificationDerivatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.Grid3Scales.compactificationDerivatives" title="Link to this definition"></a></dt>
+<dd><p>Derivative of transforms coordinates to [-1, 1] interval</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.compactify">
+<span class="sig-name descname"><span class="pre">compactify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#WallGo.Grid3Scales.compactify" title="Link to this definition"></a></dt>
+<dd><p>Transforms coordinates to [-1, 1] interval</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>array-like</em>) -- Physical z (or xi) coordinate.</p></li>
+<li><p><strong>pz</strong> (<em>array-like</em>) -- Physical pz coordinate.</p></li>
+<li><p><strong>pp</strong> (<em>array-like</em>) -- Physical p_par coordinate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>z_compact</strong> (<em>array-like</em>) -- Compact z coordinate (chi).</p></li>
+<li><p><strong>pz_compact</strong> (<em>array-like</em>) -- Compact pz coordinate (rho_z).</p></li>
+<li><p><strong>pp_compact</strong> (<em>array-like</em>) -- Compact p_par coordinate (rho_par).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.decompactify">
+<span class="sig-name descname"><span class="pre">decompactify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pzCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ppCompact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/grid3Scales.html#Grid3Scales.decompactify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.Grid3Scales.decompactify" title="Link to this definition"></a></dt>
+<dd><p>Transforms coordinates from [-1, 1] interval (inverse of compactify).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.getCompactCoordinates">
+<span class="sig-name descname"><span class="pre">getCompactCoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="headerlink" href="#WallGo.Grid3Scales.getCompactCoordinates" title="Link to this definition"></a></dt>
+<dd><p>Return compact coordinates of grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoints</strong> (<em>Bool</em><em>, </em><em>optional</em>) -- If True, include endpoints of grid. Default is False.</p></li>
+<li><p><strong>direction</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Specifies which coordinates to return. Can either be 'z', 'pz',
+'pp' or None. If None, returns a tuple containing the 3 directions.
+Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>chiValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\chi\)</span> direction.</p></li>
+<li><p><strong>rzValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\rho_z\)</span> direction.</p></li>
+<li><p><strong>rpValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\rho_\Vert\)</span> direction.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.getCompactificationDerivatives">
+<span class="sig-name descname"><span class="pre">getCompactificationDerivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#WallGo.Grid3Scales.getCompactificationDerivatives" title="Link to this definition"></a></dt>
+<dd><p>Return derivatives of compactified coordinates of grid, with respect to
+uncompactified derivatives.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>endpoints</strong> (<em>Bool</em><em>, </em><em>optional</em>) -- If True, include endpoints of grid. Default is False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>dchiValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\partial_\xi\chi\)</span> direction.</p></li>
+<li><p><strong>drzValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\partial_{p_z}\rho_z\)</span> direction.</p></li>
+<li><p><strong>drpValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\partial_{p_\Vert}\rho_\Vert\)</span> direction.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.Grid3Scales.getCoordinates">
+<span class="sig-name descname"><span class="pre">getCoordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endpoints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#WallGo.Grid3Scales.getCoordinates" title="Link to this definition"></a></dt>
+<dd><p>Return coordinates of grid, not compactified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>endpoints</strong> (<em>Bool</em><em>, </em><em>optional</em>) -- If True, include endpoints of grid. Default is False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>xiValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(\xi\)</span> direction.</p></li>
+<li><p><strong>pzValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(p_z\)</span> direction.</p></li>
+<li><p><strong>ppValues</strong> (<em>array_like</em>) -- Grid of the <span class="math notranslate nohighlight">\(p_\Vert\)</span> direction.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="grid.html" class="btn btn-neutral float-left" title="Grid" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="helpers.html" class="btn btn-neutral float-right" title="Helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

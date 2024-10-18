@@ -1,0 +1,383 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGoManager &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Particle" href="particle.html" />
+    <link rel="prev" title="InterpolatableFunction" href="interpolatableFunction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">WallGoManager</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/manager.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="wallgomanager">
+<h1>WallGoManager<a class="headerlink" href="#wallgomanager" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.WallGoManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.</span></span><span class="sig-name descname"><span class="pre">WallGoManager</span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager" title="Link to this definition"></a></dt>
+<dd><p>Defines a 'control' class for managing the program flow.
+This should be better than writing the same stuff in every example main
+function, and is good for hiding some of our internal implementation
+details from the user.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.buildEOM">
+<span class="sig-name descname"><span class="pre">buildEOM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.grid3Scales.Grid3Scales"><span class="pre">Grid3Scales</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltzmannSolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="boltzmann.html#WallGo.BoltzmannSolver" title="WallGo.boltzmann.BoltzmannSolver"><span class="pre">BoltzmannSolver</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanFreePathScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="equationOfMotion.html#WallGo.EOM" title="WallGo.equationOfMotion.EOM"><span class="pre">EOM</span></a></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.buildEOM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.buildEOM" title="Link to this definition"></a></dt>
+<dd><p>Constructs an EOM object using internal state from the WallGoManager,
+and the input Grid/BoltzmannSolver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.Grid3Scales"><em>Grid3Scales</em></a>) -- Grid3Scales object used to describe the mapping between the physical
+coordinates to the compact ones.</p></li>
+<li><p><strong>boltzmannSolver</strong> (<a class="reference internal" href="boltzmann.html#WallGo.BoltzmannSolver" title="WallGo.BoltzmannSolver"><em>BoltzmannSolver</em></a>) -- BoltzmannSolver object used to solve the Boltzmann equation.</p></li>
+<li><p><strong>meanFreePathScale</strong> (<em>float</em>) -- Estimate of the mean free path of the plasma. This will be used to set the
+tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>EOM object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="equationOfMotion.html#WallGo.EOM" title="WallGo.EOM">EOM</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.buildGrid">
+<span class="sig-name descname"><span class="pre">buildGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallThicknessIni</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanFreePathScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialMomentumFalloffScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.grid3Scales.Grid3Scales"><span class="pre">Grid3Scales</span></a></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.buildGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.buildGrid" title="Link to this definition"></a></dt>
+<dd><p>Initialize a Grid3Scales object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wallThicknessIni</strong> (<em>float</em>) -- Initial guess of the wall thickness that will be used to solve the EOM.
+Should be expressed in units of 1/Tnucl.</p></li>
+<li><p><strong>meanFreePathScale</strong> (<em>float</em>) -- Estimate of the mean free path of the plasma. This will be used to set the
+tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.</p></li>
+<li><p><strong>initialMomentumFalloffScale</strong> (<em>float</em>) -- TODO documentation. Should be close to temperature at the wall</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.getCurrentCollisionDirectory">
+<span class="sig-name descname"><span class="pre">getCurrentCollisionDirectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.getCurrentCollisionDirectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.getCurrentCollisionDirectory" title="Link to this definition"></a></dt>
+<dd><p>Returns the path to the directory with the collision files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.getMomentumGridSize">
+<span class="sig-name descname"><span class="pre">getMomentumGridSize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.getMomentumGridSize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.getMomentumGridSize" title="Link to this definition"></a></dt>
+<dd><p>Returns the momentum grid size.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.initTemperatureRange">
+<span class="sig-name descname"><span class="pre">initTemperatureRange</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.initTemperatureRange"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.initTemperatureRange" title="Link to this definition"></a></dt>
+<dd><p>Determine the relevant temperature range and trace the phases
+over this range. Interpolate the free energy in both phases and
+store in internal thermodynamics object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.isModelValid">
+<span class="sig-name descname"><span class="pre">isModelValid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.isModelValid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.isModelValid" title="Link to this definition"></a></dt>
+<dd><p>True if a valid model is currently registered.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.registerModel">
+<span class="sig-name descname"><span class="pre">registerModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="genericModel.html#WallGo.GenericModel" title="WallGo.genericModel.GenericModel"><span class="pre">GenericModel</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.registerModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.registerModel" title="Link to this definition"></a></dt>
+<dd><p>Register a physics model with WallGo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<a class="reference internal" href="genericModel.html#WallGo.GenericModel" title="WallGo.GenericModel"><em>GenericModel</em></a>) -- GenericModel object that describes the model studied.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.setPathToCollisionData">
+<span class="sig-name descname"><span class="pre">setPathToCollisionData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directoryPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.setPathToCollisionData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.setPathToCollisionData" title="Link to this definition"></a></dt>
+<dd><p>Specify path to collision files for use with the Boltzmann solver.
+This does not necessarily load the files immediately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directoryPath</strong> (<em>pathlib.Path</em>) -- Directory containing the .hdf5 collision data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.setVerbosity">
+<span class="sig-name descname"><span class="pre">setVerbosity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbosityLevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.setVerbosity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.setVerbosity" title="Link to this definition"></a></dt>
+<dd><p>Set the verbosity level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbosityLevel</strong> (<em>int</em>) -- Verbosity level. Follows the standard convention of the logging module where
+DEBUG=10, INFO=20, WARNING=30 and ERROR=40. In WallGo, most of the
+information is shown at the INFO level. At the DEBUG level, more
+information about the calculation of the pressure at each iteration is
+shown.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.setupThermodynamicsHydrodynamics">
+<span class="sig-name descname"><span class="pre">setupThermodynamicsHydrodynamics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phaseInfo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.PhaseInfo" title="WallGo.containers.PhaseInfo"><span class="pre">PhaseInfo</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">veffDerivativeScales</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VeffDerivativeSettings</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.setupThermodynamicsHydrodynamics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.setupThermodynamicsHydrodynamics" title="Link to this definition"></a></dt>
+<dd><p>Must run before solveWall() and companions.
+Initialization of internal objects related to equilibrium thermodynamics and
+hydrodynamics. Specifically, we verify that the input PhaseInfo is valid
+(distinct phases can be found in the effective potential),
+estimate the relevant temperature range for wall solving and create efficient
+approximations for phase free energies over this range using interpolation.
+Finally, it initializes the Hydrodynamics and confirms that it can find a
+reasonable value for the Jouguet velocity (the transition from hybdrid to
+detonation solutions).
+You are required to run this function whenever details of your
+physics model change to keep the manager's internal state up to date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phaseInfo</strong> (<a class="reference internal" href="containers.html#WallGo.containers.PhaseInfo" title="WallGo.containers.PhaseInfo"><em>PhaseInfo</em></a>) -- WallGo object containing the approximate positions of the minima and
+nucleation temperature.</p></li>
+<li><p><strong>veffDerativeScales</strong> (<em>VeffDerivativeSettings</em>) -- WallGo dataclass containing the typical temprature and field scale over
+which the potential varies.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.setupWallSolver">
+<span class="sig-name descname"><span class="pre">setupWallSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallSolverSettings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WallSolverSettings</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">WallSolver</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.setupWallSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.setupWallSolver" title="Link to this definition"></a></dt>
+<dd><p>Helper for constructing an EOM object whose state is tied to equilibrium
+and hydrodynamical information stored in the WallGoManager.
+Specifically, uses results of setupThermodynamicsHydrodynamics() to find
+optimal grid settings for wall solving, and creates Grid and BoltzmannSolver
+objects to use from within the EOM. Be aware that the created EOM object can
+change state if its creator WallGoManager instance is modified
+(eg. if setupThermodynamicsHydrodynamics() is called)!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.solveWall">
+<span class="sig-name descname"><span class="pre">solveWall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallSolverSettings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WallSolverSettings</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults"><span class="pre">WallGoResults</span></a></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.solveWall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.solveWall" title="Link to this definition"></a></dt>
+<dd><p>Solves the EOM and computes the wall velocity.
+Must be ran after analyzeHydrodynamics() because
+the solver depends on thermodynamical and hydrodynamical
+info stored internally in the WallGoManager.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wallSolverSettings</strong> (<em>WallSolverSettings</em>) -- Configuration settings for the solver.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Object containing the wall velocity and EOM solution, as well as different
+quantities used to assess the accuracy of the solution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults">WallGoResults</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.solveWallDetonation">
+<span class="sig-name descname"><span class="pre">solveWallDetonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallSolverSettings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WallSolverSettings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onlySmallest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults"><span class="pre">WallGoResults</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.solveWallDetonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.solveWallDetonation" title="Link to this definition"></a></dt>
+<dd><p>Finds all the detonation solutions by computing the pressure on a grid
+and interpolating to find the roots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wallSolverSettings</strong> (<em>WallSolverSettings</em>) -- Configuration settings for the solver.</p></li>
+<li><p><strong>onlySmallest</strong> (<em>bool</em><em>, </em><em>optional</em>) -- Whether or not to only look for one solution. If True, the solver will
+stop the calculation after finding the first root. If False, it will
+continue looking for solutions until it reaches the maximal velocity.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List containing the detonation solutions. If no solutions were found,
+returns a wall velocity of 0  if the pressure is always positive, or 1 if
+it is negative (runaway wall). If it is positive at vmin and negative at
+vmax, the outcome is uncertain and would require a time-dependent analysis,
+so it returns an empty list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults">WallGoResults</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.validatePhaseInput">
+<span class="sig-name descname"><span class="pre">validatePhaseInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phaseInput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.PhaseInfo" title="WallGo.containers.PhaseInfo"><span class="pre">PhaseInfo</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.validatePhaseInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.validatePhaseInput" title="Link to this definition"></a></dt>
+<dd><p>This checks that the user-specified phases are OK.
+Specifically, the effective potential should have two minima at the given T,
+otherwise phase transition analysis is not possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>phaseInput</strong> (<a class="reference internal" href="containers.html#WallGo.containers.PhaseInfo" title="WallGo.containers.PhaseInfo"><em>PhaseInfo</em></a>) -- Should contain approximate field values at the two phases that WallGo will
+analyze, and the nucleation temperature. Transition is assumed to go
+phaseLocation1 --&gt; phaseLocation2.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.WallGoManager.wallSpeedLTE">
+<span class="sig-name descname"><span class="pre">wallSpeedLTE</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/WallGo/wallGoManager.html#WallGoManager.wallSpeedLTE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.WallGoManager.wallSpeedLTE" title="Link to this definition"></a></dt>
+<dd><p>Solves wall speed in the Local Thermal Equilibrium (LTE) approximation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Wall velocity in LTE.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="interpolatableFunction.html" class="btn btn-neutral float-left" title="InterpolatableFunction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="particle.html" class="btn btn-neutral float-right" title="Particle" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

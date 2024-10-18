@@ -1,0 +1,847 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.wallGoManager &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.wallGoManager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.wallGoManager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Defines the WallGoManager class which initializes the different object needed for the</span>
+<span class="sd">wall velocity calculation.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># WallGo imports</span>
+<span class="kn">import</span> <span class="nn">WallGo</span>
+<span class="kn">from</span> <span class="nn">.boltzmann</span> <span class="kn">import</span> <span class="n">BoltzmannSolver</span>
+<span class="kn">from</span> <span class="nn">.containers</span> <span class="kn">import</span> <span class="n">PhaseInfo</span>
+<span class="kn">from</span> <span class="nn">.equationOfMotion</span> <span class="kn">import</span> <span class="n">EOM</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">WallGoError</span><span class="p">,</span> <span class="n">WallGoPhaseValidationError</span>
+<span class="kn">from</span> <span class="nn">.genericModel</span> <span class="kn">import</span> <span class="n">GenericModel</span>
+<span class="kn">from</span> <span class="nn">.grid3Scales</span> <span class="kn">import</span> <span class="n">Grid3Scales</span>
+<span class="kn">from</span> <span class="nn">.hydrodynamics</span> <span class="kn">import</span> <span class="n">Hydrodynamics</span>
+<span class="kn">from</span> <span class="nn">.hydrodynamicsTemplateModel</span> <span class="kn">import</span> <span class="n">HydrodynamicsTemplateModel</span>
+<span class="kn">from</span> <span class="nn">.thermodynamics</span> <span class="kn">import</span> <span class="n">Thermodynamics</span>
+<span class="kn">from</span> <span class="nn">.results</span> <span class="kn">import</span> <span class="n">WallGoResults</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">Config</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">WallSolverSettings</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Settings for the WallSolver.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bIncludeOffEquilibrium</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">meanFreePathScale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Estimate of the mean free path of the plasma in units of 1/Tn. This will be used</span>
+<span class="sd">    to set the tail lengths in the Grid object. Default is 100.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">wallThicknessGuess</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initial guess of the wall thickness that will be used to solve the EOM, in units</span>
+<span class="sd">    1/Tn. Default is 5.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">WallSolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data class containing classes and settings for the wall velocity computation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">eom</span><span class="p">:</span> <span class="n">EOM</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;EOM object&quot;&quot;&quot;</span>
+
+    <span class="n">grid</span><span class="p">:</span> <span class="n">Grid3Scales</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Grid3Scales object used to describe the mapping between the physical</span>
+<span class="sd">    coordinates to the compact ones.&quot;&quot;&quot;</span>
+
+    <span class="n">boltzmannSolver</span><span class="p">:</span> <span class="n">BoltzmannSolver</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; BoltzmannSolver object used to solve the Boltzmann equation.&quot;&quot;&quot;</span>
+
+    <span class="n">initialWallThickness</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initial wall thickness used by the solver. Should be expressed in physical</span>
+<span class="sd">    units (the units used in EffectivePotential).&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="WallGoManager">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager">[docs]</a>
+<span class="k">class</span> <span class="nc">WallGoManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines a &#39;control&#39; class for managing the program flow.</span>
+<span class="sd">    This should be better than writing the same stuff in every example main</span>
+<span class="sd">    function, and is good for hiding some of our internal implementation</span>
+<span class="sd">    details from the user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+
+        <span class="c1"># Initialise the configs with the default values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+
+        <span class="c1"># Set the default verbosity level to logging.INFO</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setVerbosity</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+        <span class="c1"># default to working directory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collisionDirectory</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
+
+        <span class="c1"># These we currently have to keep cached, otherwise we can&#39;t construct</span>
+        <span class="c1"># a sensible WallSolver:</span>
+        <span class="c1">## TODO init these to None or have other easy way of checking if they</span>
+        <span class="c1">## have been properly initialized</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">:</span> <span class="n">GenericModel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="p">:</span> <span class="n">Hydrodynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="p">:</span> <span class="n">PhaseInfo</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="p">:</span> <span class="n">Thermodynamics</span>
+
+<div class="viewcode-block" id="WallGoManager.getMomentumGridSize">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.getMomentumGridSize">[docs]</a>
+    <span class="k">def</span> <span class="nf">getMomentumGridSize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the momentum grid size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">momentumGridSize</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.setVerbosity">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.setVerbosity">[docs]</a>
+    <span class="k">def</span> <span class="nf">setVerbosity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbosityLevel</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the verbosity level.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbosityLevel : int</span>
+<span class="sd">            Verbosity level. Follows the standard convention of the logging module where</span>
+<span class="sd">            DEBUG=10, INFO=20, WARNING=30 and ERROR=40. In WallGo, most of the</span>
+<span class="sd">            information is shown at the INFO level. At the DEBUG level, more</span>
+<span class="sd">            information about the calculation of the pressure at each iteration is</span>
+<span class="sd">            shown.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">verbosityLevel</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.setupThermodynamicsHydrodynamics">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.setupThermodynamicsHydrodynamics">[docs]</a>
+    <span class="k">def</span> <span class="nf">setupThermodynamicsHydrodynamics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">phaseInfo</span><span class="p">:</span> <span class="n">WallGo</span><span class="o">.</span><span class="n">PhaseInfo</span><span class="p">,</span>
+        <span class="n">veffDerivativeScales</span><span class="p">:</span> <span class="n">WallGo</span><span class="o">.</span><span class="n">VeffDerivativeSettings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Must run before solveWall() and companions.</span>
+<span class="sd">        Initialization of internal objects related to equilibrium thermodynamics and</span>
+<span class="sd">        hydrodynamics. Specifically, we verify that the input PhaseInfo is valid</span>
+<span class="sd">        (distinct phases can be found in the effective potential),</span>
+<span class="sd">        estimate the relevant temperature range for wall solving and create efficient</span>
+<span class="sd">        approximations for phase free energies over this range using interpolation.</span>
+<span class="sd">        Finally, it initializes the Hydrodynamics and confirms that it can find a</span>
+<span class="sd">        reasonable value for the Jouguet velocity (the transition from hybdrid to</span>
+<span class="sd">        detonation solutions).</span>
+<span class="sd">        You are required to run this function whenever details of your</span>
+<span class="sd">        physics model change to keep the manager&#39;s internal state up to date.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phaseInfo : PhaseInfo</span>
+<span class="sd">            WallGo object containing the approximate positions of the minima and</span>
+<span class="sd">            nucleation temperature.</span>
+<span class="sd">        veffDerativeScales : VeffDerivativeSettings</span>
+<span class="sd">            WallGo dataclass containing the typical temprature and field scale over</span>
+<span class="sd">            which the potential varies.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">phaseInfo</span><span class="o">.</span><span class="n">phaseLocation1</span><span class="o">.</span><span class="n">numFields</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fieldCount</span>
+            <span class="ow">and</span> <span class="n">phaseInfo</span><span class="o">.</span><span class="n">phaseLocation2</span><span class="o">.</span><span class="n">numFields</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fieldCount</span>
+        <span class="p">),</span> <span class="s2">&quot;Invalid PhaseInfo input, field counts don&#39;t match those defined in model&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">()</span><span class="o">.</span><span class="n">configureDerivatives</span><span class="p">(</span><span class="n">veffDerivativeScales</span><span class="p">)</span>
+
+        <span class="c1"># Checks that phase input makes sense with the user-specified Veff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validatePhaseInput</span><span class="p">(</span><span class="n">phaseInfo</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">initTemperatureRange</span><span class="p">()</span>
+
+        <span class="c1">## Should we write these to a result struct?</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Temperature ranges:&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;High-T phase: TMin = &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;TMax = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Low-T phase: TMin = &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;TMax = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">setExtrapolate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initHydrodynamics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to solve Jouguet velocity at input temperature!&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;vJ&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span><span class="p">,</span>
+                    <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="n">phaseInfo</span><span class="o">.</span><span class="n">temperature</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Jouguet: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+        <span class="c1"># TODO return some results struct</span>
+
+<div class="viewcode-block" id="WallGoManager.isModelValid">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.isModelValid">[docs]</a>
+    <span class="k">def</span> <span class="nf">isModelValid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;True if a valid model is currently registered.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.registerModel">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.registerModel">[docs]</a>
+    <span class="k">def</span> <span class="nf">registerModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">GenericModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register a physics model with WallGo.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : GenericModel</span>
+<span class="sd">            GenericModel object that describes the model studied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">GenericModel</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">fieldCount</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;WallGo model must contain at least one classical field&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.validatePhaseInput">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.validatePhaseInput">[docs]</a>
+    <span class="k">def</span> <span class="nf">validatePhaseInput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phaseInput</span><span class="p">:</span> <span class="n">PhaseInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This checks that the user-specified phases are OK.</span>
+<span class="sd">        Specifically, the effective potential should have two minima at the given T,</span>
+<span class="sd">        otherwise phase transition analysis is not possible.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        phaseInput : PhaseInfo</span>
+<span class="sd">            Should contain approximate field values at the two phases that WallGo will</span>
+<span class="sd">            analyze, and the nucleation temperature. Transition is assumed to go</span>
+<span class="sd">            phaseLocation1 --&gt; phaseLocation2.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="n">phaseInput</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="c1"># Find the actual minima at T, should be close to the user-specified locations</span>
+        <span class="p">(</span>
+            <span class="n">phaseLocation1</span><span class="p">,</span>
+            <span class="n">effPotValue1</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">()</span><span class="o">.</span><span class="n">findLocalMinimum</span><span class="p">(</span>
+            <span class="n">phaseInput</span><span class="o">.</span><span class="n">phaseLocation1</span><span class="p">,</span> <span class="n">T</span>
+        <span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">phaseLocation2</span><span class="p">,</span>
+            <span class="n">effPotValue2</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">()</span><span class="o">.</span><span class="n">findLocalMinimum</span><span class="p">(</span>
+            <span class="n">phaseInput</span><span class="o">.</span><span class="n">phaseLocation2</span><span class="p">,</span> <span class="n">T</span>
+        <span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found phase 1: phi = </span><span class="si">{</span><span class="n">phaseLocation1</span><span class="si">}</span><span class="s2">, Veff(phi) = </span><span class="si">{</span><span class="n">effPotValue1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found phase 2: phi = </span><span class="si">{</span><span class="n">phaseLocation2</span><span class="si">}</span><span class="s2">, Veff(phi) = </span><span class="si">{</span><span class="n">effPotValue2</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">phaseLocation1</span><span class="p">,</span> <span class="n">phaseLocation2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-05</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WallGoPhaseValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;It looks like both phases are the same, this will not work&quot;</span><span class="p">,</span>
+                <span class="n">phaseInput</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;phaseLocation1&quot;</span><span class="p">:</span> <span class="n">phaseLocation1</span><span class="p">,</span>
+                    <span class="s2">&quot;Veff(phi1)&quot;</span><span class="p">:</span> <span class="n">effPotValue1</span><span class="p">,</span>
+                    <span class="s2">&quot;phaseLocation2&quot;</span><span class="p">:</span> <span class="n">phaseLocation2</span><span class="p">,</span>
+                    <span class="s2">&quot;Veff(phi2)&quot;</span><span class="p">:</span> <span class="n">effPotValue2</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1">## Currently we assume transition phase1 -&gt; phase2. This assumption shows up at</span>
+        <span class="c1">## least when initializing FreeEnergy objects</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">effPotValue1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">effPotValue2</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WallGoPhaseValidationError</span><span class="p">(</span>
+                <span class="s2">&quot;Phase 1 has lower free energy than Phase 2, this will not work&quot;</span><span class="p">,</span>
+                <span class="n">phaseInput</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;phaseLocation1&quot;</span><span class="p">:</span> <span class="n">phaseLocation1</span><span class="p">,</span>
+                    <span class="s2">&quot;Veff(phi1)&quot;</span><span class="p">:</span> <span class="n">effPotValue1</span><span class="p">,</span>
+                    <span class="s2">&quot;phaseLocation2&quot;</span><span class="p">:</span> <span class="n">phaseLocation2</span><span class="p">,</span>
+                    <span class="s2">&quot;Veff(phi2)&quot;</span><span class="p">:</span> <span class="n">effPotValue2</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="n">foundPhaseInfo</span> <span class="o">=</span> <span class="n">PhaseInfo</span><span class="p">(</span>
+            <span class="n">temperature</span><span class="o">=</span><span class="n">T</span><span class="p">,</span> <span class="n">phaseLocation1</span><span class="o">=</span><span class="n">phaseLocation1</span><span class="p">,</span> <span class="n">phaseLocation2</span><span class="o">=</span><span class="n">phaseLocation2</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span> <span class="o">=</span> <span class="n">foundPhaseInfo</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.initTemperatureRange">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.initTemperatureRange">[docs]</a>
+    <span class="k">def</span> <span class="nf">initTemperatureRange</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine the relevant temperature range and trace the phases</span>
+<span class="sd">        over this range. Interpolate the free energy in both phases and</span>
+<span class="sd">        store in internal thermodynamics object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModelValid</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">()</span><span class="o">.</span><span class="n">areDerivativesConfigured</span><span class="p">()</span>
+        <span class="p">),</span> <span class="s2">&quot;Must have called effectivePotential.configureDerivatives()&quot;</span>
+
+        <span class="n">Tn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span> <span class="o">=</span> <span class="n">Thermodynamics</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">(),</span>
+            <span class="n">Tn</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">phaseLocation2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">phaseLocation1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Let&#39;s turn these off so that things are more transparent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">disableAdaptiveInterpolation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">disableAdaptiveInterpolation</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Use the template model to find an estimate of the minimum and maximum</span>
+            <span class="c1"># required temperature. We do not solve hydrodynamics inside the bubble, so</span>
+            <span class="c1"># we are only interested in T- (the temperature right at the wall).</span>
+            <span class="n">hydrodynamicsTemplate</span> <span class="o">=</span> <span class="n">HydrodynamicsTemplateModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;vwLTE in the template model: </span><span class="si">{</span><span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">findvwLTE</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">WallGoError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="c1"># Throw new error with more info</span>
+            <span class="k">raise</span> <span class="n">WallGoPhaseValidationError</span><span class="p">(</span>
+                <span class="n">error</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="p">,</span> <span class="n">error</span><span class="o">.</span><span class="n">data</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">error</span>
+
+        <span class="c1"># Raise an error if this is an inverse PT (if epsilon is negative)</span>
+        <span class="k">if</span> <span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WallGo requires epsilon=</span><span class="si">{</span><span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">epsilon</span><span class="si">}</span><span class="s2"> to be &quot;</span>
+                <span class="s2">&quot;positive.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Maximum values for T+ and T- are reached at the Jouguet velocity</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">THighTMaxTemplate</span><span class="p">,</span> <span class="n">TLowTMaxTemplate</span> <span class="o">=</span> <span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span>
+            <span class="mf">0.99</span> <span class="o">*</span> <span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">vJ</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Minimum value for T- is reached at small wall velocity. The minimum value</span>
+        <span class="c1"># for T+ is the nucleation temperature.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">TLowTMinTemplate</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">hydrodynamicsTemplate</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">THighTMaxTemplate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">THighTMaxTemplate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmax</span> <span class="o">*</span> <span class="n">Tn</span>
+        <span class="k">if</span> <span class="n">TLowTMaxTemplate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">TLowTMaxTemplate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmax</span> <span class="o">*</span> <span class="n">Tn</span>
+
+        <span class="k">if</span> <span class="n">TLowTMinTemplate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">TLowTMinTemplate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmin</span> <span class="o">*</span> <span class="n">Tn</span>
+
+        <span class="n">phaseTracerTol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">phaseTracerTol</span>
+
+        <span class="c1"># Estimate of the dT needed to reach the desired tolerance considering</span>
+        <span class="c1"># the error of a cubic spline scales like dT**4.</span>
+        <span class="n">dT</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">getEffectivePotential</span><span class="p">()</span><span class="o">.</span><span class="n">derivativeSettings</span><span class="o">.</span><span class="n">temperatureVariationScale</span>
+            <span class="o">*</span> <span class="n">phaseTracerTol</span><span class="o">**</span><span class="mf">0.25</span>
+        <span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Since the template model is an approximation of the full model, </span>
+<span class="sd">        and since the temperature profile in the wall could be non-monotonous,</span>
+<span class="sd">        we should not take exactly the TMin and TMax from the template model.</span>
+<span class="sd">        We use a configuration parameter to determine the TMin and TMax that we</span>
+<span class="sd">        use in the phase tracing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">TMinHighT</span> <span class="o">=</span> <span class="n">Tn</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmin</span>
+        <span class="n">TMaxHighT</span> <span class="o">=</span> <span class="n">THighTMaxTemplate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmax</span>
+        <span class="n">TMinLowT</span> <span class="o">=</span> <span class="n">TLowTMinTemplate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmin</span>
+        <span class="n">TMaxLowT</span> <span class="o">=</span> <span class="n">TLowTMaxTemplate</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmax</span>
+
+        <span class="c1"># Interpolate phases and check that they remain stable in this range</span>
+        <span class="n">fHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span>
+        <span class="n">fLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span>
+
+        <span class="n">fHighT</span><span class="o">.</span><span class="n">tracePhase</span><span class="p">(</span><span class="n">TMinHighT</span><span class="p">,</span> <span class="n">TMaxHighT</span><span class="p">,</span> <span class="n">dT</span><span class="p">,</span> <span class="n">phaseTracerTol</span><span class="p">)</span>
+        <span class="n">fLowT</span><span class="o">.</span><span class="n">tracePhase</span><span class="p">(</span><span class="n">TMinLowT</span><span class="p">,</span> <span class="n">TMaxLowT</span><span class="p">,</span> <span class="n">dT</span><span class="p">,</span> <span class="n">phaseTracerTol</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.setPathToCollisionData">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.setPathToCollisionData">[docs]</a>
+    <span class="k">def</span> <span class="nf">setPathToCollisionData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directoryPath</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify path to collision files for use with the Boltzmann solver.</span>
+<span class="sd">        This does not necessarily load the files immediately.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO validate? or not if we want to allow the data to be generated on the fly</span>
+        <span class="c1"># should at least validate that it is not an existing file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collisionDirectory</span> <span class="o">=</span> <span class="n">directoryPath</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.getCurrentCollisionDirectory">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.getCurrentCollisionDirectory">[docs]</a>
+    <span class="k">def</span> <span class="nf">getCurrentCollisionDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the path to the directory with the collision files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">collisionDirectory</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.wallSpeedLTE">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.wallSpeedLTE">[docs]</a>
+    <span class="k">def</span> <span class="nf">wallSpeedLTE</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves wall speed in the Local Thermal Equilibrium (LTE) approximation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Wall velocity in LTE.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">findvwLTE</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.solveWall">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.solveWall">[docs]</a>
+    <span class="k">def</span> <span class="nf">solveWall</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wallSolverSettings</span><span class="p">:</span> <span class="n">WallSolverSettings</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WallGoResults</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves the EOM and computes the wall velocity.</span>
+<span class="sd">        Must be ran after analyzeHydrodynamics() because</span>
+<span class="sd">        the solver depends on thermodynamical and hydrodynamical</span>
+<span class="sd">        info stored internally in the WallGoManager.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wallSolverSettings : WallSolverSettings</span>
+<span class="sd">            Configuration settings for the solver.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        WallGoResults</span>
+<span class="sd">            Object containing the wall velocity and EOM solution, as well as different</span>
+<span class="sd">            quantities used to assess the accuracy of the solution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">solver</span><span class="p">:</span> <span class="n">WallSolver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setupWallSolver</span><span class="p">(</span><span class="n">wallSolverSettings</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">solver</span><span class="o">.</span><span class="n">eom</span><span class="o">.</span><span class="n">findWallVelocityDeflagrationHybrid</span><span class="p">(</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">initialWallThickness</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.solveWallDetonation">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.solveWallDetonation">[docs]</a>
+    <span class="k">def</span> <span class="nf">solveWallDetonation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wallSolverSettings</span><span class="p">:</span> <span class="n">WallSolverSettings</span><span class="p">,</span>
+        <span class="n">onlySmallest</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">WallGoResults</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds all the detonation solutions by computing the pressure on a grid</span>
+<span class="sd">        and interpolating to find the roots.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wallSolverSettings : WallSolverSettings</span>
+<span class="sd">            Configuration settings for the solver.</span>
+
+<span class="sd">        onlySmallest : bool, optional</span>
+<span class="sd">            Whether or not to only look for one solution. If True, the solver will</span>
+<span class="sd">            stop the calculation after finding the first root. If False, it will</span>
+<span class="sd">            continue looking for solutions until it reaches the maximal velocity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[WallGoResults]</span>
+<span class="sd">            List containing the detonation solutions. If no solutions were found,</span>
+<span class="sd">            returns a wall velocity of 0  if the pressure is always positive, or 1 if</span>
+<span class="sd">            it is negative (runaway wall). If it is positive at vmin and negative at</span>
+<span class="sd">            vmax, the outcome is uncertain and would require a time-dependent analysis,</span>
+<span class="sd">            so it returns an empty list.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">solver</span><span class="p">:</span> <span class="n">WallSolver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setupWallSolver</span><span class="p">(</span><span class="n">wallSolverSettings</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">solver</span><span class="o">.</span><span class="n">initialWallThickness</span>
+
+        <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">errTol</span>
+        <span class="n">nbrPointsMin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">nbrPointsMinDeton</span>
+        <span class="n">nbrPointsMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">nbrPointsMaxDeton</span>
+        <span class="n">overshootProb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">overshootProbDeton</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">vJ</span> <span class="o">+</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="o">.</span><span class="n">slowestDeton</span><span class="p">())</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">vwMaxDeton</span>
+
+        <span class="k">if</span> <span class="n">vmin</span> <span class="o">&gt;=</span> <span class="n">vmax</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;In WallGoManager.solveWallDetonation(): vmax must be larger than vmin&quot;</span><span class="p">,</span>
+                <span class="p">{</span><span class="s2">&quot;vmin&quot;</span><span class="p">:</span> <span class="n">vmin</span><span class="p">,</span> <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="n">vmax</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">solver</span><span class="o">.</span><span class="n">eom</span><span class="o">.</span><span class="n">findWallVelocityDetonation</span><span class="p">(</span>
+            <span class="n">vmin</span><span class="p">,</span>
+            <span class="n">vmax</span><span class="p">,</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">initialWallThickness</span><span class="p">,</span>
+            <span class="n">nbrPointsMin</span><span class="p">,</span>
+            <span class="n">nbrPointsMax</span><span class="p">,</span>
+            <span class="n">overshootProb</span><span class="p">,</span>
+            <span class="n">rtol</span><span class="p">,</span>
+            <span class="n">onlySmallest</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.setupWallSolver">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.setupWallSolver">[docs]</a>
+    <span class="k">def</span> <span class="nf">setupWallSolver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wallSolverSettings</span><span class="p">:</span> <span class="n">WallSolverSettings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WallSolver</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper for constructing an EOM object whose state is tied to equilibrium</span>
+<span class="sd">        and hydrodynamical information stored in the WallGoManager.</span>
+<span class="sd">        Specifically, uses results of setupThermodynamicsHydrodynamics() to find</span>
+<span class="sd">        optimal grid settings for wall solving, and creates Grid and BoltzmannSolver</span>
+<span class="sd">        objects to use from within the EOM. Be aware that the created EOM object can</span>
+<span class="sd">        change state if its creator WallGoManager instance is modified</span>
+<span class="sd">        (eg. if setupThermodynamicsHydrodynamics() is called)!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">temperature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isModelValid</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">),</span> <span class="s2">&quot;Run WallGoManager.setupThermodynamicsHydrodynamics() before wall solving&quot;</span>
+
+        <span class="n">Tnucl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="n">gridMomentumFalloffScale</span> <span class="o">=</span> <span class="n">Tnucl</span>
+
+        <span class="n">wallThickness</span> <span class="o">=</span> <span class="n">wallSolverSettings</span><span class="o">.</span><span class="n">wallThicknessGuess</span>
+        <span class="n">meanFreePathScale</span> <span class="o">=</span> <span class="n">wallSolverSettings</span><span class="o">.</span><span class="n">meanFreePathScale</span>
+
+        <span class="n">grid</span><span class="p">:</span> <span class="n">Grid3Scales</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildGrid</span><span class="p">(</span>
+            <span class="n">wallThickness</span><span class="p">,</span>
+            <span class="n">meanFreePathScale</span><span class="p">,</span>
+            <span class="n">gridMomentumFalloffScale</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Factor that multiplies the collision term in the Boltzmann equation.</span>
+        <span class="n">collisionMultiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configBoltzmannSolver</span><span class="o">.</span><span class="n">collisionMultiplier</span>
+        <span class="c1"># Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp</span>
+        <span class="n">boltzmannSolver</span> <span class="o">=</span> <span class="n">BoltzmannSolver</span><span class="p">(</span>
+            <span class="n">grid</span><span class="p">,</span>
+            <span class="n">basisM</span><span class="o">=</span><span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+            <span class="n">basisN</span><span class="o">=</span><span class="s2">&quot;Chebyshev&quot;</span><span class="p">,</span>
+            <span class="n">collisionMultiplier</span><span class="o">=</span><span class="n">collisionMultiplier</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">boltzmannSolver</span><span class="o">.</span><span class="n">updateParticleList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">outOfEquilibriumParticles</span><span class="p">)</span>
+
+        <span class="n">bShouldLoadCollisions</span> <span class="o">=</span> <span class="n">wallSolverSettings</span><span class="o">.</span><span class="n">bIncludeOffEquilibrium</span>
+        <span class="k">if</span> <span class="n">bShouldLoadCollisions</span><span class="p">:</span>
+            <span class="c1"># This throws if collision load fails, let caller handle the exception.</span>
+            <span class="c1"># TODO may be cleaner to handle it here and return an invalid solver</span>
+            <span class="n">boltzmannSolver</span><span class="o">.</span><span class="n">loadCollisions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">collisionDirectory</span><span class="p">)</span>
+
+        <span class="n">eom</span><span class="p">:</span> <span class="n">EOM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildEOM</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">boltzmannSolver</span><span class="p">,</span> <span class="n">meanFreePathScale</span><span class="p">)</span>
+
+        <span class="n">eom</span><span class="o">.</span><span class="n">includeOffEq</span> <span class="o">=</span> <span class="n">wallSolverSettings</span><span class="o">.</span><span class="n">bIncludeOffEquilibrium</span>
+        <span class="k">return</span> <span class="n">WallSolver</span><span class="p">(</span><span class="n">eom</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">boltzmannSolver</span><span class="p">,</span> <span class="n">wallThickness</span> <span class="o">/</span> <span class="n">Tnucl</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_initHydrodynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thermodynamics</span><span class="p">:</span> <span class="n">Thermodynamics</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Hydrodynamics object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        thermodynamics : Thermodynamics</span>
+<span class="sd">            Thermodynamics object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmax</span>
+        <span class="n">tmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmin</span>
+        <span class="n">rtol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">relativeTol</span>
+        <span class="n">atol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">absoluteTol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span> <span class="o">=</span> <span class="n">Hydrodynamics</span><span class="p">(</span><span class="n">thermodynamics</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">tmin</span><span class="p">,</span> <span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WallGoManager.buildGrid">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.buildGrid">[docs]</a>
+    <span class="k">def</span> <span class="nf">buildGrid</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wallThicknessIni</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">meanFreePathScale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">initialMomentumFalloffScale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid3Scales</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a Grid3Scales object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wallThicknessIni : float</span>
+<span class="sd">            Initial guess of the wall thickness that will be used to solve the EOM.</span>
+<span class="sd">            Should be expressed in units of 1/Tnucl.</span>
+<span class="sd">        meanFreePathScale : float</span>
+<span class="sd">            Estimate of the mean free path of the plasma. This will be used to set the</span>
+<span class="sd">            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.</span>
+<span class="sd">        initialMomentumFalloffScale : float</span>
+<span class="sd">            TODO documentation. Should be close to temperature at the wall</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">gridN</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">momentumGridSize</span>
+        <span class="n">gridM</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">spatialGridSize</span>
+        <span class="n">ratioPointsWall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">ratioPointsWall</span>
+        <span class="n">smoothing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">smoothing</span>
+        
+        <span class="n">Tnucl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="c1"># We divide by Tnucl to get it in physical units of length</span>
+        <span class="n">tailLength</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">meanFreePathScale</span><span class="p">,</span> <span class="n">wallThicknessIni</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="n">smoothing</span><span class="p">)</span> <span class="o">/</span> <span class="n">ratioPointsWall</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="n">Tnucl</span>
+
+        <span class="k">if</span> <span class="n">gridN</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;You have chosen an even number N of momentum-grid points. &quot;</span>
+                <span class="s2">&quot;WallGo only works with odd N, please change it to an odd number.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Grid3Scales</span><span class="p">(</span>
+            <span class="n">gridM</span><span class="p">,</span>
+            <span class="n">gridN</span><span class="p">,</span>
+            <span class="n">tailLength</span><span class="p">,</span>
+            <span class="n">tailLength</span><span class="p">,</span>
+            <span class="n">wallThicknessIni</span> <span class="o">/</span> <span class="n">Tnucl</span><span class="p">,</span>
+            <span class="n">initialMomentumFalloffScale</span><span class="p">,</span>
+            <span class="n">ratioPointsWall</span><span class="p">,</span>
+            <span class="n">smoothing</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WallGoManager.buildEOM">
+<a class="viewcode-back" href="../../modules/manager.html#WallGo.WallGoManager.buildEOM">[docs]</a>
+    <span class="k">def</span> <span class="nf">buildEOM</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">Grid3Scales</span><span class="p">,</span> <span class="n">boltzmannSolver</span><span class="p">:</span> <span class="n">BoltzmannSolver</span><span class="p">,</span> <span class="n">meanFreePathScale</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EOM</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs an EOM object using internal state from the WallGoManager,</span>
+<span class="sd">        and the input Grid/BoltzmannSolver.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid : Grid3Scales</span>
+<span class="sd">            Grid3Scales object used to describe the mapping between the physical</span>
+<span class="sd">            coordinates to the compact ones.</span>
+<span class="sd">        boltzmannSolver : BoltzmannSolver</span>
+<span class="sd">            BoltzmannSolver object used to solve the Boltzmann equation.</span>
+<span class="sd">        meanFreePathScale : float</span>
+<span class="sd">            Estimate of the mean free path of the plasma. This will be used to set the</span>
+<span class="sd">            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        EOM</span>
+<span class="sd">            EOM object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">numberOfFields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fieldCount</span>
+
+        <span class="n">errTol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">errTol</span>
+        <span class="n">maxIterations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">maxIterations</span>
+        <span class="n">pressRelErrTol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">pressRelErrTol</span>
+        <span class="n">conserveEnergy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">conserveEnergyMomentum</span>
+
+        <span class="n">wallThicknessBounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallThicknessBounds</span>
+        <span class="n">wallOffsetBounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallOffsetBounds</span>
+        
+        <span class="n">Tnucl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phasesAtTn</span><span class="o">.</span><span class="n">temperature</span>
+
+        <span class="k">return</span> <span class="n">EOM</span><span class="p">(</span>
+            <span class="n">boltzmannSolver</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hydrodynamics</span><span class="p">,</span>
+            <span class="n">grid</span><span class="p">,</span>
+            <span class="n">numberOfFields</span><span class="p">,</span>
+            <span class="n">meanFreePathScale</span> <span class="o">/</span> <span class="n">Tnucl</span><span class="p">,</span> <span class="c1"># We divide by Tnucl to get physical units</span>
+            <span class="n">wallThicknessBounds</span><span class="p">,</span>
+            <span class="n">wallOffsetBounds</span><span class="p">,</span>
+            <span class="n">includeOffEq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">forceEnergyConservation</span><span class="o">=</span><span class="n">conserveEnergy</span><span class="p">,</span>
+            <span class="n">forceImproveConvergence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">errTol</span><span class="o">=</span><span class="n">errTol</span><span class="p">,</span>
+            <span class="n">maxIterations</span><span class="o">=</span><span class="n">maxIterations</span><span class="p">,</span>
+            <span class="n">pressRelErrTol</span><span class="o">=</span><span class="n">pressRelErrTol</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

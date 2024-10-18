@@ -1,0 +1,1134 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.hydrodynamics &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.hydrodynamics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.hydrodynamics</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes for solving the hydrodynamic equations for the fluid velocity and temperature.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">minimize_scalar</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">solve_ivp</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">WallGoError</span>
+<span class="kn">from</span> <span class="nn">.thermodynamics</span> <span class="kn">import</span> <span class="n">Thermodynamics</span>
+<span class="kn">from</span> <span class="nn">.hydrodynamicsTemplateModel</span> <span class="kn">import</span> <span class="n">HydrodynamicsTemplateModel</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">gammaSq</span><span class="p">,</span> <span class="n">boostVelocity</span>
+<span class="kn">from</span> <span class="nn">.results</span> <span class="kn">import</span> <span class="n">HydroResults</span>
+
+
+<div class="viewcode-block" id="Hydrodynamics">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics">[docs]</a>
+<span class="k">class</span> <span class="nc">Hydrodynamics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for solving the hydrodynamic equations of the plasma, at distances far enough</span>
+<span class="sd">    from the wall such that the wall can be treated as infinitesimally thin.</span>
+
+<span class="sd">    NOTE: We use the conventions that the velocities are always positive, even in the</span>
+<span class="sd">    wall frame (vp and vm). These conventions are consistent with the literature, e.g.</span>
+<span class="sd">    with arxiv:1004.4187. These conventions differ from the conventions used in the</span>
+<span class="sd">    EOM and Boltzmann part of the code. The conversion is made in findHydroBoundaries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Hydrodynamics.__init__">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">thermodynamics</span><span class="p">:</span> <span class="n">Thermodynamics</span><span class="p">,</span>
+        <span class="n">tmax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tmin</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        thermodynamics : class</span>
+<span class="sd">        tmax : float</span>
+<span class="sd">        tmin : float</span>
+<span class="sd">        rtol : float</span>
+<span class="sd">        atol : float</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cls: Hydrodynamics</span>
+<span class="sd">            An object of the Hydrodynamics class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span> <span class="o">=</span> <span class="n">thermodynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">=</span> <span class="n">tmax</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span> <span class="o">=</span> <span class="n">tmin</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">=</span> <span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="n">HydrodynamicsTemplateModel</span><span class="p">(</span><span class="n">thermodynamics</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findJouguetVelocity</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">WallGoError</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Couldn&#39;t find Jouguet velocity, we continue &quot;</span>
+                <span class="s2">&quot;with the Jouguet velocity of the template model&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">vJ</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span> <span class="o">=</span> <span class="mf">1e-3</span>
+        <span class="c1"># Minimum velocity that allows a shock with the given nucleation temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minVelocity</span><span class="p">())</span>
+
+        <span class="c1"># Bool which is set to true if the upper temperature in the phase tracing</span>
+        <span class="c1"># limits the allowed velocity range. First (second) value corresponds to</span>
+        <span class="c1"># the high (low )temperature phase</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doesPhaseTraceLimitvmax</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.findJouguetVelocity">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.findJouguetVelocity">[docs]</a>
+    <span class="k">def</span> <span class="nf">findJouguetVelocity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the Jouguet velocity for a thermal effective potential, defined by</span>
+<span class="sd">        thermodynamics, and at the model&#39;s nucleation temperature, using that the</span>
+<span class="sd">        derivative of :math:`v_+` with respect to :math:`T_-` is zero at the</span>
+<span class="sd">        Jouguet velocity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vJ: float</span>
+<span class="sd">            The value of the Jouguet velocity for this model.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span>
+        <span class="n">eHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">vpDerivNum</span><span class="p">(</span><span class="n">tm</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>  <span class="c1"># The numerator of the derivative of v+^2</span>
+            <span class="n">pLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
+            <span class="n">eLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eLowT</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
+            <span class="n">num1</span> <span class="o">=</span> <span class="n">pHighT</span> <span class="o">-</span> <span class="n">pLowT</span>  <span class="c1"># First factor in the numerator of v+^2</span>
+            <span class="n">num2</span> <span class="o">=</span> <span class="n">pHighT</span> <span class="o">+</span> <span class="n">eLowT</span>
+            <span class="n">den1</span> <span class="o">=</span> <span class="n">eHighT</span> <span class="o">-</span> <span class="n">eLowT</span>  <span class="c1"># First factor in the denominator of v+^2</span>
+            <span class="n">den2</span> <span class="o">=</span> <span class="n">eHighT</span> <span class="o">+</span> <span class="n">pLowT</span>
+            <span class="n">dnum1</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span>
+                <span class="n">tm</span>
+            <span class="p">)</span>  <span class="c1"># T-derivative of first factor wrt tm</span>
+            <span class="n">dnum2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">deLowT</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
+            <span class="n">dden1</span> <span class="o">=</span> <span class="o">-</span><span class="n">dnum2</span>  <span class="c1"># T-derivative of second factor wrt tm</span>
+            <span class="n">dden2</span> <span class="o">=</span> <span class="o">-</span><span class="n">dnum1</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">dnum1</span> <span class="o">*</span> <span class="n">num2</span> <span class="o">*</span> <span class="n">den1</span> <span class="o">*</span> <span class="n">den2</span>
+                <span class="o">+</span> <span class="n">num1</span> <span class="o">*</span> <span class="n">dnum2</span> <span class="o">*</span> <span class="n">den1</span> <span class="o">*</span> <span class="n">den2</span>
+                <span class="o">-</span> <span class="n">num1</span> <span class="o">*</span> <span class="n">num2</span> <span class="o">*</span> <span class="n">dden1</span> <span class="o">*</span> <span class="n">den2</span>
+                <span class="o">-</span> <span class="n">num1</span> <span class="o">*</span> <span class="n">num2</span> <span class="o">*</span> <span class="n">den1</span> <span class="o">*</span> <span class="n">dden2</span>
+            <span class="p">)</span>
+
+        <span class="c1"># For detonations, Tm has a lower bound of Tn, but no upper bound.</span>
+        <span class="c1"># We make a guess for Tmax, and if it does not work we use the secant method</span>
+
+        <span class="n">Tmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+        <span class="n">Tmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Tmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span><span class="p">)</span>
+
+        <span class="n">bracket1</span><span class="p">,</span> <span class="n">bracket2</span> <span class="o">=</span> <span class="n">vpDerivNum</span><span class="p">(</span><span class="n">Tmin</span><span class="p">),</span> <span class="n">vpDerivNum</span><span class="p">(</span><span class="n">Tmax</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">bracket1</span> <span class="o">*</span> <span class="n">bracket2</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">Tmax</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span><span class="p">:</span>
+            <span class="n">Tmin</span> <span class="o">=</span> <span class="n">Tmax</span>
+            <span class="n">Tmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Tmax</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span><span class="p">)</span>
+            <span class="n">bracket1</span><span class="p">,</span> <span class="n">bracket2</span> <span class="o">=</span> <span class="n">vpDerivNum</span><span class="p">(</span><span class="n">Tmin</span><span class="p">),</span> <span class="n">vpDerivNum</span><span class="p">(</span><span class="n">Tmax</span><span class="p">)</span>
+
+        <span class="n">tmSol</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="k">if</span> <span class="n">bracket1</span> <span class="o">*</span> <span class="n">bracket2</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If Tmin and Tmax bracket our root, use the &#39;brentq&#39; method.</span>
+            <span class="n">rootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">vpDerivNum</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="n">Tmax</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If we cannot bracket the root, use the &#39;secant&#39; method instead.</span>
+            <span class="n">rootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">vpDerivNum</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;secant&quot;</span><span class="p">,</span>
+                <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+                <span class="n">x1</span><span class="o">=</span><span class="n">Tmax</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rootResult</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">tmSol</span> <span class="o">=</span> <span class="n">rootResult</span><span class="o">.</span><span class="n">root</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to solve Jouguet velocity at </span><span class="se">\</span>
+<span class="s2">                              input temperature!&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;flag&quot;</span><span class="p">:</span> <span class="n">rootResult</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="s2">&quot;Root result&quot;</span><span class="p">:</span> <span class="n">rootResult</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">pHighT</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">tmSol</span><span class="p">))</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">pHighT</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eLowT</span><span class="p">(</span><span class="n">tmSol</span><span class="p">))</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eLowT</span><span class="p">(</span><span class="n">tmSol</span><span class="p">))</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">tmSol</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">vp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.fastestDeflag">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.fastestDeflag">[docs]</a>
+    <span class="k">def</span> <span class="nf">fastestDeflag</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the largest wall velocity for which the temperature of the plasma is</span>
+<span class="sd">        within the allowed regime, by finding the velocity for which</span>
+<span class="sd">        Tm = TMaxLowT or Tp = TMaxHighT.</span>
+<span class="sd">        Returns the Jouguet velocity if no solution can be found.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vmax: float</span>
+<span class="sd">            The value of the fastest deflagration/hybrid solution for this model</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">TpTm</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">TpTm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span>
+            <span class="ow">and</span> <span class="n">TpTm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span>
+
+        <span class="k">def</span> <span class="nf">TmMax</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TpTm</span><span class="p">(</span><span class="n">vw</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vmax1</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">TmMax</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vMin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">doesPhaseTraceLimitvmax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">vmax1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doesPhaseTraceLimitvmax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">def</span> <span class="nf">TpMax</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TpTm</span><span class="p">(</span><span class="n">vw</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vmax2</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">TpMax</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vMin</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">doesPhaseTraceLimitvmax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">vmax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doesPhaseTraceLimitvmax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">vmax1</span><span class="p">,</span> <span class="n">vmax2</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.slowestDeton">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.slowestDeton">[docs]</a>
+    <span class="k">def</span> <span class="nf">slowestDeton</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the smallest detonation wall velocity for which the temperature of the</span>
+<span class="sd">        plasma is within the allowed range, by finding the velocity for which</span>
+<span class="sd">        Tm = TMaxLowT. For detonations, Tp = Tn, so always in the allowed range.</span>
+<span class="sd">        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity</span>
+<span class="sd">        if no solution can be found.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vmin: float</span>
+<span class="sd">            The value of the slowest detonation solution for this model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">TpTm</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">TpTm</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="k">def</span> <span class="nf">TmMax</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TpTm</span><span class="p">(</span><span class="n">vw</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vmin</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">TmMax</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">+</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+            <span class="c1"># We add 0.01 because the functions in EOM become unstable at vmin</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmin</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">))</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.vpvmAndvpovm">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.vpvmAndvpovm">[docs]</a>
+    <span class="k">def</span> <span class="nf">vpvmAndvpovm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Tp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tm</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds :math:`v_+v_-` and :math:`v_+/v_-` as a function of :math:`T_+, T_-`,</span>
+<span class="sd">        from the matching conditions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Tp : float</span>
+<span class="sd">            Plasma temperature right in front of the bubble wall</span>
+<span class="sd">        Tm : float</span>
+<span class="sd">            Plasma temperature right behind the bubble wall</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vpvm, vpovm: float</span>
+<span class="sd">            `v_+v_-` and :math:`v_+/v_-`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pHighT</span><span class="p">,</span> <span class="n">pLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">Tm</span><span class="p">)</span>
+        <span class="n">eHighT</span><span class="p">,</span> <span class="n">eLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">eLowT</span><span class="p">(</span><span class="n">Tm</span><span class="p">)</span>
+        <span class="n">vpvm</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">pHighT</span> <span class="o">-</span> <span class="n">pLowT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">-</span> <span class="n">eLowT</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">eHighT</span> <span class="o">!=</span> <span class="n">eLowT</span>
+            <span class="k">else</span> <span class="p">(</span><span class="n">pHighT</span> <span class="o">-</span> <span class="n">pLowT</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e50</span>
+        <span class="p">)</span>
+        <span class="n">vpovm</span> <span class="o">=</span> <span class="p">(</span><span class="n">eLowT</span> <span class="o">+</span> <span class="n">pHighT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">+</span> <span class="n">pLowT</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">vpvm</span><span class="p">,</span> <span class="n">vpovm</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.matchDeton">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.matchDeton">[docs]</a>
+    <span class="k">def</span> <span class="nf">matchDeton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves the matching conditions for a detonation. In this case, :math:`v_w = v_+`</span>
+<span class="sd">        and :math:`T_+ = T_n` and :math:`v_-,T_-` are found from the matching equations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vp,vm,Tp,Tm : float</span>
+<span class="sd">            The value of the fluid velocities in the wall frame and the temperature</span>
+<span class="sd">            right in front of the wall and right behind the wall.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">vw</span>
+        <span class="n">Tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+        <span class="n">pHighT</span><span class="p">,</span> <span class="n">wHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span>
+        <span class="n">eHighT</span> <span class="o">=</span> <span class="n">wHighT</span> <span class="o">-</span> <span class="n">pHighT</span>
+
+        <span class="k">def</span> <span class="nf">tmFromvpsq</span><span class="p">(</span><span class="n">tm</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">pLowT</span><span class="p">,</span> <span class="n">wLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">tm</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wLowT</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
+            <span class="n">eLowT</span> <span class="o">=</span> <span class="n">wLowT</span> <span class="o">-</span> <span class="n">pLowT</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">vp</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">-</span> <span class="n">eLowT</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">(</span><span class="n">pHighT</span> <span class="o">-</span> <span class="n">pLowT</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">eLowT</span> <span class="o">+</span> <span class="n">pHighT</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">eHighT</span> <span class="o">+</span> <span class="n">pLowT</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">minimizeResult</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span>
+            <span class="n">tmFromvpsq</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span><span class="p">],</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Bounded&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">minimizeResult</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">Tmax</span> <span class="o">=</span> <span class="n">minimizeResult</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="n">minimizeResult</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">minimizeResult</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">minimizeResult</span><span class="o">.</span><span class="n">fun</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;No solutions to the matching equations were found. This can be &quot;</span>
+                <span class="s2">&quot;caused by a bad interpolation of the free energy. Try decreasing &quot;</span>
+                <span class="s2">&quot;phaseTracerTol.&quot;</span><span class="p">,</span>
+                <span class="n">minimizeResult</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">rootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+            <span class="n">tmFromvpsq</span><span class="p">,</span>
+            <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="n">Tmax</span><span class="p">],</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+            <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">rootResult</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="n">Tm</span> <span class="o">=</span> <span class="n">rootResult</span><span class="o">.</span><span class="n">root</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="n">rootResult</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="n">rootResult</span><span class="p">)</span>
+        <span class="n">vpvm</span><span class="p">,</span> <span class="n">vpovm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vpvmAndvpovm</span><span class="p">(</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">)</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vpvm</span> <span class="o">/</span> <span class="n">vpovm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">vm</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.matchDeflagOrHyb">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.matchDeflagOrHyb">[docs]</a>
+    <span class="k">def</span> <span class="nf">matchDeflagOrHyb</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtains the matching parameters :math:`v_+, v_-, T_+, T_-` for a deflagration</span>
+<span class="sd">        or hybrid by solving the matching relations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity.</span>
+<span class="sd">        vp : float or None, optional</span>
+<span class="sd">            Plasma velocity in front of the wall :math:`v_+`. If None, vp is</span>
+<span class="sd">            determined from conservation of entropy. Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vp,vm,Tp,Tm : float</span>
+<span class="sd">            The value of the fluid velocities in the wall frame and the temperature</span>
+<span class="sd">            right in front of the wall and right behind the wall.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">matching</span><span class="p">(</span>
+            <span class="n">mappedTpTm</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>  <span class="c1"># Matching relations at the wall interface</span>
+            <span class="n">Tpm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverseMappingT</span><span class="p">(</span><span class="n">mappedTpTm</span><span class="p">)</span>
+            <span class="n">vmsq</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Determine vp from entropy conservation, e.g. eq. (15) of 2303.10171</span>
+                <span class="n">vpsq</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">Tpm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vmsq</span><span class="p">))</span> <span class="o">/</span> <span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">vpsq</span> <span class="o">=</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">vpvm</span><span class="p">,</span> <span class="n">vpovm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vpvmAndvpovm</span><span class="p">(</span><span class="n">Tpm</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">eq1</span> <span class="o">=</span> <span class="n">vpvm</span> <span class="o">*</span> <span class="n">vpovm</span> <span class="o">-</span> <span class="n">vpsq</span>
+            <span class="n">eq2</span> <span class="o">=</span> <span class="n">vpvm</span> <span class="o">/</span> <span class="n">vpovm</span> <span class="o">-</span> <span class="n">vmsq</span>
+
+            <span class="c1"># We multiply the equations by c to make sure the solver</span>
+            <span class="c1"># does not explore arbitrarly small or large values of Tm and Tp.</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Tpm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="mi">2</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">Tpm</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">Tpm</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">eq1</span> <span class="o">*</span> <span class="n">c</span><span class="p">,</span> <span class="n">eq2</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span>
+
+        <span class="c1"># Finds an initial guess for Tp and Tm using the template model and make</span>
+        <span class="c1"># sure it satisfies all the relevant bounds.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vw</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">vMin</span><span class="p">:</span>
+                <span class="n">vwTemplate</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">)</span>
+                <span class="n">vpTemplate</span> <span class="o">=</span> <span class="n">vp</span>
+                <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">vpTemplate</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vwTemplate</span><span class="p">)</span>
+                <span class="n">Tpm0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">matchDeflagOrHybInitial</span><span class="p">(</span><span class="n">vwTemplate</span><span class="p">,</span> <span class="n">vpTemplate</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Tpm0</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="mf">0.99</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">WallGoError</span><span class="p">:</span>
+            <span class="n">Tpm0</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">min</span><span class="p">(</span><span class="mf">1.1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">cb2</span><span class="p">)))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+            <span class="p">]</span>  <span class="c1"># The temperature in front of the wall Tp will be above Tnucl,</span>
+            <span class="c1"># so we use the smallest of 1.1*Tnucl or gamma_-*Tnucl as initial guess</span>
+            <span class="c1"># (the latter being close to the LTE value of (gamma_-/gamma_+)*T_-).</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">Tpm0</span><span class="p">)):</span>
+            <span class="n">Tpm0</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nb">min</span><span class="p">(</span><span class="mf">1.1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">cb2</span><span class="p">)))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">vp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.01</span> <span class="o">*</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">vp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="ow">or</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="o">&gt;</span> <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+        <span class="p">):</span>
+            <span class="n">Tpm0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="o">*</span> <span class="p">(</span>
+                    <span class="mi">1</span>
+                    <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">Tpm0</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+                <span class="p">)</span>
+                <span class="o">/</span> <span class="mi">2</span>
+            <span class="p">)</span>
+
+        <span class="c1"># We map Tm and Tp, which we assume to lie between TMinHydro and TMaxHydro,</span>
+        <span class="c1"># to the interval (-inf,inf) which is used by the solver.</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span>
+            <span class="n">matching</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mappingT</span><span class="p">(</span><span class="n">Tpm0</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;hybr&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;xtol&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">sol</span><span class="o">.</span><span class="n">success</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">fun</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+        <span class="p">)</span>  <span class="c1"># If the error is small enough,</span>
+        <span class="c1"># we consider that root has converged even if it returns False.</span>
+        <span class="p">[</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverseMappingT</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="n">vmsq</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">Tm</span><span class="p">))</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">vmsq</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">Tm</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">Tp</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vm</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span> <span class="o">/</span> <span class="n">Tm</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">vp</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Hydrodynamics error: Not able to find vp in matchDeflagOrHyb. &quot;</span>
+                <span class="s2">&quot;Can sometimes be caused by a negative sound speed squared. If that is&quot;</span>
+                <span class="s2">&quot; the case, try decreasing phaseTracerTol or the temperature scale, &quot;</span>
+                <span class="s2">&quot;which will improve the potential&#39;s interpolation.&quot;</span><span class="p">,</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;vw&quot;</span><span class="p">:</span> <span class="n">vw</span><span class="p">,</span>
+                    <span class="s2">&quot;vm&quot;</span><span class="p">:</span> <span class="n">vm</span><span class="p">,</span>
+                    <span class="s2">&quot;Tp&quot;</span><span class="p">:</span> <span class="n">Tp</span><span class="p">,</span>
+                    <span class="s2">&quot;Tm&quot;</span><span class="p">:</span> <span class="n">Tm</span><span class="p">,</span>
+                    <span class="s2">&quot;csq&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamicsExtrapolate</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">Tm</span><span class="p">),</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.shockDE">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.shockDE">[docs]</a>
+    <span class="k">def</span> <span class="nf">shockDE</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">xiAndT</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and</span>
+<span class="sd">        the fluid temperature :math:`T` in terms of the fluid velocity :math:`v`</span>
+<span class="sd">        See e.g. eq. (B.10, B.11) of 1909.10040</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        v : array</span>
+<span class="sd">            Fluid velocities.</span>
+<span class="sd">        xiAndT : array</span>
+<span class="sd">            Values of the self-similar coordinate :math:`\xi = r/t` and</span>
+<span class="sd">            the temperature :math:`T`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eq1, eq2 : array</span>
+<span class="sd">            The expressions for :math:`\frac{\partial \xi}{\partial v}`</span>
+<span class="sd">            and :math:`\frac{\partial T}{\partial v}`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">xiAndT</span>
+
+        <span class="k">if</span> <span class="n">T</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Hydrodynamics error: The temperature in the shock wave became &quot;</span>
+                <span class="s2">&quot;negative during the integration. This can be caused by a too coarse &quot;</span>
+                <span class="s2">&quot;integration. Try decreasing Hydrodynamics&#39;s relative tolerance.&quot;</span><span class="p">,</span>
+                <span class="p">{</span><span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="n">v</span><span class="p">,</span> <span class="s2">&quot;xi&quot;</span><span class="p">:</span> <span class="n">xi</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="n">T</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="n">eq1</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">gammaSq</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">xi</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">boostVelocity</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">xi</span>
+            <span class="o">/</span> <span class="mf">2.0</span>
+            <span class="o">/</span> <span class="n">v</span>
+        <span class="p">)</span>
+        <span class="n">eq2</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">boostVelocity</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">eq1</span><span class="p">,</span> <span class="n">eq2</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.solveHydroShock">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.solveHydroShock">[docs]</a>
+    <span class="k">def</span> <span class="nf">solveHydroShock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves the hydrodynamic equations in the shock for a given wall</span>
+<span class="sd">        velocity :math:`v_w` and matching parameters :math:`v_+,T_+`</span>
+<span class="sd">        and returns the corresponding nucleation temperature :math:`T_n`,</span>
+<span class="sd">        which is the temperature of the plasma in front of the shock.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity</span>
+<span class="sd">        vp : float</span>
+<span class="sd">            Value of the fluid velocity in the wall frame, right in front of the bubble</span>
+<span class="sd">        Tp : float</span>
+<span class="sd">            Value of the fluid temperature right in front of the bubble</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tn : float</span>
+<span class="sd">            Nucleation temperature</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">shock</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">xiAndT</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">xi</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">xiAndT</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">boostVelocity</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">*</span> <span class="n">xi</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+
+        <span class="n">shock</span><span class="o">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># What&#39;s happening here?</span>
+        <span class="n">xi0T0</span> <span class="o">=</span> <span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="n">Tp</span><span class="p">]</span>
+        <span class="n">vpcent</span> <span class="o">=</span> <span class="n">boostVelocity</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="n">vp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shock</span><span class="p">(</span><span class="n">vpcent</span><span class="p">,</span> <span class="n">xi0T0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">vmShock</span> <span class="o">=</span> <span class="n">vpcent</span>
+            <span class="n">xiShock</span> <span class="o">=</span> <span class="n">vw</span>
+            <span class="n">TmShock</span> <span class="o">=</span> <span class="n">Tp</span>
+        <span class="k">elif</span> <span class="n">vw</span> <span class="o">==</span> <span class="n">vp</span><span class="p">:</span>
+            <span class="n">vmShock</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">xiShock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+            <span class="n">TmShock</span> <span class="o">=</span> <span class="n">Tp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">solshock</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shockDE</span><span class="p">,</span>
+                <span class="p">[</span><span class="n">vpcent</span><span class="p">,</span> <span class="mf">1e-8</span><span class="p">],</span>
+                <span class="n">xi0T0</span><span class="p">,</span>
+                <span class="n">events</span><span class="o">=</span><span class="n">shock</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">atol</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># solve differential equation all the way from v = v+ to v = 0</span>
+            <span class="n">vmShock</span> <span class="o">=</span> <span class="n">solshock</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">xiShock</span><span class="p">,</span> <span class="n">TmShock</span> <span class="o">=</span> <span class="n">solshock</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># continuity of the ii-compontent of the energy-momentum tensor</span>
+        <span class="k">def</span> <span class="nf">TiiShock</span><span class="p">(</span><span class="n">tn</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span> <span class="o">*</span> <span class="n">xiShock</span> <span class="o">/</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">-</span> <span class="n">xiShock</span><span class="o">**</span><span class="mi">2</span>
+            <span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">TmShock</span><span class="p">)</span> <span class="o">*</span> <span class="n">boostVelocity</span><span class="p">(</span>
+                <span class="n">xiShock</span><span class="p">,</span> <span class="n">vmShock</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="n">gammaSq</span><span class="p">(</span>
+                <span class="n">boostVelocity</span><span class="p">(</span><span class="n">xiShock</span><span class="p">,</span> <span class="n">vmShock</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Make an initial guess for the temperature range in which Tnucl will be found</span>
+        <span class="n">Tmin</span><span class="p">,</span> <span class="n">Tmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">),</span> <span class="n">TmShock</span>
+        <span class="n">bracket1</span><span class="p">,</span> <span class="n">bracket2</span> <span class="o">=</span> <span class="n">TiiShock</span><span class="p">(</span><span class="n">Tmin</span><span class="p">),</span> <span class="n">TiiShock</span><span class="p">(</span><span class="n">Tmax</span><span class="p">)</span>
+
+        <span class="c1"># If the range does not capture the shock, we lower Tmin</span>
+        <span class="k">while</span> <span class="n">bracket1</span> <span class="o">*</span> <span class="n">bracket2</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">Tmin</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">:</span>
+            <span class="n">Tmax</span> <span class="o">=</span> <span class="n">Tmin</span>
+            <span class="n">bracket2</span> <span class="o">=</span> <span class="n">bracket1</span>
+            <span class="n">Tmin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Tmin</span> <span class="o">/</span> <span class="mf">1.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span>
+            <span class="n">bracket1</span> <span class="o">=</span> <span class="n">TiiShock</span><span class="p">(</span><span class="n">Tmin</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">bracket1</span> <span class="o">*</span> <span class="n">bracket2</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If Tmin and Tmax bracket our root, use the &#39;brentq&#39; method.</span>
+            <span class="n">TnRootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">TiiShock</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="n">Tmin</span><span class="p">,</span> <span class="n">Tmax</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If we cannot bracket the root, use the &#39;secant&#39; method instead.</span>
+            <span class="n">TnRootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">TiiShock</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;secant&quot;</span><span class="p">,</span>
+                <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+                <span class="n">x1</span><span class="o">=</span><span class="n">TmShock</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">TnRootResult</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="n">TnRootResult</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="n">TnRootResult</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">TnRootResult</span><span class="o">.</span><span class="n">root</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.strongestShock">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.strongestShock">[docs]</a>
+    <span class="k">def</span> <span class="nf">strongestShock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the smallest nucleation temperature possible for a given wall velocity vw.</span>
+<span class="sd">        The strongest shock is found by finding the value of Tp for which vp = 0 and</span>
+<span class="sd">        Tm is TMinHydro (very small). The correspdoning nucleation temperature is</span>
+<span class="sd">        obtained from solveHydroShock at this value of Tp and vp=0.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw: float</span>
+<span class="sd">            Value of the wall velocity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tnucl: float</span>
+<span class="sd">            The nucleation temperature corresponding to the strongest shock.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">matchingStrongest</span><span class="p">(</span><span class="n">Tp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">TpStrongestRootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">matchingStrongest</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span><span class="p">],</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">TpStrongestRootResult</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                    <span class="n">TpStrongestRootResult</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span>
+                    <span class="n">TpStrongestRootResult</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">Tpstrongest</span> <span class="o">=</span> <span class="n">TpStrongestRootResult</span><span class="o">.</span><span class="n">root</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveHydroShock</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">Tpstrongest</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.minVelocity">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.minVelocity">[docs]</a>
+    <span class="k">def</span> <span class="nf">minVelocity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the smallest velocity for which a deflagration/hybrid is possible for the</span>
+<span class="sd">        given nucleation temperature. Returns 0 if no solution can be found.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vMin: float</span>
+<span class="sd">            The smallest velocity that allows for a deflagration/hybrid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">strongestshockTnucl</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">strongestShock</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vMinRootResult</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="n">strongestshockTnucl</span><span class="p">,</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">),</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">vMinRootResult</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="n">vMinRootResult</span><span class="o">.</span><span class="n">flag</span><span class="p">,</span> <span class="n">vMinRootResult</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">vMinRootResult</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.findMatching">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.findMatching">[docs]</a>
+    <span class="k">def</span> <span class="nf">findMatching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vwTry</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the matching parameters :math:`v_+, v_-, T_+, T_-` as a function</span>
+<span class="sd">        of the wall velocity and for the nucleation temperature of the model.</span>
+<span class="sd">        For detonations, these follow directly from :func:`matchDeton`,</span>
+<span class="sd">        for deflagrations and hybrids, the code varies :math:`v_+` until the</span>
+<span class="sd">        temperature in front of the shock equals the nucleation temperature</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vwTry : float</span>
+<span class="sd">            The value of the wall velocity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vp,vm,Tp,Tm : float</span>
+<span class="sd">            The value of the fluid velocities in the wall frame and the</span>
+<span class="sd">            temperature right in front of the wall and right behind the wall.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">vwTry</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">:</span>  <span class="c1"># Detonation</span>
+            <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeton</span><span class="p">(</span><span class="n">vwTry</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Hybrid or deflagration</span>
+            <span class="c1"># Loop over v+ until the temperature in front of the shock matches</span>
+            <span class="c1"># the nucleation temperature.</span>
+
+            <span class="n">vpmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBracketLow</span>
+            <span class="c1"># The speed of sound below should really be evaluated at Tp, but we use Tn</span>
+            <span class="c1"># here to save time. We will use Tp later if it doesn&#39;t work.</span>
+            <span class="n">vpmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span> <span class="o">/</span> <span class="n">vwTry</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">shockTnuclDiff</span><span class="p">(</span><span class="n">vpTry</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeflagOrHyb</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="n">vpTry</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveHydroShock</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="n">vpTry</span><span class="p">,</span> <span class="n">Tp</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+
+            <span class="n">shockTnuclDiffMin</span> <span class="o">=</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">vpmin</span><span class="p">)</span>
+            <span class="n">shockTnuclDiffMax</span> <span class="o">=</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">vpmax</span><span class="p">)</span>
+
+            <span class="c1"># If no solution was found between vpmin and vpmax, it might be because</span>
+            <span class="c1"># vpmax was evaluated at Tn instead of Tp.  We thus reevaluate vpmax by</span>
+            <span class="c1"># solving &#39;vpmax = cs(Tp(vpmax))^2/vwTry&#39;</span>
+            <span class="k">if</span> <span class="n">shockTnuclDiffMin</span> <span class="o">*</span> <span class="n">shockTnuclDiffMax</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="k">def</span> <span class="nf">solveVpmax</span><span class="p">(</span><span class="n">vpTry</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeflagOrHyb</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="n">vpTry</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">vpTry</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span> <span class="o">/</span> <span class="n">vwTry</span>
+
+                <span class="k">if</span> <span class="n">solveVpmax</span><span class="p">(</span><span class="n">vwTry</span><span class="p">)</span> <span class="o">*</span> <span class="n">solveVpmax</span><span class="p">(</span><span class="n">vpmax</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">vpmax</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                        <span class="n">solveVpmax</span><span class="p">,</span>
+                        <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="n">vpmax</span><span class="p">,</span> <span class="n">vwTry</span><span class="p">],</span>
+                        <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                        <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+                    <span class="n">shockTnuclDiffMax</span> <span class="o">=</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">vpmax</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">shockTnuclDiffMin</span> <span class="o">*</span> <span class="n">shockTnuclDiffMax</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                    <span class="n">shockTnuclDiff</span><span class="p">,</span>
+                    <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="n">vpmin</span><span class="p">,</span> <span class="n">vpmax</span><span class="p">],</span>
+                    <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                    <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">extremum</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">shockTnuclDiffMax</span><span class="p">)</span> <span class="o">*</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                    <span class="n">bounds</span><span class="o">=</span><span class="p">[</span><span class="n">vpmin</span><span class="p">,</span> <span class="n">vpmax</span><span class="p">],</span>
+                    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Bounded&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">extremum</span><span class="o">.</span><span class="n">fun</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># In this case, use the template model to compute the matching.</span>
+                    <span class="c1"># Because the Jouguet velocity can be slightly different in the</span>
+                    <span class="c1"># template model, we make sure that vwTemplate corresponds to</span>
+                    <span class="c1"># the appropriate type of solution.</span>
+                    <span class="k">if</span> <span class="n">vwTry</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">:</span>
+                        <span class="n">vwTemplate</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="mf">1e-6</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">vwTemplate</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">vJ</span> <span class="o">+</span> <span class="mf">1e-6</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">template</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="n">vwTemplate</span><span class="p">)</span>
+
+                <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                    <span class="n">shockTnuclDiff</span><span class="p">,</span>
+                    <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="n">vpmin</span><span class="p">,</span> <span class="n">extremum</span><span class="o">.</span><span class="n">x</span><span class="p">],</span>
+                    <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                    <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeflagOrHyb</span><span class="p">(</span><span class="n">vwTry</span><span class="p">,</span> <span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.findHydroBoundaries">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.findHydroBoundaries">[docs]</a>
+    <span class="k">def</span> <span class="nf">findHydroBoundaries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">vwTry</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid</span>
+<span class="sd">        velocity in right in front of the wall) for the scalar and plasma equations of</span>
+<span class="sd">        motion for a given wall velocity and the model&#39;s nucletion temperature.</span>
+
+<span class="sd">        NOTE: the sign of :math:`c_1` is chosen to match the convention for the</span>
+<span class="sd">        fluid velocity used in EOM and Hydro. In those conventions,</span>
+<span class="sd">        math:`v_+` would be negative, and therefore :math:`c_1` has to</span>
+<span class="sd">        be negative as well.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vwTry : float</span>
+<span class="sd">            The value of the wall velocity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        c1,c2,Tp,Tm,velocityMid : float</span>
+<span class="sd">            The boundary conditions for the scalar field and plasma equation of motion</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">vwTry</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;This wall velocity is too small for the chosen nucleation temperature,&quot;</span>
+                <span class="s2">&quot; findHydroBoundaries will return zero.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="n">vwTry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">wHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="o">-</span><span class="n">wHighT</span> <span class="o">*</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">vp</span><span class="p">)</span> <span class="o">*</span> <span class="n">vp</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span> <span class="o">+</span> <span class="n">wHighT</span> <span class="o">*</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">vp</span><span class="p">)</span> <span class="o">*</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">velocityMid</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">vm</span> <span class="o">+</span> <span class="n">vp</span><span class="p">)</span>  <span class="c1"># NOTE: minus sign for convention change</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">,</span> <span class="n">velocityMid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hydrodynamics.findvwLTE">
+<a class="viewcode-back" href="../../modules/hydrodynamics.html#WallGo.Hydrodynamics.findvwLTE">[docs]</a>
+    <span class="k">def</span> <span class="nf">findvwLTE</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the wall velocity in local thermal equilibrium for the model&#39;s</span>
+<span class="sd">        nucleation temperature. The wall velocity is determined by solving the</span>
+<span class="sd">        matching condition :math:`T_+ \gamma_+= T_-\gamma_-`. For small wall</span>
+<span class="sd">        velocity :math:`T_+ \gamma_+&gt; T_-\gamma_-`, and -- if a solution exists --</span>
+<span class="sd">        :math:`T_+ \gamma_+&lt; T_-\gamma_-` for large wall velocity. If the phase</span>
+<span class="sd">        transition is too weak for a solution to exist, returns 0. If it is too</span>
+<span class="sd">        strong, returns 1. The solution is always a deflagration or hybrid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vwLTE</span>
+<span class="sd">            The value of the wall velocity for this model in local thermal equilibrium.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Function given to the root finder.</span>
+        <span class="k">def</span> <span class="nf">shockTnuclDiff</span><span class="p">(</span>
+            <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">vp</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeflagOrHyb</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+            <span class="n">Tntry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveHydroShock</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="n">Tp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Tntry</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span>
+
+        <span class="c1"># Equation to find the position of the shock front.</span>
+        <span class="c1"># If shock(vw) &lt; 0, the front is ahead of vw.</span>
+        <span class="k">def</span> <span class="nf">shock</span><span class="p">(</span>
+            <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">vp</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matchDeflagOrHyb</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">vp</span> <span class="o">*</span> <span class="n">vw</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">Tp</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">-</span> <span class="mf">1e-10</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">shock</span><span class="p">(</span><span class="n">vmax</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">):</span>  <span class="c1"># Finds the maximum vw such that the shock front is ahead of the wall.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vmax</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                    <span class="n">shock</span><span class="p">,</span>
+                    <span class="n">bracket</span><span class="o">=</span><span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">,</span>
+                    <span class="p">],</span>
+                    <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+                    <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+                <span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span> <span class="o">-</span> <span class="mf">1e-6</span>  <span class="c1"># HACK! why?</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span>  <span class="c1"># No shock can be found, e.g. when the PT is too strong --</span>
+            <span class="c1"># is there a risk here of returning 1 when it should be 0?</span>
+
+        <span class="n">shockTnuclDiffMax</span> <span class="o">=</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">vmax</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">shockTnuclDiffMax</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span>
+        <span class="p">):</span>  <span class="c1"># There is no deflagration or hybrid solution, we return 1.</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="n">shockTnuclDiffMin</span> <span class="o">=</span> <span class="n">shockTnuclDiff</span><span class="p">(</span><span class="n">vmin</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shockTnuclDiffMin</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># vw is smaller than vmin, we return 0.</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+            <span class="n">shockTnuclDiff</span><span class="p">,</span>
+            <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="p">),</span>
+            <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_mappingT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">TpTm</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Maps the variables Tp and Tm, which are constrained to</span>
+<span class="sd">        TMinHydro &lt; Tm,Tp &lt; TMaxHydro to the interval (-inf,inf) to allow root</span>
+<span class="sd">        finding algorithms to explore different values of (Tp,Tm), without going</span>
+<span class="sd">        outside of the bounds above.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        TpTm : array_like, shape (2,)</span>
+<span class="sd">            List containing Tp and Tm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="n">TpTm</span>
+        <span class="n">mappedTm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">Tm</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># Maps Tm =TminGuess to -inf and Tm = TmaxGuess to inf</span>
+        <span class="n">mappedTp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">Tp</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># Maps Tp=TminGuess to -inf and Tp =TmaxGuess to +inf</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">mappedTp</span><span class="p">,</span> <span class="n">mappedTm</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_inverseMappingT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mappedTpTm</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inverse of _mappingT.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mappedTp</span><span class="p">,</span> <span class="n">mappedTm</span> <span class="o">=</span> <span class="n">mappedTpTm</span>
+        <span class="n">Tp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">mappedTp</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">Tm</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">mappedTm</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHydro</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHydro</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,428 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.config &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Dataclasses to store the configs &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">configparser</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ConfigGrid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Grid3Scales class. &quot;&quot;&quot;</span>
+
+    <span class="n">spatialGridSize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Number of grid points in the spatial direction (M in 2204.13120). &quot;&quot;&quot;</span>
+
+    <span class="n">momentumGridSize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">11</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Number of grid points in the momentum directions (N in 2204.13120).</span>
+<span class="sd">    MUST BE ODD.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ratioPointsWall</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fraction of points inside the wall defined by the interval</span>
+<span class="sd">    [-wallThickness+wallCenter, wallThickness+wallCenter]. Should be a number between 0</span>
+<span class="sd">    and 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Smoothing factor of the mapping function (the larger the smoother). &quot;&quot;&quot;</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ConfigEOM</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the EOM class. &quot;&quot;&quot;</span>
+
+    <span class="n">errTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The absolute error tolerance for the wall velocity result. &quot;&quot;&quot;</span>
+
+    <span class="n">pressRelErrTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Relative error tolerance for the pressure. &quot;&quot;&quot;</span>
+
+    <span class="n">maxIterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Maximum number of iterations for the convergence of the pressure. &quot;&quot;&quot;</span>
+
+    <span class="n">conserveEnergyMomentum</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flag to enforce conservation of energy and momentum. Normally, this should be set to</span>
+<span class="sd">    True, but it can help with numerical stability to set it to False. If True, there is</span>
+<span class="sd">    an ambiguity in the separation between :math:`f_{eq}` and :math:`\delta f` when the</span>
+<span class="sd">    out-of-equilibrium particles form a closed  system (or nearly closed). This can lead</span>
+<span class="sd">    to a divergence of the iterative loop. In the end, it is better to set this to False</span>
+<span class="sd">    if most of the degrees of freedom are treated as out-of-equilibrium particle. If</span>
+<span class="sd">    most of the dofs are in the background fluid, setting it to True will give better</span>
+<span class="sd">    results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">wallThicknessBounds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">])</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Lower and upper bounds on wall thickness (in units of 1/Tnucl). &quot;&quot;&quot;</span>
+
+    <span class="n">wallOffsetBounds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">])</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Lower and upper bounds on wall offset. &quot;&quot;&quot;</span>
+
+    <span class="c1">## The following parameters are only used for detonation solutions ##</span>
+    <span class="n">vwMaxDeton</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Maximal Velocity at which the solver will look to find a detonation solution &quot;&quot;&quot;</span>
+
+    <span class="n">nbrPointsMinDeton</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Minimal number of points probed to bracket the detonation roots. &quot;&quot;&quot;</span>
+
+    <span class="n">nbrPointsMaxDeton</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Maximal number of points probed to bracket the detonation roots. &quot;&quot;&quot;</span>
+
+    <span class="n">overshootProbDeton</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Desired probability of overshooting a root. Must be between 0 and 1. A smaller value</span>
+<span class="sd">    will lead to more pressure evaluations (and thus a longer time), but is less likely</span>
+<span class="sd">    to miss a root.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ConfigHydrodynamics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Hydrodynamics class. &quot;&quot;&quot;</span>
+
+    <span class="n">tmin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Minimum temperature that is probed in Hydrodynamics (in units of Tnucl). &quot;&quot;&quot;</span>
+
+    <span class="n">tmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Maximum temperature that is probed in Hydrodynamics (in units of Tnucl). &quot;&quot;&quot;</span>
+
+    <span class="n">relativeTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Relative tolerance used in Hydrodynamics. &quot;&quot;&quot;</span>
+
+    <span class="n">absoluteTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Absolute tolerance used in Hydrodynamics. &quot;&quot;&quot;</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ConfigThermodynamics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Hydrodynamics class. &quot;&quot;&quot;</span>
+
+    <span class="n">tmin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Minimum temperature used in the phase tracing (in units of the estimate for the</span>
+<span class="sd">    minimum temperature obtained in the template model). </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tmax</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Maximum temperature used in the phase tracing (in units of the estimate for the</span>
+<span class="sd">    maximum temperature obtained in the template model). </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">phaseTracerTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Desired accuracy of the phase tracer and the resulting FreeEnergy interpolation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ConfigBoltzmannSolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the BoltzmannSolver class. &quot;&quot;&quot;</span>
+
+    <span class="n">basisM</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Cardinal&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The position polynomial basis type, either &#39;Cardinal&#39; or &#39;Chebyshev&#39;. &quot;&quot;&quot;</span>
+
+    <span class="n">basisN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;Chebyshev&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The momentum polynomial basis type, either &#39;Cardinal&#39; or &#39;Chebyshev&#39;. &quot;&quot;&quot;</span>
+
+    <span class="n">collisionMultiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factor multiplying the collision term in the Boltzmann equation. Can be used for</span>
+<span class="sd">    testing or for studying the solution&#39;s sensibility to the collision integrals. Don&#39;t</span>
+<span class="sd">    forget to adjust meanFreePathScale accordingly if this is different from 1</span>
+<span class="sd">    (meanFreePathScale should scale like 1/collisionMultiplier).</span>
+<span class="sd">    WARNING: THIS CHANGES THE COLLISION TERMS WRT TO THEIR PHYSICAL VALUE.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Config">
+<a class="viewcode-back" href="../../modules/config.html#WallGo.Config">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Data class that holds all the model-independent configs.</span>
+<span class="sd">    It contains objects of the data classes ConfigGrid, ConfigEOM,</span>
+<span class="sd">    ConfigEffectivePotential, ConfigHydrodynamics, ConfigThermodynamics and</span>
+<span class="sd">    ConfigBoltzmannSolver.</span>
+<span class="sd">    It can also load the configs from an .ini file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">configGrid</span><span class="p">:</span> <span class="n">ConfigGrid</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">ConfigGrid</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Grid3Scales class. &quot;&quot;&quot;</span>
+
+    <span class="n">configEOM</span><span class="p">:</span> <span class="n">ConfigEOM</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">ConfigEOM</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the EOM class. &quot;&quot;&quot;</span>
+
+    <span class="n">configHydrodynamics</span><span class="p">:</span> <span class="n">ConfigHydrodynamics</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">ConfigHydrodynamics</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Hydrodynamics class. &quot;&quot;&quot;</span>
+
+    <span class="n">configThermodynamics</span><span class="p">:</span> <span class="n">ConfigThermodynamics</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">ConfigThermodynamics</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the Thermodynamics class. &quot;&quot;&quot;</span>
+
+    <span class="n">configBoltzmannSolver</span><span class="p">:</span> <span class="n">ConfigBoltzmannSolver</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">ConfigBoltzmannSolver</span><span class="p">())</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Holds the config of the BoltzmannSolver class. &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Config.loadConfigFromFile">
+<a class="viewcode-back" href="../../modules/config.html#WallGo.Config.loadConfigFromFile">[docs]</a>
+    <span class="k">def</span> <span class="nf">loadConfigFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filePath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the configs from a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filePath : str</span>
+<span class="sd">            Path of the file where the configs are.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Make sure that the file exists</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">optionxform</span> <span class="o">=</span> <span class="nb">str</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+
+        <span class="c1"># Read the Grid configs</span>
+        <span class="k">if</span> <span class="s1">&#39;Grid&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;Grid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;spatialGridSize&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">spatialGridSize</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;Grid&quot;</span><span class="p">,</span>
+                                                                <span class="s2">&quot;spatialGridSize&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;momentumGridSize&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">momentumGridSize</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;Grid&quot;</span><span class="p">,</span>
+                                                                <span class="s2">&quot;momentumGridSize&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;ratioPointsWall&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">ratioPointsWall</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Grid&quot;</span><span class="p">,</span>
+                                                                <span class="s2">&quot;ratioPointsWall&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;smoothing&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configGrid</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Grid&quot;</span><span class="p">,</span> <span class="s2">&quot;smoothing&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read the EOM configs</span>
+        <span class="k">if</span> <span class="s1">&#39;EquationOfMotion&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;EquationOfMotion&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;errTol&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">errTol</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span> <span class="s2">&quot;errTol&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;pressRelErrTol&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">pressRelErrTol</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                                <span class="s2">&quot;pressRelErrTol&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;maxIterations&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">maxIterations</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                             <span class="s2">&quot;maxIterations&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;conserveEnergyMomentum&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">conserveEnergyMomentum</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span>
+                    <span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;conserveEnergyMomentum&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;wallThicknessLowerBound&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallThicknessBounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;wallThicknessLowerBound&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;wallThicknessUpperBound&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallThicknessBounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;wallThicknessUpperBound&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;wallOffsetLowerBound&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallOffsetBounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;wallOffsetLowerBound&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;wallOffsetUpperBound&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">wallOffsetBounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;wallOffsetUpperBound&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;vwMaxDeton&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">vwMaxDeton</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                            <span class="s2">&quot;vwMaxDeton&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;nbrPointsMinDeton&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">nbrPointsMinDeton</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                                 <span class="s2">&quot;nbrPointsMinDeton&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;nbrPointsMaxDeton&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">nbrPointsMaxDeton</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getint</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                                 <span class="s2">&quot;nbrPointsMaxDeton&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;overshootProbDeton&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configEOM</span><span class="o">.</span><span class="n">overshootProbDeton</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;EquationOfMotion&quot;</span><span class="p">,</span>
+                                                                <span class="s2">&quot;overshootProbDeton&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read the Hydrodynamics configs</span>
+        <span class="k">if</span> <span class="s1">&#39;Hydrodynamics&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;Hydrodynamics&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;tmin&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmin</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Hydrodynamics&quot;</span><span class="p">,</span> <span class="s2">&quot;tmin&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;tmax&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">tmax</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Hydrodynamics&quot;</span><span class="p">,</span> <span class="s2">&quot;tmax&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;relativeTol&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">relativeTol</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Hydrodynamics&quot;</span><span class="p">,</span>
+                                                                       <span class="s2">&quot;relativeTol&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;absoluteTol&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configHydrodynamics</span><span class="o">.</span><span class="n">absoluteTol</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Hydrodynamics&quot;</span><span class="p">,</span>
+                                                                       <span class="s2">&quot;absoluteTol&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read the Thermodynamics configs</span>
+        <span class="k">if</span> <span class="s1">&#39;Thermodynamics&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;Thermodynamics&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;tmin&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmin</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Thermodynamics&quot;</span><span class="p">,</span>
+                                                                  <span class="s2">&quot;tmin&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;tmax&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">tmax</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span><span class="s2">&quot;Thermodynamics&quot;</span><span class="p">,</span>
+                                                                 <span class="s2">&quot;tmax&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;phaseTracerTol&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configThermodynamics</span><span class="o">.</span><span class="n">phaseTracerTol</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;Thermodynamics&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;phaseTracerTol&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read the BoltzmannSolver configs</span>
+        <span class="k">if</span> <span class="s1">&#39;BoltzmannSolver&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sections</span><span class="p">():</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;BoltzmannSolver&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;collisionMultiplier&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configBoltzmannSolver</span><span class="o">.</span><span class="n">collisionMultiplier</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">getfloat</span><span class="p">(</span>
+                    <span class="s2">&quot;BoltzmannSolver&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;collisionMultiplier&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;basisM&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configBoltzmannSolver</span><span class="o">.</span><span class="n">basisM</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BoltzmannSolver&quot;</span><span class="p">,</span>
+                                                               <span class="s2">&quot;basisM&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;basisN&#39;</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configBoltzmannSolver</span><span class="o">.</span><span class="n">basisN</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BoltzmannSolver&quot;</span><span class="p">,</span>
+                                                               <span class="s2">&quot;basisN&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

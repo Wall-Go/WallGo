@@ -1,0 +1,859 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.boltzmann &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.boltzmann</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.boltzmann</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes for solving the Boltzmann equations for out-of-equilibrium particles.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">findiff</span>  <span class="c1"># finite difference methods</span>
+<span class="kn">from</span> <span class="nn">.containers</span> <span class="kn">import</span> <span class="n">BoltzmannBackground</span><span class="p">,</span> <span class="n">BoltzmannDeltas</span>
+<span class="kn">from</span> <span class="nn">.grid</span> <span class="kn">import</span> <span class="n">Grid</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">Polynomial</span>
+<span class="kn">from</span> <span class="nn">.particle</span> <span class="kn">import</span> <span class="n">Particle</span>
+<span class="kn">from</span> <span class="nn">.collisionArray</span> <span class="kn">import</span> <span class="n">CollisionArray</span>
+<span class="kn">from</span> <span class="nn">.results</span> <span class="kn">import</span> <span class="n">BoltzmannResults</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">CollisionLoadError</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">importlib</span>
+
+
+<div class="viewcode-block" id="BoltzmannSolver">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver">[docs]</a>
+<span class="k">class</span> <span class="nc">BoltzmannSolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for solving Boltzmann equations for small deviations from equilibrium.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Static value holding of natural log of the maximum expressible float</span>
+    <span class="n">MAX_EXPONENT</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">float_info</span><span class="o">.</span><span class="n">max_exp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Member variables</span>
+    <span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span>
+    <span class="n">offEqParticles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Particle</span><span class="p">]</span>
+    <span class="n">background</span><span class="p">:</span> <span class="n">BoltzmannBackground</span>
+    <span class="n">collisionArray</span><span class="p">:</span> <span class="n">CollisionArray</span>
+
+<div class="viewcode-block" id="BoltzmannSolver.__init__">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span><span class="p">,</span>
+        <span class="n">basisM</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+        <span class="n">basisN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">,</span>
+        <span class="n">derivatives</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Spectral&quot;</span><span class="p">,</span>
+        <span class="n">collisionMultiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation of BoltzmannSolver</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid : Grid</span>
+<span class="sd">            An object of the Grid class.</span>
+<span class="sd">            integrals.</span>
+<span class="sd">        basisM : str, optional</span>
+<span class="sd">            The position polynomial basis type, either &#39;Cardinal&#39; or &#39;Chebyshev&#39;.</span>
+<span class="sd">            Default is &#39;Cardinal&#39;.</span>
+<span class="sd">        basisN : str, optional</span>
+<span class="sd">            The momentum polynomial basis type, either &#39;Cardinal&#39; or &#39;Chebyshev&#39;.</span>
+<span class="sd">            Default is &#39;Chebyshev&#39;.</span>
+<span class="sd">        derivatives : {&#39;Spectral&#39;, &#39;Finite Difference&#39;}, optional</span>
+<span class="sd">            Choice of method for computing derivatives. Default is &#39;Spectral&#39;</span>
+<span class="sd">            which is expected to be more accurate.</span>
+<span class="sd">        collisionMultiplier : float, optional</span>
+<span class="sd">            Factor by which the collision term is multiplied. Can be used for testing.</span>
+<span class="sd">            Default is 1.0.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cls : BoltzmannSolver</span>
+<span class="sd">            An object of the BoltzmannSolver class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+        <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">_checkDerivatives</span><span class="p">(</span><span class="n">derivatives</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">derivatives</span> <span class="o">=</span> <span class="n">derivatives</span>
+        <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">_checkBasis</span><span class="p">(</span><span class="n">basisM</span><span class="p">)</span>
+        <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">_checkBasis</span><span class="p">(</span><span class="n">basisN</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">derivatives</span> <span class="o">==</span> <span class="s2">&quot;Finite Difference&quot;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">basisM</span> <span class="o">==</span> <span class="s2">&quot;Cardinal&quot;</span> <span class="ow">and</span> <span class="n">basisN</span> <span class="o">==</span> <span class="s2">&quot;Cardinal&quot;</span>
+            <span class="p">),</span> <span class="s2">&quot;Must use Cardinal basis for Finite Difference method&quot;</span>
+
+        <span class="c1"># Position polynomial type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basisM</span> <span class="o">=</span> <span class="n">basisM</span>
+        <span class="c1"># Momentum polynomial type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span> <span class="o">=</span> <span class="n">basisN</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">collisionMultiplier</span> <span class="o">=</span> <span class="n">collisionMultiplier</span>
+
+        <span class="c1"># These are set, and can be updated, by our member functions</span>
+        <span class="c1"># TODO: are these None types the best way to go?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore[assignment]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collisionArray</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore[assignment]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.setBackground">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.setBackground">[docs]</a>
+    <span class="k">def</span> <span class="nf">setBackground</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="n">BoltzmannBackground</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter for the BoltzmannBackground</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span>
+            <span class="n">background</span>
+        <span class="p">)</span>  <span class="c1"># do we need a deepcopy? Does this even work generally?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">boostToPlasmaFrame</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.setCollisionArray">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.setCollisionArray">[docs]</a>
+    <span class="k">def</span> <span class="nf">setCollisionArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collisionArray</span><span class="p">:</span> <span class="n">CollisionArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter for the CollisionArray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collisionArray</span> <span class="o">=</span> <span class="n">collisionArray</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.updateParticleList">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.updateParticleList">[docs]</a>
+    <span class="k">def</span> <span class="nf">updateParticleList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offEqParticles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Particle</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setter for the list of out-of-equilibrium Particle objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: update the collision array as well when one updates the particle list</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">offEqParticles</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Particle</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span> <span class="o">=</span> <span class="n">offEqParticles</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.getDeltas">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.getDeltas">[docs]</a>
+    <span class="k">def</span> <span class="nf">getDeltas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deltaF</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BoltzmannResults</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes Deltas necessary for solving the Higgs equation of motion.</span>
+
+<span class="sd">        These are defined in equation (15) of 2204.13120 [LC22]_.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        deltaF : array_like, optional</span>
+<span class="sd">            The deviation of the distribution function from local thermal</span>
+<span class="sd">            equilibrium.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Deltas : BoltzmannDeltas</span>
+<span class="sd">            Defined in equation (15) of [LC22]_. A collection of 4 arrays,</span>
+<span class="sd">            each of which is of size :py:data:`len(z)`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># checking if result pre-computed</span>
+        <span class="k">if</span> <span class="n">deltaF</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">deltaF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveBoltzmannEquations</span><span class="p">()</span>
+
+        <span class="c1"># getting (optimistic) estimate of truncation error</span>
+        <span class="n">truncationError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimateTruncationError</span><span class="p">(</span><span class="n">deltaF</span><span class="p">)</span>
+
+        <span class="c1"># getting criteria for validity of linearization</span>
+        <span class="n">criterion1</span><span class="p">,</span> <span class="n">criterion2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkLinearization</span><span class="p">(</span><span class="n">deltaF</span><span class="p">)</span>
+
+        <span class="n">particles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span>
+
+        <span class="c1"># constructing Polynomial class from deltaF array</span>
+        <span class="n">deltaFPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">deltaF</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisM</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">((</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">))</span>
+
+        <span class="c1"># Take all field-space points, but throw the boundary points away</span>
+        <span class="c1"># TODO: LN: why throw away boundary points?</span>
+        <span class="n">field</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">fieldProfiles</span><span class="o">.</span><span class="n">takeSlice</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">fieldProfiles</span><span class="o">.</span><span class="n">overFieldPoints</span>
+        <span class="p">)</span>
+
+        <span class="c1"># adding new axes, to make everything rank 3 like deltaF (z, pz, pp)</span>
+        <span class="c1"># for fast multiplication of arrays, using numpy&#39;s broadcasting rules</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">pzValues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">ppValues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">msq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">particle</span><span class="o">.</span><span class="n">msqVacuum</span><span class="p">(</span><span class="n">field</span><span class="p">)</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particles</span><span class="p">])[</span>
+            <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="c1"># constructing energy with (z, pz, pp) axes</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">msq</span> <span class="o">+</span> <span class="n">pz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">pp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">dpzdrz</span><span class="p">,</span> <span class="n">dppdrp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">getCompactificationDerivatives</span><span class="p">()</span>
+        <span class="n">dpzdrz</span> <span class="o">=</span> <span class="n">dpzdrz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">dppdrp</span> <span class="o">=</span> <span class="n">dppdrp</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># base integrand, for &#39;00&#39;</span>
+        <span class="n">integrand</span> <span class="o">=</span> <span class="n">dpzdrz</span> <span class="o">*</span> <span class="n">dppdrp</span> <span class="o">*</span> <span class="n">pp</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">energy</span><span class="p">)</span>
+
+        <span class="n">Delta00</span> <span class="o">=</span> <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">integrand</span>
+        <span class="p">)</span>
+        <span class="n">Delta02</span> <span class="o">=</span> <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">pz</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">integrand</span>
+        <span class="p">)</span>
+        <span class="n">Delta20</span> <span class="o">=</span> <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">energy</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">integrand</span>
+        <span class="p">)</span>
+        <span class="n">Delta11</span> <span class="o">=</span> <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">energy</span> <span class="o">*</span> <span class="n">pz</span> <span class="o">*</span> <span class="n">integrand</span>
+        <span class="p">)</span>
+
+        <span class="n">Deltas</span> <span class="o">=</span> <span class="n">BoltzmannDeltas</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">Delta00</span><span class="o">=</span><span class="n">Delta00</span><span class="p">,</span> <span class="n">Delta02</span><span class="o">=</span><span class="n">Delta02</span><span class="p">,</span> <span class="n">Delta20</span><span class="o">=</span><span class="n">Delta20</span><span class="p">,</span> <span class="n">Delta11</span><span class="o">=</span><span class="n">Delta11</span>
+        <span class="p">)</span>
+
+        <span class="c1"># returning results</span>
+        <span class="k">return</span> <span class="n">BoltzmannResults</span><span class="p">(</span>
+            <span class="n">deltaF</span><span class="o">=</span><span class="n">deltaF</span><span class="p">,</span>
+            <span class="n">Deltas</span><span class="o">=</span><span class="n">Deltas</span><span class="p">,</span>
+            <span class="n">truncationError</span><span class="o">=</span><span class="n">truncationError</span><span class="p">,</span>
+            <span class="n">linearizationCriterion1</span><span class="o">=</span><span class="n">criterion1</span><span class="p">,</span>
+            <span class="n">linearizationCriterion2</span><span class="o">=</span><span class="n">criterion2</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.solveBoltzmannEquations">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.solveBoltzmannEquations">[docs]</a>
+    <span class="k">def</span> <span class="nf">solveBoltzmannEquations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].</span>
+
+<span class="sd">        Equations are of the form</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \mathcal{O}_{ijk,abc} \delta f_{abc} = \mathcal{S}_{ijk},</span>
+
+<span class="sd">        where letters from the middle of the alphabet denote points on the</span>
+<span class="sd">        coordinate lattice :math:`\{\xi_i,p_{z,j},p_{\Vert,k}\}`, and letters</span>
+<span class="sd">        from the beginning of the alphabet denote elements of the basis of</span>
+<span class="sd">        spectral functions :math:`\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        delta_f : array_like</span>
+<span class="sd">            The deviation from equilibrium, a rank 6 array, with shape</span>
+<span class="sd">            :py:data:`(len(z), len(pz), len(pp), len(z), len(pz), len(pp))`.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [LC22] B. Laurent and J. M. Cline, First principles determination</span>
+<span class="sd">            of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501</span>
+<span class="sd">            doi:10.1103/PhysRevD.106.023501</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># contructing the various terms in the Boltzmann equation</span>
+        <span class="n">operator</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildLinearEquations</span><span class="p">()</span>
+
+        <span class="c1"># solving the linear system: operator.deltaF = source</span>
+        <span class="n">deltaF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+
+        <span class="c1"># returning result</span>
+        <span class="n">deltaFShape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">deltaF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">deltaF</span><span class="p">,</span> <span class="n">deltaFShape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">deltaF</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.estimateTruncationError">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.estimateTruncationError">[docs]</a>
+    <span class="k">def</span> <span class="nf">estimateTruncationError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deltaF</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Quick estimate of the polynomial truncation error using</span>
+<span class="sd">        John Boyd&#39;s Rule-of-thumb-2: the last coefficient of a Chebyshev</span>
+<span class="sd">        polynomial expansion is the same order-of-magnitude as the truncation</span>
+<span class="sd">        error.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        deltaF : array_like</span>
+<span class="sd">            The solution for which to estimate the truncation error,</span>
+<span class="sd">            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        truncationError : float</span>
+<span class="sd">            Estimate of the relative trucation error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># constructing Polynomial</span>
+        <span class="n">basisTypes</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisM</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">)</span>
+        <span class="n">basisNames</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">)</span>
+        <span class="n">deltaFPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">deltaF</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">basisTypes</span><span class="p">,</span> <span class="n">basisNames</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># sum(|deltaF|) as the norm</span>
+        <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">((</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">))</span>
+        <span class="n">deltaFMeanAbs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">deltaFPoly</span><span class="o">.</span><span class="n">coefficients</span><span class="p">),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># estimating truncation errors in each direction</span>
+        <span class="n">truncationErrorChi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">deltaFPoly</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">truncationErrorPz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">deltaFPoly</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">truncationErrorPp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">deltaFPoly</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># estimating the total truncation error as the maximum of these three</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>  <span class="c1"># type: ignore[no-any-return]</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">truncationErrorChi</span> <span class="o">/</span> <span class="n">deltaFMeanAbs</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">truncationErrorPz</span> <span class="o">/</span> <span class="n">deltaFMeanAbs</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">truncationErrorPp</span> <span class="o">/</span> <span class="n">deltaFMeanAbs</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.checkLinearization">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.checkLinearization">[docs]</a>
+    <span class="k">def</span> <span class="nf">checkLinearization</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">deltaF</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute two criteria to verify the validity of the linearization of the</span>
+<span class="sd">        Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.</span>
+<span class="sd">        To be valid, at least one of the two criteria must be small for each particle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        deltaF : array-like, optional</span>
+<span class="sd">            Solution of the Boltzmann equation. The default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deltaFCriterion : tuple</span>
+<span class="sd">        collCriterion : tuple</span>
+<span class="sd">            Criteria for the validity of the linearization.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">deltaF</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">deltaF</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveBoltzmannEquations</span><span class="p">()</span>
+
+        <span class="n">particles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span>
+
+        <span class="c1"># constructing Polynomial class from deltaF array</span>
+        <span class="n">deltaFPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">deltaF</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisM</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">((</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">))</span>
+
+        <span class="n">msqFull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">msqVacuum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">fieldProfiles</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particles</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">fieldPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">fieldProfiles</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;z&quot;</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">dfielddChi</span> <span class="o">=</span> <span class="n">fieldPoly</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># adding new axes, to make everything rank 3 like deltaF (z, pz, pp)</span>
+        <span class="c1"># for fast multiplication of arrays, using numpy&#39;s broadcasting rules</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">pzValues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">ppValues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">msq</span> <span class="o">=</span> <span class="n">msqFull</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="c1"># constructing energy with (z, pz, pp) axes</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">msq</span> <span class="o">+</span> <span class="n">pz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">pp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">temperature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">temperatureProfile</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">statistics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">particle</span><span class="o">.</span><span class="n">statistics</span> <span class="o">==</span> <span class="s2">&quot;Fermion&quot;</span> <span class="k">else</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particles</span><span class="p">]</span>
+        <span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="n">fEq</span> <span class="o">=</span> <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">_feq</span><span class="p">(</span><span class="n">energy</span> <span class="o">/</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">statistics</span><span class="p">)</span>
+        <span class="n">fEqPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">fEq</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">dpzdrz</span><span class="p">,</span> <span class="n">dppdrp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">getCompactificationDerivatives</span><span class="p">()</span>
+        <span class="n">dpzdrz</span> <span class="o">=</span> <span class="n">dpzdrz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">dppdrp</span> <span class="o">=</span> <span class="n">dppdrp</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># base integrand, for &#39;00&#39;</span>
+        <span class="n">integrand</span> <span class="o">=</span> <span class="n">dfielddChi</span> <span class="o">*</span> <span class="n">dpzdrz</span> <span class="o">*</span> <span class="n">dppdrp</span> <span class="o">*</span> <span class="n">pp</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">energy</span><span class="p">)</span>
+
+        <span class="c1"># The first criterion is to require that pressureOut/pressureEq is small</span>
+        <span class="n">pressureOut</span> <span class="o">=</span> <span class="n">deltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">integrand</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span>
+        <span class="n">pressureEq</span> <span class="o">=</span> <span class="n">fEqPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">integrand</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span>
+        <span class="n">deltaFCriterion</span> <span class="o">=</span> <span class="n">pressureOut</span> <span class="o">/</span> <span class="n">pressureEq</span>
+
+        <span class="c1"># If criterion1 is large, we need C[deltaF]/L[deltaF] to be small</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">liouville</span><span class="p">,</span> <span class="n">collision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buildLinearEquations</span><span class="p">()</span>
+        <span class="n">collisionDeltaF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">collision</span> <span class="o">*</span> <span class="n">deltaF</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">liouvilleDeltaF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">liouville</span> <span class="o">*</span> <span class="n">deltaF</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">collisionDeltaFPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">collisionDeltaF</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">lioviilleDeltaFPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">liouvilleDeltaF</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">collisionDeltaFIntegrated</span> <span class="o">=</span> <span class="n">collisionDeltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">integrand</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">coefficients</span>
+        <span class="n">liovilleDeltaFIntegrated</span> <span class="o">=</span> <span class="n">lioviilleDeltaFPoly</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">integrand</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">coefficients</span>
+        <span class="n">collCriterion</span> <span class="o">=</span> <span class="n">collisionDeltaFIntegrated</span> <span class="o">/</span> <span class="n">liovilleDeltaFIntegrated</span>
+
+        <span class="k">return</span> <span class="n">deltaFCriterion</span><span class="p">,</span> <span class="n">collCriterion</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.buildLinearEquations">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.buildLinearEquations">[docs]</a>
+    <span class="k">def</span> <span class="nf">buildLinearEquations</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs matrix and source for Boltzmann equation.</span>
+
+<span class="sd">        Note, we make extensive use of numpy&#39;s broadcasting rules.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">particles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span>
+
+        <span class="c1"># coordinates</span>
+        <span class="n">xi</span><span class="p">,</span> <span class="n">pz</span><span class="p">,</span> <span class="n">pp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">getCoordinates</span><span class="p">()</span>  <span class="c1"># non-compact</span>
+        <span class="c1"># adding new axes, to make everything rank 3 like deltaF, (z, pz, pp)</span>
+        <span class="c1"># for fast multiplication of arrays, using numpy&#39;s broadcasting rules</span>
+        <span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="n">pz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="n">pp</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># compactified coordinates</span>
+        <span class="c1"># chi, rz, rp = self.grid.getCompactCoordinates(endpoints=False)</span>
+
+        <span class="c1"># background profiles</span>
+        <span class="n">temperatureFull</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">temperatureProfile</span>
+        <span class="n">vFull</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">velocityProfile</span>
+        <span class="n">msqFull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">particle</span><span class="o">.</span><span class="n">msqVacuum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">fieldProfiles</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particles</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">velocityWall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">velocityWall</span>
+
+        <span class="c1"># expanding to be rank 3 arrays, like deltaF</span>
+        <span class="n">temperature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="o">.</span><span class="n">temperatureProfile</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">vFull</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">msq</span> <span class="o">=</span> <span class="n">msqFull</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">msq</span> <span class="o">+</span> <span class="n">pz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">pp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># fluctuation mode</span>
+        <span class="n">statistics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">particle</span><span class="o">.</span><span class="n">statistics</span> <span class="o">==</span> <span class="s2">&quot;Fermion&quot;</span> <span class="k">else</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">particle</span> <span class="ow">in</span> <span class="n">particles</span><span class="p">]</span>
+        <span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># building parts which depend on the &#39;derivatives&#39; argument</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">derivatives</span> <span class="o">==</span> <span class="s2">&quot;Spectral&quot;</span><span class="p">:</span>
+            <span class="c1"># fit the background profiles to polynomials</span>
+            <span class="n">temperaturePoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+                <span class="n">temperatureFull</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;z&quot;</span><span class="p">,</span>
+                <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">vPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span><span class="n">vFull</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">msqPoly</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+                <span class="n">msqFull</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">),</span> <span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="c1"># intertwiner matrices</span>
+            <span class="n">intertwinerChiMat</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basisM</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">)</span>
+            <span class="n">intertwinerRzMat</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">)</span>
+            <span class="n">intertwinerRpMat</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">)</span>
+            <span class="c1"># derivative matrices</span>
+            <span class="n">derivMatrixChi</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">derivMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basisM</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">derivMatrixRz</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">derivMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># spatial derivatives of profiles</span>
+            <span class="n">dTemperaturedChi</span> <span class="o">=</span> <span class="n">temperaturePoly</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[</span>
+                <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">]</span>
+            <span class="n">dvdChi</span> <span class="o">=</span> <span class="n">vPoly</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">dMsqdChi</span> <span class="o">=</span> <span class="n">msqPoly</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># self.derivatives == &quot;Finite Difference&quot;</span>
+            <span class="c1"># intertwiner matrices are simply unit matrices</span>
+            <span class="c1"># as we are in the (Cardinal, Cardinal) basis</span>
+            <span class="n">intertwinerChiMat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">intertwinerRzMat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">intertwinerRpMat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># derivative matrices</span>
+            <span class="n">chiFull</span><span class="p">,</span> <span class="n">rzFull</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">getCompactCoordinates</span><span class="p">(</span><span class="n">endpoints</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">derivOperatorChi</span> <span class="o">=</span> <span class="n">findiff</span><span class="o">.</span><span class="n">FinDiff</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">chiFull</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">acc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">derivMatrixChi</span> <span class="o">=</span> <span class="n">derivOperatorChi</span><span class="o">.</span><span class="n">matrix</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">M</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,))</span>
+            <span class="n">derivOperatorRz</span> <span class="o">=</span> <span class="n">findiff</span><span class="o">.</span><span class="n">FinDiff</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">rzFull</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">acc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">derivMatrixRz</span> <span class="o">=</span> <span class="n">derivOperatorRz</span><span class="o">.</span><span class="n">matrix</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,))</span>
+            <span class="c1"># spatial derivatives of profiles, endpoints used for taking</span>
+            <span class="c1"># derivatives but then dropped as deltaF fixed at 0 at endpoints</span>
+            <span class="n">dTemperaturedChi</span> <span class="o">=</span> <span class="p">(</span><span class="n">derivMatrixChi</span> <span class="o">@</span> <span class="n">temperatureFull</span><span class="p">)[</span>
+                <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="p">]</span>
+            <span class="n">dvdChi</span> <span class="o">=</span> <span class="p">(</span><span class="n">derivMatrixChi</span> <span class="o">@</span> <span class="n">temperatureFull</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="c1"># the following is equivalent to:</span>
+            <span class="c1"># dMsqdChiEinsum = np.einsum(</span>
+            <span class="c1">#   &quot;ij,aj-&gt;ai&quot;, derivMatrixChi.toarray(), msqFull</span>
+            <span class="c1"># )[:, 1:-1, None, None]</span>
+            <span class="n">dMsqdChi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="n">derivMatrixChi</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">msqFull</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
+                <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="c1"># restructuring derivative matrices to appropriate forms for</span>
+            <span class="c1"># Liouville operator</span>
+            <span class="n">derivMatrixChi</span> <span class="o">=</span> <span class="n">derivMatrixChi</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">derivMatrixRz</span> <span class="o">=</span> <span class="n">derivMatrixRz</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># dot products with wall velocity</span>
+        <span class="n">gammaWall</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">velocityWall</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">momentumWall</span> <span class="o">=</span> <span class="n">gammaWall</span> <span class="o">*</span> <span class="p">(</span><span class="n">pz</span> <span class="o">-</span> <span class="n">velocityWall</span> <span class="o">*</span> <span class="n">energy</span><span class="p">)</span>
+
+        <span class="c1"># dot products with plasma profile velocity</span>
+        <span class="n">gammaPlasma</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">energyPlasma</span> <span class="o">=</span> <span class="n">gammaPlasma</span> <span class="o">*</span> <span class="p">(</span><span class="n">energy</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">pz</span><span class="p">)</span>
+        <span class="n">momentumPlasma</span> <span class="o">=</span> <span class="n">gammaPlasma</span> <span class="o">*</span> <span class="p">(</span><span class="n">pz</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">energy</span><span class="p">)</span>
+
+        <span class="c1"># dot product of velocities</span>
+        <span class="n">uwBaruPl</span> <span class="o">=</span> <span class="n">gammaWall</span> <span class="o">*</span> <span class="n">gammaPlasma</span> <span class="o">*</span> <span class="p">(</span><span class="n">velocityWall</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># (exact) derivatives of compactified coordinates</span>
+        <span class="n">dxidchi</span><span class="p">,</span> <span class="n">dpzdrz</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">getCompactificationDerivatives</span><span class="p">()</span>
+        <span class="n">dchidxi</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">dxidchi</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">drzdpz</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">dpzdrz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="c1"># derivative of equilibrium distribution</span>
+        <span class="n">dfEq</span> <span class="o">=</span> <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">_dfeq</span><span class="p">(</span><span class="n">energyPlasma</span> <span class="o">/</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">statistics</span><span class="p">)</span>
+
+        <span class="c1">##### source term #####</span>
+        <span class="c1"># Given by S_i on the RHS of Eq. (5) in 2204.13120, with further details</span>
+        <span class="c1"># given in Eq. (6).</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">dfEq</span> <span class="o">/</span> <span class="n">temperature</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">dchidxi</span>
+            <span class="o">*</span> <span class="p">(</span>
+                <span class="n">momentumWall</span> <span class="o">*</span> <span class="n">momentumPlasma</span> <span class="o">*</span> <span class="n">gammaPlasma</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dvdChi</span>
+                <span class="o">+</span> <span class="n">momentumWall</span> <span class="o">*</span> <span class="n">energyPlasma</span> <span class="o">*</span> <span class="n">dTemperaturedChi</span> <span class="o">/</span> <span class="n">temperature</span>
+                <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dMsqdChi</span> <span class="o">*</span> <span class="n">uwBaruPl</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1">##### liouville operator #####</span>
+        <span class="c1"># Given in the LHS of Eq. (5) in 2204.13120, with further details given</span>
+        <span class="c1"># by the second line of Eq. (32).</span>
+        <span class="n">identityParticles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">))[</span>
+            <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="n">liouville</span> <span class="o">=</span> <span class="n">identityParticles</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">dchidxi</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">momentumWall</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">derivMatrixChi</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">intertwinerRzMat</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">intertwinerRpMat</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="o">-</span> <span class="n">dchidxi</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">drzdpz</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">gammaWall</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">dMsqdChi</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">intertwinerChiMat</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">derivMatrixRz</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">intertwinerRpMat</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        An alternative, but slower, implementation is given by the following:</span>
+<span class="sd">        liouville = (</span>
+<span class="sd">            np.einsum(</span>
+<span class="sd">                &quot;ijk, ia, jb, kc -&gt; ijkabc&quot;,</span>
+<span class="sd">                dchidxi * PWall,</span>
+<span class="sd">                derivChi,</span>
+<span class="sd">                TRzMat,</span>
+<span class="sd">                TRpMat,</span>
+<span class="sd">                optimize=True,</span>
+<span class="sd">            )</span>
+<span class="sd">            - np.einsum(</span>
+<span class="sd">                &quot;ijk, ia, jb, kc -&gt; ijkabc&quot;,</span>
+<span class="sd">                gammaWall / 2 * dchidxi * drzdpz * dmsqdChi,</span>
+<span class="sd">                TChiMat,</span>
+<span class="sd">                derivRz,</span>
+<span class="sd">                TRpMat,</span>
+<span class="sd">                optimize=True,</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># including factored-out T^2 in collision integrals</span>
+        <span class="n">collision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collisionMultiplier</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">temperature</span><span class="o">**</span><span class="mi">2</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">intertwinerChiMat</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">collisionArray</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="c1">##### total operator #####</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="n">liouville</span> <span class="o">+</span> <span class="n">collision</span>
+
+        <span class="c1"># reshaping indices</span>
+        <span class="n">totalSize</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">totalSize</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="n">operator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="p">(</span><span class="n">totalSize</span><span class="p">,</span> <span class="n">totalSize</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
+        <span class="c1"># returning results</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">liouville</span><span class="p">,</span> <span class="n">collision</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannSolver.loadCollisions">
+<a class="viewcode-back" href="../../modules/boltzmann.html#WallGo.BoltzmannSolver.loadCollisions">[docs]</a>
+    <span class="k">def</span> <span class="nf">loadCollisions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directoryPath</span><span class="p">:</span> <span class="s2">&quot;pathlib.Path&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads collision files for use with the Boltzmann solver.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            directoryPath (pathlib.Path): Directory containing the .hdf5 collision data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            CollisionLoadError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">collisionArray</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">newFromDirectory</span><span class="p">(</span>
+                <span class="n">directoryPath</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">basisN</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">offEqParticles</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded collision data from directory </span><span class="si">{</span><span class="n">directoryPath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CollisionLoadError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_checkBasis</span><span class="p">(</span><span class="n">basis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that basis is recognised</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;BoltzmannSolver error: unkown basis </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_checkDerivatives</span><span class="p">(</span><span class="n">derivatives</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that derivative option is recognised</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">derivativesOptions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Spectral&quot;</span><span class="p">,</span> <span class="s2">&quot;Finite Difference&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">derivatives</span> <span class="ow">in</span> <span class="n">derivativesOptions</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;BoltzmannSolver error: unkown derivatives option </span><span class="si">{</span><span class="n">derivatives</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_feq</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">statistics</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Thermal distribution functions, Bose-Einstein and Fermi-Dirac</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">x</span> <span class="o">&gt;</span> <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">MAX_EXPONENT</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">statistics</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_dfeq</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">statistics</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature derivative of thermal distribution functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">x</span> <span class="o">&gt;</span> <span class="n">BoltzmannSolver</span><span class="o">.</span><span class="n">MAX_EXPONENT</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">0</span><span class="p">,</span>
+            <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">statistics</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

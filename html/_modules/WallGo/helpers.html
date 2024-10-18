@@ -1,0 +1,744 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.helpers &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.helpers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.helpers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Helper functions that are used by WallGo.</span>
+<span class="sd">This includes the derivative functions, a function to compute the step size for solving</span>
+<span class="sd">detonations and other small functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">special</span><span class="p">,</span> <span class="n">optimize</span>
+
+
+<span class="n">FIRST_DERIV_COEFF</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">22</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="o">-</span><span class="mi">18</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="o">-</span><span class="mi">36</span><span class="p">,</span> <span class="mi">22</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">/</span> <span class="mi">12</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">SECOND_DERIV_COEFF</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">35</span><span class="p">,</span> <span class="o">-</span><span class="mi">104</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="o">-</span><span class="mi">56</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="o">-</span><span class="mi">56</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="o">-</span><span class="mi">104</span><span class="p">,</span> <span class="mi">35</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">11</span><span class="p">],</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="o">/</span> <span class="mi">12</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">FIRST_DERIV_POS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="n">SECOND_DERIV_POS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="p">],</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+
+<span class="n">HESSIAN_POS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+    <span class="p">),</span>
+<span class="p">}</span>
+<span class="n">HESSIAN_COEFF</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="s2">&quot;4&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mi">48</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="derivative">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.derivative">[docs]</a>
+<span class="k">def</span> <span class="nf">derivative</span><span class="p">(</span>
+    <span class="n">f</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">dx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">args</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes numerical derivatives of a callable function. Use the epsilon</span>
+<span class="sd">    and scale parameters to estimate the optimal value of dx, if the latter is</span>
+<span class="sd">    not provided.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        Function to differentiate. Should take a float or an array as argument</span>
+<span class="sd">        and return a float or array (the returned array can have a different</span>
+<span class="sd">        shape as the input, but the first axis must match).</span>
+<span class="sd">    x : float or array-like</span>
+<span class="sd">        The position at which to evaluate the derivative.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        The number of derivatives to take. Can be 0, 1, 2. The default is 1.</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The accuracy order of the scheme. Errors are of order</span>
+<span class="sd">        :math:`\mathcal{O}({\rm d}x^{\text{order}/(\text{order+n})})`. Can be 2 or 4.</span>
+<span class="sd">        Note that the order at the endpoints is reduced by 1 as it would require</span>
+<span class="sd">        more function evaluations to keep the same order. The default is 4.</span>
+<span class="sd">    bounds : tuple or None, optional</span>
+<span class="sd">        Interval in which f can be called. If None, can be evaluated anywhere.</span>
+<span class="sd">        The default is None.</span>
+<span class="sd">    epsilon : float, optional</span>
+<span class="sd">        Fractional accuracy at which f can be evaluated. If f is a simple</span>
+<span class="sd">        function, should be close to the machine precision. Default is 1e-16.</span>
+<span class="sd">    scale : float, optional</span>
+<span class="sd">        Typical scale at which f(x) change by order 1. Default is 1.</span>
+<span class="sd">    dx : float or None, optional</span>
+<span class="sd">        The magnitude of finite differences. If None, use epsilon and scale to</span>
+<span class="sd">        estimate the optimal dx. Default is None.</span>
+<span class="sd">    args: list, optional</span>
+<span class="sd">        List of other fixed arguments passed to the function :math:`f`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res : float</span>
+<span class="sd">        The value of the derivative of :py:data:`f` evaluated at :py:data:`x`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">boundsTuple</span><span class="p">:</span> <span class="nb">tuple</span>
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">boundsTuple</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">boundsTuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">assert</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">boundsTuple</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">boundsTuple</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span>
+        <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">),</span> <span class="s2">&quot;Derivative error: bounds must be a tuple of 2 elements or None.&quot;</span>
+    <span class="k">assert</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s2">&quot;Derivative error: n must be 0, 1 or 2.&quot;</span>
+    <span class="k">assert</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;Derivative error: order must be 2 or 4.&quot;</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span>
+        <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Derivative error: </span><span class="si">{</span><span class="n">x</span><span class="si">=}</span><span class="s2"> must be inside bounds.&quot;</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="c1"># If dx is not provided, we estimate it from scale and epsilon by minimizing</span>
+    <span class="c1"># the total error ~ epsilon/dx**n + dx**order.</span>
+    <span class="n">dxFloat</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="k">if</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="s2">&quot;Derivative error: epsilon must be a float.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="s2">&quot;Derivative error: scale must be a float.&quot;</span>
+        <span class="n">dxFloat</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">order</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dxFloat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+
+    <span class="c1"># This step increases greatly the accuracy because it makes sure (x + dx) - x</span>
+    <span class="c1"># is exactly equal to dx (no precision error).</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dxFloat</span>
+    <span class="n">dxFloat</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">-</span> <span class="n">x</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">-=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dxFloat</span> <span class="o">&gt;</span> <span class="nb">float</span><span class="p">(</span><span class="n">boundsTuple</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">offset</span> <span class="o">+=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">dxFloat</span> <span class="o">&lt;</span> <span class="nb">float</span><span class="p">(</span><span class="n">boundsTuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">-=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dxFloat</span> <span class="o">&gt;</span> <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">offset</span> <span class="o">+=</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dxFloat</span> <span class="o">&lt;</span> <span class="n">boundsTuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">FIRST_DERIV_POS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">offset</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span><span class="o">*</span><span class="n">dxFloat</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">FIRST_DERIV_COEFF</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">offset</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span> <span class="o">/</span> <span class="n">dxFloat</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">+</span> <span class="n">SECOND_DERIV_POS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">offset</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span><span class="o">*</span><span class="n">dxFloat</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">SECOND_DERIV_COEFF</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)]</span><span class="o">.</span><span class="n">T</span><span class="p">[:,</span> <span class="n">offset</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span> <span class="o">/</span> <span class="n">dxFloat</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="n">fx</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">fxShapeLength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fx</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">coeffShapeLength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+        <span class="n">coeff</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coeff</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">fxShapeLength</span> <span class="o">-</span> <span class="n">coeffShapeLength</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span>
+        <span class="o">*</span> <span class="n">f</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="gradient">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.gradient">[docs]</a>
+<span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span>
+    <span class="n">f</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">dx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">axis</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">args</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the gradient of a callable function. Use the epsilon</span>
+<span class="sd">    and scale parameters to estimate the optimal value of dx, if the latter is</span>
+<span class="sd">    not provided.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        Function to differentiate. Should take an array as argument</span>
+<span class="sd">        and return an array.</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        The position at which to evaluate the derivative. The size of the last</span>
+<span class="sd">        axis must correspond to the number of variables on which f depends.</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The accuracy order of the scheme. Errors are of order</span>
+<span class="sd">        :math:`\mathcal{O}({\rm d}x^{\text{order}/(\text{order}+1)})`.</span>
+<span class="sd">        Can be 2 or 4. The default is 4.</span>
+<span class="sd">    epsilon : float, optional</span>
+<span class="sd">        Fractional accuracy at which f can be evaluated. If f is a simple</span>
+<span class="sd">        function, should be close to the machine precision. Default is 1e-16.</span>
+<span class="sd">    scale : float or array-like, optional</span>
+<span class="sd">        Typical scale at which f(x) change by order 1. Can be an array, in which</span>
+<span class="sd">        case each element corresponds to the scale of a different variable.</span>
+<span class="sd">        Default is 1.</span>
+<span class="sd">    dx : float or np.ndarray or None, optional</span>
+<span class="sd">        The magnitude of finite differences. Can be an array, in which case</span>
+<span class="sd">        each element corresponds to the dx of a different variable.If None, use</span>
+<span class="sd">        epsilon and scale to estimate the optimal dx. Default is None.</span>
+<span class="sd">    axis : list, int or None, optional</span>
+<span class="sd">        Element of the gradient to return. If None, returns the whole gradient.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    args: list, optional</span>
+<span class="sd">        List of other fixed arguments passed to the function :math:`f`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res : float</span>
+<span class="sd">        The value of the gradient of :py:data:`f` evaluated at :py:data:`x`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">nbrVariables</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">axisList</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">axisList</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axisList</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">axisList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">axisList</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">nbrVariables</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nbrVariables</span>
+        <span class="p">),</span> <span class="s2">&quot;Gradient error: axis must be between -nbrVariables and &quot;</span>\
+           <span class="s2">&quot;nbrVariables-1 or None.&quot;</span>
+
+    <span class="k">assert</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;Gradient error: order must be 2 or 4.&quot;</span>
+
+    <span class="c1"># If dx is not provided, we estimate it from scale and epsilon by minimizing</span>
+    <span class="c1"># the total error ~ epsilon/dx**n + dx**order.</span>
+    <span class="n">dxArray</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="k">if</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="s2">&quot;Gradient error: epsilon must be a float.&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">scale</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nbrVariables</span>
+            <span class="p">),</span> <span class="s2">&quot;Gradient error: scale must be a float or an array of size nbrVariables.&quot;</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">order</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">dxArray</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nbrVariables</span>
+        <span class="p">),</span> <span class="s2">&quot;Gradient error: dx must be None, a float or an array of size nbrVariables.&quot;</span>
+
+    <span class="c1"># This step increases greatly the accuracy because it makes sure (x + dx) - x</span>
+    <span class="c1"># is exactly equal to dx (no precision error).</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dxArray</span>
+    <span class="n">dxArray</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">-</span> <span class="n">x</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="n">FIRST_DERIV_POS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)][</span>
+        <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)[</span><span class="n">axisList</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dxArray</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="n">nbrVariables</span><span class="p">),</span> <span class="n">nbrVariables</span><span class="p">))</span>
+    <span class="n">coeff</span> <span class="o">=</span> <span class="n">FIRST_DERIV_COEFF</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)][</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span>
+        <span class="n">dxArray</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">axisList</span><span class="p">],</span> <span class="o">-</span><span class="mi">2</span>
+    <span class="p">)</span>
+
+    <span class="n">fEvaluation</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">coeff</span> <span class="o">*</span> <span class="n">fEvaluation</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="hessian">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.hessian">[docs]</a>
+<span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span>
+    <span class="n">f</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1e-16</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">dx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">xAxis</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">yAxis</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">args</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Computes the hessian of a callable function. Use the epsilon</span>
+<span class="sd">    and scale parameters to estimate the optimal value of dx, if the latter is</span>
+<span class="sd">    not provided.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        Function to differentiate. Should take an array as argument</span>
+<span class="sd">        and return an array.</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        The position at which to evaluate the derivative. The size of the last</span>
+<span class="sd">        axis must correspond to the number of variables on which f depends.</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The accuracy order of the scheme. Errors are of order</span>
+<span class="sd">        :math:`\mathcal{O}({\rm d}x^{\text{order}/(\text{order}+2)})`.</span>
+<span class="sd">        Can be 2 or 4. The default is 4.</span>
+<span class="sd">    epsilon : float, optional</span>
+<span class="sd">        Fractional accuracy at which f can be evaluated. If f is a simple</span>
+<span class="sd">        function, should be close to the machine precision. Default is 1e-16.</span>
+<span class="sd">    scale : float, optional</span>
+<span class="sd">        Typical scale at which f(x) change by order 1. Default is 1.</span>
+<span class="sd">    dx : float or None, optional</span>
+<span class="sd">        The magnitude of finite differences. If None, use epsilon and scale to</span>
+<span class="sd">        estimate the optimal dx. Default is None.</span>
+<span class="sd">    xAxis : list, int or None, optional</span>
+<span class="sd">        Lines of the hessian matrix to return. If None, returns all the lines.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    yAxis : list, int or None, optional</span>
+<span class="sd">        Columns of the hessian matrix to return. If None, returns all the columns.</span>
+<span class="sd">        Default is None.</span>
+<span class="sd">    args: list, optional</span>
+<span class="sd">        List of other fixed arguments passed to the function :math:`f`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    res : float</span>
+<span class="sd">        The value of the hessian of :py:data:`f` evaluated at :py:data:`x`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">nbrVariables</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">xAxisList</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xAxis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">xAxisList</span> <span class="o">=</span> <span class="p">[</span><span class="n">xAxis</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">xAxis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">xAxisList</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xAxisList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">xAxis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xAxisList</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">nbrVariables</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nbrVariables</span>
+        <span class="p">),</span> <span class="s2">&quot;Hessian error: axis must be between -nbrVariables and &quot;</span>\
+           <span class="s2">&quot;nbrVariables-1 or None.&quot;</span>
+    <span class="n">yAxisList</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yAxis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">yAxisList</span> <span class="o">=</span> <span class="p">[</span><span class="n">yAxis</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">yAxis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">yAxisList</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">yAxisList</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">yAxis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">yAxisList</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">nbrVariables</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">nbrVariables</span>
+        <span class="p">),</span> <span class="s2">&quot;Hessian error: axis must be between -nbrVariables and &quot;</span>\
+           <span class="s2">&quot;nbrVariables-1 or None.&quot;</span>
+
+    <span class="k">assert</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;Hessian error: order must be 2 or 4.&quot;</span>
+
+    <span class="c1"># If dx is not provided, we estimate it from scale and epsilon by minimizing</span>
+    <span class="c1"># the total error ~ epsilon/dx**n + dx**order.</span>
+    <span class="n">dxArray</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="k">if</span> <span class="n">dx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> <span class="s2">&quot;Hessian error: epsilon must be a float.&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">scale</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nbrVariables</span>
+            <span class="p">),</span> <span class="s2">&quot;Hessian error: scale must be a float or an array of size nbrVariables.&quot;</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">epsilon</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">+</span> <span class="n">order</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dxArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">dxArray</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nbrVariables</span>
+        <span class="p">),</span> <span class="s2">&quot;Hessian error: dx must be None, a float or an array of size nbrVariables.&quot;</span>
+
+    <span class="c1"># This step increases greatly the accuracy because it makes sure (x + dx) - x</span>
+    <span class="c1"># is exactly equal to dx (no precision error).</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dxArray</span>
+    <span class="n">dxArray</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">-</span> <span class="n">x</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">HESSIAN_POS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)][</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)[</span><span class="n">xAxisList</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dxArray</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="o">+</span> <span class="n">HESSIAN_POS</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)][</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nbrVariables</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="n">yAxisList</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dxArray</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">size</span> <span class="o">/</span> <span class="n">nbrVariables</span><span class="p">),</span> <span class="n">nbrVariables</span><span class="p">))</span>
+    <span class="n">coeff</span> <span class="o">=</span> <span class="n">HESSIAN_COEFF</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">order</span><span class="p">)][:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dxArray</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">yAxisList</span><span class="p">],</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">dxArray</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">xAxisList</span><span class="p">],</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">fEvaluation</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">coeff</span> <span class="o">*</span> <span class="n">fEvaluation</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">3</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="gammaSq">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.gammaSq">[docs]</a>
+<span class="k">def</span> <span class="nf">gammaSq</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lorentz factor :math:`\gamma^2` corresponding to velocity :math:`v`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="boostVelocity">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.boostVelocity">[docs]</a>
+<span class="k">def</span> <span class="nf">boostVelocity</span><span class="p">(</span><span class="n">xi</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lorentz-transformed velocity</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">xi</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="nextStepDeton">
+<a class="viewcode-back" href="../../modules/helpers.html#WallGo.helpers.nextStepDeton">[docs]</a>
+<span class="k">def</span> <span class="nf">nextStepDeton</span><span class="p">(</span>
+    <span class="n">pos1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">pos2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">pressure1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">pressure2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">mean2ndDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">std2ndDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">pressureTol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">posMax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">overshootProb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function used in EquationOfMotion to find detonation solutions. It finds the next</span>
+<span class="sd">    point to be sampled to try to bracket a root in such a way that the probability of</span>
+<span class="sd">    overshooting a root is roughly equal to overshootProb.</span>
+
+<span class="sd">    To estimate the overshoot probability, it fits the pressure to a quadratic which is</span>
+<span class="sd">    equal to pressure2 at pos2, but with uncertain 1st and 2nd derivatives which are</span>
+<span class="sd">    assumed to be normally distributed. The mean of the 1st derivative is computed by</span>
+<span class="sd">    finite differences from the last 2 points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pos1 : float</span>
+<span class="sd">        Position of the first sampled point.</span>
+<span class="sd">    pos2 : float</span>
+<span class="sd">        position of the second sampled point.</span>
+<span class="sd">    pressure1 : float</span>
+<span class="sd">        Pressure at pos1.</span>
+<span class="sd">    pressure2 : float</span>
+<span class="sd">        Pressure at pos2.</span>
+<span class="sd">    mean2ndDeriv : float</span>
+<span class="sd">        Estimate of the 2nd derivative at pos2.</span>
+<span class="sd">    std2ndDeriv : float</span>
+<span class="sd">        Uncertainty on the 2nd derivative at pos2.</span>
+<span class="sd">    pressureTol : float</span>
+<span class="sd">        Relative accuracy at which pressure1 and pressure2 are computed.</span>
+<span class="sd">    posMax : float</span>
+<span class="sd">        Maximal position that the next step can have.</span>
+<span class="sd">    overshootProb : float, optional</span>
+<span class="sd">        Desired overshoot probability. A smaller value will lead to smaller step sizes</span>
+<span class="sd">        which will take longer to evaluate, but with less chances of missing a root.</span>
+<span class="sd">        The default is 0.05.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Position where the overshoot probability is overshootProb (or posMax if there is</span>
+<span class="sd">        no solution).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">pos2</span> <span class="o">&gt;</span> <span class="n">pos1</span><span class="p">,</span> <span class="s2">&quot;Error: pos2 must be greater than pos1.&quot;</span>
+    <span class="k">assert</span> <span class="n">posMax</span> <span class="o">&gt;</span> <span class="n">pos2</span><span class="p">,</span> <span class="s2">&quot;Error: posMax must be greater than pos2.&quot;</span>
+    <span class="k">assert</span> <span class="n">std2ndDeriv</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Error: std2ndDeriv must be positive.&quot;</span>
+    <span class="k">assert</span> <span class="n">pressureTol</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Error: pressureTol must positive.&quot;</span>
+    <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">overshootProb</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Error: overshootProb must be between 0 and 1.&quot;</span>
+
+    <span class="c1"># This function requires pressure2 to be negative. If that&#39;s not the case,</span>
+    <span class="c1"># we invert the y axis.</span>
+    <span class="k">if</span> <span class="n">pressure2</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">pressure1</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">pressure2</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">mean2ndDeriv</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="c1"># Use pressure units such that abs(pressure2)=1.</span>
+    <span class="c1"># Helps when integrate to get the prob</span>
+    <span class="n">pressure1</span> <span class="o">/=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pressure2</span><span class="p">)</span>
+    <span class="n">mean2ndDeriv</span> <span class="o">/=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pressure2</span><span class="p">)</span>
+    <span class="n">std2ndDeriv</span> <span class="o">/=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">pressure2</span><span class="p">)</span>
+    <span class="n">pressure2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">pos2</span> <span class="o">-</span> <span class="n">pos1</span>
+    <span class="n">dp</span> <span class="o">=</span> <span class="n">pressure2</span> <span class="o">-</span> <span class="n">pressure1</span>
+
+    <span class="c1"># Mean and variance of first derivative at pos2</span>
+    <span class="c1"># (second term due to finite difference error)</span>
+    <span class="n">meanDeriv</span> <span class="o">=</span> <span class="n">dp</span> <span class="o">/</span> <span class="n">dx</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">mean2ndDeriv</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="c1"># First term: variance due to pressure uncertainty</span>
+    <span class="c1"># Second term: variance due to finite difference error</span>
+    <span class="n">varDeriv</span> <span class="o">=</span> <span class="p">(</span><span class="n">pressure1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">pressure2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">pressureTol</span> <span class="o">/</span> <span class="n">dx</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="n">std2ndDeriv</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">stdDeriv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">varDeriv</span><span class="p">)</span>
+
+    <span class="c1"># Probability of overshooting a root when the 2nd derivative is positive:</span>
+    <span class="k">def</span> <span class="nf">probPositive</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="n">pos2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="c1"># Min derivative that can lead to overshooting</span>
+        <span class="k">def</span> <span class="nf">derivMin</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">pressure2</span> <span class="o">/</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">-</span> <span class="n">secondDeriv</span> <span class="o">*</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># Probability density of the 2nd derivative</span>
+        <span class="k">def</span> <span class="nf">probDensity</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">secondDeriv</span> <span class="o">-</span> <span class="n">mean2ndDeriv</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">std2ndDeriv</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="o">*</span> <span class="n">special</span><span class="o">.</span><span class="n">erfc</span><span class="p">((</span><span class="n">derivMin</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">)</span> <span class="o">-</span> <span class="n">meanDeriv</span><span class="p">)</span> <span class="o">/</span> <span class="n">stdDeriv</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+            <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">std2ndDeriv</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)))</span>
+
+        <span class="c1"># Integrate the probability density to get the probability</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+            <span class="n">probDensity</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pressure2</span> <span class="o">/</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># Probability of overshooting 2 roots when the 2nd derivative is negative:</span>
+    <span class="k">def</span> <span class="nf">probNegative</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="n">pos2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="c1"># Min and max derivatives that can lead to overshooting</span>
+        <span class="k">def</span> <span class="nf">derivMin</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">secondDeriv</span> <span class="o">*</span> <span class="n">pressure2</span><span class="p">))</span>
+        <span class="k">def</span> <span class="nf">derivMax</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">pressure2</span> <span class="o">/</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">-</span> <span class="n">secondDeriv</span> <span class="o">*</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># Probability density of the 2nd derivative</span>
+        <span class="k">def</span> <span class="nf">probDensity</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">secondDeriv</span> <span class="o">-</span> <span class="n">mean2ndDeriv</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">std2ndDeriv</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span>
+                <span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">((</span><span class="n">derivMax</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">)</span> <span class="o">-</span> <span class="n">meanDeriv</span><span class="p">)</span> <span class="o">/</span> <span class="n">stdDeriv</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+                <span class="o">-</span> <span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">derivMin</span><span class="p">(</span><span class="n">secondDeriv</span><span class="p">)</span> <span class="o">-</span> <span class="n">meanDeriv</span><span class="p">)</span> <span class="o">/</span> <span class="n">stdDeriv</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">std2ndDeriv</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Integrate the probability density to get the probability</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">integrate</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span>
+            <span class="n">probDensity</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pressure2</span> <span class="o">/</span> <span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">full_output</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Find a position for which the total probability is overshootProb</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">optimize</span><span class="o">.</span><span class="n">root_scalar</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">pos</span><span class="p">:</span> <span class="n">probPositive</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="o">+</span> <span class="n">probNegative</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="o">-</span> <span class="n">overshootProb</span><span class="p">,</span>
+            <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="n">pos2</span><span class="p">,</span> <span class="n">posMax</span><span class="p">],</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="c1"># If no solution is found, returns posMax</span>
+        <span class="k">return</span> <span class="n">posMax</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

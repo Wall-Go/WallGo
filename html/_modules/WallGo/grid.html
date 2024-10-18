@@ -1,0 +1,551 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.grid &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.grid</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.grid</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for computing and storing the coordinates on the grid and other related </span>
+<span class="sd">quantities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="Grid">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid">[docs]</a>
+<span class="k">class</span> <span class="nc">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the grid on which the Boltzmann equation is solved.</span>
+
+<span class="sd">    Grid is 3d, and consists of the physical coordinates:</span>
+
+<span class="sd">        - :math:`\xi`, position perpendicular to the wall,</span>
+<span class="sd">        - :math:`p_z`, momentum perpendicular to the wall,</span>
+<span class="sd">        - :math:`p_\Vert`, momentum magnitude parallel to the wall.</span>
+
+<span class="sd">    In addition there are the corresponding compactified coordinates on the</span>
+<span class="sd">    interval [-1, 1],</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \chi \equiv \frac{\xi}{\sqrt{\xi^2 + L_{\xi}^2}}, \qquad</span>
+<span class="sd">        \rho_{z} \equiv \tanh\left(\frac{p_z}{2 T_0}\right), \qquad</span>
+<span class="sd">        \rho_{\Vert} \equiv 1 - 2 e^{-p_\Vert/T_0}.</span>
+
+<span class="sd">    All coordinates are in the wall frame.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    chiValues : array_like</span>
+<span class="sd">        Grid of the :math:`\chi` direction.</span>
+<span class="sd">    rzValues : array_like</span>
+<span class="sd">        Grid of the :math:`\rho_z` direction.</span>
+<span class="sd">    rpValues : array_like</span>
+<span class="sd">        Grid of the :math:`\rho_\Vert` direction.</span>
+<span class="sd">    xiValues : array_like</span>
+<span class="sd">        Grid of the :math:`\xi` direction.</span>
+<span class="sd">    pzValues : array_like</span>
+<span class="sd">        Grid of the :math:`p_z` direction.</span>
+<span class="sd">    ppValues : array_like</span>
+<span class="sd">        Grid of the :math:`p_\Vert` direction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Grid.__init__">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">M</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">positionFalloff</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">momentumFalloffT</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">spacing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Spectral&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialises Grid object.</span>
+
+<span class="sd">        Compactified coordinates are chosen according to</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \chi = -\cos\left(\frac{\pi i}{M}\right), \qquad</span>
+<span class="sd">            \rho_{z} = -\cos\left(\frac{\pi j}{N}\right), \qquad</span>
+<span class="sd">            \rho_{\Vert} = -\cos\left(\frac{\pi k}{N-1}\right),</span>
+
+<span class="sd">        with integers :math:`i, j, k` taken over</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            i = 0, 1, \dots, M, \qquad</span>
+<span class="sd">            j = 0, 1, \dots, N, \qquad</span>
+<span class="sd">            k = 0, 1, \dots, N-1.</span>
+
+<span class="sd">        These are the Gauss-Lobatto collocation points, here with all</span>
+<span class="sd">        boundary points included.</span>
+
+<span class="sd">        The boundary points :math:`\chi=\pm 1`, :math:`\rho_z=\pm 1` and</span>
+<span class="sd">        :math:`\rho_{\Vert}=1` correspond to points at infinity. The</span>
+<span class="sd">        deviation from equilibrium is assumed to equal zero at infinity, so</span>
+<span class="sd">        these points are dropped when solving the Boltzmann equations. The</span>
+<span class="sd">        resulting grid is</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            i = 1, 2, \dots, M-1, \qquad</span>
+<span class="sd">            j = 1, 2, \dots, N-1, \qquad</span>
+<span class="sd">            k = 0, 1, \dots, N-2.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        M : int</span>
+<span class="sd">            Number of basis functions in the :math:`\xi` (and :math:`\chi`)</span>
+<span class="sd">            direction.</span>
+<span class="sd">        N : int</span>
+<span class="sd">            Number of basis functions in the :math:`p_z` and :math:`p_\Vert`</span>
+<span class="sd">            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.</span>
+<span class="sd">        positionFalloff : float</span>
+<span class="sd">            Length scale determining transform in :math:`\xi` direction. Should be</span>
+<span class="sd">            expressed in physical units (the units used in EffectivePotential).</span>
+<span class="sd">        momentumFalloffT : float</span>
+<span class="sd">            Temperature scale determining transform in momentum directions. </span>
+<span class="sd">            Should be close to the plasma temperature.</span>
+<span class="sd">        spacing : {&#39;Spectral&#39;, &#39;Uniform&#39;}</span>
+<span class="sd">            Choose &#39;Spectral&#39; for the Gauss-Lobatto collocation points, as</span>
+<span class="sd">            required for WallGo&#39;s spectral representation, or &#39;Uniform&#39; for</span>
+<span class="sd">            a uniform grid. Default is &#39;Spectral&#39;.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="n">M</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="c1"># This number has to be odd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positionFalloff</span> <span class="o">=</span> <span class="n">positionFalloff</span>
+        <span class="k">assert</span> <span class="n">spacing</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="s2">&quot;Spectral&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Uniform&quot;</span><span class="p">,</span>
+        <span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;Unknown spacing </span><span class="si">{</span><span class="n">spacing</span><span class="si">}</span><span class="s2">, not &#39;Spectral&#39; or &#39;Uniform&#39;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span> <span class="o">=</span> <span class="n">spacing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">=</span> <span class="n">momentumFalloffT</span>
+
+        <span class="c1"># Computing the grids in the chi, rz and rp directions</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span> <span class="o">==</span> <span class="s2">&quot;Spectral&quot;</span><span class="p">:</span>
+            <span class="c1"># See equation (34) in arXiv:2204.13120.</span>
+            <span class="c1"># Additional signs are so that each coordinate starts from -1.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span> <span class="o">==</span> <span class="s2">&quot;Uniform&quot;</span><span class="p">:</span>
+            <span class="n">dchi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">M</span>
+            <span class="n">drz</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">dchi</span><span class="p">,</span>
+                <span class="mi">1</span><span class="p">,</span>
+                <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">drz</span><span class="p">,</span>
+                <span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cacheCoordinates</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_cacheCoordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute physical coordinates and store them internally.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xiValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pzValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppValues</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompactify</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span>
+        <span class="p">)</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dxidchi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpzdrz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dppdrp</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compactificationDerivatives</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Grid.changeMomentumFalloffScale">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.changeMomentumFalloffScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">changeMomentumFalloffScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newScale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the momentum falloff scale.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        newScale : float</span>
+<span class="sd">            New momentum falloff scale.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">=</span> <span class="n">newScale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cacheCoordinates</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Grid.changePositionFalloffScale">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.changePositionFalloffScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">changePositionFalloffScale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newScale</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the position falloff scale.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        newScale : float</span>
+<span class="sd">            New position falloff scale.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positionFalloff</span> <span class="o">=</span> <span class="n">newScale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cacheCoordinates</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Grid.getCompactCoordinates">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.getCompactCoordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">getCompactCoordinates</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">endpoints</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return compact coordinates of grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        endpoints : Bool, optional</span>
+<span class="sd">            If True, include endpoints of grid. Default is False.</span>
+<span class="sd">        direction : string or None, optional</span>
+<span class="sd">            Specifies which coordinates to return. Can either be &#39;z&#39;, &#39;pz&#39;,</span>
+<span class="sd">            &#39;pp&#39; or None. If None, returns a tuple containing the 3 directions.</span>
+<span class="sd">            Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        chiValues : array_like</span>
+<span class="sd">            Grid of the :math:`\chi` direction.</span>
+<span class="sd">        rzValues : array_like</span>
+<span class="sd">            Grid of the :math:`\rho_z` direction.</span>
+<span class="sd">        rpValues : array_like</span>
+<span class="sd">            Grid of the :math:`\rho_\Vert` direction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">endpoints</span><span class="p">:</span>
+            <span class="n">chi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">rz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">rp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chi</span><span class="p">,</span> <span class="n">rz</span><span class="p">,</span> <span class="n">rp</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">chiValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rzValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpValues</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">chi</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;pz&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rz</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;pp&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rp</span>
+        <span class="k">return</span> <span class="n">chi</span><span class="p">,</span> <span class="n">rz</span><span class="p">,</span> <span class="n">rp</span></div>
+
+
+<div class="viewcode-block" id="Grid.getCoordinates">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.getCoordinates">[docs]</a>
+    <span class="k">def</span> <span class="nf">getCoordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">endpoints</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return coordinates of grid, not compactified.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        endpoints : Bool, optional</span>
+<span class="sd">            If True, include endpoints of grid. Default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        xiValues : array_like</span>
+<span class="sd">            Grid of the :math:`\xi` direction.</span>
+<span class="sd">        pzValues : array_like</span>
+<span class="sd">            Grid of the :math:`p_z` direction.</span>
+<span class="sd">        ppValues : array_like</span>
+<span class="sd">            Grid of the :math:`p_\Vert` direction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">endpoints</span><span class="p">:</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+                          <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xiValues</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="n">pz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+                          <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pzValues</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="n">pp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+                          <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ppValues</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">xi</span><span class="p">,</span> <span class="n">pz</span><span class="p">,</span> <span class="n">pp</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xiValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pzValues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppValues</span></div>
+
+
+<div class="viewcode-block" id="Grid.getCompactificationDerivatives">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.getCompactificationDerivatives">[docs]</a>
+    <span class="k">def</span> <span class="nf">getCompactificationDerivatives</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">endpoints</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return derivatives of compactified coordinates of grid, with respect to</span>
+<span class="sd">        uncompactified derivatives.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        endpoints : Bool, optional</span>
+<span class="sd">            If True, include endpoints of grid. Default is False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dchiValues : array_like</span>
+<span class="sd">            Grid of the :math:`\partial_\xi\chi` direction.</span>
+<span class="sd">        drzValues : array_like</span>
+<span class="sd">            Grid of the :math:`\partial_{p_z}\rho_z` direction.</span>
+<span class="sd">        drpValues : array_like</span>
+<span class="sd">            Grid of the :math:`\partial_{p_\Vert}\rho_\Vert` direction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">endpoints</span><span class="p">:</span>
+            <span class="n">dxidchi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dxidchi</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="n">dpzdrz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dpzdrz</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="n">dppdrp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dppdrp</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">dxidchi</span><span class="p">,</span> <span class="n">dpzdrz</span><span class="p">,</span> <span class="n">dppdrp</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxidchi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpzdrz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dppdrp</span></div>
+
+
+<div class="viewcode-block" id="Grid.compactify">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.compactify">[docs]</a>
+    <span class="k">def</span> <span class="nf">compactify</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">pz</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="n">pp</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transforms coordinates to [-1, 1] interval</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z : array-like</span>
+<span class="sd">            Physical z (or xi) coordinate.</span>
+<span class="sd">        pz : array-like</span>
+<span class="sd">            Physical pz coordinate.</span>
+<span class="sd">        pp : array-like</span>
+<span class="sd">            Physical p_par coordinate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        z_compact : array-like</span>
+<span class="sd">            Compact z coordinate (chi).</span>
+<span class="sd">        pz_compact : array-like</span>
+<span class="sd">            Compact pz coordinate (rho_z).</span>
+<span class="sd">        pp_compact : array-like</span>
+<span class="sd">            Compact p_par coordinate (rho_par).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">zCompact</span> <span class="o">=</span> <span class="n">z</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">positionFalloff</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">pzCompact</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">pz</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span><span class="p">)</span>
+        <span class="n">ppCompact</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">pp</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">zCompact</span><span class="p">,</span> <span class="n">pzCompact</span><span class="p">,</span> <span class="n">ppCompact</span></div>
+
+
+<div class="viewcode-block" id="Grid.decompactify">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.decompactify">[docs]</a>
+    <span class="k">def</span> <span class="nf">decompactify</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">zCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">pzCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">ppCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transforms coordinates to [-1, 1] interval</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z_compact : array-like</span>
+<span class="sd">            Compact z coordinate (chi).</span>
+<span class="sd">        pz_compact : array-like</span>
+<span class="sd">            Compact pz coordinate (rho_z).</span>
+<span class="sd">        pp_compact : array-like</span>
+<span class="sd">            Compact p_par coordinate (rho_par).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        z : array-like</span>
+<span class="sd">            Physical z (or xi) coordinate.</span>
+<span class="sd">        pz : array-like</span>
+<span class="sd">            Physical pz coordinate.</span>
+<span class="sd">        pp : array-like</span>
+<span class="sd">            Physical p_par coordinate.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">positionFalloff</span> <span class="o">*</span> <span class="n">zCompact</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">zCompact</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">pzCompact</span><span class="p">))</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+              <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ppCompact</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">pz</span><span class="p">,</span> <span class="n">pp</span></div>
+
+
+<div class="viewcode-block" id="Grid.compactificationDerivatives">
+<a class="viewcode-back" href="../../modules/grid.html#WallGo.Grid.compactificationDerivatives">[docs]</a>
+    <span class="k">def</span> <span class="nf">compactificationDerivatives</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">zCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">pzCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">ppCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Derivative :math:`d(X)/d(X_\text{compact})` of coordinate transforms to [-1, 1] interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z_compact : array-like</span>
+<span class="sd">            Compact z coordinate (chi).</span>
+<span class="sd">        pz_compact : array-like</span>
+<span class="sd">            Compact pz coordinate (rho_z).</span>
+<span class="sd">        pp_compact : array-like</span>
+<span class="sd">            Compact p_par coordinate (rho_par).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dzdzCompact : array-like</span>
+<span class="sd">            Derivative d(z)/d(chi).</span>
+<span class="sd">        dpzdpzCompact : array-like</span>
+<span class="sd">            PDerivative d(p_z)/d(rho_z).</span>
+<span class="sd">        dppdppCompact : array-like</span>
+<span class="sd">            Derivative d(p_par)/d(rho_par).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dzdzCompact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positionFalloff</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">zCompact</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.5</span>
+        <span class="n">dpzdpzCompact</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pzCompact</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dppdppCompact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ppCompact</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dzdzCompact</span><span class="p">,</span> <span class="n">dpzdpzCompact</span><span class="p">,</span> <span class="n">dppdppCompact</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EOM &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Exceptions" href="exceptions.html" />
+    <link rel="prev" title="EffectivePotential" href="effectivePotential.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">EOM</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/equationOfMotion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="eom">
+<h1>EOM<a class="headerlink" href="#eom" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.EOM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.</span></span><span class="sig-name descname"><span class="pre">EOM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boltzmannSolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="boltzmann.html#WallGo.BoltzmannSolver" title="WallGo.boltzmann.BoltzmannSolver"><span class="pre">BoltzmannSolver</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermodynamics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="thermodynamics.html#WallGo.thermodynamics.Thermodynamics" title="WallGo.thermodynamics.Thermodynamics"><span class="pre">Thermodynamics</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hydrodynamics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hydrodynamics.html#WallGo.Hydrodynamics" title="WallGo.hydrodynamics.Hydrodynamics"><span class="pre">Hydrodynamics</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.grid3Scales.Grid3Scales"><span class="pre">Grid3Scales</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbrFields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanFreePathScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThicknessBounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallOffsetBounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeOffEq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceEnergyConservation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceImproveConvergence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errTol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressRelErrTol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3679</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM" title="Link to this definition"></a></dt>
+<dd><p>Class that solves the energy-momentum conservation equations and the scalar
+EOMs to determine the wall velocity.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boltzmannSolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="boltzmann.html#WallGo.BoltzmannSolver" title="WallGo.boltzmann.BoltzmannSolver"><span class="pre">BoltzmannSolver</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">thermodynamics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="thermodynamics.html#WallGo.thermodynamics.Thermodynamics" title="WallGo.thermodynamics.Thermodynamics"><span class="pre">Thermodynamics</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">hydrodynamics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="hydrodynamics.html#WallGo.Hydrodynamics" title="WallGo.hydrodynamics.Hydrodynamics"><span class="pre">Hydrodynamics</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.grid3Scales.Grid3Scales"><span class="pre">Grid3Scales</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbrFields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meanFreePathScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThicknessBounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallOffsetBounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">includeOffEq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceEnergyConservation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceImproveConvergence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errTol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxIterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressRelErrTol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.3679</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialization</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>boltzmannSolver</strong> (<a class="reference internal" href="boltzmann.html#WallGo.BoltzmannSolver" title="WallGo.BoltzmannSolver"><em>BoltzmannSolver</em></a>) -- BoltzmannSolver instance.</p></li>
+<li><p><strong>thermodynamics</strong> (<a class="reference internal" href="thermodynamics.html#WallGo.thermodynamics.Thermodynamics" title="WallGo.thermodynamics.Thermodynamics"><em>Thermodynamics</em></a>) -- Thermodynamics object</p></li>
+<li><p><strong>hydrodynamics</strong> (<a class="reference internal" href="hydrodynamics.html#WallGo.Hydrodynamics" title="WallGo.Hydrodynamics"><em>Hydrodynamics</em></a>) -- Hydrodynamics object</p></li>
+<li><p><strong>grid</strong> (<a class="reference internal" href="grid3Scales.html#WallGo.Grid3Scales" title="WallGo.Grid3Scales"><em>Grid3Scales</em></a>) -- Object of the class Grid3Scales.</p></li>
+<li><p><strong>nbrFields</strong> (<em>int</em>) -- Number of scalar fields on which the scalar potential depends.</p></li>
+<li><p><strong>meanFreePathScale</strong> (<em>float</em>) -- Estimate of the mean free path of the particles in the plasma. Should be
+expressed in physical units (the units used in EffectivePotential).</p></li>
+<li><p><strong>wallThicknessBounds</strong> (<em>tuple</em>) -- Tuple containing the bounds the wall thickness (in units of 1/Tnucl).
+The solver will never explore outside of this interval.</p></li>
+<li><p><strong>wallOffsetBounds</strong> (<em>tuple</em>) -- Tuple containing the bounds the wall offset. The solver will never
+explore outside of this interval.</p></li>
+<li><p><strong>includeOffEq</strong> (<em>bool</em><em>, </em><em>optional</em>) -- If False, all the out-of-equilibrium contributions are neglected.
+The default is False.</p></li>
+<li><p><strong>forceEnergyConservation</strong> (<em>bool</em><em>, </em><em>optional</em>) -- If True, enforce energy-momentum conservation by solving for the appropriate
+T and vpl profiles. If false, use fixed T and vpl profiles. Default is True.</p></li>
+<li><p><strong>forceImproveConvergence</strong> (<em>bool</em><em>, </em><em>optional</em>) -- If True, uses a slower algorithm that improves the convergence when
+computing the pressure. The improved algorithm is automatically used
+for detonation. Default is False.</p></li>
+<li><p><strong>errTol</strong> (<em>float</em><em>, </em><em>optional</em>) -- Absolute error tolerance. The default is 1e-3.</p></li>
+<li><p><strong>maxIterations</strong> (<em>int</em><em>, </em><em>optional</em>) -- Maximum number of iterations for the convergence of pressure.
+The default is 10.</p></li>
+<li><p><strong>pressRelErrTol</strong> (<em>float</em><em>, </em><em>optional</em>) -- Relative tolerance in pressure when finding its root.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.action">
+<span class="sig-name descname"><span class="pre">action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallParams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vevLowT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vevHighT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperatureProfile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offEquilDelta00</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.polynomial.Polynomial"><span class="pre">Polynomial</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.action" title="Link to this definition"></a></dt>
+<dd><p>Computes the action by using gaussian quadratrure to integrate the Lagrangian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wallParams</strong> (<a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><em>WallParams</em></a>) -- WallParams object.</p></li>
+<li><p><strong>vevLowT</strong> (<em>Fields</em>) -- Field values in the low-T phase.</p></li>
+<li><p><strong>vevHighT</strong> (<em>Fields</em>) -- Field values in the high-T phase.</p></li>
+<li><p><strong>temperatureProfile</strong> (<em>ndarray</em>) -- Temperature profile on the grid.</p></li>
+<li><p><strong>offEquilDelta00</strong> (<a class="reference internal" href="polynomial.html#WallGo.Polynomial" title="WallGo.Polynomial"><em>Polynomial</em></a>) -- Off-equilibrium function Delta00.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>action</strong> -- Action spent by the scalar field configuration.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.deltaToTmunu">
+<span class="sig-name descname"><span class="pre">deltaToTmunu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityMid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offEquilDeltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.deltaToTmunu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.deltaToTmunu" title="Link to this definition"></a></dt>
+<dd><p>Computes the out-of-equilibrium part of the energy-momentum tensor. See eq. (14)
+of arXiv:2204.13120v1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> (<em>int</em>) -- Index of the grid point on which to find the plasma profile.</p></li>
+<li><p><strong>fields</strong> (<em>FieldPoint</em>) -- Scalar field profile.</p></li>
+<li><p><strong>velocityMid</strong> (<em>float</em>) -- Midpoint of plasma velocity in the wall frame, <span class="math notranslate nohighlight">\((v_+ + v_-)/2\)</span>.</p></li>
+<li><p><strong>offEquilDeltas</strong> (<a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><em>BoltzmannDeltas</em></a>) -- BoltzmannDeltas object containing the off-equilibrium Delta functions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>T30</strong> (<em>float</em>) -- Out-of-equilibrium part of <span class="math notranslate nohighlight">\(T^{30}\)</span>.</p></li>
+<li><p><strong>T33</strong> (<em>float</em>) -- Out-of-equilibrium part of <span class="math notranslate nohighlight">\(T^{33}\)</span>.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.findPlasmaProfile">
+<span class="sig-name descname"><span class="pre">findPlasmaProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityMid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dPhidz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offEquilDeltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tplus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tminus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.findPlasmaProfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.findPlasmaProfile" title="Link to this definition"></a></dt>
+<dd><p>Solves Eq. (20) of arXiv:2204.13120v1 globally. If no solution, the minimum of
+LHS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>c1</strong> (<em>float</em>) -- Value of the <span class="math notranslate nohighlight">\(T^{30}\)</span> component of the energy-momentum tensor.</p></li>
+<li><p><strong>c2</strong> (<em>float</em>) -- Value of the <span class="math notranslate nohighlight">\(T^{33}\)</span> component of the energy-momentum tensor.</p></li>
+<li><p><strong>velocityMid</strong> (<em>float</em>) -- Midpoint of plasma velocity in the wall frame, <span class="math notranslate nohighlight">\((v_+ + v_-)/2\)</span>.</p></li>
+<li><p><strong>fields</strong> (<em>Fields</em>) -- Scalar field profiles.</p></li>
+<li><p><strong>dPhidz</strong> (<em>Fields</em>) -- Derivative with respect to the position of the scalar field profiles.</p></li>
+<li><p><strong>offEquilDeltas</strong> (<a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><em>BoltzmannDeltas</em></a>) -- BoltzmannDeltas object containing the off-equilibrium Delta functions</p></li>
+<li><p><strong>Tplus</strong> (<em>float</em>) -- Plasma temperature in front of the wall.</p></li>
+<li><p><strong>Tminus</strong> (<em>float</em>) -- Plasma temperature behind the wall.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>temperatureProfile</strong> (<em>array-like</em>) -- Temperature profile in the wall.</p></li>
+<li><p><strong>velocityProfile</strong> (<em>array-like</em>) -- Plasma velocity profile in the wall.</p></li>
+<li><p><strong>success</strong> (<em>bool</em>) -- Whether or not the temperature profile was found successfully.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.findPlasmaProfilePoint">
+<span class="sig-name descname"><span class="pre">findPlasmaProfilePoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocityMid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dPhidz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offEquilDeltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><span class="pre">BoltzmannDeltas</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tplus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tminus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.findPlasmaProfilePoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.findPlasmaProfilePoint" title="Link to this definition"></a></dt>
+<dd><p>Solves Eq. (20) of arXiv:2204.13120v1 locally. If no solution,
+the minimum of LHS.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index</strong> (<em>int</em>) -- Index of the grid point on which to find the plasma profile.</p></li>
+<li><p><strong>c1</strong> (<em>float</em>) -- Value of the <span class="math notranslate nohighlight">\(T^{30}\)</span> component of the energy-momentum tensor.</p></li>
+<li><p><strong>c2</strong> (<em>float</em>) -- Value of the <span class="math notranslate nohighlight">\(T^{33}\)</span> component of the energy-momentum tensor.</p></li>
+<li><p><strong>velocityMid</strong> (<em>float</em>) -- Midpoint of plasma velocity in the wall frame, <span class="math notranslate nohighlight">\((v_+ + v_-)/2\)</span>.</p></li>
+<li><p><strong>fields</strong> (<em>FieldPoint</em>) -- Scalar field profile.</p></li>
+<li><p><strong>dPhidz</strong> (<em>FieldPoint</em>) -- Derivative with respect to the position of the scalar field profile.</p></li>
+<li><p><strong>offEquilDeltas</strong> (<a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas"><em>BoltzmannDeltas</em></a>) -- BoltzmannDeltas object containing the off-equilibrium Delta functions</p></li>
+<li><p><strong>Tplus</strong> (<em>float</em>) -- Plasma temperature in front of the wall.</p></li>
+<li><p><strong>Tminus</strong> (<em>float</em>) -- Plasma temperature behind the wall.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>T</strong> (<em>float</em>) -- Temperature at the point grid.xiValues[index].</p></li>
+<li><p><strong>vPlasma</strong> (<em>float</em>) -- Plasma velocity at the point grid.xiValues[index].</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.findWallVelocityDeflagrationHybrid">
+<span class="sig-name descname"><span class="pre">findWallVelocityDeflagrationHybrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallThicknessIni</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults"><span class="pre">WallGoResults</span></a></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.findWallVelocityDeflagrationHybrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.findWallVelocityDeflagrationHybrid" title="Link to this definition"></a></dt>
+<dd><p>Finds the wall velocity by minimizing the action and solving for the
+solution with 0 total pressure on the wall. This function only looks for
+deflagration or hybrid solutions. Returns a velocity of 1 if the pressure
+peak at vw = vJ is not large enough to stop the wall.
+For detonation solutions, use solveInterpolation().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wallThicknessIni</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Initial thickness used for all the walls. Should be expressed in physical
+units (the units used in EffectivePotential). If None, uses 5/Tnucl.
+Default is None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WallGoResults object containing the solution of the EOM.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults">WallGoResults</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.findWallVelocityDetonation">
+<span class="sig-name descname"><span class="pre">findWallVelocityDetonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallThicknessIni</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbrPointsMin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nbrPointsMax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overshootProb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onlySmallest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults"><span class="pre">WallGoResults</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.findWallVelocityDetonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.findWallVelocityDetonation" title="Link to this definition"></a></dt>
+<dd><p>Finds the wall velocity of detonation solutions. This is more complicated than
+for deflagrations or hybrids since the pressure is not necessarily monotonous,
+so the root cannot be bracketed easily. To bracket it, we start at vmin and
+increase it until the pressure goes from negative to positive. We then use a
+normal bracketed root finding algorithm to find the wall velocity. In
+principles, several solutions can exist. The function can either return a list
+containing all the solutions or the solution containing the smallest wall
+velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vmin</strong> (<em>float</em>) -- Smallest wall velocity probed. Must be between the Jouguet velocity and 1.</p></li>
+<li><p><strong>vmax</strong> (<em>float</em>) -- Largest wall velocity probed. Must be between vmin and 1.</p></li>
+<li><p><strong>wallThicknessIni</strong> (<em>float</em><em> | </em><em>None</em><em>, </em><em>optional</em>) -- Initial value of the wall thickness. Should be expressed in physical units
+(the units used in EffectivePotential). If None, it is set to 5/Tnucl.
+The default is None.</p></li>
+<li><p><strong>nbrPointsMin</strong> (<em>int</em><em>, </em><em>optional</em>) -- Minimal number of points to bracket the roots. The default is 5.</p></li>
+<li><p><strong>nbrPointsMax</strong> (<em>int</em><em>, </em><em>optional</em>) -- Maximal number of points to bracket the roots. The default is 20.</p></li>
+<li><p><strong>overshootProb</strong> (<em>float</em><em>, </em><em>optional</em>) -- Desired probability of overshooting a root. Must be between 0 and 1. A
+smaller value will lead to more pressure evaluations
+(and thus a longer time), but is less likely to miss a root.
+The default is 0.05.</p></li>
+<li><p><strong>rtol</strong> (<em>float</em><em>, </em><em>optional</em>) -- Relative tolerance on the pressure. The default is 0.01.</p></li>
+<li><p><strong>onlySmallest</strong> (<em>bool</em><em>, </em><em>optional</em>) -- If True, returns a list containing only the root with the smallest wall
+velocity. Otherwise, the list contains all the roots. The default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List containing the detonation solutions. If no solutions were found,
+returns a wall velocity of 0  if the pressure is always positive, or 1 if
+it is negative (runaway wall). If it is positive at vmin and negative at
+vmax, the outcome is uncertain and would require a time-dependent analysis,
+so it returns an empty list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults">WallGoResults</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.getBoltzmannFiniteDifference">
+<span class="sig-name descname"><span class="pre">getBoltzmannFiniteDifference</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.getBoltzmannFiniteDifference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.getBoltzmannFiniteDifference" title="Link to this definition"></a></dt>
+<dd><p>Mostly to estimate errors, recomputes Boltzmann stuff
+using finite difference derivatives.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.plasmaVelocity">
+<span class="sig-name descname"><span class="pre">plasmaVelocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.plasmaVelocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.plasmaVelocity" title="Link to this definition"></a></dt>
+<dd><p>Computes the plasma velocity as a function of the temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>FieldPoint</em>) -- Scalar field profiles.</p></li>
+<li><p><strong>T</strong> (<em>float</em>) -- Temperature.</p></li>
+<li><p><strong>s1</strong> (<em>float</em>) -- Value of <span class="math notranslate nohighlight">\(T^{30}-T_{\rm out}^{30}\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Plasma velocity.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.solveWall">
+<span class="sig-name descname"><span class="pre">solveWall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallVelocityMin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallVelocityMax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallParamsGuess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallPressureResultsMin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannBackground" title="WallGo.containers.BoltzmannBackground"><span class="pre">BoltzmannBackground</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.HydroResults" title="WallGo.results.HydroResults"><span class="pre">HydroResults</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallPressureResultsMax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannBackground" title="WallGo.containers.BoltzmannBackground"><span class="pre">BoltzmannBackground</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.HydroResults" title="WallGo.results.HydroResults"><span class="pre">HydroResults</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults"><span class="pre">WallGoResults</span></a></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.solveWall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.solveWall" title="Link to this definition"></a></dt>
+<dd><p>Solves the equation <span class="math notranslate nohighlight">\(P_{\rm tot}(\xi_w)=0\)</span> for the wall velocity
+and wall thicknesses/offsets. The solver only looks between wallVelocityMin
+and wallVelocityMax</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wallVelocityMin</strong> (<em>float</em>) -- Lower bound of the bracket in which the root finder will look for a
+solution. Should satisfy
+<span class="math notranslate nohighlight">\(0&lt;{\rm wallVelocityMin}&lt;{\rm wallVelocityMax}\)</span>.</p></li>
+<li><p><strong>wallVelocityMax</strong> (<em>float</em>) -- Upper bound of the bracket in which the root finder will look for a
+solution. Should satisfy
+<span class="math notranslate nohighlight">\({\rm wallVelocityMin}&lt;{\rm wallVelocityMax}\leq\xi_J\)</span>.</p></li>
+<li><p><strong>wallParamsGuess</strong> (<a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><em>WallParams</em></a>) -- Contains a guess of the wall thicknesses and wall offsets.</p></li>
+<li><p><strong>wallPressureResultsMin</strong> (<em>tuple</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Tuple containing the results of the self.wallPressure function evaluated
+at wallVelocityMin. If None, computes it manually. Default is None.</p></li>
+<li><p><strong>wallPressureResultsMax</strong> (<em>tuple</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Tuple containing the results of the self.wallPressure function evaluated
+at wallVelocityMax. If None, computes it manually. Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>results</strong> -- Data class containing results.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="results.html#WallGo.results.WallGoResults" title="WallGo.results.WallGoResults">WallGoResults</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.temperatureProfileEqLHS">
+<span class="sig-name descname"><span class="pre">temperatureProfileEqLHS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dPhidz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.temperatureProfileEqLHS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.temperatureProfileEqLHS" title="Link to this definition"></a></dt>
+<dd><p>The LHS of Eq. (20) of arXiv:2204.13120v1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>FieldPoint</em>) -- Scalar field profile.</p></li>
+<li><p><strong>dPhidz</strong> (<em>FieldPoint</em>) -- Derivative with respect to the position of the scalar field profile.</p></li>
+<li><p><strong>T</strong> (<em>float</em>) -- Temperature.</p></li>
+<li><p><strong>s1</strong> (<em>float</em>) -- Value of <span class="math notranslate nohighlight">\(T^{30}-T_{\rm out}^{30}\)</span>.</p></li>
+<li><p><strong>s2</strong> (<em>float</em>) -- Value of <span class="math notranslate nohighlight">\(T^{33}-T_{\rm out}^{33}\)</span>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>LHS of Eq. (20) of arXiv:2204.13120v1.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.wallPressure">
+<span class="sig-name descname"><span class="pre">wallPressure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wallVelocity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallParams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boltzmannResultsInput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannBackground" title="WallGo.containers.BoltzmannBackground"><span class="pre">BoltzmannBackground</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="results.html#WallGo.results.HydroResults" title="WallGo.results.HydroResults"><span class="pre">HydroResults</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.wallPressure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.wallPressure" title="Link to this definition"></a></dt>
+<dd><p>Computes the total pressure on the wall by finding the tanh profile
+that minimizes the action. Can use two different iteration algorithms
+to find the pressure. If self.forceImproveConvergence=False and
+wallVelocity&lt;self.hydrodynamics.vJ, uses a fast algorithm that sometimes fails
+to converge. Otherwise, or if the previous algorithm converges slowly,
+uses a slower, but more robust algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wallVelocity</strong> (<em>float</em>) -- Wall velocity at which the pressure is computed.</p></li>
+<li><p><strong>wallParams</strong> (<a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><em>WallParams</em></a>) -- Contains a guess of the wall thicknesses and wall offsets.</p></li>
+<li><p><strong>atol</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Absolute tolerance. If None, uses self.pressAbsErrTol. Default is None.</p></li>
+<li><p><strong>rtol</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Relative tolerance. If None, uses self.pressRelErrTol. Default is None.</p></li>
+<li><p><strong>boltzmannResultsInput</strong> (<a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><em>BoltzmannResults</em></a><em> or </em><em>None</em><em>, </em><em>optional</em>) -- Object of the BoltzmannResults class containing the initial solution
+of the Boltzmann equation. If None, sets the initial deltaF to 0.
+Default is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>pressure</strong> (<em>float</em>) -- Total pressure on the wall.</p></li>
+<li><p><strong>wallParams</strong> (<em>WallParams</em>) -- WallParams object containing the wall thicknesses and wall offsets
+that minimize the action and solve the EOM. Only returned if
+returnExtras is True.</p></li>
+<li><p><strong>boltzmannResults</strong> (<em>BoltzmannResults</em>) -- BoltzmannResults object containing the solution of the Boltzmann
+equation. Only returned if returnExtras is True</p></li>
+<li><p><strong>boltzmannBackground</strong> (<em>BoltzmannBackground</em>) -- BoltzmannBackground object containing the solution of the hydrodynamic
+equations and the scalar field profiles. Only returned if returnExtras
+is True.</p></li>
+<li><p><strong>hydroResults</strong> (<em>HydroResults</em>) -- HydroResults object containing the solution obtained from Hydrodynamics.
+Only returned if returnExtras is True</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.EOM.wallProfile">
+<span class="sig-name descname"><span class="pre">wallProfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vevLowT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vevHighT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wallParams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><span class="pre">WallParams</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Fields</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/equationOfMotion.html#EOM.wallProfile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.EOM.wallProfile" title="Link to this definition"></a></dt>
+<dd><p>Computes the scalar field profile and its derivative with respect to
+the position in the wall.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>ndarray</em>) -- Position grid on which to compute the scalar field profile.</p></li>
+<li><p><strong>vevLowT</strong> (<em>Fields</em>) -- Scalar field VEVs in the low-T phase.</p></li>
+<li><p><strong>vevHighT</strong> (<em>Fields</em>) -- Scalar field VEVs in the high-T phase.</p></li>
+<li><p><strong>wallParams</strong> (<a class="reference internal" href="containers.html#WallGo.containers.WallParams" title="WallGo.containers.WallParams"><em>WallParams</em></a>) -- WallParams object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- Scalar field profile.</p></li>
+<li><p><strong>dPhidz</strong> (<em>Fields</em>) -- Derivative with respect to the position of the scalar field profile.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="effectivePotential.html" class="btn btn-neutral float-left" title="EffectivePotential" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exceptions.html" class="btn btn-neutral float-right" title="Exceptions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
