@@ -7,7 +7,7 @@ import sys
 
 
 def generateMatrixElementsViaSubprocess(
-    inFilePath: pathlib.Path, outFilePath: pathlib.Path, bVerbose: bool = False
+    inFilePath: pathlib.Path, outFilePath: pathlib.Path
 ) -> None:
     """
     Generates matrix elements by executing a Mathematica script via a subprocess.
@@ -47,8 +47,7 @@ def generateMatrixElementsViaSubprocess(
         result = subprocess.run(
             command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        if bVerbose:
-            print(result.stdout.decode("utf-8"))  # If you want to print the output
+        print(result.stdout.decode("utf-8"))  # print the output
 
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
