@@ -43,7 +43,7 @@ def generateMatrixElementsViaSubprocess(
 """
     print(banner)
 
-    command = ["wolframscript", "-script", inFilePathStr, outFilePathStr]
+    command = ["wolframscript", "-script", inFilePathStr, "--outputFile", outFilePathStr]
 
     try:
         # run wolframscript
