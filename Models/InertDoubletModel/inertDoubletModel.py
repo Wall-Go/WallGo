@@ -141,7 +141,7 @@ class InertDoubletModel(GenericModel):
 
         topQuarkR = Particle(
             name="TopR",
-            index=1,
+            index=2,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
             msqThermal=topMsqThermal,
@@ -162,7 +162,7 @@ class InertDoubletModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=2,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
@@ -183,7 +183,7 @@ class InertDoubletModel(GenericModel):
         
         heavyScalar = Particle(
             name="heavyScalar",
-            index=3,
+            index=11,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
             msqThermal=heavyScalarThermal,

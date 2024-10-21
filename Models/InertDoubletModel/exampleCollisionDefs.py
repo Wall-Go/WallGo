@@ -43,10 +43,11 @@ def setupCollisionModel_QCDEW(
     parameters = WallGoCollision.ModelParameters()
 
     # For defining new parameters use addOrModifyParameter(). For read-only access you can use the [] operator.
-    # Here we copy the value of QCD and EW couplings as defined in the main WallGo model (names differ for historical reasons)
+    # Here we copy the value of QCD, EW and scalar couplings as defined in the main WallGo model (names differ for historical reasons)
     parameters.addOrModifyParameter("gs", modelParameters["g3"])
     parameters.addOrModifyParameter("gw", modelParameters["g2"])
     parameters.addOrModifyParameter("yt", modelParameters["yt"])
+    parameters.addOrModifyParameter("lamH3", modelParameters["lambda3"])
 
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
@@ -61,15 +62,19 @@ def setupCollisionModel_QCDEW(
     
     def wBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 11.0 * p["gw"] ** 2 / 6.0
-    
+
     def HiggsBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return (9 * p["gw"] ** 2 / 4 + 3 * p["yt"]) / 12.0
+    
+    def heavyScalarThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
+        return p["lambda3"] / 24.0
 
 
     parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mw2", wBosonThermalMassSquared(parameters))
     parameters.addOrModifyParameter("ms2", HiggsBosonThermalMassSquared(parameters))
+    parameters.addOrModifyParameter("", heavyScalarThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
     modelDefinition.defineParameters(parameters)
@@ -87,26 +92,34 @@ def setupCollisionModel_QCDEW(
     )
     topQuarkL.bUltrarelativistic = True
     topQuarkL.massSqFunction = quarkThermalMassSquared
-
     modelDefinition.defineParticleSpecies(topQuarkL)
+
+    bottomQuarkL = WallGoCollision.ParticleDescription()
+    bottomQuarkL.name = "BotL"
+    bottomQuarkL.index = 1
+    bottomQuarkL.type = WallGoCollision.EParticleType.eFermion
+    bottomQuarkL.bInEquilibrium = True
+    bottomQuarkL.bUltrarelativistic = True
+    bottomQuarkL.massSqFunction = quarkThermalMassSquared
+    modelDefinition.defineParticleSpecies(bottomQuarkL)
 
     topQuarkR = WallGoCollision.ParticleDescription()
     topQuarkR.name = "TopR"
-    topQuarkR.index = 1
+    topQuarkR.index = 2
     topQuarkR.type = WallGoCollision.EParticleType.eFermion
     topQuarkR.bInEquilibrium = False
     topQuarkR.bUltrarelativistic = True
     topQuarkR.massSqFunction = quarkThermalMassSquared
     modelDefinition.defineParticleSpecies(topQuarkR)
 
-    bottomQuarkR = WallGoCollision.ParticleDescription()
-    bottomQuarkR.name = "BotR"
-    bottomQuarkR.index = 2
-    bottomQuarkR.type = WallGoCollision.EParticleType.eFermion
-    bottomQuarkR.bInEquilibrium = True
-    bottomQuarkR.bUltrarelativistic = True
-    bottomQuarkR.massSqFunction = quarkThermalMassSquared
-    modelDefinition.defineParticleSpecies(bottomQuarkR)
+    gluon = WallGoCollision.ParticleDescription()
+    gluon.name = "Gluon"
+    gluon.index = 3
+    gluon.type = WallGoCollision.EParticleType.eBoson
+    gluon.bInEquilibrium = True
+    gluon.bUltrarelativistic = True
+    gluon.massSqFunction = gluonThermalMassSquared
+    modelDefinition.defineParticleSpecies(gluon)
 
     wBoson = WallGoCollision.ParticleDescription()
     wBoson.name = "W"
@@ -117,15 +130,14 @@ def setupCollisionModel_QCDEW(
     wBoson.massSqFunction = wBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(wBoson)
 
-
-    gluon = WallGoCollision.ParticleDescription()
-    gluon.name = "Gluon"
-    gluon.index = 3
-    gluon.type = WallGoCollision.EParticleType.eBoson
-    gluon.bInEquilibrium = True
-    gluon.bUltrarelativistic = True
-    gluon.massSqFunction = gluonThermalMassSquared
-    modelDefinition.defineParticleSpecies(gluon)
+    photon = WallGoCollision.ParticleDescription()
+    photon.name = "B"
+    photon.index = 5
+    photon.type = WallGoCollision.EParticleType.eBoson
+    photon.bInEquilibrium = True
+    photon.bUltrarelativistic = True
+    photon.massSqFunction = HiggsBosonThermalMassSquared
+    modelDefinition.defineParticleSpecies(photon)
 
     higgs = WallGoCollision.ParticleDescription()
     higgs.name = "H"
