@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.grid3Scales &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.grid3Scales</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.grid3Scales</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for computing and storing the coordinates on the grid and other related </span>
+<span class="sd">quantities.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.grid</span> <span class="kn">import</span> <span class="n">Grid</span>
+
+
+<div class="viewcode-block" id="Grid3Scales">
+<a class="viewcode-back" href="../../modules/grid3Scales.html#WallGo.Grid3Scales">[docs]</a>
+<span class="k">class</span> <span class="nc">Grid3Scales</span><span class="p">(</span><span class="n">Grid</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Redefinition of the Grid class to take into account the different scales present in</span>
+<span class="sd">    the z direction. More specifically, the :math:`z` mapping function should scale as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        z(\chi \to -1) &amp;= \lambda_- \log(1+\chi),\\</span>
+<span class="sd">        z(\chi \to 1) &amp;= -\lambda_+ \log(1-\chi),</span>
+<span class="sd">    </span>
+<span class="sd">    where :math:`\lambda_-` and :math:`\lambda_+` are the lengths of the solution&#39;s</span>
+<span class="sd">    tails inside and outside the bubble, respectively. Furthermore, the mapping</span>
+<span class="sd">    should be approximately linear in the region :math:`-r&lt;\chi&lt;r`, where :math:`r`</span>
+<span class="sd">    is roughly the ratio of points that are used to resolve the wall&#39;s interior.</span>
+<span class="sd">    The slope in that region should be :math:`L/r`, where :math:`L` is the wall</span>
+<span class="sd">    thickness, so that</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        z&#39;(\chi) \approx \frac{L}{r}\chi, \quad \chi \in [-r, r].</span>
+
+<span class="sd">    It is easier to find the derivative of a function that has these properties,</span>
+<span class="sd">    and then integrate it. We choose here</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        z&#39;(\chi)=\frac{f(\chi)}{1-\chi^2},</span>
+
+<span class="sd">    where :math:`f(\chi)` is a smoothed step function equal to</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        f(\chi) \approx \begin{cases}</span>
+<span class="sd">            \lambda_-,&amp; \chi&lt;-r,\\</span>
+<span class="sd">            L/r,&amp; -r&lt;\chi&lt;r,\\</span>
+<span class="sd">            \lambda_+,&amp; \chi&gt;r.</span>
+<span class="sd">        \end{cases}</span>
+<span class="sd">    </span>
+<span class="sd">    We choose :math:`f(\chi)` to be a sum of functions like</span>
+<span class="sd">    :math:`\frac{\chi-\chi_0}{\sqrt{a^2+(\chi-\chi_0)^2}}`, which allows us to find</span>
+<span class="sd">    analytically the mapping function with</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        z(\chi) - z(\chi_0) =\int^\chi_{\chi_0} \frac{f(\chi&#39;)}{1-\chi&#39;^2}  d\chi&#39;.</span>
+
+<span class="sd">    The parameter :math:`a` can be adjusted to control the smoothness of the mapping</span>
+<span class="sd">    function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Grid3Scales.__init__">
+<a class="viewcode-back" href="../../modules/grid3Scales.html#WallGo.Grid3Scales.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">M</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">tailLengthInside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tailLengthOutside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">wallThickness</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">momentumFalloffT</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">ratioPointsWall</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">wallCenter</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">spacing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Spectral&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        M : int</span>
+<span class="sd">            Number of basis functions in the :math:`\xi` (and :math:`\chi`)</span>
+<span class="sd">            direction.</span>
+<span class="sd">        N : int</span>
+<span class="sd">            Number of basis functions in the :math:`p_z` and :math:`p_\Vert`</span>
+<span class="sd">            (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.</span>
+<span class="sd">        tailLengthInside : float</span>
+<span class="sd">            Decay length of the solution&#39;s tail inside the wall. Should be larger</span>
+<span class="sd">            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be</span>
+<span class="sd">            expressed in physical units (the units used in EffectivePotential).</span>
+<span class="sd">        tailLengthOutside : float</span>
+<span class="sd">            Decay length of the solution&#39;s tail outside the wall. Should be larger</span>
+<span class="sd">            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be</span>
+<span class="sd">            expressed in physical units (the units used in EffectivePotential).</span>
+<span class="sd">        wallThickness : float</span>
+<span class="sd">            Thickness of the wall. Should be expressed in physical units</span>
+<span class="sd">            (the units used in EffectivePotential).</span>
+<span class="sd">        momentumFalloffT : float</span>
+<span class="sd">            Temperature scale determining transform in momentum directions. </span>
+<span class="sd">            Should be close to the plasma temperature.</span>
+<span class="sd">        ratioPointsWall : float, optional</span>
+<span class="sd">            Ratio of grid points inside the wall. The remaining points are</span>
+<span class="sd">            distributed equally between the 2 tails. The default is 0.5.</span>
+<span class="sd">        smoothing : float, optional</span>
+<span class="sd">            Controls the smoothness of the mapping function. Its first derivative</span>
+<span class="sd">            becomes discontinuous at :math:`\chi=\pm r` when smoothness is 0.</span>
+<span class="sd">            Should be smaller than 1, otherwise the function would not be linear</span>
+<span class="sd">            at :math:`\chi=0` anymore. As explained above, the decay length is</span>
+<span class="sd">            controlled by adding 2 smoothed step functions. &#39;smoothing&#39; is the</span>
+<span class="sd">            value of these functions at the origin, in units of :math:`L/r`.</span>
+<span class="sd">            The default is 0.1.</span>
+<span class="sd">        wallCenter : float, optional</span>
+<span class="sd">            Position of the wall&#39;s center (in the z coordinates). Default is 0.</span>
+<span class="sd">        spacing : {&#39;Spectral&#39;, &#39;Uniform&#39;}</span>
+<span class="sd">            Choose &#39;Spectral&#39; for the Gauss-Lobatto collocation points, as</span>
+<span class="sd">            required for WallGo&#39;s spectral representation, or &#39;Uniform&#39; for</span>
+<span class="sd">            a uniform grid. Default is &#39;Spectral&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updateParameters</span><span class="p">(</span>
+            <span class="n">tailLengthInside</span><span class="p">,</span>
+            <span class="n">tailLengthOutside</span><span class="p">,</span>
+            <span class="n">wallThickness</span><span class="p">,</span>
+            <span class="n">ratioPointsWall</span><span class="p">,</span>
+            <span class="n">smoothing</span><span class="p">,</span>
+            <span class="n">wallCenter</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">wallThickness</span><span class="p">,</span> <span class="n">momentumFalloffT</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Grid3Scales.changePositionFalloffScale">
+<a class="viewcode-back" href="../../modules/grid3Scales.html#WallGo.Grid3Scales.changePositionFalloffScale">[docs]</a>
+    <span class="k">def</span> <span class="nf">changePositionFalloffScale</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tailLengthInside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tailLengthOutside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">wallThickness</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">wallCenter</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updateParameters</span><span class="p">(</span>
+            <span class="n">tailLengthInside</span><span class="p">,</span>
+            <span class="n">tailLengthOutside</span><span class="p">,</span>
+            <span class="n">wallThickness</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ratioPointsWall</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span><span class="p">,</span>
+            <span class="n">wallCenter</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cacheCoordinates</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_updateParameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tailLengthInside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">tailLengthOutside</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">wallThickness</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">ratioPointsWall</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">smoothing</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">wallCenter</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">wallThickness</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Grid3Scales error: wallThickness must be positive.&quot;</span>
+        <span class="k">assert</span> <span class="n">smoothing</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Grid3Scales error: smoothness must be positive.&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">tailLengthInside</span> <span class="o">&gt;</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">smoothing</span><span class="p">)</span> <span class="o">/</span> <span class="n">ratioPointsWall</span>
+        <span class="p">),</span> <span class="s2">&quot;&quot;&quot;Grid3Scales error: tailLengthInside must be greater than</span>
+<span class="s2">        wallThickness*(1+2*smoothness)/ratioPointsWall.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">tailLengthOutside</span> <span class="o">&gt;</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">smoothing</span><span class="p">)</span> <span class="o">/</span> <span class="n">ratioPointsWall</span>
+        <span class="p">),</span> <span class="s2">&quot;&quot;&quot;Grid3Scales error: tailLengthOutside must be greater than</span>
+<span class="s2">        wallThickness*(1+2*smoothness)/ratioPointsWall.&quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">ratioPointsWall</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">&quot;Grid3Scales error: ratioPointsWall must be between 0 and 1.&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthInside</span> <span class="o">=</span> <span class="n">tailLengthInside</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthOutside</span> <span class="o">=</span> <span class="n">tailLengthOutside</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wallThickness</span> <span class="o">=</span> <span class="n">wallThickness</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ratioPointsWall</span> <span class="o">=</span> <span class="n">ratioPointsWall</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">=</span> <span class="n">smoothing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wallCenter</span> <span class="o">=</span> <span class="n">wallCenter</span>
+
+        <span class="c1"># Defining parameters used in the mapping functions.</span>
+        <span class="c1"># These are set to insure that the smoothed step functions used to get</span>
+        <span class="c1"># the right decay length have a value of smoothing*L/ratioPointsWall</span>
+        <span class="c1"># at the origin.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aIn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="mi">4</span>
+            <span class="o">*</span> <span class="n">smoothing</span>
+            <span class="o">*</span> <span class="n">wallThickness</span>
+            <span class="o">*</span> <span class="n">ratioPointsWall</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">ratioPointsWall</span> <span class="o">*</span> <span class="n">tailLengthInside</span> <span class="o">-</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span>
+            <span class="n">ratioPointsWall</span> <span class="o">*</span> <span class="n">tailLengthInside</span> <span class="o">-</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">smoothing</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aOut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="mi">4</span>
+            <span class="o">*</span> <span class="n">smoothing</span>
+            <span class="o">*</span> <span class="n">wallThickness</span>
+            <span class="o">*</span> <span class="n">ratioPointsWall</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">*</span> <span class="p">(</span><span class="n">ratioPointsWall</span> <span class="o">*</span> <span class="n">tailLengthOutside</span> <span class="o">-</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">smoothing</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span>
+            <span class="n">ratioPointsWall</span> <span class="o">*</span> <span class="n">tailLengthOutside</span> <span class="o">-</span> <span class="n">wallThickness</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">smoothing</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Grid3Scales.decompactify">
+<a class="viewcode-back" href="../../modules/grid3Scales.html#WallGo.Grid3Scales.decompactify">[docs]</a>
+    <span class="k">def</span> <span class="nf">decompactify</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">zCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">pzCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">ppCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transforms coordinates from [-1, 1] interval (inverse of compactify).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wallThickness</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ratioPointsWall</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">tailIn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthInside</span>
+        <span class="n">tailOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthOutside</span>
+        <span class="n">aIn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aIn</span>
+        <span class="n">aOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aOut</span>
+
+        <span class="k">def</span> <span class="nf">term1</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">tailOut</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">r</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">term2</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">tailOut</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">r</span>
+            <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">term3</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">tailIn</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">r</span>
+            <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">term4</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">tailIn</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
+                <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="o">/</span> <span class="n">r</span>
+            <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">term5</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">tailIn</span> <span class="o">+</span> <span class="n">tailOut</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span> <span class="o">*</span> <span class="n">L</span> <span class="o">/</span> <span class="n">r</span><span class="p">)</span>
+                            <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">totalMapping</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">term1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">term2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">term3</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">term4</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">term5</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+             <span class="n">totalMapping</span><span class="p">(</span><span class="n">zCompact</span><span class="p">)</span> <span class="o">-</span> <span class="n">totalMapping</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.0</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">wallCenter</span><span class="p">)</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+              <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">pzCompact</span><span class="p">))</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="p">(</span> <span class="c1"># pylint: disable=invalid-name</span>
+              <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ppCompact</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">z</span><span class="p">,</span> <span class="n">pz</span><span class="p">,</span> <span class="n">pp</span></div>
+
+
+<div class="viewcode-block" id="Grid3Scales.compactificationDerivatives">
+<a class="viewcode-back" href="../../modules/grid3Scales.html#WallGo.Grid3Scales.compactificationDerivatives">[docs]</a>
+    <span class="k">def</span> <span class="nf">compactificationDerivatives</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">zCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">pzCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">ppCompact</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Derivative of transforms coordinates to [-1, 1] interval</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wallThickness</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ratioPointsWall</span> <span class="c1"># pylint: disable=invalid-name</span>
+        <span class="n">tailIn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthInside</span>
+        <span class="n">tailOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tailLengthOutside</span>
+        <span class="n">aIn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aIn</span>
+        <span class="n">aOut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aOut</span>
+
+        <span class="n">dzdzCompact</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">tailIn</span> <span class="o">-</span> <span class="n">L</span> <span class="o">/</span> <span class="n">r</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">zCompact</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aIn</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">zCompact</span> <span class="o">+</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">dzdzCompact</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">tailOut</span> <span class="o">-</span> <span class="n">L</span> <span class="o">/</span> <span class="n">r</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">zCompact</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aOut</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">zCompact</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="o">/</span> <span class="mi">2</span>
+        <span class="p">)</span>
+        <span class="n">dzdzCompact</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">smoothing</span><span class="p">)</span> <span class="o">*</span> <span class="n">L</span> <span class="o">/</span> <span class="n">r</span>
+        <span class="n">dzdzCompact</span> <span class="o">/=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">zCompact</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">dpzdpzCompact</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pzCompact</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">dppdppCompact</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentumFalloffT</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ppCompact</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dzdzCompact</span><span class="p">,</span> <span class="n">dpzdpzCompact</span><span class="p">,</span> <span class="n">dppdppCompact</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

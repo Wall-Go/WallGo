@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.containers &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.containers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.containers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data classes passed around WallGo</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.fields</span> <span class="kn">import</span> <span class="n">Fields</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">boostVelocity</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">Polynomial</span>
+
+
+<div class="viewcode-block" id="PhaseInfo">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.PhaseInfo">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">PhaseInfo</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Object describing coexisting phases.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">phaseLocation1</span><span class="p">:</span> <span class="n">Fields</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Field value of the starting phase.&quot;&quot;&quot;</span>
+
+    <span class="n">phaseLocation2</span><span class="p">:</span> <span class="n">Fields</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Field value of the ending phase.&quot;&quot;&quot;</span>
+
+    <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Temperature of transition.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="WallParams">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.WallParams">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">WallParams</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds wall widths and wall offsets for all fields</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">widths</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>  <span class="c1"># 1D array</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bubble wall widths in each field direction. Should be expressed in physical units</span>
+<span class="sd">    (the units used in EffectivePotential).&quot;&quot;&quot;</span>
+
+    <span class="n">offsets</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>  <span class="c1"># 1D array</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bubble wall offsets in each field direction.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">WallParams</span><span class="p">(</span>
+            <span class="n">widths</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">widths</span><span class="p">),</span> <span class="n">offsets</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">offsets</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">WallParams</span><span class="p">(</span>
+            <span class="n">widths</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">widths</span><span class="p">),</span> <span class="n">offsets</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">offsets</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">:</span>
+        <span class="c1">## does not work if other = WallParams type</span>
+        <span class="k">return</span> <span class="n">WallParams</span><span class="p">(</span><span class="n">widths</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">*</span> <span class="n">number</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span> <span class="o">*</span> <span class="n">number</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallParams&quot;</span><span class="p">:</span>
+        <span class="c1">## does not work if other = WallParams type</span>
+        <span class="k">return</span> <span class="n">WallParams</span><span class="p">(</span><span class="n">widths</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">/</span> <span class="n">number</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span> <span class="o">/</span> <span class="n">number</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BoltzmannBackground">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.BoltzmannBackground">[docs]</a>
+<span class="k">class</span> <span class="nc">BoltzmannBackground</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container for holding velocity, temperature and field backgrounds on which</span>
+<span class="sd">    out-of-equilibrium fluctuations live.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">velocityWall</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Bubble wall velocity.&quot;&quot;&quot;</span>
+
+    <span class="n">velocityMid</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The average between the asymptotic velocities inside and outside the bubble.&quot;&quot;&quot;</span>
+
+    <span class="n">velocityProfile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fluid velocity as a function of position.&quot;&quot;&quot;</span>
+
+    <span class="n">fieldProfiles</span><span class="p">:</span> <span class="n">Fields</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Field profile as a function of position.&quot;&quot;&quot;</span>
+
+    <span class="n">temperatureProfile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Temperarture profile as a function of position.&quot;&quot;&quot;</span>
+
+    <span class="n">polynomialBasis</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Type of polynomial basis used, e.g. Chebyshev, Cardinal.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BoltzmannBackground.__init__">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.BoltzmannBackground.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">velocityMid</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">velocityProfile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">fieldProfiles</span><span class="p">:</span> <span class="n">Fields</span><span class="p">,</span>
+        <span class="n">temperatureProfile</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">polynomialBasis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># assumes input is in the wall frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityWall</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityProfile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">velocityProfile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fieldProfiles</span> <span class="o">=</span> <span class="n">fieldProfiles</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">Fields</span><span class="p">)</span>  <span class="c1">## NEEDS to be Fields object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temperatureProfile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">temperatureProfile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polynomialBasis</span> <span class="o">=</span> <span class="n">polynomialBasis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityMid</span> <span class="o">=</span> <span class="n">velocityMid</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannBackground.boostToPlasmaFrame">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.BoltzmannBackground.boostToPlasmaFrame">[docs]</a>
+    <span class="k">def</span> <span class="nf">boostToPlasmaFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boosts background to the plasma frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityProfile</span> <span class="o">=</span> <span class="n">boostVelocity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">velocityProfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocityMid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityWall</span> <span class="o">=</span> <span class="n">boostVelocity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">velocityWall</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocityMid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoltzmannBackground.boostToWallFrame">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.BoltzmannBackground.boostToWallFrame">[docs]</a>
+    <span class="k">def</span> <span class="nf">boostToWallFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Boosts background to the wall frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityProfile</span> <span class="o">=</span> <span class="n">boostVelocity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">velocityProfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">velocityWall</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocityWall</span> <span class="o">=</span> <span class="mi">0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BoltzmannDeltas">
+<a class="viewcode-back" href="../../modules/containers.html#WallGo.containers.BoltzmannDeltas">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">BoltzmannDeltas</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrals of the out-of-equilibrium particle densities,</span>
+<span class="sd">    defined in equation (15) of arXiv:2204.13120.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Delta00</span><span class="p">:</span> <span class="n">Polynomial</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Relativistically invariant integral over :math:`\delta f`.&quot;&quot;&quot;</span>
+
+    <span class="n">Delta02</span><span class="p">:</span> <span class="n">Polynomial</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Relativistically invariant integral over</span>
+<span class="sd">    :math:`\mathcal{P}^2_\text{pl}\delta f`.&quot;&quot;&quot;</span>
+
+    <span class="n">Delta20</span><span class="p">:</span> <span class="n">Polynomial</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Relativistically invariant integral over</span>
+<span class="sd">    :math:`\mathcal{E}^2_\text{pl}\delta f`.&quot;&quot;&quot;</span>
+
+    <span class="n">Delta11</span><span class="p">:</span> <span class="n">Polynomial</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Relativistically invariant integral over</span>
+<span class="sd">    :math:`\mathcal{E}_\text{pl}\mathcal{P}_\text{pl}\delta f`.&quot;&quot;&quot;</span>
+
+    <span class="c1"># string literal type hints as class not defined yet</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply a BoltzmannDeltas object with a scalar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BoltzmannDeltas</span><span class="p">(</span>
+            <span class="n">Delta00</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta00</span><span class="p">,</span>
+            <span class="n">Delta02</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta02</span><span class="p">,</span>
+            <span class="n">Delta20</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta20</span><span class="p">,</span>
+            <span class="n">Delta11</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta11</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply a BoltzmannDeltas object with a scalar.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BoltzmannDeltas</span><span class="p">(</span>
+            <span class="n">Delta00</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta00</span><span class="p">,</span>
+            <span class="n">Delta02</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta02</span><span class="p">,</span>
+            <span class="n">Delta20</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta20</span><span class="p">,</span>
+            <span class="n">Delta11</span><span class="o">=</span><span class="n">number</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta11</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add two BoltzmannDeltas objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BoltzmannDeltas</span><span class="p">(</span>
+            <span class="n">Delta00</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">Delta00</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta00</span><span class="p">,</span>
+            <span class="n">Delta02</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">Delta02</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta02</span><span class="p">,</span>
+            <span class="n">Delta20</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">Delta20</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta20</span><span class="p">,</span>
+            <span class="n">Delta11</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">Delta11</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta11</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BoltzmannDeltas&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Substract two BoltzmannDeltas objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__add__</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

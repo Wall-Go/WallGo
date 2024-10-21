@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BoltzmannSolver &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CollisionArray" href="collisionArray.html" />
+    <link rel="prev" title="License" href="../license.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">BoltzmannSolver</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/boltzmann.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="boltzmannsolver">
+<h1>BoltzmannSolver<a class="headerlink" href="#boltzmannsolver" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.</span></span><span class="sig-name descname"><span class="pre">BoltzmannSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="grid.html#WallGo.Grid" title="WallGo.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">basisM</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Cardinal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basisN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Chebyshev'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Spectral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collisionMultiplier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver" title="Link to this definition"></a></dt>
+<dd><p>Class for solving Boltzmann equations for small deviations from equilibrium.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="grid.html#WallGo.Grid" title="WallGo.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">basisM</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Cardinal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basisN</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Chebyshev'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivatives</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Spectral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collisionMultiplier</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialisation of BoltzmannSolver</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> (<a class="reference internal" href="grid.html#WallGo.Grid" title="WallGo.Grid"><em>Grid</em></a>) -- An object of the Grid class.
+integrals.</p></li>
+<li><p><strong>basisM</strong> (<em>str</em><em>, </em><em>optional</em>) -- The position polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+Default is 'Cardinal'.</p></li>
+<li><p><strong>basisN</strong> (<em>str</em><em>, </em><em>optional</em>) -- The momentum polynomial basis type, either 'Cardinal' or 'Chebyshev'.
+Default is 'Chebyshev'.</p></li>
+<li><p><strong>derivatives</strong> (<em>{'Spectral'</em><em>, </em><em>'Finite Difference'}</em><em>, </em><em>optional</em>) -- Choice of method for computing derivatives. Default is 'Spectral'
+which is expected to be more accurate.</p></li>
+<li><p><strong>collisionMultiplier</strong> (<em>float</em><em>, </em><em>optional</em>) -- Factor by which the collision term is multiplied. Can be used for testing.
+Default is 1.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cls</strong> -- An object of the BoltzmannSolver class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#WallGo.BoltzmannSolver" title="WallGo.BoltzmannSolver">BoltzmannSolver</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.buildLinearEquations">
+<span class="sig-name descname"><span class="pre">buildLinearEquations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.buildLinearEquations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.buildLinearEquations" title="Link to this definition"></a></dt>
+<dd><p>Constructs matrix and source for Boltzmann equation.</p>
+<p>Note, we make extensive use of numpy's broadcasting rules.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.checkLinearization">
+<span class="sig-name descname"><span class="pre">checkLinearization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltaF</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.checkLinearization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.checkLinearization" title="Link to this definition"></a></dt>
+<dd><p>Compute two criteria to verify the validity of the linearization of the
+Boltzmann equation: <span class="math notranslate nohighlight">\(\delta f/f_{eq}\)</span> and <span class="math notranslate nohighlight">\(C[\delta f]/L[\delta f]\)</span>.
+To be valid, at least one of the two criteria must be small for each particle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>deltaF</strong> (<em>array-like</em><em>, </em><em>optional</em>) -- Solution of the Boltzmann equation. The default is None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>deltaFCriterion</strong> (<em>tuple</em>)</p></li>
+<li><p><strong>collCriterion</strong> (<em>tuple</em>) -- Criteria for the validity of the linearization.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.estimateTruncationError">
+<span class="sig-name descname"><span class="pre">estimateTruncationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltaF</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.estimateTruncationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.estimateTruncationError" title="Link to this definition"></a></dt>
+<dd><p>Quick estimate of the polynomial truncation error using
+John Boyd's Rule-of-thumb-2: the last coefficient of a Chebyshev
+polynomial expansion is the same order-of-magnitude as the truncation
+error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>deltaF</strong> (<em>array_like</em>) -- The solution for which to estimate the truncation error,
+a rank 3 array, with shape <code class="xref py py-data docutils literal notranslate"><span class="pre">(len(z),</span> <span class="pre">len(pz),</span> <span class="pre">len(pp))</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>truncationError</strong> -- Estimate of the relative trucation error.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.getDeltas">
+<span class="sig-name descname"><span class="pre">getDeltas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deltaF</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="results.html#WallGo.results.BoltzmannResults" title="WallGo.results.BoltzmannResults"><span class="pre">BoltzmannResults</span></a></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.getDeltas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.getDeltas" title="Link to this definition"></a></dt>
+<dd><p>Computes Deltas necessary for solving the Higgs equation of motion.</p>
+<p>These are defined in equation (15) of 2204.13120 <a class="reference internal" href="#lc22" id="id1"><span>[LC22]</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>deltaF</strong> (<em>array_like</em><em>, </em><em>optional</em>) -- The deviation of the distribution function from local thermal
+equilibrium.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Deltas</strong> -- Defined in equation (15) of <a class="reference internal" href="#lc22" id="id2"><span>[LC22]</span></a>. A collection of 4 arrays,
+each of which is of size <code class="xref py py-data docutils literal notranslate"><span class="pre">len(z)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannDeltas" title="WallGo.containers.BoltzmannDeltas">BoltzmannDeltas</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.loadCollisions">
+<span class="sig-name descname"><span class="pre">loadCollisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directoryPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.loadCollisions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.loadCollisions" title="Link to this definition"></a></dt>
+<dd><p>Loads collision files for use with the Boltzmann solver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>directoryPath</strong> (<em>pathlib.Path</em>) -- Directory containing the .hdf5 collision data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="exceptions.html#WallGo.exceptions.CollisionLoadError" title="WallGo.exceptions.CollisionLoadError"><strong>CollisionLoadError</strong></a> -- </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.setBackground">
+<span class="sig-name descname"><span class="pre">setBackground</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="containers.html#WallGo.containers.BoltzmannBackground" title="WallGo.containers.BoltzmannBackground"><span class="pre">BoltzmannBackground</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.setBackground"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.setBackground" title="Link to this definition"></a></dt>
+<dd><p>Setter for the BoltzmannBackground</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.setCollisionArray">
+<span class="sig-name descname"><span class="pre">setCollisionArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collisionArray</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="collisionArray.html#WallGo.collisionArray.CollisionArray" title="WallGo.collisionArray.CollisionArray"><span class="pre">CollisionArray</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.setCollisionArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.setCollisionArray" title="Link to this definition"></a></dt>
+<dd><p>Setter for the CollisionArray</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.solveBoltzmannEquations">
+<span class="sig-name descname"><span class="pre">solveBoltzmannEquations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.solveBoltzmannEquations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.solveBoltzmannEquations" title="Link to this definition"></a></dt>
+<dd><p>Solves Boltzmann equation for <span class="math notranslate nohighlight">\(\delta f\)</span>, equation (32) of [LC22].</p>
+<p>Equations are of the form</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{O}_{ijk,abc} \delta f_{abc} = \mathcal{S}_{ijk},\]</div>
+<p>where letters from the middle of the alphabet denote points on the
+coordinate lattice <span class="math notranslate nohighlight">\(\{\xi_i,p_{z,j},p_{\Vert,k}\}\)</span>, and letters
+from the beginning of the alphabet denote elements of the basis of
+spectral functions <span class="math notranslate nohighlight">\(\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delta_f</strong> -- The deviation from equilibrium, a rank 6 array, with shape
+<code class="xref py py-data docutils literal notranslate"><span class="pre">(len(z),</span> <span class="pre">len(pz),</span> <span class="pre">len(pp),</span> <span class="pre">len(z),</span> <span class="pre">len(pz),</span> <span class="pre">len(pp))</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>array_like</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="lc22" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>LC22<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>)</span>
+<p>B. Laurent and J. M. Cline, First principles determination
+of bubble wall velocity, Phys. Rev. D 106 (2022) no.2, 023501
+doi:10.1103/PhysRevD.106.023501</p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.BoltzmannSolver.updateParticleList">
+<span class="sig-name descname"><span class="pre">updateParticleList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offEqParticles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="particle.html#WallGo.Particle" title="WallGo.particle.Particle"><span class="pre">Particle</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/WallGo/boltzmann.html#BoltzmannSolver.updateParticleList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.BoltzmannSolver.updateParticleList" title="Link to this definition"></a></dt>
+<dd><p>Setter for the list of out-of-equilibrium Particle objects</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../license.html" class="btn btn-neutral float-left" title="License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="collisionArray.html" class="btn btn-neutral float-right" title="CollisionArray" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

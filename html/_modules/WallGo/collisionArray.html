@@ -1,0 +1,667 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.collisionArray &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.collisionArray</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.collisionArray</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for loading and storing the collision files used in boltzmann.py.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">codecs</span>  <span class="c1"># for decoding unicode string from hdf5 file</span>
+<span class="kn">import</span> <span class="nn">copy</span>  <span class="c1">## for deepcopy</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>  <span class="c1"># read/write hdf5 structured binary data file format</span>
+
+<span class="kn">from</span> <span class="nn">.particle</span> <span class="kn">import</span> <span class="n">Particle</span>
+<span class="kn">from</span> <span class="nn">.grid</span> <span class="kn">import</span> <span class="n">Grid</span>
+<span class="kn">from</span> <span class="nn">.polynomial</span> <span class="kn">import</span> <span class="n">Polynomial</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">CollisionLoadError</span>
+
+
+<div class="viewcode-block" id="CollisionArray">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray">[docs]</a>
+<span class="k">class</span> <span class="nc">CollisionArray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to load, transform, interpolate and hold the collision array</span>
+<span class="sd">    which is needed in :py:data:`WallGo.BoltzmannSolver`. Internally the collision array</span>
+<span class="sd">    is represented by a :py:data:`WallGo.Polynomial` object. Specifically, this</span>
+<span class="sd">    describes a rank-4 tensor :math:`C[P_k(p_{z}^{(i)}) P_l(p_{\parallel}^{(j)})]` where</span>
+<span class="sd">    the :math:`p` are momenta on the grid. Index ordering is hardcoded as: :math:`ijkl`.</span>
+<span class="sd">    Currently we have one CollisionArray object for each pair of off-equilibrium</span>
+<span class="sd">    particles.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">AXIS_TYPES</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pp&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Static axis types in correct order.&quot;&quot;&quot;</span>
+
+    <span class="n">AXIS_LABELS</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Final</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;particles&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pz&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;particles&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;polynomial1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;polynomial2&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Static axis labels in correct order, :math:`ijklmn`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CollisionArray.__init__">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">basisType</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">particles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Particle</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes a CollisionArray for a given grid and basis. Collision data will be</span>
+<span class="sd">        set to zero.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid : Grid</span>
+<span class="sd">            Grid object that the collision array lives on (non-owned).</span>
+<span class="sd">        basisType: str</span>
+<span class="sd">            Basis to use for the polynomials. Note that unlike in the</span>
+<span class="sd">            :py:data:`WallGo.Polynomial` class, our basis is just a string. We always</span>
+<span class="sd">            use `&quot;Cardinal&quot;` basis on momentum axes and `basisType` on polynomial axes.</span>
+<span class="sd">            We do NOT support different basis types for the two polynomials.</span>
+<span class="sd">        particles: list[Particle]</span>
+<span class="sd">            List of the :py:data:`WallGo.Particle` objects this collision array</span>
+<span class="sd">            describes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+
+        <span class="c1">## Our actual data size is N-1 in each direction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grid</span> <span class="o">=</span> <span class="n">grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basisType</span> <span class="o">=</span> <span class="n">basisType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">particles</span> <span class="o">=</span> <span class="n">particles</span>
+
+        <span class="c1">## Setup the actual collision data. We will use &quot;Cardinal&quot; basis on momentum</span>
+        <span class="c1">## axes and default to &quot;Chebyshev&quot; for polynomial axes.</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="n">basisType</span><span class="p">,</span> <span class="n">basisType</span><span class="p">)</span>
+
+        <span class="c1">## Default to zero but correct size</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polynomialData</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">AXIS_TYPES</span><span class="p">,</span> <span class="n">endpoints</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve the value at the specified key.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : int or slice</span>
+<span class="sd">            The index of the value to retrieve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or np.ndarray</span>
+<span class="sd">            The value at the specified key.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        IndexError</span>
+<span class="sd">            If the key is out of range.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">polynomialData</span><span class="o">.</span><span class="n">coefficients</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+<div class="viewcode-block" id="CollisionArray.getBasisSize">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.getBasisSize">[docs]</a>
+    <span class="k">def</span> <span class="nf">getBasisSize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the size of the basis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The size of the basis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span></div>
+
+
+<div class="viewcode-block" id="CollisionArray.getBasisType">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.getBasisType">[docs]</a>
+    <span class="k">def</span> <span class="nf">getBasisType</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the basis type of the CollisionArray.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The basis type of the CollisionArray.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisType</span></div>
+
+
+<div class="viewcode-block" id="CollisionArray.newFromPolynomial">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.newFromPolynomial">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">newFromPolynomial</span><span class="p">(</span>
+        <span class="n">inputPolynomial</span><span class="p">:</span> <span class="n">Polynomial</span><span class="p">,</span> <span class="n">particles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Particle</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CollisionArray&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new CollisionArray object from polynomial data (which contains a grid</span>
+<span class="sd">        reference). This only makes sense if the polynomial is already in correct shape.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputPolynomial : Polynomial</span>
+<span class="sd">            The input polynomial data.</span>
+<span class="sd">        particles : list[Particle]</span>
+<span class="sd">            The list of particles.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        &quot;CollisionArray&quot;</span>
+<span class="sd">            The newly created CollisionArray object.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If the input polynomial does not meet the required conditions.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="n">inputPolynomial</span><span class="o">.</span><span class="n">basis</span>
+
+        <span class="k">assert</span> <span class="n">inputPolynomial</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">6</span>
+        <span class="k">assert</span> <span class="n">bases</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Cardinal&quot;</span> <span class="ow">and</span> <span class="n">bases</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Cardinal&quot;</span>
+        <span class="k">assert</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Array&quot;</span> <span class="ow">and</span> <span class="n">bases</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Array&quot;</span>
+        <span class="k">assert</span> <span class="n">bases</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="n">bases</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1">## polynomial axes need to be in same basis</span>
+
+        <span class="n">basisType</span> <span class="o">=</span> <span class="n">bases</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="n">newCollision</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="p">(</span><span class="n">inputPolynomial</span><span class="o">.</span><span class="n">grid</span><span class="p">,</span> <span class="n">basisType</span><span class="p">,</span> <span class="n">particles</span><span class="p">)</span>
+        <span class="n">newCollision</span><span class="o">.</span><span class="n">polynomialData</span> <span class="o">=</span> <span class="n">inputPolynomial</span>
+        <span class="k">return</span> <span class="n">newCollision</span></div>
+
+
+    <span class="c1">## This will fail with assert or exception if something goes wrong.</span>
+    <span class="c1"># If we don&#39;t want to abort, consider denoting failure by return value instead</span>
+<div class="viewcode-block" id="CollisionArray.newFromDirectory">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.newFromDirectory">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">newFromDirectory</span><span class="p">(</span>
+        <span class="n">directoryPath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">grid</span><span class="p">:</span> <span class="n">Grid</span><span class="p">,</span>
+        <span class="n">basisType</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">particles</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Particle</span><span class="p">],</span>
+        <span class="n">bInterpolate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CollisionArray&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new CollisionArray object from a directory containing collision files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        collision : Collision</span>
+<span class="sd">            Collision class that holds path of the directory containing the collision</span>
+<span class="sd">            files. The collision files must have names with the form</span>
+<span class="sd">            &quot;collisions_particle1_particle2.hdf5&quot;.</span>
+<span class="sd">        grid : Grid</span>
+<span class="sd">            The grid object representing the computational grid.</span>
+<span class="sd">        basisType : str</span>
+<span class="sd">            The basis type for the CollisionArray object.</span>
+<span class="sd">        particles : list[Particle]</span>
+<span class="sd">            The list of particles involved in the collisions.</span>
+<span class="sd">        bInterpolate : bool, optional</span>
+<span class="sd">            Interpolate the data to match the grid size. Extrapolation is not possible.</span>
+<span class="sd">            Default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CollisionArray</span>
+<span class="sd">            The new CollisionArray object created from the collision files.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        CollisionLoadError</span>
+<span class="sd">            If any of the collision files are not found,</span>
+<span class="sd">            or if there is a grid size mismatch and bInterpolate is set to False.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">collisionFileArray</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+        <span class="n">basisSizeFile</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="n">basisTypeFile</span><span class="p">:</span> <span class="nb">str</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">particle1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">particles</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">particle2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">particles</span><span class="p">):</span>
+
+                <span class="c1"># file names are hardcoded</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">directoryPath</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;collisions_</span><span class="si">{</span><span class="n">particle1</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">particle2</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.hdf5&quot;</span>
+                <span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+
+                        <span class="n">metadata</span> <span class="o">=</span> <span class="n">file</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
+                        <span class="n">size</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;Basis Size&quot;</span><span class="p">]</span>
+
+                        <span class="k">if</span> <span class="n">grid</span><span class="o">.</span><span class="n">N</span> <span class="o">&gt;</span> <span class="n">size</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="n">CollisionLoadError</span><span class="p">(</span>
+                                <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Target collision grid size (</span><span class="si">{</span><span class="n">grid</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2">) must be smaller</span>
+<span class="s2">                                or equal to the grid size recorded in collision files (</span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">).</span>
+<span class="s2">                                &quot;&quot;&quot;</span>
+                            <span class="p">)</span>
+
+                        <span class="n">btype</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                            <span class="n">metadata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;Basis Type&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;unicode_escape&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+                        <span class="n">CollisionArray</span><span class="o">.</span><span class="n">_checkBasis</span><span class="p">(</span><span class="n">btype</span><span class="p">)</span>
+
+                        <span class="c1"># Dataset names are hardcoded, eg. &quot;top, top&quot;</span>
+                        <span class="n">datasetName</span> <span class="o">=</span> <span class="n">particle1</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="n">particle2</span><span class="o">.</span><span class="n">name</span>
+                        <span class="n">collisionDataset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="n">datasetName</span><span class="p">][:])</span>
+
+                        <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;collisionFileArray&quot;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">():</span>
+                            <span class="n">collisionFileArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                                <span class="p">(</span>
+                                    <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
+                                    <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                    <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                    <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
+                                    <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                    <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                <span class="p">)</span>
+                            <span class="p">)</span>
+                            <span class="n">basisSizeFile</span> <span class="o">=</span> <span class="n">size</span>
+                            <span class="n">basisTypeFile</span> <span class="o">=</span> <span class="n">btype</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="p">(</span>
+                                <span class="n">size</span> <span class="o">==</span> <span class="n">basisSizeFile</span>
+                            <span class="p">),</span> <span class="s2">&quot;&quot;&quot;CollisionArray error: All the collision files must</span>
+<span class="s2">                            have the same basis size.&quot;&quot;&quot;</span>
+                            <span class="k">assert</span> <span class="p">(</span>
+                                <span class="n">btype</span> <span class="o">==</span> <span class="n">basisTypeFile</span>
+                            <span class="p">),</span> <span class="s2">&quot;&quot;&quot;CollisionArray error: All the collision files must</span>
+<span class="s2">                            have the same basis type.&quot;&quot;&quot;</span>
+
+                        <span class="n">collisionFileArray</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">j</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">collisionDataset</span>
+                        
+                <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">CollisionLoadError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;CollisionArray error: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> not found.&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="n">collisionFileArray</span> <span class="o">=</span> <span class="n">collisionFileArray</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
+                <span class="n">basisSizeFile</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">basisSizeFile</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">particles</span><span class="p">),</span>
+                <span class="n">basisSizeFile</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">basisSizeFile</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;We want to compute Polynomial object from the loaded data and put it on the</span>
+<span class="sd">        input grid. This is straightforward if the grid size matches that of the data,</span>
+<span class="sd">        if not we either abort or attempt interpolation to smaller N. In latter case we</span>
+<span class="sd">        need a dummy grid of read size, create a dummy CollisionArray living on the</span>
+<span class="sd">        dummy grid, and finally downscale that. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">basisSizeFile</span> <span class="o">==</span> <span class="n">grid</span><span class="o">.</span><span class="n">N</span><span class="p">:</span>
+            <span class="n">polynomialData</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+                <span class="n">collisionFileArray</span><span class="p">,</span>
+                <span class="n">grid</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+                    <span class="n">basisTypeFile</span><span class="p">,</span>
+                    <span class="n">basisTypeFile</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">CollisionArray</span><span class="o">.</span><span class="n">AXIS_TYPES</span><span class="p">,</span>
+                <span class="n">endpoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">newCollision</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">newFromPolynomial</span><span class="p">(</span><span class="n">polynomialData</span><span class="p">,</span> <span class="n">particles</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">## Grid sizes don&#39;t match, attempt interpolation</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">bInterpolate</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CollisionLoadError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Grid size mismatch when loading collision directory: </span><span class="si">{</span><span class="n">directoryPath</span><span class="si">}</span><span class="s2">.</span>
+<span class="s2">                    Consider using bInterpolate=True in CollisionArray.loadFromFile().&quot;&quot;&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">dummyGrid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">M</span><span class="p">,</span>
+                <span class="n">basisSizeFile</span><span class="p">,</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">positionFalloff</span><span class="p">,</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">momentumFalloffT</span><span class="p">,</span>
+                <span class="n">grid</span><span class="o">.</span><span class="n">spacing</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">dummyPolynomial</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+                <span class="n">collisionFileArray</span><span class="p">,</span>
+                <span class="n">dummyGrid</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Array&quot;</span><span class="p">,</span>
+                    <span class="n">basisTypeFile</span><span class="p">,</span>
+                    <span class="n">basisTypeFile</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">CollisionArray</span><span class="o">.</span><span class="n">AXIS_TYPES</span><span class="p">,</span>
+                <span class="n">endpoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">dummyCollision</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">newFromPolynomial</span><span class="p">(</span>
+                <span class="n">dummyPolynomial</span><span class="p">,</span> <span class="n">particles</span>
+            <span class="p">)</span>
+            <span class="n">newCollision</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">interpolateCollisionArray</span><span class="p">(</span>
+                <span class="n">dummyCollision</span><span class="p">,</span> <span class="n">grid</span>
+            <span class="p">)</span>
+
+        <span class="c1">## Change to the requested basis</span>
+        <span class="k">return</span> <span class="n">newCollision</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">(</span><span class="n">basisType</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CollisionArray.changeBasis">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.changeBasis">[docs]</a>
+    <span class="k">def</span> <span class="nf">changeBasis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newBasisType</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CollisionArray&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the basis in our polynomial indices.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        newBasisType : str</span>
+<span class="sd">            The new basis type to be used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CollisionArray</span>
+<span class="sd">            The modified CollisionArray object.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            - Momentum indices always use the Cardinal basis.</span>
+<span class="sd">            - This method modifies the object in place.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basisType</span> <span class="o">==</span> <span class="n">newBasisType</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="n">CollisionArray</span><span class="o">.</span><span class="n">_checkBasis</span><span class="p">(</span><span class="n">newBasisType</span><span class="p">)</span>
+
+        <span class="c1"># NEEDS to take inverse transpose because of magic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">polynomialData</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">(</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="n">newBasisType</span><span class="p">,</span> <span class="n">newBasisType</span><span class="p">),</span>
+            <span class="n">inverseTranspose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basisType</span> <span class="o">=</span> <span class="n">newBasisType</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="CollisionArray.interpolateCollisionArray">
+<a class="viewcode-back" href="../../modules/collisionArray.html#WallGo.collisionArray.CollisionArray.interpolateCollisionArray">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">interpolateCollisionArray</span><span class="p">(</span>
+        <span class="n">srcCollision</span><span class="p">:</span> <span class="s2">&quot;CollisionArray&quot;</span><span class="p">,</span> <span class="n">targetGrid</span><span class="p">:</span> <span class="n">Grid</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CollisionArray&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interpolate collision array to match a target grid size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        srcCollision : CollisionArray</span>
+<span class="sd">            The source collision array to be interpolated.</span>
+<span class="sd">        targetGrid : Grid</span>
+<span class="sd">            The target grid to match the size of the interpolated collision array.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CollisionArray</span>
+<span class="sd">            The interpolated collision array.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If the target grid size is larger than or equal to the source grid size.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This function interpolates a collision array to match the size of a target grid.</span>
+<span class="sd">        It takes the source collision array and the target grid as input, and returns</span>
+<span class="sd">        the interpolated collision array.</span>
+
+<span class="sd">        The interpolation is performed by evaluating the original collisions on the</span>
+<span class="sd">        interpolated grid points. The resulting data is used to create a new polynomial,</span>
+<span class="sd">        which is then used to create a new CollisionArray object.</span>
+
+<span class="sd">        The source collision array must be in the Chebyshev basis for interpolation.</span>
+<span class="sd">        The target grid should have a size smaller than the source grid size.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; srcCollision = CollisionArray(...)</span>
+<span class="sd">        &gt;&gt;&gt; targetGrid = Grid(...)</span>
+<span class="sd">        &gt;&gt;&gt; interpolatedCollision = interpolateCollisionArray(srcCollision, targetGrid)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">&lt;=</span> <span class="n">srcCollision</span><span class="o">.</span><span class="n">getBasisSize</span><span class="p">()</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;CollisionArray interpolation error: target grid size (</span><span class="si">{</span><span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span><span class="si">}</span><span class="s2">)</span>
+<span class="s2">        must be smaller than or equal to the source grid size</span>
+<span class="s2">        (</span><span class="si">{</span><span class="n">srcCollision</span><span class="o">.</span><span class="n">getBasisSize</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">).&quot;&quot;&quot;</span>
+
+        <span class="c1">## Take deepcopy to avoid modifying the input</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">srcCollision</span><span class="p">)</span>
+
+        <span class="c1"># Source needs to be in the Chebyshev basis for interpolation</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">(</span><span class="s2">&quot;Chebyshev&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Generate a grid of points to give as input to Polynomial.evaluate.</span>
+        <span class="n">gridPoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">targetGrid</span><span class="o">.</span><span class="n">rzValues</span><span class="p">,</span> <span class="n">targetGrid</span><span class="o">.</span><span class="n">rpValues</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+        <span class="c1"># Evaluate the original collisions on the interpolated grid, create a new</span>
+        <span class="c1"># polynomial from the result and finally a new CollisionArray from the</span>
+        <span class="c1"># polynomial data</span>
+        <span class="n">newShape</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">particles</span><span class="p">),</span>
+            <span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">interpolatedData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">polynomialData</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">gridPoints</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))[</span>
+            <span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:</span> <span class="n">targetGrid</span><span class="o">.</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">newShape</span><span class="p">)</span>
+
+        <span class="n">interpolatedPolynomial</span> <span class="o">=</span> <span class="n">Polynomial</span><span class="p">(</span>
+            <span class="n">interpolatedData</span><span class="p">,</span>
+            <span class="n">targetGrid</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Array&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;pp&quot;</span><span class="p">),</span>
+            <span class="n">endpoints</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">newCollision</span> <span class="o">=</span> <span class="n">CollisionArray</span><span class="o">.</span><span class="n">newFromPolynomial</span><span class="p">(</span>
+            <span class="n">interpolatedPolynomial</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">particles</span>
+        <span class="p">)</span>
+
+        <span class="c1">## Change back to the original basis</span>
+        <span class="n">newCollision</span><span class="o">.</span><span class="n">changeBasis</span><span class="p">(</span><span class="n">srcCollision</span><span class="o">.</span><span class="n">getBasisType</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">newCollision</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_checkBasis</span><span class="p">(</span><span class="n">basis</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that basis is recognized.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        basis : str</span>
+<span class="sd">            The basis to be checked.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If the basis is unknown.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span> <span class="s2">&quot;Chebyshev&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;collisionarray error: unknown basis </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

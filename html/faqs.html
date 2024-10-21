@@ -1,0 +1,434 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQs &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contact" href="contact.html" />
+    <link rel="prev" title="Yukawa" href="examples/yukawa.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Collected examples</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">FAQs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/faqs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="faqs">
+<h1>FAQs<a class="headerlink" href="#faqs" title="Link to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#general" id="id2">General</a></p></li>
+<li><p><a class="reference internal" href="#installation" id="id3">Installation</a></p></li>
+<li><p><a class="reference internal" href="#matrix-elements" id="id4">Matrix elements</a></p></li>
+<li><p><a class="reference internal" href="#collision-integrals" id="id5">Collision integrals</a></p></li>
+<li><p><a class="reference internal" href="#creating-a-model-in-python" id="id6">Creating a model in Python</a></p>
+<ul>
+<li><p><a class="reference internal" href="#model-requirements" id="id7">Model requirements</a></p></li>
+<li><p><a class="reference internal" href="#effective-potentials" id="id8">Effective potentials</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#settings" id="id9">Settings</a></p></li>
+<li><p><a class="reference internal" href="#running-the-python-code" id="id10">Running the Python code</a></p>
+<ul>
+<li><p><a class="reference internal" href="#understanding-the-output" id="id11">Understanding the output</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-errors" id="id12">Warnings and errors</a></p></li>
+<li><p><a class="reference internal" href="#parallelisation" id="id13">Parallelisation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#bugs" id="id14">Bugs</a></p></li>
+</ul>
+</nav>
+<section id="general">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">General</a><a class="headerlink" href="#general" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>How should I cite WallGo?</strong></p>
+<blockquote>
+<div><p>WallGo is free and open source, but if you use WallGo in your work, we ask that you
+support us by please citing the WallGo paper, <cite>arXiv:2410.00000 &lt;https://arxiv.org/abs/2410.00000&gt;</cite>.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="installation">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Installation</a><a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>I can not install WallGo.</strong></p>
+<blockquote>
+<div><p>Please take a look at our <a class="reference internal" href="installation.html"><span class="doc">installation instructions</span></a>. If it doesn't
+work for you, feel free to <a class="reference internal" href="contact.html"><span class="doc">send us an email</span></a>.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="matrix-elements">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Matrix elements</a><a class="headerlink" href="#matrix-elements" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>I want to use a different set of matrix elements, is this possible?</strong></p>
+<blockquote>
+<div><p>Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].</p>
+</div></blockquote>
+</li>
+<li><dl class="simple">
+<dt><strong>Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?</strong></dt><dd><p>Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
+we used this to cross check our results. We have included an example in the repository
+for the <a class="reference external" href="https://github.com/Wall-Go/WallGoMatrix">WallGo MatrixElements package</a>. Take
+a look at <cite>tests/FeynCalc</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>I do not have a Mathematica license, can I still generate matrix elements?</strong></p>
+<blockquote>
+<div><p>[To do]</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="collision-integrals">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Collision integrals</a><a class="headerlink" href="#collision-integrals" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>Can I parallelize the computation of the collision terms?</strong></p>
+<blockquote>
+<div><p>Yes! If you have <a class="reference external" href="https://www.openmp.org/">OpenMP</a> installed, by default the collision
+code is compiled with parallelisation. This allows processors with shared memory to work
+in parallel, so can make use of the multiple processors on your computer, or use up to
+one node on a supercomputer. To choose the number of threads, you need to set an
+environment variable, as follows</p>
+<blockquote>
+<div><p>export OMP_NUM_THREADS=4</p>
+</div></blockquote>
+<p>Once done, if you then run the computation of the collision integrals, they will run with
+4 threads, which should speed up the computation by a factor of almost 4, if you have at
+least 4 physical cores.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Why doesn't the parallelisation work on my Mac?</strong></p>
+<blockquote>
+<div><p>Note that for Mac users, OpenMP can be a little more tricky to set up. We recommend using
+the Homebrew version, which requires an export statement to properly link,</p>
+<blockquote>
+<div><p>brew install libomp
+export OpenMP_ROOT=$(brew --prefix)/opt/libomp</p>
+</div></blockquote>
+<p>The second line can be added to your <cite>~/.zprofile</cite> or <cite>~/.zshrc</cite> file so that it is called
+every time you open a terminal.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Can I reuse the same collision integrals for different models/parameter choices?</strong></p>
+<blockquote>
+<div><p>Yes, as long as your new model/parameter choice has the same interaction strength,
+thermal masses (for the out-of-equilibrium particles) and momentum grid size as the model
+with which you obtained the collision integrals.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="creating-a-model-in-python">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Creating a model in Python</a><a class="headerlink" href="#creating-a-model-in-python" title="Link to this heading"></a></h2>
+<section id="model-requirements">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Model requirements</a><a class="headerlink" href="#model-requirements" title="Link to this heading"></a></h3>
+<ul>
+<li><p><strong>What is the parameter fieldCount?</strong></p>
+<blockquote>
+<div><p>This is the number of scalar background fields that your effective potential depends on and must be specified when
+subclassing EffectivePotential. It is used internally to reshape various helper arrays.</p>
+</div></blockquote>
+</li>
+<li><p><strong>What is the msqVacuum in the Particle definition?</strong></p>
+<blockquote>
+<div><p>This is the field-dependent, vacuum (zero temperature) mass squared. The size of this quantity affects the strength of the
+friction effect in the equation of motion of the scalar field, and the force that the particle feels from the wall.
+Note that this parameter needs to be of the type Fields. If the particle is in equilibrium the type does not matter, and it
+msqVacuum can simply be set to zero.</p>
+</div></blockquote>
+</li>
+<li><p><strong>What is the msqDerivative in the Particle definition?</strong></p>
+<blockquote>
+<div><p>This is the field-derivative of msqVacuum.
+Note that this parameter needs to be of the type Fields. If the particle is in equilibrium the type does not matter, and it
+msqVacuum can simply be set to zero.</p>
+</div></blockquote>
+</li>
+<li><p><strong>What is the msqThermal in the Particle defintion?</strong></p>
+<blockquote>
+<div><p>This is the (field-independent) thermal mass of the particle. It is used in the propagator in the matrix elements, and
+regularizes the IR-divergence in the limit of vanishing Mandelstam variables t and u.</p>
+</div></blockquote>
+</li>
+<li><p><strong>How do I cound the totalDOFs in the Particle definition?</strong></p>
+<blockquote>
+<div><p>totalDOFs counts the total number of degrees of freedom for a particle species. This includes summing over e.g. spins and colors.
+E.g. totalDOFs for the SM gluon would be 16. For a top quark with only SU(3) interactions totalDOFs would be 12,
+but if we distinguish left-handed and right-handed top quarks both would have totalDOFs = 6.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="effective-potentials">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Effective potentials</a><a class="headerlink" href="#effective-potentials" title="Link to this heading"></a></h3>
+<ul>
+<li><p><strong>How can I check if implemented my potential correctly?</strong></p>
+<blockquote>
+<div><p>Assuming that you know what the critical temperature of your model is, you could cross-check if
+WallGo gives you the same. The critical temperature is not computed by default, but can be obtained
+from WallGoManager.thermodynamics.findCriticalTemperature( dT, rTol, paranoid), where dT is the
+temperature step size, rTol the relative tolerance, and bool a setting for the phase tracing. The
+latter two arguments are optional.</p>
+<p>Another cross-check is the position of the minimum at the provided nucleation temperature.
+This can be checked with WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn),
+where phaseLocation is the approximate postion of the phase.</p>
+</div></blockquote>
+</li>
+<li><p><strong>I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?</strong></p>
+<blockquote>
+<div><p>WallGo has predefined methods to compute the fermionic and bosonic one-loop
+sum-integrals. It also has a default table of precomputed values. These are
+located in the sub-package called PotentialTools, and can be imported as</p>
+<blockquote>
+<div><p>from WallGo import PotentialTools</p>
+</div></blockquote>
+<p>For a model using PotentialTools see the singlet scalar extension example.</p>
+</div></blockquote>
+</li>
+<li><p><strong>My effective potential is complex, what should I do?</strong></p>
+<blockquote>
+<div><p>In a self-consistent calculation, the equations of motion for the scalar field/s
+should be real, and hence so the relevant effective potential should be real too.
+Yet, computations of the effective potential can yield complex values. The same issue arises in the context of the bubble nucleation rate, and can resolved using
+effective field theory. <a class="footnote-reference brackets" href="#footcite-gould-2021ccf" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
+<p>By default WallGo requires a real effective potential, so it is up to the user to ensure this. For the one-loop PotentialTools sub-package of WallGo gives four
+different options for how to remove unwanted imaginary parts, listed in the
+enum <code class="xref py py-class docutils literal notranslate"><span class="pre">WallGo.PotentialTools.EImaginaryOption</span></code>. See the docs for more
+details.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+</section>
+<section id="settings">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Settings</a><a class="headerlink" href="#settings" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>Can I choose any value for the grid size?</strong></p>
+<blockquote>
+<div><p>No! The momentum-grid size has to be an ODD number. It should also be a large
+enough. We have found that 11, 13, ..., 21 are often sufficient, but larger
+grid sizes are needed when the model has a hierarchy of scales to resolve.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="running-the-python-code">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Running the Python code</a><a class="headerlink" href="#running-the-python-code" title="Link to this heading"></a></h2>
+<section id="understanding-the-output">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Understanding the output</a><a class="headerlink" href="#understanding-the-output" title="Link to this heading"></a></h3>
+<ul>
+<li><p><strong>Why does WallGo return a wall velocity of 1?</strong></p>
+<blockquote>
+<div><p>You found a runaway wall. The included hydrodynamic backreaction and out-of-equilibrium friction effects are not sufficient
+to stop the wall from accelerating. Additional out-of-equilibrium particles might provide additional friction to obtain a
+static solution. Also note that a too small grid size could falsely suggest that the wall runs away. If the runaway behavior
+persists, your phase transition might be very strong. A proper computation of the wall velocity would require next-to-leading
+order contributions to the friction. These will be added to WallGo in the future.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Why does the hydrodynamic local thermal equilibrium velocity differ from the solution to the equation of motion?</strong></p>
+<blockquote>
+<div><p>The hydrodynamic solution in local thermal equilibrium and the solution to the equation of motion are not supposed to be
+exactly identical. The solution in the equation of motion relies on a Tanh-Ansatz. As a result, the equation of motion is
+not exactly satisfied, whereas the hydrodynamic solution is obtained under the assumption that this is the case.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Why does the template model give me a terminal wall velocity, but the full hydrodynamics and the equation of motion do not?</strong></p>
+<blockquote>
+<div><p>The template model is an approximation of the full equation of state: it assumes that the sound speed is everywhere constant,
+and equal to the value at the nucleation temperature. Moreover: the plasma does not have a maximum or minimum temperature
+in the template model. In the full equation of state, there could be a maximum/minimum temperature due to the finite range of
+existence of the phases. This could limit the hydrodynamic backreaction effect, and as a result no terminal velocity can be found.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="warnings-and-errors">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Warnings and errors</a><a class="headerlink" href="#warnings-and-errors" title="Link to this heading"></a></h3>
+<ul>
+<li><p><strong>Why does WallGo throw the error &quot;Failed to solve Jouguet velocity at input temperature!&quot;</strong></p>
+<blockquote>
+<div><p>WallGo can not solve the hydrodynamic matching condition to obtain the Jouguet velocity.
+Please check your effective potential, and confirm that the thermodynamic quantities are reasonable
+(alpha positive, the speeds of sound real and positive and the ratio of enthalpies smaller than 1).
+Make sure that the field-independent contributions are also included in the effective potential
+(e.g. the T^4 contribution from light fermions).
+Also make sure that you provided the WallGoManager with a temperature variation scale
+that was not too large, as this might prevent finding a correct tracing of (one of) the phases.</p>
+</div></blockquote>
+</li>
+<li><p><strong>Why do I get the warning &quot;Truncation error large, increase N or M&quot;?</strong></p>
+<blockquote>
+<div><p>The accuracy of the solution to the Boltzmann equation and equations of motion increases with the grid size.
+WallGo will throw the warning &quot;Truncation error large, increase N or M&quot; when the estimated error on the solution of
+the out-of-equilibirum is large. This happens when the truncation error (obtained with John Boyd's Rule-of-thumb-2) is larger
+than the finite-difference error <em>and</em> the truncation error is larger than the chosen error tolerance.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="parallelisation">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Parallelisation</a><a class="headerlink" href="#parallelisation" title="Link to this heading"></a></h3>
+<ul>
+<li><p><strong>I am running a scan. Can I parallelise the computation of the wall velocity with Python?</strong></p>
+<blockquote>
+<div><p>For a single parameter point, the Python part of WallGo does not parallelise
+simply. But, when running a scan, WallGo can be trivially parallelised, by sharing
+out the parameter points between processors.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+</section>
+<section id="bugs">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Bugs</a><a class="headerlink" href="#bugs" title="Link to this heading"></a></h2>
+<ul>
+<li><p><strong>I think I found a bug in WallGo, what can I do?</strong></p>
+<blockquote>
+<div><p>Please create an issue on our <a class="reference external" href="https://github.com/Wall-Go/WallGo/issues">GitHub Issues page</a>
+including sufficient detail that we can follow it up, ideally with a minimal
+example demonstrating the bug. Alternatively, <a class="reference internal" href="contact.html"><span class="doc">send us an email</span></a>
+and we will take a look at it. Please do check the FAQs and GitHub issues first,
+in case your bug has already been described.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="examples/yukawa.html" class="btn btn-neutral float-left" title="Yukawa" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="contact.html" class="btn btn-neutral float-right" title="Contact" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

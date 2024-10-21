@@ -1,0 +1,734 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Standard Model &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Singlet Scalar Extension" href="singletScalarExtension.html" />
+    <link rel="prev" title="Collected examples" href="../examples.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../firstExample.html">First example</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../examples.html">Collected examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Standard Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="singletScalarExtension.html">Singlet Scalar Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manySinglets.html">Many Singlet Scalars Extension</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inertDoubletModel.html">Two Higgs Doublet Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yukawa.html">Yukawa</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../examples.html">Collected examples</a></li>
+      <li class="breadcrumb-item active">Standard Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/standardModel.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="standard-model">
+<h1>Standard Model<a class="headerlink" href="#standard-model" title="Link to this heading"></a></h1>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python script, standardModel.py,</span>
+<span class="sd">implements the Standard Model, with a light Higgs mass.</span>
+<span class="sd">This model is ruled out by actual measurements of the Higgs mass, which</span>
+<span class="sd">show that it is 125 GeV, but this file can be used to compare with </span>
+<span class="sd">earlier computations performed in the literature.</span>
+
+<span class="sd">Features:</span>
+<span class="sd">- Definition of the standard model parameters.</span>
+<span class="sd">- Definition of the out-of-equilibrium particles, in our case the top and W-boson.</span>
+<span class="sd">- Implementation of the thermal potential, with high-T expansion.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">- This script is intended to compute the wall speed of the model.</span>
+
+<span class="sd">Dependencies:</span>
+<span class="sd">- NumPy for numerical calculations</span>
+<span class="sd">- the WallGo package</span>
+<span class="sd">- CollisionIntegrals in read-only mode using the default path for the collision</span>
+<span class="sd">integrals as the &quot;CollisonOutput&quot; directory</span>
+
+<span class="sd">Note:</span>
+<span class="sd">This benchmark is used to compare against the results of</span>
+<span class="sd">G. Moore and T. Prokopec, How fast can the wall move?</span>
+<span class="sd">A Study of the electroweak phase transition dynamics, Phys.Rev.D 52 (1995) 7182-7204</span>
+<span class="sd">doi:10.1103/PhysRevD.52.7182</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="c1"># WallGo imports</span>
+<span class="kn">import</span> <span class="nn">WallGo</span>  <span class="c1"># Whole package, in particular we get WallGo._initializeInternal()</span>
+<span class="kn">from</span> <span class="nn">WallGo</span> <span class="kn">import</span> <span class="n">EffectivePotential</span><span class="p">,</span> <span class="n">Fields</span><span class="p">,</span> <span class="n">GenericModel</span><span class="p">,</span> <span class="n">Particle</span>
+
+<span class="c1"># Add the Models folder to the path; need to import the base</span>
+<span class="c1"># example template</span>
+<span class="n">modelsBaseDir</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">modelsBaseDir</span><span class="p">))</span>
+
+<span class="kn">from</span> <span class="nn">wallGoExampleBase</span> <span class="kn">import</span> <span class="n">WallGoExampleBase</span>  <span class="c1"># pylint: disable=C0411, C0413, E0401</span>
+<span class="kn">from</span> <span class="nn">wallGoExampleBase</span> <span class="kn">import</span> <span class="n">ExampleInputPoint</span>  <span class="c1"># pylint: disable=C0411, C0413, E0401</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">WallGoCollision</span>
+
+
+<span class="k">class</span> <span class="nc">StandardModel</span><span class="p">(</span><span class="n">GenericModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Standard model, with a light Higgs mass, such that the</span>
+<span class="sd">    electroweak phase transition becomes fist order.</span>
+
+<span class="sd">    This class inherits from the GenericModel class and implements the necessary</span>
+<span class="sd">    methods for the WallGo package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the SM model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cls: StandardModel</span>
+<span class="sd">            An object of the StandardModel class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Initialize internal effective potential</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effectivePotential</span> <span class="o">=</span> <span class="n">EffectivePotentialSM</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1"># Create a list of particles relevant for the Boltzmann equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defineParticles</span><span class="p">()</span>
+
+        <span class="c1"># ~ GenericModel interface</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fieldCount</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;How many classical background fields&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">getEffectivePotential</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;EffectivePotentialSM&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">effectivePotential</span>
+
+    <span class="c1"># ~</span>
+
+    <span class="k">def</span> <span class="nf">defineParticles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the particles for the model.</span>
+<span class="sd">        Note that the particle list only needs to contain the</span>
+<span class="sd">        particles that are relevant for the Boltzmann equations.</span>
+<span class="sd">        The particles relevant to the effective potential are</span>
+<span class="sd">        included independently.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clearParticles</span><span class="p">()</span>
+
+        <span class="c1">## === Top quark ===</span>
+        <span class="c1"># The msqVacuum function of an out-of-equilibrium particle must take</span>
+        <span class="c1"># a Fields object and return an array of length equal to the number of</span>
+        <span class="c1"># points in fields.</span>
+        <span class="k">def</span> <span class="nf">topMsqVacuum</span><span class="p">(</span><span class="n">fields</span><span class="p">:</span> <span class="n">Fields</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fields</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;yt&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fields</span><span class="o">.</span><span class="n">getField</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+        <span class="c1"># The msqDerivative function of an out-of-equilibrium particle must take</span>
+        <span class="c1"># a Fields object and return an array with the same shape as fields.</span>
+        <span class="k">def</span> <span class="nf">topMsqDerivative</span><span class="p">(</span><span class="n">fields</span><span class="p">:</span> <span class="n">Fields</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fields</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;yt&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fields</span><span class="o">.</span><span class="n">getField</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">topMsqThermal</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g3&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">6.0</span>
+
+        <span class="n">topQuarkL</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TopL&quot;</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">msqVacuum</span><span class="o">=</span><span class="n">topMsqVacuum</span><span class="p">,</span>
+            <span class="n">msqDerivative</span><span class="o">=</span><span class="n">topMsqDerivative</span><span class="p">,</span>
+            <span class="n">msqThermal</span><span class="o">=</span><span class="n">topMsqThermal</span><span class="p">,</span>
+            <span class="n">statistics</span><span class="o">=</span><span class="s2">&quot;Fermion&quot;</span><span class="p">,</span>
+            <span class="n">totalDOFs</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParticle</span><span class="p">(</span><span class="n">topQuarkL</span><span class="p">)</span>
+
+        <span class="n">topQuarkR</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TopR&quot;</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">msqVacuum</span><span class="o">=</span><span class="n">topMsqVacuum</span><span class="p">,</span>
+            <span class="n">msqDerivative</span><span class="o">=</span><span class="n">topMsqDerivative</span><span class="p">,</span>
+            <span class="n">msqThermal</span><span class="o">=</span><span class="n">topMsqThermal</span><span class="p">,</span>
+            <span class="n">statistics</span><span class="o">=</span><span class="s2">&quot;Fermion&quot;</span><span class="p">,</span>
+            <span class="n">totalDOFs</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParticle</span><span class="p">(</span><span class="n">topQuarkR</span><span class="p">)</span>
+
+        <span class="c1">## === SU(2) gauge boson ===</span>
+        <span class="k">def</span> <span class="nf">WMsqVacuum</span><span class="p">(</span><span class="n">fields</span><span class="p">:</span> <span class="n">Fields</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fields</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fields</span><span class="o">.</span><span class="n">getField</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">4</span>
+
+        <span class="k">def</span> <span class="nf">WMsqDerivative</span><span class="p">(</span><span class="n">fields</span><span class="p">:</span> <span class="n">Fields</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fields</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">fields</span><span class="o">.</span><span class="n">getField</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="k">def</span> <span class="nf">WMsqThermal</span><span class="p">(</span><span class="n">T</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>  <span class="c1"># pylint: disable=invalid-name</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">11.0</span> <span class="o">/</span> <span class="mf">6.0</span>
+
+        <span class="n">wBoson</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">msqVacuum</span><span class="o">=</span><span class="n">WMsqVacuum</span><span class="p">,</span>
+            <span class="n">msqDerivative</span><span class="o">=</span><span class="n">WMsqDerivative</span><span class="p">,</span>
+            <span class="n">msqThermal</span><span class="o">=</span><span class="n">WMsqThermal</span><span class="p">,</span>
+            <span class="n">statistics</span><span class="o">=</span><span class="s2">&quot;Boson&quot;</span><span class="p">,</span>
+            <span class="n">totalDOFs</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParticle</span><span class="p">(</span><span class="n">wBoson</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calculateLagrangianParameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputParameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the model parameters based on the input parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputParameters: dict[str, float]</span>
+<span class="sd">            A dictionary of input parameters for the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        modelParameters: dict[str, float]</span>
+<span class="sd">            A dictionary of calculated model parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">modelParameters</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Zero-temperature vev</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v0</span>
+
+        <span class="c1"># Zero-temperature masses</span>
+        <span class="n">massH</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;mH&quot;</span><span class="p">]</span>
+        <span class="n">massW</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;mW&quot;</span><span class="p">]</span>
+        <span class="n">massZ</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;mZ&quot;</span><span class="p">]</span>
+        <span class="n">massT</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;mt&quot;</span><span class="p">]</span>
+
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mW&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">massW</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mZ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">massZ</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">massT</span>
+
+        <span class="c1"># helper</span>
+        <span class="n">g0</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">massW</span> <span class="o">/</span> <span class="n">v0</span>
+
+        <span class="c1"># Gauge couplings</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">massZ</span> <span class="o">/</span> <span class="n">massW</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g0</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g3&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;g3&quot;</span><span class="p">]</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;yt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">g0</span> <span class="o">*</span> <span class="n">massT</span> <span class="o">/</span> <span class="n">massW</span>
+
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;lambda&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputParameters</span><span class="p">[</span><span class="s2">&quot;mH&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># The following parameters are defined on page 6 of hep-ph/9506475</span>
+        <span class="n">bconst</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">/</span> <span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v0</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">massW</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">massZ</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">massT</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">8</span> <span class="o">*</span> <span class="n">v0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">massW</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">massZ</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">massT</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;E0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">v0</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">massW</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">massZ</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;T0sq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">/</span> <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">massH</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">bconst</span> <span class="o">*</span> <span class="n">v0</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;C0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.42</span> <span class="o">*</span> <span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">modelParameters</span>
+
+    <span class="k">def</span> <span class="nf">updateModel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newInputParams</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes new Lagrangian parameters from given input and caches</span>
+<span class="sd">        them internally. These changes automatically propagate to the associated</span>
+<span class="sd">        EffectivePotential, particle masses etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">newParams</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateLagrangianParameters</span><span class="p">(</span><span class="n">newInputParams</span><span class="p">)</span>
+        <span class="c1"># Copy to the model dict, do NOT replace the reference.</span>
+        <span class="c1"># This way the changes propagate to Veff and particles</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">newParams</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">EffectivePotentialSM</span><span class="p">(</span><span class="n">EffectivePotential</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Effective potential for the Standard Model.</span>
+
+<span class="sd">    This class inherits from the EffectivePotential class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># ~ EffectivePotential interface</span>
+    <span class="n">fieldCount</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;How many classical background fields&quot;&quot;&quot;</span>
+
+    <span class="n">effectivePotentialError</span> <span class="o">=</span> <span class="mf">1e-15</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Relative accuracy at which the potential can be computed. Here the potential is</span>
+<span class="sd">    polynomial so we can set it to the machine precision.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owningModel</span><span class="p">:</span> <span class="n">StandardModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the EffectivePotentialSM.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">owningModel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Invalid model passed to Veff&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owningModel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">modelParameters</span>
+
+        <span class="c1"># Count particle degrees-of-freedom to facilitate inclusion of</span>
+        <span class="c1"># light particle contributions to ideal gas pressure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numBosonDof</span> <span class="o">=</span> <span class="mi">28</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numFermionDof</span> <span class="o">=</span> <span class="mi">90</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>  <span class="c1"># pylint: disable=R0914</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="n">Fields</span><span class="p">,</span>
+        <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the effective potential. We implement the effective potential</span>
+<span class="sd">        of eq. (7) of hep-ph/9506475.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fields: Fields</span>
+<span class="sd">            The field configuration</span>
+<span class="sd">        temperature: float</span>
+<span class="sd">            The temperature</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        potentialTotal: complex | np.ndarray</span>
+<span class="sd">            The value of the effective potential</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># phi ~ 1/sqrt(2) (0, v)</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">Fields</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">fields</span><span class="o">.</span><span class="n">getField</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0000001</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">+</span> <span class="mf">0.0000001</span>
+
+        <span class="n">ab</span> <span class="o">=</span> <span class="mf">49.78019250</span>
+        <span class="n">af</span> <span class="o">=</span> <span class="mf">3.111262032</span>
+
+        <span class="n">mW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mW&quot;</span><span class="p">]</span>
+        <span class="n">mZ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mZ&quot;</span><span class="p">]</span>
+        <span class="n">mt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;mt&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Implement finite-temperature corrections to the modelParameters lambda,</span>
+        <span class="c1"># C0 and E0, as on page 6 and 7 of hep-ph/9506475.</span>
+        <span class="n">lambdaT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;lambda&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="mi">16</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">4</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="mi">2</span> <span class="o">*</span> <span class="n">mW</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mW</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">ab</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-100</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">mZ</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mZ</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">ab</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-100</span><span class="p">)</span>
+            <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">mt</span><span class="o">**</span><span class="mi">4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mt</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">af</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-100</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">cT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;C0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="mi">16</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mf">4.8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">lambdaT</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">lambdaT</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># HACK: take the absolute value of lambdaT here,</span>
+        <span class="c1"># to avoid taking the square root of a negative number</span>
+        <span class="n">eT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;E0&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">12</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">3</span><span class="o">**</span><span class="mf">1.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lambdaT</span><span class="p">)</span> <span class="o">**</span> <span class="mf">1.5</span>
+        <span class="p">)</span>
+
+        <span class="n">potentialT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;D&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;T0sq&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span>
+            <span class="o">-</span> <span class="n">cT</span> <span class="o">*</span> <span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span> <span class="o">/</span> <span class="n">T</span><span class="p">))</span>
+            <span class="o">-</span> <span class="n">eT</span> <span class="o">*</span> <span class="n">T</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="o">+</span> <span class="n">lambdaT</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">potentialTotal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">potentialT</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">constantTerms</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">potentialTotal</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">constantTerms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Need to explicitly compute field-independent but T-dependent parts</span>
+<span class="sd">        that we don&#39;t already get from field-dependent loops. At leading order in high-T</span>
+<span class="sd">        expansion these are just (minus) the ideal gas pressure of light particles that</span>
+<span class="sd">        were not integrated over in the one-loop part.</span>
+
+<span class="sd">        See Eq. (39) in hep-ph/0510375 for general LO formula</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature: array-like (float)</span>
+<span class="sd">            The temperature</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constantTerms: array-like (float)</span>
+<span class="sd">            The value of the field-independent contribution to the effective potential</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># How many degrees of freedom we have left. The number of DOFs</span>
+        <span class="c1"># that were included in evaluate() is hardcoded</span>
+        <span class="n">dofsBoson</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numBosonDof</span>
+        <span class="n">dofsFermion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numFermionDof</span>
+
+        <span class="c1"># Fermions contribute with a magic 7/8 prefactor as usual. Overall minus</span>
+        <span class="c1"># sign since Veff(min) = -pressure</span>
+        <span class="k">return</span> <span class="o">-</span><span class="p">(</span><span class="n">dofsBoson</span> <span class="o">+</span> <span class="mf">7.0</span> <span class="o">/</span> <span class="mf">8.0</span> <span class="o">*</span> <span class="n">dofsFermion</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">temperature</span><span class="o">**</span><span class="mi">4</span> <span class="o">/</span> <span class="mf">90.0</span>
+
+
+<span class="k">class</span> <span class="nc">StandardModelExample</span><span class="p">(</span><span class="n">WallGoExampleBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets up the standard model, computes or loads the collision</span>
+<span class="sd">    integrals, and computes the wall velocity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bShouldRecalculateMatrixElements</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bShouldRecalculateCollisions</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrixElementFile</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exampleBaseDirectory</span> <span class="o">/</span> <span class="s2">&quot;MatrixElements/matrixElements.ew.json&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ~ Begin WallGoExampleBase interface</span>
+
+    <span class="k">def</span> <span class="nf">getDefaultCollisionDirectory</span><span class="p">(</span> <span class="c1"># pylint: disable = W0246</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">momentumGridSize</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the path to the directory with collisions. Does not</span>
+<span class="sd">        have to be overwritten for this example, but included for completeness&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">getDefaultCollisionDirectory</span><span class="p">(</span><span class="n">momentumGridSize</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">initWallGoModel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallGo.GenericModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the model. This should run after cmdline argument parsing</span>
+<span class="sd">        so safe to use them here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">StandardModel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">initCollisionModel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">wallGoModel</span><span class="p">:</span> <span class="s2">&quot;StandardModel&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WallGoCollision.PhysicsModel&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Collision model and set the seed.&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">WallGoCollision</span>  <span class="c1"># pylint: disable = C0415</span>
+
+        <span class="c1"># This example comes with a very explicit example function on how to setup and</span>
+        <span class="c1"># configure the collision module. It is located in a separate module</span>
+        <span class="c1"># (same directory) to avoid bloating this file. Import and use it here.</span>
+        <span class="kn">from</span> <span class="nn">exampleCollisionDefs</span> <span class="kn">import</span> <span class="p">(</span>  <span class="c1"># pylint: disable = W0246</span>
+            <span class="n">setupCollisionModel_QCDEW</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># pylint: disable = C0415</span>
+
+        <span class="n">collisionModel</span> <span class="o">=</span> <span class="n">setupCollisionModel_QCDEW</span><span class="p">(</span>
+            <span class="n">wallGoModel</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">collisionModel</span>
+
+    <span class="k">def</span> <span class="nf">updateCollisionModel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inWallGoModel</span><span class="p">:</span> <span class="s2">&quot;StandardModel&quot;</span><span class="p">,</span>
+        <span class="n">inOutCollisionModel</span><span class="p">:</span> <span class="s2">&quot;WallGoCollision.PhysicsModel&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Propagate changes in WallGo model to the collision model.&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">WallGoCollision</span>  <span class="c1"># pylint: disable = C0415</span>
+
+        <span class="n">changedParams</span> <span class="o">=</span> <span class="n">WallGoCollision</span><span class="o">.</span><span class="n">ModelParameters</span><span class="p">()</span>
+
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">inWallGoModel</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g3&quot;</span><span class="p">]</span>  <span class="c1"># names differ for historical reasons</span>
+        <span class="n">gw</span> <span class="o">=</span> <span class="n">inWallGoModel</span><span class="o">.</span><span class="n">modelParameters</span><span class="p">[</span><span class="s2">&quot;g2&quot;</span><span class="p">]</span>  <span class="c1"># names differ for historical reasons</span>
+        <span class="n">changedParams</span><span class="o">.</span><span class="n">addOrModifyParameter</span><span class="p">(</span><span class="s2">&quot;gs&quot;</span><span class="p">,</span> <span class="n">gs</span><span class="p">)</span>
+        <span class="n">changedParams</span><span class="o">.</span><span class="n">addOrModifyParameter</span><span class="p">(</span><span class="s2">&quot;gw&quot;</span><span class="p">,</span> <span class="n">gw</span><span class="p">)</span>
+        <span class="n">changedParams</span><span class="o">.</span><span class="n">addOrModifyParameter</span><span class="p">(</span>
+            <span class="s2">&quot;mq2&quot;</span><span class="p">,</span> <span class="n">gs</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">6.0</span>
+        <span class="p">)</span>  <span class="c1"># quark thermal mass^2 in units of T</span>
+        <span class="n">changedParams</span><span class="o">.</span><span class="n">addOrModifyParameter</span><span class="p">(</span>
+            <span class="s2">&quot;mg2&quot;</span><span class="p">,</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">gs</span><span class="o">**</span><span class="mi">2</span>
+        <span class="p">)</span>  <span class="c1"># gluon thermal mass^2 in units of T</span>
+        <span class="n">changedParams</span><span class="o">.</span><span class="n">addOrModifyParameter</span><span class="p">(</span>
+            <span class="s2">&quot;mw2&quot;</span><span class="p">,</span> <span class="mf">11.0</span> <span class="o">*</span> <span class="n">gw</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">6.0</span>
+        <span class="p">)</span>  <span class="c1"># W boson thermal mass^2 in units of T</span>
+
+        <span class="n">inOutCollisionModel</span><span class="o">.</span><span class="n">updateParameters</span><span class="p">(</span><span class="n">changedParams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">configureCollisionIntegration</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inOutCollisionTensor</span><span class="p">:</span> <span class="s2">&quot;WallGoCollision.CollisionTensor&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Non-abstract override&quot;&quot;&quot;</span>
+
+        <span class="kn">import</span> <span class="nn">WallGoCollision</span>  <span class="c1"># pylint: disable = C0415</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure the integrator. Default settings should be reasonably OK so</span>
+<span class="sd">        you can modify only what you need, or skip this step entirely. Here we</span>
+<span class="sd">        set everything manually to show how it&#39;s done.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">integrationOptions</span> <span class="o">=</span> <span class="n">WallGoCollision</span><span class="o">.</span><span class="n">IntegrationOptions</span><span class="p">()</span>
+        <span class="n">integrationOptions</span><span class="o">.</span><span class="n">calls</span> <span class="o">=</span> <span class="mi">50000</span>
+        <span class="n">integrationOptions</span><span class="o">.</span><span class="n">maxTries</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="c1"># collision integration momentum goes from 0 to maxIntegrationMomentum.</span>
+        <span class="c1"># This is in units of temperature</span>
+        <span class="n">integrationOptions</span><span class="o">.</span><span class="n">maxIntegrationMomentum</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="n">integrationOptions</span><span class="o">.</span><span class="n">absoluteErrorGoal</span> <span class="o">=</span> <span class="mf">1e-5</span>
+        <span class="n">integrationOptions</span><span class="o">.</span><span class="n">relativeErrorGoal</span> <span class="o">=</span> <span class="mf">1e-1</span>
+
+        <span class="n">inOutCollisionTensor</span><span class="o">.</span><span class="n">setIntegrationOptions</span><span class="p">(</span><span class="n">integrationOptions</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;We can also configure various verbosity settings that are useful when you</span>
+<span class="sd">        want to see what is going on in long-running integrations. These include </span>
+<span class="sd">        progress reporting and time estimates, as well as a full result dump of each</span>
+<span class="sd">        individual integral to stdout. By default these are all disabled. </span>
+<span class="sd">        Here we enable some for demonstration purposes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">verbosity</span> <span class="o">=</span> <span class="n">WallGoCollision</span><span class="o">.</span><span class="n">CollisionTensorVerbosity</span><span class="p">()</span>
+        <span class="n">verbosity</span><span class="o">.</span><span class="n">bPrintElapsedTime</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">True</span>  <span class="c1"># report total time when finished with all integrals</span>
+        <span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Progress report when this percentage of total integrals (approximately) have</span>
+<span class="sd">        been computed. Note that this percentage is per-particle-pair, ie. each</span>
+<span class="sd">        (particle1, particle2) pair reports when this percentage of their own integrals</span>
+<span class="sd">        is done. Note also that in multithreaded runs the progress tracking is less </span>
+<span class="sd">        precise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">verbosity</span><span class="o">.</span><span class="n">progressReportPercentage</span> <span class="o">=</span> <span class="mf">0.25</span>
+
+        <span class="c1"># Print every integral result to stdout? This is very slow and verbose,</span>
+        <span class="c1"># intended only for debugging purposes</span>
+        <span class="n">verbosity</span><span class="o">.</span><span class="n">bPrintEveryElement</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="n">inOutCollisionTensor</span><span class="o">.</span><span class="n">setIntegrationVerbosity</span><span class="p">(</span><span class="n">verbosity</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">configureManager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inOutManager</span><span class="p">:</span> <span class="s2">&quot;WallGo.WallGoManager&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inOutManager</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">loadConfigFromFile</span><span class="p">(</span>
+            <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exampleBaseDirectory</span> <span class="o">/</span> <span class="s2">&quot;standardModelConfig.ini&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">configureManager</span><span class="p">(</span><span class="n">inOutManager</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">updateModelParameters</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;StandardModel&quot;</span><span class="p">,</span> <span class="n">inputParameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert SM inputs to Lagrangian params and update internal model parameters.</span>
+<span class="sd">        This example is constructed so that the effective potential and particle mass</span>
+<span class="sd">        functions refer to model.modelParameters, so be careful not to replace that</span>
+<span class="sd">        reference here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># oldParams = model.modelParameters.copy()</span>
+        
+        <span class="n">model</span><span class="o">.</span><span class="n">updateModel</span><span class="p">(</span><span class="n">inputParameters</span><span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collisions integrals for this example depend on the QCD and Electroweak</span>
+<span class="sd">        coupling, so if these change we should mark the collision data as outdated</span>
+<span class="sd">        by setting self.bNeedsNewCollisions = True. But since we want to keep</span>
+<span class="sd">        the example simple, we skip this check and assume the existing data is OK.</span>
+<span class="sd">        (FIXME?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bNeedsNewCollisions</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># pylint: disable = W0201</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        if (</span>
+<span class="sd">            not oldParams</span>
+<span class="sd">            or newParams[&quot;g3&quot;] != oldParams[&quot;g3&quot;]</span>
+<span class="sd">            or newParams[&quot;g2&quot;] != oldParams[&quot;g2&quot;]</span>
+<span class="sd">        ):</span>
+<span class="sd">            self.bNeedsNewCollisions = True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">getBenchmarkPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ExampleInputPoint</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Input parameters, phase info, and settings for the effective potential and</span>
+<span class="sd">        wall solver for the standard model benchmark points, with different values</span>
+<span class="sd">        of the Higgs mass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">valuesMH</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">34.0</span><span class="p">,</span> <span class="mf">50.0</span><span class="p">,</span> <span class="mf">70.0</span><span class="p">,</span> <span class="mf">81.0</span><span class="p">]</span>
+        <span class="n">valuesTn</span> <span class="o">=</span> <span class="p">[</span><span class="mf">57.192</span><span class="p">,</span> <span class="mf">70.579</span><span class="p">,</span> <span class="mf">83.426</span><span class="p">,</span> <span class="mf">102.344</span><span class="p">,</span> <span class="mf">113.575</span><span class="p">]</span>
+
+        <span class="n">output</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ExampleInputPoint</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valuesMH</span><span class="p">)):</span>  <span class="c1"># pylint: disable=C0200</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">ExampleInputPoint</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;v0&quot;</span><span class="p">:</span> <span class="mf">246.0</span><span class="p">,</span>
+                        <span class="s2">&quot;mW&quot;</span><span class="p">:</span> <span class="mf">80.4</span><span class="p">,</span>
+                        <span class="s2">&quot;mZ&quot;</span><span class="p">:</span> <span class="mf">91.2</span><span class="p">,</span>
+                        <span class="s2">&quot;mt&quot;</span><span class="p">:</span> <span class="mf">174.0</span><span class="p">,</span>
+                        <span class="s2">&quot;g3&quot;</span><span class="p">:</span> <span class="mf">1.2279920495357861</span><span class="p">,</span>
+                        <span class="s2">&quot;mH&quot;</span><span class="p">:</span> <span class="n">valuesMH</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="p">},</span>
+                    <span class="n">WallGo</span><span class="o">.</span><span class="n">PhaseInfo</span><span class="p">(</span>
+                        <span class="n">temperature</span><span class="o">=</span><span class="n">valuesTn</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="n">phaseLocation1</span><span class="o">=</span><span class="n">WallGo</span><span class="o">.</span><span class="n">Fields</span><span class="p">([</span><span class="mf">0.0</span><span class="p">]),</span>
+                        <span class="n">phaseLocation2</span><span class="o">=</span><span class="n">WallGo</span><span class="o">.</span><span class="n">Fields</span><span class="p">([</span><span class="n">valuesTn</span><span class="p">[</span><span class="n">i</span><span class="p">]]),</span>
+                    <span class="p">),</span>
+                    <span class="n">WallGo</span><span class="o">.</span><span class="n">VeffDerivativeSettings</span><span class="p">(</span>
+                        <span class="n">temperatureVariationScale</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">fieldValueVariationScale</span><span class="o">=</span><span class="p">[</span><span class="mf">50.0</span><span class="p">]</span>
+                    <span class="p">),</span>
+                    <span class="n">WallGo</span><span class="o">.</span><span class="n">WallSolverSettings</span><span class="p">(</span>
+                        <span class="c1"># we actually do both cases in the common example</span>
+                        <span class="n">bIncludeOffEquilibrium</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">meanFreePathScale</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="c1"># In units of 1/Tnucl</span>
+                        <span class="n">wallThicknessGuess</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="c1"># In units of 1/Tnucl</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="c1"># ~ End WallGoExampleBase interface</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="n">example</span> <span class="o">=</span> <span class="n">StandardModelExample</span><span class="p">()</span>
+    <span class="n">example</span><span class="o">.</span><span class="n">runExample</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../examples.html" class="btn btn-neutral float-left" title="Collected examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="singletScalarExtension.html" class="btn btn-neutral float-right" title="Singlet Scalar Extension" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

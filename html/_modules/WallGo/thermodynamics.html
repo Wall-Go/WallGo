@@ -1,0 +1,847 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.thermodynamics &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.thermodynamics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.thermodynamics</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes that contain thermodynamics quantities like pressure, enthalpy, energy density </span>
+<span class="sd">for both phases</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.optimize</span>
+
+<span class="kn">from</span> <span class="nn">.effectivePotential</span> <span class="kn">import</span> <span class="n">EffectivePotential</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">WallGoError</span>
+<span class="kn">from</span> <span class="nn">.fields</span> <span class="kn">import</span> <span class="n">Fields</span>
+<span class="kn">from</span> <span class="nn">.freeEnergy</span> <span class="kn">import</span> <span class="n">FreeEnergy</span>
+
+
+<div class="viewcode-block" id="Thermodynamics">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics">[docs]</a>
+<span class="k">class</span> <span class="nc">Thermodynamics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Thermodynamic functions corresponding to the effective potential.</span>
+
+<span class="sd">    All functions can be run outside of the temperature range where the phases</span>
+<span class="sd">    exist if the minimum and maximum temperatures of the phases are known</span>
+<span class="sd">    (these are obtained by FreeEnergy.tracePhase()) and self.setExtrapolate has</span>
+<span class="sd">    been run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Thermodynamics.__init__">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">effectivePotential</span><span class="p">:</span> <span class="n">EffectivePotential</span><span class="p">,</span>
+        <span class="n">nucleationTemperature</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">phaseLowT</span><span class="p">:</span> <span class="n">Fields</span><span class="p">,</span>
+        <span class="n">phaseHighT</span><span class="p">:</span> <span class="n">Fields</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialisation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        effectivePotential : EffectivePotential</span>
+<span class="sd">            An object of the EffectivePotential class.</span>
+<span class="sd">        nucleationTemperature : float</span>
+<span class="sd">            The nucleation temperature.</span>
+<span class="sd">        phaseLowT : Fields</span>
+<span class="sd">            The location of the low temperature phase at the nucleation</span>
+<span class="sd">            temperature. Does not need to be exact, as resolved internally</span>
+<span class="sd">            with input as starting point.</span>
+<span class="sd">        phaseHighT: Fields</span>
+<span class="sd">            The location of the high temperature phase at the nucleation</span>
+<span class="sd">            temperature. Does not need to be exact, as resolved internally</span>
+<span class="sd">            with input as starting point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        cls: Thermodynamics</span>
+<span class="sd">            An object of the Thermodynamics class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">effectivePotential</span> <span class="o">=</span> <span class="n">effectivePotential</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">=</span> <span class="n">nucleationTemperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phaseLowT</span> <span class="o">=</span> <span class="n">phaseLowT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phaseHighT</span> <span class="o">=</span> <span class="n">phaseHighT</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span> <span class="o">=</span> <span class="n">FreeEnergy</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">effectivePotential</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phaseHighT</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span> <span class="o">=</span> <span class="n">FreeEnergy</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">effectivePotential</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">phaseLowT</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># These parameters are set by setExtrapolate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxHighT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinLowT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxLowT</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.setExtrapolate">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.setExtrapolate">[docs]</a>
+    <span class="k">def</span> <span class="nf">setExtrapolate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allows use of thermodynamics outside of the temperature range where</span>
+<span class="sd">        the phase exists. The equation of state gets</span>
+<span class="sd">        extrapolated using the template model of [LM15]_ outside of</span>
+<span class="sd">        the allowed range.</span>
+<span class="sd">        This function computes the parameters of the template model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [LM15] L. Leitao and A. Megevand, Hydrodynamics of phase transition fronts</span>
+<span class="sd">            and the speed of sound in the plasma, Nucl.Phys.B 891 (2015) 159-199</span>
+<span class="sd">            doi:10.1016/j.nuclphysb.2014.12.008</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="mi">3</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">)</span>
+                <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinHighT</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span><span class="p">)</span>
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">3</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxHighT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span>
+        <span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">3</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinLowT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span>
+        <span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">3</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxLowT</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span>
+        <span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_getCoexistenceRange</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the temperature range where the two phases coexist</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TMin, Tmax:</span>
+<span class="sd">            The minimum and maximum temperature of phase coexistence</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">TMin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">minPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">TMax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">maxPossibleTemperature</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">TMin</span><span class="p">,</span> <span class="n">TMax</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Thermodynamics.findCriticalTemperature">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.findCriticalTemperature">[docs]</a>
+    <span class="k">def</span> <span class="nf">findCriticalTemperature</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dT</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rTol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="n">paranoid</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the critical temperature by finding the temperature for which the</span>
+<span class="sd">        free energy of both phases is equal.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dT: float</span>
+<span class="sd">            Temperature step size for the determination of Tc</span>
+<span class="sd">        rTol: float, optional</span>
+<span class="sd">            Error tolerance for the phase tracing</span>
+<span class="sd">        paranoid: bool, optional</span>
+<span class="sd">            Setting for phase tracing. When True, recomputes minimum at every step</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tc: float</span>
+<span class="sd">            The value of the critical temperature</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># getting range over which both phases naively exist</span>
+        <span class="c1"># (if we haven&#39;t traced the phases yet)</span>
+        <span class="n">TMin</span><span class="p">,</span> <span class="n">TMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getCoexistenceRange</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">TMin</span> <span class="o">&gt;</span> <span class="n">TMax</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;findCriticalTemperature needs TMin &lt; TMax&quot;</span><span class="p">,</span>
+                <span class="p">{</span><span class="s2">&quot;TMax&quot;</span><span class="p">:</span> <span class="n">TMax</span><span class="p">,</span> <span class="s2">&quot;TMin&quot;</span><span class="p">:</span> <span class="n">TMin</span><span class="p">},</span>
+            <span class="p">)</span>
+
+        <span class="c1"># tracing phases and ensuring they are stable</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">hasInterpolation</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tracing high-T phase: </span><span class="si">{</span><span class="n">TMin</span><span class="si">=}</span><span class="s2">, </span><span class="si">{</span><span class="n">TMax</span><span class="si">=}</span><span class="s2">, </span><span class="si">{</span><span class="n">dT</span><span class="si">=}</span><span class="s2">, </span><span class="si">{</span><span class="n">rTol</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">tracePhase</span><span class="p">(</span>
+                <span class="n">TMin</span><span class="p">,</span> <span class="n">TMax</span><span class="p">,</span> <span class="n">dT</span><span class="p">,</span> <span class="n">rTol</span><span class="p">,</span> <span class="n">spinodal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">paranoid</span><span class="o">=</span><span class="n">paranoid</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">hasInterpolation</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Tracing low-T phase&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">tracePhase</span><span class="p">(</span>
+                <span class="n">TMin</span><span class="p">,</span> <span class="n">TMax</span><span class="p">,</span> <span class="n">dT</span><span class="p">,</span> <span class="n">rTol</span><span class="p">,</span> <span class="n">spinodal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">paranoid</span><span class="o">=</span><span class="n">paranoid</span>
+            <span class="p">)</span>
+
+        <span class="c1"># getting range over which both phases are stable</span>
+        <span class="n">TMin</span><span class="p">,</span> <span class="n">TMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getCoexistenceRange</span><span class="p">()</span>
+
+        <span class="c1"># Wrapper that computes free-energy difference between our phases.</span>
+        <span class="c1"># This goes into scipy so scalar in, scalar out</span>
+        <span class="k">def</span> <span class="nf">freeEnergyDifference</span><span class="p">(</span><span class="n">inputT</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="p">(</span><span class="n">inputT</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="p">(</span><span class="n">inputT</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">f2</span> <span class="o">-</span> <span class="n">f1</span>
+            <span class="c1"># Force into scalar type. This errors out if the size is not 1;</span>
+            <span class="c1"># no failsafes to avoid overhead</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+
+        <span class="c1"># start from TMax and decrease temperature in small steps until</span>
+        <span class="c1"># the free energy difference changes sign</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">TMax</span>
+        <span class="n">TStep</span> <span class="o">=</span> <span class="n">dT</span>
+        <span class="n">signAtStart</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">freeEnergyDifference</span><span class="p">(</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">bConverged</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">while</span> <span class="n">T</span><span class="o">-</span><span class="n">TStep</span> <span class="o">&gt;</span> <span class="n">TMin</span><span class="p">:</span>
+            <span class="n">T</span> <span class="o">-=</span> <span class="n">TStep</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">freeEnergyDifference</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">!=</span> <span class="n">signAtStart</span><span class="p">:</span>
+                <span class="n">bConverged</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bConverged</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="s2">&quot;Could not find critical temperature. &quot;</span>\
+                              <span class="s2">&quot;Try changing the temperature scale.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Improve Tc estimate by solving DeltaF = 0 in narrow range near T</span>
+        <span class="c1"># NB: bracket will break if the function has same sign on both ends.</span>
+        <span class="c1"># The rough loop above should prevent this.</span>
+        <span class="n">rootResults</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">root_scalar</span><span class="p">(</span>
+            <span class="n">freeEnergyDifference</span><span class="p">,</span>
+            <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span> <span class="o">+</span> <span class="n">TStep</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;brentq&quot;</span><span class="p">,</span>
+            <span class="n">rtol</span><span class="o">=</span><span class="n">rTol</span><span class="p">,</span>
+            <span class="n">xtol</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">rTol</span> <span class="o">*</span> <span class="n">T</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dT</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rootResults</span><span class="o">.</span><span class="n">converged</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Error finding critical temperature&quot;</span><span class="p">,</span>
+                <span class="n">rootResults</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">rootResults</span><span class="o">.</span><span class="n">root</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.pHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.pHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">pHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pressure in the high-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pHighT : array-like (float)</span>
+<span class="sd">            Pressure in the high-temperature phase.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span><span class="p">)</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinHighT</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span><span class="p">)</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxHighT</span>
+            <span class="p">)</span>
+
+        <span class="n">veffValue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.dpHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.dpHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">dpHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature derivative of the pressure in the high-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dpHighT : array-like (float)</span>
+<span class="sd">            Temperature derivative of the pressure in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.ddpHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.ddpHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">ddpHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second temperature derivative of the pressure in the high-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ddpHighT : array-like (float)</span>
+<span class="sd">            Second temperature derivative of the pressure in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinHighT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinHighT</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxHighT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxHighT</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyHigh</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.eHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.eHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">eHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Energy density in the high-temperature phase, obtained via</span>
+<span class="sd">        :math:`e(T) = T \frac{dp}{dT}-p`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eHighT : array-like (float)</span>
+<span class="sd">            Energy density in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.deHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.deHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">deHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature derivative of the energy density in the high-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deHighT : array-like (float)</span>
+<span class="sd">            Temperature derivative of the energy density in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ddpHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.wHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.wHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">wHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enthalpy density in the high-temperature phase, obtained via</span>
+<span class="sd">        :math:`w(T) = p(T)+e(T)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wHighT : array-like (float)</span>
+<span class="sd">            Enthalpy density in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.csqHighT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.csqHighT">[docs]</a>
+    <span class="k">def</span> <span class="nf">csqHighT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sound speed squared in the high-temperature phase,</span>
+<span class="sd">        obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        csqHighT : array-like (float)</span>
+<span class="sd">            Sound speed squared in the high-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinHighT</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deHighT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxHighT</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deHighT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.pLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.pLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">pLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pressure in the low-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pLowT : array-like (float)</span>
+<span class="sd">            Pressure in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span><span class="p">)</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMinLowT</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span> <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span><span class="p">)</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilonMaxLowT</span>
+            <span class="p">)</span>
+
+        <span class="n">veffValue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.dpLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.dpLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">dpLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature derivative of the pressure in the low-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dpLowT : array-like (float)</span>
+<span class="sd">            Temperature derivative of the pressure in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.ddpLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.ddpLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">ddpLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second temperature derivative of the pressure in the low-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ddpLowT : array-like (float)</span>
+<span class="sd">            Second temperature derivative of the pressure in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMinLowT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMinLowT</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="o">/</span> <span class="mf">3.0</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span>
+                <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">aMaxLowT</span>
+                <span class="o">*</span> <span class="nb">pow</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">muMaxLowT</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">freeEnergyLow</span><span class="o">.</span><span class="n">derivative</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">veffValue</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.eLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.eLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">eLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Energy density in the low-temperature phase,</span>
+<span class="sd">        obtained via :math:`e(T) = T \frac{dp}{dT}-p`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        eLowT : array-like (float)</span>
+<span class="sd">            Energy density in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.deLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.deLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">deLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Temperature derivative of the energy density in the low-temperature phase.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        deLowT : array-like (float)</span>
+<span class="sd">            Temperature derivative of the energy density in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ddpLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.wLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.wLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">wLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enthalpy density in the low-temperature phase,</span>
+<span class="sd">        obtained via :math:`w(T) = p(T)+e(T)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wLowT : array-like (float)</span>
+<span class="sd">            Enthalpy density in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">temperature</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.csqLowT">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.csqLowT">[docs]</a>
+    <span class="k">def</span> <span class="nf">csqLowT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sound speed squared in the low-temperature phase,</span>
+<span class="sd">        obtained via :math:`c_s^2 = \frac{dp/dT}{de/dT}`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        temperature : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        csqLowT : array-like (float)</span>
+<span class="sd">            Sound speed squared in the low-temperature phase.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMinLowT</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deLowT</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TMaxLowT</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dpLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">deLowT</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Thermodynamics.alpha">
+<a class="viewcode-back" href="../../modules/thermodynamics.html#WallGo.thermodynamics.Thermodynamics.alpha">[docs]</a>
+    <span class="k">def</span> <span class="nf">alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The phase transition strength at the temperature :math:`T`, computed via</span>
+<span class="sd">        :math:`\alpha = \frac{e_{\rm HighT}(T)-e_{\rm LowT}(T) -(p_{\rm HighT}(T)</span>
+<span class="sd">        -p_{\rm LowT}(T)) /c^2_{\rm LowT}(T)}{3w_{\rm HighT}(T)}`</span>
+<span class="sd">        as defined in eq. (34) of [GKvdV20]_</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        T : array-like</span>
+<span class="sd">            Temperature(s)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        alpha : array-like (float)</span>
+<span class="sd">            Phase transition strength.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        .. [GKvdV20] F. Giese, T. Konstandin and J. van de Vis, Model-independent energy</span>
+<span class="sd">            budget of cosmological first-order phase transitions — A sound argument</span>
+<span class="sd">            to go beyond the bag model, JCAP 07 (2020) 07, 057</span>
+<span class="sd">            doi:10.1088/1475-7516/2020/07/057</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">eLowT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">T</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="mi">3</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

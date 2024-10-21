@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PotentialTools.EffectivePotentialNoResum &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PotentialTools.Integrals" href="integrals.html" />
+    <link rel="prev" title="WallGoUtils" href="../utilities.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">PotentialTools.EffectivePotentialNoResum</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/modules/potentialTools/effectivePotentialNoResum.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-WallGo.PotentialTools.effectivePotentialNoResum">
+<span id="potentialtools-effectivepotentialnoresum"></span><h1>PotentialTools.EffectivePotentialNoResum<a class="headerlink" href="#module-WallGo.PotentialTools.effectivePotentialNoResum" title="Link to this heading"></a></h1>
+<p>Class for the one-loop thermal effective potential.</p>
+<p>Defined without high-temperature expansion and without resummation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.PotentialTools.effectivePotentialNoResum.</span></span><span class="sig-name descname"><span class="pre">EImaginaryOption</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EImaginaryOption"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption" title="Link to this definition"></a></dt>
+<dd><p>Enums for what to do with imaginary parts in the effective potential.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_ARGUMENT">
+<span class="sig-name descname"><span class="pre">ABS_ARGUMENT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_ARGUMENT" title="Link to this definition"></a></dt>
+<dd><p>Absolute value of argument of integral</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_RESULT">
+<span class="sig-name descname"><span class="pre">ABS_RESULT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_RESULT" title="Link to this definition"></a></dt>
+<dd><p>Absolute value of analytically continued integral</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ERROR" title="Link to this definition"></a></dt>
+<dd><p>Throw an error if imaginary part nonzero</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.PRINCIPAL_PART">
+<span class="sig-name descname"><span class="pre">PRINCIPAL_PART</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.PRINCIPAL_PART" title="Link to this definition"></a></dt>
+<dd><p>Principal part of analytically continued integral</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">WallGo.PotentialTools.effectivePotentialNoResum.</span></span><span class="sig-name descname"><span class="pre">EffectivePotentialNoResum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integrals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="integrals.html#WallGo.PotentialTools.integrals.Integrals" title="WallGo.PotentialTools.integrals.Integrals"><span class="pre">Integrals</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useDefaultInterpolation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imaginaryOption</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption"><span class="pre">EImaginaryOption</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">EImaginaryOption.ERROR</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum" title="Link to this definition"></a></dt>
+<dd><p>One-loop thermal effective potential</p>
+<p>Specialization of the abstract
+EffectivePotential class that implements common functions for computing
+the 1-loop potential at finite temperature, without any
+assumptions regarding the temperature (no high- or low-T approximations).
+In some literature this would be the _4D effective <a href="#id1"><span class="problematic" id="id2">potential_</span></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">integrals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="integrals.html#WallGo.PotentialTools.integrals.Integrals" title="WallGo.PotentialTools.integrals.Integrals"><span class="pre">Integrals</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useDefaultInterpolation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imaginaryOption</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption"><span class="pre">EImaginaryOption</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">EImaginaryOption.ERROR</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialisation of EffectivePotentialNoResum</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>integrals</strong> (<a class="reference internal" href="integrals.html#WallGo.PotentialTools.integrals.Integrals" title="WallGo.PotentialTools.integrals.Integrals"><em>Integrals</em></a><em>, </em><em>optional</em>) -- An object of the Integrals class. Default is <cite>None</cite> in which case
+the integrals will be done without interpolation. Beware this may
+be slow.</p></li>
+<li><p><strong>useDefaultInterpolation</strong> (<em>bool</em><em>, </em><em>optional</em>) -- If <cite>True</cite> the default integration data will be loaded and used for
+interpolation.</p></li>
+<li><p><strong>imaginaryOption</strong> (<a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption"><em>EImaginaryOption</em></a>) -- Default is <a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ERROR" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ERROR"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EImaginaryOption.ERROR</span></code></a> which throws an error if
+nonzero imaginary parts arise. Alternatives are
+<a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.PRINCIPAL_PART" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.PRINCIPAL_PART"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EImaginaryOption.PRINCIPAL_PART</span></code></a> for the principal part of the
+integrals, <a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_RESULT" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_RESULT"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EImaginaryOption.ABS_RESULT</span></code></a> for taking the absolute
+part of the result, and <a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_ARGUMENT" title="WallGo.PotentialTools.effectivePotentialNoResum.EImaginaryOption.ABS_ARGUMENT"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EImaginaryOption.ABS_ARGUMENT</span></code></a> for taking
+the absolute part of the argument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>cls</strong> -- An object of the EffectivePotentialNoResum class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum" title="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum">EffectivePotentialNoResum</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.allSecondDerivatives">
+<span class="sig-name descname"><span class="pre">allSecondDerivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.allSecondDerivatives" title="Link to this definition"></a></dt>
+<dd><p>Computes <span class="math notranslate nohighlight">\(d^2V/(d\text{Field}^2)\)</span>, <span class="math notranslate nohighlight">\(d^2V/(d\text{Field} dT)\)</span>
+and <span class="math notranslate nohighlight">\(d^2V/(dT^2)\)</span> at the ssame time. This function is more efficient
+than calling the other functions one at a time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- The background field values (e.g.: Higgs, singlet)</p></li>
+<li><p><strong>temperature</strong> (<em>array_like</em>) -- The temperature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>d2VdField2</strong> (<em>list[Fields]</em>) -- Field Hessian of the potential. For each temperature, this is
+a matrix of the same size as Fields.</p></li>
+<li><p><strong>d2fdFielddT</strong> (<em>list[Fields]</em>) -- Field derivatives of the potential, one Fields object for each
+temperature. They are of Fields type since the shapes match nicely.</p></li>
+<li><p><strong>d2VdT2</strong> (<em>array-like</em>) -- Temperature second derivative of the potential.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.areDerivativesConfigured">
+<span class="sig-name descname"><span class="pre">areDerivativesConfigured</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.areDerivativesConfigured" title="Link to this definition"></a></dt>
+<dd><p>True if derivative routines are ready to use.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.bosonInformation">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bosonInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.bosonInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.bosonInformation" title="Link to this definition"></a></dt>
+<dd><p>Calculate the boson particle spectrum. Should be overridden by
+subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>array_like</em>) -- Field value(s).
+Either a single point (with length <cite>Ndim</cite>), or an array of points.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em> or </em><em>array_like</em>) -- The temperature at which to calculate the boson masses. Can be used
+for including thermal mass corrrections. The shapes of <cite>fields</cite> and
+<cite>temperature</cite> should be such that <cite>fields.shape[:-1]</cite> and
+<cite>temperature.shape</cite> are broadcastable
+(that is, <cite>fields[0,...]*T</cite> is a valid operation).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>massSq</strong> (<em>array_like</em>) -- A list of the boson particle masses at each input point <cite>X</cite>. The
+shape should be such that
+<cite>massSq.shape == (X[...,0]*T).shape + (Nbosons,)</cite>.
+That is, the particle index is the <em>last</em> index in the output array
+if the input array(s) are multidimensional.</p></li>
+<li><p><strong>degreesOfFreedom</strong> (<em>float or array_like</em>) -- The number of degrees of freedom for each particle. If an array
+(i.e., different particles have different d.o.f.), it should have
+length <cite>Ndim</cite>.</p></li>
+<li><p><strong>c</strong> (<em>float or array_like</em>) -- A constant used in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Generally
+<cite>c = 1/2</cite> for gauge boson transverse modes, and <cite>c = 3/2</cite> for all
+other bosons.</p></li>
+<li><p><strong>rgScale</strong> (<em>float or array_like</em>) -- Renormalization scale in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Typically, one
+takes the same rgScale for all particles, but different scales
+for each particle are possible.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.configureDerivatives">
+<span class="sig-name descname"><span class="pre">configureDerivatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">VeffDerivativeSettings</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.configureDerivatives" title="Link to this definition"></a></dt>
+<dd><p>Sets the temperature and field scales.
+These quantities are used together with the 'effectivePotentialError' attribute
+to estimate the optimal step size when computing
+derivatives with finite differences. It is done by requiring that the potential
+error and the error from finite difference calculation contribute similarly to
+the derivative error.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.deriv2Field2">
+<span class="sig-name descname"><span class="pre">deriv2Field2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.deriv2Field2" title="Link to this definition"></a></dt>
+<dd><p>Computes the Hessian, <span class="math notranslate nohighlight">\(d^2V/(d\text{Field}^2)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- The background field values (e.g.: Higgs, singlet)</p></li>
+<li><p><strong>temperature</strong> (<em>npt.ArrayLike</em>) -- Temperatures. Either scalar or a 1D array of same length as fields.NumPoints()</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>d2VdField2</strong> -- Field Hessian of the potential. For each temperature, this is
+a matrix of the same size as Fields.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Fields]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.deriv2FieldT">
+<span class="sig-name descname"><span class="pre">deriv2FieldT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.deriv2FieldT" title="Link to this definition"></a></dt>
+<dd><p>Computes <span class="math notranslate nohighlight">\(d^2V/(d\text{Field} dT)\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- The background field values (e.g.: Higgs, singlet)</p></li>
+<li><p><strong>temperature</strong> (<em>array_like</em>) -- The temperature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>d2fdFielddT</strong> -- Field derivatives of the potential, one Fields object for each
+temperature. They are of Fields type since the shapes match nicely.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Fields]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.derivField">
+<span class="sig-name descname"><span class="pre">derivField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.derivField" title="Link to this definition"></a></dt>
+<dd><p>Compute field-derivative of the effective potential with respect to
+all background fields, at given temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- The background field values (e.g.: Higgs, singlet)</p></li>
+<li><p><strong>temperature</strong> (<em>array_like</em>) -- The temperature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dVdField</strong> -- Field derivatives of the potential, one Fields object for each
+temperature. They are of Fields type since the shapes match nicely.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[Fields]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.derivT">
+<span class="sig-name descname"><span class="pre">derivT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.derivT" title="Link to this definition"></a></dt>
+<dd><p>Calculate derivative of the effective potential with
+respect to temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>Fields</em>) -- The background field values (e.g.: Higgs, singlet)</p></li>
+<li><p><strong>temperature</strong> (<em>array_like</em>) -- The temperature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dVdT</strong> -- Temperature derivative of the potential, evaluated at each
+point of the input temperature array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.effectivePotentialError">
+<span class="sig-name descname"><span class="pre">effectivePotentialError</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.effectivePotentialError" title="Link to this definition"></a></dt>
+<dd><p>Typical relative accuracy at which the effective potential can be computed.
+For simple polynomial potentials this is probably close to machine precision of Python floats (1e-15).
+For loop-corrected potentials a limited factor can be the eg. accuracy of numerical integration.
+IMPORTANT: YOUR CONCRETE POTENTIAL MUST SET THIS TO A NONZERO POSITIVE FLOAT.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.evaluate">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FieldPoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.evaluate" title="Link to this definition"></a></dt>
+<dd><p>Implement the actual computation of <span class="math notranslate nohighlight">\(V_{\rm eff}(\phi)\)</span> here. The return value should be (the UV-finite part of)  <span class="math notranslate nohighlight">\(V_{\rm eff}\)</span>
+at the input field configuration and temperature.</p>
+<p>Normalization of the potential DOES matter: You have to ensure that full T-dependence is included.
+Pay special attention to field-independent &quot;constant&quot; terms such as (minus the) pressure from light fermions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.fermionInformation">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fermionInformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.fermionInformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.fermionInformation" title="Link to this definition"></a></dt>
+<dd><p>Calculate the fermion particle spectrum. Should be overridden by
+subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fields</strong> (<em>array_like</em>) -- Field value(s).
+Either a single point (with length <cite>Ndim</cite>), or an array of points.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em> or </em><em>array_like</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>massSq</strong> (<em>array_like</em>) -- A list of the fermion particle masses at each input point <cite>field</cite>. The
+shape should be such that  <cite>massSq.shape == (field[...,0]).shape</cite>.
+That is, the particle index is the <em>last</em> index in the output array
+if the input array(s) are multidimensional.</p></li>
+<li><p><strong>degreesOfFreedom</strong> (<em>float or array_like</em>) -- The number of degrees of freedom for each particle. If an array
+(i.e., different particles have different d.o.f.), it should have
+length <cite>Ndim</cite>.</p></li>
+<li><p><strong>c</strong> (<em>float or array_like</em>) -- A constant used in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Generally
+<cite>c = 3/2</cite> for all fermions.</p></li>
+<li><p><strong>rgScale</strong> (<em>float or array_like</em>) -- Renormalization scale in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Typically, one
+takes the same rgScale for all particles, but different scales
+for each particle are possible.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.fieldCount">
+<span class="sig-name descname"><span class="pre">fieldCount</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.fieldCount" title="Link to this definition"></a></dt>
+<dd><p>Number of background fields in your potential.
+IMPORTANT: YOUR CONCRETE POTENTIAL MUST SET THIS TO A NONZERO POSITIVE INTEGER.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.findLocalMinimum">
+<span class="sig-name descname"><span class="pre">findLocalMinimum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initialGuess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">_SupportsArray</span><span class="p"><span class="pre">[</span></span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_NestedSequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.findLocalMinimum" title="Link to this definition"></a></dt>
+<dd><p>Finds a local minimum starting from a given initial configuration of background fields.
+Feel free to override this if your model requires more delicate minimization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>minimum, functionValue</strong> (<em>tuple.</em>)</p></li>
+<li><p><strong>minimum</strong> (<em>list[float] is the location x of the minimum in field space.</em>)</p></li>
+<li><p><strong>functionValue</strong> (<em>float is Veff(x) evaluated at the minimum.</em>)</p></li>
+<li><p><em>If the input temperature is a numpy array, the returned values will be arrays of same length.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.jCW">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jCW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">massSq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degreesOfFreedom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rgScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.jCW"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.jCW" title="Link to this definition"></a></dt>
+<dd><p>Coleman-Weinberg potential</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msq</strong> (<em>array_like</em>) -- A list of the boson particle masses at each input point <cite>X</cite>.</p></li>
+<li><p><strong>degreesOfFreedom</strong> (<em>float</em><em> or </em><em>array_like</em>) -- The number of degrees of freedom for each particle. If an array
+(i.e., different particles have different d.o.f.), it should have
+length <cite>Ndim</cite>.</p></li>
+<li><p><strong>c</strong> (<em>float</em><em> or </em><em>array_like</em>) -- A constant used in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Generally
+<cite>c = 1/2</cite> for gauge boson transverse modes, and <cite>c = 3/2</cite> for all
+other bosons.</p></li>
+<li><p><strong>rgScale</strong> (<em>float</em><em> or </em><em>array_like</em>) -- Renormalization scale in the one-loop zero-temperature effective
+potential. If an array, it should have length <cite>Ndim</cite>. Typically, one
+takes the same rgScale for all particles, but different scales
+for each particle are possible.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>jCW</strong> -- One-loop Coleman-Weinberg potential for given particle spectrum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoop">
+<span class="sig-name descname"><span class="pre">potentialOneLoop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bosons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fermions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.potentialOneLoop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoop" title="Link to this definition"></a></dt>
+<dd><p>One-loop corrections to the zero-temperature effective potential
+in dimensional regularization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bosons</strong> (<em>tuple</em>) -- bosonic particle spectrum (here: masses, number of dofs, ci)</p></li>
+<li><p><strong>fermions</strong> (<em>tuple</em>) -- fermionic particle spectrum (here: masses, number of dofs)</p></li>
+<li><p><strong>RGscale</strong> (<em>float</em>) -- RG scale of the effective potential</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>potential</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoopThermal">
+<span class="sig-name descname"><span class="pre">potentialOneLoopThermal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bosons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fermions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/WallGo/PotentialTools/effectivePotentialNoResum.html#EffectivePotentialNoResum.potentialOneLoopThermal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#WallGo.PotentialTools.effectivePotentialNoResum.EffectivePotentialNoResum.potentialOneLoopThermal" title="Link to this definition"></a></dt>
+<dd><p>One-loop thermal correction to the effective potential without any
+temperature expansions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bosons</strong> (<em>tuple</em>) -- bosonic particle spectrum (here: masses, number of dofs, ci)</p></li>
+<li><p><strong>fermions</strong> (<em>tuple</em>) -- fermionic particle spectrum (here: masses, number of dofs)</p></li>
+<li><p><strong>temperature</strong> (<em>float</em><em> or </em><em>array_like</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>potential</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../utilities.html" class="btn btn-neutral float-left" title="WallGoUtils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="integrals.html" class="btn btn-neutral float-right" title="PotentialTools.Integrals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,860 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WallGo.hydrodynamicsTemplateModel &mdash; WallGo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=1e580bb1"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #efefef" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/wallgo.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../firstExample.html">First example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Collected examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faqs.html">FAQs</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development version</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Python API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/boltzmann.html">BoltzmannSolver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionArray.html">CollisionArray</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/collisionHelpers.html">Collision Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/containers.html">Containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/effectivePotential.html">EffectivePotential</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/equationOfMotion.html">EOM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/fields.html">Fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/freeEnergy.html">FreeEnergy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/genericModel.html">GenericModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid.html">Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/grid3Scales.html">Grid3Scales</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/helpers.html">Helpers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamics.html">Hydrodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/hydrodynamicsTemplateModel.html">HydrodynamicsTemplateModel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/interpolatableFunction.html">InterpolatableFunction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/manager.html">WallGoManager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/particle.html">Particle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/polynomial.html">Polynomial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/thermodynamics.html">Thermodynamics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/utilities.html">WallGoUtils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/effectivePotentialNoResum.html">PotentialTools.EffectivePotentialNoResum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/integrals.html">PotentialTools.Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/potentialTools/utilities.html">PotentialTools.Utils</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #efefef" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">WallGo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">WallGo.hydrodynamicsTemplateModel</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for WallGo.hydrodynamicsTemplateModel</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class for solving the hydrodynamic equations for the fluid velocity and temperature by </span>
+<span class="sd">approximating the equation of state by the template model.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">solve_ivp</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span><span class="p">,</span> <span class="n">minimize_scalar</span><span class="p">,</span> <span class="n">OptimizeResult</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">WallGoError</span>
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">gammaSq</span>
+<span class="kn">from</span> <span class="nn">.thermodynamics</span> <span class="kn">import</span> <span class="n">Thermodynamics</span>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel">[docs]</a>
+<span class="k">class</span> <span class="nc">HydrodynamicsTemplateModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for solving the matching equations and computing vw in LTE by fitting to the </span>
+<span class="sd">    template model, where the speeds of sound are assumed to be constant. This generally </span>
+<span class="sd">    offers a good approximation to realistic models, while being much faster to treat.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [GKSvdV20] Felix Giese, Thomas Konstandin, Kai Schmitz and Jorinde van de Vis</span>
+<span class="sd">        Model-independent energy budget for LISA</span>
+<span class="sd">        arXiv:2010.09744 (2020)</span>
+
+<span class="sd">    .. [ALvdV23] Wen-Yuan Ai, Benoit Laurent, and Jorinde van de Vis.</span>
+<span class="sd">        Model-independent bubble wall velocities in local thermal equilibrium.</span>
+<span class="sd">        arXiv:2303.10171 (2023).</span>
+
+<span class="sd">    NOTE: We use the conventions that the velocities are always positive, even in the </span>
+<span class="sd">    wall frame (vp and vm).</span>
+<span class="sd">    These conventions are consistent with the literature, e.g. with arxiv:1004.4187.</span>
+<span class="sd">    These conventions differ from the conventions used in the EOM and Boltzmann part of </span>
+<span class="sd">    the code. The conversion is made in findHydroBoundaries.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.__init__">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">thermodynamics</span><span class="p">:</span> <span class="n">Thermodynamics</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the HydroTemplateModel class.</span>
+<span class="sd">        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics</span>
+<span class="sd">        quantities (see [ALvdV23]_ for the definitions of these variables).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        thermodynamics : class</span>
+<span class="sd">        rtol : float, optional</span>
+<span class="sd">            Default value is 1e-6.</span>
+<span class="sd">        atol : float, optional</span>
+<span class="sd">            Default value is 1e-10.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thermodynamics</span> <span class="o">=</span> <span class="n">thermodynamics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atol</span> <span class="o">=</span> <span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span>
+        <span class="n">pHighT</span><span class="p">,</span> <span class="n">pLowT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">pHighT</span><span class="p">(</span>
+            <span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span>
+        <span class="p">),</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">pLowT</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span>
+        <span class="n">wHighT</span><span class="p">,</span> <span class="n">wLowT</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">wHighT</span><span class="p">(</span>
+            <span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span>
+        <span class="p">),</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">wLowT</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span>
+        <span class="n">eHighT</span><span class="p">,</span> <span class="n">eLowT</span> <span class="o">=</span> <span class="n">wHighT</span> <span class="o">-</span> <span class="n">pHighT</span><span class="p">,</span> <span class="n">wLowT</span> <span class="o">-</span> <span class="n">pLowT</span>
+
+        <span class="c1">## Calculate sound speed squared in both phases, needs to be &gt; 0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqLowT</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">csqHighT</span><span class="p">(</span><span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid sound speed at nucleation temperature&quot;</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;csqLowT&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="p">,</span> <span class="s2">&quot;csqHighT&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="p">},</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">&gt;</span> <span class="mf">0.4</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">&gt;</span> <span class="mf">0.4</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: One of the sound speed at Tnucl is unusually&quot;</span>\
+                          <span class="sa">f</span><span class="s2">&quot; large (cb^2=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="si">}</span><span class="s2">, cs^2=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="si">}</span><span class="s2">). This can lead&quot;</span>\
+                          <span class="sa">f</span><span class="s2">&quot; to errors later.&quot;</span><span class="p">)</span>
+
+        <span class="c1">## Calculate other thermodynamics quantities like alpha and Psi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alN</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="n">eHighT</span> <span class="o">-</span> <span class="n">eLowT</span> <span class="o">-</span> <span class="p">(</span><span class="n">pHighT</span> <span class="o">-</span> <span class="n">pLowT</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">wHighT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wLowT</span> <span class="o">/</span> <span class="n">wHighT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="p">)</span>
+        <span class="c1">## Enthalpy outside the bubble at Tn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wN</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wHighT</span><span class="p">)</span>
+        <span class="c1">## Pressure outside the bubble at Tn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pN</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pHighT</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">=</span> <span class="n">thermodynamics</span><span class="o">.</span><span class="n">Tnucl</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findJouguetVelocity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">minVelocity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wN</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">alN</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.findJouguetVelocity">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.findJouguetVelocity">[docs]</a>
+    <span class="k">def</span> <span class="nf">findJouguetVelocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alN</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the Jouguet velocity, corresponding to the phase transition strength </span>
+<span class="sd">        :math:`\alpha_n`, using </span>
+<span class="sd">        :math:`v_J = c_b \frac{1 + \sqrt{3 \alpha_n(1 - c_b^2 + 3 c_b^2 \alpha_n)}}</span>
+<span class="sd">        {1+ 3 c_b^2 \alpha_n}`</span>
+<span class="sd">        (eq. (25) of [ALvdV23]_).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        alN : float or None</span>
+<span class="sd">            phase transition strength at the nucleation temperature, :math:`\alpha_n`.</span>
+<span class="sd">            If :math:`\alpha_n` is not specified, the value defined by the model is</span>
+<span class="sd">            used. Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vJ: float</span>
+<span class="sd">            The value of the Jouguet velocity.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">alN</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">alN</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cb</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">alN</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">alN</span><span class="p">)))</span>
+            <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">alN</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.minVelocity">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.minVelocity">[docs]</a>
+    <span class="k">def</span> <span class="nf">minVelocity</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the minimum velocity that is possible for a given nucleation temperature.</span>
+<span class="sd">        It is found by shooting in vp with :math:`\alpha_+ = 1/3` at the wall. This is</span>
+<span class="sd">        the maximum value of :math:`\alpha_+` possible. The wall velocity which yields </span>
+<span class="sd">        :math:`\alpha_+ = 1/3` for a given :math:`\alpha_N` is the minimum possible wall</span>
+<span class="sd">        velocity.</span>
+
+<span class="sd">        It is possible that no solution can be found, in this case there is no minimum</span>
+<span class="sd">        value of the wall velocity and the function returns zero.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vmin: float</span>
+<span class="sd">            The minimum value of the wall velocity for which a solution can be found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">vw</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shooting</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-6</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">),</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">root</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.getVp">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.getVp">[docs]</a>
+    <span class="k">def</span> <span class="nf">getVp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">al</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">branch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solves the matching equation for :math:`v_+`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vm : float</span>
+<span class="sd">            Plasma velocity in the wall frame right behind the wall :math:`v_-`.</span>
+<span class="sd">        al : float</span>
+<span class="sd">            phase transition strength at the temperature right in front of the wall</span>
+<span class="sd">            :math:`\alpha_+`.</span>
+<span class="sd">        branch : int, optional</span>
+<span class="sd">            Select the branch of the matching equation&#39;s solution. Can either be 1 for</span>
+<span class="sd">            detonation or -1 for deflagration/hybrid. Default is -1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vp : float</span>
+<span class="sd">            Plasma velocity in the wall frame right in front of the the wall</span>
+<span class="sd">            :math:`v_+`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">disc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">vm</span><span class="o">**</span><span class="mi">4</span>
+            <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">vm</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">al</span><span class="p">)</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">12</span> <span class="o">*</span> <span class="n">vm</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">al</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">al</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="mf">0.5</span>
+            <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">+</span> <span class="n">vm</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">branch</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">disc</span><span class="p">))</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">vm</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="n">al</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.wFromAlpha">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.wFromAlpha">[docs]</a>
+    <span class="k">def</span> <span class="nf">wFromAlpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">al</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the enthlapy :math:`w_+` corresponding to :math:`\alpha_+` using the</span>
+<span class="sd">        equation of state of the template model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        al : float</span>
+<span class="sd">            alpha parameter at the temperature :math:`T_+` in front of the wall</span>
+<span class="sd">            :math:`\alpha_+`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            :math:`w_+`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Add 1e-100 to avoid having something like 0/0</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">alN</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">al</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sign</span><span class="o">*</span><span class="p">(</span><span class="nb">abs</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-100</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="nb">abs</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">al</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-100</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_findTm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds :math:`T_-` as a function of :math:`v_-,\ v_+,\ T_+` using the matching</span>
+<span class="sd">        equations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vm : float</span>
+<span class="sd">            Value of the fluid velocity in the wall frame, right behind the bubble wall</span>
+<span class="sd">        vp : float</span>
+<span class="sd">            Value of the fluid velocity in the wall frame, right in front of the bubble</span>
+<span class="sd">        Tp : float</span>
+<span class="sd">            Plasma temperature right in front of the bubble wall</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tm : float</span>
+<span class="sd">            Plasma temperature right behind the bubble wall</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># a paramaters appearing in the definition of the template model</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ap</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>
+            <span class="c1"># If self.mu is large, the exponential can overflow and trigger an error</span>
+            <span class="n">ap</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">am</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OverflowError</span><span class="p">:</span>
+            <span class="c1"># Same thing</span>
+            <span class="n">am</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">ap</span> <span class="o">*</span> <span class="n">vp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vm</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">Tp</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+                <span class="o">/</span> <span class="p">(</span><span class="n">am</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eqWall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">al</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vm</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">branch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Residual of the matching equation at the bubble wall.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        al : float</span>
+<span class="sd">            phase transition strength at the temperature right in front of the wall</span>
+<span class="sd">            :math:`\alpha_+`.</span>
+<span class="sd">        vm : float</span>
+<span class="sd">            Value of the fluid velocity in the wall frame, right behind the bubble wall</span>
+<span class="sd">        branch : int, optional</span>
+<span class="sd">            Select the branch of the matching equation&#39;s solution. Can either be 1 for</span>
+<span class="sd">            detonation or -1 for deflagration/hybrid. Default is -1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Residual of the matching equation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVp</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">al</span><span class="p">,</span> <span class="n">branch</span><span class="p">)</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wFromAlpha</span><span class="p">(</span><span class="n">al</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="n">al</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span><span class="p">)</span>
+            <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">al</span> <span class="o">-</span> <span class="p">(</span><span class="n">gammaSq</span><span class="p">(</span><span class="n">vp</span><span class="p">)</span> <span class="o">/</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">vm</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi</span><span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.solveAlpha">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.solveAlpha">[docs]</a>
+    <span class="k">def</span> <span class="nf">solveAlpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">constraint</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the value of :math:`\alpha_+` that solves the matching equation at the</span>
+<span class="sd">        wall by varying :math:`v_-`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity at which to solve the matching equation.</span>
+<span class="sd">        constraint : bool, optional</span>
+<span class="sd">            If True, imposes :math:`v_+&lt;\min(c_s^2/v_w,v_w)` on the solution. Otherwise,</span>
+<span class="sd">            the constraint :math:`v_+&lt;v_-` is used instead. Default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        alp : float</span>
+<span class="sd">            Value of :math:`\alpha_+` that solves the matching equation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb</span><span class="p">,</span> <span class="n">vw</span><span class="p">)</span>
+        <span class="n">vpMax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">/</span> <span class="n">vw</span><span class="p">,</span> <span class="n">vw</span><span class="p">)</span> <span class="k">if</span> <span class="n">constraint</span> <span class="k">else</span> <span class="n">vm</span>
+
+        <span class="c1"># Find lower and upper bounds on alpha</span>
+        <span class="n">alMin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">vm</span> <span class="o">-</span> <span class="n">vpMax</span><span class="p">)</span>
+            <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">-</span> <span class="n">vm</span> <span class="o">*</span> <span class="n">vpMax</span><span class="p">)</span>
+            <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vpMax</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">),</span>
+            <span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="mf">1e-10</span>
+        <span class="n">alMax</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span>
+        <span class="n">branch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eqWall</span><span class="p">(</span><span class="n">alMin</span><span class="p">,</span> <span class="n">vm</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eqWall</span><span class="p">(</span><span class="n">alMax</span><span class="p">,</span> <span class="n">vm</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">vm</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span><span class="p">:</span>
+            <span class="c1"># If alMin and alMax don&#39;t bracket the deflagration solution, try with the</span>
+            <span class="c1"># detonation one, which only exists when vm &gt; cb^2.</span>
+            <span class="n">branch</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_eqWall</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">branch</span><span class="p">),</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">alMin</span><span class="p">,</span> <span class="n">alMax</span><span class="p">),</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span><span class="s2">&quot;alpha can not be found&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vw&quot;</span><span class="p">:</span> <span class="n">vw</span><span class="p">})</span> <span class="kn">from</span> <span class="nn">exc</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_dxiAndWdv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">xiAndW</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fluid equations in the shock wave as a function of v.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">xi</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">xiAndW</span>
+        <span class="n">muXiV</span> <span class="o">=</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">xi</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">dwdv</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="p">)</span> <span class="o">*</span> <span class="n">muXiV</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dxidv</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">xi</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v</span> <span class="o">*</span> <span class="n">xi</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">muXiV</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If v = 0, dxidv is set to a very high value</span>
+            <span class="n">dxidv</span> <span class="o">=</span> <span class="mf">1e50</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dxidv</span><span class="p">,</span> <span class="n">dwdv</span><span class="p">])</span>
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.integratePlasma">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.integratePlasma">[docs]</a>
+    <span class="k">def</span> <span class="nf">integratePlasma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v0</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">wp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizeResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrates the fluid equations in the shock wave until it reaches the shock</span>
+<span class="sd">        front.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        v0 : float</span>
+<span class="sd">            Plasma velocity just in front of the wall (in the frame of the bubble&#39;s</span>
+<span class="sd">                                                       center).</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity.</span>
+<span class="sd">        wp : float</span>
+<span class="sd">            Enthalpy just in front of the wall.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Bunch object returned by the scipy function integrate.solve_ivp containing the</span>
+<span class="sd">        solution of the fluid equations.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">event</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">xiAndW</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="c1"># Function that is 0 at the shock wave front. Is used by solve_ivp to stop</span>
+            <span class="c1"># the integration</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">xiAndW</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">((</span><span class="n">xi</span> <span class="o">*</span> <span class="p">(</span><span class="n">xi</span> <span class="o">-</span> <span class="n">v</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">xi</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="p">)</span> <span class="o">*</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="n">event</span><span class="o">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dxiAndWdv</span><span class="p">,</span> <span class="p">(</span><span class="n">v0</span><span class="p">,</span> <span class="mf">1e-10</span><span class="p">),</span> <span class="p">[</span><span class="n">vw</span><span class="p">,</span> <span class="n">wp</span><span class="p">],</span> <span class="n">events</span><span class="o">=</span><span class="n">event</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sol</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_shooting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vp</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integrates through the shock wave and returns the residual of the matching</span>
+<span class="sd">        equation at the shock front.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb</span><span class="p">,</span> <span class="n">vw</span><span class="p">)</span>
+        <span class="n">al</span> <span class="o">=</span> <span class="p">(</span><span class="n">vp</span> <span class="o">/</span> <span class="n">vm</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span>
+        <span class="n">wp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wFromAlpha</span><span class="p">(</span><span class="n">al</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">vp</span> <span class="o">*</span> <span class="n">vw</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">:</span>
+            <span class="c1"># If the wall is already very close to the shock front, we do not integrate</span>
+            <span class="c1"># through the shock wave to avoid any error due to rounding error.</span>
+            <span class="n">vpSW</span> <span class="o">=</span> <span class="n">vw</span>
+            <span class="n">vmSW</span> <span class="o">=</span> <span class="n">vp</span>
+            <span class="n">wmSW</span> <span class="o">=</span> <span class="n">wp</span>
+        <span class="k">elif</span> <span class="n">vw</span> <span class="o">==</span> <span class="n">vp</span><span class="p">:</span>
+            <span class="c1"># If the plasma is at rest in front of the wall, there is no variation of</span>
+            <span class="c1"># plasma velocity and temperature in the shock wave</span>
+            <span class="n">vpSW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs</span>
+            <span class="n">vmSW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs</span>
+            <span class="n">wmSW</span> <span class="o">=</span> <span class="n">wp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integratePlasma</span><span class="p">((</span><span class="n">vw</span> <span class="o">-</span> <span class="n">vp</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vw</span> <span class="o">*</span> <span class="n">vp</span><span class="p">),</span> <span class="n">vw</span><span class="p">,</span> <span class="n">wp</span><span class="p">)</span>
+            <span class="n">vpSW</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">vmSW</span> <span class="o">=</span> <span class="p">(</span><span class="n">vpSW</span> <span class="o">-</span> <span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vpSW</span> <span class="o">*</span> <span class="n">sol</span><span class="o">.</span><span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">wmSW</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">vpSW</span> <span class="o">/</span> <span class="n">vmSW</span> <span class="o">-</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">wmSW</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">wmSW</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.findvwLTE">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.findvwLTE">[docs]</a>
+    <span class="k">def</span> <span class="nf">findvwLTE</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the wall velocity for a deflagration or hybrid solution. Uses the </span>
+<span class="sd">        method described in [ALvdV23]_.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vwLTE : float</span>
+<span class="sd">            Wall velocity in local thermal equilibrium.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">shootingInLTE</span><span class="p">(</span><span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">vm</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb</span><span class="p">,</span> <span class="n">vw</span><span class="p">)</span>
+            <span class="n">al</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveAlpha</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+            <span class="n">vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVp</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">al</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shooting</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="n">vp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="p">):</span>
+            <span class="c1"># alpha is too small</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxAl</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span> <span class="ow">or</span> <span class="n">shootingInLTE</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># alpha is too large</span>
+            <span class="k">return</span> <span class="mf">1.0</span>
+
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+            <span class="n">shootingInLTE</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.findMatching">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.findMatching">[docs]</a>
+    <span class="k">def</span> <span class="nf">findMatching</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a deflagration or hybrid solution</span>
+<span class="sd">        when the wall velocity is vw.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity at which to solve the matching equation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[float | None, ...]</span>
+<span class="sd">            Tuple containing :math:`v_+`, :math:`v_-`, :math:`T_+`, :math:`T_-` and </span>
+<span class="sd">            velocityMid. If the solver wasn&#39;t able to find a solution, returns a tuple</span>
+<span class="sd">            of None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">vw</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vJ</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">detonationVAndT</span><span class="p">(</span><span class="n">vw</span><span class="p">)</span>
+
+        <span class="n">vm</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb</span><span class="p">,</span> <span class="n">vw</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vw</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span><span class="p">:</span>
+            <span class="c1"># alN too large for shock</span>
+            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">vpMax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">/</span> <span class="n">vw</span><span class="p">,</span> <span class="n">vw</span>
+        <span class="p">)</span>  <span class="c1"># Follows from  v+max v- = 1/self.cs2, see page 6 of arXiv:1004.4187</span>
+        <span class="n">vpMin</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Change vpMin or vpMax in case wp is negative between vpMin and vpMax</span>
+        <span class="n">sqrtDisc</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">+</span><span class="n">vm</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">vm</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sqrtDisc</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># vp at which wp changes sign</span>
+            <span class="n">vpSignChangeWp</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">vm</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">))</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sqrtDisc</span><span class="p">))</span><span class="o">/</span><span class="p">(</span>
+                <span class="mi">2</span><span class="o">*</span><span class="n">vm</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">vpSignChangeWp</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">vpMin</span> <span class="o">&lt;</span> <span class="n">vpSignChangeWp</span> <span class="o">&lt;</span> <span class="n">vpMax</span><span class="p">:</span>
+                    <span class="n">vpMax</span> <span class="o">=</span> <span class="n">vpSignChangeWp</span><span class="o">-</span><span class="mf">1e-10</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">vp</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shooting</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="n">vp</span><span class="p">),</span>
+                <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">vpMin</span><span class="p">,</span> <span class="n">vpMax</span><span class="p">),</span>
+                <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span>
+                <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># If no deflagration solution exists, returns None.</span>
+
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">root</span>
+        <span class="n">alp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">vp</span> <span class="o">/</span> <span class="n">vm</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span>
+        <span class="p">)</span>  <span class="c1"># This is equation 20a of arXiv:2303.10171 solved for alpha_+</span>
+        <span class="n">wp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wFromAlpha</span><span class="p">(</span><span class="n">alp</span><span class="p">)</span>
+        <span class="n">Tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">*</span> <span class="n">wp</span> <span class="o">**</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="p">)</span>  <span class="c1"># This follows from equation 22-23 of arXiv:2303.10171, and setting wn = 1</span>
+        <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findTm</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="n">Tp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.matchDeflagOrHybInitial">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.matchDeflagOrHybInitial">[docs]</a>
+    <span class="k">def</span> <span class="nf">matchDeflagOrHybInitial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">vp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns initial guess [Tp, Tm] for the solver in the </span>
+<span class="sd">        Hydrodynamics.matchDeflagOrHyb function by computing the corresponding </span>
+<span class="sd">        quantities in the template models. See Refs. [GKSvdV20]_ and [ALvdV23]_ for</span>
+<span class="sd">        details.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity.</span>
+<span class="sd">        vp : float or None</span>
+<span class="sd">            Plasma velocity in front of the wall :math:`v_+`. If None, vp is</span>
+<span class="sd">            determined from conservation of entropy.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list[float]</span>
+<span class="sd">            List containing Tp and Tm, the temperature in front and behind the wall.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb</span><span class="p">)</span>
+        <span class="n">al</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">al</span> <span class="o">=</span> <span class="p">((</span><span class="n">vm</span> <span class="o">-</span> <span class="n">vp</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">-</span> <span class="n">vm</span> <span class="o">*</span> <span class="n">vp</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span>
+                <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">al</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solveAlpha</span><span class="p">(</span><span class="n">vw</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">WallGoError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WallGoError</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to find alpha!&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;vw&quot;</span><span class="p">:</span> <span class="n">vw</span><span class="p">,</span> <span class="s2">&quot;vm&quot;</span><span class="p">:</span> <span class="n">vm</span><span class="p">}</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+            <span class="n">vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getVp</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">al</span><span class="p">)</span>
+        <span class="n">wp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wFromAlpha</span><span class="p">(</span><span class="n">al</span><span class="p">)</span>
+        <span class="n">Tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span> <span class="o">*</span> <span class="n">wp</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findTm</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="n">Tp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.findHydroBoundaries">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.findHydroBoundaries">[docs]</a>
+    <span class="k">def</span> <span class="nf">findHydroBoundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vwTry</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns :math:`c_1, c_2, T_+, T_-` for a given wall velocity and nucleation</span>
+<span class="sd">        temperature.</span>
+
+<span class="sd">        NOTE: the sign of c1 is chosen to match the convention for the fluid velocity</span>
+<span class="sd">        used in EquationOfMotion and Hydrodynamics. In those conventions, vp would be</span>
+<span class="sd">        negative, and therefore c1 has to be negative as well.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vwTry : float</span>
+<span class="sd">            Wall velocity</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[float | None, ...]</span>
+<span class="sd">            Tuple containing c1, c2, Tp, Tm and velocityMid. If the solver wasn&#39;t able </span>
+<span class="sd">            to find a solution, returns a tuple of None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">vwTry</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">vMin</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;This wall velocity is too small for the chosen nucleation</span>
+<span class="sd">                temperature. findHydroBoundaries will return zero.&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findMatching</span><span class="p">(</span><span class="n">vwTry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">vm</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">Tp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">Tm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">vp</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">vm</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">Tp</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">Tm</span><span class="p">)</span>
+        <span class="n">wHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wN</span> <span class="o">*</span> <span class="p">(</span><span class="n">Tp</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="n">pHighT</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pN</span> <span class="o">+</span> <span class="p">((</span><span class="n">Tp</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wN</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="o">-</span><span class="n">wHighT</span> <span class="o">*</span> <span class="n">vp</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="n">pHighT</span> <span class="o">+</span> <span class="n">wHighT</span> <span class="o">*</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">velocityMid</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">vm</span> <span class="o">+</span> <span class="n">vp</span><span class="p">)</span>  <span class="c1"># minus sign for convention change</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">Tp</span><span class="p">,</span> <span class="n">Tm</span><span class="p">,</span> <span class="n">velocityMid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.maxAl">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.maxAl">[docs]</a>
+    <span class="k">def</span> <span class="nf">maxAl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upperLimit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the highest value of :math:`\alpha_n` at which a hybrid solution can be</span>
+<span class="sd">        found by finding the value that gives a solution with :math:`v_w=v_J`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        upperLimit : float, optional</span>
+<span class="sd">            Largest value of :math:`\alpha_n` at which the solver will look. Default is</span>
+<span class="sd">            100.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Maximal value for :math:`\alpha_n`. If the true value is above upperLimit,</span>
+<span class="sd">            returns upperLimit.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb</span>
+        <span class="n">lowerLimit</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
+
+        <span class="c1">## This function returns the residual of the matching equation when vw=vJ for a</span>
+        <span class="c1">## given value of alpha_n.</span>
+        <span class="k">def</span> <span class="nf">matching</span><span class="p">(</span><span class="n">alN</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+            <span class="n">vw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">findJouguetVelocity</span><span class="p">(</span><span class="n">alN</span><span class="p">)</span>
+            <span class="n">vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cs2</span> <span class="o">/</span> <span class="n">vw</span>
+            <span class="n">ga2p</span><span class="p">,</span> <span class="n">ga2m</span> <span class="o">=</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">vp</span><span class="p">),</span> <span class="n">gammaSq</span><span class="p">(</span><span class="n">vm</span><span class="p">)</span>
+            <span class="n">wp</span> <span class="o">=</span> <span class="p">(</span><span class="n">vp</span> <span class="o">+</span> <span class="n">vw</span> <span class="o">-</span> <span class="n">vw</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">vp</span> <span class="o">+</span> <span class="n">vw</span> <span class="o">-</span> <span class="n">vp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+            <span class="n">psi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span> <span class="o">*</span> <span class="n">wp</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">al</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+                <span class="n">alN</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="n">wp</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span> <span class="o">*</span> <span class="n">al</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">vp</span> <span class="o">*</span> <span class="n">vm</span><span class="p">)</span>
+                <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">al</span> <span class="o">-</span> <span class="p">(</span><span class="n">ga2p</span> <span class="o">/</span> <span class="n">ga2m</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1">## Finds the min or max of matching  to bracket the root in case it is not</span>
+        <span class="c1">## monotonous.</span>
+        <span class="k">if</span> <span class="n">matching</span><span class="p">(</span><span class="n">upperLimit</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">maximum</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">matching</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">bounds</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">psiN</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">upperLimit</span><span class="p">],</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Bounded&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">maximum</span><span class="o">.</span><span class="n">fun</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">upperLimit</span>
+            <span class="n">upperLimit</span> <span class="o">=</span> <span class="n">maximum</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">if</span> <span class="n">matching</span><span class="p">(</span><span class="n">lowerLimit</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">minimum</span> <span class="o">=</span> <span class="n">minimize_scalar</span><span class="p">(</span>
+                <span class="n">matching</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">[</span><span class="n">lowerLimit</span><span class="p">,</span> <span class="n">upperLimit</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Bounded&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">minimum</span><span class="o">.</span><span class="n">fun</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">lowerLimit</span>
+            <span class="n">upperLimit</span> <span class="o">=</span> <span class="n">minimum</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1">## Finds the solution with 0 residual.</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
+            <span class="n">matching</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">lowerLimit</span><span class="p">,</span> <span class="n">upperLimit</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rtol</span><span class="p">,</span> <span class="n">xtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">atol</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HydrodynamicsTemplateModel.detonationVAndT">
+<a class="viewcode-back" href="../../modules/hydrodynamicsTemplateModel.html#WallGo.hydrodynamicsTemplateModel.HydrodynamicsTemplateModel.detonationVAndT">[docs]</a>
+    <span class="k">def</span> <span class="nf">detonationVAndT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes :math:`v_-,\ v_+,\ T_-,\ T_+` for a detonation solution.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        vw : float</span>
+<span class="sd">            Wall velocity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vp : float</span>
+<span class="sd">            Plasma velocity in front of the wall.</span>
+<span class="sd">        vm : float</span>
+<span class="sd">            Plasma velocity behind the wall.</span>
+<span class="sd">        Tp : float</span>
+<span class="sd">            Temperature in front of the wall.</span>
+<span class="sd">        Tm : float</span>
+<span class="sd">            Temperature behind the wall.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">vw</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">alN</span><span class="p">)</span>
+        <span class="n">vm</span> <span class="o">=</span> <span class="p">(</span><span class="n">part</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">part</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">cb2</span> <span class="o">*</span> <span class="n">vp</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">vp</span><span class="p">)</span>
+        <span class="n">Tm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_findTm</span><span class="p">(</span><span class="n">vm</span><span class="p">,</span> <span class="n">vp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vp</span><span class="p">,</span> <span class="n">vm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Tnucl</span><span class="p">,</span> <span class="n">Tm</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Andreas Ekstedt, Oliver Gould, Joonas Hirvonen, Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
