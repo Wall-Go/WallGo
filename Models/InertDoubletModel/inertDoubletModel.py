@@ -182,7 +182,7 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["lambda3"] * T**2 / 24.0
         
         heavyScalar = Particle(
-            name="heavyScalar",
+            name="A",
             index=11,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
