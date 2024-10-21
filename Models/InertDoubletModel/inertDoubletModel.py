@@ -171,6 +171,27 @@ class InertDoubletModel(GenericModel):
         )
         self.addParticle(wBoson)
 
+        ## === A, Hpm scalars ===
+        def heavyScalarMsqVacuum(fields: Fields) -> Fields:
+            return self.modelParameters["msq2"] + self.modelParameters["lambda3"]*fields.getField(0)**2 / 2
+
+        def heavyScalarMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["lambda3"]*fields.getField(0)
+
+        def heavyScalarThermal(T: float) -> float:
+            return self.modelParameters["lambda3"] * T**2 / 24.0
+        
+        heavyScalar = Particle(
+            name="heavyScalar",
+            index=3,
+            msqVacuum=heavyScalarMsqVacuum,
+            msqDerivative=heavyScalarMsqDerivative,
+            msqThermal=heavyScalarThermal,
+            statistics="Boson",
+            totalDOFs=3,
+        )
+        self.addParticle(heavyScalar)
+
     ## Go from whatever input params --> action params
     def calculateLagrangianParameters(
         self, inputParameters: dict[str, float]
