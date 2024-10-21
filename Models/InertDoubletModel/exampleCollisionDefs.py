@@ -26,6 +26,7 @@ def setupCollisionModel_QCDEW(
     mg2 -- Mass of a gluon propagator.
     mw2 -- Mass of a W propagator.
     ms2 -- Mass of a Higgs propagator.
+    mA2 -- Mass of a A propogator
 
     Thermal masses depend on the QCD coupling, however the model definition always needs a numerical value for each symbol.
     This adds some complexity to the model setup, and therefore we do the symbol definitions in stages: 
@@ -48,6 +49,7 @@ def setupCollisionModel_QCDEW(
     parameters.addOrModifyParameter("gw", modelParameters["g2"])
     parameters.addOrModifyParameter("yt", modelParameters["yt"])
     parameters.addOrModifyParameter("lamH3", modelParameters["lambda3"])
+    parameters.addOrModifyParameter("v", modelParameters["v0"]/2) #TODO: replace with something better
 
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
@@ -132,17 +134,8 @@ def setupCollisionModel_QCDEW(
     wBoson.massSqFunction = wBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(wBoson)
 
-    photon = WallGoCollision.ParticleDescription()
-    photon.name = "B"
-    photon.index = 5
-    photon.type = WallGoCollision.EParticleType.eBoson
-    photon.bInEquilibrium = True
-    photon.bUltrarelativistic = True
-    photon.massSqFunction = HiggsBosonThermalMassSquared
-    modelDefinition.defineParticleSpecies(photon)
-
     higgs = WallGoCollision.ParticleDescription()
-    higgs.name = "H"
+    higgs.name = "h"
     higgs.index = 5
     higgs.type = WallGoCollision.EParticleType.eBoson
     higgs.bInEquilibrium = True
@@ -150,12 +143,58 @@ def setupCollisionModel_QCDEW(
     higgs.massSqFunction = HiggsBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(higgs)
 
+    goldStone0 = WallGoCollision.ParticleDescription()
+    goldStone0.name = "G0"
+    goldStone0.index = 6
+    goldStone0.type = WallGoCollision.EParticleType.eBoson
+    goldStone0.bInEquilibrium = True
+    goldStone0.bUltrarelativistic = True
+    goldStone0.massSqFunction = HiggsBosonThermalMassSquared
+    modelDefinition.defineParticleSpecies(goldStone0)
+
+    goldStonepR = WallGoCollision.ParticleDescription()
+    goldStonepR.name = "GpR"
+    goldStonepR.index = 7
+    goldStonepR.type = WallGoCollision.EParticleType.eBoson
+    goldStonepR.bInEquilibrium = True
+    goldStonepR.bUltrarelativistic = True
+    goldStonepR.massSqFunction = HiggsBosonThermalMassSquared
+    modelDefinition.defineParticleSpecies(goldStonepR)
+
+    goldStonepI = WallGoCollision.ParticleDescription()
+    goldStonepI.name = "GpI"
+    goldStonepI.index = 8
+    goldStonepI.type = WallGoCollision.EParticleType.eBoson
+    goldStonepI.bInEquilibrium = True
+    goldStonepI.bUltrarelativistic = True
+    goldStonepI.massSqFunction = HiggsBosonThermalMassSquared
+    modelDefinition.defineParticleSpecies(goldStonepI)
+
+    newScalarLight = WallGoCollision.ParticleDescription()
+    newScalarLight.name = "H"
+    newScalarLight.index = 9
+    newScalarLight.type = WallGoCollision.EParticleType.eBoson
+    newScalarLight.bInEquilibrium = True
+    newScalarLight.bUltrarelativistic = True
+    newScalarLight.massSqFunction = newScalarThermalMassSquared
+    modelDefinition.defineParticleSpecies(newScalarLight)
+
+    newScalarHeavy = WallGoCollision.ParticleDescription()
+    newScalarHeavy.name = "A"
+    newScalarHeavy.index = 10
+    newScalarHeavy.type = WallGoCollision.EParticleType.eBoson
+    newScalarHeavy.bInEquilibrium = False
+    newScalarHeavy.bUltrarelativistic = True
+    newScalarHeavy.massSqFunction = newScalarThermalMassSquared
+    modelDefinition.defineParticleSpecies(newScalarHeavy)
+
     lightQuark = WallGoCollision.ParticleDescription()
     lightQuark.name = "lightQuark"
-    lightQuark.index = 6
+    lightQuark.index = 11
     lightQuark.type = WallGoCollision.EParticleType.eFermion
     lightQuark.bInEquilibrium = True
     lightQuark.bUltrarelativistic = True
+    lightQuark.massSqFunction = quarkThermalMassSquared
     modelDefinition.defineParticleSpecies(lightQuark)
 
     # Create the concrete model
