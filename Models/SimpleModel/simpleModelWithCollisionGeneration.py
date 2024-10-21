@@ -39,6 +39,8 @@ class SimpleModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
+        self.bShouldRecalculateMatrixElements = False
+
         self.bShouldRecalculateCollisions = False
 
         # We take the matrix elements from the Yukawa model
