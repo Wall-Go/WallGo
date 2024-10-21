@@ -190,9 +190,10 @@ MatrixElements=ExportMatrixElements[
 	ParticleMasses,
 	{
 		TruncateAtLeadingLog->True,
-		Replacements->{lam4H->0,lam5H->0},
+		Replacements->{lam1H->0,lam2H->0,lam4H->0,lam5H->0},
 		Format->{"json","txt"},
 		NormalizeWithDOF->False}];
+
 
 
 
