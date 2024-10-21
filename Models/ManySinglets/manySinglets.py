@@ -538,6 +538,7 @@ class NSingletsModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
+        self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(

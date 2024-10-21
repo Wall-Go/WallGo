@@ -372,6 +372,7 @@ class StandardModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
+        self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
             self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
