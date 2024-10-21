@@ -14,10 +14,10 @@ import sys
 import logging
 
 import WallGo
+from WallGo import mathematicaHelpers   
 
 if typing.TYPE_CHECKING:
     import WallGoCollision
-
 
 @dataclass
 class ExampleInputPoint:
@@ -41,9 +41,16 @@ class WallGoExampleBase(ABC):
     command line flag always takes priority.
     """
 
+    bShouldRecalculateMatrixElements: bool
+    """Flag used to check if new matrix elements should be generated
+    """
+
     matrixElementFile: pathlib.Path
     """Where to load matrix elements from. Used by runExample() if/when the
     collision model is initialized."""
+
+    matrixElementInput: pathlib.Path
+    """Where to load matrix element code from."""
 
     @abstractmethod
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -124,7 +131,7 @@ class WallGoExampleBase(ABC):
         argParser.add_argument(
             "--recalculateMatrixElements",
             action="store_true",
-            help="Forces full recalculation of matrix elements via DRalgo.",
+            help="Forces full recalculation of matrix elements via WallGoMatrix.",
         )
 
         argParser.add_argument(
@@ -228,6 +235,19 @@ class WallGoExampleBase(ABC):
 
         model = self.initWallGoModel()
         manager.registerModel(model)
+
+        bNeedsNewMatrixElements = (
+                self.cmdArgs.recalculateMatrixElements or self.bShouldRecalculateMatrixElements
+            )
+        
+        if bNeedsNewMatrixElements:
+            newMatrixElementFile =  pathlib.Path(
+                self.exampleBaseDirectory / "MatrixElements/UserGenerated"
+            )
+            self.matrixElementFile = newMatrixElementFile
+            # this subprocess requires wolframscript and a licensed installation of WolframEngine.
+            mathematicaHelpers.generateMatrixElementsViaSubprocess(self.matrixElementInput,self.matrixElementFile)
+
 
         """Collision model will be initialized only if new collision integrals
         are needed"""

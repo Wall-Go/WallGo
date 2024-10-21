@@ -3,19 +3,18 @@
 (*Quit[];*)
 
 
-SetDirectory[DirectoryName[$InputFileName]];
+(*SetDirectory[NotebookDirectory[]];*)
 (*Put this if you want to create multiple model-files with the same kernel*)
 $GroupMathMultipleModels=True;
 $LoadGroupMath=True;
-<<DRalgo`;
-<<matrixElements`;
+<<WallGoMatrix`
 
 
 (* ::Chapter:: *)
 (*QCD*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Model*)
 
 
@@ -40,11 +39,14 @@ RepFermion3Gen={RepFermion1Gen,RepFermion1Gen,RepFermion1Gen,RepFermion1Gen,RepF
 {gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC}=AllocateTensors[Group,RepAdjoint,CouplingName,RepFermion3Gen,RepScalar];
 
 
-(* ::Title:: *)
+ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC,Verbose->False];
+
+
+(* ::Section:: *)
 (*A model with 6 quarks and 1 gluon*)
 
 
-(* ::Subtitle:: *)
+(* ::Subsection:: *)
 (*UserInput*)
 
 
@@ -52,7 +54,7 @@ RepFermion3Gen={RepFermion1Gen,RepFermion1Gen,RepFermion1Gen,RepFermion1Gen,RepF
 In DRalgo fermions are Weyl.
 So to create one Dirac we need
 one left-handed and
-one right-handed fermoon
+one right-handed fermion
 *)
 
 
@@ -60,22 +62,8 @@ one right-handed fermoon
 rep 1-6 are quarks,
 rep 7 is a gluon
 *)
-Rep1=CreateOutOfEq[{1,2},"F"];
-Rep2=CreateOutOfEq[{3,4},"F"];
-Rep3=CreateOutOfEq[{5,6},"F"];
-Rep4=CreateOutOfEq[{7,8},"F"];
-Rep5=CreateOutOfEq[{9,10},"F"];
-Rep6=CreateOutOfEq[{11,12},"F"];
-RepGluon=CreateOutOfEq[{1},"V"];
-(*check*)
-(*Rep2=CreateOutOfEq[{3,4,...,12},"F"];*)
-
-
-ParticleList={Rep1,RepGluon,Rep2,Rep3,Rep4,Rep5,Rep6};
-(*
-These particles do not have out-of-eq contributions
-*)
-LightParticles={3,4,5,6,7};
+Rep1=CreateParticle[{1,2},"F"];
+RepGluon=CreateParticle[{1},"V"];
 
 
 (*Defining various masses and couplings*)
@@ -83,6 +71,8 @@ LightParticles={3,4,5,6,7};
 
 VectorMass=Table[mg2,{i,1,Length[gvff]}];
 FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
+ScalarMass={};
+ParticleMasses={VectorMass,FermionMass,ScalarMass};
 (*
 up to the user to make sure that the same order is given in the python code
 *)
@@ -90,7 +80,30 @@ UserMasses={mq2,mg2};
 UserCouplings={gs};
 
 
-SetDirectory[DirectoryName[$InputFileName]];
-OutputFile="../MatrixElements";
-ParticleName={"Top","Gluon"};
-MatrixElements=ExportMatrixElements[OutputFile,ParticleList,LightParticles,UserMasses,UserCouplings,ParticleName];
+(*
+These particles do not necessarily have to be out of equilibrium
+the remainin particle content is set as light
+*)
+ParticleList={Rep1,RepGluon};
+ParticleName={"Top", "Gluon"};
+
+
+Print[$ScriptCommandLine]
+
+
+(*
+	output of matrix elements
+*)
+(*SetDirectory[NotebookDirectory[]];*)
+OutputFile="output/matrixElements.qcd";
+MatrixElements=ExportMatrixElements[
+	OutputFile,
+	ParticleList,
+	UserMasses,
+	UserCouplings,
+	ParticleName,
+	ParticleMasses,
+	{TruncateAtLeadingLog->True,Format->{"json","txt"}}];
+
+
+
