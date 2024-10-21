@@ -10,6 +10,7 @@ import numpy as np
 import WallGo
 from WallGo import Fields, GenericModel, Particle
 
+
 class YukawaModel(GenericModel):
     """
     The Yukawa model, inheriting from WallGo.GenericModel.
@@ -47,12 +48,21 @@ class YukawaModel(GenericModel):
         # === left fermion ===
         # Vacuum mass squared
         def psiMsqVacuum(fields: Fields) -> Fields:
-            return (self.modelParameters["mf"] + self.modelParameters["y"] * fields.getField(0)) ** 2
+            return (
+                self.modelParameters["mf"]
+                + self.modelParameters["y"] * fields.getField(0)
+            ) ** 2
 
         # Field-derivative of the vacuum mass squared
         def psiMsqDerivative(fields: Fields) -> Fields:
-            return 2 * self.modelParameters["y"] * (self.modelParameters["mf"]
-            + self.modelParameters["y"] * fields.getField(0))
+            return (
+                2
+                * self.modelParameters["y"]
+                * (
+                    self.modelParameters["mf"]
+                    + self.modelParameters["y"] * fields.getField(0)
+                )
+            )
 
         # Thermal mass
         def psiMsqThermal(T: float) -> float:
@@ -108,9 +118,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
     """
     # ~
 
-    def evaluate(
-        self, fields: Fields, temperature: float
-    ) -> float | np.ndarray:
+    def evaluate(self, fields: Fields, temperature: float) -> float | np.ndarray:
         """
         Evaluate the effective potential.
         """
@@ -143,6 +151,7 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
 
         return np.array(potentialTotal)
 
+
 def main() -> None:
 
     manager = WallGo.WallGoManager()
@@ -168,9 +177,9 @@ def main() -> None:
 
     manager.setupThermodynamicsHydrodynamics(
         WallGo.PhaseInfo(
-                temperature=8.0,  # nucleation temperature
-                phaseLocation1=WallGo.Fields([0.4]),
-                phaseLocation2=WallGo.Fields([27.0]),
+            temperature=8.0,  # nucleation temperature
+            phaseLocation1=WallGo.Fields([0.4]),
+            phaseLocation2=WallGo.Fields([27.0]),
         ),
         WallGo.VeffDerivativeSettings(
             temperatureVariationScale=1.0,
@@ -187,8 +196,8 @@ def main() -> None:
         # meanFreePathScale is determined here by the annihilation channels,
         # and scales inversely with y^4 or lam^2. This is why
         # meanFreePathScale has to be so large.
-        meanFreePathScale=10000.0, # In units of 1/Tnucl
-        wallThicknessGuess=10.0, # In units of 1/Tnucl
+        meanFreePathScale=10000.0,  # In units of 1/Tnucl
+        wallThicknessGuess=10.0,  # In units of 1/Tnucl
     )
 
     results = manager.solveWall(solverSettings)
@@ -289,7 +298,7 @@ if __name__ == "__main__":
 #         collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
 
 #         return collisionModel
-    
+
 #     def configureCollisionIntegration(
 #         self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
 #     ) -> None:
@@ -298,9 +307,9 @@ if __name__ == "__main__":
 #         import WallGoCollision  # pylint: disable = C0415
 
 #         """We can also configure various verbosity settings that are useful when
-#         you want to see what is going on in long-running integrations. These 
+#         you want to see what is going on in long-running integrations. These
 #         include progress reporting and time estimates, as well as a full result dump
-#         of each individual integral to stdout. By default these are all disabled. 
+#         of each individual integral to stdout. By default these are all disabled.
 #         Here we enable some for demonstration purposes.
 #         """
 #         verbosity = WallGoCollision.CollisionTensorVerbosity()
@@ -309,9 +318,9 @@ if __name__ == "__main__":
 #         )
 
 #         """Progress report when this percentage of total integrals (approximately)
-#         have been computed. Note that this percentage is per-particle-pair, ie. 
+#         have been computed. Note that this percentage is per-particle-pair, ie.
 #         each (particle1, particle2) pair reports when this percentage of their
-#         own integrals is done. Note also that in multithreaded runs the 
+#         own integrals is done. Note also that in multithreaded runs the
 #         progress tracking is less precise.
 #         """
 #         verbosity.progressReportPercentage = 0.25

@@ -41,8 +41,7 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory
-            / "MatrixElements/MatrixElements_Yukawa.json"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa.json"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -87,17 +86,17 @@ class YukawaModelExample(WallGoExampleBase):
 
         parameters = WallGoCollision.ModelParameters()
 
-        parameters.addOrModifyParameter("y", wallGoModel.modelParameters["y"])
-        parameters.addOrModifyParameter("gamma", wallGoModel.modelParameters["gamma"])
-        parameters.addOrModifyParameter("lam", wallGoModel.modelParameters["lam"])
-        parameters.addOrModifyParameter("v", 0.0)
+        parameters.add("y", wallGoModel.modelParameters["y"])
+        parameters.add("gamma", wallGoModel.modelParameters["gamma"])
+        parameters.add("lam", wallGoModel.modelParameters["lam"])
+        parameters.add("v", 0.0)
 
-        parameters.addOrModifyParameter(
+        parameters.add(
             "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
         )  # phi thermal mass^2 in units of T
-        parameters.addOrModifyParameter(
+        parameters.add(
             "ms2",
-            + wallGoModel.modelParameters["lam"] / 24.0
+            +wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
         )  # psi thermal mass^2 in units of T
 
@@ -107,7 +106,7 @@ class YukawaModelExample(WallGoExampleBase):
         collisionModel = WallGoCollision.PhysicsModel(collisionModelDefinition)
 
         return collisionModel
-    
+
     def configureCollisionIntegration(
         self, inOutCollisionTensor: "WallGoCollision.CollisionTensor"
     ) -> None:
@@ -155,7 +154,7 @@ class YukawaModelExample(WallGoExampleBase):
         """
 
         newParams = inputParameters
-        #Copy to the model dict, do NOT replace the reference.
+        # Copy to the model dict, do NOT replace the reference.
         # This way the changes propagate to Veff and particles
         model.modelParameters.update(newParams)
 
@@ -193,8 +192,8 @@ class YukawaModelExample(WallGoExampleBase):
                     # meanFreePathScale is determined here by the annihilation channels,
                     # and scales inversely with y^4 or lam^2. This is why
                     # meanFreePathScale has to be so large.
-                    meanFreePathScale=10000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=10.0, # In units of 1/Tnucl
+                    meanFreePathScale=10000.0,  # In units of 1/Tnucl
+                    wallThicknessGuess=10.0,  # In units of 1/Tnucl
                 ),
             )
         )
