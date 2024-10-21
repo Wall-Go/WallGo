@@ -5,6 +5,7 @@ Class that can be use to evaluate and interpolate functions.
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import Callable, Tuple
+import logging
 import numpy as np
 from scipy.interpolate import CubicSpline
 
@@ -662,7 +663,7 @@ class InterpolatableFunction(ABC):
         """
         if not self.hasInterpolation():
             newPoints = int(pointsMin + pointsMax)
-            print(
+            logging.warning(
                 f"Warning: {self.__class__.__name__}.extendInterpolationRange() "
                 "called without existing interpolation. "
                 f"Creating new table in range [{newMin}, {newMax}] with {newPoints} "
@@ -711,7 +712,7 @@ class InterpolatableFunction(ABC):
             self.disableAdaptiveInterpolation()
             self.enableAdaptiveInterpolation()
 
-    def readInterpolationTable(self, fileToRead: str, bVerbose: bool = True) -> None:
+    def readInterpolationTable(self, fileToRead: str) -> None:
         """
         Reads precalculated values from a file and does cubic interpolation.
         Each line in the file must be of form x f(x).
@@ -721,8 +722,6 @@ class InterpolatableFunction(ABC):
         ----------
         fileToRead : str
             Path of the file where the interpolation table is stored.
-        bVerbose : bool, optional
-            Whether or not to print information. The default is True.
 
         """
 
@@ -757,23 +756,20 @@ class InterpolatableFunction(ABC):
             self._validateInterpolationTable(self._rangeMax)
             self._validateInterpolationTable((self._rangeMax - self._rangeMin) / 2.55)
 
-            if bVerbose:
-                print(
-                    f"{selfName}: Succesfully read interpolation table from file. "
-                    "Range [{self._rangeMin}, {self._rangeMax}]"
-                )
+            logging.debug(
+                f"{selfName}: Succesfully read interpolation table from file. "
+                "Range [{self._rangeMin}, {self._rangeMax}]"
+            )
 
         except IOError as ioError:
-            print(
+            logging.warning(
                 f"IOError! {selfName} attempted to read interpolation table from "
                 "file, but got error:"
             )
-            print(ioError)
-            print("This is non-fatal. Interpolation table will not be updated.\n")
+            logging.warning(ioError)
+            logging.warning("This is non-fatal. Interpolation table will not be updated.\n")
 
-    def writeInterpolationTable(
-        self, outputFileName: str, bVerbose: bool = True
-    ) -> None:
+    def writeInterpolationTable(self, outputFileName: str) -> None:
         """
         Write our interpolation table to file.
 
@@ -781,8 +777,6 @@ class InterpolatableFunction(ABC):
         ----------
         outputFileName : str
             Name of the file where the interpolation table will be written.
-        bVerbose : bool, optional
-            Whether or not to print information. The default is True.
 
         """
         try:
@@ -797,14 +791,13 @@ class InterpolatableFunction(ABC):
             )
             np.savetxt(outputFileName, stackedArray, fmt="%.15g", delimiter=" ")
 
-            if bVerbose:
-                print(
-                    "Stored interpolation table for function "
-                    f"{self.__class__.__name__}, output file {outputFileName}."
-                )
+            logging.debug(
+                "Stored interpolation table for function "
+                f"{self.__class__.__name__}, output file {outputFileName}."
+            )
 
         except Exception as e:
-            print(
+            logging.warning(
                 f"Error from {self.__class__.__name__}, function "
                 f"writeInterpolationTable(): {e}"
             )
@@ -823,7 +816,7 @@ class InterpolatableFunction(ABC):
             self._interpolatedFunction is None
             or not self._rangeMin <= x <= self._rangeMax
         ):
-            print(
+            logging.warning(
                 f"{self.__class__.__name__}: _validateInterpolationTable called, "
                 "but no valid interpolation table was found."
             )
@@ -831,7 +824,7 @@ class InterpolatableFunction(ABC):
 
         diff = self.evaluateInterpolation(x) - self._functionImplementation(x)
         if np.any(np.abs(diff) > absoluteTolerance):
-            print(
+            logging.warning(
                 f"{self.__class__.__name__}: Could not validate interpolation table!"
                 f" Value discrepancy was {diff}"
             )

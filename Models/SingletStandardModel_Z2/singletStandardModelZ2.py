@@ -300,11 +300,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
         self.integrals.Jb.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            bVerbose=False,
         )
         self.integrals.Jf.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            bVerbose=False,
         )
 
         self.integrals.Jb.disableAdaptiveInterpolation()
@@ -647,9 +645,11 @@ class SingletStandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Singlet example uses spatial grid size = 20"""
+        """We load the configs from a file for this example."""
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "singletStandardModelZ2Config.ini")
+        )
         super().configureManager(inOutManager)
-        inOutManager.config.configGrid.spatialGridSize = 20
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]
