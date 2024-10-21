@@ -646,7 +646,7 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.idm.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -697,19 +697,40 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         changedParams = WallGoCollision.ModelParameters()
 
-        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+        g3 = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
-        changedParams.addOrModifyParameter("gs", gs)
+        yt = inWallGoModel.modelParameters["yt"]
+        lam3H = inWallGoModel.modelParameters["lambda3"]
+        v = inWallGoModel.modelParameters["v0"]/2 #TODO: replace with something better
+
+        changedParams.addOrModifyParameter("g3", g3)
         changedParams.addOrModifyParameter("gw", gw)
+        changedParams.add("yt1",yt)
+        changedParams.add("lambda3", lam3H)
+        changedParams.add("v",v)
+
         changedParams.addOrModifyParameter(
-            "mq2", gs**2 / 6.0
+            "mq2", g3**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "mg2", 2.0 * gs**2
+            "mg2", 2.0 * g3**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
             "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "mG2", (9 * gw**2 / 4+ 3 * yt) / 12.0
+        )  # goldstone thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "mh2", (9 * gw**2 / 4+ 3 * yt) / 12.0
+        )  # Higgs thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "mH2", lamH3 / 24.0
+        )  # h thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "mA2", lamH3 / 24.0
+        )  # A thermal mass^2 in units of T
+
 
         inOutCollisionModel.updateParameters(changedParams)
 

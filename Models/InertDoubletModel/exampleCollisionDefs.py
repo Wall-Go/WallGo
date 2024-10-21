@@ -45,10 +45,10 @@ def setupCollisionModel_QCDEW(
 
     # For defining new parameters use addOrModifyParameter(). For read-only access you can use the [] operator.
     # Here we copy the value of QCD, EW and scalar couplings as defined in the main WallGo model (names differ for historical reasons)
-    parameters.addOrModifyParameter("gs", modelParameters["g3"])
+    parameters.addOrModifyParameter("g3", modelParameters["g3"])
     parameters.addOrModifyParameter("gw", modelParameters["g2"])
-    parameters.addOrModifyParameter("yt", modelParameters["yt"])
-    parameters.addOrModifyParameter("lamH3", modelParameters["lambda3"])
+    parameters.addOrModifyParameter("yt1", modelParameters["yt"])
+    parameters.addOrModifyParameter("lam3H", modelParameters["lambda3"])
     parameters.addOrModifyParameter("v", modelParameters["v0"]/2) #TODO: replace with something better
 
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
@@ -56,20 +56,20 @@ def setupCollisionModel_QCDEW(
 
     # For quarks we include the thermal mass only
     def quarkThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        gs = p["gs"]  # this is equivalent to: gs = p.getParameterValue("gs")
+        gs = p["g3"]  # this is equivalent to: gs = p.getParameterValue("gs")
         return gs**2 / 6.0
 
     def gluonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return 2.0 * p["gs"] ** 2
+        return 2.0 * p["g3"] ** 2
     
     def wBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 11.0 * p["gw"] ** 2 / 6.0
 
     def HiggsBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return (9 * p["gw"] ** 2 / 4 + 3 * p["yt"]) / 12.0
+        return (9 * p["gw"] ** 2 / 4 + 3 * p["yt1"]) / 12.0
     
     def newScalarThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return p["lambda3"] / 24.0
+        return p["lam3H"] / 24.0
 
 
     parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
