@@ -1,9 +1,11 @@
+"""
+Common Wolfram Mathematica and WallGoMatrix related functions.
+Common physics/math functions should go into helpers.py
+"""
+
 import pathlib
 import subprocess
 import logging
-
-# Put common Wolfram Mathematica and WallGoMatrix related functions here.
-# Common physics/math functions should go into helpers.py
 
 def generateMatrixElementsViaSubprocess(
     inFilePath: pathlib.Path, outFilePath: pathlib.Path
@@ -37,19 +39,24 @@ def generateMatrixElementsViaSubprocess(
     upperBanner = f"""
 === WallGoMatrix recomputing Matrix Elements ===
 Input file  : {inFilePathStr}"""
+    lowerBanner = f"""================================================\n"""
 
-    lowerBanner= f"""================================================\n"""
-
-    print(upperBanner)
-
-    command = ["wolframscript", "-script", inFilePathStr, "--outputFile", outFilePathStr]
+    command = [
+        "wolframscript",
+        "-script",
+        inFilePathStr,
+        "--outputFile",
+        outFilePathStr,
+    ]
 
     try:
+        print(upperBanner)
         # run wolframscript
         result = subprocess.run(
             command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         print(result.stdout.decode("utf-8"))  # print the output
+        print(lowerBanner)
 
     except subprocess.CalledProcessError as e:
         # Handle errors in case the command fails
@@ -59,6 +66,3 @@ Input file  : {inFilePathStr}"""
             Ensure a licensed installation of WolframEngine."""
         )
         logging.error(e.stderr.decode("utf-8"))
-
-    
-    print(lowerBanner)
