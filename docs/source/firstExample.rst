@@ -16,7 +16,7 @@ In this case the scalar field may undergo a phase transition, with the fermion f
 
 The definition of the Model starts by inheriting from the :py:data:`WallGo.GenericModel` class. This class holds the features of a model which enter directly in the Python side of WallGo. This includes the list of particles (:py:data:`WallGo.Particle` objects) and a reference to a definition of the effective potential.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
    :lines: 6-90
 
@@ -43,7 +43,7 @@ where we have defined the effective tadpole coefficient and effective mass as
 
 The implementation in WallGo is as follows: one defines a class, here called :py:data:`WallGo.EffectivePotentialYukawa` which inherits from the base class :py:data:`WallGo.EffectivePotential`. This definition must contain a member function called :py:data:`evaluate` which evaluates the potential as a function of the scalar fields and temperature.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
    :lines: 93-152
 
@@ -51,7 +51,7 @@ The initialisation of an :py:data:`WallGo.EffectivePotential` object takes the m
 
 Once these two classes have been defined, we can now run WallGo to compute the bubble wall speed.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
    :lines: 155-215
 
