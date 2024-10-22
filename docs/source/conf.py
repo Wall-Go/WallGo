@@ -46,6 +46,7 @@ extensions = [
     "myst_parser",  # for markdown
 ]
 
+# Some tricks here from StackOverflow question 2701998
 # numpydoc_show_class_members = False # automodapi
 autosummary_generate = True
 autoclass_content = "both"  # 'both', 'init' or 'class'
