@@ -4,6 +4,7 @@ c.f. 2310.02308
 """
 
 import pathlib
+import logging
 import numpy as np
 
 # WallGo imports
@@ -155,6 +156,9 @@ class EffectivePotentialYukawa(WallGo.EffectivePotential):
 def main() -> None:
 
     manager = WallGo.WallGoManager()
+    manager.config.loadConfigFromFile(
+        pathlib.Path(__file__).resolve().parent / "yukawaConfig.ini")
+    manager.setVerbosity(logging.DEBUG)
 
     pathtoCollisions = pathlib.Path(__file__).resolve().parent / pathlib.Path(
         f"CollisionOutput_N11"
