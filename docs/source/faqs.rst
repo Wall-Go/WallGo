@@ -52,6 +52,8 @@ Collision integrals
     one node on a supercomputer. To choose the number of threads, you need to set an
     environment variable, as follows
 
+.. code-block:: bash
+
         export OMP_NUM_THREADS=4
 
     Once done, if you then run the computation of the collision integrals, they will run with
@@ -62,6 +64,8 @@ Collision integrals
 
     Note that for Mac users, OpenMP can be a little more tricky to set up. We recommend using
     the Homebrew version, which requires an export statement to properly link,
+
+.. code-block:: bash
 
         brew install libomp
         export OpenMP_ROOT=$(brew --prefix)/opt/libomp
@@ -130,6 +134,8 @@ Effective potentials
     WallGo has predefined methods to compute the fermionic and bosonic one-loop
     sum-integrals. It also has a default table of precomputed values. These are
     located in the sub-package called PotentialTools, and can be imported as
+
+.. code-block:: python
 
         from WallGo import PotentialTools
 
