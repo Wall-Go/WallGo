@@ -34,14 +34,13 @@ def generateMatrixElementsViaSubprocess(
     inFilePathStr = str(inFilePath)
     outFilePathStr = str(outFilePath)
 
-    banner = f"""\n
-================================================
-    WallGoMatrix recomputing Matrix Elements:
-    Input file  : {inFilePathStr}
-    Output path : {outFilePathStr}
-================================================
-"""
-    print(banner)
+    upperBanner = f"""
+=== WallGoMatrix recomputing Matrix Elements ===
+Input file  : {inFilePathStr}"""
+
+    lowerBanner= f"""================================================\n"""
+
+    print(upperBanner)
 
     command = ["wolframscript", "-script", inFilePathStr, "--outputFile", outFilePathStr]
 
@@ -60,3 +59,6 @@ def generateMatrixElementsViaSubprocess(
             Ensure a licensed installation of WolframEngine."""
         )
         logging.error(e.stderr.decode("utf-8"))
+
+    
+    print(lowerBanner)
