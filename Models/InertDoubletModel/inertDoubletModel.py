@@ -247,6 +247,8 @@ class InertDoubletModel(GenericModel):
         modelParameters["lambda2"] = inputParameters["lambda2"]
         modelParameters["lambdaL"] = inputParameters["lambdaL"]
 
+        print(modelParameters)
+
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
@@ -787,6 +789,8 @@ class InertDoubletModelExample(WallGoExampleBase):
         )
         super().configureManager(inOutManager)
 
+        inOutManager.config.configBoltzmannSolver.collisionMultiplier = 0.1
+
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]
     ) -> None:
@@ -849,7 +853,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=1000.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
