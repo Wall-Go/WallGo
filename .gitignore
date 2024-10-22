@@ -9,6 +9,7 @@ temp/
 build/
 examples/
 docs/_build
+docs/source/_autosummary
 *.egg-info
 dist/
 *.hdf5

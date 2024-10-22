@@ -9,7 +9,6 @@ If you use WallGo, please cite arXiv:....
 
 .. toctree::
     :caption: Getting Started:
-    :maxdepth: 2
     :hidden:
 
     intro
@@ -21,7 +20,6 @@ If you use WallGo, please cite arXiv:....
 
 .. toctree::
     :caption: Development:
-    :maxdepth: 2
     :hidden:
 
     contact
@@ -30,33 +28,8 @@ If you use WallGo, please cite arXiv:....
     license
 
 .. toctree::
-    :caption: Python API Reference
-    :maxdepth: 4
+    :caption: API reference:
     :hidden:
 
-    modules/boltzmann
-    modules/collisionArray
-    modules/collisionHelpers
-    modules/config
-    modules/containers
-    modules/effectivePotential
-    modules/equationOfMotion
-    modules/exceptions
-    modules/fields
-    modules/freeEnergy
-    modules/genericModel
-    modules/grid
-    modules/grid3Scales
-    modules/helpers
-    modules/hydrodynamics
-    modules/hydrodynamicsTemplateModel
-    modules/interpolatableFunction
-    modules/manager
-    modules/particle
-    modules/polynomial
-    modules/results
-    modules/thermodynamics
-    modules/utilities
-    modules/potentialTools/effectivePotentialNoResum
-    modules/potentialTools/integrals
-    modules/potentialTools/utilities
+    WallGo API <_autosummary/WallGo>
+
