@@ -13,7 +13,7 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`.
+    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`_.
 
 Installation
 ============
@@ -52,7 +52,7 @@ Collision integrals
     one node on a supercomputer. To choose the number of threads, you need to set an
     environment variable, as follows
 
-.. code-block:: bash
+    .. code-block:: bash
 
         export OMP_NUM_THREADS=4
 
@@ -65,7 +65,7 @@ Collision integrals
     Note that for Mac users, OpenMP can be a little more tricky to set up. We recommend using
     the Homebrew version, which requires an export statement to properly link,
 
-.. code-block:: bash
+    .. code-block:: bash
 
         brew install libomp
         export OpenMP_ROOT=$(brew --prefix)/opt/libomp
@@ -135,7 +135,7 @@ Effective potentials
     sum-integrals. It also has a default table of precomputed values. These are
     located in the sub-package called PotentialTools, and can be imported as
 
-.. code-block:: python
+    .. code-block:: python
 
         from WallGo import PotentialTools
 
