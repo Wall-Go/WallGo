@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  deployments: write
 
 jobs:
   docs:
