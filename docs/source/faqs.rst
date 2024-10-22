@@ -28,13 +28,14 @@ Matrix elements
 
 - **I want to use a different set of matrix elements, is this possible?**
 
-    Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].
+    Definitely! You can load your own matrix elements file. The default format is
+    a JSON file with a specific structure, described in detail in the WallGo paper. 
 
 - **Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?**
     Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
     we used this to cross check our results. We have included an example in the repository
-    for the `WallGo MatrixElements package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
-    a look at `tests/FeynCalc`.
+    for the `WallGoMatrix package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
+    a look at the directory `tests/FeynCalc`.
 
 - **I do not have a Mathematica license, can I still generate matrix elements?**
 
