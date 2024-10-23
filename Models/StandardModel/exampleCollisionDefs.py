@@ -60,7 +60,7 @@ def setupCollisionModel_QCDEW(
         return 2.0 * p["gs"] ** 2
     
     def wBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return 11.0 * p["gw"] ** 2 / 6.0
+        return 3.0 * p["gw"] ** 2 / 5.0
     
     def HiggsBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return (9 * p["gw"] ** 2 / 4 + 3 * p["yt"]) / 12.0
