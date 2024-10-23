@@ -15,7 +15,7 @@ Development: https://github.com/Wall-Go/WallGo
 
 [![Version](https://img.shields.io/github/v/tag/Wall-Go/WallGo?label=Version)](https://github.com/Wall-Go/WallGo/tags/)
 
-[![WallGo tests](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/badge.svg)](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml)
+[![WallGo tests (main)](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/badge.svg)](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml)
 
 ## About this project
 
