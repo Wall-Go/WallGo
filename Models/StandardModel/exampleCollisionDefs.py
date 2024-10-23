@@ -51,6 +51,9 @@ def setupCollisionModel_QCDEW(
     # Define mass helper functions. We need the mass-squares in units of temperature, ie. m^2 / T^2.
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
 
+    # Note that the particular values of masses here are for a comparison with arXiv:hep-ph/9506475.
+    # Doubly weak diagrams have been neglected as subleading in the comparison.
+    # For proceeding beyond the leading-log approximation one should use the asymptotic masses.
     # For quarks we include the thermal mass only
     def quarkThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         gs = p["gs"]  # this is equivalent to: gs = p.getParameterValue("gs")
