@@ -7,7 +7,7 @@ Here we collect a number of different example model files. The Yukawa model file
 
 .. toctree::
 
-    examples/wallgoExampleBase
+    examples/wallGoExampleBase
     examples/standardModel
     examples/singletScalarExtension
     examples/manySinglets
