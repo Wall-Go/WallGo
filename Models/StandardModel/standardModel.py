@@ -375,7 +375,7 @@ class StandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMLightHiggs.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -442,6 +442,9 @@ class StandardModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter(
             "mw2", 3.0 * gw**2 / 5.0
         )  # W boson thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "ml2", 3*gw**2 / 32.0
+        )  # lepton thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
 
