@@ -2,32 +2,25 @@
 Installation
 ===========================================
 
-WallGo comes in two parts: there is a C++ code for computing the collision integrals
-and a Python package for computing the bubble wall speed, which requires the collision
-integrals as input.
 
-The instructions below assume that you have first cloned the
-`repository <https://github.com/Wall-Go/WallGo>`_.
-
-Collision integrals (C++)
+Installing WallGo with pip
 ===========================================
 
-To install the C++ part of WallGo, the easiest way of handling the dependencies is
-with the Conan package manager (version > 2.0). The build proceeds as::
+WallGo can be installed as a Python package using pip:
 
-    cd Collision
-    conan install . --output-folder=build --build=missing
-    cmake -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
-    cmake --build build
-    cmake --install build
+.. code-block:: bash
+    
+    pip install WallGo
 
-**Hint:** Conan can be installed with pip. 
 
-Python package
+.. Installing WallGo with conan
+.. ===========================================
+
+
+WallGoCollision and WallGoMatrix
 ===========================================
 
-The Python part of WallGo be installed as a package (in developer mode) with pip,
-or pip3. From the base directory of the repository, use::
+The main WallGo package is accompanied by two subsidiary software packages, which are installed separately. For details, see the links below.
 
-    pip install -e .
-
+- `WallGoMatrix <https://github.com/Wall-Go/WallGoMatrix>`_ computes the relevant matrix elements for the out-of-equilibrium particles, and is written in Mathematica. It builds on existing Mathematica packages [DRalgo](https://github.com/DR-algo/DRalgo) and [GroupMath](https://renatofonseca.net/groupmath).
+- `WallGoCollision <https://github.com/Wall-Go/WallGoCollision>`_ performs the higher-dimensional integrals to obtain the collision terms in the Boltzmann equations, and is written in C++. It also has Python bindings so that it can be called directly from Python, but still benefits from the speedup from compiled C++ code.
