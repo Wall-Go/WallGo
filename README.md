@@ -3,7 +3,7 @@
 
 # WallGo
 
-Home: https://wall-go.github.io/WallGo
+Home: https://wallgo.readthedocs.io
 
 License: [GPL3](LICENSE)
 
