@@ -727,10 +727,10 @@ class InertDoubletModelExample(WallGoExampleBase):
             "mh2", (9 * gw**2 / 4+ 3 * yt) / 12.0
         )  # Higgs thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "mH2", lamH3 / 24.0
+            "mH2", lam3H / 24.0
         )  # h thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "mA2", lamH3 / 24.0
+            "mA2", lam3H / 24.0
         )  # A thermal mass^2 in units of T
 
 
