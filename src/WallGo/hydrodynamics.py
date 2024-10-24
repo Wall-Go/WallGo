@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
-from scipy.integrate import solve_ivp, simpson
+from scipy.integrate import solve_ivp, simps
 from .exceptions import WallGoError
 from .thermodynamics import Thermodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
@@ -484,7 +484,7 @@ class Hydrodynamics:
         return vp, vm, Tp, Tm
 
     def shockDE(
-        self, v: float, xiAndT: np.ndarray
+        self, v: float, xiAndT: np.ndarray, shockWave: bool=True
     ) -> Tuple[npt.ArrayLike, npt.ArrayLike]:
         r"""
         Hydrodynamic equations for the self-similar coordinate :math:`\xi = r/t` and
@@ -498,6 +498,9 @@ class Hydrodynamics:
         xiAndT : array
             Values of the self-similar coordinate :math:`\xi = r/t` and
             the temperature :math:`T`
+        shockWave : bool, optional
+            If True, the integration happens in the shock wave. If False, it happens in
+            the rarefaction wave. Default is True.
 
         Returns
         -------
@@ -515,20 +518,19 @@ class Hydrodynamics:
                 {"v": v, "xi": xi, "T": T},
             )
 
+        if shockWave:
+            csq = self.thermodynamics.csqHighT(T)
+        else:
+            csq = self.thermodynamics.csqLowT(T)
         eq1 = (
             gammaSq(v)
             * (1.0 - v * xi)
-            * (boostVelocity(xi, v) ** 2 / self.thermodynamics.csqHighT(T) - 1.0)
+            * (boostVelocity(xi, v) ** 2 / csq - 1.0)
             * xi
             / 2.0
             / v
         )
-        eq2 = (
-            self.thermodynamics.wHighT(T)
-            / self.thermodynamics.dpHighT(T)
-            * gammaSq(v)
-            * boostVelocity(xi, v)
-        )
+        eq2 = T * gammaSq(v) * boostVelocity(xi, v)
         return [eq1, eq2]
 
     def solveHydroShock(self, vw: float, vp: float, Tp: float) -> float:
@@ -938,7 +940,7 @@ class Hydrodynamics:
                 # Integrate the shock wave
                 solShock = solve_ivp(
                     self.shockDE,
-                    [vpcent, 1e-8],
+                    [vpcent, 1e-10],
                     xi0T0,
                     events=shock,
                     rtol=self.rtol,
@@ -947,10 +949,10 @@ class Hydrodynamics:
                 vPlasma = solShock.t
                 xi = solShock.y[0]
                 T = solShock.y[1]
-                enthalpy = self.thermodynamics.wHighT(T)
+                enthalpy = np.array([self.thermodynamics.wHighT(t) for t in T])
 
                 # Integrate the solution to get kappa
-                kappaSW = 4 * simpson(
+                kappaSW = 4 * simps(
                     xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                     xi,
                 ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
@@ -962,18 +964,19 @@ class Hydrodynamics:
             # Integrate the rarefaction wave
             solRarefaction = solve_ivp(
                 self.shockDE,
-                [vmcent, 1e-8],
+                [vmcent, 1e-10],
                 xi0T0,
                 rtol=self.rtol,
                 atol=0,
+                args=(False,)
             )  # solve differential equation all the way from v = v- to v = 0
             vPlasma = solRarefaction.t
             xi = solRarefaction.y[0]
             T = solRarefaction.y[1]
-            enthalpy = self.thermodynamics.wLowT(T)
+            enthalpy = np.array([self.thermodynamics.wLowT(t) for t in T])
 
             # Integrate the solution to get kappa
-            kappaRW = 4 * simpson(
+            kappaRW = -4 * simps(
                 xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                 xi,
             ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)

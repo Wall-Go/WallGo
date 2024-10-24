@@ -118,6 +118,22 @@ def test_findvwLTE():
         res2[i] = hydroTemplate.findvwLTE()
     np.testing.assert_allclose(res1,res2,rtol = 10**-4,atol = 0)
 
+def test_efficiencyFactor():
+    res1,res2 = np.zeros(N),np.zeros(N)
+    psiN = 1-0.5*rng.random(N)
+    alN = (1-psiN)/3+10**(-3*rng.random(N)-0.5)
+    cs2 = 1/4+(1/3-1/4)*rng.random(N)
+    cb2 = cs2-(1/3-1/4)*rng.random(N)
+    for i in range(N):
+        model = TestModelTemplate(alN[i],psiN[i],cb2[i],cs2[i],1,1)
+        hydrodynamics = WallGo.Hydrodynamics(model,tmax,tmin,1e-8,1e-8)
+        hydroTemplate = WallGo.HydrodynamicsTemplateModel(model)
+        vMin = max(hydroTemplate.vMin, hydrodynamics.vMin)
+        vw = vMin + (1-vMin)*rng.random()
+        res1[i] = hydrodynamics.efficiencyFactor(vw)
+        res2[i] = hydroTemplate.efficiencyFactor(vw)
+    np.testing.assert_allclose(res1,res2,rtol = 10**-2,atol = 0)
+
 def test_findHydroBoundaries():
     res1,res2 = np.zeros((N,5)),np.zeros((N,5))
     psiN = 1-0.5*rng.random(N)
