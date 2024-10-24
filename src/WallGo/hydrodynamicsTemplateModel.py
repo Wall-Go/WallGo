@@ -721,8 +721,8 @@ class HydrodynamicsTemplateModel:
 
             # Integrate the solution to get kappa
             kappaSW = 4 * simpson(
-                xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
-                xi,
+                y=xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                x=xi
             ) / (vw**3 * self.alN)
 
         # If hybrid or detonation, computes the rarefaction wave contribution
@@ -734,8 +734,8 @@ class HydrodynamicsTemplateModel:
 
             # Integrate the solution to get kappa
             kappaRW = -4 * simpson(
-                xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
-                xi,
+                y=xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                x=xi
             ) / (vw**3 * self.alN)
 
         return kappaSW + kappaRW
