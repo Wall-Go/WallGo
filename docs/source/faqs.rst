@@ -13,7 +13,7 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`.
+    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`_.
 
 Installation
 ============
@@ -28,13 +28,14 @@ Matrix elements
 
 - **I want to use a different set of matrix elements, is this possible?**
 
-    Definitely! You can load your own matrix elements file. [Here we need we write what the requirements are].
+    Definitely! You can load your own matrix elements file. The default format is
+    a JSON file with a specific structure, described in detail in the WallGo paper. 
 
 - **Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?**
     Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
     we used this to cross check our results. We have included an example in the repository
-    for the `WallGo MatrixElements package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
-    a look at `tests/FeynCalc`.
+    for the `WallGoMatrix package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
+    a look at the directory `tests/FeynCalc`.
 
 - **I do not have a Mathematica license, can I still generate matrix elements?**
 
@@ -51,6 +52,8 @@ Collision integrals
     one node on a supercomputer. To choose the number of threads, you need to set an
     environment variable, as follows
 
+    .. code-block:: bash
+
         export OMP_NUM_THREADS=4
 
     Once done, if you then run the computation of the collision integrals, they will run with
@@ -61,6 +64,8 @@ Collision integrals
 
     Note that for Mac users, OpenMP can be a little more tricky to set up. We recommend using
     the Homebrew version, which requires an export statement to properly link,
+
+    .. code-block:: bash
 
         brew install libomp
         export OpenMP_ROOT=$(brew --prefix)/opt/libomp
@@ -130,6 +135,8 @@ Effective potentials
     sum-integrals. It also has a default table of precomputed values. These are
     located in the sub-package called PotentialTools, and can be imported as
 
+    .. code-block:: python
+
         from WallGo import PotentialTools
 
     For a model using PotentialTools see the singlet scalar extension example.
@@ -163,7 +170,7 @@ Running the Python code
 Understanding the output
 ------------------------
 
-- **Why does WallGo return a wall velocity of 1?**
+- **Why does WallGo return a wall velocity of None?**
 
     You found a runaway wall. The included hydrodynamic backreaction and out-of-equilibrium friction effects are not sufficient
     to stop the wall from accelerating. Additional out-of-equilibrium particles might provide additional friction to obtain a

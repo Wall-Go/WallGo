@@ -16,9 +16,9 @@ In this case the scalar field may undergo a phase transition, with the fermion f
 
 The definition of the Model starts by inheriting from the :py:data:`WallGo.GenericModel` class. This class holds the features of a model which enter directly in the Python side of WallGo. This includes the list of particles (:py:data:`WallGo.Particle` objects) and a reference to a definition of the effective potential.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 5-70
+   :lines: 6-90
 
 The scalar potential is used both for determining the free energy of homogeneous phases and for the shape and width of the bubble wall. In principle the potentials determining these two phenomena are different, as the former is coarse grained all the way to infinite length scales, while the latter can only consistenly be coarse grained on length scales shorter than the bubble wall width. :footcite:p:`Langer:1974cpa` Nervertheless, at high temperatures and to leading order in powers of the coupling, these two potentials agree.
 
@@ -43,17 +43,17 @@ where we have defined the effective tadpole coefficient and effective mass as
 
 The implementation in WallGo is as follows: one defines a class, here called :py:data:`WallGo.EffectivePotentialYukawa` which inherits from the base class :py:data:`WallGo.EffectivePotential`. This definition must contain a member function called :py:data:`evaluate` which evaluates the potential as a function of the scalar fields and temperature.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 73-113
+   :lines: 93-152
 
 The initialisation of an :py:data:`WallGo.EffectivePotential` object takes the model parameters and the number of background scalar fields as arguments and stores them for use in evaluating the potential. It is possible to override other member functions when defining :py:data:`WallGo.EffectivePotentialYukawa`, such as the initialisation function, or to add additional member functions and variables, though we haven't done so in this simple example.
 
 Once these two classes have been defined, we can now run WallGo to compute the bubble wall speed.
 
-.. literalinclude:: ../../Models/Yukawa/Yukawa.py
+.. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 116-169
+   :lines: 155-215
 
 **********
 References
