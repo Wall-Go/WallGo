@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
-from scipy.integrate import solve_ivp
+from scipy.integrate import solve_ivp, simpson
 from .exceptions import WallGoError
 from .thermodynamics import Thermodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
@@ -558,7 +558,7 @@ class Hydrodynamics:
             xi, T = xiAndT
             return float(boostVelocity(xi, v) * xi - self.thermodynamics.csqHighT(T))
 
-        shock.terminal = True  # What's happening here?
+        shock.terminal = True
         xi0T0 = [vw, Tp]
         vpcent = boostVelocity(vw, vp)
         if shock(vpcent, xi0T0) > 0:
@@ -902,6 +902,83 @@ class Hydrodynamics:
             rtol=self.rtol,
         )
         return float(sol.root)
+
+    def efficiencyFactor(self, vw: float) -> float:
+        r"""
+        Computes the efficiency factor :math:`\kappa`.
+
+        Parameters
+        ----------
+        vw : float
+            Wall velocity.
+
+        Returns
+        -------
+        float
+            Value of the efficiency factor :math:`\kappa`.
+
+        """
+        # Separates the efficiency factor into a contribution from the shock wave and
+        # the rarefaction wave.
+        kappaSW = 0.0
+        kappaRW = 0.0
+
+        vp, vm, Tp, Tm = self.findMatching(vw)
+
+        # If deflagration or hybrid, computes the shock wave contribution
+        if vw < self.vJ:
+            def shock(v: float, xiAndT: np.ndarray | list) -> float:
+                xi, T = xiAndT
+                return float(boostVelocity(xi, v)*xi - self.thermodynamics.csqHighT(T))
+
+            shock.terminal = True
+            xi0T0 = [vw, Tp]
+            vpcent = boostVelocity(vw, vp)
+            if shock(vpcent, xi0T0) < 0 and vw != vp:
+                # Integrate the shock wave
+                solShock = solve_ivp(
+                    self.shockDE,
+                    [vpcent, 1e-8],
+                    xi0T0,
+                    events=shock,
+                    rtol=self.rtol,
+                    atol=0,
+                )  # solve differential equation all the way from v = v+ to v = 0
+                vPlasma = solShock.t
+                xi = solShock.y[0]
+                T = solShock.y[1]
+                enthalpy = self.thermodynamics.wHighT(T)
+
+                # Integrate the solution to get kappa
+                kappaSW = 4 * simpson(
+                    xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                    xi,
+                ) / (self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
+
+        # If hybrid or detonation, computes the rarefaction wave contribution
+        if vw**2 > self.thermodynamics.csqLowT(Tm):
+            xi0T0 = [vw, Tm]
+            vmcent = boostVelocity(vw, vm)
+            # Integrate the rarefaction wave
+            solRarefaction = solve_ivp(
+                self.shockDE,
+                [vmcent, 1e-8],
+                xi0T0,
+                rtol=self.rtol,
+                atol=0,
+            )  # solve differential equation all the way from v = v- to v = 0
+            vPlasma = solRarefaction.t
+            xi = solRarefaction.y[0]
+            T = solRarefaction.y[1]
+            enthalpy = self.thermodynamics.wLowT(T)
+
+            # Integrate the solution to get kappa
+            kappaRW = 4 * simpson(
+                xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                xi,
+            ) / (self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
+
+        return kappaSW + kappaRW
 
     def _mappingT(self, TpTm: list[float]) -> list[float]:
         """
