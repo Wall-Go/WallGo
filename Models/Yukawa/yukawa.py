@@ -156,8 +156,13 @@ def main() -> None:
 
     manager = WallGo.WallGoManager()
 
+    # Change the amount of grid points in the spatial coordinates
+    # for faster computations
     manager.config.configGrid.spatialGridSize = 20
+    # Increase the number of iterations in the wall solving to 
+    # ensure convergence
     manager.config.configEOM.maxIterations = 25
+    # Decrease error tolerance for phase tracing to ensure stability
     manager.config.configThermodynamics.phaseTracerTol = 1e-8
 
     pathtoCollisions = pathlib.Path(__file__).resolve().parent / pathlib.Path(
