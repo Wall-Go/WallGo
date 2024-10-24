@@ -140,10 +140,17 @@ class YukawaModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        inOutManager.config.loadConfigFromFile(
-            pathlib.Path(self.exampleBaseDirectory / "yukawaConfig.ini")
-        )
+
         super().configureManager(inOutManager)
+
+        # Change the amount of grid points in the spatial coordinates
+        # for faster computations
+        inOutManager.config.configGrid.spatialGridSize = 20
+        # Increase the number of iterations in the wall solving to 
+        # ensure convergence
+        inOutManager.config.configEOM.maxIterations = 25
+        # Decrease error tolerance for phase tracing to ensure stability
+        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
 
     def updateModelParameters(
         self, model: "YukawaModel", inputParameters: dict[str, float]
