@@ -170,7 +170,7 @@ Running the Python code
 Understanding the output
 ------------------------
 
-- **Why does WallGo return a wall velocity of 1?**
+- **Why does WallGo return a wall velocity of None?**
 
     You found a runaway wall. The included hydrodynamic backreaction and out-of-equilibrium friction effects are not sufficient
     to stop the wall from accelerating. Additional out-of-equilibrium particles might provide additional friction to obtain a
