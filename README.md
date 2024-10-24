@@ -3,8 +3,13 @@
 
 # WallGo
 
-WallGo is open-source scientific software for computing the bubble wall speed for cosmological phase transitions.
+Home: https://wall-go.github.io/WallGo
 
+License: [GPL3](LICENSE)
+
+Summary: A Python package for computing the bubble wall speed for cosmological phase transitions.
+
+Development: https://github.com/Wall-Go/WallGo
 
 ## Status
 
@@ -14,12 +19,12 @@ WallGo is open-source scientific software for computing the bubble wall speed fo
 
 ## About this project
 
-**WallGo** is an open source code for the computation of the bubble wall velocity and bubble wall width in first-order cosmological phase transitions.
+[**WallGo**](https://wallgo.readthedocs.io) is an open source code for the computation of the bubble wall velocity and bubble wall width in first-order cosmological phase transitions.
 The main WallGo Python package determines the wall velocity and width by solving the scalar field(s) equation of motion, the Boltzmann equations and energy-momentum conservation for the fluid velocity and temperature.
 
-**WallGo** is accompanied by two subsidiary software packages:
-- **WallGoMatrix** computes the relevant matrix elements for the out-of-equilibrium particles, and is written in Mathematica. It builds on existing Mathematica packages DRalgo and GroupMath.
-- **WallGoCollision** performs the higher-dimensional integrals to obtain the collision terms in the Boltzmann equations, and is written in C++. It also has Python bindings so that it can be called directly from Python, but still benefits from the speedup from compiled C++ code.
+The [**WallGo**](https://github.com/Wall-Go/WallGo) package is accompanied by two subsidiary software packages:
+- [**WallGoMatrix**](https://github.com/Wall-Go/WallGoMatrix) computes the relevant matrix elements for the out-of-equilibrium particles, and is written in Mathematica. It builds on existing Mathematica packages [DRalgo](https://github.com/DR-algo/DRalgo) and [GroupMath](https://renatofonseca.net/groupmath).
+- [**WallGoCollision**](https://github.com/Wall-Go/WallGoCollision) performs the higher-dimensional integrals to obtain the collision terms in the Boltzmann equations, and is written in C++. It also has Python bindings so that it can be called directly from Python, but still benefits from the speedup from compiled C++ code.
 
 Users can implement their own models by specifying an effective potential and a list of out-of-equilibrium particles and their corresponding interactions.
 
@@ -64,6 +69,11 @@ After installing the package, these examples can be run directly with Python, as
 in:
 
     python3 Models/SingletStandardModel_Z2/singletStandardModelZ2.py
+
+
+## Feedback and further questions
+
+For feedback and frequently asked questions, please see the [WallGo homepage](https://wallgo.readthedocs.io).
 
 
 ## License

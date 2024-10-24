@@ -1,12 +1,15 @@
 *__pycache__/
 *.pyc
 *~
+temp
 temp/
 *.DS_Store
 */.DS_Store
 *.png
 build/
+examples/
 docs/_build
+docs/source/_autosummary
 *.egg-info
 dist/
 *.hdf5
@@ -27,3 +30,5 @@ old/
 *.pyi
 *.pdb
 *.so
+Pipfile
+Pipfile.lock
