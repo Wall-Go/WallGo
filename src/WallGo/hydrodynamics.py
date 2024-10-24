@@ -478,7 +478,7 @@ class Hydrodynamics:
                     "vm": vm,
                     "Tp": Tp,
                     "Tm": Tm,
-                    "csq": self.thermodynamicsExtrapolate.csqLowT(Tm),
+                    "csq": self.thermodynamics.csqLowT(Tm),
                 },
             )
         return vp, vm, Tp, Tm

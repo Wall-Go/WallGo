@@ -19,15 +19,15 @@ from .grid3Scales import Grid3Scales
 from .hydrodynamics import Hydrodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
+from .manager import WallGoManager, WallSolverSettings
 from .particle import Particle
 from .polynomial import Polynomial
 from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
 from .results import WallGoResults
-from .wallGoManager import WallGoManager, WallSolverSettings
+from .utils import getSafePathToResource
 
 from .config import Config
-from .WallGoUtils import getSafePathToResource
 
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name

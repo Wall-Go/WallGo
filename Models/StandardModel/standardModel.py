@@ -426,6 +426,11 @@ class StandardModelExample(WallGoExampleBase):
 
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
+        
+        
+        # Note that the particular values of masses here are for a comparison with arXiv:hep-ph/9506475.
+        # For proceeding beyond the leading-log approximation one should use the asymptotic masses.
+        # For quarks we include the thermal mass only
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
@@ -435,7 +440,7 @@ class StandardModelExample(WallGoExampleBase):
             "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "mw2", 11.0 * gw**2 / 6.0
+            "mw2", 3.0 * gw**2 / 5.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
