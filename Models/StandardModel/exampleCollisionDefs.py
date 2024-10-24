@@ -25,7 +25,7 @@ def setupCollisionModel_QCDEW(
     mq2 -- Mass of a fermion propagator (thermal part only, and only QCD-contribution to thermal mass, so no distinction between quark types)
     mg2 -- Mass of a gluon propagator.
     mw2 -- Mass of a W propagator.
-    ms2 -- Mass of a Higgs propagator.
+    ml2 -- Mass of a left-handed lepton propagator.
 
     Thermal masses depend on the QCD coupling, however the model definition always needs a numerical value for each symbol.
     This adds some complexity to the model setup, and therefore we do the symbol definitions in stages: 
@@ -52,7 +52,6 @@ def setupCollisionModel_QCDEW(
     # These should take in a WallGoCollision.ModelParameters object and return a floating-point value
 
     # Note that the particular values of masses here are for a comparison with arXiv:hep-ph/9506475.
-    # Doubly weak diagrams have been neglected as subleading in the comparison.
     # For proceeding beyond the leading-log approximation one should use the asymptotic masses.
     # For quarks we include the thermal mass only
     def quarkThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
@@ -65,9 +64,6 @@ def setupCollisionModel_QCDEW(
     def wBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 3.0 * p["gw"] ** 2 / 5.0
     
-    def HiggsBosonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
-        return (9 * p["gw"] ** 2 / 4 + 3 * p["yt"]) / 12.0
-    
     def leptonThermalMassSquared(p: WallGoCollision.ModelParameters) -> float:
         return 3*p["gw"]**2 / 32.0
 
@@ -75,7 +71,8 @@ def setupCollisionModel_QCDEW(
     parameters.addOrModifyParameter("mq2", quarkThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mg2", gluonThermalMassSquared(parameters))
     parameters.addOrModifyParameter("mw2", wBosonThermalMassSquared(parameters))
-    #parameters.addOrModifyParameter("ms2", HiggsBosonThermalMassSquared(parameters))
+    # The left-handed leptons appear in the propagator, we therefore
+    # provide the mass here
     parameters.addOrModifyParameter("ml2", leptonThermalMassSquared(parameters))
 
     # Copy the parameters to our ModelDefinition helper. This finishes the parameter part of model definition.
