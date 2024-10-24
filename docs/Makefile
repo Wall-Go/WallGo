@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = _build
+EXTRABUILDDIR = source/_autosummary
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -17,3 +18,9 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+
+# Also remove content made by autosummary
+cleaner:
+	rm -r $(BUILDDIR)
+	rm -r $(EXTRABUILDDIR)
