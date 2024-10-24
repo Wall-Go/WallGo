@@ -40,7 +40,9 @@ CouplingName={g3,gw};
 Rep1={{{1,0},{1}},"L"};
 Rep2={{{1,0},{0}},"R"};
 Rep3={{{1,0},{0}},"R"};
-RepFermion1Gen={Rep1,Rep2,Rep3};
+Rep4={{{0,0},{1}},"L"};
+Rep5={{{0,0},{0}},"R"};
+RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
 
 
 (* ::Text:: *)
@@ -140,7 +142,14 @@ Repb = CreateParticle[{{1,2},3},"F"];
 (*Light quarks*)
 
 
-RepLightQ = CreateParticle[{4,5,6,7,8,9},"F"];
+RepLightQ = CreateParticle[{6,7,8,11,12,13},"F"];
+
+
+(*left-handed leptons*)
+RepLepL = CreateParticle[{4,9,14},"F"];
+
+(*right-handed leptons -- these don't contribute*)
+RepLepR = CreateParticle[{5,10,15},"F"];
 
 
 (*Vector bosons*)
@@ -163,7 +172,11 @@ VectorMass=Join[
 	Table[mg2,{i,1,RepGluon[[1]]//Length}],
 	Table[mw2,{i,1,RepW[[1]]//Length}]
 	];
+(*First we give all the fermions the same mass*)
 FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
+(*Now we replace the entries with the lefthanded lepton indices by the lepton mass*)
+(*We don't care about the right-handed leptons, because they don't appear in the diagrams*)
+FermionMass[[RepLepL[[1]]]]=ml2;
 ScalarMass={mG2,mh2,mG2,mG2,mA2,mH2,mA2,mA2};
 ParticleMasses={VectorMass,FermionMass,ScalarMass};
 
@@ -172,12 +185,12 @@ UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//
 
 
 ParticleList={
-	ReptL,ReptR,Repb,RepLightQ,
+	ReptL,ReptR,Repb,RepLightQ,RepLepL,RepLepR,
 	RepGluon,RepW,
 	RepHiggsh,RepGoldstoneGp0,RepGoldstoneGpR,RepGoldstoneGpI,
 	RepHiggsH,RepGoldstoneA};
 ParticleName={
-	"TopL","TopR","Bot","LightQuark",
+	"TopL","TopR","Bot","LightQuark","LepL","LepR",
 	"Gluon","W",
 	"Higgs","GoldstoneG0","GoldstoneGpR","GoldstoneGpI",
 	"H","A"};
