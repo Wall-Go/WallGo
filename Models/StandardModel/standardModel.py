@@ -155,7 +155,7 @@ class StandardModel(GenericModel):
             return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
         def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
+            return self.modelParameters["g2"] ** 2 * T**2 * 3.0 / 5.0
 
         wBoson = Particle(
             name="W",
