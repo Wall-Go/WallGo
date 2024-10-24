@@ -6,10 +6,10 @@ approximating the equation of state by the template model.
 import warnings
 import logging
 import numpy as np
-from scipy.integrate import solve_ivp
+from scipy.integrate import solve_ivp, simpson
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
-from .helpers import gammaSq
+from .helpers import gammaSq, boostVelocity
 from .thermodynamics import Thermodynamics
 
 
@@ -673,3 +673,57 @@ class HydrodynamicsTemplateModel:
         vm = (part + np.sqrt(part**2 - 4 * self.cb2 * vp**2)) / (2 * vp)
         Tm = self._findTm(vm, vp, self.Tnucl)
         return vp, vm, self.Tnucl, Tm
+
+    def efficiencyFactor(self, vw: float) -> float:
+        r"""
+        Computes the efficiency factor :math:`\kappa`.
+
+        Parameters
+        ----------
+        vw : float
+            Wall velocity.
+
+        Returns
+        -------
+        float
+            Value of the efficiency factor :math:`\kappa`.
+
+        """
+        # Separates the efficiency factor into a contribution from the shock wave and
+        # the rarefaction wave.
+        kappaSW = 0.0
+        kappaRW = 0.0
+
+        vp, vm, Tp, Tm = self.findMatching(vw)
+
+        # Computes the enthalpies (in units where w_s(Tn)=1)
+        wp = (Tp/self.Tnucl)**self.mu
+        wm = gammaSq(vp)*vp*wp/(gammaSq(vm)*vm)
+
+        # If deflagration or hybrid, computes the shock wave contribution
+        if vw < self.vJ:
+            solShock = self.integratePlasma(boostVelocity(vw, vp), vw, wp)
+            vPlasma = solShock.t
+            xi = solShock.y[0]
+            enthalpy = solShock.y[1]
+
+            # Integrate the solution to get kappa
+            kappaSW = 4 * simpson(
+                xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                xi,
+            ) / (vw**3 * self.alN)
+
+        # If hybrid or detonation, computes the rarefaction wave contribution
+        if vw > self.cb:
+            solRarefaction = self.integratePlasma(boostVelocity(vw, vm), vw, wm)
+            vPlasma = solRarefaction.t
+            xi = solRarefaction.y[0]
+            enthalpy = solRarefaction.y[1]
+
+            # Integrate the solution to get kappa
+            kappaRW = 4 * simpson(
+                xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                xi,
+            ) / (vw**3 * self.alN)
+
+        return kappaSW + kappaRW

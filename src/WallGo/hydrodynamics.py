@@ -953,7 +953,7 @@ class Hydrodynamics:
                 kappaSW = 4 * simpson(
                     xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                     xi,
-                ) / (self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
+                ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
 
         # If hybrid or detonation, computes the rarefaction wave contribution
         if vw**2 > self.thermodynamics.csqLowT(Tm):
@@ -976,7 +976,7 @@ class Hydrodynamics:
             kappaRW = 4 * simpson(
                 xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                 xi,
-            ) / (self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
+            ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
 
         return kappaSW + kappaRW
 
