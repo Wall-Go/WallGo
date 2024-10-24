@@ -6,7 +6,7 @@ approximating the equation of state by the template model.
 import warnings
 import logging
 import numpy as np
-from scipy.integrate import solve_ivp, simps
+from scipy.integrate import solve_ivp, simpson
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
 from .helpers import gammaSq, boostVelocity
@@ -720,7 +720,7 @@ class HydrodynamicsTemplateModel:
             enthalpy = solShock.y[1]
 
             # Integrate the solution to get kappa
-            kappaSW = 4 * simps(
+            kappaSW = 4 * simpson(
                 xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                 xi,
             ) / (vw**3 * self.alN)
@@ -733,7 +733,7 @@ class HydrodynamicsTemplateModel:
             enthalpy = solRarefaction.y[1]
 
             # Integrate the solution to get kappa
-            kappaRW = -4 * simps(
+            kappaRW = -4 * simpson(
                 xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                 xi,
             ) / (vw**3 * self.alN)

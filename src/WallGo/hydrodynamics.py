@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import numpy.typing as npt
 from scipy.optimize import root_scalar, root, minimize_scalar
-from scipy.integrate import solve_ivp, simps
+from scipy.integrate import solve_ivp, simpson
 from .exceptions import WallGoError
 from .thermodynamics import Thermodynamics
 from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
@@ -952,7 +952,7 @@ class Hydrodynamics:
                 enthalpy = np.array([self.thermodynamics.wHighT(t) for t in T])
 
                 # Integrate the solution to get kappa
-                kappaSW = 4 * simps(
+                kappaSW = 4 * simpson(
                     xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                     xi,
                 ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
@@ -976,7 +976,7 @@ class Hydrodynamics:
             enthalpy = np.array([self.thermodynamics.wLowT(t) for t in T])
 
             # Integrate the solution to get kappa
-            kappaRW = -4 * simps(
+            kappaRW = -4 * simpson(
                 xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
                 xi,
             ) / (vw**3*self.thermodynamics.wHighT(self.Tnucl)*self.template.alN)
