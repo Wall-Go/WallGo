@@ -51,7 +51,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(3*gw^4*mg2^2*_s^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*mw2^2*_s^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (3*gw^4*mg2*_s^2*_t)\/(2*(mg2 - _t)^2*(-mw2 + _t)^2) - (16*gs^4*mw2*_s^2*_t)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*_s^2*_t^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_s^2*_t^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*mg2^2*_u^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*mw2^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (3*gw^4*mg2*_t*_u^2)\/(2*(mg2 - _t)^2*(-mw2 + _t)^2) - (16*gs^4*mw2*_t*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*_t^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_t^2*_u^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*mg2^2*_s^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*mw2^2*_s^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*mg2^2*_t^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*mw2^2*_t^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (3*gw^4*mg2*_s^2*_u)\/(2*(mg2 - _u)^2*(-mw2 + _u)^2) - (16*gs^4*mw2*_s^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (3*gw^4*mg2*_t^2*_u)\/(2*(mg2 - _u)^2*(-mw2 + _u)^2) - (16*gs^4*mw2*_t^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*_s^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*_s^2*_u^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*_t^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*_t^2*_u^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2)"
+			"expression":"((_s^2 + _t^2)*(9*gw^4*(mg2 - _u)^2 + 32*gs^4*(mw2 - _u)^2))\/(12*(mg2 - _u)^2*(mw2 - _u)^2) + ((9*gw^4*(mg2 - _t)^2 + 32*gs^4*(mw2 - _t)^2)*(_s^2 + _u^2))\/(12*(mg2 - _t)^2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -64,7 +64,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _t)^2) + (8*gs^4*_u^2)\/(3*(-mg2 + _t)^2)"
+			"expression":"(8*gs^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -77,7 +77,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _u)^2) + (8*gs^4*_t^2)\/(3*(-mg2 + _u)^2)"
+			"expression":"(8*gs^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -92,7 +92,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(15*gw^4*mg2^2*_s^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*mw2^2*_s^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (15*gw^4*mg2*_s^2*_t)\/(2*(mg2 - _t)^2*(-mw2 + _t)^2) - (160*gs^4*mw2*_s^2*_t)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*_s^2*_t^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (15*gw^4*_s^2*_t^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (15*gw^4*mg2^2*_u^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*mw2^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (15*gw^4*mg2*_t*_u^2)\/(2*(mg2 - _t)^2*(-mw2 + _t)^2) - (160*gs^4*mw2*_t*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*_t^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (15*gw^4*_t^2*_u^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(-mw2 + _u)^2 + (3*gw^4*_t^2)\/(-mw2 + _u)^2"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(mw2 - _u)^2 + (5*(9*gw^4*(mg2 - _t)^2 + 64*gs^4*(mw2 - _t)^2)*(_s^2 + _u^2))\/(12*(mg2 - _t)^2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -107,7 +107,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(-mw2 + _t)^2 + (3*gw^4*_u^2)\/(-mw2 + _t)^2 + (15*gw^4*mg2^2*_s^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*mw2^2*_s^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (15*gw^4*mg2^2*_t^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*mw2^2*_t^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (15*gw^4*mg2*_s^2*_u)\/(2*(mg2 - _u)^2*(-mw2 + _u)^2) - (160*gs^4*mw2*_s^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (15*gw^4*mg2*_t^2*_u)\/(2*(mg2 - _u)^2*(-mw2 + _u)^2) - (160*gs^4*mw2*_t^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*_s^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (15*gw^4*_s^2*_u^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*_t^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (15*gw^4*_t^2*_u^2)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2)"
+			"expression":"(5*(_s^2 + _t^2)*(9*gw^4*(mg2 - _u)^2 + 64*gs^4*(mw2 - _u)^2))\/(12*(mg2 - _u)^2*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(mw2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -120,7 +120,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(6*gw^4*_s^2)\/(-mw2 + _t)^2 + (6*gw^4*_u^2)\/(-mw2 + _t)^2 + (6*gw^4*_s^2)\/(-mw2 + _u)^2 + (6*gw^4*_t^2)\/(-mw2 + _u)^2"
+			"expression":"(6*gw^4*(_s^2 + _t^2))\/(mw2 - _u)^2 + (6*gw^4*(_s^2 + _u^2))\/(mw2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -133,7 +133,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(2*(-mw2 + _t)^2)"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -146,7 +146,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(-mw2 + _t)^2 + (3*gw^4*_u^2)\/(-mw2 + _t)^2"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(mw2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -159,7 +159,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(2*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(2*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -172,7 +172,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(-mw2 + _u)^2 + (3*gw^4*_t^2)\/(-mw2 + _u)^2"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(mw2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -185,7 +185,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _u)^2) + (8*gs^4*_t^2)\/(3*(-mg2 + _u)^2)"
+			"expression":"(8*gs^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -198,7 +198,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _t)^2) + (8*gs^4*_u^2)\/(3*(-mg2 + _t)^2)"
+			"expression":"(8*gs^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -211,7 +211,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _t)^2) + (8*gs^4*_u^2)\/(3*(-mg2 + _t)^2) + (8*gs^4*_s^2)\/(3*(-mg2 + _u)^2) + (8*gs^4*_t^2)\/(3*(-mg2 + _u)^2)"
+			"expression":"(8*gs^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2) + (8*gs^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -224,7 +224,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(80*gs^4*_s^2)\/(3*(-mg2 + _t)^2) + (80*gs^4*_u^2)\/(3*(-mg2 + _t)^2)"
+			"expression":"(80*gs^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -237,7 +237,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(80*gs^4*_s^2)\/(3*(-mg2 + _u)^2) + (80*gs^4*_t^2)\/(3*(-mg2 + _u)^2)"
+			"expression":"(80*gs^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -252,7 +252,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(10*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(10*(-mw2 + _t)^2) + (3*gw^4*mg2^2*_s^2)\/(8*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*mw2^2*_s^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*mg2^2*_t^2)\/(8*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*mw2^2*_t^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (3*gw^4*mg2*_s^2*_u)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) - (16*gs^4*mw2*_s^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (3*gw^4*mg2*_t^2*_u)\/(4*(mg2 - _u)^2*(-mw2 + _u)^2) - (16*gs^4*mw2*_t^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*_s^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*_s^2*_u^2)\/(8*(mg2 - _u)^2*(-mw2 + _u)^2) + (8*gs^4*_t^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (3*gw^4*_t^2*_u^2)\/(8*(mg2 - _u)^2*(-mw2 + _u)^2)"
+			"expression":"((_s^2 + _t^2)*(9*gw^4*(mg2 - _u)^2 + 64*gs^4*(mw2 - _u)^2))\/(24*(mg2 - _u)^2*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(10*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -267,7 +267,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(3*gw^4*mg2^2*_s^2)\/(8*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*mw2^2*_s^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (3*gw^4*mg2*_s^2*_t)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) - (16*gs^4*mw2*_s^2*_t)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*_s^2*_t^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_s^2*_t^2)\/(8*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*mg2^2*_u^2)\/(8*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*mw2^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (3*gw^4*mg2*_t*_u^2)\/(4*(mg2 - _t)^2*(-mw2 + _t)^2) - (16*gs^4*mw2*_t*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (8*gs^4*_t^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_t^2*_u^2)\/(8*(mg2 - _t)^2*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(10*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(10*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(10*(mw2 - _u)^2) + ((9*gw^4*(mg2 - _t)^2 + 64*gs^4*(mw2 - _t)^2)*(_s^2 + _u^2))\/(24*(mg2 - _t)^2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -280,7 +280,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(5*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(5*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(5*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(5*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -293,7 +293,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _u)^2) + (8*gs^4*_t^2)\/(3*(-mg2 + _u)^2)"
+			"expression":"(8*gs^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -306,7 +306,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(8*gs^4*_s^2)\/(3*(-mg2 + _t)^2) + (8*gs^4*_u^2)\/(3*(-mg2 + _t)^2)"
+			"expression":"(8*gs^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -319,7 +319,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(5*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(5*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(5*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(5*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -332,7 +332,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(5*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(5*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(5*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(5*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(5*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -347,7 +347,7 @@
 				"mg2",
 				"mw2"
 			],
-			"expression":"(171*gw^4*mg2^2*_s^2)\/(40*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*mw2^2*_s^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (171*gw^4*mg2*_s^2*_t)\/(20*(mg2 - _t)^2*(-mw2 + _t)^2) - (160*gs^4*mw2*_s^2*_t)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*_s^2*_t^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (171*gw^4*_s^2*_t^2)\/(40*(mg2 - _t)^2*(-mw2 + _t)^2) + (171*gw^4*mg2^2*_u^2)\/(40*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*mw2^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) - (171*gw^4*mg2*_t*_u^2)\/(20*(mg2 - _t)^2*(-mw2 + _t)^2) - (160*gs^4*mw2*_t*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (80*gs^4*_t^2*_u^2)\/(3*(mg2 - _t)^2*(-mw2 + _t)^2) + (171*gw^4*_t^2*_u^2)\/(40*(mg2 - _t)^2*(-mw2 + _t)^2) + (171*gw^4*mg2^2*_s^2)\/(40*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*mw2^2*_s^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (171*gw^4*mg2^2*_t^2)\/(40*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*mw2^2*_t^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (171*gw^4*mg2*_s^2*_u)\/(20*(mg2 - _u)^2*(-mw2 + _u)^2) - (160*gs^4*mw2*_s^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) - (171*gw^4*mg2*_t^2*_u)\/(20*(mg2 - _u)^2*(-mw2 + _u)^2) - (160*gs^4*mw2*_t^2*_u)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*_s^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (171*gw^4*_s^2*_u^2)\/(40*(mg2 - _u)^2*(-mw2 + _u)^2) + (80*gs^4*_t^2*_u^2)\/(3*(mg2 - _u)^2*(-mw2 + _u)^2) + (171*gw^4*_t^2*_u^2)\/(40*(mg2 - _u)^2*(-mw2 + _u)^2)"
+			"expression":"((_s^2 + _t^2)*(513*gw^4*(mg2 - _u)^2 + 3200*gs^4*(mw2 - _u)^2))\/(120*(mg2 - _u)^2*(mw2 - _u)^2) + ((513*gw^4*(mg2 - _t)^2 + 3200*gs^4*(mw2 - _t)^2)*(_s^2 + _u^2))\/(120*(mg2 - _t)^2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -360,7 +360,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(10*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(10*(-mw2 + _t)^2)"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(10*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -373,7 +373,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(39*gw^4*_s^2)\/(20*(-mw2 + _t)^2) + (39*gw^4*_u^2)\/(20*(-mw2 + _t)^2)"
+			"expression":"(39*gw^4*(_s^2 + _u^2))\/(20*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -386,7 +386,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(10*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(10*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(10*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -399,7 +399,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(39*gw^4*_s^2)\/(20*(-mw2 + _u)^2) + (39*gw^4*_t^2)\/(20*(-mw2 + _u)^2)"
+			"expression":"(39*gw^4*(_s^2 + _t^2))\/(20*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -412,7 +412,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(4*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(4*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(4*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -425,7 +425,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(2*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(2*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -438,7 +438,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(4*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(4*(-mw2 + _t)^2)"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(4*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -451,7 +451,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(2*(-mw2 + _t)^2)"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -464,7 +464,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(2*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s^2 + _t^2))\/(2*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -477,7 +477,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(39*gw^4*_s^2)\/(4*(-mw2 + _u)^2) + (39*gw^4*_t^2)\/(4*(-mw2 + _u)^2)"
+			"expression":"(39*gw^4*(_s^2 + _t^2))\/(4*(mw2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -490,7 +490,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(2*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(2*(-mw2 + _t)^2)"
+			"expression":"(3*gw^4*(_s^2 + _u^2))\/(2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -503,7 +503,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(39*gw^4*_s^2)\/(4*(-mw2 + _t)^2) + (39*gw^4*_u^2)\/(4*(-mw2 + _t)^2)"
+			"expression":"(39*gw^4*(_s^2 + _u^2))\/(4*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -516,7 +516,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(9*gw^4*_s^2)\/(2*(-mw2 + _t)^2) + (9*gw^4*_u^2)\/(2*(-mw2 + _t)^2) + (9*gw^4*_s^2)\/(2*(-mw2 + _u)^2) + (9*gw^4*_t^2)\/(2*(-mw2 + _u)^2)"
+			"expression":"(9*gw^4*(_s^2 + _t^2))\/(2*(mw2 - _u)^2) + (9*gw^4*(_s^2 + _u^2))\/(2*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -530,7 +530,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(16*gs^4*_s^2)\/(-mg2 + _t)^2 + (16*gs^4*_u^2)\/(-mg2 + _t)^2 - (64*gs^4*_s*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(-64*gs^4*_s*_u)\/(9*(mq2 - _u)^2) + (16*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -544,7 +544,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -558,7 +558,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -572,7 +572,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-64*gs^4*_s*_t)\/(9*(-mq2 + _t)^2) + (16*gs^4*_s^2)\/(-mg2 + _u)^2 + (16*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-64*gs^4*_s*_t)\/(9*(mq2 - _t)^2) + (16*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -586,7 +586,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -600,7 +600,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -614,7 +614,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -628,7 +628,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(2*gw^4*_s^2)\/(-mg2 + _t)^2 + (2*gw^4*_u^2)\/(-mg2 + _t)^2 - (5*gw^4*_s*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(-5*gw^4*_s*_u)\/(4*(mq2 - _u)^2) + (2*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -642,7 +642,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -656,7 +656,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(4*gw^4*_s^2)\/(-mg2 + _t)^2 + (4*gw^4*_u^2)\/(-mg2 + _t)^2 - (gw^4*_s*_u)\/(-mq2 + _u)^2"
+			"expression":"-((gw^4*_s*_u)\/(mq2 - _u)^2) + (4*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -670,7 +670,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -684,7 +684,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -698,7 +698,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-5*gw^4*_s*_t)\/(4*(-mq2 + _t)^2) + (2*gw^4*_s^2)\/(-mg2 + _u)^2 + (2*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-5*gw^4*_s*_t)\/(4*(mq2 - _t)^2) + (2*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -712,7 +712,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"-((gw^4*_s*_t)\/(-mq2 + _t)^2) + (4*gw^4*_s^2)\/(-mg2 + _u)^2 + (4*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"-((gw^4*_s*_t)\/(mq2 - _t)^2) + (4*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -726,7 +726,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(16*gs^4*_s^2)\/(-mg2 + _t)^2 + (16*gs^4*_u^2)\/(-mg2 + _t)^2 - (64*gs^4*_s*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(-64*gs^4*_s*_u)\/(9*(mq2 - _u)^2) + (16*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -740,7 +740,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-64*gs^4*_s*_t)\/(9*(-mq2 + _t)^2) + (16*gs^4*_s^2)\/(-mg2 + _u)^2 + (16*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-64*gs^4*_s*_t)\/(9*(mq2 - _t)^2) + (16*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -754,7 +754,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -768,7 +768,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(16*gs^4*_s^2)\/(-mg2 + _t)^2 + (16*gs^4*_u^2)\/(-mg2 + _t)^2 - (64*gs^4*_s*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(-64*gs^4*_s*_u)\/(9*(mq2 - _u)^2) + (16*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -782,7 +782,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-26*gs^2*gw^2*_s*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(-26*gs^2*gw^2*_s*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -796,7 +796,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-64*gs^4*_s*_t)\/(9*(-mq2 + _t)^2) + (16*gs^4*_s^2)\/(-mg2 + _u)^2 + (16*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-64*gs^4*_s*_t)\/(9*(mq2 - _t)^2) + (16*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -810,7 +810,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_t)\/(15*(-mq2 + _t)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_t)\/(15*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -824,7 +824,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-26*gs^2*gw^2*_s*_t)\/(15*(-mq2 + _t)^2)"
+			"expression":"(-26*gs^2*gw^2*_s*_t)\/(15*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -838,7 +838,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -852,7 +852,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(2*gw^4*_s^2)\/(5*(-mg2 + _t)^2) + (2*gw^4*_u^2)\/(5*(-mg2 + _t)^2) - (gw^4*_s*_u)\/(10*(-mq2 + _u)^2)"
+			"expression":"-1\/10*(gw^4*_s*_u)\/(mq2 - _u)^2 + (2*gw^4*(_s^2 + _u^2))\/(5*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -866,7 +866,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-26*gs^2*gw^2*_s*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(-26*gs^2*gw^2*_s*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -880,7 +880,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(13*gw^4*_s^2)\/(5*(-mg2 + _t)^2) + (13*gw^4*_u^2)\/(5*(-mg2 + _t)^2) - (41*gw^4*_s*_u)\/(40*(-mq2 + _u)^2)"
+			"expression":"(-41*gw^4*_s*_u)\/(40*(mq2 - _u)^2) + (13*gw^4*(_s^2 + _u^2))\/(5*(mg2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -894,7 +894,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_t)\/(15*(-mq2 + _t)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_t)\/(15*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -908,7 +908,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-26*gs^2*gw^2*_s*_t)\/(15*(-mq2 + _t)^2)"
+			"expression":"(-26*gs^2*gw^2*_s*_t)\/(15*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -922,7 +922,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"-1\/10*(gw^4*_s*_t)\/(-mq2 + _t)^2 + (2*gw^4*_s^2)\/(5*(-mg2 + _u)^2) + (2*gw^4*_t^2)\/(5*(-mg2 + _u)^2)"
+			"expression":"-1\/10*(gw^4*_s*_t)\/(mq2 - _t)^2 + (2*gw^4*(_s^2 + _t^2))\/(5*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -936,7 +936,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-41*gw^4*_s*_t)\/(40*(-mq2 + _t)^2) + (13*gw^4*_s^2)\/(5*(-mg2 + _u)^2) + (13*gw^4*_t^2)\/(5*(-mg2 + _u)^2)"
+			"expression":"(-41*gw^4*_s*_t)\/(40*(mq2 - _t)^2) + (13*gw^4*(_s^2 + _t^2))\/(5*(mg2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -950,7 +950,7 @@
 				"mg2",
 				"ml2"
 			],
-			"expression":"(6*gw^4*_s^2)\/(-mg2 + _t)^2 + (6*gw^4*_u^2)\/(-mg2 + _t)^2 - (9*gw^4*_s*_u)\/(4*(-ml2 + _u)^2)"
+			"expression":"(-9*gw^4*_s*_u)\/(4*(ml2 - _u)^2) + (6*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -964,7 +964,7 @@
 				"mg2",
 				"ml2"
 			],
-			"expression":"(-9*gw^4*_s*_t)\/(4*(-ml2 + _t)^2) + (6*gw^4*_s^2)\/(-mg2 + _u)^2 + (6*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-9*gw^4*_s*_t)\/(4*(ml2 - _t)^2) + (6*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -978,7 +978,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-8*gs^4*_s*_t)\/(3*(-mq2 + _t)^2) + (6*gs^4*_s^2)\/(-mg2 + _u)^2 + (6*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-8*gs^4*_s*_t)\/(3*(mq2 - _t)^2) + (6*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -992,7 +992,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-1\/2*(gs^2*gw^2*_s*_t)\/(-mq2 + _t)^2"
+			"expression":"-1\/2*(gs^2*gw^2*_s*_t)\/(mq2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1006,7 +1006,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-((gs^2*gw^2*_s*_t)\/(-mq2 + _t)^2)"
+			"expression":"-((gs^2*gw^2*_s*_t)\/(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1020,7 +1020,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(6*gs^4*_s^2)\/(-mg2 + _t)^2 + (6*gs^4*_u^2)\/(-mg2 + _t)^2 - (8*gs^4*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^4*_s*_u)\/(3*(mq2 - _u)^2) + (6*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1034,7 +1034,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-1\/2*(gs^2*gw^2*_s*_u)\/(-mq2 + _u)^2"
+			"expression":"-1\/2*(gs^2*gw^2*_s*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1048,7 +1048,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-((gs^2*gw^2*_s*_u)\/(-mq2 + _u)^2)"
+			"expression":"-((gs^2*gw^2*_s*_u)\/(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1062,7 +1062,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-8*gs^4*_s*_t)\/(3*(-mq2 + _t)^2) + (6*gs^4*_s^2)\/(-mg2 + _u)^2 + (6*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-8*gs^4*_s*_t)\/(3*(mq2 - _t)^2) + (6*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1076,7 +1076,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(6*gs^4*_s^2)\/(-mg2 + _t)^2 + (6*gs^4*_u^2)\/(-mg2 + _t)^2 - (8*gs^4*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^4*_s*_u)\/(3*(mq2 - _u)^2) + (6*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1090,7 +1090,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-((gs^2*gw^2*_s*_t)\/(-mq2 + _t)^2)"
+			"expression":"-((gs^2*gw^2*_s*_t)\/(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1104,7 +1104,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-80*gs^4*_s*_t)\/(3*(-mq2 + _t)^2) + (60*gs^4*_s^2)\/(-mg2 + _u)^2 + (60*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-80*gs^4*_s*_t)\/(3*(mq2 - _t)^2) + (60*gs^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1118,7 +1118,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-13*gs^2*gw^2*_s*_t)\/(2*(-mq2 + _t)^2)"
+			"expression":"(-13*gs^2*gw^2*_s*_t)\/(2*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1132,7 +1132,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(60*gs^4*_s^2)\/(-mg2 + _t)^2 + (60*gs^4*_u^2)\/(-mg2 + _t)^2 - (80*gs^4*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-80*gs^4*_s*_u)\/(3*(mq2 - _u)^2) + (60*gs^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1146,7 +1146,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"-((gs^2*gw^2*_s*_u)\/(-mq2 + _u)^2)"
+			"expression":"-((gs^2*gw^2*_s*_u)\/(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1160,7 +1160,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-13*gs^2*gw^2*_s*_u)\/(2*(-mq2 + _u)^2)"
+			"expression":"(-13*gs^2*gw^2*_s*_u)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1174,7 +1174,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1188,7 +1188,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-5*gw^4*_s*_t)\/(4*(-mq2 + _t)^2) + (2*gw^4*_s^2)\/(-mg2 + _u)^2 + (2*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-5*gw^4*_s*_t)\/(4*(mq2 - _t)^2) + (2*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1202,7 +1202,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1216,7 +1216,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"-((gw^4*_s*_t)\/(-mq2 + _t)^2) + (4*gw^4*_s^2)\/(-mg2 + _u)^2 + (4*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"-((gw^4*_s*_t)\/(mq2 - _t)^2) + (4*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1230,7 +1230,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-4*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1244,7 +1244,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1258,7 +1258,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(2*gw^4*_s^2)\/(-mg2 + _t)^2 + (2*gw^4*_u^2)\/(-mg2 + _t)^2 - (5*gw^4*_s*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(-5*gw^4*_s*_u)\/(4*(mq2 - _u)^2) + (2*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1272,7 +1272,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(4*gw^4*_s^2)\/(-mg2 + _t)^2 + (4*gw^4*_u^2)\/(-mg2 + _t)^2 - (gw^4*_s*_u)\/(-mq2 + _u)^2"
+			"expression":"-((gw^4*_s*_u)\/(mq2 - _u)^2) + (4*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1286,7 +1286,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1300,7 +1300,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"-((gw^4*_s*_t)\/(-mq2 + _t)^2) + (4*gw^4*_s^2)\/(-mg2 + _u)^2 + (4*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"-((gw^4*_s*_t)\/(mq2 - _t)^2) + (4*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1314,7 +1314,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-52*gs^2*gw^2*_s*_t)\/(3*(-mq2 + _t)^2)"
+			"expression":"(-52*gs^2*gw^2*_s*_t)\/(3*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1328,7 +1328,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(-41*gw^4*_s*_t)\/(4*(-mq2 + _t)^2) + (26*gw^4*_s^2)\/(-mg2 + _u)^2 + (26*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-41*gw^4*_s*_t)\/(4*(mq2 - _t)^2) + (26*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1342,7 +1342,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-8*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1356,7 +1356,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(-52*gs^2*gw^2*_s*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(-52*gs^2*gw^2*_s*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1370,7 +1370,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(4*gw^4*_s^2)\/(-mg2 + _t)^2 + (4*gw^4*_u^2)\/(-mg2 + _t)^2 - (gw^4*_s*_u)\/(-mq2 + _u)^2"
+			"expression":"-((gw^4*_s*_u)\/(mq2 - _u)^2) + (4*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1384,7 +1384,7 @@
 				"mg2",
 				"mq2"
 			],
-			"expression":"(26*gw^4*_s^2)\/(-mg2 + _t)^2 + (26*gw^4*_u^2)\/(-mg2 + _t)^2 - (41*gw^4*_s*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(-41*gw^4*_s*_u)\/(4*(mq2 - _u)^2) + (26*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1398,7 +1398,7 @@
 				"mg2",
 				"ml2"
 			],
-			"expression":"(-9*gw^4*_s*_t)\/(2*(-ml2 + _t)^2) + (12*gw^4*_s^2)\/(-mg2 + _u)^2 + (12*gw^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(-9*gw^4*_s*_t)\/(2*(ml2 - _t)^2) + (12*gw^4*(_s^2 + _t^2))\/(mg2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1412,7 +1412,7 @@
 				"mg2",
 				"ml2"
 			],
-			"expression":"(12*gw^4*_s^2)\/(-mg2 + _t)^2 + (12*gw^4*_u^2)\/(-mg2 + _t)^2 - (9*gw^4*_s*_u)\/(2*(-ml2 + _u)^2)"
+			"expression":"(-9*gw^4*_s*_u)\/(2*(ml2 - _u)^2) + (12*gw^4*(_s^2 + _u^2))\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1425,7 +1425,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(64*gs^4*_t*_u)\/(9*(-mq2 + _t)^2) + (64*gs^4*_t*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(64*gs^4*_t*_u)\/(9*(mq2 - _t)^2) + (64*gs^4*_t*_u)\/(9*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1439,7 +1439,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1453,7 +1453,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1466,7 +1466,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(5*gw^4*_t*_u)\/(4*(-mq2 + _t)^2) + (5*gw^4*_t*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(5*gw^4*_t*_u)\/(4*(mq2 - _t)^2) + (5*gw^4*_t*_u)\/(4*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1480,7 +1480,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1494,7 +1494,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1507,7 +1507,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gw^4*_t*_u)\/(-mq2 + _t)^2 + (gw^4*_t*_u)\/(-mq2 + _u)^2"
+			"expression":"(gw^4*_t*_u)\/(mq2 - _t)^2 + (gw^4*_t*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1520,7 +1520,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(64*gs^4*_t*_u)\/(9*(-mq2 + _t)^2) + (64*gs^4*_t*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(64*gs^4*_t*_u)\/(9*(mq2 - _t)^2) + (64*gs^4*_t*_u)\/(9*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1534,7 +1534,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(4*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _t)^2) + (4*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(4*gs^2*gw^2*_t*_u)\/(15*(mq2 - _t)^2) + (4*gs^2*gw^2*_t*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1548,7 +1548,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(4*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _t)^2) + (4*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(4*gs^2*gw^2*_t*_u)\/(15*(mq2 - _t)^2) + (4*gs^2*gw^2*_t*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1561,7 +1561,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gw^4*_t*_u)\/(10*(-mq2 + _t)^2) + (gw^4*_t*_u)\/(10*(-mq2 + _u)^2)"
+			"expression":"(gw^4*_t*_u)\/(10*(mq2 - _t)^2) + (gw^4*_t*_u)\/(10*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1574,7 +1574,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(64*gs^4*_t*_u)\/(9*(-mq2 + _t)^2) + (64*gs^4*_t*_u)\/(9*(-mq2 + _u)^2)"
+			"expression":"(64*gs^4*_t*_u)\/(9*(mq2 - _t)^2) + (64*gs^4*_t*_u)\/(9*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1588,7 +1588,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(26*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _t)^2) + (26*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(26*gs^2*gw^2*_t*_u)\/(15*(mq2 - _t)^2) + (26*gs^2*gw^2*_t*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1602,7 +1602,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(26*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _t)^2) + (26*gs^2*gw^2*_t*_u)\/(15*(-mq2 + _u)^2)"
+			"expression":"(26*gs^2*gw^2*_t*_u)\/(15*(mq2 - _t)^2) + (26*gs^2*gw^2*_t*_u)\/(15*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1615,7 +1615,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(41*gw^4*_t*_u)\/(40*(-mq2 + _t)^2) + (41*gw^4*_t*_u)\/(40*(-mq2 + _u)^2)"
+			"expression":"(41*gw^4*_t*_u)\/(40*(mq2 - _t)^2) + (41*gw^4*_t*_u)\/(40*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1628,7 +1628,7 @@
 				"gw",
 				"ml2"
 			],
-			"expression":"(9*gw^4*_t*_u)\/(4*(-ml2 + _t)^2) + (9*gw^4*_t*_u)\/(4*(-ml2 + _u)^2)"
+			"expression":"(9*gw^4*_t*_u)\/(4*(ml2 - _t)^2) + (9*gw^4*_t*_u)\/(4*(ml2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1641,7 +1641,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(8*gs^4*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^4*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^4*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^4*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1654,7 +1654,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(8*gs^4*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^4*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^4*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^4*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1667,7 +1667,7 @@
 				"gs",
 				"mq2"
 			],
-			"expression":"(80*gs^4*_t*_u)\/(3*(-mq2 + _t)^2) + (80*gs^4*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(80*gs^4*_t*_u)\/(3*(mq2 - _t)^2) + (80*gs^4*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1681,7 +1681,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gs^2*gw^2*_t*_u)\/(2*(-mq2 + _t)^2) + (gs^2*gw^2*_t*_u)\/(2*(-mq2 + _u)^2)"
+			"expression":"(gs^2*gw^2*_t*_u)\/(2*(mq2 - _t)^2) + (gs^2*gw^2*_t*_u)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1695,7 +1695,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gs^2*gw^2*_t*_u)\/(-mq2 + _t)^2 + (gs^2*gw^2*_t*_u)\/(-mq2 + _u)^2"
+			"expression":"(gs^2*gw^2*_t*_u)\/(mq2 - _t)^2 + (gs^2*gw^2*_t*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1709,7 +1709,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gs^2*gw^2*_t*_u)\/(-mq2 + _t)^2 + (gs^2*gw^2*_t*_u)\/(-mq2 + _u)^2"
+			"expression":"(gs^2*gw^2*_t*_u)\/(mq2 - _t)^2 + (gs^2*gw^2*_t*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1723,7 +1723,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(13*gs^2*gw^2*_t*_u)\/(2*(-mq2 + _t)^2) + (13*gs^2*gw^2*_t*_u)\/(2*(-mq2 + _u)^2)"
+			"expression":"(13*gs^2*gw^2*_t*_u)\/(2*(mq2 - _t)^2) + (13*gs^2*gw^2*_t*_u)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1737,7 +1737,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (4*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1751,7 +1751,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1765,7 +1765,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (8*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1779,7 +1779,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(52*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _t)^2) + (52*gs^2*gw^2*_t*_u)\/(3*(-mq2 + _u)^2)"
+			"expression":"(52*gs^2*gw^2*_t*_u)\/(3*(mq2 - _t)^2) + (52*gs^2*gw^2*_t*_u)\/(3*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1792,7 +1792,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(5*gw^4*_t*_u)\/(4*(-mq2 + _t)^2) + (5*gw^4*_t*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(5*gw^4*_t*_u)\/(4*(mq2 - _t)^2) + (5*gw^4*_t*_u)\/(4*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1805,7 +1805,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gw^4*_t*_u)\/(-mq2 + _t)^2 + (gw^4*_t*_u)\/(-mq2 + _u)^2"
+			"expression":"(gw^4*_t*_u)\/(mq2 - _t)^2 + (gw^4*_t*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1818,7 +1818,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(gw^4*_t*_u)\/(-mq2 + _t)^2 + (gw^4*_t*_u)\/(-mq2 + _u)^2"
+			"expression":"(gw^4*_t*_u)\/(mq2 - _t)^2 + (gw^4*_t*_u)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -1831,7 +1831,7 @@
 				"gw",
 				"mq2"
 			],
-			"expression":"(41*gw^4*_t*_u)\/(4*(-mq2 + _t)^2) + (41*gw^4*_t*_u)\/(4*(-mq2 + _u)^2)"
+			"expression":"(41*gw^4*_t*_u)\/(4*(mq2 - _t)^2) + (41*gw^4*_t*_u)\/(4*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1844,7 +1844,7 @@
 				"gw",
 				"ml2"
 			],
-			"expression":"(9*gw^4*_t*_u)\/(2*(-ml2 + _t)^2) + (9*gw^4*_t*_u)\/(2*(-ml2 + _u)^2)"
+			"expression":"(9*gw^4*_t*_u)\/(2*(ml2 - _t)^2) + (9*gw^4*_t*_u)\/(2*(ml2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1857,7 +1857,7 @@
 				"gs",
 				"mg2"
 			],
-			"expression":"(18*gs^4*_s^2)\/(-mg2 + _t)^2 - (36*gs^4*_s*_u)\/(-mg2 + _t)^2 + (18*gs^4*_u^2)\/(-mg2 + _t)^2 + (18*gs^4*_s^2)\/(-mg2 + _u)^2 - (36*gs^4*_s*_t)\/(-mg2 + _u)^2 + (18*gs^4*_t^2)\/(-mg2 + _u)^2"
+			"expression":"(18*gs^4*(_s - _t)^2)\/(mg2 - _u)^2 + (18*gs^4*(_s - _u)^2)\/(mg2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1870,7 +1870,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(8*gw^4*_s^2)\/(-mw2 + _t)^2 - (16*gw^4*_s*_u)\/(-mw2 + _t)^2 + (8*gw^4*_u^2)\/(-mw2 + _t)^2 + (8*gw^4*_s^2)\/(-mw2 + _u)^2 - (16*gw^4*_s*_t)\/(-mw2 + _u)^2 + (8*gw^4*_t^2)\/(-mw2 + _u)^2"
+			"expression":"(8*gw^4*(_s - _t)^2)\/(mw2 - _u)^2 + (8*gw^4*(_s - _u)^2)\/(mw2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1883,7 +1883,7 @@
 				"gw",
 				"mw2"
 			],
-			"expression":"(3*gw^4*_s^2)\/(4*(-mw2 + _t)^2) - (3*gw^4*_s*_u)\/(2*(-mw2 + _t)^2) + (3*gw^4*_u^2)\/(4*(-mw2 + _t)^2) + (3*gw^4*_s^2)\/(4*(-mw2 + _u)^2) - (3*gw^4*_s*_t)\/(2*(-mw2 + _u)^2) + (3*gw^4*_t^2)\/(4*(-mw2 + _u)^2)"
+			"expression":"(3*gw^4*(_s - _t)^2)\/(4*(mw2 - _u)^2) + (3*gw^4*(_s - _u)^2)\/(4*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2156,7 +2156,7 @@
 				"gw",
 				"ms2"
 			],
-			"expression":"(3*gw^4*_t^2)\/(4*(-ms2 + _t)^2) + (3*gw^4*ms2*_s*_t)\/(4*(ms2 - _t)^2*(ms2 - _u)) + (3*gw^4*ms2*_s*_u)\/(4*(ms2 - _t)*(ms2 - _u)^2) - (3*gw^4*_s*_t*_u)\/(4*(ms2 - _t)*(ms2 - _u)^2) - (3*gw^4*_s*_t*_u)\/(4*(ms2 - _t)^2*(ms2 - _u)) + (3*gw^4*_u^2)\/(4*(-ms2 + _u)^2)"
+			"expression":"(3*gw^4*_t*(_s + _t))\/(4*(ms2 - _t)^2) + (3*gw^4*_u*(_s + _u))\/(4*(ms2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2169,7 +2169,7 @@
 				"gw",
 				"ms2"
 			],
-			"expression":"(9*gw^4*_t^2)\/(8*(-ms2 + _t)^2) + (9*gw^4*ms2*_s*_t)\/(8*(ms2 - _t)^2*(ms2 - _u)) + (9*gw^4*ms2*_s*_u)\/(8*(ms2 - _t)*(ms2 - _u)^2) - (9*gw^4*_s*_t*_u)\/(8*(ms2 - _t)*(ms2 - _u)^2) - (9*gw^4*_s*_t*_u)\/(8*(ms2 - _t)^2*(ms2 - _u)) + (9*gw^4*_u^2)\/(8*(-ms2 + _u)^2)"
+			"expression":"(9*gw^4*_t*(_s + _t))\/(8*(ms2 - _t)^2) + (9*gw^4*_u*(_s + _u))\/(8*(ms2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2183,7 +2183,7 @@
 				"mw2",
 				"ms2"
 			],
-			"expression":"-1\/4*(gw^4*_s^2)\/(mw2 - _t)^2 - (15*gw^4*_s*_u)\/(2*(mw2 - _t)^2) - (gw^4*_u^2)\/(4*(mw2 - _t)^2) + (3*gw^4*_t*_u)\/(4*(-ms2 + _u)^2) + (3*gw^4*_u^2)\/(4*(-ms2 + _u)^2)"
+			"expression":"(3*gw^4*_u*(_t + _u))\/(4*(ms2 - _u)^2) - (gw^4*(_s^2 + 30*_s*_u + _u^2))\/(4*(mw2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2197,7 +2197,7 @@
 				"mw2",
 				"ms2"
 			],
-			"expression":"(3*gw^4*_t^2)\/(4*(-ms2 + _t)^2) - (gw^4*_s^2)\/(4*(mw2 - _u)^2) - (15*gw^4*_s*_t)\/(2*(mw2 - _u)^2) - (gw^4*_t^2)\/(4*(mw2 - _u)^2) + (3*gw^4*_t*_u)\/(4*(-ms2 + _t)^2)"
+			"expression":"-1\/4*(gw^4*(_s^2 + 30*_s*_t + _t^2))\/(mw2 - _u)^2 + (3*gw^4*_t*(_t + _u))\/(4*(ms2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2211,7 +2211,7 @@
 				"mw2",
 				"ms2"
 			],
-			"expression":"(9*gw^4*_t^2)\/(8*(-ms2 + _t)^2) - (3*gw^4*_s^2)\/(8*(mw2 - _u)^2) - (45*gw^4*_s*_t)\/(4*(mw2 - _u)^2) - (3*gw^4*_t^2)\/(8*(mw2 - _u)^2) + (9*gw^4*_t*_u)\/(8*(-ms2 + _t)^2)"
+			"expression":"(-3*gw^4*(_s^2 + 30*_s*_t + _t^2))\/(8*(mw2 - _u)^2) + (9*gw^4*_t*(_t + _u))\/(8*(ms2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2225,7 +2225,7 @@
 				"mw2",
 				"ms2"
 			],
-			"expression":"(-3*gw^4*_s^2)\/(8*(mw2 - _t)^2) - (45*gw^4*_s*_u)\/(4*(mw2 - _t)^2) - (3*gw^4*_u^2)\/(8*(mw2 - _t)^2) + (9*gw^4*_t*_u)\/(8*(-ms2 + _u)^2) + (9*gw^4*_u^2)\/(8*(-ms2 + _u)^2)"
+			"expression":"(9*gw^4*_u*(_t + _u))\/(8*(ms2 - _u)^2) - (3*gw^4*(_s^2 + 30*_s*_u + _u^2))\/(8*(mw2 - _t)^2)"
 		}
 	]
 }
