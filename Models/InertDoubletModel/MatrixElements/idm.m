@@ -18,13 +18,14 @@ Check[
 
 
 (* ::Chapter:: *)
-(*2HDM*)
+(*Inert doublet model*)
 
 
-(*See 2211.13142 for implementation details*)
+(*See 2211.13142 for implementation details -- note our different normalization in the
+quartic couplings*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Model*)
 
 
@@ -39,9 +40,7 @@ CouplingName={g3,gw};
 Rep1={{{1,0},{1}},"L"};
 Rep2={{{1,0},{0}},"R"};
 Rep3={{{1,0},{0}},"R"};
-Rep4={{{0,0},{1}},"L"};
-Rep5={{{0,0},{0}},"R"};
-RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
+RepFermion1Gen={Rep1,Rep2,Rep3};
 
 
 (* ::Text:: *)
@@ -85,8 +84,8 @@ QuarticTerm5=(MassTerm3[[1]]^2+MassTerm4[[1]]^2)//Simplify;
 
 
 VQuartic=(
-	+lam1H/2*QuarticTerm1
-	+lam2H/2*QuarticTerm2
+	+lam1H*QuarticTerm1
+	+lam2H*QuarticTerm2
 	+lam3H*QuarticTerm3
 	+lam4H*QuarticTerm4
 	+lam5H/2*QuarticTerm5
@@ -133,8 +132,15 @@ SymmetryBreaking[vev,VevDependentCouplings->True] (*uncomment if you want vev-de
 
 (*Third generation of fermions*)
 ReptL=CreateParticle[{{1,1}},"F"];
-RepbL=CreateParticle[{{1,2}},"F"];
 ReptR=CreateParticle[{{2,1}},"F"];
+(*We group the two left-handed and right-handed bottom together*)
+Repb = CreateParticle[{{1,2},3},"F"];
+
+
+(*Light quarks*)
+
+
+RepLightQ = CreateParticle[{4,5,6,7,8,9},"F"];
 
 
 (*Vector bosons*)
@@ -148,7 +154,8 @@ RepGoldstoneGpR={{1},"S"}; (*real charged Goldstone*)
 RepGoldstoneGpI={{3},"S"}; (*imag charged Golstone*)
 RepGoldstoneGp0={{4},"S"}; (*neutral Goldstone*)
 RepHiggsH=CreateParticle[{{2,2}},"S"]; (*CP-even inert scalar*)
-RepGoldstoneA=CreateParticle[{{2,3},{2,1}},"S"]; (*CP-odd inert and charged scalars *)
+RepGoldstoneA=CreateParticle[{{2,3},{2,1}},"S"]; (*CP-odd inert and charged scalars.
+Note that when lambda4 = lambda5, they have the same mass*)
 
 
 (*Defining various masses and couplings*)
@@ -161,16 +168,16 @@ ScalarMass={mG2,mh2,mG2,mG2,mA2,mH2,mA2,mA2};
 ParticleMasses={VectorMass,FermionMass,ScalarMass};
 
 UserMasses={mq2,mg2,mw2,mG2,mh2,mH2,mA2};
-UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//DeleteDuplicates;
+UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//DeleteDuplicates
 
 
 ParticleList={
-	ReptL,RepbL,ReptR,
+	ReptL,ReptR,Repb,RepLightQ,
 	RepGluon,RepW,
 	RepHiggsh,RepGoldstoneGp0,RepGoldstoneGpR,RepGoldstoneGpI,
 	RepHiggsH,RepGoldstoneA};
 ParticleName={
-	"TopL","BotL","TopR",
+	"TopL","TopR","Bot","LightQuark",
 	"Gluon","W",
 	"Higgs","GoldstoneG0","GoldstoneGpR","GoldstoneGpI",
 	"H","A"};
@@ -179,7 +186,7 @@ ParticleName={
 (*
 	output of matrix elements
 *)
-OutputFile="output/matrixElements.idm";
+OutputFile="matrixElements.idm";
 
 MatrixElements=ExportMatrixElements[
 	OutputFile,
@@ -193,6 +200,7 @@ MatrixElements=ExportMatrixElements[
 		Replacements->{lam1H->0,lam2H->0,lam4H->0,lam5H->0},
 		Format->{"json","txt"},
 		NormalizeWithDOF->False}];
+
 
 
 
