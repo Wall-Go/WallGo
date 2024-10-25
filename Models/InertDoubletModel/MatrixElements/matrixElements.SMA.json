@@ -64,15 +64,30 @@
 		{
 			"externalParticles":[
 				0,
+				0,
+				1,
+				1
+			],
+			"parameters":[
+				"yt1",
+				"mh2"
+			],
+			"expression":"(3*_t^2*yt1^4)\/(mh2 - _t)^2 + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				0,
 				1,
 				0,
 				1
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
+			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2) + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -83,9 +98,11 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
+			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2) + (3*_t^2*yt1^4)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -191,9 +208,11 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
+			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2) + (3*_t^2*yt1^4)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -204,9 +223,24 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
+			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2) + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				1,
+				0,
+				0
+			],
+			"parameters":[
+				"yt1",
+				"mh2"
+			],
+			"expression":"(3*_t^2*yt1^4)\/(mh2 - _t)^2 + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -224,15 +258,30 @@
 		{
 			"externalParticles":[
 				1,
+				1,
+				2,
+				2
+			],
+			"parameters":[
+				"yt1",
+				"mh2"
+			],
+			"expression":"(3*_t^2*yt1^4)\/(mh2 - _t)^2 + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				1,
 				2,
 				1,
 				2
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(80*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
+			"expression":"(80*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2) + (3*_u^2*yt1^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -243,9 +292,11 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(80*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
+			"expression":"(80*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2) + (3*_t^2*yt1^4)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -299,9 +350,11 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2)"
+			"expression":"(8*g3^4*(_s^2 + _t^2))\/(3*(mg2 - _u)^2) + (3*_t^2*yt1^4)\/(10*(mh2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -312,9 +365,11 @@
 			],
 			"parameters":[
 				"g3",
-				"mg2"
+				"yt1",
+				"mg2",
+				"mh2"
 			],
-			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2)"
+			"expression":"(8*g3^4*(_s^2 + _u^2))\/(3*(mg2 - _t)^2) + (3*_u^2*yt1^4)\/(10*(mh2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -328,6 +383,19 @@
 				"mw2"
 			],
 			"expression":"(3*gw^4*(_s^2 + _t^2))\/(5*(mw2 - _u)^2) + (3*gw^4*(_s^2 + _u^2))\/(5*(mw2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				2,
+				2,
+				1,
+				1
+			],
+			"parameters":[
+				"yt1",
+				"mh2"
+			],
+			"expression":"(3*_t^2*yt1^4)\/(10*(mh2 - _t)^2) + (3*_u^2*yt1^4)\/(10*(mh2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1896,6 +1964,48 @@
 		{
 			"externalParticles":[
 				7,
+				7,
+				8,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(lam3H^4*v^4)\/(4*(mH2 - _t)^2) + (lam3H^4*v^4)\/(4*(mH2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				9,
+				9
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mA2"
+			],
+			"expression":"(3*lam3H^4*v^4)\/(4*(mA2 - _t)^2) + (3*lam3H^4*v^4)\/(4*(mA2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				8,
+				7,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(lam3H^3*v^2)\/(2*(-mH2 + _u)) + (lam3H^4*v^4)\/(4*(mH2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
 				8,
 				7,
 				9
@@ -1905,6 +2015,20 @@
 				"mw2"
 			],
 			"expression":"(3*gw^4*(_s - _u)^2)\/(16*(mw2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				8,
+				8,
+				7
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(lam3H^3*v^2)\/(2*(-mH2 + _t)) + (lam3H^4*v^4)\/(4*(mH2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1941,9 +2065,13 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mA2",
+				"mH2"
 			],
-			"expression":"(3*gw^4*(_s - _u)^2)\/(8*(mw2 - _t)^2)"
+			"expression":"(3*gw^4*(_s - _u)^2)\/(8*(mw2 - _t)^2) + (3*lam3H^3*(mH2 - _u)*v^2)\/(2*(mA2 - _u)*(-mH2 + _u)) + (3*lam3H^4*v^4)\/(4*(mA2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -1967,9 +2095,27 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mA2",
+				"mH2"
 			],
-			"expression":"(3*gw^4*(_s - _t)^2)\/(8*(mw2 - _u)^2)"
+			"expression":"(3*gw^4*(_s - _t)^2)\/(8*(mw2 - _u)^2) + (3*lam3H^3*(mH2 - _t)*v^2)\/(2*(mA2 - _t)*(-mH2 + _t)) + (3*lam3H^4*v^4)\/(4*(mA2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				8,
+				7,
+				7,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(2*lam3H^3*v^2)\/(-mH2 + _t) + (lam3H^4*v^4)\/(mH2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -1988,6 +2134,20 @@
 			"externalParticles":[
 				8,
 				7,
+				8,
+				7
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(2*lam3H^3*v^2)\/(-mH2 + _u) + (lam3H^4*v^4)\/(mH2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				7,
 				9,
 				7
 			],
@@ -1996,6 +2156,34 @@
 				"mw2"
 			],
 			"expression":"(3*gw^4*(_s - _u)^2)\/(4*(mw2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				8,
+				8,
+				7,
+				7
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mH2"
+			],
+			"expression":"(lam3H^4*v^4)\/(mH2 - _t)^2 + (lam3H^4*v^4)\/(mH2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				8,
+				8,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mh2"
+			],
+			"expression":"(lam3H^4*v^4)\/(mh2 - _t)^2 + (lam3H^4*v^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2019,9 +2207,12 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mh2"
 			],
-			"expression":"(3*gw^4*(_s - _t)^2)\/(16*(mw2 - _u)^2)"
+			"expression":"(3*gw^4*(_s - _t)^2)\/(16*(mw2 - _u)^2) + (3*lam3H^4*v^4)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2032,9 +2223,12 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mh2"
 			],
-			"expression":"(3*gw^4*(_s - _u)^2)\/(16*(mw2 - _t)^2)"
+			"expression":"(3*gw^4*(_s - _u)^2)\/(16*(mw2 - _t)^2) + (3*lam3H^4*v^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2071,9 +2265,13 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mA2",
+				"mH2"
 			],
-			"expression":"(gw^4*(_s - _t)^2)\/(2*(mw2 - _u)^2)"
+			"expression":"(gw^4*(_s - _t)^2)\/(2*(mw2 - _u)^2) + (2*lam3H^3*(mH2 - _t)*v^2)\/((mA2 - _t)*(-mH2 + _t)) + (lam3H^4*v^4)\/(mA2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2097,9 +2295,13 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mA2",
+				"mH2"
 			],
-			"expression":"(gw^4*(_s - _u)^2)\/(2*(mw2 - _t)^2)"
+			"expression":"(gw^4*(_s - _u)^2)\/(2*(mw2 - _t)^2) + (2*lam3H^3*(mH2 - _u)*v^2)\/((mA2 - _u)*(-mH2 + _u)) + (lam3H^4*v^4)\/(mA2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2110,9 +2312,12 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mh2"
 			],
-			"expression":"(gw^4*(_s - _u)^2)\/(16*(mw2 - _t)^2)"
+			"expression":"(gw^4*(_s - _u)^2)\/(16*(mw2 - _t)^2) + (lam3H^4*v^4)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2123,9 +2328,12 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mh2"
 			],
-			"expression":"(gw^4*(_s - _t)^2)\/(16*(mw2 - _u)^2)"
+			"expression":"(gw^4*(_s - _t)^2)\/(16*(mw2 - _u)^2) + (lam3H^4*v^4)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2139,6 +2347,20 @@
 				"mw2"
 			],
 			"expression":"(gw^4*(_s - _t)^2)\/(8*(mw2 - _u)^2) + (gw^4*(_s - _u)^2)\/(8*(mw2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				9,
+				9,
+				7,
+				7
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"mA2"
+			],
+			"expression":"(lam3H^4*v^4)\/(mA2 - _t)^2 + (lam3H^4*v^4)\/(mA2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2188,9 +2410,142 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"lam3H",
+				"v",
+				"mw2",
+				"mh2"
 			],
-			"expression":"(gw^4*(_s - _t)^2)\/(4*(mw2 - _u)^2) + (gw^4*(_s - _u)^2)\/(4*(mw2 - _t)^2)"
+			"expression":"(gw^4*(_s - _t)^2)\/(4*(mw2 - _u)^2) + (gw^4*(_s - _u)^2)\/(4*(mw2 - _t)^2) + (3*lam3H^4*v^4)\/(mh2 - _t)^2 + (3*lam3H^4*v^4)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				0,
+				0,
+				7,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(_t*_u*yt1^4)\/(mq2 - _t)^2 + (_t*_u*yt1^4)\/(mq2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				0,
+				2,
+				7,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(_t*_u*yt1^4)\/(mq2 - _t)^2 + (_t*_u*yt1^4)\/(mq2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				1,
+				7,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(2*_t*_u*yt1^4)\/(mq2 - _t)^2 + (2*_t*_u*yt1^4)\/(mq2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				2,
+				0,
+				7,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(_t*_u*yt1^4)\/(10*(mq2 - _t)^2) + (_t*_u*yt1^4)\/(10*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				2,
+				2,
+				7,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(_t*_u*yt1^4)\/(10*(mq2 - _t)^2) + (_t*_u*yt1^4)\/(10*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				0,
+				0
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(3*_t*_u*yt1^4)\/(2*(mq2 - _t)^2) + (3*_t*_u*yt1^4)\/(2*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				0,
+				2
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(3*_t*_u*yt1^4)\/(2*(mq2 - _t)^2) + (3*_t*_u*yt1^4)\/(2*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				1,
+				1
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(3*_t*_u*yt1^4)\/(mq2 - _t)^2 + (3*_t*_u*yt1^4)\/(mq2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				2,
+				0
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(3*_t*_u*yt1^4)\/(2*(mq2 - _t)^2) + (3*_t*_u*yt1^4)\/(2*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				7,
+				2,
+				2
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(3*_t*_u*yt1^4)\/(2*(mq2 - _t)^2) + (3*_t*_u*yt1^4)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2201,9 +2556,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"-((gw^4*_s*_u)\/(mw2 - _t)^2)"
+			"expression":"-((gw^4*_s*_u)\/(mw2 - _t)^2) - (_s*_u*yt1^4)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2214,9 +2571,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-2*gw^4*_s*_u)\/(mw2 - _t)^2"
+			"expression":"(-2*gw^4*_s*_u)\/(mw2 - _t)^2 - (_s*_u*yt1^4)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2227,9 +2586,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"-((gw^4*_s*_t)\/(mw2 - _u)^2)"
+			"expression":"-((gw^4*_s*_t)\/(mw2 - _u)^2) - (_s*_t*yt1^4)\/(mq2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2240,9 +2601,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-2*gw^4*_s*_t)\/(mw2 - _u)^2"
+			"expression":"(-2*gw^4*_s*_t)\/(mw2 - _u)^2 - (_s*_t*yt1^4)\/(mq2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2261,6 +2624,21 @@
 			"externalParticles":[
 				0,
 				8,
+				1,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"-1\/2*(lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				0,
+				8,
 				2,
 				9
 			],
@@ -2269,6 +2647,21 @@
 				"mw2"
 			],
 			"expression":"-1\/2*(gw^4*_s*_u)\/(mw2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				0,
+				8,
+				8,
+				1
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"-1\/2*(lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2326,6 +2719,21 @@
 			"externalParticles":[
 				0,
 				9,
+				1,
+				9
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(2*(mh2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				0,
+				9,
 				2,
 				8
 			],
@@ -2392,6 +2800,21 @@
 				0,
 				9,
 				9,
+				1
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(2*(mh2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				0,
+				9,
+				9,
 				2
 			],
 			"parameters":[
@@ -2402,6 +2825,92 @@
 		},
 		{
 			"externalParticles":[
+				1,
+				7,
+				1,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(-2*_s*_u*yt1^4)\/(mq2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				7,
+				7,
+				1
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(-2*_s*_t*yt1^4)\/(mq2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				8,
+				0,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"-1\/2*(lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				8,
+				8,
+				0
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"-1\/2*(lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				1,
+				9,
+				0,
+				9
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(2*(mh2 - _t)^2)"
+		},
+		{
+			"externalParticles":[
+				1,
+				9,
+				9,
+				0
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(2*(mh2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
 				2,
 				7,
 				0,
@@ -2409,9 +2918,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"-1\/5*(gw^4*_s*_u)\/(mw2 - _t)^2"
+			"expression":"-1\/5*(gw^4*_s*_u)\/(mw2 - _t)^2 - (_s*_u*yt1^4)\/(10*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2422,9 +2933,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-13*gw^4*_s*_u)\/(10*(mw2 - _t)^2)"
+			"expression":"(-13*gw^4*_s*_u)\/(10*(mw2 - _t)^2) - (_s*_u*yt1^4)\/(10*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2435,9 +2948,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"-1\/5*(gw^4*_s*_t)\/(mw2 - _u)^2"
+			"expression":"-1\/5*(gw^4*_s*_t)\/(mw2 - _u)^2 - (_s*_t*yt1^4)\/(10*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2448,9 +2963,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-13*gw^4*_s*_t)\/(10*(mw2 - _u)^2)"
+			"expression":"(-13*gw^4*_s*_t)\/(10*(mw2 - _u)^2) - (_s*_t*yt1^4)\/(10*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2721,9 +3238,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_t)\/(2*(mw2 - _u)^2)"
+			"expression":"(-3*gw^4*_s*_t)\/(2*(mw2 - _u)^2) - (3*_s*_t*yt1^4)\/(2*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2734,9 +3253,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_t)\/(mw2 - _u)^2"
+			"expression":"(-3*gw^4*_s*_t)\/(mw2 - _u)^2 - (3*_s*_t*yt1^4)\/(2*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2747,9 +3268,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_u)\/(2*(mw2 - _t)^2)"
+			"expression":"(-3*gw^4*_s*_u)\/(2*(mw2 - _t)^2) - (3*_s*_u*yt1^4)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2760,9 +3283,37 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_u)\/(mw2 - _t)^2"
+			"expression":"(-3*gw^4*_s*_u)\/(mw2 - _t)^2 - (3*_s*_u*yt1^4)\/(2*(mq2 - _u)^2)"
+		},
+		{
+			"externalParticles":[
+				7,
+				1,
+				1,
+				7
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(-3*_s*_t*yt1^4)\/(mq2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				7,
+				1,
+				7,
+				1
+			],
+			"parameters":[
+				"yt1",
+				"mq2"
+			],
+			"expression":"(-3*_s*_u*yt1^4)\/(mq2 - _u)^2"
 		},
 		{
 			"externalParticles":[
@@ -2773,9 +3324,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_t)\/(mw2 - _u)^2"
+			"expression":"(-3*gw^4*_s*_t)\/(mw2 - _u)^2 - (3*_s*_t*yt1^4)\/(2*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2786,9 +3339,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-39*gw^4*_s*_t)\/(2*(mw2 - _u)^2)"
+			"expression":"(-39*gw^4*_s*_t)\/(2*(mw2 - _u)^2) - (3*_s*_t*yt1^4)\/(2*(mq2 - _t)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2799,9 +3354,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-3*gw^4*_s*_u)\/(mw2 - _t)^2"
+			"expression":"(-3*gw^4*_s*_u)\/(mw2 - _t)^2 - (3*_s*_u*yt1^4)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2812,9 +3369,11 @@
 			],
 			"parameters":[
 				"gw",
-				"mw2"
+				"yt1",
+				"mw2",
+				"mq2"
 			],
-			"expression":"(-39*gw^4*_s*_u)\/(2*(mw2 - _t)^2)"
+			"expression":"(-39*gw^4*_s*_u)\/(2*(mw2 - _t)^2) - (3*_s*_u*yt1^4)\/(2*(mq2 - _u)^2)"
 		},
 		{
 			"externalParticles":[
@@ -2859,6 +3418,21 @@
 			"externalParticles":[
 				8,
 				0,
+				1,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				0,
 				2,
 				9
 			],
@@ -2867,6 +3441,21 @@
 				"mw2"
 			],
 			"expression":"(-3*gw^4*_s*_t)\/(mw2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				0,
+				8,
+				1
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -2893,6 +3482,36 @@
 				"mw2"
 			],
 			"expression":"(-3*gw^4*_s*_u)\/(mw2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				1,
+				0,
+				8
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				8,
+				1,
+				8,
+				0
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[
@@ -3002,6 +3621,21 @@
 			"externalParticles":[
 				9,
 				0,
+				1,
+				9
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				9,
+				0,
 				2,
 				8
 			],
@@ -3068,6 +3702,21 @@
 				9,
 				0,
 				9,
+				1
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				9,
+				0,
+				9,
 				2
 			],
 			"parameters":[
@@ -3075,6 +3724,36 @@
 				"mw2"
 			],
 			"expression":"(-2*gw^4*_s*_u)\/(mw2 - _t)^2"
+		},
+		{
+			"externalParticles":[
+				9,
+				1,
+				0,
+				9
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_u*v^2*yt1^2)\/(mh2 - _u)^2"
+		},
+		{
+			"externalParticles":[
+				9,
+				1,
+				9,
+				0
+			],
+			"parameters":[
+				"lam3H",
+				"v",
+				"yt1",
+				"mh2"
+			],
+			"expression":"(-3*lam3H^2*_t*v^2*yt1^2)\/(mh2 - _t)^2"
 		},
 		{
 			"externalParticles":[

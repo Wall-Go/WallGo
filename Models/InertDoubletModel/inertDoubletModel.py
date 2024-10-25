@@ -190,7 +190,7 @@ class InertDoubletModel(GenericModel):
             statistics="Boson",
             totalDOFs=3,
         )
-        #self.addParticle(heavyScalar)
+        self.addParticle(heavyScalar)
 
     ## Go from whatever input params --> action params
     def calculateLagrangianParameters(
