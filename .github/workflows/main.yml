@@ -1,10 +1,10 @@
-name: WallGo tests
+name: WallGo main tests
 
 on:
-  # Note that this workflow is in a separate file from main.yml so that
-  # the PR tests are separate from testing if the current main branch passes.
-  pull_request:
-  workflow_dispatch:
+  push:
+    # Note that this workflow is in a separate file from tests.yml so that
+    # it can be separated out, and used for the [passing] badge on the README.md
+    branches: [ main ]
 
 jobs:
   build:
