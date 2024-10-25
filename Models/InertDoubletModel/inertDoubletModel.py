@@ -190,7 +190,7 @@ class InertDoubletModel(GenericModel):
             statistics="Boson",
             totalDOFs=3,
         )
-        self.addParticle(heavyScalar)
+        #self.addParticle(heavyScalar)
 
     ## Go from whatever input params --> action params
     def calculateLagrangianParameters(
@@ -649,7 +649,7 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.idm.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.idmReduced.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -708,7 +708,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         lam1H = inWallGoModel.modelParameters["lambda"]
         lam3H = inWallGoModel.modelParameters["lambda3"]
         lam4H = inWallGoModel.modelParameters["lambda4"]
-        v = inWallGoModel.modelParameters["vevCollisions"] #TODO: replace with something better
+        v = inWallGoModel.modelParameters["vevCollisions"]
 
         changedParams.add("g3", g3)
         changedParams.add("gw", gw)
@@ -844,7 +844,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                 {
                     "v0": 246.22,
                     # This is hardcoded to be half of the vev at the nucleation temperature of BMA
-                    "vevCollisions": 74.8354, 
+                    "vevCollisions": 74.8354/117.1, 
                     "Mt": 172.76,
                     "g1": 0.35,
                     "g2": 0.65,
