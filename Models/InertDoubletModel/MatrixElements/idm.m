@@ -408,7 +408,10 @@ MatrixElements=ExportMatrixElements[
 
 
 Group={"SU3","SU2"};
-RepAdjoint={{1,1},{2}};
+RepAdjoint={{1,1},{2},0};
+HiggsDoublet1={{{0,0},{1}},"C"};
+HiggsDoublet2={{{0,0},{1}},"C"};
+RepScalar={HiggsDoublet1,HiggsDoublet2};
 CouplingName={g3,gw};
 
 
@@ -420,17 +423,15 @@ Rep5={{{0,0},{0}},"R"};
 RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
 
 
-
-HiggsDoublet1={{{0,0},{1}},"C"};
-HiggsDoublet2={{{0,0},{1}},"C"};
-RepScalar={HiggsDoublet1,HiggsDoublet2};
+(* ::Text:: *)
+(*The input for the gauge interactions to DRalgo are then given by*)
 
 
 RepFermion3Gen={RepFermion1Gen,RepFermion1Gen,RepFermion1Gen}//Flatten[#,1]&;
 
 
 (* ::Text:: *)
-(*The input for the gauge interactions toDRalgo are then given by*)
+(*The first element is the vector self-interaction matrix:*)
 
 
 {gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC}=AllocateTensors[Group,RepAdjoint,CouplingName,RepFermion3Gen,RepScalar];
@@ -475,8 +476,13 @@ VQuartic=(
 
 
 InputInv={{1,1,2},{False,False,True}}; 
-YukawaDoublet=CreateInvariantYukawa[Group,RepScalar,RepFermion3Gen,InputInv]//Simplify;
-Ysff=-GradYukawa[yt1*YukawaDoublet[[1]]];
+YukawaDoublet1=CreateInvariantYukawa[Group,RepScalar,RepFermion3Gen,InputInv]//Simplify;
+
+
+Ysff=-GradYukawa[yt1*YukawaDoublet1[[1]]];
+
+
+YsffC=SparseArray[Simplify[Conjugate[Ysff]//Normal,Assumptions->{yt1>0}]];
 
 
 ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC,Verbose->False];
@@ -491,7 +497,7 @@ ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]I
 
 
 vev={0,v,0,0,0,0,0,0};
-SymmetryBreaking[vev]
+SymmetryBreaking[vev,VevDependentCouplings->True] 
 
 
 (* ::Subsection:: *)
