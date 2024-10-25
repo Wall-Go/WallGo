@@ -119,18 +119,18 @@ def setupCollisionModel_IDM(
     topQuarkR.massSqFunction = quarkThermalMassSquared
     modelDefinition.defineParticleSpecies(topQuarkR)
 
-    bottomQuark = WallGoCollision.ParticleDescription()
-    bottomQuark.name = "Bot"
-    bottomQuark.index = 2
-    bottomQuark.type = WallGoCollision.EParticleType.eFermion
-    bottomQuark.bInEquilibrium = True
-    bottomQuark.bUltrarelativistic = True
-    bottomQuark.massSqFunction = quarkThermalMassSquared
-    modelDefinition.defineParticleSpecies(bottomQuark)
+    # bottomQuark = WallGoCollision.ParticleDescription()
+    # bottomQuark.name = "Bot"
+    # bottomQuark.index = 2
+    # bottomQuark.type = WallGoCollision.EParticleType.eFermion
+    # bottomQuark.bInEquilibrium = True
+    # bottomQuark.bUltrarelativistic = True
+    # bottomQuark.massSqFunction = quarkThermalMassSquared
+    # modelDefinition.defineParticleSpecies(bottomQuark)
 
     lightQuark = WallGoCollision.ParticleDescription()
     lightQuark.name = "LightQuark"
-    lightQuark.index = 3
+    lightQuark.index = 2 #3
     lightQuark.type = WallGoCollision.EParticleType.eFermion
     lightQuark.bInEquilibrium = True
     lightQuark.bUltrarelativistic = True
@@ -139,7 +139,7 @@ def setupCollisionModel_IDM(
 
     gluon = WallGoCollision.ParticleDescription()
     gluon.name = "Gluon"
-    gluon.index = 6
+    gluon.index = 5 #6
     gluon.type = WallGoCollision.EParticleType.eBoson
     gluon.bInEquilibrium = True
     gluon.bUltrarelativistic = True
@@ -148,7 +148,7 @@ def setupCollisionModel_IDM(
 
     wBoson = WallGoCollision.ParticleDescription()
     wBoson.name = "W"
-    wBoson.index = 7
+    wBoson.index = 6 #7
     wBoson.type = WallGoCollision.EParticleType.eBoson
     wBoson.bInEquilibrium = False
     wBoson.bUltrarelativistic = True
@@ -157,43 +157,43 @@ def setupCollisionModel_IDM(
 
     higgs = WallGoCollision.ParticleDescription()
     higgs.name = "h"
-    higgs.index = 8
+    higgs.index = 7 #8
     higgs.type = WallGoCollision.EParticleType.eBoson
     higgs.bInEquilibrium = True
     higgs.bUltrarelativistic = True
     higgs.massSqFunction = HiggsBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(higgs)
 
-    goldStone0 = WallGoCollision.ParticleDescription()
-    goldStone0.name = "G0"
-    goldStone0.index = 9
-    goldStone0.type = WallGoCollision.EParticleType.eBoson
-    goldStone0.bInEquilibrium = True
-    goldStone0.bUltrarelativistic = True
-    goldStone0.massSqFunction = HiggsBosonThermalMassSquared
-    modelDefinition.defineParticleSpecies(goldStone0)
+    # goldStone0 = WallGoCollision.ParticleDescription()
+    # goldStone0.name = "G0"
+    # goldStone0.index = 9
+    # goldStone0.type = WallGoCollision.EParticleType.eBoson
+    # goldStone0.bInEquilibrium = True
+    # goldStone0.bUltrarelativistic = True
+    # goldStone0.massSqFunction = HiggsBosonThermalMassSquared
+    # modelDefinition.defineParticleSpecies(goldStone0)
 
-    goldStonepR = WallGoCollision.ParticleDescription()
-    goldStonepR.name = "GpR"
-    goldStonepR.index = 10
-    goldStonepR.type = WallGoCollision.EParticleType.eBoson
-    goldStonepR.bInEquilibrium = True
-    goldStonepR.bUltrarelativistic = True
-    goldStonepR.massSqFunction = HiggsBosonThermalMassSquared
-    modelDefinition.defineParticleSpecies(goldStonepR)
+    # goldStonepR = WallGoCollision.ParticleDescription()
+    # goldStonepR.name = "GpR"
+    # goldStonepR.index = 10
+    # goldStonepR.type = WallGoCollision.EParticleType.eBoson
+    # goldStonepR.bInEquilibrium = True
+    # goldStonepR.bUltrarelativistic = True
+    # goldStonepR.massSqFunction = HiggsBosonThermalMassSquared
+    # modelDefinition.defineParticleSpecies(goldStonepR)
 
-    goldStonepI = WallGoCollision.ParticleDescription()
-    goldStonepI.name = "GpI"
-    goldStonepI.index = 11
-    goldStonepI.type = WallGoCollision.EParticleType.eBoson
-    goldStonepI.bInEquilibrium = True
-    goldStonepI.bUltrarelativistic = True
-    goldStonepI.massSqFunction = HiggsBosonThermalMassSquared
-    modelDefinition.defineParticleSpecies(goldStonepI)
+    # goldStonepI = WallGoCollision.ParticleDescription()
+    # goldStonepI.name = "GpI"
+    # goldStonepI.index = 11
+    # goldStonepI.type = WallGoCollision.EParticleType.eBoson
+    # goldStonepI.bInEquilibrium = True
+    # goldStonepI.bUltrarelativistic = True
+    # goldStonepI.massSqFunction = HiggsBosonThermalMassSquared
+    # modelDefinition.defineParticleSpecies(goldStonepI)
 
     newScalarHeavy = WallGoCollision.ParticleDescription()
     newScalarHeavy.name = "A"
-    newScalarHeavy.index = 13
+    newScalarHeavy.index = 9
     newScalarHeavy.type = WallGoCollision.EParticleType.eBoson
     newScalarHeavy.bInEquilibrium = False
     newScalarHeavy.bUltrarelativistic = True

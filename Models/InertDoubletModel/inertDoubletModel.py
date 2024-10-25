@@ -190,7 +190,7 @@ class InertDoubletModel(GenericModel):
             statistics="Boson",
             totalDOFs=3,
         )
-        #self.addParticle(heavyScalar)
+        self.addParticle(heavyScalar)
 
     ## Go from whatever input params --> action params
     def calculateLagrangianParameters(
@@ -649,7 +649,7 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.idmReduced.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMA.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -799,6 +799,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutManager.config.loadConfigFromFile(
             pathlib.Path(self.exampleBaseDirectory / "inertDoubletModelConfig.ini")
         )
+        inOutManager.config.configEOM.conserveEnergyMomentum = True
         super().configureManager(inOutManager)
 
 
@@ -866,8 +867,8 @@ class InertDoubletModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=1000.0, # In units of 1/Tnucl
-                    wallThicknessGuess=5.0, # In units of 1/Tnucl
+                    meanFreePathScale=10.0, # In units of 1/Tnucl
+                    wallThicknessGuess=1.0, # In units of 1/Tnucl
                 ),
             )
         )
