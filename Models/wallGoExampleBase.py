@@ -13,6 +13,8 @@ import inspect
 import sys
 import logging
 
+import matplotlib.pyplot as plt
+
 import WallGo
 from WallGo import mathematicaHelpers   
 
@@ -403,6 +405,13 @@ class WallGoExampleBase(ABC):
 
             try:
                 results = manager.solveWall(wallSolverSettings)
+
+                plt.plot(results.Deltas.Delta00.grid.chiValues, results.Deltas.Delta00.coefficients[0])
+                plt.plot(results.Deltas.Delta00.grid.chiValues, results.Deltas.Delta00.coefficients[1])
+                plt.plot(results.Deltas.Delta00.grid.chiValues, results.Deltas.Delta00.coefficients[2])
+                plt.plot(results.Deltas.Delta00.grid.chiValues, results.Deltas.Delta00.coefficients[3])
+                plt.show()
+
                 self.processResultsForBenchmark(benchmark, results)
 
             except Exception as e:  # pylint: disable = W0718

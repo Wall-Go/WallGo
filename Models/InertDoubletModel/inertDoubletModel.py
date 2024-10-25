@@ -183,7 +183,7 @@ class InertDoubletModel(GenericModel):
         
         heavyScalar = Particle(
             name="A",
-            index=13,
+            index=9,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
             msqThermal=heavyScalarThermal,
@@ -800,6 +800,8 @@ class InertDoubletModelExample(WallGoExampleBase):
             pathlib.Path(self.exampleBaseDirectory / "inertDoubletModelConfig.ini")
         )
         inOutManager.config.configEOM.conserveEnergyMomentum = True
+        inOutManager.config.configBoltzmannSolver.collisionMultiplier = 100.
+        inOutManager.config.configGrid.spatialGridSize = 50
         super().configureManager(inOutManager)
 
 
@@ -867,8 +869,8 @@ class InertDoubletModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=10.0, # In units of 1/Tnucl
-                    wallThicknessGuess=1.0, # In units of 1/Tnucl
+                    meanFreePathScale=100000.0, # In units of 1/Tnucl
+                    wallThicknessGuess=10.0, # In units of 1/Tnucl
                 ),
             )
         )
