@@ -29,6 +29,7 @@ def setupCollisionModel_IDM(
     mw2 -- Mass of a W propagator.
     mh2 -- Mass of a Higgs propagator.
     mA2 -- Mass of a A propogator
+    mH2 -- Mass of a H propagator
     ml2 -- Mass of a lepton propagator
 
     Thermal masses depend on the couplings, however the model definition always needs a numerical value for each symbol.
