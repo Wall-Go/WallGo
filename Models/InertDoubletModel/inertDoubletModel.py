@@ -800,8 +800,9 @@ class InertDoubletModelExample(WallGoExampleBase):
             pathlib.Path(self.exampleBaseDirectory / "inertDoubletModelConfig.ini")
         )
         inOutManager.config.configEOM.conserveEnergyMomentum = True
-        inOutManager.config.configBoltzmannSolver.collisionMultiplier = 100.
-        inOutManager.config.configGrid.spatialGridSize = 50
+        inOutManager.config.configBoltzmannSolver.collisionMultiplier = 1.
+        inOutManager.config.configGrid.spatialGridSize = 30
+        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
         super().configureManager(inOutManager)
 
 
@@ -865,11 +866,11 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeSettings(temperatureVariationScale=0.5, fieldValueVariationScale=[10.0]),
+                WallGo.VeffDerivativeSettings(temperatureVariationScale=1.0, fieldValueVariationScale=[10.0]),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=10.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
