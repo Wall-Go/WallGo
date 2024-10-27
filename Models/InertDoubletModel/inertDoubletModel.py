@@ -248,8 +248,6 @@ class InertDoubletModel(GenericModel):
         modelParameters["lambda2"] = inputParameters["lambda2"]
         modelParameters["lambdaL"] = inputParameters["lambdaL"]
 
-        print(modelParameters)
-
         return modelParameters
 
     def updateModel(self, newInputParams: dict[str, float]) -> None:
@@ -649,7 +647,7 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMA.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.idm.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -799,10 +797,6 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutManager.config.loadConfigFromFile(
             pathlib.Path(self.exampleBaseDirectory / "inertDoubletModelConfig.ini")
         )
-        inOutManager.config.configEOM.conserveEnergyMomentum = True
-        inOutManager.config.configBoltzmannSolver.collisionMultiplier = 1.
-        inOutManager.config.configGrid.spatialGridSize = 30
-        inOutManager.config.configThermodynamics.phaseTracerTol = 1e-8
         super().configureManager(inOutManager)
 
 
@@ -856,13 +850,13 @@ class InertDoubletModelExample(WallGoExampleBase):
                     "lambda2": 0.1,
                     "lambdaL": 0.0015,
                     "mh": 125.0,
-                    "mH": 62.66,
-                    "mA": 300.0,
-                    "mHp": 300.0,
+                    "mH": 63.,
+                    "mA": 295.0,
+                    "mHp": 295.0,
                     # We don't use mHm as input parameter, as it is equal to mHp
                 },
                 WallGo.PhaseInfo(
-                    temperature=117.1,
+                    temperature=118.4,
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
