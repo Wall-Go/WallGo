@@ -850,13 +850,13 @@ class InertDoubletModelExample(WallGoExampleBase):
                     "lambda2": 0.1,
                     "lambdaL": 0.0015,
                     "mh": 125.0,
-                    "mH": 63.,
-                    "mA": 295.0,
-                    "mHp": 295.0,
+                    "mH": 62.66,
+                    "mA": 300.0,
+                    "mHp": 300.0,
                     # We don't use mHm as input parameter, as it is equal to mHp
                 },
                 WallGo.PhaseInfo(
-                    temperature=118.4,
+                    temperature=117.1,
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
