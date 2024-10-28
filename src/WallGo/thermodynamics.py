@@ -4,11 +4,12 @@ for both phases
 """
 
 from typing import Tuple
+import logging
 
 import numpy as np
 import scipy.optimize
 
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import Fields
 from .freeEnergy import FreeEnergy
@@ -211,12 +212,12 @@ class Thermodynamics:
 
         # tracing phases and ensuring they are stable
         if not self.freeEnergyHigh.hasInterpolation():
-            print(f"Tracing high-T phase: {TMin=}, {TMax=}, {dT=}, {rTol=}")
+            logging.info(f"Tracing high-T phase: {TMin=}, {TMax=}, {dT=}, {rTol=}")
             self.freeEnergyHigh.tracePhase(
                 TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
             )
         if not self.freeEnergyLow.hasInterpolation():
-            print("Tracing low-T phase")
+            logging.info("Tracing low-T phase")
             self.freeEnergyLow.tracePhase(
                 TMin, TMax, dT, rTol, spinodal=True, paranoid=paranoid
             )

@@ -4,6 +4,7 @@ approximating the equation of state by the template model.
 """
 
 import warnings
+import logging
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
@@ -40,8 +41,8 @@ class HydrodynamicsTemplateModel:
         self, thermodynamics: Thermodynamics, rtol: float = 1e-6, atol: float = 1e-10
     ) -> None:
         r"""
-        Initialize the HydroTemplateModel class. 
-        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics 
+        Initialize the HydroTemplateModel class.
+        Computes :math:`\alpha_n,\ \Psi_n,\ c_s,\ c_b` and other thermodynamics
         quantities (see [ALvdV23]_ for the definitions of these variables).
 
         Parameters
@@ -50,7 +51,7 @@ class HydrodynamicsTemplateModel:
         rtol : float, optional
             Default value is 1e-6.
         atol : float, optional
-            Default value is 1e-6.
+            Default value is 1e-10.
 
         Returns
         -------
@@ -568,7 +569,7 @@ class HydrodynamicsTemplateModel:
             to find a solution, returns a tuple of None.
         """
         if vwTry < self.vMin:
-            print(
+            logging.warning(
                 """This wall velocity is too small for the chosen nucleation
                 temperature. findHydroBoundaries will return zero."""
             )

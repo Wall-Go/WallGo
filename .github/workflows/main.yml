@@ -1,7 +1,9 @@
-name: WallGo tests
+name: WallGo main tests
 
 on:
-  pull_request:
+  push:
+    # Note that this workflow is in a separate file from tests.yml so that
+    # it can be separated out, and used for the [passing] badge on the README.md
     branches: [ main ]
 
 jobs:
@@ -14,34 +16,11 @@ jobs:
       fail-fast: false
 
       matrix:
-#        os: [ubuntu-latest, macos-latest]
-        os: [ubuntu-latest]
-        build_type: [Release]
-        c_compiler: [gcc, clang]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11"]
-        include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-#          - os: macos-latest
-#            c_compiler: clang
-#            cpp_compiler: clang++
-        exclude:
-          - os: ubuntu-latest
-            c_compiler: clang
-#          - os: macos-latest
-#            c_compiler: gcc
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set reusable strings
-        # Define useful strings like the path to build dir 
-        id: strings
-        shell: bash
-        run: |
-          echo "collision-root-dir=${{ github.workspace }}/Collision" >> "$GITHUB_OUTPUT"
-          echo "collision-build-dir=${{ github.workspace }}/Collision/build" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -49,53 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install WallGo Python package
-        run: pip install .[collisions,tests]
-
-      - name: Install os-dependent Collision requirements
-        run: |
-             if [ "$RUNNER_OS" == "Linux" ]; then
-               sudo apt-get update
-               sudo apt-get install libgsl-dev libhdf5-dev
-             elif [ "$RUNNER_OS" == "macOS" ]; then
-               brew remove azure-cli 
-               brew update 
-               brew install qt@5 xz ccache zstd webp
-               brew install gsl hdf5 muparser
-             else
-               echo "$RUNNER_OS not supported"
-               exit 1
-             fi
-
-      - name: Clone muparser repository
-        uses: actions/checkout@v4
-        with:
-          repository: beltoforion/muparser
-          path: muparser
-      
-      - name: Install muparser
-      # Will install muparser without OpenMP support, our program doesn't need it here. ldconfig seems to be required for linux builds
-        run: |
-             if [ "$RUNNER_OS" == "Linux" ]; then
-               cd muparser && cmake -DENABLE_OPENMP=OFF . && make && sudo make install && cd ..
-               sudo ldconfig
-             fi
-
-      - name: Configure CMake for Collision
-        run: >
-          cmake -B ${{ steps.strings.outputs.collision-build-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ steps.strings.outputs.collision-root-dir }}
-
-      - name: Build and install Collision
-        run: |
-          cmake --build ${{ steps.strings.outputs.collision-build-dir }} --config ${{ matrix.build_type }}
-          cmake --install ${{ steps.strings.outputs.collision-build-dir }}
-          
-      - name: Run Collision QCD examples
-        run: cd ${{ steps.strings.outputs.collision-root-dir }}/examples && ./bin/QCD
+        run: pip install .[tests]
 
       - name: Test with pytest
-      # Let's have -s flag for showing prints etc, can be useful for debugging
         run: cd ${{ github.workspace }} && pytest -vs

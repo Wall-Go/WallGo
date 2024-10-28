@@ -11,12 +11,13 @@ from pathlib import Path
 import copy
 import inspect
 import sys
+import logging
 
 import WallGo
+from WallGo import mathematicaHelpers   
 
 if typing.TYPE_CHECKING:
     import WallGoCollision
-
 
 @dataclass
 class ExampleInputPoint:
@@ -40,9 +41,16 @@ class WallGoExampleBase(ABC):
     command line flag always takes priority.
     """
 
+    bShouldRecalculateMatrixElements: bool
+    """Flag used to check if new matrix elements should be generated
+    """
+
     matrixElementFile: pathlib.Path
     """Where to load matrix elements from. Used by runExample() if/when the
     collision model is initialized."""
+
+    matrixElementInput: pathlib.Path
+    """Where to load matrix element code from."""
 
     @abstractmethod
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -110,11 +118,20 @@ class WallGoExampleBase(ABC):
             help="""Basis size N override for momentum grid. Values less than equal
             to 0 are ignored and we use whatever default the example has defined.""",
         )
+        
+        argParser.add_argument(
+            "-v",
+            "--verbose",
+            type=int,
+            default=logging.DEBUG,
+            help="""Set the verbosity level. Must be an int: DEBUG=10, INFO=20,
+             WARNING=30, ERROR=40. Default is DEBUG.""",
+        )
 
         argParser.add_argument(
             "--recalculateMatrixElements",
             action="store_true",
-            help="Forces full recalculation of matrix elements via DRalgo.",
+            help="Forces full recalculation of matrix elements via WallGoMatrix.",
         )
 
         argParser.add_argument(
@@ -132,6 +149,13 @@ class WallGoExampleBase(ABC):
             "--includeDetonations",
             action="store_true",
             help="""Also search for detonation solutions after deflagrations.""",
+        )
+
+        argParser.add_argument(
+            "--skipEquilibriumEOM",
+            action="store_true",
+            help="""Only run wall solver with out-of-equilibrium contributions included,
+            skip the simpler setup where these are absent."""
         )
 
         return argParser
@@ -160,10 +184,8 @@ class WallGoExampleBase(ABC):
 
         # Override basis size if it was passed via command line
         if self.cmdArgs.momentumGridSize > 0:
-            inOutManager.config.set(
-                "PolynomialGrid",
-                "momentumGridSize",
-                str(self.cmdArgs.momentumGridSize),
+            inOutManager.config.configGrid.momentumGridSize = (
+                self.cmdArgs.momentumGridSize
             )
 
     def processResultsForBenchmark(  # pylint: disable=W0613
@@ -198,19 +220,34 @@ class WallGoExampleBase(ABC):
         Initializes WallGo and runs the entire model set-up, computation of
         collision integrals (if enabled) and computation of the wall velocity.
         """
-        WallGo.initialize()
 
         argParser = self.initCommandLineArgs()
         # store the args so that subclasses can access them if needed
         self.cmdArgs = argParser.parse_args()
 
+        # Initialise the manager
         manager = WallGo.WallGoManager()
 
-        # Do model-dependent configuration of the manager
+        manager.setVerbosity(self.cmdArgs.verbose)
+
+        # Update the configs
         self.configureManager(manager)
 
         model = self.initWallGoModel()
         manager.registerModel(model)
+
+        bNeedsNewMatrixElements = (
+                self.cmdArgs.recalculateMatrixElements or self.bShouldRecalculateMatrixElements
+            )
+        
+        if bNeedsNewMatrixElements:
+            newMatrixElementFile =  pathlib.Path(
+                self.exampleBaseDirectory / "MatrixElements/UserGenerated"
+            )
+            self.matrixElementFile = newMatrixElementFile
+            # this subprocess requires wolframscript and a licensed installation of WolframEngine.
+            mathematicaHelpers.generateMatrixElementsViaSubprocess(self.matrixElementInput,self.matrixElementFile)
+
 
         """Collision model will be initialized only if new collision integrals
         are needed"""
@@ -222,7 +259,7 @@ class WallGoExampleBase(ABC):
         collisionTensor: "WallGoCollision.CollisionTensor" | None = None
 
         # hacky
-        momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
+        momentumGridSize = manager.getMomentumGridSize()
 
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
@@ -264,13 +301,15 @@ class WallGoExampleBase(ABC):
             # Take copy of the input solver settings because we will do
             # both off-eq = True/False cases
             wallSolverSettings = copy.deepcopy(benchmark.wallSolverSettings)
-            wallSolverSettings.bIncludeOffEquilibrium = False
 
-            print(
-                f"\n === Begin EOM with off-eq effects ignored ==="  # pylint: disable=W1309
-            )
-            results = manager.solveWall(wallSolverSettings)
-            self.processResultsForBenchmark(benchmark, results)
+            if not self.cmdArgs.skipEquilibriumEOM:
+                
+                wallSolverSettings.bIncludeOffEquilibrium = False
+                print(
+                    f"\n=== Begin EOM with off-eq effects ignored ==="
+                )
+                results = manager.solveWall(wallSolverSettings)
+                self.processResultsForBenchmark(benchmark, results)
 
             """Solve field EOM with out-of-equilibrium effects included.
             This requires simulatenous solving of Boltzmann equations
@@ -311,7 +350,7 @@ class WallGoExampleBase(ABC):
                     Subclasses should set matrixElementFile to a valid file path.
                     """
                     bShouldPrintMatrixElements = True
-                    if not collisionModel.readMatrixElements(
+                    if not collisionModel.loadMatrixElements(
                         str(self.matrixElementFile), bShouldPrintMatrixElements
                     ):
                         print("FATAL: Failed to load matrix elements")
@@ -379,6 +418,7 @@ class WallGoExampleBase(ABC):
                         the example.
                         """
                     )
+                raise e
 
             if self.cmdArgs.includeDetonations:
                 print("\n=== Search for detonation solution ===")

@@ -30,7 +30,8 @@ class WallParams:
     """
 
     widths: np.ndarray  # 1D array
-    """Bubble wall widths in each field direction."""
+    """Bubble wall widths in each field direction. Should be expressed in physical units
+    (the units used in EffectivePotential)."""
 
     offsets: np.ndarray  # 1D array
     """Bubble wall offsets in each field direction."""

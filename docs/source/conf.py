@@ -32,9 +32,10 @@ Benoit Laurent, Lauri Niemi, Philipp Schicho, and Jorinde van de Vis"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    #"sphinx.ext.autosummary",
-    #"sphinx_automodapi.automodapi",
-    #"sphinx_automodapi.smart_resolver",
+    "sphinx.ext.autosummary",
+    # "sphinx_automodapi.automodapi",
+    # "sphinx_automodapi.smart_resolver",
+    # 'sphinx_autodoc_typehints', # types (less noise in class signature)
     'sphinxcontrib.bibtex',
     "sphinx.ext.napoleon", # for numpy style docs
     "sphinx.ext.doctest", # test code snippets in docs
@@ -42,9 +43,18 @@ extensions = [
     "sphinx.ext.mathjax", # support for mathjax
     "sphinx.ext.ifconfig", # if statements for including content
     "sphinx.ext.viewcode", # add links to highlighted source code
+    "myst_parser",  # for markdown
 ]
-#numpydoc_show_class_members = True # automodapi
-#autosummary_generate = True
+
+# Some tricks here from StackOverflow question 2701998
+# numpydoc_show_class_members = False # automodapi
+autosummary_generate = True
+autoclass_content = "both"  # 'both', 'init' or 'class'
+html_show_sourcelink = False  # Remove 'view source code' from top of page (for html, not python)
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+# set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+autodoc_typehints = "description" # Sphinx-native method. Not as good as sphinx_autodoc_typehints
+add_module_names = False # Remove namespaces from class/method signatures
 
 # Options for sphinxcontrib.bibtex
 bibtex_bibfiles = ['refs.bib']
@@ -53,7 +63,7 @@ bibtex_bibfiles = ['refs.bib']
 templates_path = ["_templates"]
 
 # Include both markdown and rst files
-source_suffix = [".rst"]
+source_suffix = [".rst", ".md"]
 
 # The master toctree document.
 master_doc = "index"
@@ -82,7 +92,7 @@ html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     'logo_only': True,
-    'display_version': True,
+    # 'display_version': True,
     'titles_only': True,
     'style_nav_header_background': '#efefef'
 }

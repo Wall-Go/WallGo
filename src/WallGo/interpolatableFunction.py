@@ -5,6 +5,7 @@ Class that can be use to evaluate and interpolate functions.
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from typing import Callable, Tuple
+import logging
 import numpy as np
 from scipy.interpolate import CubicSpline
 
@@ -19,7 +20,7 @@ class EExtrapolationType(Enum):
     Enums for extrapolation. Default is NONE, no extrapolation at all.
     """
 
-    ## Throw and error
+    ## Throw ValueError if attempting to evaluate out of bounds
     ERROR = auto()
     ## Re-evaluate
     NONE = auto()
@@ -30,30 +31,31 @@ class EExtrapolationType(Enum):
 
 
 class InterpolatableFunction(ABC):
-    """
+    r"""
     This is a totally-not-overengineered base class for defining optimized functions
-    f(x) that, in addition to normal evaluation, support the following:
-        - Producing and using interpolation tables in favor of direct evaluation, where
-          applicable.
-        - Automatic adaptive updating of the interpolation table.
-        - Reading interpolation tables from a file.
-        - Producing said file for some range of inputs.
-        - Validating that what was read from a file makes sense, ie. matches the result
-          given by _evaluate().
+    :math:`f(x)` that, in addition to normal evaluation, support the following:
 
-    WallGo uses this class for the thermal Jb, Jf integrals and for evaluating the free
-    energy as function of the temperature.
+    - Producing and using interpolation tables in favor of direct evaluation, where
+        applicable.
+    - Automatic adaptive updating of the interpolation table.
+    - Reading interpolation tables from a file.
+    - Producing said file for some range of inputs.
+    - Validating that what was read from a file makes sense, ie. matches the result
+        given by :py:meth:`_evaluate()`.
+
+    WallGo uses this class for evaluating the free energy as function of the
+    temperature. It can also be used for the thermal :math:`J_b, J_f` integrals.
 
     This also works for functions returning many numbers, ie. vector functions
-    V(x) = [V1, V2, ...]. In this case each component gets its own interpolation table.
+    :math:`V(x) = [V1, V2, ...]`. In this case each component gets its own interpolation table.
 
     Works with numpy array input and applying the function element-wise, but it is the
-    user's responsibility to ensure that the implementation of _functionImplementation
+    user's responsibility to ensure that the implementation of :py:meth:`_functionImplementation`
     is compatible with this behavior. The logic is such that if x is an array and idx is
-    a index-tuple for an element in x, then fx[idx] is the value of f(x) at x[idx]. Note
-    that the shapes of fx and x will NOT match IF f(x) is vector valued.
+    a index-tuple for an element in `x`, then `fx[idx]` is the value of `f(x)` at `x[idx]`. Note
+    that the shapes of `fx` and `x` will NOT match IF `f(x)` is vector valued.
 
-    Special care is needed if the function evaluation fails for some input x, eg. if the
+    Special care is needed if the function evaluation fails for some input `x`, eg. if the
     function is evaluated only on some interval. In this case it is the user's
     responsibility to return np.nan from _functionImplementation() for these input
     values; this will mark these points as invalid and they will not be included in
@@ -348,29 +350,39 @@ class InterpolatableFunction(ABC):
 
             xLower = x <= self._rangeMin
             xUpper = x >= self._rangeMax
-            res = np.empty_like(x)
+
+            # Figure out shape of the result. If we are vector valued, need an extra axis
+            if self._RETURN_VALUE_COUNT > 1:
+                resShape = x.shape + (self._RETURN_VALUE_COUNT,)
+            else:
+                resShape = x.shape
+            res = np.empty(resShape)
 
             ## Lower range
-            match self.extrapolationTypeLower:
-                case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
-                case EExtrapolationType.NONE:
-                    res[xLower] = self._evaluateDirectly(x[xLower])
-                case EExtrapolationType.CONSTANT:
-                    res[xLower] = self.evaluateInterpolation(self._rangeMin)
-                case EExtrapolationType.FUNCTION:
-                    res[xLower] = self.evaluateInterpolation(x[xLower])
+            if np.any(xLower):
+                match self.extrapolationTypeLower:
+                    case EExtrapolationType.ERROR:
+                        # TODO better error message, this is nonsensible if x is array or list
+                        raise ValueError(f"Out of bounds: {x} < {self._rangeMin}")
+                    case EExtrapolationType.NONE:
+                        res[xLower, :] = self._evaluateDirectly(x[xLower])
+                    case EExtrapolationType.CONSTANT:
+                        res[xLower, :] = self.evaluateInterpolation(self._rangeMin)
+                    case EExtrapolationType.FUNCTION:
+                        res[xLower, :] = self.evaluateInterpolation(x[xLower])
 
             ## Upper range
-            match self.extrapolationTypeUpper:
-                case EExtrapolationType.ERROR:
-                    raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
-                case EExtrapolationType.NONE:
-                    res[xUpper] = self._evaluateDirectly(x[xUpper])
-                case EExtrapolationType.CONSTANT:
-                    res[xUpper] = self.evaluateInterpolation(self._rangeMax)
-                case EExtrapolationType.FUNCTION:
-                    res[xUpper] = self.evaluateInterpolation(x[xUpper])
+            if np.any(xUpper):
+                match self.extrapolationTypeUpper:
+                    case EExtrapolationType.ERROR:
+                        # TODO better error message, this is nonsensible if x is array or list
+                        raise ValueError(f"Out of bounds: {x} > {self._rangeMax}")
+                    case EExtrapolationType.NONE:
+                        res[xUpper, :] = self._evaluateDirectly(x[xUpper])
+                    case EExtrapolationType.CONSTANT:
+                        res[xUpper, :] = self.evaluateInterpolation(self._rangeMax)
+                    case EExtrapolationType.FUNCTION:
+                        res[xUpper, :] = self.evaluateInterpolation(x[xUpper])
 
         return res
 
@@ -651,7 +663,7 @@ class InterpolatableFunction(ABC):
         """
         if not self.hasInterpolation():
             newPoints = int(pointsMin + pointsMax)
-            print(
+            logging.warning(
                 f"Warning: {self.__class__.__name__}.extendInterpolationRange() "
                 "called without existing interpolation. "
                 f"Creating new table in range [{newMin}, {newMax}] with {newPoints} "
@@ -700,7 +712,7 @@ class InterpolatableFunction(ABC):
             self.disableAdaptiveInterpolation()
             self.enableAdaptiveInterpolation()
 
-    def readInterpolationTable(self, fileToRead: str, bVerbose: bool = True) -> None:
+    def readInterpolationTable(self, fileToRead: str) -> None:
         """
         Reads precalculated values from a file and does cubic interpolation.
         Each line in the file must be of form x f(x).
@@ -710,8 +722,6 @@ class InterpolatableFunction(ABC):
         ----------
         fileToRead : str
             Path of the file where the interpolation table is stored.
-        bVerbose : bool, optional
-            Whether or not to print information. The default is True.
 
         """
 
@@ -746,23 +756,20 @@ class InterpolatableFunction(ABC):
             self._validateInterpolationTable(self._rangeMax)
             self._validateInterpolationTable((self._rangeMax - self._rangeMin) / 2.55)
 
-            if bVerbose:
-                print(
-                    f"{selfName}: Succesfully read interpolation table from file. "
-                    "Range [{self._rangeMin}, {self._rangeMax}]"
-                )
+            logging.debug(
+                f"{selfName}: Succesfully read interpolation table from file. "
+                "Range [{self._rangeMin}, {self._rangeMax}]"
+            )
 
         except IOError as ioError:
-            print(
+            logging.warning(
                 f"IOError! {selfName} attempted to read interpolation table from "
                 "file, but got error:"
             )
-            print(ioError)
-            print("This is non-fatal. Interpolation table will not be updated.\n")
+            logging.warning(ioError)
+            logging.warning("This is non-fatal. Interpolation table will not be updated.\n")
 
-    def writeInterpolationTable(
-        self, outputFileName: str, bVerbose: bool = True
-    ) -> None:
+    def writeInterpolationTable(self, outputFileName: str) -> None:
         """
         Write our interpolation table to file.
 
@@ -770,8 +777,6 @@ class InterpolatableFunction(ABC):
         ----------
         outputFileName : str
             Name of the file where the interpolation table will be written.
-        bVerbose : bool, optional
-            Whether or not to print information. The default is True.
 
         """
         try:
@@ -786,14 +791,13 @@ class InterpolatableFunction(ABC):
             )
             np.savetxt(outputFileName, stackedArray, fmt="%.15g", delimiter=" ")
 
-            if bVerbose:
-                print(
-                    "Stored interpolation table for function "
-                    f"{self.__class__.__name__}, output file {outputFileName}."
-                )
+            logging.debug(
+                "Stored interpolation table for function "
+                f"{self.__class__.__name__}, output file {outputFileName}."
+            )
 
         except Exception as e:
-            print(
+            logging.warning(
                 f"Error from {self.__class__.__name__}, function "
                 f"writeInterpolationTable(): {e}"
             )
@@ -812,7 +816,7 @@ class InterpolatableFunction(ABC):
             self._interpolatedFunction is None
             or not self._rangeMin <= x <= self._rangeMax
         ):
-            print(
+            logging.warning(
                 f"{self.__class__.__name__}: _validateInterpolationTable called, "
                 "but no valid interpolation table was found."
             )
@@ -820,7 +824,7 @@ class InterpolatableFunction(ABC):
 
         diff = self.evaluateInterpolation(x) - self._functionImplementation(x)
         if np.any(np.abs(diff) > absoluteTolerance):
-            print(
+            logging.warning(
                 f"{self.__class__.__name__}: Could not validate interpolation table!"
                 f" Value discrepancy was {diff}"
             )

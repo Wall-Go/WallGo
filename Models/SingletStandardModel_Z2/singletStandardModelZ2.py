@@ -32,24 +32,23 @@ import os
 import sys
 import pathlib
 import argparse
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 from WallGo.interpolatableFunction import EExtrapolationType
 
+from WallGo.PotentialTools import EffectivePotentialNoResum, EImaginaryOption
+
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
-from wallGoExampleBase import WallGoExampleBase
-from wallGoExampleBase import ExampleInputPoint
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
+from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413, E0401
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -247,12 +246,26 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
     Furthermore we use customized interpolation tables for Jb/Jf
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 2
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: SingletSMZ2) -> None:
         """
         Initialize the EffectivePotentialxSMZ2.
         """
 
-        super().__init__()
+        # Not using default Jb/Jf interpolation tables here
+        super().__init__(
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+            useDefaultInterpolation=False,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
@@ -266,15 +279,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         """For this benchmark model we do NOT use the default integrals from WallGo.
         This is because the benchmark points we're comparing with were originally done
-        with integrals from CosmoTransitions. In real applications we recommend 
-        using the WallGo default implementations.
+        with integrals from CosmoTransitions. In real applications we recommend using the WallGo default implementations.
         """
         self._configureBenchmarkIntegrals()
-
-    # ~ EffectivePotential interface
-    fieldCount = 2
-    """How many classical background fields"""
-    # ~
 
     def _configureBenchmarkIntegrals(self) -> None:
         """
@@ -293,11 +300,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
         self.integrals.Jb.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            bVerbose=False,
         )
         self.integrals.Jf.readInterpolationTable(
             os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            bVerbose=False,
         )
 
         self.integrals.Jb.disableAdaptiveInterpolation()
@@ -322,7 +327,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
     def evaluate(
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
@@ -333,8 +338,6 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
@@ -365,15 +368,15 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         )
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation)
             + self.potentialOneLoopThermal(
-                bosonStuff, fermionStuff, temperature, checkForImaginary
+                bosonInformation, fermionInformation, temperature
             )
         )
 
@@ -408,7 +411,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # sign since Veff(min) = -pressure
         return -(dofsBoson + 7.0 / 8.0 * dofsFermion) * np.pi**2 * temperature**4 / 90.0
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -467,7 +470,7 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, rgScale
 
-    def fermionStuff(
+    def fermionInformation(
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -516,13 +519,18 @@ class SingletStandardModelExample(WallGoExampleBase):
         """"""
         self.bShouldRecalculateCollisions = False
 
+        self.bShouldRecalculateMatrixElements = False
+
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.txt"
+            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.json"
+        )
+        self.matrixElementInput = pathlib.Path(
+            self.exampleBaseDirectory / "MatrixElements/qcd.m"
         )
 
     # ~ Begin WallGoExampleBase interface
     def initCommandLineArgs(self) -> argparse.ArgumentParser:
-        """Non-abstract override to add a SM + singlet specific cmd option"""
+        """Non-abstract override to add a SM + singlet specific command line option"""
 
         argParser: argparse.ArgumentParser = super().initCommandLineArgs()
         argParser.add_argument(
@@ -531,22 +539,7 @@ class SingletStandardModelExample(WallGoExampleBase):
             action="store_true",
         )
         return argParser
-
-    def getDefaultCollisionDirectory(self, momentumGridSize: int) -> pathlib.Path:
-        """TEMPORARY: override to load provided collision data from Benoit's matrix
-        elements if only top is off-eq. Remove once matrix elements have been fixed
-        and correct data generated from them.
-        """
-
-        bUseBenoit = not self.cmdArgs.outOfEquilibriumGluon
-        if bUseBenoit:
-            return pathlib.Path(
-                self.exampleBaseDirectory
-                / f"CollisionOutput_N{momentumGridSize}_BenoitBenchmark"
-            )
-
-        return pathlib.Path(super().getDefaultCollisionDirectory(momentumGridSize))
-
+        
     def initWallGoModel(self) -> "WallGo.GenericModel":
         """
         Initialize the model. This should run after cmdline argument parsing
@@ -578,20 +571,8 @@ class SingletStandardModelExample(WallGoExampleBase):
             wallGoModel.bIsGluonOffEq,
         )
 
-        """TEMPORARY: set matrixElementFile (used by runExample()) so that we load 
-        Benoit's benchmark matrix elements if only top is off-eq.
-        Otherwise use the file that was set in __init__().
-        Remove once matrix elements have been fixed."""
-
-        bUseBenoit = not wallGoModel.bIsGluonOffEq
-        if bUseBenoit:
-            self.matrixElementFile = pathlib.Path(
-                self.exampleBaseDirectory
-                / "MatrixElements/MatrixElements_QCD_BenoitBenchmark.txt"
-            )
-
         return collisionModel
-
+    
     def updateCollisionModel(
         self,
         inWallGoModel: "SingletSMZ2",
@@ -608,10 +589,10 @@ class SingletStandardModelExample(WallGoExampleBase):
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -664,9 +645,11 @@ class SingletStandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Singlet example uses spatial grid size = 20"""
+        """We load the configs from a file for this example."""
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "singletStandardModelZ2Config.ini")
+        )
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
         self, model: "SingletSMZ2", inputParameters: dict[str, float]
@@ -683,7 +666,7 @@ class SingletStandardModelExample(WallGoExampleBase):
 
         """Collisions integrals for this example depend only on the QCD coupling,
         if it changes we must recompute collisions before running the wall solver.
-        The bool flag here is inherited from WallGoExampleBase and checked
+        The bool flag here is inherited from WallGoExampleBase and temperatureed
         in runExample(). But since we want to keep the example simple, we skip
         this check and assume the existing data is OK.
         (FIXME?)
@@ -723,12 +706,12 @@ class SingletStandardModelExample(WallGoExampleBase):
                     phaseLocation2=WallGo.Fields([246.0, 0.0]),
                 ),
                 WallGo.VeffDerivativeSettings(
-                    temperatureScale=10.0, fieldScale=[10.0, 10.0]
+                    temperatureVariationScale=10.0, fieldValueVariationScale=[10.0, 10.0]
                 ),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

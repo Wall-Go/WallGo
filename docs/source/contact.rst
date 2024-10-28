@@ -9,10 +9,10 @@ Or, if you prefer to get into contact directly, feel free to send us an email:
 
     | andreas.ekstedt@physics.uu.se
     | oliver.gould@nottingham.ac.uk
-    | joonas.o.hirvonen@helsinki.fi
+    | joonas.hirvonen@nottingham.ac.uk
     | benoit.laurent@mail.mcgill.ca
     | lauri.b.niemi@helsinki.fi
-    | schicho@itp.uni-frankfurt.de
-    | vandevis@lorentz.leidenuniv.nl
+    | philipp.schicho@unige.ch
+    | jorinde.van.de.vis@cern.ch
 
 |

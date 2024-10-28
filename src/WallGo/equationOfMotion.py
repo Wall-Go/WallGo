@@ -5,6 +5,7 @@ Class for solving the EOM and the hydrodynamic equations.
 import warnings
 from typing import Tuple
 import copy  # for deepcopy
+import logging
 import numpy as np
 import numpy.typing as npt
 
@@ -43,10 +44,11 @@ class EOM:
         hydrodynamics: Hydrodynamics,
         grid: Grid3Scales,
         nbrFields: int,
-        meanFreePath: float,
+        meanFreePathScale: float,
         wallThicknessBounds: tuple[float, float],
         wallOffsetBounds: tuple[float, float],
         includeOffEq: bool = False,
+        forceEnergyConservation: bool = True,
         forceImproveConvergence: bool = False,
         errTol: float = 1e-3,
         maxIterations: int = 10,
@@ -67,8 +69,9 @@ class EOM:
             Object of the class Grid3Scales.
         nbrFields : int
             Number of scalar fields on which the scalar potential depends.
-        meanFreePath : float
-            Estimate of the mean free path of the particles in the plasma.
+        meanFreePathScale : float
+            Estimate of the mean free path of the particles in the plasma. Should be
+            expressed in physical units (the units used in EffectivePotential).
         wallThicknessBounds : tuple
             Tuple containing the bounds the wall thickness (in units of 1/Tnucl).
             The solver will never explore outside of this interval.
@@ -78,6 +81,9 @@ class EOM:
         includeOffEq : bool, optional
             If False, all the out-of-equilibrium contributions are neglected.
             The default is False.
+        forceEnergyConservation : bool, optional
+            If True, enforce energy-momentum conservation by solving for the appropriate
+            T and vpl profiles. If false, use fixed T and vpl profiles. Default is True.
         forceImproveConvergence : bool, optional
             If True, uses a slower algorithm that improves the convergence when
             computing the pressure. The improved algorithm is automatically used
@@ -107,10 +113,11 @@ class EOM:
         self.boltzmannSolver = boltzmannSolver
         self.grid = grid
         self.nbrFields = nbrFields
-        self.meanFreePath = meanFreePath
+        self.meanFreePathScale = meanFreePathScale
         self.wallThicknessBounds = wallThicknessBounds
         self.wallOffsetBounds = wallOffsetBounds
         self.includeOffEq = includeOffEq
+        self.forceEnergyConservation = forceEnergyConservation
         self.forceImproveConvergence = forceImproveConvergence
 
         self.thermo = thermodynamics
@@ -142,7 +149,8 @@ class EOM:
         Parameters
         ----------
         wallThicknessIni : float or None, optional
-            Initial thickness used for all the walls. If None, uses 5/Tnucl.
+            Initial thickness used for all the walls. Should be expressed in physical
+            units (the units used in EffectivePotential). If None, uses 5/Tnucl.
             Default is None.
 
         Returns
@@ -171,7 +179,7 @@ class EOM:
             self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
             or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
-            print(
+            logging.warning(
                 """\n Warning: vmax is limited by the maximum temperature chosen in
                 the phase tracing. WallGo might be unable to find the wall velocity.
                 Try increasing the maximum temperature! \n"""
@@ -207,7 +215,8 @@ class EOM:
         vmax : float
             Largest wall velocity probed. Must be between vmin and 1.
         wallThicknessIni : float | None, optional
-            Initial value of the wall thickness. If None, it is set to 5/Tnucl.
+            Initial value of the wall thickness. Should be expressed in physical units
+            (the units used in EffectivePotential). If None, it is set to 5/Tnucl.
             The default is None.
         nbrPointsMin : int, optional
             Minimal number of points to bracket the roots. The default is 5.
@@ -448,8 +457,8 @@ class EOM:
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
         if pressureMax < 0:
-            print("Maximum pressure on wall is negative!")
-            print(f"{pressureMax=} {wallParamsMax=}")
+            logging.info("Maximum pressure on wall is negative!")
+            logging.info(f"{pressureMax=} {wallParamsMax=}")
             results.setWallVelocities(None, None, wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
@@ -486,7 +495,7 @@ class EOM:
             # until it's negative.
             wallVelocityMin *= 2
             if wallVelocityMin >= wallVelocityMax:
-                print(
+                logging.warning(
                     """EOM warning: the pressure at vw = 0 is positive which indicates
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
@@ -742,7 +751,7 @@ class EOM:
         if wallVelocity > self.hydrodynamics.vJ:
             improveConvergence = True
 
-        print(f"------------- Trying {wallVelocity=:g} -------------")
+        logging.info(f"------------- Trying {wallVelocity=:g} -------------")
 
         # Initialize the different data class objects and arrays
         zeroPoly = Polynomial(
@@ -825,6 +834,15 @@ class EOM:
             Tplus,
             Tminus,
         )
+        temperatureProfile = None
+        velocityProfile = None
+        if not self.forceEnergyConservation:
+            # If conservation of energy and momentum is not enforced, fix the velocity
+            # and temperature to the following profiles, which are the profiles computed
+            # at the first iteration. Otherwise, they will be evaluated at each
+            # iteration.
+            temperatureProfile = boltzmannBackground.temperatureProfile[1:-1]
+            velocityProfile = boltzmannBackground.velocityProfile[1:-1]
 
         pressures = [pressure]
 
@@ -839,7 +857,7 @@ class EOM:
         multiplier = 1.0
 
         i = 0
-        print(
+        logging.debug(
             f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}"
         )
         while True:
@@ -862,6 +880,8 @@ class EOM:
                     boltzmannResults,
                     Tplus,
                     Tminus,
+                    temperatureProfile=temperatureProfile,
+                    velocityProfile=velocityProfile,
                     multiplier=multiplier,
                 )
             else:
@@ -880,6 +900,8 @@ class EOM:
                     boltzmannResults,
                     Tplus,
                     Tminus,
+                    temperatureProfileInput=temperatureProfile,
+                    velocityProfileInput=velocityProfile,
                     multiplier=multiplier,
                 )
                 errorSolver = 0
@@ -888,7 +910,7 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            print(
+            logging.debug(
                 f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}"
             )
             i += 1
@@ -908,7 +930,7 @@ class EOM:
                 else:
                     break
             elif i >= self.maxIterations - 1:
-                print(
+                logging.warning(
                     "Pressure for a wall velocity has not converged to "
                     "sufficient accuracy with the given maximum number "
                     "for iterations."
@@ -932,7 +954,9 @@ class EOM:
                     # If the error decreases too slowly, use the improved algorithm
                     improveConvergence = True
 
-        print(f"Final {pressure=:g}; Final {wallParams=}")
+        logging.info(f"Final {pressure=:g}")
+        logging.debug(f"Final {wallParams=}")
+        
         return (
             pressure,
             wallParams,
@@ -1229,13 +1253,13 @@ class EOM:
         outside like 1/gamma. We take the max because the tail lengths must be larger
         than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
         tailInside = max(
-            self.meanFreePath * gammaWall * self.includeOffEq,
+            self.meanFreePathScale * gammaWall * self.includeOffEq,
             wallThicknessGrid
             * (1 + 2.1 * self.grid.smoothing)
             / self.grid.ratioPointsWall,
         )
         tailOutside = max(
-            self.meanFreePath / gammaWall * self.includeOffEq,
+            self.meanFreePathScale / gammaWall * self.includeOffEq,
             wallThicknessGrid
             * (1 + 2.1 * self.grid.smoothing)
             / self.grid.ratioPointsWall,

@@ -1,21 +1,17 @@
 (* ::Package:: *)
 
-(*Quit[];*)
+Quit[];
 
 
-SetDirectory[DirectoryName[$InputFileName]];
+SetDirectory[NotebookDirectory[]];
 (*Put this if you want to create multiple model-files with the same kernel*)
 $GroupMathMultipleModels=True;
 $LoadGroupMath=True;
-<<DRalgo`;
-<<matrixElements`;
+<<../src/WallGoMatrix.m
 
 
 (* ::Chapter:: *)
 (*QCD+W boson*)
-
-
-$UserBaseDirectory
 
 
 (* ::Section:: *)
@@ -37,9 +33,6 @@ HiggsDoublet={{{0,0},{1}},"C"};
 RepScalar={HiggsDoublet};
 
 
-
-
-
 RepFermion3Gen={RepFermion1Gen,RepFermion1Gen,RepFermion1Gen}//Flatten[#,1]&;
 
 
@@ -53,6 +46,9 @@ RepFermion3Gen={RepFermion1Gen,RepFermion1Gen,RepFermion1Gen}//Flatten[#,1]&;
 InputInv={{1,1,2},{False,False,True}}; 
 YukawaDoublet=CreateInvariantYukawa[Group,RepScalar,RepFermion3Gen,InputInv]//Simplify;
 Ysff=-GradYukawa[yt*YukawaDoublet[[1]]];
+
+
+ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]IJ,\[Mu]IJC,Ysff,YsffC,Verbose->False];
 
 
 (* ::Section:: *)
@@ -84,25 +80,27 @@ one right-handed fermoon
 	reps 5,6 are vector bosons
 *)
 (*left-handed top-quark*)
-ReptL=CreateOutOfEq[{{1,1}},"F"];
+ReptL=CreateParticle[{1},"F"];
 
 (*right-handed top-quark*)
-ReptR=CreateOutOfEq[{{2,1}},"F"];
+ReptR=CreateParticle[{2},"F"];
 
-(*light quarks*)
-RepLight=CreateOutOfEq[{{1,2},3,4,5,6,7,8,9},"F"];
+(*right-handed bottom-quark*)
+RepbR=CreateParticle[{3},"F"];
 
 (*Vector bosons*)
-RepGluon=CreateOutOfEq[{1},"V"];
-RepW=CreateOutOfEq[{2},"V"];
+RepGluon=CreateParticle[{1},"V"];
+RepW=CreateParticle[{{2,1}},"V"];
+
+(*Higgs*)
+RepH = CreateParticle[{1},"S"];
 
 
-ParticleList={ReptL,ReptR,RepW,RepGluon,RepLight};
 (*
-These particles do not have out-of-eq contributions
+These particles do not necessarily have to be out of equilibrium
+the remainin particle content is set as light
 *)
-(*LightParticles={3,4,5,6,7,8,9};*)
-EqParticles={5};
+ParticleList={ReptL,ReptR,RepbR,RepGluon,RepW,RepH};
 
 
 (*Defining various masses and couplings*)
@@ -112,36 +110,29 @@ VectorMass=Join[
 	Table[mg2,{i,1,RepGluon[[1]]//Length}],
 	Table[mw2,{i,1,RepW[[1]]//Length}]];
 FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
+ScalarMass=Table[ms2,{i,1,Length[gvss[[1]]]}];
+ParticleMasses={VectorMass,FermionMass,ScalarMass};
 (*
 up to the user to make sure that the same order is given in the python code
 *)
-UserMasses={mq2,mq2,mw2,mg2}; 
-UserCouplings=CouplingName;
+UserMasses={mq2,mg2,mw2, ms2}; 
+UserCouplings={gs,gw};
 
 
 (*
 	output of matrix elements
 *)
-OutputFile="../MatrixElements_QCDEW";
-SetDirectory[DirectoryName[$InputFileName]];
-RepOptional={c[1]->c[1]};
-ParticleName={"TopL","TopR","W","Gluon"};
-MatrixElements=ExportMatrixElements[OutputFile,ParticleList,EqParticles,UserMasses,UserCouplings,ParticleName,RepOptional];
+OutputFile="matrixElements.ew";
+SetDirectory[NotebookDirectory[]];
+ParticleName={"TopL","TopR","BotR","Gluon","W","H"};
+MatrixElements=ExportMatrixElements[
+	OutputFile,
+	ParticleList,
+	UserMasses,
+	UserCouplings,
+	ParticleName,
+	ParticleMasses,
+	{TruncateAtLeadingLog->True,Format->{"json","txt"}}];
 
 
 MatrixElements//Expand
-
-
-Import[OutputFile<>".hdf5"]
-
-
-Import[OutputFile<>".hdf5","CouplingInfo"]
-
-
-Import[OutputFile<>".hdf5","ParticleInfo"]
-
-
-Import[OutputFile<>".hdf5","CouplingInfo"]
-
-
-Import[OutputFile<>".hdf5","ParticleInfo"]

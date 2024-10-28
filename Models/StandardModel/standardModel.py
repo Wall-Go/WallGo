@@ -32,11 +32,11 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import EffectivePotential, Fields, GenericModel, Particle
 
 # Add the Models folder to the path; need to import the base
-# example template and effectivePotentialNoResum.py
+# example template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
@@ -123,7 +123,7 @@ class StandardModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            name="topL",
+            name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -134,7 +134,7 @@ class StandardModel(GenericModel):
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            name="topR",
+            name="TopR",
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -243,6 +243,16 @@ class EffectivePotentialSM(EffectivePotential):
     This class inherits from the EffectivePotential class.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-15
+    """
+    Relative accuracy at which the potential can be computed. Here the potential is
+    polynomial so we can set it to the machine precision.
+    """
+
     def __init__(self, owningModel: StandardModel) -> None:
         """
         Initialize the EffectivePotentialSM.
@@ -259,16 +269,10 @@ class EffectivePotentialSM(EffectivePotential):
         self.numBosonDof = 28
         self.numFermionDof = 90
 
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
-
     def evaluate(  # pylint: disable=R0914
         self,
         fields: Fields,
         temperature: float | np.ndarray,
-        checkForImaginary: bool = False,
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential. We implement the effective potential
@@ -280,8 +284,6 @@ class EffectivePotentialSM(EffectivePotential):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
@@ -364,15 +366,16 @@ class EffectivePotentialSM(EffectivePotential):
 
 class StandardModelExample(WallGoExampleBase):
     """
-    Sets up the standard model, computes or loads the collison
+    Sets up the standard model, computes or loads the collision
     integrals, and computes the wall velocity.
     """
 
     def __init__(self) -> None:
         """"""
+        self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -416,23 +419,28 @@ class StandardModelExample(WallGoExampleBase):
         inWallGoModel: "StandardModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagete changes in WallGo model to the collision model."""
+        """Propagate changes in WallGo model to the collision model."""
         import WallGoCollision  # pylint: disable = C0415
 
         changedParams = WallGoCollision.ModelParameters()
 
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
+        
+        
+        # Note that the particular values of masses here are for a comparison with arXiv:hep-ph/9506475.
+        # For proceeding beyond the leading-log approximation one should use the asymptotic masses.
+        # For quarks we include the thermal mass only
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[2]", 11.0 * gw**2 / 6.0
+            "mw2", 3.0 * gw**2 / 5.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -450,11 +458,11 @@ class StandardModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 50
+        integrationOptions.maxTries = 10
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.absoluteErrorGoal = 1e-5
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -485,10 +493,10 @@ class StandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """SM example uses spatial grid size = 20"""
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "standardModelConfig.ini")
+        )
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
 
         #Added on October 2, 15.41:
         #inOutManager.config.set("EffectivePotential", "potentialError", "1e-10")
@@ -555,12 +563,12 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureScale=5., fieldScale=[50.0]
+                        temperatureVariationScale=1., fieldValueVariationScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
                         bIncludeOffEquilibrium=True,
-                        meanFreePath=100.0, # In units of 1/Tnucl
+                        meanFreePathScale=100.0, # In units of 1/Tnucl
                         wallThicknessGuess=5.0, # In units of 1/Tnucl
                     ),
                 )

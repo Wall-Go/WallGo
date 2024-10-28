@@ -4,6 +4,7 @@ interpolate it.
 """
 
 from dataclasses import dataclass
+import logging
 import numpy as np
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
@@ -14,7 +15,7 @@ from .interpolatableFunction import (
     inputType,
     outputType,
 )
-from .EffectivePotential import EffectivePotential
+from .effectivePotential import EffectivePotential
 from .exceptions import WallGoError
 from .fields import FieldPoint, Fields
 
@@ -232,7 +233,7 @@ class FreeEnergy(InterpolatableFunction):
             order,
             bUseInterpolation=bUseInterpolation,
             epsilon=self.effectivePotential.getInherentRelativeError(),
-            scale=self.effectivePotential.derivativeSettings.temperatureScale,
+            scale=self.effectivePotential.derivativeSettings.temperatureVariationScale,
         )
 
         return FreeEnergyValueType.fromArray(np.asarray(resultsArray))
@@ -336,7 +337,7 @@ class FreeEnergy(InterpolatableFunction):
                 try:
                     ode.step()
                 except RuntimeWarning as error:
-                    print(error.args[0] + f" at T={ode.t}")
+                    logging.error(error.args[0] + f" at T={ode.t}")
                     break
                 if paranoid:
                     phaset, potentialEffT = self.effectivePotential.findLocalMinimum(
@@ -369,7 +370,7 @@ class FreeEnergy(InterpolatableFunction):
                 if ode.step_size < 1e-16 * T0 or (
                     TList.size > 0 and ode.t == TList[-1]
                 ):
-                    print(
+                    logging.warning(
                         f"Step size {ode.step_size} shrunk too small at T={ode.t}, "
                         f"vev={ode.y}"
                     )
@@ -421,9 +422,9 @@ class FreeEnergy(InterpolatableFunction):
             or self.minPossibleTemperature[0]
             > self.startingTemperature - ode.step_size * 10
         ):
-            print(
+            logging.warning(
                 """Warning: the temperature step size seems too large.
-                Try decreasing temperatureScale."""
+                Try decreasing temperatureVariationScale."""
             )
 
         # Now to construct the interpolation

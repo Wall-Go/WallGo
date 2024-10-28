@@ -29,22 +29,21 @@ doi:10.1103/PhysRevD.107.095005
 
 import sys
 import pathlib
-import numpy as np
 from typing import TYPE_CHECKING
+import numpy as np
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo.initialize()
+import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
 from WallGo import Fields, GenericModel, Particle
 
+from WallGo.PotentialTools import EffectivePotentialNoResum, EImaginaryOption
+
 # Add the Models folder to the path; need to import the base example
-# template and effectivePotentialNoResum.py
+# template
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
-from effectivePotentialNoResum import (  # pylint: disable=C0411, C0413, E0401
-    EffectivePotentialNoResum,
-)
 
-from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
 from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
@@ -130,7 +129,7 @@ class InertDoubletModel(GenericModel):
             return self.modelParameters["g3"] ** 2 * T**2 / 6.0
 
         topQuarkL = Particle(
-            name="topL",
+            name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -141,7 +140,7 @@ class InertDoubletModel(GenericModel):
         self.addParticle(topQuarkL)
 
         topQuarkR = Particle(
-            name="topR",
+            name="TopR",
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
@@ -250,11 +249,25 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
     For this benchmark model we use the 4D potential without high-temperature expansion.
     """
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-8
+    """
+    Relative accuracy at which the potential can be computed. Here it is set by the
+    error tolerance of the thermal integrals Jf/Jb.
+    """
+
     def __init__(self, owningModel: InertDoubletModel):
         """
         Initialize the EffectivePotentialIDM.
         """
-        super().__init__(integrals=None, useDefaultInterpolation=True)
+        super().__init__(
+            integrals=None,
+            useDefaultInterpolation=True,
+            imaginaryOption=EImaginaryOption.PRINCIPAL_PART,
+        )
 
         assert owningModel is not None, "Invalid model passed to Veff"
 
@@ -266,13 +279,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         self.numBosonDof = 32
         self.numFermionDof = 90
 
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-    # ~
-
     def evaluate(
-        self, fields: Fields, temperature: float, checkForImaginary: bool = False
+        self, fields: Fields, temperature: float
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential.
@@ -283,8 +291,6 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             The field configuration
         temperature: float
             The temperature
-        checkForImaginary: bool
-            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
@@ -308,18 +314,18 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         potentialTree = 0.5 * msq * v**2 + 0.25 * lam * v**4
 
         # Particle masses and coefficients for the CW potential
-        bosonStuff = self.bosonStuff(fields)
-        fermionStuff = self.fermionStuff(fields)
+        bosonInformation = self.bosonInformation(fields)
+        fermionInformation = self.fermionInformation(fields)
 
         # Particle masses and coefficients for the one-loop thermal potential
-        bosonStuffResummed = self.bosonStuffResummed(fields, temperature)
+        bosonInformationResummed = self.bosonInformationResummed(fields, temperature)
 
         potentialTotal = (
             potentialTree
             + self.constantTerms(temperature)
-            + self.potentialOneLoop(bosonStuff, fermionStuff, checkForImaginary)
+            + self.potentialOneLoop(bosonInformation, fermionInformation)
             + self.potentialOneLoopThermal(
-                bosonStuffResummed, fermionStuff, temperature, checkForImaginary
+                bosonInformationResummed, fermionInformation, temperature
             )
         )
 
@@ -361,12 +367,15 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
             One-loop Coleman-Weinberg potential for given particle spectrum.
         """
 
-        return degreesOfFreedom * np.array(
-            massSq * massSq * (np.log(np.abs(massSq / rgScale**2) + 1e-100) - c)
+        # Note that we are taking the absolute value of the mass in the log here,
+        # instead of using EImaginaryOption = ABS_ARGUMENT, because we do not 
+        # want the absolute value in the product of massSq ans rgScale
+        return degreesOfFreedom*np.array( 
+            massSq * massSq * (np.log(np.abs(massSq / rgScale**2)) - c)
             + 2 * massSq * rgScale**2
-        )
+        ) / (64 * np.pi * np.pi)
 
-    def fermionStuff(self, fields: Fields) -> tuple[
+    def fermionInformation(self, fields: Fields) -> tuple[
         np.ndarray,
         float | np.ndarray,
         float | np.ndarray,
@@ -406,7 +415,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, 3 / 2, np.sqrt(massSq0T)
 
-    def bosonStuff(  # pylint: disable=too-many-locals
+    def bosonInformation(  # pylint: disable=too-many-locals
         self, fields: Fields
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
@@ -472,7 +481,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
 
-    def bosonStuffResummed(  # pylint: disable=too-many-locals
+    def bosonInformationResummed(  # pylint: disable=too-many-locals
         self, fields: Fields, temperature: float | np.ndarray
     ) -> tuple[np.ndarray, np.ndarray | float, np.ndarray | float, np.ndarray | float]:
         """
@@ -524,6 +533,8 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         )  # Eq. (16) of 2211.13142 (note the different normalization of lam2)
 
         # Scalar masses including thermal contribution
+        # Need to take the absolute value because we can not
+        # use EImaginaryOption = ABS_ARGUMENT for the full potential
         mhsq = np.abs(msq + 3 * lam * v**2 + piPhi)
         mGsq = np.abs(msq + lam * v**2 + piPhi)  # Goldstone bosons
         mHsq = msq2 + (lam3 + lam4 + lam5) / 2 * v**2 + piEta
@@ -610,9 +621,11 @@ class InertDoubletModelExample(WallGoExampleBase):
 
     def __init__(self) -> None:
         """"""
+        self.bShouldRecalculateMatrixElements = False
+
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCDEW.txt"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -668,13 +681,13 @@ class InertDoubletModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
-            "msq[0]", gs**2 / 6.0
+            "mq2", gs**2 / 6.0
         )  # quark thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[1]", 2.0 * gs**2
+            "mg2", 2.0 * gs**2
         )  # gluon thermal mass^2 in units of T
         changedParams.addOrModifyParameter(
-            "msq[2]", 11.0 * gw**2 / 6.0
+            "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
@@ -692,11 +705,11 @@ class InertDoubletModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 50
+        integrationOptions.maxTries = 10
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-8
+        integrationOptions.absoluteErrorGoal = 1e-5
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -727,10 +740,10 @@ class InertDoubletModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
-        """Inert doublet model example uses spatial grid size = 20"""
+        inOutManager.config.loadConfigFromFile(
+            pathlib.Path(self.exampleBaseDirectory / "inertDoubletModelConfig.ini")
+        )
         super().configureManager(inOutManager)
-        inOutManager.config.set("PolynomialGrid", "momentumGridSize", "11")
-        inOutManager.config.set("PolynomialGrid", "spatialGridSize", "20")
 
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]
@@ -790,11 +803,11 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeSettings(temperatureScale=0.5, fieldScale=[10.0]),
+                WallGo.VeffDerivativeSettings(temperatureVariationScale=0.5, fieldValueVariationScale=[10.0]),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePath=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=100.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )
