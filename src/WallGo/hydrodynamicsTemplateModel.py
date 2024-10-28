@@ -6,10 +6,10 @@ approximating the equation of state by the template model.
 import warnings
 import logging
 import numpy as np
-from scipy.integrate import solve_ivp
+from scipy.integrate import solve_ivp, simpson
 from scipy.optimize import root_scalar, minimize_scalar, OptimizeResult
 from .exceptions import WallGoError
-from .helpers import gammaSq
+from .helpers import gammaSq, boostVelocity
 from .thermodynamics import Thermodynamics
 
 
@@ -328,23 +328,31 @@ class HydrodynamicsTemplateModel:
         except ValueError as exc:
             raise WallGoError("alpha can not be found", data={"vw": vw}) from exc
 
-    def _dxiAndWdv(self, v: float, xiAndW: np.ndarray) -> np.ndarray:
+    def _dxiAndWdv(
+            self, v: float, xiAndW: np.ndarray, shockWave: bool=True
+        ) -> np.ndarray:
         """
         Fluid equations in the shock wave as a function of v.
         """
         xi, w = xiAndW
+        if shockWave:
+            csq = self.cs2
+        else:
+            csq = self.cb2
         muXiV = (xi - v) / (1 - xi * v)
-        dwdv = w * (1 + 1 / self.cs2) * muXiV / (1 - v**2)
+        dwdv = w * (1 + 1 / csq) * muXiV / (1 - v**2)
         if v != 0:
             dxidv = (
-                xi * (1 - v * xi) * (muXiV**2 / self.cs2 - 1) / (2 * v * (1 - v**2))
+                xi * (1 - v * xi) * (muXiV**2 / csq - 1) / (2 * v * (1 - v**2))
             )
         else:
             # If v = 0, dxidv is set to a very high value
             dxidv = 1e50
         return np.array([dxidv, dwdv])
 
-    def integratePlasma(self, v0: float, vw: float, wp: float) -> OptimizeResult:
+    def integratePlasma(
+            self, v0: float, vw: float, wp: float, shockWave: bool=True
+        ) -> OptimizeResult:
         """
         Integrates the fluid equations in the shock wave until it reaches the shock
         front.
@@ -358,6 +366,9 @@ class HydrodynamicsTemplateModel:
             Wall velocity.
         wp : float
             Enthalpy just in front of the wall.
+        shockWave : bool, optional
+            If True, the integration happens in the shock wave. If False, it happens in
+            the rarefaction wave. Default is True.
 
         Returns
         -------
@@ -366,15 +377,16 @@ class HydrodynamicsTemplateModel:
 
         """
 
-        def event(v: float, xiAndW: np.ndarray) -> float:
+        def event(v: float, xiAndW: np.ndarray, shockWave: bool=True) -> float:
             # Function that is 0 at the shock wave front. Is used by solve_ivp to stop
             # the integration
             xi = xiAndW[0]
             return float((xi * (xi - v) / (1 - xi * v) - self.cs2) * v)
 
-        event.terminal = True
+        event.terminal = shockWave
         sol = solve_ivp(
-            self._dxiAndWdv, (v0, 1e-10), [vw, wp], events=event, rtol=self.rtol, atol=0
+            self._dxiAndWdv, (v0, 1e-10), [vw, wp],
+            events=event, rtol=self.rtol/10, atol=0, args=(shockWave,)
         )
         return sol
 
@@ -673,3 +685,58 @@ class HydrodynamicsTemplateModel:
         vm = (part + np.sqrt(part**2 - 4 * self.cb2 * vp**2)) / (2 * vp)
         Tm = self._findTm(vm, vp, self.Tnucl)
         return vp, vm, self.Tnucl, Tm
+
+    def efficiencyFactor(self, vw: float) -> float:
+        r"""
+        Computes the efficiency factor
+        :math:`\kappa=\frac{4}{v_w^3 \alpha_n w_n}\int d\xi \xi^2 v^2\gamma^2 w`..
+
+        Parameters
+        ----------
+        vw : float
+            Wall velocity.
+
+        Returns
+        -------
+        float
+            Value of the efficiency factor :math:`\kappa`.
+
+        """
+        # Separates the efficiency factor into a contribution from the shock wave and
+        # the rarefaction wave.
+        kappaSW = 0.0
+        kappaRW = 0.0
+
+        vp, vm, Tp, Tm = self.findMatching(vw)
+
+        # Computes the enthalpies (in units where w_s(Tn)=1)
+        wp = (Tp/self.Tnucl)**self.mu
+        wm = gammaSq(vp)*vp*wp/(gammaSq(vm)*vm)
+
+        # If deflagration or hybrid, computes the shock wave contribution
+        if vw < self.vJ:
+            solShock = self.integratePlasma(boostVelocity(vw, vp), vw, wp)
+            vPlasma = solShock.t
+            xi = solShock.y[0]
+            enthalpy = solShock.y[1]
+
+            # Integrate the solution to get kappa
+            kappaSW = 4 * simpson(
+                y=xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                x=xi
+            ) / (vw**3 * self.alN)
+
+        # If hybrid or detonation, computes the rarefaction wave contribution
+        if vw > self.cb:
+            solRarefaction = self.integratePlasma(boostVelocity(vw, vm), vw, wm, False)
+            vPlasma = solRarefaction.t
+            xi = solRarefaction.y[0]
+            enthalpy = solRarefaction.y[1]
+
+            # Integrate the solution to get kappa
+            kappaRW = -4 * simpson(
+                y=xi**2*vPlasma**2*gammaSq(vPlasma)*enthalpy,
+                x=xi
+            ) / (vw**3 * self.alN)
+
+        return kappaSW + kappaRW
