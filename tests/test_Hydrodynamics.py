@@ -218,6 +218,23 @@ def test_findMatching():
     res = hydrodynamics.findMatching(0.9)
     np.testing.assert_allclose(res,(0.9, 0.894957,0.9,0.918446),rtol = 10**-2,atol = 0)
 
+
+# Test efficiency factor in two-step model
+def test_efficiencyFactor():
+    model1 = TestModel2Step(0.2,0.1,0.4,0.7)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin, rtol, atol)
+    res = hydrodynamics.efficiencyFactor(0.4)
+    assert res == pytest.approx(0.140972, rel = 0.01)
+    res = hydrodynamics.efficiencyFactor(0.6)
+    assert res == pytest.approx(0.334666, rel = 0.01)
+    model1 = TestModel2Step(0.2,0.1,0.4,0.9)
+    hydrodynamics = WallGo.Hydrodynamics(model1, tmax, tmin, rtol, atol)
+    res = hydrodynamics.efficiencyFactor(0.4)
+    assert res == pytest.approx(0.0399354, rel = 0.01)
+    res = hydrodynamics.efficiencyFactor(0.6)
+    assert res == pytest.approx(0.197849, rel = 0.01)
+
+
 ### Test local thermal equilibrium solution in bag model
 
 
