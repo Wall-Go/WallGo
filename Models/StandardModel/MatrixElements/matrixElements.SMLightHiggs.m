@@ -3,11 +3,18 @@
 Quit[];
 
 
-SetDirectory[NotebookDirectory[]];
+If[$InputFileName=="",
+	SetDirectory[NotebookDirectory[]],
+	SetDirectory[DirectoryName[$InputFileName]]
+];
 (*Put this if you want to create multiple model-files with the same kernel*)
 $GroupMathMultipleModels=True;
 $LoadGroupMath=True;
-<<../src/WallGoMatrix.m
+Check[
+    Get["WallGoMatrix`"],
+    Message[Get::noopen, "WallGoMatrix` at "<>ToString[$UserBaseDirectory]<>"/Applications"];
+    Abort[];
+]
 
 
 (* ::Chapter:: *)
@@ -26,7 +33,10 @@ CouplingName={gs,gw};
 Rep1={{{1,0},{1}},"L"};
 Rep2={{{1,0},{0}},"R"};
 Rep3={{{1,0},{0}},"R"};
-RepFermion1Gen={Rep1,Rep2,Rep3};
+Rep4={{{0,0},{1}},"L"};
+Rep5={{{0,0},{0}},"R"};
+RepFermion1Gen={Rep1,Rep2,Rep3,Rep4,Rep5};
+
 
 
 HiggsDoublet={{{0,0},{1}},"C"};
@@ -52,7 +62,7 @@ ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]I
 
 
 (* ::Section:: *)
-(*SM quarks + gauge bosons*)
+(*SM quarks + gauge bosons + leptons*)
 
 
 (* ::Subsection:: *)
@@ -75,21 +85,25 @@ one right-handed fermoon
 *)
 
 
-(*
-	Reps 1-4 are quarks,
-	reps 5,6 are vector bosons
-*)
 (*left-handed top-quark*)
-ReptL=CreateParticle[{1},"F"];
+ReptL=CreateParticle[{{1,1}},"F"];
 
 (*right-handed top-quark*)
-ReptR=CreateParticle[{2},"F"];
+ReptR=CreateParticle[{{2,1}},"F"];
 
-(*right-handed bottom-quark*)
-RepbR=CreateParticle[{3},"F"];
+(*light quarks*)
+RepLightQ = CreateParticle[{{1,2},3,6,7,8,11,12,13},"F"];
+
+(*left-handed leptons*)
+RepLepL = CreateParticle[{4,9,14},"F"];
+
+(*right-handed leptons -- these don't contribute*)
+RepLepR = CreateParticle[{5,10,15},"F"];
 
 (*Vector bosons*)
 RepGluon=CreateParticle[{1},"V"];
+
+(*We are approximating the W and the Z as the same particle*)
 RepW=CreateParticle[{{2,1}},"V"];
 
 (*Higgs*)
@@ -100,7 +114,7 @@ RepH = CreateParticle[{1},"S"];
 These particles do not necessarily have to be out of equilibrium
 the remainin particle content is set as light
 *)
-ParticleList={ReptL,ReptR,RepbR,RepGluon,RepW,RepH};
+ParticleList={ReptL,ReptR,RepLightQ,RepLepL,RepLepR,RepGluon,RepW, RepH};
 
 
 (*Defining various masses and couplings*)
@@ -108,23 +122,28 @@ ParticleList={ReptL,ReptR,RepbR,RepGluon,RepW,RepH};
 
 VectorMass=Join[
 	Table[mg2,{i,1,RepGluon[[1]]//Length}],
-	Table[mw2,{i,1,RepW[[1]]//Length}]];
+	Table[mw2,{i,1,RepW[[1]]//Length}]
+	];
+(*First we give all the leptons the same mass*)
 FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
+(*Now we replace the entries with the lefthanded lepton indices by the lepton mass*)
+(*We don't care about the right-handed leptons, because they don't appear in the diagrams*)
+FermionMass[[RepLepL[[1]]]]=ml2;
 ScalarMass=Table[ms2,{i,1,Length[gvss[[1]]]}];
 ParticleMasses={VectorMass,FermionMass,ScalarMass};
 (*
 up to the user to make sure that the same order is given in the python code
 *)
-UserMasses={mq2,mg2,mw2, ms2}; 
-UserCouplings={gs,gw};
+UserMasses={mq2,ml2,mg2,mw2,ms2};
+UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//DeleteDuplicates
 
 
 (*
 	output of matrix elements
 *)
-OutputFile="matrixElements.ew";
+OutputFile="matrixElements.SMLightHiggs";
 SetDirectory[NotebookDirectory[]];
-ParticleName={"TopL","TopR","BotR","Gluon","W","H"};
+ParticleName={"TopL","TopR","LightQuark","LepL","LepR","Gluon","W","H"};
 MatrixElements=ExportMatrixElements[
 	OutputFile,
 	ParticleList,
@@ -132,7 +151,7 @@ MatrixElements=ExportMatrixElements[
 	UserCouplings,
 	ParticleName,
 	ParticleMasses,
-	{TruncateAtLeadingLog->True,Format->{"json","txt"}}];
+	{TruncateAtLeadingLog->True,Replacements->{yt->0},Format->{"json","txt"}}];
 
 
-MatrixElements//Expand
+

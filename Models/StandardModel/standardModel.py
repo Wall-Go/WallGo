@@ -152,11 +152,11 @@ class StandardModel(GenericModel):
             return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
         def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
+            return self.modelParameters["g2"] ** 2 * T**2 * 3.0 / 5.0
 
         wBoson = Particle(
             name="W",
-            index=2,
+            index=6,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
@@ -375,7 +375,7 @@ class StandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMLightHiggs.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -442,6 +442,9 @@ class StandardModelExample(WallGoExampleBase):
         changedParams.addOrModifyParameter(
             "mw2", 3.0 * gw**2 / 5.0
         )  # W boson thermal mass^2 in units of T
+        changedParams.addOrModifyParameter(
+            "ml2", 3*gw**2 / 32.0
+        )  # lepton thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
 
@@ -561,8 +564,8 @@ class StandardModelExample(WallGoExampleBase):
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
                         bIncludeOffEquilibrium=True,
-                        meanFreePathScale=100.0, # In units of 1/Tnucl
-                        wallThicknessGuess=5.0, # In units of 1/Tnucl
+                        meanFreePathScale=200.0, # In units of 1/Tnucl
+                        wallThicknessGuess=20.0, # In units of 1/Tnucl
                     ),
                 )
             )
