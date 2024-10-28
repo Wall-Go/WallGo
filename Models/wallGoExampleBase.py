@@ -13,6 +13,8 @@ import inspect
 import sys
 import logging
 
+import numpy as np
+
 import WallGo
 from WallGo import mathematicaHelpers   
 
@@ -268,6 +270,9 @@ class WallGoExampleBase(ABC):
                 override WallGoExampleBase.getBenchmarkPoints()?"""
             )
 
+        vwresults = np.zeros((len(benchmarkPoints),5))
+        counter = 0
+
         for benchmark in benchmarkPoints:
 
             """Update model parameters. Our examples store them internally in the model,
@@ -289,9 +294,13 @@ class WallGoExampleBase(ABC):
                 benchmark.veffDerivativeScales,
             )
 
+            vwresults[counter, 0] = benchmark.inputParameters["mH"]
+
             # ---- Solve wall speed in Local Thermal Equilibrium (LTE) approximation
             vwLTE = manager.wallSpeedLTE()
             print(f"LTE wall speed:    {vwLTE:.6f}")
+
+            vwresults[counter, 1] = vwLTE
 
             """Solve field EOM. For illustration, first solve it without any
             out-of-equilibrium contributions. The resulting wall speed should
@@ -419,6 +428,18 @@ class WallGoExampleBase(ABC):
                         """
                     )
                 raise e
+            
+            if results.wallVelocity is not None:
+                vwresults[counter, 2] = results.wallVelocity
+                vwresults[counter, 3] = results.wallVelocityError
+                vwresults[counter, 4] = results.wallWidths
+            
+            else:
+                vwresults[counter, 2] = 0
+                vwresults[counter, 3] = 0
+                vwresults[counter, 4] = 0
+
+            counter = counter + 1
 
             if self.cmdArgs.includeDetonations:
                 print("\n=== Search for detonation solution ===")
@@ -426,3 +447,6 @@ class WallGoExampleBase(ABC):
                 print(f"\n=== Detonation results, {len(results)} solutions found ===")
                 for res in results:
                     print(f"wallVelocity:      {res.wallVelocity}")
+
+        np.set_printoptions(precision=4)
+        print(f"{vwresults}")
