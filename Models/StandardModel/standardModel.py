@@ -40,8 +40,11 @@ from WallGo import EffectivePotential, Fields, GenericModel, Particle
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallGoExampleBaseSavevw import WallGoExampleBase
-from wallGoExampleBaseSavevw import ExampleInputPoint
+#from wallGoExampleBaseSavevw import WallGoExampleBase
+#from wallGoExampleBaseSavevw import ExampleInputPoint
+
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -497,11 +500,6 @@ class StandardModelExample(WallGoExampleBase):
             pathlib.Path(self.exampleBaseDirectory / "standardModelConfig.ini")
         )
         super().configureManager(inOutManager)
-
-        #Added on October 2, 15.41:
-        #inOutManager.config.set("EffectivePotential", "potentialError", "1e-10")
-
-        inOutManager.config.set("EffectivePotential", "phaseTracerTol", "1e-8")
 
     
     def updateModelParameters(

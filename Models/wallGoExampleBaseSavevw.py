@@ -161,11 +161,7 @@ class WallGoExampleBase(ABC):
 
         # Override basis size if it was passed via command line
         if self.cmdArgs.momentumGridSize > 0:
-            inOutManager.config.set(
-                "PolynomialGrid",
-                "momentumGridSize",
-                str(self.cmdArgs.momentumGridSize),
-            )
+            inOutManager.config.configGrid.momentumGridSize= self.cmdArgs.momentumGridSize
 
     def processResultsForBenchmark(  # pylint: disable=W0613
         self,
@@ -199,7 +195,6 @@ class WallGoExampleBase(ABC):
         Initializes WallGo and runs the entire model set-up, computation of
         collision integrals (if enabled) and computation of the wall velocity.
         """
-        WallGo.initialize()
 
         argParser = self.initCommandLineArgs()
         # store the args so that subclasses can access them if needed
@@ -223,8 +218,8 @@ class WallGoExampleBase(ABC):
         collisionTensor: "WallGoCollision.CollisionTensor" | None = None
 
         # hacky
-        momentumGridSize = manager.config.getint("PolynomialGrid", "momentumGridSize")
-        spatialGridSize = manager.config.getint("PolynomialGrid", "spatialGridSize")
+        momentumGridSize = manager.config.configGrid.momentumGridSize
+        spatialGridSize = manager.config.configGrid.spatialGridSize
 
         benchmarkPoints = self.getBenchmarkPoints()
         if len(benchmarkPoints) < 1:
@@ -416,4 +411,5 @@ class WallGoExampleBase(ABC):
 
         #hacky
         filename = 'Models/StandardModel/ResultsMPPotential/N' + str(momentumGridSize) + 'M' + str(spatialGridSize) + 'tempScale' + str(temperatureScale) + 'fieldScale' + str(fieldScale) + '.txt'
-        np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')
+        print(f"{vwresults}")
+        #np.savetxt(filename, vwresults, delimiter=' ', fmt='%.6f')
