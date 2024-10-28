@@ -907,7 +907,8 @@ class Hydrodynamics:
 
     def efficiencyFactor(self, vw: float) -> float:
         r"""
-        Computes the efficiency factor :math:`\kappa`.
+        Computes the efficiency factor
+        :math:`\kappa=\frac{4}{v_w^3 \alpha_n w_n}\int d\xi \xi^2 v^2\gamma^2 w`.
 
         Parameters
         ----------
