@@ -448,4 +448,5 @@ class WallGoExampleBase(ABC):
                 for res in results:
                     print(f"wallVelocity:      {res.wallVelocity}")
 
+        np.set_printoptions(precision=4)
         print(f"{vwresults}")
