@@ -162,7 +162,7 @@ class InertDoubletModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=7,
+            index=6,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
