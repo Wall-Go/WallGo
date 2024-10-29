@@ -7,15 +7,15 @@ This folder contains individual model directories, each equipped with a Python s
 ## Directory Structure
 
 Each model directory includes the following files and subdirectories:
-- `<nameOfModel>.py' - Contains the model definition and the commands for finding the wall velocity.
-- `<nameOfModel>Config.ini' - An optional configuration file containing model-specific configuration settings. (Note: This file is not included for the Yukawa model.)
-- `exampleCollisionDefs.py' - Defines collision generation settings specific to the model.
+- `<nameOfModel>.py` - Contains the model definition and the commands for finding the wall velocity.
+- `<nameOfModel>Config.ini` - An optional configuration file containing model-specific configuration settings. (Note: This file is not included for the Yukawa model.)
+- `exampleCollisionDefs.py` - Defines collision generation settings specific to the model.
 - `MatrixElements/` - A subdirectory holding scripts (with .m extensions) used for generating matrix elements, as well as a .json file containing the computed matrix elements.
 - `CollisionOutput_N<spatialGridSize>/` - Subdirectories for storing collision data files for each pair of out-of-equilibrium particles, with each folder corresponding to a specific spatial grid size. 
 
 Additionally, the Models folder contains a common utility file:
 
-- `wallGoExampleBase.py' - This script provides a shared template for wall velocity computations. It is used by all models except the Yukawa model.
+- `wallGoExampleBase.py` - This script provides a shared template for wall velocity computations. It is used by all models except the Yukawa model.
 
 ## Running a model
 
