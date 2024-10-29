@@ -21,9 +21,7 @@ integrals as the "CollisonOutput" directory
 
 Note:
 This benchmark is used to compare against the results of
-G. Moore and T. Prokopec, How fast can the wall move?
-A Study of the electroweak phase transition dynamics, Phys.Rev.D 52 (1995) 7182-7204
-doi:10.1103/PhysRevD.52.7182
+Konstandin, Nardini, Rues, From Boltzmann equations to steady wall velocities, 2014
 """
 
 import sys
@@ -32,16 +30,16 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 # WallGo imports
-import WallGo  # Whole package, in particular we get WallGo._initializeInternal()
+import WallGo  # Whole package, in particular we get WallGo.initialize()
 from WallGo import EffectivePotential, Fields, GenericModel, Particle
 
 # Add the Models folder to the path; need to import the base
-# example template
+# example template and effectivePotentialNoResum.py
 modelsBaseDir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(modelsBaseDir))
 
-from wallGoExampleBase import WallGoExampleBase  # pylint: disable=C0411, C0413, E0401
-from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413, E0401
+from wallGoExampleBase import WallGoExampleBase
+from wallGoExampleBase import ExampleInputPoint
 
 if TYPE_CHECKING:
     import WallGoCollision
@@ -208,19 +206,17 @@ class StandardModel(GenericModel):
 
         modelParameters["lambda"] = inputParameters["mH"] ** 2 / (2 * v0**2)
 
+
         # The following parameters are defined on page 6 of hep-ph/9506475
         bconst = 3 / (64 * np.pi**2 * v0**4) * (2 * massW**4 + massZ**4 - 4 * massT**4)
 
         modelParameters["D"] = (
             1 / (8 * v0**2) * (2 * massW**2 + massZ**2 + 2 * massT**2)
         )
-        modelParameters["E0"] = 1 / (12 * np.pi * v0**3) * (4 * massW**3 + 2 * massZ**3)
+        modelParameters["E"] = 1 / (4 * np.pi * v0**3) * (2 * massW**3 +  massZ**3)
 
         modelParameters["T0sq"] = (
             1 / 4 / modelParameters["D"] * (massH**2 - 8 * bconst * v0**2)
-        )
-        modelParameters["C0"] = (
-            1 / (16 * np.pi**2) * (1.42 * modelParameters["g2"] ** 4)
         )
 
         return modelParameters
@@ -243,16 +239,6 @@ class EffectivePotentialSM(EffectivePotential):
     This class inherits from the EffectivePotential class.
     """
 
-    # ~ EffectivePotential interface
-    fieldCount = 1
-    """How many classical background fields"""
-
-    effectivePotentialError = 1e-15
-    """
-    Relative accuracy at which the potential can be computed. Here the potential is
-    polynomial so we can set it to the machine precision.
-    """
-
     def __init__(self, owningModel: StandardModel) -> None:
         """
         Initialize the EffectivePotentialSM.
@@ -269,10 +255,22 @@ class EffectivePotentialSM(EffectivePotential):
         self.numBosonDof = 28
         self.numFermionDof = 90
 
+    # ~ EffectivePotential interface
+    fieldCount = 1
+    """How many classical background fields"""
+
+    effectivePotentialError = 1e-15
+    """
+    Relative accuracy at which the potential can be computed. Here the potential is
+    polynomial so we can set it to the machine precision.
+    """
+    # ~
+
     def evaluate(  # pylint: disable=R0914
         self,
         fields: Fields,
         temperature: float | np.ndarray,
+        checkForImaginary: bool = False,
     ) -> float | np.ndarray:
         """
         Evaluate the effective potential. We implement the effective potential
@@ -284,6 +282,8 @@ class EffectivePotentialSM(EffectivePotential):
             The field configuration
         temperature: float
             The temperature
+        checkForImaginary: bool
+            Setting to check for imaginary parts of the potential
 
         Returns
         ----------
@@ -305,31 +305,11 @@ class EffectivePotentialSM(EffectivePotential):
 
         # Implement finite-temperature corrections to the modelParameters lambda,
         # C0 and E0, as on page 6 and 7 of hep-ph/9506475.
-        lambdaT = self.modelParameters["lambda"] - 3 / (
-            16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
-        ) * (
-            2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
-            + mZ**4 * np.log(mZ**2 / (ab * T**2) + 1e-100)
-            - 4 * mt**4 * np.log(mt**2 / (af * T**2) + 1e-100)
-        )
+        lambdaT = self.modelParameters["lambda"] - 3/(16*np.pi*np.pi*self.modelParameters["v0"]**4)*(2*mW**4*np.log(mW**2/(ab*T**2))+ mZ**4*np.log(mZ**2/(ab*T**2)) -4*mt**4*np.log(mt**2/(af*T**2)))
 
-        cT: float | np.ndarray = self.modelParameters["C0"] + 1 / (
-            16 * np.pi * np.pi
-        ) * (4.8 * self.modelParameters["g2"] ** 2 * lambdaT - 6 * lambdaT**2)
 
-        # HACK: take the absolute value of lambdaT here,
-        # to avoid taking the square root of a negative number
-        eT: float | np.ndarray = (
-            self.modelParameters["E0"]
-            + 1 / (12 * np.pi) * (3 + 3**1.5) * np.abs(lambdaT) ** 1.5
-        )
+        potentialT: float | np.ndarray = self.modelParameters["D"]*(T**2 - self.modelParameters["T0sq"])*v**2 - self.modelParameters["E"]*T*pow(v,3) + lambdaT/4*pow(v,4)
 
-        potentialT: float | np.ndarray = (
-            self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
-            - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T))
-            - eT * T * pow(v, 3)
-            + lambdaT / 4 * pow(v, 4)
-        )
 
         potentialTotal = np.real(potentialT + self.constantTerms(T))
 
@@ -366,7 +346,7 @@ class EffectivePotentialSM(EffectivePotential):
 
 class StandardModelExample(WallGoExampleBase):
     """
-    Sets up the standard model, computes or loads the collision
+    Sets up the standard model, computes or loads the collison
     integrals, and computes the wall velocity.
     """
 
@@ -419,18 +399,13 @@ class StandardModelExample(WallGoExampleBase):
         inWallGoModel: "StandardModel",
         inOutCollisionModel: "WallGoCollision.PhysicsModel",
     ) -> None:
-        """Propagate changes in WallGo model to the collision model."""
+        """Propagete changes in WallGo model to the collision model."""
         import WallGoCollision  # pylint: disable = C0415
 
         changedParams = WallGoCollision.ModelParameters()
 
         gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
-        
-        
-        # Note that the particular values of masses here are for a comparison with arXiv:hep-ph/9506475.
-        # For proceeding beyond the leading-log approximation one should use the asymptotic masses.
-        # For quarks we include the thermal mass only
         changedParams.addOrModifyParameter("gs", gs)
         changedParams.addOrModifyParameter("gw", gw)
         changedParams.addOrModifyParameter(
@@ -461,11 +436,11 @@ class StandardModelExample(WallGoExampleBase):
         """
         integrationOptions = WallGoCollision.IntegrationOptions()
         integrationOptions.calls = 50000
-        integrationOptions.maxTries = 10
+        integrationOptions.maxTries = 50
         # collision integration momentum goes from 0 to maxIntegrationMomentum.
         # This is in units of temperature
         integrationOptions.maxIntegrationMomentum = 20
-        integrationOptions.absoluteErrorGoal = 1e-5
+        integrationOptions.absoluteErrorGoal = 1e-8
         integrationOptions.relativeErrorGoal = 1e-1
 
         inOutCollisionTensor.setIntegrationOptions(integrationOptions)
@@ -496,6 +471,7 @@ class StandardModelExample(WallGoExampleBase):
         inOutCollisionTensor.setIntegrationVerbosity(verbosity)
 
     def configureManager(self, inOutManager: "WallGo.WallGoManager") -> None:
+        """SM example uses spatial grid size = 20"""
         inOutManager.config.loadConfigFromFile(
             pathlib.Path(self.exampleBaseDirectory / "standardModelConfig.ini")
         )
@@ -538,7 +514,7 @@ class StandardModelExample(WallGoExampleBase):
         of the Higgs mass.
         """
         valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
-        valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
+        valuesTn = [57.692, 71.179, 84.105, 103.138, 114.443]
 
         output: list[ExampleInputPoint] = []
 
@@ -564,8 +540,8 @@ class StandardModelExample(WallGoExampleBase):
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
                         bIncludeOffEquilibrium=True,
-                        meanFreePathScale=200.0, # In units of 1/Tnucl
-                        wallThicknessGuess=20.0, # In units of 1/Tnucl
+                        meanFreePathScale=1.0,
+                        wallThicknessGuess=0.05,
                     ),
                 )
             )
