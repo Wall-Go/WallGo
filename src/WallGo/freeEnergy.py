@@ -332,6 +332,7 @@ class FreeEnergy(InterpolatableFunction):
                 rtol=rTol,
                 atol=tolAbsolute,
                 max_step=dT,
+                first_step=dT,
             )
             while ode.status == "running":
                 try:
