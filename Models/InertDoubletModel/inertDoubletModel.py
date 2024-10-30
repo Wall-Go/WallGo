@@ -162,7 +162,7 @@ class InertDoubletModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=2,
+            index=6,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
@@ -170,6 +170,27 @@ class InertDoubletModel(GenericModel):
             totalDOFs=9,
         )
         self.addParticle(wBoson)
+
+        ## === A, Hpm scalars ===
+        def heavyScalarMsqVacuum(fields: Fields) -> Fields:
+            return self.modelParameters["msq2"] + self.modelParameters["lambda3"]*fields.getField(0)**2 / 2
+
+        def heavyScalarMsqDerivative(fields: Fields) -> Fields:
+            return self.modelParameters["lambda3"]*fields.getField(0)
+
+        def heavyScalarThermal(T: float) -> float:
+            return self.modelParameters["lambda3"] * T**2 / 24.0
+        
+        heavyScalar = Particle(
+            name="A",
+            index=9,
+            msqVacuum=heavyScalarMsqVacuum,
+            msqDerivative=heavyScalarMsqDerivative,
+            msqThermal=heavyScalarThermal,
+            statistics="Boson",
+            totalDOFs=3,
+        )
+        self.addParticle(heavyScalar)
 
     ## Go from whatever input params --> action params
     def calculateLagrangianParameters(
@@ -193,6 +214,7 @@ class InertDoubletModel(GenericModel):
         # Zero-tempreature Higgs vev
         v0 = inputParameters["v0"]
         modelParameters["v0"] = v0
+        modelParameters["vevCollisions"] = inputParameters["vevCollisions"]
 
         # Higgs parameters
         massh = inputParameters["mh"]
@@ -625,7 +647,7 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.idm.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -657,10 +679,10 @@ class InertDoubletModelExample(WallGoExampleBase):
         # configure the collision module. It is located in a separate module (same
         # directory) to avoid bloating this file. Import and use it here.
         from exampleCollisionDefs import (
-            setupCollisionModel_QCDEW,
+            setupCollisionModel_IDM,
         )  # pylint: disable = C0415
 
-        collisionModel = setupCollisionModel_QCDEW(
+        collisionModel = setupCollisionModel_IDM(
             wallGoModel.modelParameters,
         )
 
@@ -676,19 +698,51 @@ class InertDoubletModelExample(WallGoExampleBase):
 
         changedParams = WallGoCollision.ModelParameters()
 
-        gs = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
+
+        g3 = inWallGoModel.modelParameters["g3"]  # names differ for historical reasons
         gw = inWallGoModel.modelParameters["g2"]  # names differ for historical reasons
-        changedParams.addOrModifyParameter("gs", gs)
-        changedParams.addOrModifyParameter("gw", gw)
-        changedParams.addOrModifyParameter(
-            "mq2", gs**2 / 6.0
+        g1 = inWallGoModel.modelParameters["g1"]
+        yt = inWallGoModel.modelParameters["yt"]
+        lam1H = inWallGoModel.modelParameters["lambda"]
+        lam3H = inWallGoModel.modelParameters["lambda3"]
+        lam4H = inWallGoModel.modelParameters["lambda4"]
+        v = inWallGoModel.modelParameters["vevCollisions"]
+
+        changedParams.add("g3", g3)
+        changedParams.add("gw", gw)
+        changedParams.add("g1", g1)
+        changedParams.add("yt1",yt)
+        changedParams.add("lam1H", lam1H)
+        changedParams.add("lam3H", lam3H)
+        changedParams.add("lam4H", lam4H)
+        changedParams.add("v",v)
+
+        # The values for the quark, gluon, W and A are taken from 2211.13142
+        # For the Higgs and Goldstone we take the thermal mass
+        changedParams.add(
+            "mq2", g3**2 / 6.0
         )  # quark thermal mass^2 in units of T
-        changedParams.addOrModifyParameter(
-            "mg2", 2.0 * gs**2
+        changedParams.add(
+            "ml2", 3*gw**2 / 32.0
+        )  # lepton thermal mass^2 in units of T
+        changedParams.add(
+            "mg2", 2.0 * g3**2
         )  # gluon thermal mass^2 in units of T
-        changedParams.addOrModifyParameter(
+        changedParams.add(
             "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
+        changedParams.add(
+            "mG2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
+        )  # goldstone thermal mass^2 in units of T
+        changedParams.add(
+            "mh2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
+        )  # Higgs thermal mass^2 in units of T
+        changedParams.add(
+            "mH2", lam3H / 24.0
+        )  # H thermal mass^2 in units of T
+        changedParams.add(
+            "mA2", lam3H / 24.0
+        )  # A thermal mass^2 in units of T
 
         inOutCollisionModel.updateParameters(changedParams)
 
@@ -745,6 +799,7 @@ class InertDoubletModelExample(WallGoExampleBase):
         )
         super().configureManager(inOutManager)
 
+
     def updateModelParameters(
         self, model: "InertDoubletModel", inputParameters: dict[str, float]
     ) -> None:
@@ -786,6 +841,8 @@ class InertDoubletModelExample(WallGoExampleBase):
             ExampleInputPoint(
                 {
                     "v0": 246.22,
+                    # This is hardcoded to be half of the vev at the nucleation temperature of BMA
+                    "vevCollisions": 74.8354/117.1, 
                     "Mt": 172.76,
                     "g1": 0.35,
                     "g2": 0.65,
@@ -803,7 +860,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                     phaseLocation1=WallGo.Fields([0.0]),
                     phaseLocation2=WallGo.Fields([246.0]),
                 ),
-                WallGo.VeffDerivativeSettings(temperatureVariationScale=0.5, fieldValueVariationScale=[10.0]),
+                WallGo.VeffDerivativeSettings(temperatureVariationScale=1.0, fieldValueVariationScale=[10.0]),
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
