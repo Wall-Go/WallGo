@@ -25,7 +25,7 @@ The examples can be run directly with e.g.
     
 For models that use the common `wallGoExampleBase.py', additional command line arguments are available to (re)calculate matrix elements and collisions, and adjust the momentum grid size e.g.
 
-    python3 Models/SingletStandardModel_Z2/singletStandardModelZ2.py --recalculateMatrixElements -- recalculateCollisions --momentumGridSize 5
+    python3 Models/SingletStandardModel_Z2/singletStandardModelZ2.py --recalculateMatrixElements --recalculateCollisions --momentumGridSize 5
 
 ## Requirements
 
