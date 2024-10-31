@@ -126,14 +126,12 @@ LightParticleList={RepLepL,RepLepR, RepH};
 (*
 	output of matrix elements
 *)
-OutputFile="matrixElements.SMLightHiggs";
+OutputFile="matrixElements.ew";
 SetDirectory[NotebookDirectory[]];
 MatrixElements=ExportMatrixElements[
 	OutputFile,
 	ParticleList,
 	LightParticleList,
 	{TruncateAtLeadingLog->True,Replacements->{yt->0},Format->{"json","txt"}}];
-
-
 
 
