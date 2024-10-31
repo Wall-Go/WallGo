@@ -162,7 +162,7 @@ class InertDoubletModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=6,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
@@ -183,7 +183,7 @@ class InertDoubletModel(GenericModel):
         
         heavyScalar = Particle(
             name="A",
-            index=9,
+            index=6,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
             msqThermal=heavyScalarThermal,
@@ -732,11 +732,8 @@ class InertDoubletModelExample(WallGoExampleBase):
             "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
         changedParams.add(
-            "mG2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
-        )  # goldstone thermal mass^2 in units of T
-        changedParams.add(
             "mh2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
-        )  # Higgs thermal mass^2 in units of T
+        )  # Higgs and Goldstone thermal mass^2 in units of T
         changedParams.add(
             "mH2", lam3H / 24.0
         )  # H thermal mass^2 in units of T
