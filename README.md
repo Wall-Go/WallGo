@@ -11,11 +11,13 @@ Summary: A Python package for computing the bubble wall speed for cosmological p
 
 Development: https://github.com/Wall-Go/WallGo
 
+
 ## Status
 
 [![Version](https://img.shields.io/github/v/tag/Wall-Go/WallGo?label=Version)](https://github.com/Wall-Go/WallGo/tags/)
 
 [![WallGo tests (main)](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml/badge.svg)](https://github.com/Wall-Go/WallGo/actions/workflows/main.yml)
+
 
 ## About this project
 
@@ -28,36 +30,37 @@ The [**WallGo**](https://github.com/Wall-Go/WallGo) package is accompanied by tw
 
 Users can implement their own models by specifying an effective potential and a list of out-of-equilibrium particles and their corresponding interactions.
 
+
 ## Installation
 
-WallGo can be installed as a Python package (in developer mode) with pip, using:
+WallGo can be installed with pip, using:
 
-    python -m pip install -e .
+    pip install WallGo
 
-(or equivalent with python3) from the base directory of the repository.
+If you have an existing installation, add the flag `--upgrade` to get the latest (stable) release.
 
-To also install the requirements for tests, linting and the documentation
-instead run
+Alternatively, to get the latest (unstable) development version from the repository, run:
 
-    python -m pip install -e ".[docs,lint,tests]"
+    git clone git@github.com:Wall-Go/WallGo.git
+    cd WallGo
+    pip install -e .
 
 
 ### Requirements
 
-WallGo is based on Python 3. Necessary requirements are installed automatically with
-pip. They can be found in the file `pyproject.toml`.
+WallGo requires Python 3.10 or above.
 
 
-### Tests
+## Quick start
 
-Tests can be run from the base directory with:
+A first example model is explained in the
+[WallGo documentation](https://wallgo.readthedocs.io/en/latest/firstExample.html).
 
-    pytest -v
 
+### Examples
 
-## Examples
-
-A number of example models are collected in the directory `Models/`, including the following:
+A number of example models are collected in the repository in the folder
+[Models](https://github.com/Wall-Go/WallGo/tree/main/Models), including the following:
 
 - Standard Model with light Higgs
 - Inert Doublet Model
@@ -68,7 +71,7 @@ A number of example models are collected in the directory `Models/`, including t
 After installing the package, these examples can be run directly with Python, as
 in:
 
-    python3 Models/SingletStandardModel_Z2/singletStandardModelZ2.py
+    python Models/SingletStandardModel_Z2/singletStandardModelZ2.py
 
 
 ## Feedback and further questions
