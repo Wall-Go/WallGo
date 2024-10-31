@@ -145,14 +145,14 @@ def setupCollisionModel_IDM(
     wBoson.massSqFunction = wBosonThermalMassSquared
     modelDefinition.defineParticleSpecies(wBoson)
 
-    higgs = WallGoCollision.ParticleDescription()
-    higgs.name = "Higgs"
-    higgs.index = 5
-    higgs.type = WallGoCollision.EParticleType.eBoson
-    higgs.bInEquilibrium = True
-    higgs.bUltrarelativistic = True
-    higgs.massSqFunction = HiggsBosonThermalMassSquared
-    modelDefinition.defineParticleSpecies(higgs)
+    higgsDoublet = WallGoCollision.ParticleDescription() #Contains also Goldstones
+    higgsDoublet.name = "Higgs"
+    higgsDoublet.index = 5
+    higgsDoublet.type = WallGoCollision.EParticleType.eBoson
+    higgsDoublet.bInEquilibrium = True
+    higgsDoublet.bUltrarelativistic = True
+    higgsDoublet.massSqFunction = HiggsBosonThermalMassSquared
+    modelDefinition.defineParticleSpecies(higgsDoublet)
 
     newScalarHeavy = WallGoCollision.ParticleDescription()
     newScalarHeavy.name = "A"
