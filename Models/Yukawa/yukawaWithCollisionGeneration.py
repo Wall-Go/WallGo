@@ -41,7 +41,7 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.yukawa.json"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
