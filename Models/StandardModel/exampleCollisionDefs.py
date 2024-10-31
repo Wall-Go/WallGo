@@ -113,7 +113,7 @@ def setupCollisionModel_QCDEW(
 
     gluon = WallGoCollision.ParticleDescription()
     gluon.name = "Gluon"
-    gluon.index = 5
+    gluon.index = 3
     gluon.type = WallGoCollision.EParticleType.eBoson
     gluon.bInEquilibrium = True
     gluon.bUltrarelativistic = True
@@ -122,7 +122,7 @@ def setupCollisionModel_QCDEW(
 
     wBoson = WallGoCollision.ParticleDescription()
     wBoson.name = "W"
-    wBoson.index = 6
+    wBoson.index = 4
     wBoson.type = WallGoCollision.EParticleType.eBoson
     wBoson.bInEquilibrium = False
     wBoson.bUltrarelativistic = True

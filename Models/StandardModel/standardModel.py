@@ -156,7 +156,7 @@ class StandardModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=6,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
