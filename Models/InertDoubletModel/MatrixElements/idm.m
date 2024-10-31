@@ -111,7 +111,7 @@ ImportModel[Group,gvvv,gvff,gvss,\[Lambda]1,\[Lambda]3,\[Lambda]4,\[Mu]ij,\[Mu]I
 
 
 (* ::Section:: *)
-(*SM quarks + gauge bosons + leptons*)
+(*MatrixElements*)
 
 
 (* ::Subsection:: *)
@@ -123,7 +123,7 @@ SymmetryBreaking[vev,VevDependentCouplings->True]
 
 
 (* ::Subsection:: *)
-(*UserInput*)
+(*Grouping representations*)
 
 
 (*
@@ -135,60 +135,42 @@ one right-handed fermoon
 
 
 (*left-handed top-quark*)
-ReptL=CreateParticle[{{1,1}},"F"];
+ReptL=CreateParticle[{{1,1}},"F", mq2, "TopL"];
 
 (*right-handed top-quark*)
-ReptR=CreateParticle[{{2,1}},"F"];
+ReptR=CreateParticle[{{2,1}},"F", mq2, "TopR"];
 
 (*light quarks*)
-RepLightQ = CreateParticle[{{1,2},3,6,7,8,11,12,13},"F"];
+RepLightQ = CreateParticle[{{1,2},3,6,7,8,11,12,13},"F", mq2, "LightQuark"];
 
 (*left-handed leptons*)
-RepLepL = CreateParticle[{4,9,14},"F"];
+RepLepL = CreateParticle[{4,9,14},"F", ml2, "LepL"];
 
 (*right-handed leptons -- these don't contribute*)
-RepLepR = CreateParticle[{5,10,15},"F"];
+RepLepR = CreateParticle[{5,10,15},"F", ml2, "LepR"];
 
 (*Vector bosons*)
-RepGluon=CreateParticle[{1},"V"];
+RepGluon=CreateParticle[{1},"V", mg2, "Gluon"];
 
 (*We are approximating the W and the Z as the same particle*)
-RepW=CreateParticle[{{2,1}},"V"];
+RepW=CreateParticle[{{2,1}},"V", mw2, "W"];
 
-(*Higgs*)
-RepHiggs = CreateParticle[{1},"S"];
+(*Higgs and Goldstones*)
+RepHiggs = CreateParticle[{1},"S", mh2,"Higgs"];
 
-RepH=CreateParticle[{{2,2}},"S"]; (*CP-even inert scalar*)
-RepA=CreateParticle[{{2,3},{2,1}},"S"]; (*CP-odd inert and charged scalars.
+RepH=CreateParticle[{{2,2}},"S", mH2, "H"]; (*CP-even inert scalar*)
+RepA=CreateParticle[{{2,3},{2,1}},"S", mA2, "A"]; (*CP-odd inert and charged scalars.
 Note that when lambda4 = lambda5, they have the same mass*)
 
 
+ParticleList={ReptL,ReptR,RepLightQ,RepGluon,RepW, RepHiggs, RepA};
 (*
-These particles do not necessarily have to be out of equilibrium
-the remainin particle content is set as light
+Light particles are never incoming particles 
 *)
-ParticleList={ReptL,ReptR,RepLightQ,RepLepL,RepLepR,RepGluon,RepW, RepHiggs,RepH, RepA};
+LightParticleList={RepLepL, RepLepR, RepH};
 
 
 (*Defining various masses and couplings*)
-
-
-VectorMass=Join[
-	Table[mg2,{i,1,RepGluon[[1]]//Length}],
-	Table[mw2,{i,1,RepW[[1]]//Length}]
-	];
-(*First we give all the leptons the same mass*)
-FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
-(*Now we replace the entries with the lefthanded lepton indices by the lepton mass*)
-(*We don't care about the right-handed leptons, because they don't appear in the diagrams*)
-FermionMass[[RepLepL[[1]]]]=ml2;
-ScalarMass={mh2,mh2,mh2,mh2,mA2,mH2,mA2,mA2};
-ParticleMasses={VectorMass,FermionMass,ScalarMass};
-(*
-up to the user to make sure that the same order is given in the python code
-*)
-UserMasses={mq2,ml2,mg2,mw2,mh2,mA2};
-UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//DeleteDuplicates
 
 
 (*
@@ -196,14 +178,10 @@ UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//
 *)
 OutputFile="matrixElements.idm";
 SetDirectory[NotebookDirectory[]];
-ParticleName={"TopL","TopR","LightQuark","LepL","LepR","Gluon","W","Higgs","H","A"};
 MatrixElements=ExportMatrixElements[
 	OutputFile,
 	ParticleList,
-	UserMasses,
-	UserCouplings,
-	ParticleName,
-	ParticleMasses,
-	{TruncateAtLeadingLog->True,Replacements->{lam1H->0,lam2H->0,lam4H->0,lam5H->0},Format->{"json","txt"}}];
-
-
+	LightParticleList,
+	{TruncateAtLeadingLog->True,
+	Replacements->{lam1H->0,lam2H->0,lam4H->0,lam5H->0},
+	Format->{"json","txt"}}];
