@@ -70,7 +70,7 @@ class YukawaModel(GenericModel):
 
         psiL = Particle(
             "psiL",
-            index=1,  # old collision data has top at index 0
+            index=1,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
@@ -79,7 +79,7 @@ class YukawaModel(GenericModel):
         )
         psiR = Particle(
             "psiR",
-            index=2,  # old collision data has top at index 0
+            index=2,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
             msqThermal=psiMsqThermal,
