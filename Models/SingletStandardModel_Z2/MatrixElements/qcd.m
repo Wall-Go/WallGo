@@ -88,6 +88,7 @@ LightParticleList={LightQuarks};
 	output of matrix elements
 *)
 OutputFile="matrixElements.qcd";
+SetDirectory[NotebookDirectory[]];
 MatrixElements=ExportMatrixElements[
 	OutputFile,
 	ParticleList,
