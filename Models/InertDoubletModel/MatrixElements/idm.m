@@ -163,10 +163,6 @@ RepA=CreateParticle[{{2,3},{2,1}},"S", mA2, "A"]; (*CP-odd inert and charged sca
 Note that when lambda4 = lambda5, they have the same mass*)
 
 
-(*
-These particles do not necessarily have to be out of equilibrium
-the remainin particle content is set as light
-*)
 ParticleList={ReptL,ReptR,RepLightQ,RepGluon,RepW, RepHiggs, RepA};
 (*
 Light particles are never incoming particles 
