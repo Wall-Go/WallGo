@@ -522,7 +522,7 @@ class SingletStandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateMatrixElements = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_QCD.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.qcd.json"
         )
         self.matrixElementInput = pathlib.Path(
             self.exampleBaseDirectory / "MatrixElements/qcd.m"

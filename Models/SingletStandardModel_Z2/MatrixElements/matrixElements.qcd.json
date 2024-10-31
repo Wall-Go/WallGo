@@ -7,6 +7,10 @@
 		{
 			"index":1,
 			"name":"Gluon"
+		},
+		{
+			"index":2,
+			"name":"LightParticle"
 		}
 	],
 	"matrixElements":[
