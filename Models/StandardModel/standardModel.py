@@ -156,7 +156,7 @@ class StandardModel(GenericModel):
 
         wBoson = Particle(
             name="W",
-            index=6,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
             msqThermal=WMsqThermal,
@@ -375,7 +375,7 @@ class StandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMLightHiggs.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface

@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-Quit[];
+(*Quit[];*)
 
 
 If[$InputFileName=="",
@@ -77,6 +77,9 @@ SymmetryBreaking[vev]
 (*UserInput*)
 
 
+PrintFieldRepPositions["Fermion"]
+
+
 (*
 In DRalgo fermions are Weyl.
 So to create one Dirac we need
@@ -86,72 +89,49 @@ one right-handed fermoon
 
 
 (*left-handed top-quark*)
-ReptL=CreateParticle[{{1,1}},"F"];
+ReptL=CreateParticle[{{1,1}},"F", mq2, "TopL"];
 
 (*right-handed top-quark*)
-ReptR=CreateParticle[{{2,1}},"F"];
+ReptR=CreateParticle[{{2,1}},"F", mq2, "TopR"];
 
 (*light quarks*)
-RepLightQ = CreateParticle[{{1,2},3,6,7,8,11,12,13},"F"];
+RepLightQ = CreateParticle[{{1,2},3,6,7,8,11,12,13},"F",mq2, "LightQuark"];
 
 (*left-handed leptons*)
-RepLepL = CreateParticle[{4,9,14},"F"];
+RepLepL = CreateParticle[{4,9,14},"F", ml2,"LepL"];
 
 (*right-handed leptons -- these don't contribute*)
-RepLepR = CreateParticle[{5,10,15},"F"];
+RepLepR = CreateParticle[{5,10,15},"F",mlr2,"LepR"];
 
 (*Vector bosons*)
-RepGluon=CreateParticle[{1},"V"];
+RepGluon=CreateParticle[{1},"V",mg2,"Gluon"];
 
 (*We are approximating the W and the Z as the same particle*)
-RepW=CreateParticle[{{2,1}},"V"];
+RepW=CreateParticle[{{2,1}},"V",mw2,"W"];
 
 (*Higgs*)
-RepH = CreateParticle[{1},"S"];
+RepH = CreateParticle[{1},"S",ms2,"H"];
 
 
 (*
 These particles do not necessarily have to be out of equilibrium
-the remainin particle content is set as light
 *)
-ParticleList={ReptL,ReptR,RepLightQ,RepLepL,RepLepR,RepGluon,RepW, RepH};
-
-
-(*Defining various masses and couplings*)
-
-
-VectorMass=Join[
-	Table[mg2,{i,1,RepGluon[[1]]//Length}],
-	Table[mw2,{i,1,RepW[[1]]//Length}]
-	];
-(*First we give all the leptons the same mass*)
-FermionMass=Table[mq2,{i,1,Length[gvff[[1]]]}];
-(*Now we replace the entries with the lefthanded lepton indices by the lepton mass*)
-(*We don't care about the right-handed leptons, because they don't appear in the diagrams*)
-FermionMass[[RepLepL[[1]]]]=ml2;
-ScalarMass=Table[ms2,{i,1,Length[gvss[[1]]]}];
-ParticleMasses={VectorMass,FermionMass,ScalarMass};
+ParticleList={ReptL,ReptR,RepLightQ,RepGluon,RepW};
 (*
-up to the user to make sure that the same order is given in the python code
+Light particles are never incoming particles 
 *)
-UserMasses={mq2,ml2,mg2,mw2,ms2};
-UserCouplings=Variables@Normal@{Ysff,gvss,gvff,gvvv,\[Lambda]4,\[Lambda]3,vev}//DeleteDuplicates
+LightParticleList={RepLepL,RepLepR, RepH};
 
 
 (*
 	output of matrix elements
 *)
-OutputFile="matrixElements.SMLightHiggs";
+OutputFile="matrixElements.ew";
 SetDirectory[NotebookDirectory[]];
-ParticleName={"TopL","TopR","LightQuark","LepL","LepR","Gluon","W","H"};
 MatrixElements=ExportMatrixElements[
 	OutputFile,
 	ParticleList,
-	UserMasses,
-	UserCouplings,
-	ParticleName,
-	ParticleMasses,
+	LightParticleList,
 	{TruncateAtLeadingLog->True,Replacements->{yt->0},Format->{"json","txt"}}];
-
 
 
