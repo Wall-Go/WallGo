@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install WallGo Python package
-        run: pip install .[tests]
+        run: pip install -e .[tests]
 
       - name: Test with pytest
         run: cd ${{ github.workspace }} && pytest -vs
