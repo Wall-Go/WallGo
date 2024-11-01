@@ -1,10 +1,3 @@
-"""
-This is a simplified version of the xSM, with an effective potential obtained in the
-high-temperature expansion.
-This file is used for running tests, and can not be used as a standalone model
-file for computing the wall velocity.
-"""
-
 import pathlib
 import numpy as np
 
