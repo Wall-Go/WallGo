@@ -27,13 +27,10 @@ from .equationOfMotion import EOM
 from .results import WallGoResults
 from .utils import getSafePathToResource
 
-from ._version import __version__
-
 # list of submodules for lazy importing
 submodules = ["PotentialTools"]
 
 __all__ = submodules + [
-    "__version__",
     "BoltzmannSolver",
     "Config",
     "CollisionArray",
@@ -66,7 +63,7 @@ __all__ = submodules + [
 ]
 
 
-def __dir__():
+def __dir__() -> list[str]:
     return __all__
 
 
