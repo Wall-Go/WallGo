@@ -27,12 +27,42 @@ from .equationOfMotion import EOM
 from .results import WallGoResults
 from .utils import getSafePathToResource
 
+from ._version import __version__
 
 # list of submodules for lazy importing
 submodules = ["PotentialTools"]
 
 __all__ = submodules + [
-    '_version',
+    "__version__",
+    "BoltzmannSolver",
+    "Config",
+    "CollisionArray",
+    "PhaseInfo",
+    "BoltzmannBackground",
+    "BoltzmannDeltas",
+    "WallParams",
+    "EffectivePotential",
+    "VeffDerivativeSettings",
+    "WallGoError",
+    "WallGoPhaseValidationError",
+    "CollisionLoadError",
+    "Fields",
+    "FreeEnergy",
+    "GenericModel",
+    "Grid",
+    "Grid3Scales",
+    "Hydrodynamics",
+    "HydrodynamicsTemplateModel",
+    "InterpolatableFunction",
+    "EExtrapolationType",
+    "WallGoManager",
+    "WallSolverSettings",
+    "Particle",
+    "Polynomial",
+    "Thermodynamics",
+    "EOM",
+    "WallGoResults",
+    "getSafePathToResource",
 ]
 
 
