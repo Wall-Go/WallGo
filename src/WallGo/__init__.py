@@ -31,6 +31,14 @@ from .utils import getSafePathToResource
 # list of submodules for lazy importing
 submodules = ["PotentialTools"]
 
+__all__ = submodules + [
+    '_version',
+]
+
+
+def __dir__():
+    return __all__
+
 
 def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
     """Lazy subpackage import, following Numpy and Scipy"""
