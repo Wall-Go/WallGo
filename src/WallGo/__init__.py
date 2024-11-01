@@ -2,9 +2,6 @@
 
 import warnings
 
-# subpackage
-from . import PotentialTools
-
 # package level modules
 from .boltzmann import BoltzmannSolver
 from .collisionArray import CollisionArray
