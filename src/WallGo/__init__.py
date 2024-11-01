@@ -30,6 +30,7 @@ from .utils import getSafePathToResource
 # list of submodules for lazy importing
 submodules = ["PotentialTools"]
 
+# This allows: `from WallGo import *`
 __all__ = submodules + [
     "BoltzmannSolver",
     "Config",
