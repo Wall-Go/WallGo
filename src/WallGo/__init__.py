@@ -32,7 +32,7 @@ def __getattr__(attr: str) -> types.ModuleType:  # pylint: disable=invalid-name
     """Lazy subpackage import, following Numpy"""
     if attr == "PotentialTools":
         from . import PotentialTools # pylint: disable=import-outside-toplevel
-        return WallGo.PotentialTools
+        return PotentialTools
     raise AttributeError(
         f"module {__name__} has no attribute {attr}"
     )
