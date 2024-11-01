@@ -4,9 +4,7 @@ import numpy.typing as npt
 import pytest
 
 from WallGo import InterpolatableFunction, EExtrapolationType
-
 from WallGo import PotentialTools
-from WallGo.PotentialTools import JbIntegral, JfIntegral
 
 ### Test real parts of Jb, Jf integrals
 
@@ -20,7 +18,7 @@ from WallGo.PotentialTools import JbIntegral, JfIntegral
 )
 def test_directJb(x: float, expectedResult: np.array) -> None:
 
-    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    Jb = PotentialTools.JbIntegral(bUseAdaptiveInterpolation=False)
     assert Jb(x) == pytest.approx(expectedResult, rel=1e-6)
 
 
@@ -30,7 +28,7 @@ def test_directJb(x: float, expectedResult: np.array) -> None:
 )
 def test_directJb_derivative(x: float, expectedResult: float) -> None:
 
-    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    Jb = PotentialTools.JbIntegral(bUseAdaptiveInterpolation=False)
     assert Jb.derivative(x, 1, False) == pytest.approx(expectedResult, rel=1e-6)
 
 
@@ -40,7 +38,7 @@ def test_directJb_derivative(x: float, expectedResult: float) -> None:
 )
 def test_directJf(x: float, expectedResult: float) -> None:
 
-    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf = PotentialTools.JfIntegral(bUseAdaptiveInterpolation=False)
     assert Jf(x) == pytest.approx(expectedResult, rel=1e-6)
 
 
@@ -50,21 +48,21 @@ def test_directJf(x: float, expectedResult: float) -> None:
 )
 def test_directJf_derivative(x: float, expectedResult: float) -> None:
 
-    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf = PotentialTools.JfIntegral(bUseAdaptiveInterpolation=False)
     assert Jf.derivative(x, 1, False) == pytest.approx(expectedResult, rel=1e-6)
 
 
 ## Interpolated Jb integral fixture, no extrapolation. The interpolation here is very rough to make this run fast
 @pytest.fixture()
 def Jb_interpolated() -> InterpolatableFunction:
-    Jb = JbIntegral(bUseAdaptiveInterpolation=False)
+    Jb = PotentialTools.JbIntegral(bUseAdaptiveInterpolation=False)
     Jb.newInterpolationTable(1.0, 10.0, 100)
     return Jb
 
 
 @pytest.fixture()
 def Jf_interpolated() -> InterpolatableFunction:
-    Jf = JfIntegral(bUseAdaptiveInterpolation=False)
+    Jf = PotentialTools.JfIntegral(bUseAdaptiveInterpolation=False)
     Jf.newInterpolationTable(1.0, 10.0, 100)
     return Jf
 
@@ -94,7 +92,7 @@ def Jf_interpolated() -> InterpolatableFunction:
     ],
 )
 def test_Jb_interpolated(
-    Jb_interpolated: JbIntegral,
+    Jb_interpolated: PotentialTools.JbIntegral,
     x: Union[float, np.array],
     expectedResult: Union[float, np.array],
 ) -> None:
@@ -103,7 +101,7 @@ def test_Jb_interpolated(
 
 
 @pytest.mark.parametrize("x", [-5, -1, 0, 0.5, 1, 5, 10])
-def test_Jb_derivative_interpolated(Jb_interpolated: JbIntegral, x: float) -> None:
+def test_Jb_derivative_interpolated(Jb_interpolated: PotentialTools.JbIntegral, x: float) -> None:
     np.testing.assert_allclose(
         Jb_interpolated.derivative(x, 1, True),
         Jb_interpolated.derivative(x, 1, False),
@@ -113,7 +111,7 @@ def test_Jb_derivative_interpolated(Jb_interpolated: JbIntegral, x: float) -> No
 
 @pytest.mark.parametrize("x", [-5, -1, 0, 0.5, 1, 5, 10])
 def test_Jb_second_derivative_interpolated(
-    Jb_interpolated: JbIntegral, x: float
+    Jb_interpolated: PotentialTools.JbIntegral, x: float
 ) -> None:
     np.testing.assert_allclose(
         Jb_interpolated.derivative(x, 2, True),
@@ -124,7 +122,7 @@ def test_Jb_second_derivative_interpolated(
 
 
 @pytest.mark.parametrize("x", [-5, -1, 0, 0.5, 1, 5, 10])
-def test_Jf_derivative_interpolated(Jf_interpolated: JfIntegral, x: float) -> None:
+def test_Jf_derivative_interpolated(Jf_interpolated: PotentialTools.JfIntegral, x: float) -> None:
     np.testing.assert_allclose(
         Jf_interpolated.derivative(x, 1, True),
         Jf_interpolated.derivative(x, 1, False),
@@ -134,7 +132,7 @@ def test_Jf_derivative_interpolated(Jf_interpolated: JfIntegral, x: float) -> No
 
 @pytest.mark.parametrize("x", [-5, -1, 0, 0.5, 1, 5, 10])
 def test_Jf_second_derivative_interpolated(
-    Jf_interpolated: JfIntegral, x: float
+    Jf_interpolated: PotentialTools.JfIntegral, x: float
 ) -> None:
     np.testing.assert_allclose(
         Jf_interpolated.derivative(x, 2, True),
@@ -148,7 +146,7 @@ def test_Jf_second_derivative_interpolated(
 
 
 ## Got lazy with parametrization here, so this is just one big function now
-def test_Jb_extrapolation_constant(Jb_interpolated: JbIntegral) -> None:
+def test_Jb_extrapolation_constant(Jb_interpolated: PotentialTools.JbIntegral) -> None:
 
     Jb = Jb_interpolated
     Jb.setExtrapolationType(
@@ -197,7 +195,7 @@ def test_Jb_extrapolation_constant(Jb_interpolated: JbIntegral) -> None:
 
 
 ##
-def test_Jb_extend_range(Jb_interpolated: JbIntegral) -> None:
+def test_Jb_extend_range(Jb_interpolated: PotentialTools.JbIntegral) -> None:
 
     Jb = Jb_interpolated
     relativeTolerance = 1e-6

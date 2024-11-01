@@ -6,6 +6,7 @@ import importlib
 
 # package level modules
 from .boltzmann import BoltzmannSolver
+from .config import Config
 from .collisionArray import CollisionArray
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
 from .effectivePotential import EffectivePotential, VeffDerivativeSettings
@@ -25,8 +26,6 @@ from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
 from .results import WallGoResults
 from .utils import getSafePathToResource
-
-from .config import Config
 
 
 # list of submodules for lazy importing
