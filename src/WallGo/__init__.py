@@ -1,5 +1,6 @@
 """Initialising WallGo package"""
 
+import types
 import warnings
 
 # package level modules
@@ -25,6 +26,16 @@ from .results import WallGoResults
 from .utils import getSafePathToResource
 
 from .config import Config
+
+
+def __getattr__(attr: str) -> types.ModuleType:  # pylint: disable=invalid-name
+    """Lazy subpackage import, following Numpy"""
+    if attr == "PotentialTools":
+        import WallGo.PotentialTools as PotentialTools  # pylint: disable=import-outside-toplevel
+        return PotentialTools
+    raise AttributeError(
+        f"module {__name__} has no attribute {attr}"
+    )
 
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
