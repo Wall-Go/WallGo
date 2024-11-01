@@ -2,6 +2,7 @@
 
 import types
 import warnings
+import importlib
 
 # package level modules
 from .boltzmann import BoltzmannSolver
@@ -28,14 +29,18 @@ from .utils import getSafePathToResource
 from .config import Config
 
 
-def __getattr__(attr: str) -> types.ModuleType:  # pylint: disable=invalid-name
-    """Lazy subpackage import, following Numpy"""
-    if attr == "PotentialTools":
-        from . import PotentialTools # pylint: disable=import-outside-toplevel
-        return PotentialTools
-    raise AttributeError(
-        f"module {__name__} has no attribute {attr}"
-    )
+# list of submodules for lazy importing
+submodules = ["PotentialTools"]
+
+
+def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
+    """Lazy subpackage import, following Numpy and Scipy"""
+    if name in submodules:
+        return importlib.import_module(f'WallGo.{name}')
+    try:
+        return globals()[name]
+    except KeyError as esc:
+        raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
 
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
