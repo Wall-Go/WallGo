@@ -40,7 +40,6 @@ import WallGo  # Whole package, in particular we get WallGo._initializeInternal(
 from WallGo import Fields, GenericModel, Particle
 from WallGo.interpolatableFunction import EExtrapolationType
 
-from WallGo import PotentialTools
 from WallGo.PotentialTools import EffectivePotentialNoResum, EImaginaryOption
 
 # Add the Models folder to the path; need to import the base example

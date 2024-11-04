@@ -30,43 +30,6 @@ from .utils import getSafePathToResource
 # list of submodules for lazy importing
 submodules = ["PotentialTools"]
 
-# This allows: `from WallGo import *`
-__all__ = submodules + [
-    "BoltzmannSolver",
-    "Config",
-    "CollisionArray",
-    "PhaseInfo",
-    "BoltzmannBackground",
-    "BoltzmannDeltas",
-    "WallParams",
-    "EffectivePotential",
-    "VeffDerivativeSettings",
-    "WallGoError",
-    "WallGoPhaseValidationError",
-    "CollisionLoadError",
-    "Fields",
-    "FreeEnergy",
-    "GenericModel",
-    "Grid",
-    "Grid3Scales",
-    "Hydrodynamics",
-    "HydrodynamicsTemplateModel",
-    "InterpolatableFunction",
-    "EExtrapolationType",
-    "WallGoManager",
-    "WallSolverSettings",
-    "Particle",
-    "Polynomial",
-    "Thermodynamics",
-    "EOM",
-    "WallGoResults",
-    "getSafePathToResource",
-]
-
-
-def __dir__() -> list[str]:
-    return __all__
-
 
 def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
     """Lazy subpackage import, following Numpy and Scipy"""
