@@ -4,6 +4,9 @@ import types
 import warnings
 import importlib
 
+# subpackage import
+from . import PotentialTools
+
 # package level modules
 from .boltzmann import BoltzmannSolver
 from .config import Config
@@ -28,54 +31,54 @@ from .results import WallGoResults
 from .utils import getSafePathToResource
 
 # list of submodules for lazy importing
-submodules = ["PotentialTools"]
+# submodules = ["PotentialTools"]
 
 # This allows: `from WallGo import *`
-__all__ = submodules + [
-    "BoltzmannSolver",
-    "Config",
-    "CollisionArray",
-    "PhaseInfo",
-    "BoltzmannBackground",
-    "BoltzmannDeltas",
-    "WallParams",
-    "EffectivePotential",
-    "VeffDerivativeSettings",
-    "WallGoError",
-    "WallGoPhaseValidationError",
-    "CollisionLoadError",
-    "Fields",
-    "FreeEnergy",
-    "GenericModel",
-    "Grid",
-    "Grid3Scales",
-    "Hydrodynamics",
-    "HydrodynamicsTemplateModel",
-    "InterpolatableFunction",
-    "EExtrapolationType",
-    "WallGoManager",
-    "WallSolverSettings",
-    "Particle",
-    "Polynomial",
-    "Thermodynamics",
-    "EOM",
-    "WallGoResults",
-    "getSafePathToResource",
-]
+# __all__ = submodules + [
+#     "BoltzmannSolver",
+#     "Config",
+#     "CollisionArray",
+#     "PhaseInfo",
+#     "BoltzmannBackground",
+#     "BoltzmannDeltas",
+#     "WallParams",
+#     "EffectivePotential",
+#     "VeffDerivativeSettings",
+#     "WallGoError",
+#     "WallGoPhaseValidationError",
+#     "CollisionLoadError",
+#     "Fields",
+#     "FreeEnergy",
+#     "GenericModel",
+#     "Grid",
+#     "Grid3Scales",
+#     "Hydrodynamics",
+#     "HydrodynamicsTemplateModel",
+#     "InterpolatableFunction",
+#     "EExtrapolationType",
+#     "WallGoManager",
+#     "WallSolverSettings",
+#     "Particle",
+#     "Polynomial",
+#     "Thermodynamics",
+#     "EOM",
+#     "WallGoResults",
+#     "getSafePathToResource",
+# ]
 
 
-def __dir__() -> list[str]:
-    return __all__
+# def __dir__() -> list[str]:
+#     return __all__
 
 
-def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
-    """Lazy subpackage import, following Numpy and Scipy"""
-    if name in submodules:
-        return importlib.import_module(f'WallGo.{name}')
-    try:
-        return globals()[name]
-    except KeyError as esc:
-        raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
+# def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
+#     """Lazy subpackage import, following Numpy and Scipy"""
+#     if name in submodules:
+#         return importlib.import_module(f'WallGo.{name}')
+#     try:
+#         return globals()[name]
+#     except KeyError as esc:
+#         raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
 
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
