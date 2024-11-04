@@ -74,7 +74,7 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 # specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
-WallGo = ["Config/*.ini", "Data/*"]
+"WallGo.PotentialTools" = ["Config/*.ini", "Data/*.txt"]
 
 [tool.setuptools_scm]
 
