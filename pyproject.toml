@@ -69,6 +69,7 @@ Changelog = "https://github.com/Wall-Go/WallGo/blob/main/CHANGELOG.rst"
 
 [tool.setuptools]
 packages = ["WallGo", "WallGo.PotentialTools"]
+package-dir = {"" = "src"}
 include-package-data = true
 
 [tool.setuptools.package-data]
