@@ -37,10 +37,6 @@ Matrix elements
     for the `WallGoMatrix package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
     a look at the directory `tests/FeynCalc`.
 
-- **I do not have a Mathematica license, can I still generate matrix elements?**
-
-    [To do]
-
 Collision integrals
 ===================
 
