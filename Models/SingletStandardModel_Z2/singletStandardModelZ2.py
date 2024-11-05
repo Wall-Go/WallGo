@@ -59,7 +59,7 @@ class SingletSMZ2(GenericModel):
     Z2 symmetric SM + singlet model.
 
     The potential is given by:
-    V = msq |phi|^2 + lam |phi|^4 + 1/2 b2 S^2 + 1/4 b4 S^4 + 1/2 a2 |phi|^2 S^2
+    V = 1/2 muHsq |phi|^2 + 1/4 lHH |phi|^4 + 1/2 muSsq S^2 + 1/4 lSS S^4 + 1/4 lHS |phi|^2 S^2
 
     This class inherits from the GenericModel class and implements the necessary
     methods for the WallGo package.
@@ -195,14 +195,14 @@ class SingletSMZ2(GenericModel):
 
         # these are direct inputs:
         modelParameters["RGScale"] = inputParameters["RGScale"]
-        modelParameters["a2"] = inputParameters["a2"]
-        modelParameters["b4"] = inputParameters["b4"]
+        modelParameters["lHS"] = inputParameters["lHS"]
+        modelParameters["lSS"] = inputParameters["lSS"]
 
-        modelParameters["lambda"] = 0.5 * massh1**2 / v0**2
+        modelParameters["lHH"] = 0.5 * massh1**2 / v0**2
         # should be same as the following:
-        # modelParameters["msq"] = -massh1**2 / 2.
-        modelParameters["msq"] = -modelParameters["lambda"] * v0**2
-        modelParameters["b2"] = massh2**2 - 0.5 * v0**2 * inputParameters["a2"]
+        # modelParameters["muHsq"] = -massh1**2 / 2.
+        modelParameters["muHsq"] = -modelParameters["lHH"] * v0**2
+        modelParameters["muSsq"] = massh2**2 - 0.5 * v0**2 * inputParameters["lHS"]
 
         # Then the gauge and Yukawa sector
         massT = inputParameters["Mt"]
@@ -352,19 +352,19 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         fields = Fields(fields)
         v, x = fields.getField(0), fields.getField(1)
 
-        msq = self.modelParameters["msq"]
-        b2 = self.modelParameters["b2"]
-        lam = self.modelParameters["lambda"]
-        b4 = self.modelParameters["b4"]
-        a2 = self.modelParameters["a2"]
+        muHsq = self.modelParameters["muHsq"]
+        muSsq = self.modelParameters["muSsq"]
+        lHH = self.modelParameters["lHH"]
+        lSS = self.modelParameters["lSS"]
+        lHS = self.modelParameters["lHS"]
 
         # tree level potential
         potentialTree = (
-            0.5 * msq * v**2
-            + 0.25 * lam * v**4
-            + 0.5 * b2 * x**2
-            + 0.25 * b4 * x**4
-            + 0.25 * a2 * v**2 * x**2
+            0.5 * muHsq * v**2
+            + 0.25 * lHH * v**4
+            + 0.5 * muSsq * x**2
+            + 0.25 * lSS * x**4
+            + 0.25 * lHS * v**2 * x**2
         )
 
         # Particle masses and coefficients for the CW potential
@@ -438,16 +438,16 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
 
         # Scalar masses, just diagonalizing manually. matrix (A C // C B)
         mass00 = (
-            self.modelParameters["msq"]
-            + 0.5 * self.modelParameters["a2"] * x**2
-            + 3 * self.modelParameters["lambda"] * v**2
+            self.modelParameters["muHsq"]
+            + 0.5 * self.modelParameters["lHS"] * x**2
+            + 3 * self.modelParameters["lHH"] * v**2
         )
         mass11 = (
-            self.modelParameters["b2"]
-            + 0.5 * self.modelParameters["a2"] * v**2
-            + 3 * self.modelParameters["b4"] * x**2
+            self.modelParameters["muSsq"]
+            + 0.5 * self.modelParameters["lHS"] * v**2
+            + 3 * self.modelParameters["lSS"] * x**2
         )
-        mass01 = self.modelParameters["a2"] * v * x
+        mass01 = self.modelParameters["lHS"] * v * x
         thingUnderSqrt = (mass00 - mass11) ** 2 + 4 * mass01**2
 
         msqEig1 = 0.5 * (mass00 + mass11 - np.sqrt(thingUnderSqrt))
@@ -457,9 +457,9 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         mZsq = mWsq + self.modelParameters["g1"] ** 2 * v**2 / 4
         # Goldstones
         mGsq = (
-            self.modelParameters["msq"]
-            + self.modelParameters["lambda"] * v**2
-            + 0.5 * self.modelParameters["a2"] * x**2
+            self.modelParameters["muHsq"]
+            + self.modelParameters["lHH"] * v**2
+            + 0.5 * self.modelParameters["lHS"] * x**2
         )
 
         # h, s, chi, W, Z
@@ -697,8 +697,8 @@ class SingletStandardModelExample(WallGoExampleBase):
                     "g3": 1.2279920495357861,
                     "mh1": 125.0,
                     "mh2": 120.0,
-                    "a2": 0.9,
-                    "b4": 1.0,
+                    "lHS": 0.9,
+                    "lSS": 1.0,
                 },
                 WallGo.PhaseInfo(
                     temperature=100.0,  # nucleation temperature
