@@ -54,6 +54,7 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-automodapi",
     "sphinxcontrib-bibtex",
+    "WallGoCollision",
 ]
 lint = [
     "black",
