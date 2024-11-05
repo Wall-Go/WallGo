@@ -53,7 +53,7 @@ Once these two classes have been defined, we can now run WallGo to compute the b
 
 .. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 155-215
+   :lines: 155-216
 
 **********
 References
