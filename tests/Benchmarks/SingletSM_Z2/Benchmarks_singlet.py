@@ -14,8 +14,8 @@ BM1 = BenchmarkPoint(
         # scalar specific, choose Benoit benchmark values
         "mh1": 125.0,
         "mh2": 120.0,
-        "a2": 0.9,
-        "b4": 1.0,
+        "lHS": 0.9,
+        "lSS": 1.0,
     },
     phaseInfo={
         "Tn": 100.0,
@@ -62,8 +62,8 @@ BM2 = BenchmarkPoint(
         "g3": 1.2279920495357861,
         "mh1": 125.0,
         "mh2": 160.0,
-        "a2": 1.2,
-        "b4": 1.0,
+        "lHS": 1.2,
+        "lSS": 1.0,
     },
     {},
 )
@@ -81,8 +81,8 @@ BM3 = BenchmarkPoint(
         # scalar specific, choose Benoit benchmark values
         "mh1": 125.0,
         "mh2": 160.0,
-        "a2": 1.6,
-        "b4": 1.0,
+        "lHS": 1.6,
+        "lSS": 1.0,
     },
     {},
 )
@@ -97,8 +97,8 @@ BM4 = BenchmarkPoint(
         "g3": 1.2279920495357861,
         "mh1": 125.0,
         "mh2": 160.0,
-        "a2": 1.2,
-        "b4": 1.0,
+        "lHS": 1.2,
+        "lSS": 1.0,
     },
     {},
 )
