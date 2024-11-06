@@ -37,12 +37,15 @@ class Particle:  # pylint: disable=too-few-public-methods
             and match the intended particle index in matrix elements.
         msqVacuum : function
             Function :math:`m^2_0(\phi)`, should take a Fields or FieldPoint object and
-            return an array of length Fields.NumPoints().
+            return an array of length Fields.NumPoints(). The background field dependent
+            but temperature independent part of the effective mass squared.
         msqDerivative : function
             Function :math:`d(m_0^2)/d(\phi)`, should take a Fields or FieldPoints
             object and return an array of shape Fields.shape.
         msqThermal : function
-            Function :math:`m^2_T(T)`, should take a float and return one.
+            Function :math:`m^2_T(T)`, should take a float and return one. The
+            temperature dependent but background field independent part of the
+            effective mass squared.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
         totalDOFs : int
