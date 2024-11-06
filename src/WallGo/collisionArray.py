@@ -19,8 +19,8 @@ from .exceptions import CollisionLoadError
 class CollisionArray:
     r"""
     Class used to load, transform, interpolate and hold the collision array
-    which is needed in :py:data:`WallGo.BoltzmannSolver`. Internally the collision array
-    is represented by a :py:data:`WallGo.Polynomial` object. Specifically, this
+    which is needed in :py:class:`WallGo.BoltzmannSolver`. Internally the collision array
+    is represented by a :py:class:`WallGo.Polynomial` object. Specifically, this
     describes a rank-4 tensor :math:`C_{ab}[\bar{T}_j(\rho_{z}^{(\alpha)}) \tilde{T}_k(\rho_{\parallel}^{(\beta)})]` where
     the :math:`\rho` are momenta on the grid, and the particle indices :math:`a, b` are fixed. Index ordering is hardcoded as:
     :math:`\alpha, \beta, j, k`.
