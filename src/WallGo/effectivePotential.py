@@ -34,9 +34,9 @@ class EffectivePotential(ABC):
     r"""Base class for the effective potential Veff. WallGo uses this to identify phases and their temperature dependence, 
     and computing free energies (pressures) in the two phases.
     
-    Hydrodynamical routines in WallGo need the full pressure in the plasma, which in principle is :math:`p = -V_{\rm eff}(\phi)` if :math:`\phi` is a local minimum.
-    However for phase transitions it is common to neglect field-independent parts of :math:`V_{\rm eff}`, for example one may choose normalization so that :math:`V_{\rm eff}(0) = 0`.
-    Meanwhile for hydrodynamics we require knowledge of all temperature-dependent parts.
+    Hydrodynamical routines in WallGo require the full pressure in the plasma, which in principle is :math:`p = -V_{\rm eff}(\phi)` if :math:`\phi` is a local minimum.
+    One should not neglect field-independent parts of :math:`V_{\rm eff}` here, for example one may not choose a normalization so that :math:`V_{\rm eff}(0) = 0`.
+    For hydrodynamics we require knowledge of all temperature-dependent parts.
     With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
 
     The effective potential defined here is assumed to be real. That is, the
