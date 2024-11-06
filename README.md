@@ -1,4 +1,4 @@
-![WallGo](docs/source/figures/wallgo.svg)
+<img src="docs/source/figures/wallgo.svg" alt="WallGoLogo" width="200"/
 
 
 # WallGo
