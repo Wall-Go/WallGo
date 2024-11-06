@@ -250,10 +250,10 @@ class FreeEnergy(InterpolatableFunction):
         r"""Traces minimum of potential
 
         Finds field(T) for the range over which it exists. Takes a temperature
-        derivative of the minimsation condition, and solves for :math:`\phi_a^\text{min}(T)` as an initial value problem
+        derivative of the minimsation condition, and solves for :math:`\phi_i^\text{min}(T)` as an initial value problem
 
         .. math::
-            \frac{\partial^2 V^\text{eff}}{\partial \phi_a \partial \phi_b}\bigg|_{\phi=\phi^\text{min}} \frac{\partial \phi^\text{min}_b}{\partial T} + \frac{\partial^2 V^\text{eff}}{\partial \phi_a \partial T}\bigg|_{\phi=\phi^\text{min}} = 0,
+            \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial \phi_j}\bigg|_{\phi=\phi^\text{min}} \frac{\partial \phi^\text{min}_j}{\partial T} + \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial T}\bigg|_{\phi=\phi^\text{min}} = 0,
         
         starting from a solution at the starting temperature. It uses `scipy.integrate.solve_ivp` to solve the problem. Stops if a mass squared goes through zero.
 
