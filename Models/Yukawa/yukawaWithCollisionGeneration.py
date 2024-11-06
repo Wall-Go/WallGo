@@ -91,14 +91,17 @@ class YukawaModelExample(WallGoExampleBase):
         parameters.add("lam", wallGoModel.modelParameters["lam"])
         parameters.add("v", 0.0)
 
+        # fermion asymptotic thermal mass^2 (twice the static thermal mass)
+        # in units of T
         parameters.add(
-            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
-        )  # phi thermal mass^2 in units of T
+            "mf2", 1 / 8 * wallGoModel.modelParameters["y"] ** 2
+        )
+        # scalar thermal mass^2 in units of T
         parameters.add(
             "ms2",
             +wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
-        )  # psi thermal mass^2 in units of T
+        )
 
         collisionModelDefinition.defineParticleSpecies(phiParticle)
         collisionModelDefinition.defineParameters(parameters)
