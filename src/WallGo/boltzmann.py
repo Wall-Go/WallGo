@@ -210,15 +210,24 @@ class BoltzmannSolver:
         r"""
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
 
-        Equations are of the form
+        The Boltzmann equations are linearised and expressed in a spectral expansion,
+        so that take the form
 
         .. math::
-            \mathcal{O}_{ijk,abc} \delta f_{abc} = \mathcal{S}_{ijk},
+            \left(\mathcal{L}[\alpha,\beta,\gamma;i,j,k]\delta_{ab} + \bar T_i(\chi^{(\alpha)})\mathcal{C}_{ab}[\beta,\gamma; j,k] \right) \delta f^b_{ijk} = \mathcal{S}_a[\alpha,\beta,\gamma],
 
-        where letters from the middle of the alphabet denote points on the
-        coordinate lattice :math:`\{\xi_i,p_{z,j},p_{\Vert,k}\}`, and letters
-        from the beginning of the alphabet denote elements of the basis of
-        spectral functions :math:`\{\bar{T}_a, \bar{T}_b, \tilde{T}_c\}`.
+        where :math:`\mathcal{L}` is the Lioville operator, :math:`\mathcal{C}`
+        is the collision operator, and :math:`\mathcal{S}` is the source.
+        
+        As regards the indicies,
+            
+            - :math:`\alpha, \beta, \gamma` denote points on the coordinate lattice :math:`\{\xi^{(\alpha)},p_{z}^{(\beta)},p_{\Vert}^{(\gamma)}\}`,
+
+            - :math:`i, j, k` denote elements of the basis of spectral functions :math:`\{\bar{T}_i, \bar{T}_j, \tilde{T}_k\}`,
+
+            - :math:`a, b` denote particle species.
+        
+        For more details see the WallGo paper.
 
         Parameters
         ----------
