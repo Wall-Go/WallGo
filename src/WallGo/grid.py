@@ -56,16 +56,16 @@ class Grid:
         Compactified coordinates are chosen according to
 
         .. math::
-            \chi = -\cos\left(\frac{\pi i}{M}\right), \qquad
-            \rho_{z} = -\cos\left(\frac{\pi j}{N}\right), \qquad
-            \rho_{\Vert} = -\cos\left(\frac{\pi k}{N-1}\right),
+            \chi = -\cos\left(\frac{\pi \alpha}{M}\right), \qquad
+            \rho_{z} = -\cos\left(\frac{\pi \beta}{N}\right), \qquad
+            \rho_{\Vert} = -\cos\left(\frac{\pi \gamma}{N-1}\right),
 
         with integers :math:`i, j, k` taken over
 
         .. math::
-            i = 0, 1, \dots, M, \qquad
-            j = 0, 1, \dots, N, \qquad
-            k = 0, 1, \dots, N-1.
+            \alpha = 0, 1, \dots, M, \qquad
+            \beta = 0, 1, \dots, N, \qquad
+            \gamma = 0, 1, \dots, N-1.
 
         These are the Gauss-Lobatto collocation points, here with all
         boundary points included.
@@ -77,9 +77,9 @@ class Grid:
         resulting grid is
 
         .. math::
-            i = 1, 2, \dots, M-1, \qquad
-            j = 1, 2, \dots, N-1, \qquad
-            k = 0, 1, \dots, N-2.
+            \alpha = 1, 2, \dots, M-1, \qquad
+            \beta = 1, 2, \dots, N-1, \qquad
+            \gamma = 0, 1, \dots, N-2.
 
 
         Parameters
