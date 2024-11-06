@@ -20,20 +20,20 @@ def test_effectivePotential_V_singletSimple(
 
     # parameters
     thermalParameters = Veff.getThermalParameters(T)
-    msq = thermalParameters["msq"]
-    b2 = thermalParameters["b2"]
-    lam = thermalParameters["lambda"]
-    a2 = thermalParameters["a2"]
-    b4 = thermalParameters["b4"]
+    muHsq = thermalParameters["muHsq"]
+    muSsq = thermalParameters["muSsq"]
+    lam = thermalParameters["lHH"]
+    lHS = thermalParameters["lHS"]
+    lSS = thermalParameters["lSS"]
 
     # fields
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
+    v = np.sqrt(2 * (-lHS * muSsq + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam))
+    x = np.sqrt(2 * (-lHS * muHsq + 2 * lam * muSsq) / (lHS**2 - 4 * lSS * lam))
     fields = WallGo.Fields(([v, x]))
 
     # exact results
     f0 = -107.75 * np.pi**2 / 90 * T**4
-    VExact = (b4 * msq**2 - a2 * msq * b2 + lam * b2**2) / (a2**2 - 4 * b4 * lam)
+    VExact = (lSS * muHsq**2 - lHS * muHsq * muSsq + lam * muSsq**2) / (lHS**2 - 4 * lSS * lam)
 
     # tolerance
     Veff.dT = 1e-4 * T
@@ -58,15 +58,15 @@ def test_effectivePotential_dVdField_singletSimple(
 
     # parameters
     thermalParameters = Veff.getThermalParameters(T)
-    msq = thermalParameters["msq"]
-    b2 = thermalParameters["b2"]
-    lam = thermalParameters["lambda"]
-    a2 = thermalParameters["a2"]
-    b4 = thermalParameters["b4"]
+    muHsq = thermalParameters["muHsq"]
+    muSsq = thermalParameters["muSsq"]
+    lam = thermalParameters["lHH"]
+    lHS = thermalParameters["lHS"]
+    lSS = thermalParameters["lSS"]
 
     # fields
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
+    v = np.sqrt(2 * (-lHS * muSsq + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam))
+    x = np.sqrt(2 * (-lHS * muHsq + 2 * lam * muSsq) / (lHS**2 - 4 * lSS * lam))
     fields = WallGo.Fields(([v, x]))
 
     # exact results
@@ -96,25 +96,25 @@ def test_effectivePotential_dVdT_singletSimple(
 
     # parameters
     thermalParameters = Veff.getThermalParameters(T)
-    msq = thermalParameters["msq"]
-    b2 = thermalParameters["b2"]
-    lam = thermalParameters["lambda"]
-    a2 = thermalParameters["a2"]
-    b4 = thermalParameters["b4"]
+    muHsq = thermalParameters["muHsq"]
+    muSsq = thermalParameters["muSsq"]
+    lam = thermalParameters["lHH"]
+    lHS = thermalParameters["lHS"]
+    lSS = thermalParameters["lSS"]
     vacuumParameters = Veff.modelParameters
-    msq0 = vacuumParameters["msq"]
-    b20 = vacuumParameters["b2"]
+    muHsq0 = vacuumParameters["muHsq"]
+    muSsq0 = vacuumParameters["muSsq"]
 
     # fields
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
+    v = np.sqrt(2 * (-lHS * muSsq + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam))
+    x = np.sqrt(2 * (-lHS * muHsq + 2 * lam * muSsq) / (lHS**2 - 4 * lSS * lam))
     fields = WallGo.Fields(([v, x]))
 
     # exact results
     dVdTExact = (
         -107.75 * np.pi**2 / 90 * 4 * T**3
-        + (msq - msq0) / T * v**2
-        + (b2 - b20) / T * x**2
+        + (muHsq - muHsq0) / T * v**2
+        + (muSsq - muSsq0) / T * x**2
     )
 
     # tolerance
@@ -140,25 +140,25 @@ def test_effectivePotential_d2VdFielddT_singletSimple(
 
     # parameters
     thermalParameters = Veff.getThermalParameters(T)
-    msq = thermalParameters["msq"]
-    b2 = thermalParameters["b2"]
-    lam = thermalParameters["lambda"]
-    a2 = thermalParameters["a2"]
-    b4 = thermalParameters["b4"]
+    muHsq = thermalParameters["muHsq"]
+    muSsq = thermalParameters["muSsq"]
+    lam = thermalParameters["lHH"]
+    lHS = thermalParameters["lHS"]
+    lSS = thermalParameters["lSS"]
     vacuumParameters = Veff.modelParameters
-    msq0 = vacuumParameters["msq"]
-    b20 = vacuumParameters["b2"]
+    muHsq0 = vacuumParameters["muHsq"]
+    muSsq0 = vacuumParameters["muSsq"]
 
     # fields
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
+    v = np.sqrt(2 * (-lHS * muSsq + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam))
+    x = np.sqrt(2 * (-lHS * muHsq + 2 * lam * muSsq) / (lHS**2 - 4 * lSS * lam))
     fields = WallGo.Fields(([v, x]))
 
     # exact results
     d2VdFielddTExact = np.array(
         [
-            2 * (msq - msq0) / T * v,
-            2 * (b2 - b20) / T * x,
+            2 * (muHsq - muHsq0) / T * v,
+            2 * (muSsq - muSsq0) / T * x,
         ]
     )
 
@@ -185,25 +185,25 @@ def test_effectivePotential_d2VdField2_singletSimple(
 
     # parameters
     thermalParameters = Veff.getThermalParameters(T)
-    msq = thermalParameters["msq"]
-    b2 = thermalParameters["b2"]
-    lam = thermalParameters["lambda"]
-    a2 = thermalParameters["a2"]
-    b4 = thermalParameters["b4"]
+    muHsq = thermalParameters["muHsq"]
+    muSsq = thermalParameters["muSsq"]
+    lam = thermalParameters["lHH"]
+    lHS = thermalParameters["lHS"]
+    lSS = thermalParameters["lSS"]
 
     # fields
-    v = np.sqrt(2 * (-a2 * b2 + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam))
-    x = np.sqrt(2 * (-a2 * msq + 2 * lam * b2) / (a2**2 - 4 * b4 * lam))
+    v = np.sqrt(2 * (-lHS * muSsq + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam))
+    x = np.sqrt(2 * (-lHS * muHsq + 2 * lam * muSsq) / (lHS**2 - 4 * lSS * lam))
     fields = WallGo.Fields(([v, x]))
 
     # exact results
-    a = 4 * lam * (-(a2 * b2) + 2 * b4 * msq) / (a2**2 - 4 * b4 * lam)
+    a = 4 * lam * (-(lHS * muSsq) + 2 * lSS * muHsq) / (lHS**2 - 4 * lSS * lam)
     b = (
-        (2 * a2)
-        * np.sqrt((2 * b2 * lam - a2 * msq) * (-(a2 * b2) + 2 * b4 * msq))
-        / (a2**2 - 4 * b4 * lam)
+        (2 * lHS)
+        * np.sqrt((2 * muSsq * lam - lHS * muHsq) * (-(lHS * muSsq) + 2 * lSS * muHsq))
+        / (lHS**2 - 4 * lSS * lam)
     )
-    d = b4 * (8 * b2 * lam - 4 * a2 * msq) / (a2**2 - 4 * b4 * lam)
+    d = lSS * (8 * muSsq * lam - 4 * lHS * muHsq) / (lHS**2 - 4 * lSS * lam)
     d2VdField2 = np.array([[a, b], [b, d]])
 
 

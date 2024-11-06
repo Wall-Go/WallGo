@@ -34,14 +34,14 @@ def test_thermodynamics_Tc_singletSimple(
     Veff = thermodynamics.freeEnergyLow.effectivePotential
     p = Veff.modelParameters
     A = (
-        p["a2"] / 24
-        + (p["g1"] ** 2 + 3 * p["g2"] ** 2 + 8 * p["lambda"] + 4 * p["yt"] ** 2) / 16
+        p["lHS"] / 24
+        + (p["g1"] ** 2 + 3 * p["g2"] ** 2 + 8 * p["lHH"] + 4 * p["yt"] ** 2) / 16
     )
-    B = p["a2"] / 6 + p["b4"] / 4
+    B = p["lHS"] / 6 + p["lSS"] / 4
     expectedTc = np.sqrt(
         (
-            (p["b2"] * np.sqrt(p["lambda"]) - p["msq"] * np.sqrt(p["b4"]))
-            / (A * np.sqrt(p["b4"]) - B * np.sqrt(p["lambda"]))
+            (p["muSsq"] * np.sqrt(p["lHH"]) - p["muHsq"] * np.sqrt(p["lSS"]))
+            / (A * np.sqrt(p["lSS"]) - B * np.sqrt(p["lHH"]))
         )
     )
 

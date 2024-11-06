@@ -20,10 +20,10 @@ def test_freeEnergy_singletSimple(
     # exact results
     thermalParameters = freeEnergy1.effectivePotential.getThermalParameters(T)
     f0 = -107.75 * np.pi ** 2 / 90 * T ** 4
-    vExact = np.sqrt(-thermalParameters["msq"] / thermalParameters["lambda"])
-    VvExact = -0.25 * thermalParameters["msq"] ** 2 / thermalParameters["lambda"]
-    xExact = np.sqrt(-thermalParameters["b2"] / thermalParameters["b4"])
-    VxExact = -0.25 * thermalParameters["b2"] ** 2 / thermalParameters["b4"]
+    vExact = np.sqrt(-thermalParameters["muHsq"] / thermalParameters["lHH"])
+    VvExact = -0.25 * thermalParameters["muHsq"] ** 2 / thermalParameters["lHH"]
+    xExact = np.sqrt(-thermalParameters["muSsq"] / thermalParameters["lSS"])
+    VxExact = -0.25 * thermalParameters["muSsq"] ** 2 / thermalParameters["lSS"]
 
     # tolerance
     rTol = 1e-5
