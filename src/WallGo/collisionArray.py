@@ -21,9 +21,10 @@ class CollisionArray:
     Class used to load, transform, interpolate and hold the collision array
     which is needed in :py:data:`WallGo.BoltzmannSolver`. Internally the collision array
     is represented by a :py:data:`WallGo.Polynomial` object. Specifically, this
-    describes a rank-4 tensor :math:`C[P_k(p_{z}^{(i)}) P_l(p_{\parallel}^{(j)})]` where
-    the :math:`p` are momenta on the grid. Index ordering is hardcoded as: :math:`ijkl`.
-    Currently we have one CollisionArray object for each pair of off-equilibrium
+    describes a rank-4 tensor :math:`C_{ab}[\bar{T}_j(\rho_{z}^{(\alpha)}) \tilde{T}_k(\rho_{\parallel}^{(\beta)})]` where
+    the :math:`\rho` are momenta on the grid, and the particle indices :math:`a, b` are fixed. Index ordering is hardcoded as:
+    :math:`\alpha, \beta, j, k`.
+    There is one CollisionArray object for each pair of off-equilibrium
     particles.
     """
 
@@ -45,7 +46,7 @@ class CollisionArray:
         "polynomial1",
         "polynomial2",
     )
-    r"""Static axis labels in correct order, :math:`ijklmn`."""
+    r"""Static axis labels in correct order, :math:`a, \alpha, \beta, b, j, k`."""
 
     def __init__(self, grid: Grid, basisType: str, particles: list[Particle]):
         """
