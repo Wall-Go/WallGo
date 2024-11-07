@@ -211,7 +211,7 @@ class BoltzmannSolver:
         Solves Boltzmann equation for :math:`\delta f`, equation (32) of [LC22].
 
         The Boltzmann equations are linearised and expressed in a spectral expansion,
-        so that take the form
+        so that they take the form
 
         .. math::
             \left(\mathcal{L}[\alpha,\beta,\gamma;i,j,k]\delta_{ab} + \bar T_i(\chi^{(\alpha)})\mathcal{C}_{ab}[\beta,\gamma; j,k] \right) \delta f^b_{ijk} = \mathcal{S}_a[\alpha,\beta,\gamma],
