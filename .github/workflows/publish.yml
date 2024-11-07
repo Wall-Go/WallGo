@@ -32,6 +32,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install build
 
+    - name: Check git status
+      run: |
+        git status
+        git log -n 2
+        git diff
+
     - name: Install WallGo Python package
       run: |
         pip uninstall WallGo
