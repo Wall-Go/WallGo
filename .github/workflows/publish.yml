@@ -33,7 +33,9 @@ jobs:
         pip install build
 
     - name: Install WallGo Python package
-      run: pip install -v .
+      run: |
+        pip uninstall WallGo
+        pip install . --upgrade -v
 
     - name: Build package
       run: python -m build
