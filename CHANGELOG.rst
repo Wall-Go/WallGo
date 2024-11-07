@@ -2,11 +2,16 @@
 Changelog
 ==================
 
+1.0.0 (2024-11-07)
+==================
+
+* WallGo released.
+
 0.1.0 (2024-10-08)
 ==================
 
 * WallGoCollision code migrated to a separate repository.
-* Alpha version goes public.
+* Alpha version made public.
 
 0.0.1 (2023-05-18)
 ==================
