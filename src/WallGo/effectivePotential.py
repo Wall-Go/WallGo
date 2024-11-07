@@ -35,7 +35,7 @@ class EffectivePotential(ABC):
     and computing free energies (pressures) in the two phases.
     
     Hydrodynamical routines in WallGo require the full pressure in the plasma, which in principle is :math:`p = -V_{\rm eff}(\phi)` if :math:`\phi` is a local minimum.
-    One should not neglect field-independent parts of :math:`V_{\rm eff}` that still depend on temperature. These temperature-dependent terms do have an effect on hydrodynamics.
+    One should not neglect field-independent parts of :math:`V_{\rm eff}` that still depend on temperature. These temperature-dependent terms do affect hydrodynamics.
     Hence, for example, one may *not* choose the common normalisation of :math:`V_{\rm eff}(0) = 0`, as this would eliminate these crucial terms.
     With this in mind, you should ensure that your effective potential is defined with full T-dependence included.
 
