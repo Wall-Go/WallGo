@@ -584,7 +584,7 @@ class WallGoManager:
 
         # We divide by Tnucl to get it in physical units of length
         tailLength = max(
-            meanFreePathScale, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
+            meanFreePathScale, 0.5 * wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
         ) / Tnucl
 
         if gridN % 2 == 0:
