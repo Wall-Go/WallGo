@@ -1251,17 +1251,17 @@ class EOM:
         gammaWall = 1 / np.sqrt(1 - velocityMid**2)
         """ The length of the tail inside typically scales like gamma, while the one
         outside like 1/gamma. We take the max because the tail lengths must be larger
-        than wallThicknessGrid*(1+2*smoothing)/ratioPointsWall """
+        than wallThicknessGrid*(1/2+smoothing)/ratioPointsWall """
         tailInside = max(
             self.meanFreePathScale * gammaWall * self.includeOffEq,
             wallThicknessGrid
-            * (1 + 2.1 * self.grid.smoothing)
+            * (0.5 + 1.05 * self.grid.smoothing)
             / self.grid.ratioPointsWall,
         )
         tailOutside = max(
             self.meanFreePathScale / gammaWall * self.includeOffEq,
             wallThicknessGrid
-            * (1 + 2.1 * self.grid.smoothing)
+            * (0.5 + 1.05 * self.grid.smoothing)
             / self.grid.ratioPointsWall,
         )
         self.grid.changePositionFalloffScale(

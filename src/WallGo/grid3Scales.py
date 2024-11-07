@@ -24,7 +24,7 @@ class Grid3Scales(Grid):
     thickness, so that
 
     .. math::
-        z'(\chi) \approx \frac{L}{r}\chi, \quad \chi \in [-r, r].
+        z'(\chi) \approx \frac{L}{r}, \quad \chi \in [-r, r].
 
     It is easier to find the derivative of a function that has these properties,
     and then integrate it. We choose here
@@ -36,9 +36,9 @@ class Grid3Scales(Grid):
     
     .. math::
         f(\chi) \approx \begin{cases}
-            \lambda_-,& \chi<-r,\\
+            2\lambda_-,& \chi<-r,\\
             L/r,& -r<\chi<r,\\
-            \lambda_+,& \chi>r.
+            2\lambda_+,& \chi>r.
         \end{cases}
     
     We choose :math:`f(\chi)` to be a sum of functions like
@@ -78,11 +78,11 @@ class Grid3Scales(Grid):
             (and :math:`\rho_z` and :math:`\rho_\Vert`) directions.
         tailLengthInside : float
             Decay length of the solution's tail inside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            than wallThickness*(1/2+smoothing)/ratioPointsWall. Should be
             expressed in physical units (the units used in EffectivePotential).
         tailLengthOutside : float
             Decay length of the solution's tail outside the wall. Should be larger
-            than wallThickness*(1+2*smoothing)/ratioPointsWall. Should be
+            than wallThickness*(1/2+smoothing)/ratioPointsWall. Should be
             expressed in physical units (the units used in EffectivePotential).
         wallThickness : float
             Thickness of the wall. Should be expressed in physical units
@@ -154,11 +154,11 @@ class Grid3Scales(Grid):
         assert wallThickness > 0, "Grid3Scales error: wallThickness must be positive."
         assert smoothing > 0, "Grid3Scales error: smoothness must be positive."
         assert (
-            tailLengthInside > wallThickness * (1 + 2 * smoothing) / ratioPointsWall
+            tailLengthInside > wallThickness * (1 / 2 + smoothing) / ratioPointsWall
         ), """Grid3Scales error: tailLengthInside must be greater than
         wallThickness*(1+2*smoothness)/ratioPointsWall."""
         assert (
-            tailLengthOutside > wallThickness * (1 + 2 * smoothing) / ratioPointsWall
+            tailLengthOutside > wallThickness * (1 / 2 + smoothing) / ratioPointsWall
         ), """Grid3Scales error: tailLengthOutside must be greater than
         wallThickness*(1+2*smoothness)/ratioPointsWall."""
         assert (
@@ -181,18 +181,18 @@ class Grid3Scales(Grid):
             * smoothing
             * wallThickness
             * ratioPointsWall**2
-            * (ratioPointsWall * tailLengthInside - wallThickness * (1 + smoothing))
+            * (2 * ratioPointsWall * tailLengthInside - wallThickness * (1 + smoothing))
         ) / abs(
-            ratioPointsWall * tailLengthInside - wallThickness * (1 + 2 * smoothing)
+            2 * ratioPointsWall * tailLengthInside - wallThickness * (1 + 2 * smoothing)
         )
         self.aOut = np.sqrt(
             4
             * smoothing
             * wallThickness
             * ratioPointsWall**2
-            * (ratioPointsWall * tailLengthOutside - wallThickness * (1 + smoothing))
+            * (2 * ratioPointsWall * tailLengthOutside - wallThickness * (1 + smoothing))
         ) / abs(
-            ratioPointsWall * tailLengthOutside - wallThickness * (1 + 2 * smoothing)
+            2 * ratioPointsWall * tailLengthOutside - wallThickness * (1 + 2 * smoothing)
         )
 
     def decompactify(
@@ -213,7 +213,7 @@ class Grid3Scales(Grid):
 
         def term1(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
             return np.array((1 - r)
-                * (r * tailOut - L)
+                * (2 * r * tailOut - L)
                 * np.arctanh(
                     (1 - x + np.sqrt(aOut**2 + (x - r) ** 2))
                     / np.sqrt(aOut**2 + (1 - r) ** 2)
@@ -225,7 +225,7 @@ class Grid3Scales(Grid):
 
         def term2(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
             return np.array(-(1 + r)
-                * (r * tailOut - L)
+                * (2 * r * tailOut - L)
                 * np.arctanh(
                     (1 + x - np.sqrt(aOut**2 + (x - r) ** 2))
                     / np.sqrt(aOut**2 + (1 + r) ** 2)
@@ -236,7 +236,7 @@ class Grid3Scales(Grid):
             )
         def term3(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
             return np.array((1 - r)
-                * (r * tailIn - L)
+                * (2 * r * tailIn - L)
                 * np.arctanh(
                     (1 + x - np.sqrt(aIn**2 + (x + r) ** 2))
                     / np.sqrt(aIn**2 + (1 - r) ** 2)
@@ -247,7 +247,7 @@ class Grid3Scales(Grid):
             )
         def term4(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
             return np.array(-(1 + r)
-                * (r * tailIn - L)
+                * (2 * r * tailIn - L)
                 * np.arctanh(
                     (1 - x + np.sqrt(aIn**2 + (x + r) ** 2))
                     / np.sqrt(aIn**2 + (1 + r) ** 2)
@@ -257,7 +257,7 @@ class Grid3Scales(Grid):
                 / r
             )
         def term5(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
-            return np.array((tailIn + tailOut - 4 * self.smoothing * L / r)
+            return np.array((2 * tailIn + 2 * tailOut - 4 * self.smoothing * L / r)
                             * np.arctanh(x)
             )
         def totalMapping(x: np.ndarray) -> np.ndarray: # pylint: disable=invalid-name
@@ -289,12 +289,12 @@ class Grid3Scales(Grid):
         aOut = self.aOut
 
         dzdzCompact = (
-            (tailIn - L / r)
+            (2 * tailIn - L / r)
             * (1 - (zCompact + r) / np.sqrt(aIn**2 + (zCompact + r) ** 2))
             / 2
         )
         dzdzCompact += (
-            (tailOut - L / r)
+            (2 * tailOut - L / r)
             * (1 + (zCompact - r) / np.sqrt(aOut**2 + (zCompact - r) ** 2))
             / 2
         )
