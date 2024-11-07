@@ -158,10 +158,10 @@ class WallGoResults:
     r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
 
     wallWidths: np.ndarray  # 1D array
-    r"""Bubble wall widths in each field direction, :math:`\delta_i`."""
+    r"""Bubble wall widths in each field direction, :math:`L_i`."""
 
     wallOffsets: np.ndarray  # 1D array
-    r"""Bubble wall offsets in each field direction, :math:`L_i`."""
+    r"""Bubble wall offsets in each field direction, :math:`\delta_i`."""
 
     velocityProfile: np.ndarray
     r"""Fluid velocity as a function of position, :math:`v_\text{pl}(\xi)`."""
