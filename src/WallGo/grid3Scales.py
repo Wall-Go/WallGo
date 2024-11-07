@@ -24,7 +24,7 @@ class Grid3Scales(Grid):
     thickness, so that
 
     .. math::
-        z'(\chi) \approx \frac{L}{r}\chi, \quad \chi \in [-r, r].
+        z'(\chi) \approx \frac{L}{r}, \quad \chi \in [-r, r].
 
     It is easier to find the derivative of a function that has these properties,
     and then integrate it. We choose here
