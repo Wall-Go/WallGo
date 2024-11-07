@@ -64,16 +64,11 @@ class YukawaModel(GenericModel):
                 )
             )
 
-        # Asymptotic thermal mass (twice the static thermal mass)
-        def psiMsqThermal(T: float) -> float:
-            return 1 / 8 * self.modelParameters["y"] ** 2 * T**2
-
         psiL = Particle(
             "psiL",
             index=1,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=2,
         )
@@ -82,7 +77,6 @@ class YukawaModel(GenericModel):
             index=2,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=2,
         )
