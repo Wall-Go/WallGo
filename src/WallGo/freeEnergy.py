@@ -247,10 +247,15 @@ class FreeEnergy(InterpolatableFunction):
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
     ) -> None:
-        """
-        Finds field(T) for the range over which it exists. Sets problem
-        up as an initial value problem and uses scipy.integrate.solve_ivp to
-        solve. Stops if we get sqrt(negative) or something like that.
+        r"""Traces minimum of potential
+
+        Finds field(T) for the range over which it exists. Takes a temperature
+        derivative of the minimsation condition, and solves for :math:`\phi_i^\text{min}(T)` as an initial value problem
+
+        .. math::
+            \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial \phi_j}\bigg|_{\phi=\phi^\text{min}} \frac{\partial \phi^\text{min}_j}{\partial T} + \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial T}\bigg|_{\phi=\phi^\text{min}} = 0,
+        
+        starting from a solution at the starting temperature. It uses `scipy.integrate.solve_ivp` to solve the problem. Stops if a mass squared goes through zero.
 
         Parameters
         ----------

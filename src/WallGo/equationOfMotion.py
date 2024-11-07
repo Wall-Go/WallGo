@@ -1,5 +1,5 @@
 """
-Class for solving the EOM and the hydrodynamic equations.
+Class for solving the equation of motion and the hydrodynamic equations.
 """
 
 import warnings
@@ -34,7 +34,7 @@ from .results import (
 class EOM:
     """
     Class that solves the energy-momentum conservation equations and the scalar
-    EOMs to determine the wall velocity.
+    equations of motion to determine the wall velocity.
     """
 
     def __init__(
@@ -156,7 +156,7 @@ class EOM:
         Returns
         -------
         WallGoResults
-            WallGoResults object containing the solution of the EOM.
+            WallGoResults object containing the solution of the equation of motion.
 
         """
 
@@ -725,7 +725,7 @@ class EOM:
             Total pressure on the wall.
         wallParams : WallParams
             WallParams object containing the wall thicknesses and wall offsets
-            that minimize the action and solve the EOM. Only returned if
+            that minimize the action and solve the equation of motion. Only returned if
             returnExtras is True.
         boltzmannResults : BoltzmannResults
             BoltzmannResults object containing the solution of the Boltzmann
