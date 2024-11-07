@@ -69,7 +69,12 @@ Issues = "https://github.com/Wall-Go/WallGo/issues"
 Changelog = "https://github.com/Wall-Go/WallGo/blob/main/CHANGELOG.rst"
 
 [tool.setuptools]
-packages = ["WallGo", "WallGo.PotentialTools"]
+packages = [
+    "WallGo",
+    "WallGo.PotentialTools",
+    "WallGo.PotentialTools.Config",
+    "WallGo.PotentialTools.Data",
+]
 package-dir = {"" = "src"}
 include-package-data = true
 
