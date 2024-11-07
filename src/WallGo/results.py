@@ -143,7 +143,7 @@ class WallGoResults:
     """Estimated error in bubble wall velocity :math:`\delta v_w`. None if no solution was found."""
 
     wallVelocityLTE: float | None
-    """Bubble wall velocity in local thermal equilibrium :math:`v_w^\text{LTE}`. None when looking for a 
+    r"""Bubble wall velocity in local thermal equilibrium :math:`v_w^\text{LTE}`. None when looking for a 
     detonation solution, since no detonation exists in LTE."""
 
     temperaturePlus: float
