@@ -177,7 +177,7 @@ class Hydrodynamics:
         r"""
         Finds the largest wall velocity for which the temperature of the plasma is
         within the allowed regime, by finding the velocity for which
-        :math:`Tm = TMaxLowT` or :math:`Tp = TMaxHighT`.
+        `Tm = TMaxLowT` or `Tp = TMaxHighT`.
         Returns the Jouguet velocity if no solution can be found.
 
         Returns
@@ -240,8 +240,8 @@ class Hydrodynamics:
         r"""
         Finds the smallest detonation wall velocity for which the temperature of the
         plasma is within the allowed range, by finding the velocity for which
-        :math:`Tm = TMaxLowT`. For detonations, :math:`Tp = Tn`, so always in the allowed range.
-        Returns :math:`1` if :math:`Tm` is above :math:`TMaxLowT` for :math:`vw = 1`, and returns the
+        `Tm = TMaxLowT`. For detonations, `Tp = Tn`, so always in the allowed range.
+        Returns `1` if `Tm` is above `TMaxLowT` for `vw = 1`, and returns the
         Jouguet velocity if no solution can be found.
 
         Returns
@@ -632,7 +632,7 @@ class Hydrodynamics:
         r"""
         Finds the smallest nucleation temperature possible for a given wall velocity :math:`v_w`.
         The strongest shock is found by finding the value of :math:`T_+` for which :math:`v_+=0` and
-        :math:`T_-` is :math:`TMinHydro` (very small). The correspdoning nucleation temperature is
+        :math:`T_-` is `TMinHydro` (very small). The correspdoning nucleation temperature is
         obtained from solveHydroShock at this value of :math:`T_+` and :math:`v_+=0`.
 
         Parameters
@@ -672,7 +672,7 @@ class Hydrodynamics:
     def minVelocity(self) -> float:
         r"""
         Finds the smallest velocity for which a deflagration/hybrid is possible for the
-        given nucleation temperature. Returns :math:`0` if no solution can be found.
+        given nucleation temperature. Returns `0` if no solution can be found.
 
         Returns
         -------
