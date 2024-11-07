@@ -125,15 +125,11 @@ class InertDoubletModel(GenericModel):
         def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * fields.getField(0)
 
-        def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
         topQuarkL = Particle(
             name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -144,7 +140,6 @@ class InertDoubletModel(GenericModel):
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -157,15 +152,11 @@ class InertDoubletModel(GenericModel):
         def WMsqDerivative(fields: Fields) -> Fields:  # pylint: disable=invalid-name
             return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
-        def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
-
         wBoson = Particle(
             name="W",
             index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
-            msqThermal=WMsqThermal,
             statistics="Boson",
             totalDOFs=9,
         )
@@ -177,16 +168,12 @@ class InertDoubletModel(GenericModel):
 
         def heavyScalarMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["lambda3"]*fields.getField(0)
-
-        def heavyScalarThermal(T: float) -> float:
-            return self.modelParameters["lambda3"] * T**2 / 24.0
         
         heavyScalar = Particle(
             name="A",
             index=6,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
-            msqThermal=heavyScalarThermal,
             statistics="Boson",
             totalDOFs=3,
         )
