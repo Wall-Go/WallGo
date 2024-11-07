@@ -36,7 +36,7 @@ class EffectivePotentialNoResum(EffectivePotential, ABC):
     Specialization of the abstract
     EffectivePotential class that implements common functions for computing
     the 1-loop potential at finite temperature, without any
-    assumptions regarding the temperature (no high- or low-\( T \) approximations).
+    assumptions regarding the temperature (no high- or low-:math:`T` approximations).
     In some literature this would be the *4D effective potential*.
     """
 
