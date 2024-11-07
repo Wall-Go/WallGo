@@ -130,15 +130,11 @@ class SingletSMZ2(GenericModel):
                 [fields.getField(0), 0 * fields.getField(1)]
             )
 
-        def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
         topQuark = Particle(
             "top",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=12,
         )
@@ -155,15 +151,11 @@ class SingletSMZ2(GenericModel):
             def gluonMsqDerivative(fields: Fields) -> Fields:
                 return np.zeros_like(fields)
 
-            def gluonMsqThermal(T: float) -> float:
-                return self.modelParameters["g3"] ** 2 * T**2 * 2.0
-
             gluon = Particle(
                 "gluon",
                 index=1,
                 msqVacuum=gluonMsqVacuum,
                 msqDerivative=gluonMsqDerivative,
-                msqThermal=gluonMsqThermal,
                 statistics="Boson",
                 totalDOFs=16,
             )

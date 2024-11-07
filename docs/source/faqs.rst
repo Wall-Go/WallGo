@@ -99,11 +99,6 @@ Model requirements
     Note that this parameter needs to be of the type Fields. If the particle is in equilibrium the type does not matter, and it
     msqVacuum can simply be set to zero.
 
-- **What is the msqThermal in the Particle defintion?**
-
-    This is the (field-independent) thermal mass of the particle. It is used in the propagator in the matrix elements, and
-    regularizes the IR-divergence in the limit of vanishing Mandelstam variables t and u.
-
 - **How do I cound the totalDOFs in the Particle definition?**
 
     totalDOFs counts the total number of degrees of freedom for a particle species. This includes summing over e.g. spins and colors. 
