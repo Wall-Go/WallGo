@@ -33,7 +33,7 @@ class WallSolverSettings:
     """If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).
     """
 
-    meanFreePathScale: float = 100.0
+    meanFreePathScale: float = 50.0
     """Estimate of the mean free path of the plasma in units of 1/Tn. This will be used
     to set the tail lengths in the Grid object. Default is 100.
     """

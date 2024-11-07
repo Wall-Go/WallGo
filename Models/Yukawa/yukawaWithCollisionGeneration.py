@@ -202,7 +202,7 @@ class YukawaModelExample(WallGoExampleBase):
                     # meanFreePathScale is determined here by the annihilation channels,
                     # and scales inversely with y^4 or lam^2. This is why
                     # meanFreePathScale has to be so large.
-                    meanFreePathScale=10000.0,  # In units of 1/Tnucl
+                    meanFreePathScale=5000.0,  # In units of 1/Tnucl
                     wallThicknessGuess=10.0,  # In units of 1/Tnucl
                 ),
             )
