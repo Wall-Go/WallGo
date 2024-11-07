@@ -4,7 +4,9 @@ quantities.
 """
 
 import numpy as np
-from .grid import Grid
+from grid import Grid
+
+import matplotlib.pyplot as plt
 
 
 class Grid3Scales(Grid):
@@ -305,3 +307,45 @@ class Grid3Scales(Grid):
         dppdppCompact = self.momentumFalloffT / (1 - ppCompact)
 
         return dzdzCompact, dpzdpzCompact, dppdppCompact
+
+
+if __name__ == "__main__":
+    M = 20
+    N = 11
+    tailLengthInside = 10
+    tailLengthOutside = 30
+    grid = Grid3Scales(M, N, tailLengthInside, tailLengthOutside, 1, 1, smoothing=1e-6)
+
+    xi = np.linspace(1-1e-6, 1, 8*M)[1:-1]
+    z, _, _ = grid.decompactify(xi, np.zeros(N), np.zeros(N))
+    zAsymptote = -tailLengthOutside * np.log(1 - xi) / 2
+
+    plt.plot(xi, z)
+    plt.plot(xi, zAsymptote)
+    plt.show()
+
+
+    xi = np.linspace(1-1e-6, 1, 8*M)[1:-1]
+    z, _, _ = grid.decompactify(xi, np.zeros(N), np.zeros(N))
+    zAsymptote = -tailLengthOutside * np.log(1 - xi)
+
+    plt.plot(xi, z)
+    plt.plot(xi, zAsymptote)
+    plt.show()
+
+    xi = -np.linspace(1-1e-6, 1, 8*M)[1:-1]
+    z, _, _ = grid.decompactify(xi, np.zeros(N), np.zeros(N))
+    zAsymptote = tailLengthInside * np.log(1 + xi) / 2
+
+    plt.plot(xi, z)
+    plt.plot(xi, zAsymptote)
+    plt.show()
+
+    xi = -np.linspace(1-1e-6, 1, 8*M)[1:-1]
+    z, _, _ = grid.decompactify(xi, np.zeros(N), np.zeros(N))
+    zAsymptote = tailLengthInside * np.log(1 + xi)
+
+    plt.plot(xi, z)
+    plt.plot(xi, zAsymptote)
+    plt.show()
+
