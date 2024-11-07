@@ -140,7 +140,7 @@ class WallGoResults:
     """Bubble wall velocity :math:`v_w`. None if no solution was found."""
 
     wallVelocityError: float | None
-    """Estimated error in bubble wall velocity :math:`\delta v_w`. None if no solution was found."""
+    r"""Estimated error in bubble wall velocity :math:`\delta v_w`. None if no solution was found."""
 
     wallVelocityLTE: float | None
     r"""Bubble wall velocity in local thermal equilibrium :math:`v_w^\text{LTE}`. None when looking for a 
