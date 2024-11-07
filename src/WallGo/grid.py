@@ -60,7 +60,7 @@ class Grid:
             \rho_{z} = -\cos\left(\frac{\pi \beta}{N}\right), \qquad
             \rho_{\Vert} = -\cos\left(\frac{\pi \gamma}{N-1}\right),
 
-        with integers :math:`i, j, k` taken over
+        with integers :math:`\alpha, \beta, \gamma` taken over
 
         .. math::
             \alpha = 0, 1, \dots, M, \qquad
