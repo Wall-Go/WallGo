@@ -1,4 +1,4 @@
-<img src="docs/source/figures/wallgo.svg" alt="WallGoLogo" width="200"/
+<img src="docs/source/figures/wallgo.svg" alt="WallGoLogo" width="200"/>
 
 
 # WallGo
