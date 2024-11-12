@@ -13,7 +13,19 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `arXiv:2410.00000 <https://arxiv.org/abs/2410.00000>`_.
+    support us by please citing the WallGo paper, `arXiv:2411.04970 <https://arxiv.org/abs/2411.04970>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
+
+        @article{Ekstedt:2024fyq,
+            author = "Ekstedt, Andreas and Gould, Oliver and Hirvonen, Joonas and Laurent, Benoit and Niemi, Lauri and Schicho, Philipp and van de Vis, Jorinde",
+            title = "{How fast does the WallGo? A package for computing wall velocities in first-order phase transitions}",
+            eprint = "2411.04970",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            reportNumber = "CERN-TH-2024-174, DESY-24-162, HIP-2024-21/TH",
+            month = "11",
+            year = "2024"
+        }
+
 
 Installation
 ============
