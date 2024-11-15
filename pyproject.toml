@@ -54,6 +54,7 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-automodapi",
     "sphinxcontrib-bibtex",
+    "WallGoCollision",
 ]
 lint = [
     "black",
@@ -68,16 +69,18 @@ Issues = "https://github.com/Wall-Go/WallGo/issues"
 Changelog = "https://github.com/Wall-Go/WallGo/blob/main/CHANGELOG.rst"
 
 [tool.setuptools]
+packages = [
+    "WallGo",
+    "WallGo.PotentialTools",
+    "WallGo.PotentialTools.Config",
+    "WallGo.PotentialTools.Data",
+]
+package-dir = {"" = "src"}
 include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["WallGo"]
-#exclude = [ ... ]
 
 [tool.setuptools.package-data]
 # specify data files relative to packages. These need to be located inside the package. Including files from outside packages is apparently deprecated
-WallGo = ["Config/*.ini", "Data/*"]
+"WallGo.PotentialTools" = ["Config/*.ini", "Data/*.txt"]
 
 [tool.setuptools_scm]
 

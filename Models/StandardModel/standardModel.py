@@ -119,15 +119,11 @@ class StandardModel(GenericModel):
         def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * fields.getField(0)
 
-        def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
         topQuarkL = Particle(
             name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -138,7 +134,6 @@ class StandardModel(GenericModel):
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -151,15 +146,11 @@ class StandardModel(GenericModel):
         def WMsqDerivative(fields: Fields) -> Fields:  # pylint: disable=invalid-name
             return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
-        def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * T**2 * 3.0 / 5.0
-
         wBoson = Particle(
             name="W",
-            index=6,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
-            msqThermal=WMsqThermal,
             statistics="Boson",
             totalDOFs=9,
         )
@@ -375,7 +366,7 @@ class StandardModelExample(WallGoExampleBase):
         self.bShouldRecalculateMatrixElements = False
         self.bShouldRecalculateCollisions = False
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/matrixElements.SMLightHiggs.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.ew.json"
         )
 
     # ~ Begin WallGoExampleBase interface
@@ -559,12 +550,12 @@ class StandardModelExample(WallGoExampleBase):
                         phaseLocation2=WallGo.Fields([valuesTn[i]]),
                     ),
                     WallGo.VeffDerivativeSettings(
-                        temperatureVariationScale=1.0, fieldValueVariationScale=[50.0]
+                        temperatureVariationScale=0.75, fieldValueVariationScale=[50.0]
                     ),
                     WallGo.WallSolverSettings(
                         # we actually do both cases in the common example
                         bIncludeOffEquilibrium=True,
-                        meanFreePathScale=200.0, # In units of 1/Tnucl
+                        meanFreePathScale=100.0, # In units of 1/Tnucl
                         wallThicknessGuess=20.0, # In units of 1/Tnucl
                     ),
                 )

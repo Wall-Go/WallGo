@@ -125,15 +125,11 @@ class InertDoubletModel(GenericModel):
         def topMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["yt"] ** 2 * fields.getField(0)
 
-        def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
         topQuarkL = Particle(
             name="TopL",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -144,7 +140,6 @@ class InertDoubletModel(GenericModel):
             index=1,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=6,
         )
@@ -157,15 +152,11 @@ class InertDoubletModel(GenericModel):
         def WMsqDerivative(fields: Fields) -> Fields:  # pylint: disable=invalid-name
             return self.modelParameters["g2"] ** 2 * fields.getField(0) / 2
 
-        def WMsqThermal(T: float) -> float:  # pylint: disable=invalid-name
-            return self.modelParameters["g2"] ** 2 * T**2 * 11.0 / 6.0
-
         wBoson = Particle(
             name="W",
-            index=6,
+            index=4,
             msqVacuum=WMsqVacuum,
             msqDerivative=WMsqDerivative,
-            msqThermal=WMsqThermal,
             statistics="Boson",
             totalDOFs=9,
         )
@@ -177,16 +168,12 @@ class InertDoubletModel(GenericModel):
 
         def heavyScalarMsqDerivative(fields: Fields) -> Fields:
             return self.modelParameters["lambda3"]*fields.getField(0)
-
-        def heavyScalarThermal(T: float) -> float:
-            return self.modelParameters["lambda3"] * T**2 / 24.0
         
         heavyScalar = Particle(
             name="A",
-            index=9,
+            index=6,
             msqVacuum=heavyScalarMsqVacuum,
             msqDerivative=heavyScalarMsqDerivative,
-            msqThermal=heavyScalarThermal,
             statistics="Boson",
             totalDOFs=3,
         )
@@ -732,11 +719,8 @@ class InertDoubletModelExample(WallGoExampleBase):
             "mw2", 11.0 * gw**2 / 6.0
         )  # W boson thermal mass^2 in units of T
         changedParams.add(
-            "mG2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
-        )  # goldstone thermal mass^2 in units of T
-        changedParams.add(
             "mh2", (6* lam1H+ 2 * lam3H +lam4H+ 3*(3 * gw ** 2 + g1**2) / 4 + 3 *yt**2) / 12.0
-        )  # Higgs thermal mass^2 in units of T
+        )  # Higgs and Goldstone thermal mass^2 in units of T
         changedParams.add(
             "mH2", lam3H / 24.0
         )  # H thermal mass^2 in units of T
@@ -864,7 +848,7 @@ class InertDoubletModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0, # In units of 1/Tnucl
+                    meanFreePathScale=50.0, # In units of 1/Tnucl
                     wallThicknessGuess=5.0, # In units of 1/Tnucl
                 ),
             )

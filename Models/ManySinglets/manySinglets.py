@@ -123,15 +123,11 @@ class NSinglets(GenericModel):
                 ]
             )
 
-        def topMsqThermal(T: float) -> float:
-            return self.modelParameters["g3"] ** 2 * T**2 / 6.0
-
         topQuark = Particle(
             "top",
             index=0,
             msqVacuum=topMsqVacuum,
             msqDerivative=topMsqDerivative,
-            msqThermal=topMsqThermal,
             statistics="Fermion",
             totalDOFs=12,
         )
@@ -742,7 +738,7 @@ class NSingletsModelExample(WallGoExampleBase):
                 WallGo.WallSolverSettings(
                     # we actually do both cases in the common example
                     bIncludeOffEquilibrium=True,
-                    meanFreePathScale=100.0,  # In units of 1/Tnucl
+                    meanFreePathScale=50.0,  # In units of 1/Tnucl
                     wallThicknessGuess=5.0,  # In units of 1/Tnucl
                 ),
             )

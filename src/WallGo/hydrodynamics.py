@@ -177,7 +177,7 @@ class Hydrodynamics:
         r"""
         Finds the largest wall velocity for which the temperature of the plasma is
         within the allowed regime, by finding the velocity for which
-        Tm = TMaxLowT or Tp = TMaxHighT.
+        `Tm = TMaxLowT` or `Tp = TMaxHighT`.
         Returns the Jouguet velocity if no solution can be found.
 
         Returns
@@ -240,9 +240,9 @@ class Hydrodynamics:
         r"""
         Finds the smallest detonation wall velocity for which the temperature of the
         plasma is within the allowed range, by finding the velocity for which
-        Tm = TMaxLowT. For detonations, Tp = Tn, so always in the allowed range.
-        Returns 1 if Tm is above TMaxLowT for vw = 1, and returns the Jouguet velocity
-        if no solution can be found.
+        `Tm = TMaxLowT`. For detonations, `Tp = Tn`, so always in the allowed range.
+        Returns `1` if `Tm` is above `TMaxLowT` for `vw = 1`, and returns the
+        Jouguet velocity if no solution can be found.
 
         Returns
         -------
@@ -630,10 +630,10 @@ class Hydrodynamics:
 
     def strongestShock(self, vw: float) -> float:
         r"""
-        Finds the smallest nucleation temperature possible for a given wall velocity vw.
-        The strongest shock is found by finding the value of Tp for which vp = 0 and
-        Tm is TMinHydro (very small). The correspdoning nucleation temperature is
-        obtained from solveHydroShock at this value of Tp and vp=0.
+        Finds the smallest nucleation temperature possible for a given wall velocity :math:`v_w`.
+        The strongest shock is found by finding the value of :math:`T_+` for which :math:`v_+=0` and
+        :math:`T_-` is `TMinHydro` (very small). The correspdoning nucleation temperature is
+        obtained from solveHydroShock at this value of :math:`T_+` and :math:`v_+=0`.
 
         Parameters
         ----------
@@ -672,7 +672,7 @@ class Hydrodynamics:
     def minVelocity(self) -> float:
         r"""
         Finds the smallest velocity for which a deflagration/hybrid is possible for the
-        given nucleation temperature. Returns 0 if no solution can be found.
+        given nucleation temperature. Returns `0` if no solution can be found.
 
         Returns
         -------
@@ -794,7 +794,7 @@ class Hydrodynamics:
         self, vwTry: float
     ) -> Tuple[float, float, float, float, float]:
         r"""
-        Finds the relevant boundary conditions (:math:`c_1,c_2,T_+,T_-` and the fluid
+        Finds the relevant boundary conditions :math:`c_1,c_2,T_+,T_-` and the fluid
         velocity in right in front of the wall) for the scalar and plasma equations of
         motion for a given wall velocity and the model's nucletion temperature.
 

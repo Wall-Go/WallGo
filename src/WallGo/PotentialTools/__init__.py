@@ -7,7 +7,6 @@ from .integrals import Integrals, JbIntegral, JfIntegral
 from .utils import getSafePathToResource
 
 
-
 _bInitialized = False  # pylint: disable=invalid-name
 """Configuration settings, using class from WallGo"""
 config = configparser.ConfigParser()

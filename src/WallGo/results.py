@@ -17,7 +17,7 @@ class BoltzmannResults:
 
     deltaF: np.ndarray
     r"""Deviation of probability density function from equilibrium,
-    :math:`\delta f(z, p_z, p_\parallel)`."""
+    :math:`\delta f(\xi, p_z, p_\parallel)`."""
 
     Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     r"""Relativistically invariant integrals over
@@ -121,9 +121,9 @@ class ESolutionType(Enum):
     """
 
     DEFLAGRATION_OR_RUNAWAY = 4
-    """
+    r"""
     Used when no stable solution was found while looking for a detonation with a
-    positive pressure at vw=vJ and negative at vw=1.
+    positive pressure at :math:`v_w=v_\text{J}` and negative at :math:`v_w=1`.
     """
 
     ERROR = 5
@@ -137,13 +137,13 @@ class WallGoResults:
     """
 
     wallVelocity: float | None
-    """Bubble wall velocity. None if no solution was found."""
+    """Bubble wall velocity :math:`v_w`. None if no solution was found."""
 
     wallVelocityError: float | None
-    """Estimated error in bubble wall velocity. None if no solution was found."""
+    r"""Estimated error in bubble wall velocity :math:`\delta v_w`. None if no solution was found."""
 
     wallVelocityLTE: float | None
-    """Bubble wall velocity in local thermal equilibrium. None when looking for a 
+    r"""Bubble wall velocity in local thermal equilibrium :math:`v_w^\text{LTE}`. None when looking for a 
     detonation solution, since no detonation exists in LTE."""
 
     temperaturePlus: float
@@ -158,19 +158,19 @@ class WallGoResults:
     r"""Jouguet velocity, :math:`v_J`, the smallest velocity for a detonation."""
 
     wallWidths: np.ndarray  # 1D array
-    """Bubble wall widths in each field direction."""
+    r"""Bubble wall widths in each field direction, :math:`L_i`."""
 
     wallOffsets: np.ndarray  # 1D array
-    """Bubble wall offsets in each field direction."""
+    r"""Bubble wall offsets in each field direction, :math:`\delta_i`."""
 
     velocityProfile: np.ndarray
-    """Fluid velocity as a function of position."""
+    r"""Fluid velocity as a function of position, :math:`v_\text{pl}(\xi)`."""
 
     fieldProfiles: Fields
-    """Field profile as a function of position."""
+    r"""Field profile as a function of position, :math:`\phi_i(\xi)`."""
 
     temperatureProfile: np.ndarray
-    """Temperarture profile as a function of position."""
+    r"""Temperarture profile as a function of position, :math:`T(\xi)`."""
 
     linearizationCriterion1: np.ndarray
     r"""Ratio of out-of-equilibrium and equilibrium pressures,
@@ -184,7 +184,7 @@ class WallGoResults:
 
     deltaF: np.ndarray
     r"""Deviation of probability density function from equilibrium,
-    :math:`\delta f(z, p_z, p_\parallel)`."""
+    :math:`\delta f(\xi, p_z, p_\parallel)`."""
 
     Deltas: BoltzmannDeltas  # pylint: disable=invalid-name
     r"""Relativistically invariant integrals over
@@ -196,7 +196,7 @@ class WallGoResults:
 
     deltaFFiniteDifference: np.ndarray
     r"""Deviation of probability density function from equilibrium,
-    :math:`\delta f(z, p_z, p_\parallel)`, using finite differences instead
+    :math:`\delta f(\xi, p_z, p_\parallel)`, using finite differences instead
     of spectral expansion."""
 
     DeltasFiniteDifference: BoltzmannDeltas  # pylint: disable=invalid-name

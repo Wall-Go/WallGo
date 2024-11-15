@@ -33,7 +33,7 @@ class WallSolverSettings:
     """If False, will ignore all out-of-equilibrium effects (no Boltzmann solving).
     """
 
-    meanFreePathScale: float = 100.0
+    meanFreePathScale: float = 50.0
     """Estimate of the mean free path of the plasma in units of 1/Tn. This will be used
     to set the tail lengths in the Grid object. Default is 100.
     """
@@ -67,10 +67,11 @@ class WallSolver:
 
 
 class WallGoManager:
-    """Defines a 'control' class for managing the program flow.
-    This should be better than writing the same stuff in every example main
-    function, and is good for hiding some of our internal implementation
-    details from the user.
+    """Manages WallGo program flow
+    
+    The WallGoManager is a 'control' class which collects together and manages
+    all the various parts of the WallGo Python package for the computation of
+    the bubble wall velocity.
     """
 
     def __init__(self) -> None:
@@ -121,13 +122,13 @@ class WallGoManager:
         phaseInfo: WallGo.PhaseInfo,
         veffDerivativeScales: WallGo.VeffDerivativeSettings,
     ) -> None:
-        """Must run before solveWall() and companions.
+        r"""Must run before :py:meth:`solveWall()` and companions.
         Initialization of internal objects related to equilibrium thermodynamics and
         hydrodynamics. Specifically, we verify that the input PhaseInfo is valid
         (distinct phases can be found in the effective potential),
         estimate the relevant temperature range for wall solving and create efficient
         approximations for phase free energies over this range using interpolation.
-        Finally, it initializes the Hydrodynamics and confirms that it can find a
+        Finally, it initializes :py:class:`Hydrodynamics` and confirms that it can find a
         reasonable value for the Jouguet velocity (the transition from hybdrid to
         detonation solutions).
         You are required to run this function whenever details of your
@@ -403,11 +404,13 @@ class WallGoManager:
         self,
         wallSolverSettings: WallSolverSettings,
     ) -> WallGoResults:
-        """
-        Solves the EOM and computes the wall velocity.
-        Must be ran after analyzeHydrodynamics() because
+        r"""
+        Solves for the wall velocity
+        
+        Solves the coupled scalar equation of motion and the Boltzmann equation.
+        Must be ran after :py:meth:`analyzeHydrodynamics()` because
         the solver depends on thermodynamical and hydrodynamical
-        info stored internally in the WallGoManager.
+        info stored internally in the :py:class:`WallGoManager`.
 
         Parameters
         ----------
@@ -484,13 +487,13 @@ class WallGoManager:
         )
 
     def setupWallSolver(self, wallSolverSettings: WallSolverSettings) -> WallSolver:
-        """Helper for constructing an EOM object whose state is tied to equilibrium
-        and hydrodynamical information stored in the WallGoManager.
-        Specifically, uses results of setupThermodynamicsHydrodynamics() to find
-        optimal grid settings for wall solving, and creates Grid and BoltzmannSolver
-        objects to use from within the EOM. Be aware that the created EOM object can
-        change state if its creator WallGoManager instance is modified
-        (eg. if setupThermodynamicsHydrodynamics() is called)!
+        r"""Helper for constructing an :py:class:`EOM` object whose state is tied to equilibrium
+        and hydrodynamical information stored in the :py:class:`WallGoManager`.
+        Specifically, uses results of :py:meth:`setupThermodynamicsHydrodynamics()` to find
+        optimal grid settings for wall solving, and creates :py:class:`Grid` and :py:class:`BoltzmannSolver`
+        objects to use from within the :py:class:`EOM`. Be aware that the created :py:class:`EOM` object can
+        change state if its creator :py:class:`WallGoManager` instance is modified
+        (e.g. if :py:meth:`setupThermodynamicsHydrodynamics()` is called)!
         """
 
         assert (
@@ -536,8 +539,8 @@ class WallGoManager:
         return WallSolver(eom, grid, boltzmannSolver, wallThickness / Tnucl)
 
     def _initHydrodynamics(self, thermodynamics: Thermodynamics) -> None:
-        """
-        Initialize the Hydrodynamics object.
+        r"""
+        Initialize the :py:class:`Hydrodynamics` object.
 
         Parameters
         ----------
@@ -558,7 +561,7 @@ class WallGoManager:
         initialMomentumFalloffScale: float,
     ) -> Grid3Scales:
         r"""
-        Initialize a Grid3Scales object
+        Initialize a :py:class:`Grid3Scales` object
 
         Parameters
         ----------
@@ -581,7 +584,7 @@ class WallGoManager:
 
         # We divide by Tnucl to get it in physical units of length
         tailLength = max(
-            meanFreePathScale, wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
+            meanFreePathScale, 0.5 * wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
         ) / Tnucl
 
         if gridN % 2 == 0:
@@ -604,9 +607,9 @@ class WallGoManager:
     def buildEOM(
         self, grid: Grid3Scales, boltzmannSolver: BoltzmannSolver, meanFreePathScale: float
     ) -> EOM:
-        """
-        Constructs an EOM object using internal state from the WallGoManager,
-        and the input Grid/BoltzmannSolver.
+        r"""
+        Constructs an :py:class:`EOM` object using internal state from the :py:class:`WallGoManager`,
+        and the input :py:class:`Grid` and :py:class:`BoltzmannSolver`.
 
         Parameters
         ----------

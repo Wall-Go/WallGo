@@ -8,11 +8,11 @@ additional functionality. The latest developments are available from our
 
 .. _git repository: https://github.com/Wall-Go/WallGo
 
-To install the development version, run the following::
+To install the development version, together with the requirements for building the docs, running the tests and linting, run the following::
 
     git clone https://github.com/Wall-Go/WallGo.git
-    cd bubble_det
-    python3 -m pip install -e ".[docs,tests,lint]"
+    cd WallGo
+    pip install -e ".[docs,tests,lint]"
 
 
 Tests can then be run with::

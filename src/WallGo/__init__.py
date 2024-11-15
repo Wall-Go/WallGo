@@ -1,12 +1,12 @@
 """Initialising WallGo package"""
 
+import types
 import warnings
-
-# subpackage
-from . import PotentialTools
+import importlib
 
 # package level modules
 from .boltzmann import BoltzmannSolver
+from .config import Config
 from .collisionArray import CollisionArray
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
 from .effectivePotential import EffectivePotential, VeffDerivativeSettings
@@ -27,7 +27,18 @@ from .equationOfMotion import EOM
 from .results import WallGoResults
 from .utils import getSafePathToResource
 
-from .config import Config
+# list of submodules for lazy importing
+submodules = ["PotentialTools"]
+
+
+def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-name
+    """Lazy subpackage import, following Numpy and Scipy"""
+    if name in submodules:
+        return importlib.import_module(f'WallGo.{name}')
+    try:
+        return globals()[name]
+    except KeyError as esc:
+        raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
 
 
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name

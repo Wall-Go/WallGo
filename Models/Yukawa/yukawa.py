@@ -64,25 +64,19 @@ class YukawaModel(GenericModel):
                 )
             )
 
-        # Thermal mass
-        def psiMsqThermal(T: float) -> float:
-            return 1 / 16 * self.modelParameters["y"] ** 2 * T**2
-
         psiL = Particle(
             "psiL",
-            index=1,  # old collision data has top at index 0
+            index=1,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=2,
         )
         psiR = Particle(
             "psiR",
-            index=2,  # old collision data has top at index 0
+            index=2,
             msqVacuum=psiMsqVacuum,
             msqDerivative=psiMsqDerivative,
-            msqThermal=psiMsqThermal,
             statistics="Fermion",
             totalDOFs=2,
         )
@@ -205,7 +199,7 @@ def main() -> None:
         # meanFreePathScale is determined here by the annihilation channels,
         # and scales inversely with y^4 or lam^2. This is why
         # meanFreePathScale has to be so large.
-        meanFreePathScale=10000.0,  # In units of 1/Tnucl
+        meanFreePathScale=5000.0,  # In units of 1/Tnucl
         wallThicknessGuess=10.0,  # In units of 1/Tnucl
     )
 

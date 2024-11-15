@@ -41,7 +41,7 @@ class YukawaModelExample(WallGoExampleBase):
         self.bShouldRecalculateCollisions = False
 
         self.matrixElementFile = pathlib.Path(
-            self.exampleBaseDirectory / "MatrixElements/MatrixElements_Yukawa.json"
+            self.exampleBaseDirectory / "MatrixElements/matrixElements.yukawa.json"
         )
 
     def initWallGoModel(self) -> "WallGo.GenericModel":
@@ -91,14 +91,17 @@ class YukawaModelExample(WallGoExampleBase):
         parameters.add("lam", wallGoModel.modelParameters["lam"])
         parameters.add("v", 0.0)
 
+        # fermion asymptotic thermal mass^2 (twice the static thermal mass)
+        # in units of T
         parameters.add(
-            "mf2", 1 / 16 * wallGoModel.modelParameters["y"] ** 2
-        )  # phi thermal mass^2 in units of T
+            "mf2", 1 / 8 * wallGoModel.modelParameters["y"] ** 2
+        )
+        # scalar thermal mass^2 in units of T
         parameters.add(
             "ms2",
             +wallGoModel.modelParameters["lam"] / 24.0
             + wallGoModel.modelParameters["y"] ** 2.0 / 6.0,
-        )  # psi thermal mass^2 in units of T
+        )
 
         collisionModelDefinition.defineParticleSpecies(phiParticle)
         collisionModelDefinition.defineParameters(parameters)
@@ -199,7 +202,7 @@ class YukawaModelExample(WallGoExampleBase):
                     # meanFreePathScale is determined here by the annihilation channels,
                     # and scales inversely with y^4 or lam^2. This is why
                     # meanFreePathScale has to be so large.
-                    meanFreePathScale=10000.0,  # In units of 1/Tnucl
+                    meanFreePathScale=5000.0,  # In units of 1/Tnucl
                     wallThicknessGuess=10.0,  # In units of 1/Tnucl
                 ),
             )
