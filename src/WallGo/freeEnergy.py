@@ -246,6 +246,7 @@ class FreeEnergy(InterpolatableFunction):
         rTol: float = 1e-6,
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
+        directionFirst: bool = True, # Starting direction of phase tracing 
     ) -> None:
         r"""Traces minimum of potential
 
@@ -271,8 +272,11 @@ class FreeEnergy(InterpolatableFunction):
             If True, stop tracing if a mass squared turns negative. The default is True.
         paranoid : bool, optional
             If True, re-solve minimum after every step. The default is True.
+        directionFirst : bool, optional
+            If True, phase tracing starts with increasing T, if False with decreasing T.
 
         """
+
         # make sure the initial conditions are extra accurate
         extraTol = 0.01 * rTol
 
@@ -316,17 +320,25 @@ class FreeEnergy(InterpolatableFunction):
             eigs = scipylinalg.eigvalsh(d2V)
             return float(min(eigs))
 
-        # arrays to store results
+        # array to store results of the phase tracing
         TList = np.full(1, T0)
-        fieldList = np.full((1, phase0.numFields()), Fields((phase0,)))
-        potentialEffList = np.full((1, 1), [potential0])
+
+#        # arrays to store results
+#        TList = np.full(1, T0)
+#        fieldList = np.full((1, phase0.numFields()), Fields((phase0,)))
+#        potentialEffList = np.full((1, 1), [potential0])
 
         # maximum temperature range
         TMin = max(self.minPossibleTemperature[0], TMin)
         TMax = min(self.maxPossibleTemperature[0], TMax)
 
         # iterating over up and down integration directions
-        endpoints = [TMax, TMin]
+        if directionFirst:
+            endpoints = [TMax, TMin]
+        
+        else:
+            endpoints = [TMin, TMax]
+
         for direction in [0, 1]:
             TEnd = endpoints[direction]
             ode = scipyint.RK45(
@@ -383,30 +395,48 @@ class FreeEnergy(InterpolatableFunction):
                     break
                 # append results to lists
                 TList = np.append(TList, [ode.t], axis=0)
-                fieldList = np.append(fieldList, [ode.y], axis=0)
-                potentialEffList = np.append(potentialEffList, [potentialEffT], axis=0)
+                if direction == 1:
+                    fieldList = np.append(fieldList, [ode.y], axis=0)
+                    potentialEffList = np.append(potentialEffList, [potentialEffT], axis=0)
+
             if direction == 0:
-                # populating results array
-                TFullList = TList
-                fieldFullList = fieldList
-                potentialEffFullList = potentialEffList
-                # making new empty array for downwards integration
-                TList = np.empty(0, dtype=float)
-                fieldList = np.empty((0, phase0.numFields()), dtype=float)
-                potentialEffList = np.empty((0, 1), dtype=float)
+                # set up array for tracing over full temperature range, starting from min/max temperature
+                if directionFirst:
+                    T0 = max(TList)
+                else:
+                    T0 = min(TList)
+                phase0Temp, potential0 = self.effectivePotential.findLocalMinimum(
+                    self.startingPhaseLocationGuess,
+                    T0,
+                    tol=extraTol,
+                )
+                phase0 = FieldPoint(phase0Temp[0])
+
+                # arrays to store results
+                TList = np.full(1, T0)
+                fieldList = np.full((1, phase0.numFields()), Fields((phase0,)))
+                potentialEffList = np.full((1, 1), [potential0])
+
+
             else:
                 if len(TList) > 1:
-                    # combining up and down integrations
-                    TFullList = np.append(np.flip(TList, 0), TFullList, axis=0)
-                    fieldFullList = np.append(
-                        np.flip(fieldList, axis=0), fieldFullList, axis=0
-                    )
-                    potentialEffFullList = np.append(
-                        np.flip(potentialEffList, axis=0), potentialEffFullList, axis=0
-                    )
-                elif len(TFullList) <= 1:
-                    # Both up and down lists are too short
-                    raise RuntimeError("Failed to trace phase")
+                    if directionFirst:
+                        TFullList = np.flip(TList,0)
+                        fieldFullList = np.flip(fieldList, axis=0)
+                        potentialEffFullList = np.flip(potentialEffList, axis=0)
+
+                    else:
+                        TFullList = TList
+                        fieldFullList = fieldList
+                        potentialEffFullList = potentialEffList
+
+
+                else:
+                    raise RuntimeError("Failed to trace phase, try decreasing dT")
+                #elif len(TFullList) <= 1:
+                #    # Both up and down lists are too short
+                #    raise RuntimeError("Failed to trace phase")
+                
 
         # overwriting temperature range
         ## HACK! Hard-coded 2*dT, see issue #145

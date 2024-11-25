@@ -364,8 +364,9 @@ class WallGoManager:
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
 
-        fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
-        fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
+        print(f"Nucleation temperature {self.thermodynamics.Tnucl}")
+        fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol, directionFirst = False)
+        fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol, directionFirst = True)
 
     def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
