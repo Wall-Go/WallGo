@@ -2,7 +2,7 @@
 Class that does phase tracing, computes the effective potential in the minimum and
 interpolate it.
 """
-
+import types
 from dataclasses import dataclass
 import logging
 import numpy as np
@@ -246,7 +246,7 @@ class FreeEnergy(InterpolatableFunction):
         rTol: float = 1e-6,
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
-        scipyOptions: dict = {},  # Additional options to pass to scipy.integrate.RK45
+        scipyOptions: dict | None = None,  # scipy.integrate.RK45 options
     ) -> None:
         r"""Traces minimum of potential
 
@@ -273,7 +273,8 @@ class FreeEnergy(InterpolatableFunction):
         paranoid : bool, optional
             If True, re-solve minimum after every step. The default is True.
         scipyOptions : dict, optional
-            Options to pass to `scipy.integrate.RK45` for the phase tracing.
+            Options to pass to `scipy.integrate.RK45` for the phase tracing. For more
+            details, see the `scipy documentation <https://docs.scipy.org>`_.
 
         """
         # make sure the initial conditions are extra accurate
@@ -333,10 +334,11 @@ class FreeEnergy(InterpolatableFunction):
             "rtol": rTol,
             "atol": tolAbsolute,
             "max_step": dT,
-            "first_step": dT,
+            "first_step": None,
         }
-        for key in scipyOptions:
-            kwargsScipy[key] = scipyOptions[key]
+        if scipyOptions is not None:
+            for key in scipyOptions:
+                kwargsScipy[key] = scipyOptions[key]
 
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
