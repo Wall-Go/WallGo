@@ -246,6 +246,7 @@ class FreeEnergy(InterpolatableFunction):
         rTol: float = 1e-6,
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
+        scipyOptions: dict = {},  # Additional options to pass to scipy.integrate.RK45
     ) -> None:
         r"""Traces minimum of potential
 
@@ -271,6 +272,8 @@ class FreeEnergy(InterpolatableFunction):
             If True, stop tracing if a mass squared turns negative. The default is True.
         paranoid : bool, optional
             If True, re-solve minimum after every step. The default is True.
+        scipyOptions : dict, optional
+            Options to pass to `scipy.integrate.RK45` for the phase tracing.
 
         """
         # make sure the initial conditions are extra accurate
@@ -325,6 +328,16 @@ class FreeEnergy(InterpolatableFunction):
         TMin = max(self.minPossibleTemperature[0], TMin)
         TMax = min(self.maxPossibleTemperature[0], TMax)
 
+        # kwargs for scipy.integrate.solve_ivp
+        kwargsScipy = {
+            "rtol": rTol,
+            "atol": tolAbsolute,
+            "max_step": dT,
+            "first_step": dT,
+        }
+        for key in scipyOptions:
+            kwargsScipy[key] = scipyOptions[key]
+
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
@@ -334,10 +347,7 @@ class FreeEnergy(InterpolatableFunction):
                 T0,
                 phase0,
                 TEnd,
-                rtol=rTol,
-                atol=tolAbsolute,
-                max_step=dT,
-                first_step=dT,
+                **kwargsScipy,
             )
             while ode.status == "running":
                 try:
