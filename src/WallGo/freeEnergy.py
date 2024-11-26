@@ -330,7 +330,7 @@ class FreeEnergy(InterpolatableFunction):
         TMax = min(self.maxPossibleTemperature[0], TMax)
 
         # kwargs for scipy.integrate.solve_ivp
-        kwargsScipy = {
+        scipyKwargs = {
             "rtol": rTol,
             "atol": tolAbsolute,
             "max_step": dT,
@@ -338,7 +338,7 @@ class FreeEnergy(InterpolatableFunction):
         }
         if scipyOptions is not None:
             for key in scipyOptions:
-                kwargsScipy[key] = scipyOptions[key]
+                scipyKwargs[key] = scipyOptions[key]
 
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
@@ -349,7 +349,7 @@ class FreeEnergy(InterpolatableFunction):
                 T0,
                 phase0,
                 TEnd,
-                **kwargsScipy,
+                **scipyKwargs,
             )
             while ode.status == "running":
                 try:
