@@ -53,7 +53,6 @@ def particle() -> WallGo.Particle:
         msqDerivative=lambda fields: np.transpose(
             [fields.getField(0), 0 * fields.getField(1)]
         ),
-        msqThermal=lambda T: 0.1 * T**2,
         statistics="Fermion",
         totalDOFs=12,
     )

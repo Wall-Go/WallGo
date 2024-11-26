@@ -22,7 +22,6 @@ class Particle:  # pylint: disable=too-few-public-methods
         index: int,
         msqVacuum: typing.Callable[[Fields | FieldPoint], np.ndarray],
         msqDerivative: typing.Callable[[Fields | FieldPoint], np.ndarray],
-        msqThermal: typing.Callable[[float], float],
         statistics: str,
         totalDOFs: int,
     ) -> None:
@@ -42,10 +41,6 @@ class Particle:  # pylint: disable=too-few-public-methods
         msqDerivative : function
             Function :math:`d(m_0^2)/d(\phi)`, should take a Fields or FieldPoints
             object and return an array of shape Fields.shape.
-        msqThermal : function
-            Function :math:`m^2_T(T)`, should take a float and return one. The
-            temperature dependent but background field independent part of the
-            effective mass squared.
         statistics : {\"Fermion\", \"Boson\"}
             Particle statistics.
         totalDOFs : int
@@ -63,7 +58,6 @@ class Particle:  # pylint: disable=too-few-public-methods
             index,
             msqVacuum,
             msqDerivative,
-            msqThermal,
             statistics,
             totalDOFs,
         )
@@ -71,7 +65,6 @@ class Particle:  # pylint: disable=too-few-public-methods
         self.index = index
         self.msqVacuum = msqVacuum
         self.msqDerivative = msqDerivative
-        self.msqThermal = msqThermal
         self.statistics = statistics
         self.totalDOFs = totalDOFs
 
@@ -81,7 +74,6 @@ class Particle:  # pylint: disable=too-few-public-methods
         index: int,
         msqVacuum: typing.Callable[[Fields], np.ndarray],
         msqDerivative: typing.Callable[[Fields], np.ndarray],
-        msqThermal: typing.Callable[[float], float],
         statistics: str,
         totalDOFs: int,
     ) -> None:
@@ -92,13 +84,6 @@ class Particle:  # pylint: disable=too-few-public-methods
         # assert isinstance(msqVacuum(fields), float), \
         #    f"msqVacuum({fields}) must return float"
 
-        # LN: comment mass check out to prevent errors at model creation time if no valid params have yet been passed
-        """
-        temperature = 100
-        assert isinstance(
-            msqThermal(temperature), float
-        ), f"msqThermal({temperature}) must return float"
-        """
         if statistics not in Particle.STATISTICS_OPTIONS:
             raise ValueError(f"{statistics=} not in {Particle.STATISTICS_OPTIONS}")
         assert isinstance(totalDOFs, int), "totalDOFs must be an integer"
