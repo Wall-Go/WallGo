@@ -2,7 +2,6 @@
 Class that does phase tracing, computes the effective potential in the minimum and
 interpolate it.
 """
-import types
 from dataclasses import dataclass
 import logging
 import numpy as np
