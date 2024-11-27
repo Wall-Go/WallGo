@@ -112,6 +112,13 @@ class ConfigThermodynamics:
     Desired accuracy of the phase tracer and the resulting FreeEnergy interpolation.
     """
 
+    phaseTracerFirstStep: float | None = None
+    r"""
+    Starting step for phaseTrace. If a float, this gives the starting step
+    size in units of the maximum step size :py:data:`dT`. If :py:data:`None` then
+    uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`.
+    """
+
 @dataclass
 class ConfigBoltzmannSolver:
     """ Holds the config of the BoltzmannSolver class. """

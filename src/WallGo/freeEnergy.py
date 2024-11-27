@@ -246,7 +246,7 @@ class FreeEnergy(InterpolatableFunction):
         rTol: float = 1e-6,
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
-        scipyOptions: dict | None = None,  # scipy.integrate.RK45 options
+        phaseTracerFirstStep: float | None = None,  # Starting step
     ) -> None:
         r"""Traces minimum of potential
 
@@ -267,15 +267,13 @@ class FreeEnergy(InterpolatableFunction):
         dT : float
             Maximal temperature step size used by the phase tracer.
         rTol : float, optional
-            Relative tolerance of the phase tracing. The default is 1e-6.
+            Relative tolerance of the phase tracing. The default is :py:const:`1e-6`.
         spinodal : bool, optional
             If True, stop tracing if a mass squared turns negative. The default is True.
         paranoid : bool, optional
             If True, re-solve minimum after every step. The default is True.
-        scipyOptions : dict, optional
-            Options to pass to `scipy.integrate.RK45` for the phase tracing. For more
-            details, see the `scipy documentation <https://docs.scipy.org>`_.
-
+        phaseTracerFirstStep : float or None, optional
+            If a float, this gives the starting step size in units of the maximum step size :py:data:`dT`. If :py:data:`None` then uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`. Default is :py:data:`None`
         """
         # make sure the initial conditions are extra accurate
         extraTol = 0.01 * rTol
@@ -334,11 +332,8 @@ class FreeEnergy(InterpolatableFunction):
             "rtol": rTol,
             "atol": tolAbsolute,
             "max_step": dT,
-            "first_step": None,
+            "first_step": phaseTracerFirstStep,
         }
-        if scipyOptions is not None:
-            for key in scipyOptions:
-                scipyKwargs[key] = scipyOptions[key]
 
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]

@@ -351,7 +351,7 @@ class WallGoManager:
 
         """Since the template model is an approximation of the full model, 
         and since the temperature profile in the wall could be non-monotonous,
-        we should not take exactly the TMin and TMax from the template model.
+        we should not t ake exactly the TMin and TMax from the template model.
         We use a configuration parameter to determine the TMin and TMax that we
         use in the phase tracing.
         """
@@ -364,8 +364,20 @@ class WallGoManager:
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
 
-        fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
-        fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
+        fHighT.tracePhase(
+            TMinHighT,
+            TMaxHighT,
+            dT,
+            rTol=phaseTracerTol,
+            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+        )
+        fLowT.tracePhase(
+            TMinLowT,
+            TMaxLowT,
+            dT,
+            rTol=phaseTracerTol,
+            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+        )
 
     def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
