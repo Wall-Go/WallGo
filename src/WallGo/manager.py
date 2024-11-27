@@ -351,7 +351,7 @@ class WallGoManager:
 
         """Since the template model is an approximation of the full model, 
         and since the temperature profile in the wall could be non-monotonous,
-        we should not t ake exactly the TMin and TMax from the template model.
+        we should not take exactly the TMin and TMax from the template model.
         We use a configuration parameter to determine the TMin and TMax that we
         use in the phase tracing.
         """
@@ -379,7 +379,7 @@ class WallGoManager:
             phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
         )
 
-    def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
+    def setPathToCollisionData(selft ake, directoryPath: pathlib.Path) -> None:
         """
         Specify path to collision files for use with the Boltzmann solver.
         This does not necessarily load the files immediately.
