@@ -379,7 +379,7 @@ class WallGoManager:
             phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
         )
 
-    def setPathToCollisionData(selft ake, directoryPath: pathlib.Path) -> None:
+    def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
         Specify path to collision files for use with the Boltzmann solver.
         This does not necessarily load the files immediately.
