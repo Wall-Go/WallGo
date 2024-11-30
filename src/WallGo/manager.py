@@ -277,7 +277,7 @@ class WallGoManager:
 
         self.phasesAtTn = foundPhaseInfo
 
-    def initTemperatureRange(self, scipyOptions: dict = {}) -> None:
+    def initTemperatureRange(self) -> None:
         """
         Determine the relevant temperature range and trace the phases
         over this range. Interpolate the free energy in both phases and

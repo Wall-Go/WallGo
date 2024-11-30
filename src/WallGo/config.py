@@ -269,7 +269,19 @@ class Config:
             if 'phaseTracerTol' in keys:
                 self.configThermodynamics.phaseTracerTol = parser.getfloat(
                     "Thermodynamics",
-                    "phaseTracerTol")
+                    "phaseTracerTol"
+                )
+            if 'phaseTracerFirstStep' in keys:
+                # either float or None
+                try:
+                    self.configThermodynamics.phaseTracerFirstStep = parser.getfloat(
+                        "Thermodynamics", "phaseTracerFirstStep"
+                    )
+                except ValueError as valErr:
+                    if str(valErr) == "could not convert string to float: 'None'":
+                        self.configThermodynamics.phaseTracerFirstStep = None
+                    else:
+                        raise
 
         # Read the BoltzmannSolver configs
         if 'BoltzmannSolver' in parser.sections():
