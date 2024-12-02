@@ -2,7 +2,6 @@
 Class that does phase tracing, computes the effective potential in the minimum and
 interpolate it.
 """
-
 from dataclasses import dataclass
 import logging
 import numpy as np
@@ -246,6 +245,7 @@ class FreeEnergy(InterpolatableFunction):
         rTol: float = 1e-6,
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
+        phaseTracerFirstStep: float | None = None,  # Starting step
     ) -> None:
         r"""Traces minimum of potential
 
@@ -266,12 +266,13 @@ class FreeEnergy(InterpolatableFunction):
         dT : float
             Maximal temperature step size used by the phase tracer.
         rTol : float, optional
-            Relative tolerance of the phase tracing. The default is 1e-6.
+            Relative tolerance of the phase tracing. The default is :py:const:`1e-6`.
         spinodal : bool, optional
             If True, stop tracing if a mass squared turns negative. The default is True.
         paranoid : bool, optional
             If True, re-solve minimum after every step. The default is True.
-
+        phaseTracerFirstStep : float or None, optional
+            If a float, this gives the starting step size in units of the maximum step size :py:data:`dT`. If :py:data:`None` then uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`. Default is :py:data:`None`
         """
         # make sure the initial conditions are extra accurate
         extraTol = 0.01 * rTol
@@ -325,6 +326,14 @@ class FreeEnergy(InterpolatableFunction):
         TMin = max(self.minPossibleTemperature[0], TMin)
         TMax = min(self.maxPossibleTemperature[0], TMax)
 
+        # kwargs for scipy.integrate.solve_ivp
+        scipyKwargs = {
+            "rtol": rTol,
+            "atol": tolAbsolute,
+            "max_step": dT,
+            "first_step": phaseTracerFirstStep,
+        }
+
         # iterating over up and down integration directions
         endpoints = [TMax, TMin]
         for direction in [0, 1]:
@@ -334,10 +343,7 @@ class FreeEnergy(InterpolatableFunction):
                 T0,
                 phase0,
                 TEnd,
-                rtol=rTol,
-                atol=tolAbsolute,
-                max_step=dT,
-                first_step=dT,
+                **scipyKwargs,
             )
             while ode.status == "running":
                 try:
