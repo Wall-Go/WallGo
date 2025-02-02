@@ -117,7 +117,10 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles
 
-    def getDeltas(self, deltaF: typing.Optional[np.ndarray] = None) -> BoltzmannResults:
+    def getDeltas(self,
+                  deltaF: typing.Optional[np.ndarray] = None,
+                  checkLinearization: bool = False,
+                  ) -> BoltzmannResults:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -128,6 +131,9 @@ class BoltzmannSolver:
         deltaF : array_like, optional
             The deviation of the distribution function from local thermal
             equilibrium.
+        checkLinearization : bool, optional
+            If True, computes the linearization criterion to assess if linearization of
+            the Boltzmann equation is a valid approximation. Default is False.
 
         Returns
         -------
@@ -143,7 +149,9 @@ class BoltzmannSolver:
         truncationError = self.estimateTruncationError(deltaF)
 
         # getting criteria for validity of linearization
-        criterion1, criterion2 = self.checkLinearization(deltaF)
+        criterion1, criterion2 = 0, 0
+        if checkLinearization:
+            criterion1, criterion2 = self.checkLinearization(deltaF)
 
         particles = self.offEqParticles
 
@@ -347,6 +355,34 @@ class BoltzmannSolver:
             False,
         )
         deltaFPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
+        
+        # Computing \delta f^2
+        deltaFSqPoly = deltaFPoly*deltaFPoly
+        deltaFSqPoly.changeBasis(("Array", self.basisM, self.basisN, self.basisN))
+        
+        operator, _, _, collision = self.buildLinearEquations()
+        source = np.sum(
+            collision*deltaFSqPoly.coefficients[None,None,None,None,...],
+            axis=(4,5,6,7))
+
+        # Computing the correction from nonlinear terms
+        deltaNonlin = np.linalg.solve(operator,
+                                      np.reshape(source, source.size, order="C"))
+        deltaNonlinShape = (
+            len(self.offEqParticles),
+            self.grid.M - 1,
+            self.grid.N - 1,
+            self.grid.N - 1,
+        )
+        deltaNonlin = np.reshape(deltaNonlin, deltaNonlinShape, order="C")
+        deltaNonlinPoly = Polynomial(
+            deltaF,
+            self.grid,
+            ("Array", self.basisM, self.basisN, self.basisN),
+            ("z", "z", "pz", "pp"),
+            False,
+        )
+        deltaNonlinPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
 
         msqFull = np.array(
             [
@@ -354,14 +390,24 @@ class BoltzmannSolver:
                 for particle in particles
             ]
         )
-        fieldPoly = Polynomial(
-            np.sum(self.background.fieldProfiles, axis=1),
+        
+        msqPoly = Polynomial(
+            msqFull,
             self.grid,
-            "Cardinal",
-            "z",
+            ('Array', 'Cardinal'),
+            'z',
             True,
-        )
-        dfielddChi = fieldPoly.derivative(0).coefficients[None, 1:-1, None, None]
+            )
+        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:,:,None,None]
+        
+        # fieldPoly = Polynomial(
+        #     np.sum(self.background.fieldProfiles, axis=1),
+        #     self.grid,
+        #     "Cardinal",
+        #     "z",
+        #     True,
+        # )
+        # dfielddChi = fieldPoly.derivative(0).coefficients[None, 1:-1, None, None]
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
@@ -384,50 +430,60 @@ class BoltzmannSolver:
             ("z", "z", "pz", "pp"),
             False,
         )
+        
+        fTot = fEqPoly + deltaFPoly
 
         _, dpzdrz, dppdrp = self.grid.getCompactificationDerivatives()
         dpzdrz = dpzdrz[None, None, :, None]
         dppdrp = dppdrp[None, None, None, :]
 
         # base integrand, for '00'
-        integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
+        dofs = np.array(
+            [particle.totalDOFs for particle in particles])[:,None,None,None]
+        integrand = dofs * dmsqdChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
+        # integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
+        
+        pressureLin = np.sum(fTot.integrate((1,2,3), integrand).coefficients)
+        pressureNonlin = np.sum(deltaNonlin.integrate((1,2,3), integrand).coefficients)
+        
+        return pressureNonlin/pressureLin, pressureNonlin/pressureLin
 
-        # The first criterion is to require that pressureOut/pressureEq is small
-        pressureOut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        pressureEq = fEqPoly.integrate((1, 2, 3), integrand).coefficients
-        deltaFCriterion = pressureOut / pressureEq
+        # # The first criterion is to require that pressureOut/pressureEq is small
+        # pressureOut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
+        # pressureEq = fEqPoly.integrate((1, 2, 3), integrand).coefficients
+        # deltaFCriterion = pressureOut / pressureEq
 
-        # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
-        _, _, liouville, collision = self.buildLinearEquations()
-        collisionDeltaF = np.sum(
-            collision * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
-        )
-        liouvilleDeltaF = np.sum(
-            liouville * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
-        )
-        collisionDeltaFPoly = Polynomial(
-            collisionDeltaF,
-            self.grid,
-            ("Array", "Cardinal", "Cardinal", "Cardinal"),
-            ("z", "z", "pz", "pp"),
-            False,
-        )
-        lioviilleDeltaFPoly = Polynomial(
-            liouvilleDeltaF,
-            self.grid,
-            ("Array", "Cardinal", "Cardinal", "Cardinal"),
-            ("z", "z", "pz", "pp"),
-            False,
-        )
-        collisionDeltaFIntegrated = collisionDeltaFPoly.integrate(
-            (1, 2, 3), integrand
-        ).coefficients
-        liovilleDeltaFIntegrated = lioviilleDeltaFPoly.integrate(
-            (1, 2, 3), integrand
-        ).coefficients
-        collCriterion = collisionDeltaFIntegrated / liovilleDeltaFIntegrated
+        # # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
+        # _, _, liouville, collision = self.buildLinearEquations()
+        # collisionDeltaF = np.sum(
+        #     collision * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
+        # )
+        # liouvilleDeltaF = np.sum(
+        #     liouville * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
+        # )
+        # collisionDeltaFPoly = Polynomial(
+        #     collisionDeltaF,
+        #     self.grid,
+        #     ("Array", "Cardinal", "Cardinal", "Cardinal"),
+        #     ("z", "z", "pz", "pp"),
+        #     False,
+        # )
+        # lioviilleDeltaFPoly = Polynomial(
+        #     liouvilleDeltaF,
+        #     self.grid,
+        #     ("Array", "Cardinal", "Cardinal", "Cardinal"),
+        #     ("z", "z", "pz", "pp"),
+        #     False,
+        # )
+        # collisionDeltaFIntegrated = collisionDeltaFPoly.integrate(
+        #     (1, 2, 3), integrand
+        # ).coefficients
+        # liovilleDeltaFIntegrated = lioviilleDeltaFPoly.integrate(
+        #     (1, 2, 3), integrand
+        # ).coefficients
+        # collCriterion = collisionDeltaFIntegrated / liovilleDeltaFIntegrated
 
-        return deltaFCriterion, collCriterion
+        # return deltaFCriterion, collCriterion
 
     def buildLinearEquations(
         self,
