@@ -364,8 +364,20 @@ class WallGoManager:
         fHighT = self.thermodynamics.freeEnergyHigh
         fLowT = self.thermodynamics.freeEnergyLow
 
-        fHighT.tracePhase(TMinHighT, TMaxHighT, dT, phaseTracerTol)
-        fLowT.tracePhase(TMinLowT, TMaxLowT, dT, phaseTracerTol)
+        fHighT.tracePhase(
+            TMinHighT,
+            TMaxHighT,
+            dT,
+            rTol=phaseTracerTol,
+            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+        )
+        fLowT.tracePhase(
+            TMinLowT,
+            TMaxLowT,
+            dT,
+            rTol=phaseTracerTol,
+            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+        )
 
     def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
