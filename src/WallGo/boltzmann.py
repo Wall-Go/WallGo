@@ -360,10 +360,12 @@ class BoltzmannSolver:
         deltaFSqPoly = deltaFPoly*deltaFPoly
         deltaFSqPoly.changeBasis(("Array", self.basisM, self.basisN, self.basisN))
         
+        
         operator, _, _, collision = self.buildLinearEquations()
         source = np.sum(
             collision*deltaFSqPoly.coefficients[None,None,None,None,...],
             axis=(4,5,6,7))
+        size = (self.grid.M-1)*(self.grid.N-1)**2
 
         # Computing the correction from nonlinear terms
         deltaNonlin = np.linalg.solve(operator,
@@ -376,7 +378,7 @@ class BoltzmannSolver:
         )
         deltaNonlin = np.reshape(deltaNonlin, deltaNonlinShape, order="C")
         deltaNonlinPoly = Polynomial(
-            deltaF,
+            deltaNonlin,
             self.grid,
             ("Array", self.basisM, self.basisN, self.basisN),
             ("z", "z", "pz", "pp"),
@@ -398,7 +400,7 @@ class BoltzmannSolver:
             'z',
             True,
             )
-        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:,:,None,None]
+        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:,1:-1,None,None]
         
         # fieldPoly = Polynomial(
         #     np.sum(self.background.fieldProfiles, axis=1),
@@ -443,10 +445,19 @@ class BoltzmannSolver:
         integrand = dofs * dmsqdChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
         # integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
         
-        pressureLin = np.sum(fTot.integrate((1,2,3), integrand).coefficients)
-        pressureNonlin = np.sum(deltaNonlin.integrate((1,2,3), integrand).coefficients)
+        pressureLin = fTot.integrate((2,3), integrand)
+        pressureNonlin = deltaNonlinPoly.integrate((2,3), integrand)
         
-        return pressureNonlin/pressureLin, pressureNonlin/pressureLin
+        # import matplotlib.pyplot as plt
+        # plt.plot(self.grid.chiValues, pressureLin.coefficients[0], self.grid.chiValues, pressureNonlin.coefficients[0])
+        # plt.grid()
+        # plt.show()
+        
+        # return np.max(np.abs(pressureNonlin.coefficients[0])), np.max(np.abs(pressureNonlin.coefficients[0]))
+        pressureLin = np.sum(pressureLin.integrate((1,)).coefficients)
+        pressureNonlin = np.sum(pressureNonlin.integrate((1,)).coefficients)
+        
+        return abs(pressureNonlin/pressureLin), abs(pressureNonlin/pressureLin)
 
         # # The first criterion is to require that pressureOut/pressureEq is small
         # pressureOut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
