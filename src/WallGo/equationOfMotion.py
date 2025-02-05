@@ -580,6 +580,13 @@ class EOM:
             wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults
         )
 
+        # Computing the linearisation criteria
+        if self.includeOffEq:
+            criterion1, criterion2 = self.boltzmannSolver.checkLinearization(
+                boltzmannResults.deltaF)
+            boltzmannResults.linearizationCriterion1 = criterion1
+            boltzmannResults.linearizationCriterion2 = criterion2
+
         # minimum possible error in the wall speed
         wallVelocityMinError = self.errTol * optimizeResult.root
 
