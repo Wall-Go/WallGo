@@ -171,15 +171,13 @@ class WallGoResults:
     temperatureProfile: np.ndarray
     r"""Temperarture profile as a function of position, :math:`T(\xi)`."""
 
-    linearizationCriterion1: np.ndarray
+    linearizationCriterion1: float
     r"""Ratio of out-of-equilibrium and equilibrium pressures,
-    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. One element for each
-    out-of-equilibrium particle."""
+    :math:`|P[\delta f]| / |P[f_\text{eq}]|`."""
 
-    linearizationCriterion2: np.ndarray
-    r"""Ratio of collision and Liouville operators in Boltzmann equation,
-    :math:`|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|`. One element for each
-    out-of-equilibrium particle."""
+    linearizationCriterion2: float
+    r"""Ratio of the first-order correction due to nonlinearities and total pressure
+    computed by WallGo, :math:`|P[\delta f_2]| / |P[f_\text{eq}+\delta f]|`."""
 
     deltaF: np.ndarray
     r"""Deviation of probability density function from equilibrium,

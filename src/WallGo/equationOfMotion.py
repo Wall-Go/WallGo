@@ -788,8 +788,6 @@ class EOM:
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
                 truncationError=0.0,
-                linearizationCriterion1=np.zeros(len(self.particles)),
-                linearizationCriterion2=np.zeros(len(self.particles)),
             )
         else:
             boltzmannResults = boltzmannResultsInput
