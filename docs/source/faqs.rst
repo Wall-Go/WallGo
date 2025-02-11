@@ -27,13 +27,29 @@ General
         }
 
 
-Installation
+Installation and running
 ============
 
 - **I can not install WallGo.**
 
     Please take a look at our :doc:`installation instructions <installation>`. If it doesn't
     work for you, feel free to :doc:`send us an email <contact>`.
+
+- **How do I run a first example?**
+
+    After having installed WallGo, you can run one of the examples in the Models folder, e.g.
+    .. code-block:: bash
+
+        python Models/SingletStandardModel_Z2/singletStandardModelZ2.py
+    
+    A full run of the example file requires that the collisions files are located in the model folder as well.
+    You can also generate the collision files yourself, e.g. (for a basis size of 5)
+    .. code-block:: bash
+
+        python Models/SingletStandardModel_Z2/singletStandardModelZ2.py --recalculateCollisions --momentumGridSize 5 
+    This will create a folder called CollisionOutput_N5_UserGenerated containing the collision files.
+    A grid size of 5 is typically too small for a full computation of the wall velocity, 
+    but it does allow you to confirm that everything is installed correctly, within a small amount of computation time.
 
 Matrix elements
 ===============
@@ -86,6 +102,18 @@ Collision integrals
     Yes, as long as your new model/parameter choice has the same interaction strength, 
     thermal masses (for the out-of-equilibrium particles) and momentum grid size as the model
     with which you obtained the collision integrals.
+
+- **WallGo tells me that it can not read the collision files.**
+
+    This might happen when you download the collision files from the git repository. 
+    As the git repository uses `git lfs` to manage the large collision files, the downloaded
+    files will be pointers, and not the full collision files.
+    You can obtain the collision files by cloning the repository, and running
+    .. code-block:: bash
+
+        git install lfs
+        git lfs fetch --all
+    Alternatively, you can generate the collision files yourself.
 
 Creating a model in Python
 ==========================
