@@ -38,18 +38,23 @@ Installation and running
 - **How do I run a first example?**
 
     After having installed WallGo, you can run one of the examples in the Models folder, e.g.
+    
     .. code-block:: bash
 
         python Models/SingletStandardModel_Z2/singletStandardModelZ2.py
     
-    A full run of the example file requires that the collisions files are located in the model folder as well.
+    A full run of the example file requires that the collisions files
+    are located in the model folder as well.
     You can also generate the collision files yourself, e.g. (for a basis size of 5)
+    
     .. code-block:: bash
 
         python Models/SingletStandardModel_Z2/singletStandardModelZ2.py --recalculateCollisions --momentumGridSize 5 
+
     This will create a folder called CollisionOutput_N5_UserGenerated containing the collision files.
     A grid size of 5 is typically too small for a full computation of the wall velocity, 
-    but it does allow you to confirm that everything is installed correctly, within a small amount of computation time.
+    but it does allow you to confirm that everything is installed correctly, 
+    within a small amount of computation time.
 
 Matrix elements
 ===============
@@ -109,10 +114,12 @@ Collision integrals
     As the git repository uses `git lfs` to manage the large collision files, the downloaded
     files will be pointers, and not the full collision files.
     You can obtain the collision files by cloning the repository, and running
+    
     .. code-block:: bash
 
         git install lfs
         git lfs fetch --all
+    
     Alternatively, you can generate the collision files yourself.
 
 Creating a model in Python
