@@ -579,6 +579,13 @@ class EOM:
         ) = self.wallPressure(
             wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults
         )
+            
+        # Computing the linearisation criteria
+        if self.includeOffEq:
+            criterion1, criterion2 = self.boltzmannSolver.checkLinearization(
+                boltzmannResults.deltaF)
+            boltzmannResults.linearizationCriterion1 = criterion1
+            boltzmannResults.linearizationCriterion2 = criterion2
 
         # minimum possible error in the wall speed
         wallVelocityMinError = self.errTol * optimizeResult.root
@@ -781,8 +788,6 @@ class EOM:
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
                 truncationError=0.0,
-                linearizationCriterion1=np.zeros(len(self.particles)),
-                linearizationCriterion2=np.zeros(len(self.particles)),
             )
         else:
             boltzmannResults = boltzmannResultsInput
