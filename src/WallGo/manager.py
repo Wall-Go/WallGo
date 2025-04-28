@@ -10,7 +10,7 @@ import numpy as np
 
 # WallGo imports
 import WallGo
-from .boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver, ETruncationOption
 from .containers import PhaseInfo
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
@@ -529,13 +529,15 @@ class WallGoManager:
 
         # Factor that multiplies the collision term in the Boltzmann equation.
         collisionMultiplier = self.config.configBoltzmannSolver.collisionMultiplier
+        truncationOption = ETruncationOption[self.config.configBoltzmannSolver.truncationOption]
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
         boltzmannSolver = BoltzmannSolver(
             grid,
             basisM="Cardinal",
             basisN="Chebyshev",
             collisionMultiplier=collisionMultiplier,
-            )
+            truncationOption=truncationOption,
+        )
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
 

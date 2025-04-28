@@ -5,7 +5,7 @@ import warnings
 import importlib
 
 # package level modules
-from .boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver, ETruncationOption
 from .config import Config
 from .collisionArray import CollisionArray
 from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams

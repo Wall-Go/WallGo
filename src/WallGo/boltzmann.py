@@ -6,6 +6,7 @@ import sys
 import typing
 from copy import deepcopy
 import logging
+from enum import Enum, auto
 import numpy as np
 import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
@@ -18,6 +19,19 @@ from .exceptions import CollisionLoadError
 
 if typing.TYPE_CHECKING:
     import importlib
+
+
+class ETruncationOption(Enum):
+    """Enums for what to do with truncating the spectral expansion."""
+
+    NONE = auto()
+    """Do not truncate early, use all coefficients."""
+
+    AUTO = auto()
+    """Truncate early if it seems the UV is not converging."""
+
+    THIRD = auto()
+    """Drop the last third of the coefficients."""
 
 
 class BoltzmannSolver:
@@ -33,6 +47,7 @@ class BoltzmannSolver:
     offEqParticles: list[Particle]
     background: BoltzmannBackground
     collisionArray: CollisionArray
+    truncationOption: ETruncationOption
 
     def __init__(
         self,
@@ -41,6 +56,7 @@ class BoltzmannSolver:
         basisN: str = "Chebyshev",
         derivatives: str = "Spectral",
         collisionMultiplier: float = 1.0,
+        truncationOption: ETruncationOption = ETruncationOption.AUTO,
     ):
         """
         Initialisation of BoltzmannSolver
@@ -62,6 +78,10 @@ class BoltzmannSolver:
         collisionMultiplier : float, optional
             Factor by which the collision term is multiplied. Can be used for testing.
             Default is 1.0.
+        truncationOption : ETruncationOption, optional
+            Option for truncating the spectral expansion. Default is
+            ETruncationOption.NONE, which means no truncation. Other options
+            are ETruncationOption.AUTO and ETruncationOption.THIRD.
 
         Returns
         -------
@@ -85,6 +105,7 @@ class BoltzmannSolver:
         self.basisN = basisN
         
         self.collisionMultiplier = collisionMultiplier
+        self.truncationOption = truncationOption
 
         # These are set, and can be updated, by our member functions
         # TODO: are these None types the best way to go?
@@ -142,7 +163,11 @@ class BoltzmannSolver:
             deltaF = self.solveBoltzmannEquations()
 
         # getting (optimistic) estimate of truncation error
+        # must be before checkSpectralConvergence
         truncationError = self.estimateTruncationError(deltaF)
+
+        # checking spectral convergence
+        deltaF = self.checkSpectralConvergence(deltaF)
 
         particles = self.offEqParticles
 
@@ -310,6 +335,98 @@ class BoltzmannSolver:
             np.max(truncationErrorPp / deltaFMeanAbs),
         )
 
+    def checkSpectralConvergence(self, deltaF: np.ndarray) -> np.ndarray:
+        """
+        Check for spectral convergence. Tests if last points
+        in spectral sum are small compared to the 2/3rd points.
+
+        Parameters
+        ----------
+        deltaF : array_like
+            The solution for which to estimate the truncation error,
+            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
+
+        Returns
+        -------
+        deltaFTruncated : np.ndarray
+            Potentially truncated version of input :py:data:`deltaF`.
+        """
+        if self.grid.M < 4 or self.grid.N < 4:
+            logging.warn(f"Cannot check spectral convergence with N, M < 4.")
+            return deltaF
+
+        # constructing Polynomial
+        basisTypes = ("Array", self.basisM, self.basisN, self.basisN)
+        basisNames = ("Array", "z", "pz", "pp")
+        deltaFPoly = Polynomial(deltaF, self.grid, basisTypes, basisNames, False)
+
+        # changing to Chebyshev basis
+        deltaFPoly.changeBasis(("Array", "Chebyshev", "Chebyshev", "Chebyshev"))
+
+        # looking at convergence of spectral expansion
+        spectralCoeffsChi = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 2, 3),
+        )
+        spectralCoeffsPz = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 1, 3),
+        )
+        spectralCoeffsPp = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 1, 2),
+        )
+
+        cutSpatial = -(self.grid.M - 1) // 3
+        cutMomentum = -(self.grid.N - 1) // 3
+        # fit slope to the log of the last 1/3rd of the coefficients
+        toFitChi = spectralCoeffsChi[cutSpatial:]
+        toFitPz = spectralCoeffsPz[cutMomentum:]
+        toFitPp = spectralCoeffsPp[cutMomentum:]
+        slopeChi = np.polyfit(
+            np.arange(len(toFitChi)), np.log(toFitChi), 1
+        )[0]
+        slopePz = np.polyfit(
+            np.arange(len(toFitPz)), np.log(toFitPz), 1
+        )[0]
+        slopePp = np.polyfit(
+            np.arange(len(toFitPp)), np.log(toFitPp), 1
+        )[0]
+        logging.debug("Fit to last 1/3 of spectral coefficients gives the following powers:")
+        logging.debug(f"Chi: {slopeChi}, Pz: {slopePz}, Pp: {slopePp}")
+
+        # Deciding what to do based on truncationOption
+        if self.truncationOption == ETruncationOption.AUTO:
+            # if the slope is positive, we will truncate
+            if slopeChi > 0:
+                logging.debug("Truncating last 1/3 of spectral coefficients in chi direction")
+                deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
+            elif slopePz > 0:
+                logging.debug("Truncating last 1/3 of spectral coefficients in pz direction")
+                deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
+            elif slopePp > 0:
+                logging.debug("Truncating last 1/3 of spectral coefficients in pp direction")
+                deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
+            else:
+                logging.debug("Spectral expansion converging, so not truncating")
+        elif self.truncationOption == ETruncationOption.THIRD:
+            logging.debug("Truncating last 1/3 of spectral coefficients in all directions")
+            deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
+            deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
+            deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
+            if slopeChi < 0 and slopePz < 0 and slopePp < 0:
+                logging.info("Spectral expansions converging but truncated, consider changing truncation option")
+        else:
+            logging.debug("Not truncating")
+            if slopeChi > 0 or slopePz > 0 or slopePp > 0:
+                logging.info("Spectral expansions not converging, consider changing truncation option")
+            return deltaF
+
+        # changing back to original basis
+        deltaFPoly.changeBasis(basisTypes)
+
+        return deltaFPoly.coefficients
+
     def checkLinearization(
         self, deltaF: typing.Optional[np.ndarray] = None
     ) -> tuple[float, float]:
@@ -350,7 +467,6 @@ class BoltzmannSolver:
         # Computing \delta f^2
         deltaFSqPoly = deltaFPoly*deltaFPoly
         deltaFSqPoly.changeBasis(("Array", self.basisM, self.basisN, self.basisN))
-        
         
         operator, _, _, collision = self.buildLinearEquations()
         source = np.sum(
