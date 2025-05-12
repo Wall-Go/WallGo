@@ -103,7 +103,7 @@ class BoltzmannSolver:
         self.basisM = basisM
         # Momentum polynomial type
         self.basisN = basisN
-        
+
         self.collisionMultiplier = collisionMultiplier
         self.truncationOption = truncationOption
 
@@ -138,9 +138,10 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles
 
-    def getDeltas(self,
-                  deltaF: typing.Optional[np.ndarray] = None,
-                  ) -> BoltzmannResults:
+    def getDeltas(
+        self,
+        deltaF: typing.Optional[np.ndarray] = None,
+    ) -> BoltzmannResults:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -162,12 +163,13 @@ class BoltzmannSolver:
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
-        # getting (optimistic) estimate of truncation error
-        # must be before checkSpectralConvergence
-        truncationError = self.estimateTruncationError(deltaF)
-
         # checking spectral convergence
-        deltaF = self.checkSpectralConvergence(deltaF)
+        deltaF, shapeTruncated = self.checkSpectralConvergence(deltaF)
+
+        # getting (optimistic) estimate of truncation error
+        truncationError = self.estimateTruncationError(
+            deltaF, shapeTruncated
+        )
 
         particles = self.offEqParticles
 
@@ -240,15 +242,15 @@ class BoltzmannSolver:
 
         where :math:`\mathcal{L}` is the Lioville operator, :math:`\mathcal{C}`
         is the collision operator, and :math:`\mathcal{S}` is the source.
-        
+
         As regards the indicies,
-            
+
             - :math:`\alpha, \beta, \gamma` denote points on the coordinate lattice :math:`\{\xi^{(\alpha)},p_{z}^{(\beta)},p_{\Vert}^{(\gamma)}\}`,
 
             - :math:`i, j, k` denote elements of the basis of spectral functions :math:`\{\bar{T}_i, \bar{T}_j, \tilde{T}_k\}`,
 
             - :math:`a, b` denote particle species.
-        
+
         For more details see the WallGo paper.
 
         Parameters
@@ -284,7 +286,7 @@ class BoltzmannSolver:
 
         return deltaF
 
-    def estimateTruncationError(self, deltaF: np.ndarray) -> float:
+    def estimateTruncationError(self, deltaF: np.ndarray, shapeTruncated: tuple[int, ...]) -> float:
         r"""
         Quick estimate of the polynomial truncation error using
         John Boyd's Rule-of-thumb-2: the last coefficient of a Chebyshev
@@ -309,33 +311,39 @@ class BoltzmannSolver:
 
         # sum(|deltaF|) as the norm
         deltaFPoly.changeBasis(("Array", "Chebyshev", "Chebyshev", "Chebyshev"))
-        deltaFMeanAbs = np.sum(
-            np.abs(deltaFPoly.coefficients),
+        deltaFTuncated = deltaFPoly.coefficients[
+            :shapeTruncated[0],
+            :shapeTruncated[1],
+            :shapeTruncated[2],
+            :shapeTruncated[3],
+        ]
+        deltaFSumAbs = np.sum(
+            np.abs(deltaFTuncated),
             axis=(1, 2, 3),
         )
 
         # estimating truncation errors in each direction
         truncationErrorChi = np.sum(
-            np.abs(deltaFPoly.coefficients[:, -1, :, :]),
+            np.abs(deltaFTuncated[:, -1, :, :]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
         truncationErrorPz = np.sum(
-            np.abs(deltaFPoly.coefficients[:, :, -1, :]),
+            np.abs(deltaFTuncated[:, :, -1, :]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
         truncationErrorPp = np.sum(
-            np.abs(deltaFPoly.coefficients[:, :, :, -1]),
+            np.abs(deltaFTuncated[:, :, :, -1]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
 
         # estimating the total truncation error as the maximum of these three
         return max(  # type: ignore[no-any-return]
-            np.max(truncationErrorChi / deltaFMeanAbs),
-            np.max(truncationErrorPz / deltaFMeanAbs),
-            np.max(truncationErrorPp / deltaFMeanAbs),
+            np.max(truncationErrorChi),
+            np.max(truncationErrorPz),
+            np.max(truncationErrorPp),
         )
 
-    def checkSpectralConvergence(self, deltaF: np.ndarray) -> np.ndarray:
+    def checkSpectralConvergence(self, deltaF: np.ndarray) -> tuple[np.ndarray, tuple[int, ...]]:
         """
         Check for spectral convergence. Tests if last points
         in spectral sum are small compared to the 2/3rd points.
@@ -349,16 +357,23 @@ class BoltzmannSolver:
         Returns
         -------
         deltaFTruncated : np.ndarray
-            Potentially truncated version of input :py:data:`deltaF`.
+            Potentially truncated version of input :py:data:`deltaF`, padded with zeros if truncated, so same shape as input.
+        shapeTruncated : tuple
+            Shape of truncated array.
         """
-        if self.grid.M < 4 or self.grid.N < 4:
-            logging.warn(f"Cannot check spectral convergence with N, M < 4.")
-            return deltaF
+        if self.grid.M < 7 or self.grid.N < 7:
+            logging.warning(f"Cannot check spectral convergence with N, M < 7.")
+            return deltaF, deltaF.shape
+        elif self.grid.M < 13 or self.grid.N < 13:
+            strict = False
+        else:
+            strict = True
 
         # constructing Polynomial
         basisTypes = ("Array", self.basisM, self.basisN, self.basisN)
         basisNames = ("Array", "z", "pz", "pp")
         deltaFPoly = Polynomial(deltaF, self.grid, basisTypes, basisNames, False)
+        truncatedShape = list(deltaF.shape)
 
         # changing to Chebyshev basis
         deltaFPoly.changeBasis(("Array", "Chebyshev", "Chebyshev", "Chebyshev"))
@@ -377,55 +392,115 @@ class BoltzmannSolver:
             axis=(0, 1, 2),
         )
 
-        cutSpatial = -(self.grid.M - 1) // 3
-        cutMomentum = -(self.grid.N - 1) // 3
+        # how much to cut, if truncating
+        cutSpatial = -((self.grid.M - 1) // 3)
+        cutMomentum = -((self.grid.N - 1) // 3)
+
         # fit slope to the log of the last 1/3rd of the coefficients
-        toFitChi = spectralCoeffsChi[cutSpatial:]
-        toFitPz = spectralCoeffsPz[cutMomentum:]
-        toFitPp = spectralCoeffsPp[cutMomentum:]
-        slopeChi = np.polyfit(
-            np.arange(len(toFitChi)), np.log(toFitChi), 1
-        )[0]
-        slopePz = np.polyfit(
-            np.arange(len(toFitPz)), np.log(toFitPz), 1
-        )[0]
-        slopePp = np.polyfit(
-            np.arange(len(toFitPp)), np.log(toFitPp), 1
-        )[0]
-        logging.debug("Fit to last 1/3 of spectral coefficients gives the following powers:")
-        logging.debug(f"Chi: {slopeChi}, Pz: {slopePz}, Pp: {slopePp}")
+        if strict:
+            # enough points to fit slopes with errors
+            fitChi = np.polyfit(
+                np.arange(abs(cutSpatial)),
+                np.log(spectralCoeffsChi[cutSpatial:]),
+                1,
+                cov=True,
+            )
+            fitPz = np.polyfit(
+                np.arange(abs(cutMomentum)),
+                np.log(spectralCoeffsPz[cutMomentum:]),
+                1,
+                cov=True,
+            )
+            fitPp = np.polyfit(
+                np.arange(abs(cutMomentum)),
+                np.log(spectralCoeffsPp[cutMomentum:]),
+                1,
+                cov=True,
+            )
+            chiConverging = fitChi[0][0] < - np.sqrt(fitChi[1][0, 0])
+            pzConverging = fitPz[0][0] < - np.sqrt(fitPz[1][0, 0])
+            ppConverging = fitPp[0][0] < - np.sqrt(fitPp[1][0, 0])
+            logging.debug(
+                f"Spectral convergence: n_chi^({fitChi[0][0]:.2g}+/-{np.sqrt(fitChi[1][0, 0]):.2g}), n_pz^({fitPz[0][0]:.2g}+/-{np.sqrt(fitPz[1][0, 0]):.2g}), n_pp^({fitPp[0][0]:.2g}+/-{np.sqrt(fitPp[1][0, 0]):.2g})"
+            )
+        else:
+            # not enough points to get sensible errors
+            fitChi = np.polyfit(
+                np.arange(abs(cutSpatial)),
+                np.log(spectralCoeffsChi[cutSpatial:]),
+                1,
+                cov=False,
+            )
+            fitPz = np.polyfit(
+                np.arange(abs(cutMomentum)),
+                np.log(spectralCoeffsPz[cutMomentum:]),
+                1,
+                cov=False,
+            )
+            fitPp = np.polyfit(
+                np.arange(abs(cutMomentum)),
+                np.log(spectralCoeffsPp[cutMomentum:]),
+                1,
+                cov=False,
+            )
+            chiConverging = fitChi[0] < 0
+            pzConverging = fitPz[0] < 0
+            ppConverging = fitPp[0] < 0
+            logging.debug(
+                f"Spectral convergence: n_chi^({fitChi[0]:.2g}), n_pz^({fitPz[0]:.2g}), n_pp^({fitPp[0]:.2g})"
+            )
+
 
         # Deciding what to do based on truncationOption
         if self.truncationOption == ETruncationOption.AUTO:
-            # if the slope is positive, we will truncate
-            if slopeChi > 0:
-                logging.debug("Truncating last 1/3 of spectral coefficients in chi direction")
+            # if the slope is not definitely negative, we will truncate
+            if not chiConverging:
+                # logging.debug("Truncating last 1/3 of spectral coefficients in chi direction")
                 deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
-            elif slopePz > 0:
-                logging.debug("Truncating last 1/3 of spectral coefficients in pz direction")
+                truncatedShape[1] = deltaF.shape[1] + cutSpatial
+            if not pzConverging:
+                # logging.debug("Truncating last 1/3 of spectral coefficients in pz direction")
                 deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
-            elif slopePp > 0:
-                logging.debug("Truncating last 1/3 of spectral coefficients in pp direction")
+                truncatedShape[2] = deltaF.shape[2] + cutMomentum
+            if not ppConverging:
+                # logging.debug("Truncating last 1/3 of spectral coefficients in pp direction")
                 deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
-            else:
-                logging.debug("Spectral expansion converging, so not truncating")
+                truncatedShape[3] = deltaF.shape[3] + cutMomentum
+            # if truncatedShape == list(deltaF.shape):
+            #     logging.debug("Spectral expansion converging, so not truncating")
         elif self.truncationOption == ETruncationOption.THIRD:
-            logging.debug("Truncating last 1/3 of spectral coefficients in all directions")
+            # logging.debug("Truncating last 1/3 of spectral coefficients in all directions")
             deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
             deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
             deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
-            if slopeChi < 0 and slopePz < 0 and slopePp < 0:
-                logging.info("Spectral expansions converging but truncated, consider changing truncation option")
+            truncatedShape[1:] = [
+                deltaF.shape[1] + cutSpatial,
+                deltaF.shape[2] + cutMomentum,
+                deltaF.shape[3] + cutMomentum,
+            ]
+            if chiConverging and pzConverging and ppConverging:
+                logging.info(
+                    "Spectral expansions converging but truncated, consider changing truncation option"
+                )
         else:
-            logging.debug("Not truncating")
-            if slopeChi > 0 or slopePz > 0 or slopePp > 0:
-                logging.info("Spectral expansions not converging, consider changing truncation option")
-            return deltaF
+            # logging.debug("Not truncating")
+            if not chiConverging or not pzConverging or not ppConverging:
+                logging.info(
+                    "Spectral expansions not converging, consider changing truncation option, or changing grid parameters"
+                )
+            return deltaF, deltaF.shape
 
         # changing back to original basis
         deltaFPoly.changeBasis(basisTypes)
 
-        return deltaFPoly.coefficients
+        return deltaFPoly.coefficients, tuple(truncatedShape)
+
+    @staticmethod
+    def _smoothTruncation(length: int, cut: int, sharp: float = 3) -> np.ndarray:
+        """
+        Internal function to smooth the truncation of the spectral expansion. """
+        x = np.arange(length)
+        return 1 / (1 + np.exp(sharp * (x - cut)))
 
     def checkLinearization(
         self, deltaF: typing.Optional[np.ndarray] = None
@@ -463,19 +538,21 @@ class BoltzmannSolver:
             False,
         )
         deltaFPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
-        
+
         # Computing \delta f^2
-        deltaFSqPoly = deltaFPoly*deltaFPoly
+        deltaFSqPoly = deltaFPoly * deltaFPoly
         deltaFSqPoly.changeBasis(("Array", self.basisM, self.basisN, self.basisN))
-        
+
         operator, _, _, collision = self.buildLinearEquations()
         source = np.sum(
-            collision*deltaFSqPoly.coefficients[None,None,None,None,...],
-            axis=(4,5,6,7))
+            collision * deltaFSqPoly.coefficients[None, None, None, None, ...],
+            axis=(4, 5, 6, 7),
+        )
 
         # Computing the correction from nonlinear terms
-        deltaNonlin = np.linalg.solve(operator,
-                                      np.reshape(source, source.size, order="C"))
+        deltaNonlin = np.linalg.solve(
+            operator, np.reshape(source, source.size, order="C")
+        )
         deltaNonlinShape = (
             len(self.offEqParticles),
             self.grid.M - 1,
@@ -498,15 +575,15 @@ class BoltzmannSolver:
                 for particle in particles
             ]
         )
-        
+
         msqPoly = Polynomial(
             msqFull,
             self.grid,
-            ('Array', 'Cardinal'),
-            'z',
+            ("Array", "Cardinal"),
+            "z",
             True,
-            )
-        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:,1:-1,None,None]
+        )
+        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:, 1:-1, None, None]
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
@@ -534,21 +611,23 @@ class BoltzmannSolver:
         dpzdrz = dpzdrz[None, None, :, None]
         dppdrp = dppdrp[None, None, None, :]
 
-        dofs = np.array(
-            [particle.totalDOFs for particle in particles])[:,None,None,None]
+        dofs = np.array([particle.totalDOFs for particle in particles])[
+            :, None, None, None
+        ]
         integrand = dofs * dmsqdChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
-        
+
         # Computing the pressure contributions of the equilibrium part, the linear
         # out-of-equilibrium part and the first-order correction due to nonlinearities.
-        pressureEq = np.sum(fEqPoly.integrate((1,2,3), integrand).coefficients)
-        pressureDeltaF = np.sum(deltaFPoly.integrate((1,2,3), integrand).coefficients)
-        pressureNonlin = np.sum(deltaNonlinPoly.integrate((1,2,3),
-                                                          integrand).coefficients)
-        
+        pressureEq = np.sum(fEqPoly.integrate((1, 2, 3), integrand).coefficients)
+        pressureDeltaF = np.sum(deltaFPoly.integrate((1, 2, 3), integrand).coefficients)
+        pressureNonlin = np.sum(
+            deltaNonlinPoly.integrate((1, 2, 3), integrand).coefficients
+        )
+
         # Computing the 2 linearisation criteria
-        criterion1 = abs(pressureDeltaF/pressureEq)
-        criterion2 = abs(pressureNonlin/(pressureEq+pressureDeltaF))
-        
+        criterion1 = abs(pressureDeltaF / pressureEq)
+        criterion2 = abs(pressureNonlin / (pressureEq + pressureDeltaF))
+
         return criterion1, criterion2
 
     def buildLinearEquations(

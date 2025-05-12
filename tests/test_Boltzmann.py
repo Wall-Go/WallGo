@@ -125,7 +125,7 @@ def test_solution(
     assert ratio == pytest.approx(0, abs=1e-14)
 
 
-@pytest.mark.parametrize("spatialGridSize, momentumGridSize, slope", [(5, 5, -0.1), (5, 5, -0.1), (7, 7, 0.1)])
+@pytest.mark.parametrize("spatialGridSize, momentumGridSize, slope", [(7, 9, -0.1), (9, 9, -0.1), (11, 9, 0.1)])
 def test_checkSpectralConvergence(
     boltzmannTestBackground: WallGo.BoltzmannBackground,
     particle: WallGo.Particle,
@@ -157,13 +157,15 @@ def test_checkSpectralConvergence(
         
 
     # checking spectral convergence
-    deltaFTruncated = boltzmann.checkSpectralConvergence(deltaF)
+    deltaFTruncated, truncatedShape = boltzmann.checkSpectralConvergence(deltaF)
 
-    nTrucated = -deltaFTruncated.shape[1] // 3
-    expectTruncated = deltaFTruncated[:, nTrucated // 3, :, :]
+    nTruncated = (spatialGridSize - 1) // 3
+    expectTruncated = deltaFTruncated[:, -nTruncated:, :, :]
 
     # asserting truncation
     if slope > 0:
-        assert np.allclose(expectTruncated, np.zeros_like(expectTruncated))
+        assert truncatedShape == (1, spatialGridSize - 1 - nTruncated, momentumGridSize - 1, momentumGridSize - 1)
+        assert np.allclose(expectTruncated, np.zeros_like(expectTruncated), atol=1e-2)
     else:
+        assert truncatedShape == (1, spatialGridSize - 1, momentumGridSize - 1, momentumGridSize - 1)
         assert not np.allclose(expectTruncated, np.zeros_like(expectTruncated))
