@@ -174,6 +174,22 @@ class WallGoResults:
     linearizationCriterion1: float
     r"""Ratio of out-of-equilibrium and equilibrium pressures,
     :math:`|P[\delta f]| / |P[f_\text{eq}]|`."""
+    
+    eomResidual: np.ndarray
+    """
+    Residual of the EOM due to the tanh ansatz. There is one element for each scalar
+    field. It is estimated by the integral
+
+    .. math:: \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|}
+        
+    with 
+
+    .. math:: \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
+
+    and
+
+    .. math:: |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
+    """
 
     linearizationCriterion2: float
     r"""Ratio of the first-order correction due to nonlinearities and total pressure

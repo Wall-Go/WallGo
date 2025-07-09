@@ -579,6 +579,13 @@ class EOM:
         ) = self.wallPressure(
             wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults
         )
+        
+        eomResidual = self.estimateTanhError(
+            wallParams,
+            boltzmannResults,
+            boltzmannBackground,
+            hydroResults
+        )
             
         # Computing the linearisation criteria
         if self.includeOffEq:
@@ -633,6 +640,7 @@ class EOM:
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
         results.setFiniteDifferenceBoltzmannResults(finiteDifferenceBoltzmannResults)
+        results.eomResidual = eomResidual
 
         # Set the message
         if not self.successTemperatureProfile:
@@ -1348,6 +1356,80 @@ class EOM:
         )
 
         return float(U + K)
+    
+    def estimateTanhError(
+            self,
+            wallParams: WallParams,
+            boltzmannResults: BoltzmannResults,
+            boltzmannBackground: BoltzmannBackground,
+            hydroResults: HydroResults,
+        ) -> np.ndarray:
+        """
+        Estimates the EOM error due to the tanh ansatz. It is estimated by the integral
+
+        .. math:: \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},
+
+        with
+
+        .. math:: \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
+
+        and
+        
+        .. math:: |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
+        
+        """
+        Tminus = hydroResults.temperatureMinus
+        Tplus = hydroResults.temperaturePlus
+        
+        # Positions of the phases
+        TminusEval = max(
+            min(Tminus, self.thermo.freeEnergyLow.interpolationRangeMax()),
+            self.thermo.freeEnergyLow.interpolationRangeMin(),
+        )
+        TplusEval = max(
+            min(Tplus, self.thermo.freeEnergyHigh.interpolationRangeMax()),
+            self.thermo.freeEnergyHigh.interpolationRangeMin(),
+        )
+        vevLowT = self.thermo.freeEnergyLow(TminusEval).fieldsAtMinimum
+        vevHighT = self.thermo.freeEnergyHigh(TplusEval).fieldsAtMinimum
+        
+        temperatureProfile = boltzmannBackground.temperatureProfile[1:-1]
+        
+        z = self.grid.xiValues
+        fields = self.wallProfile(z, vevLowT, vevHighT, wallParams)[0]
+        d2FieldsDz2 = -(
+            (vevHighT-vevLowT)
+            * np.tanh(z[:,None]/wallParams.widths[None,:] + wallParams.offsets)
+            / np.cosh(z[:,None]/wallParams.widths[None,:] + wallParams.offsets)**2
+            / wallParams.widths**2
+            )
+        
+        dVdPhi = self.thermo.effectivePotential.derivField(fields, temperatureProfile)
+
+        # Out-of-equilibrium term of the EOM
+        dVout = (
+            np.sum(
+                [
+                    particle.totalDOFs
+                    * particle.msqDerivative(fields)
+                    * boltzmannResults.Deltas.Delta00.coefficients[i, :, None]
+                    for i, particle in enumerate(self.particles)
+                ],
+                axis=0,
+            )
+            / 2
+        )
+        
+        eomSq = (-d2FieldsDz2 + dVdPhi + dVout)**2
+        eomSqScale = d2FieldsDz2**2 + dVdPhi**2 + dVout**2
+        
+        eomSqPoly = Polynomial(eomSq, self.grid, basis=("Cardinal", "Array"))
+        eomSqScalePoly = Polynomial(eomSqScale, self.grid, basis=("Cardinal", "Array"))
+        dzdchi, _, _ = self.grid.getCompactificationDerivatives()
+        eomSqResidual = eomSqPoly.integrate(axis=0, weight=dzdchi[:,None])
+        eomSqScaleIntegrated = eomSqScalePoly.integrate(axis=0, weight=dzdchi[:,None])
+        
+        return eomSqResidual.coefficients/eomSqScaleIntegrated.coefficients
 
     def wallProfile(
         self,
