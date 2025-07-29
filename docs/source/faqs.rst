@@ -156,6 +156,18 @@ Effective potentials
     enum :py:class:`WallGo.PotentialTools.EImaginaryOption`. See the docs for more
     details.
 
+Free energy
+-----------
+- **I already know the value of the field and the effective potential as a function of temperature, can I provide these to WallGo to circumvent the phase tracing?**
+
+    If the phase tracing does not work properly for your model, or if you want to speed up the
+    initialization phase, you can provide arrays with the values of the field(s) in the minimum of the
+    potential and the corresponding effective potential for the appropriate temperature range. 
+    These are passed as a :py:class:`WallGo.FreeEnergyArrays` object, to the function
+    :py:meth:`WallGo.WallGoManager.setupThermodynamicsHydrodynamics()`. These arrays are optional arguments;
+    if they are not provided, WallGo will execute its default phase tracing algorithm.
+
+
 
 Settings
 ========

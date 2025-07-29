@@ -2,21 +2,25 @@
 Class that does phase tracing, computes the effective potential in the minimum and
 interpolate it.
 """
+
 from dataclasses import dataclass
 import logging
 import numpy as np
 import scipy.integrate as scipyint
 import scipy.linalg as scipylinalg
 
+from typing import Union
+
+# from .containers import FreeEnergyArrays
+from .effectivePotential import EffectivePotential
+from .exceptions import WallGoError
+from .fields import FieldPoint, Fields
 from .interpolatableFunction import (
     InterpolatableFunction,
     EExtrapolationType,
     inputType,
     outputType,
 )
-from .effectivePotential import EffectivePotential
-from .exceptions import WallGoError
-from .fields import FieldPoint, Fields
 
 
 @dataclass
@@ -163,9 +167,9 @@ class FreeEnergy(InterpolatableFunction):
                     "Trying to evaluate FreeEnergy outside of its range of existence"
                 )
             raise WallGoError(
-                    """\n Trying to evaluate FreeEnergy outside of its allowed range,
+                """\n Trying to evaluate FreeEnergy outside of its allowed range,
                         try increasing/decreasing Tmax/Tmin."""
-                )
+            )
 
     def _functionImplementation(self, temperature: inputType | float) -> outputType:
         """
@@ -254,7 +258,7 @@ class FreeEnergy(InterpolatableFunction):
 
         .. math::
             \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial \phi_j}\bigg|_{\phi=\phi^\text{min}} \frac{\partial \phi^\text{min}_j}{\partial T} + \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial T}\bigg|_{\phi=\phi^\text{min}} = 0,
-        
+
         starting from a solution at the starting temperature. It uses `scipy.integrate.solve_ivp` to solve the problem. Stops if a mass squared goes through zero.
 
         Parameters
@@ -383,8 +387,10 @@ class FreeEnergy(InterpolatableFunction):
                     TList.size > 0 and ode.t == TList[-1]
                 ):
                     logging.warning(
-                        f"Step size {ode.step_size} shrunk too small at T={ode.t}, "
-                        f"vev={ode.y}"
+                        "Step size %g shrunk too small at T=%g, vev=%g",
+                        ode.step_size,
+                        ode.t,
+                        ode.y,
                     )
                     break
                 # append results to lists
@@ -442,3 +448,67 @@ class FreeEnergy(InterpolatableFunction):
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, potentialEffFullList), axis=1)
         self.newInterpolationTableFromValues(TFullList, result)
+
+    def constructInterpolationFromArray(
+        self,
+        freeEnergyArrays: "FreeEnergyArrays",
+        dT: float,
+    ) -> None:
+        """
+        Constructs the interpolation table directly from arrays of temperatures,
+        field values, and potential values, bypassing the phase tracing process.
+
+        Parameters
+        ----------
+        freeEnergyArrays : FreeEnergyArrays
+            Object containing arrays of the temperature, minimum and value of the free energy.
+        dT : float
+            Small step in temperature used in derivatives, used here to ensure endpoints of temperature range not exceeded when taking derivatives later.
+        """
+        if freeEnergyArrays.allowedDiscrepancy is None:
+            freeEnergyArrays.allowedDiscrepancy = self.effectivePotential.effectivePotentialError
+
+        freeEnergyList = freeEnergyArrays.freeEnergyList
+
+        # Check if the loaded value is consistent with the effective potential
+        discrepancies = abs(
+            freeEnergyList.veffValue - self.effectivePotential.evaluate(
+                freeEnergyList.fieldsAtMinimum, freeEnergyArrays.temperatures
+            )
+        )
+        # Norm includes neighbouring points to avoid division by zero
+        discrepancyNorm = np.concatenate(
+            ([0.5 * (abs(freeEnergyList.veffValue[0]) + abs(freeEnergyList.veffValue[1]))],
+            0.5 * (abs(freeEnergyList.veffValue[:-1]) + abs(freeEnergyList.veffValue[1:])))
+        )
+        maxDiscrepancy = max(discrepancies / discrepancyNorm)
+        if (maxDiscrepancy > freeEnergyArrays.allowedDiscrepancy):
+            raise WallGoError(
+                f"The loaded phase disagrees with the effective potential at {maxDiscrepancy:g}, higher than the required precision of {freeEnergyArrays.allowedDiscrepancy:g}."
+            )
+
+        # Check that the provided array has sufficiently small temperature steps
+        maxTemperatureStep = max(abs(
+            freeEnergyArrays.temperatures[:-1]-freeEnergyArrays.temperatures[1:]
+        ))
+
+        if maxTemperatureStep > dT:
+            logging.warning(
+                "The maximum temperature step size %g is larger than the maximum step size %g. "
+                "This may lead to inaccurate interpolation.",
+                maxTemperatureStep,
+                dT,
+            )
+
+        self.minPossibleTemperature[0] = min(freeEnergyArrays.temperatures) + 2 * dT
+        self.maxPossibleTemperature[0] = max(freeEnergyArrays.temperatures) - 2 * dT
+
+        # Concatenate field values and potential into a single array (N, nFields + 1)
+        resultArray = np.concatenate(
+            (freeEnergyList.fieldsAtMinimum, freeEnergyList.veffValue[:, np.newaxis]), axis=1
+        )
+
+        # Construct the interpolation table
+        self.newInterpolationTableFromValues(
+            freeEnergyArrays.temperatures, resultArray
+        )

@@ -182,7 +182,7 @@ class EOM:
             logging.warning(
                 """\n Warning: vmax is limited by the maximum temperature chosen in
                 the phase tracing. WallGo might be unable to find the wall velocity.
-                Try increasing the maximum temperature! \n"""
+                Consider increasing the maximum temperature if no velocity is found. \n"""
             )
 
         return self.solveWall(vmin, vmax, wallParams)

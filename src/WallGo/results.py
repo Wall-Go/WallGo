@@ -176,7 +176,7 @@ class WallGoResults:
     :math:`|P[\delta f]| / |P[f_\text{eq}]|`."""
     
     eomResidual: np.ndarray
-    """
+    r"""
     Residual of the EOM due to the tanh ansatz. There is one element for each scalar
     field. It is estimated by the integral
 
