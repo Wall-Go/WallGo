@@ -119,6 +119,12 @@ class ConfigThermodynamics:
     uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`.
     """
 
+    interpolationDegree: int = 1
+    """
+    Degree of the splines used in FreeEnergy to interpolate the potential and its
+    derivatives.
+    """
+
 @dataclass
 class ConfigBoltzmannSolver:
     """ Holds the config of the BoltzmannSolver class. """
@@ -285,6 +291,11 @@ class Config:
                         self.configThermodynamics.phaseTracerFirstStep = None
                     else:
                         raise
+            if 'interpolationDegree' in keys:
+                self.configThermodynamics.interpolationDegree = parser.getint(
+                    "Thermodynamics",
+                    "interpolationDegree"
+                )
 
         # Read the BoltzmannSolver configs
         if 'BoltzmannSolver' in parser.sections():

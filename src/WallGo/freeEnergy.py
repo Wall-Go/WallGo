@@ -250,6 +250,7 @@ class FreeEnergy(InterpolatableFunction):
         spinodal: bool = True,  # Stop tracing if a mass squared turns negative
         paranoid: bool = True,  # Re-solve minimum after every step
         phaseTracerFirstStep: float | None = None,  # Starting step
+        interpolationDegree: int = 1,
     ) -> None:
         r"""Traces minimum of potential
 
@@ -277,6 +278,9 @@ class FreeEnergy(InterpolatableFunction):
             If True, re-solve minimum after every step. The default is True.
         phaseTracerFirstStep : float or None, optional
             If a float, this gives the starting step size in units of the maximum step size :py:data:`dT`. If :py:data:`None` then uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`. Default is :py:data:`None`
+        interpolationDegree : int, optional
+            Degree of the splines used in FreeEnergy to interpolate the potential and
+            its derivatives. Default is 1.
         """
         # make sure the initial conditions are extra accurate
         extraTol = 0.01 * rTol
@@ -300,17 +304,14 @@ class FreeEnergy(InterpolatableFunction):
             )
             return np.asarray(scipylinalg.solve(hess, -dgraddT, assume_a="sym"))
 
-        # finding some sensible mass scales
-        ddVT0 = self.effectivePotential.deriv2Field2(phase0, T0)
-        eigsT0 = np.linalg.eigvalsh(ddVT0)
-        # mass_scale_T0 = np.mean(eigs_T0)
-        # min_mass_scale = rTol * mass_scale_T0
-        # mass_hierarchy_T0 = min(eigs_T0) / max(eigs_T0)
-        # min_hierarchy = rTol * mass_hierarchy_T0
+        # compute all the second derivatives at the beginning of phase tracing
+        d2Vdphi2, d2VdphidT, d2VdT2 = self.effectivePotential.allSecondDerivatives(
+            phase0, T0)
+        eigsT0 = np.linalg.eigvalsh(d2Vdphi2)
 
         # checking stable phase at initial temperature
         assert (
-            min(eigsT0) * max(eigsT0) > 0
+            min(eigsT0) > 0
         ), "tracePhase error: unstable at starting temperature"
 
         def spinodalEvent(temperature: float, field: np.ndarray) -> float:
@@ -320,12 +321,17 @@ class FreeEnergy(InterpolatableFunction):
             d2V = self.effectivePotential.deriv2Field2(FieldPoint(field), temperature)
             eigs = scipylinalg.eigvalsh(d2V)
             return float(min(eigs))
+                    
 
         # arrays to store results
         TList = np.full(1, T0)
         fieldList = np.full((1, phase0.numFields()), Fields((phase0,)))
         potentialEffList = np.full((1, 1), [potential0])
-
+        dVdTList = np.full((1,1), [self.effectivePotential.derivT(phase0, T0)])
+        dphidT = -np.linalg.inv(d2Vdphi2)@d2VdphidT
+        d2VdT2List = np.full((1,1), [d2VdT2+dphidT@d2VdphidT])
+        dphidTList = np.full((1, phase0.numFields()),
+                             Fields((dphidT,)))
         # maximum temperature range
         TMin = max(self.minPossibleTemperature[0], TMin)
         TMax = min(self.maxPossibleTemperature[0], TMax)
@@ -352,6 +358,9 @@ class FreeEnergy(InterpolatableFunction):
             while ode.status == "running":
                 try:
                     ode.step()
+                    # check if all the eigenvalues of the hessian are positive
+                    if spinodalEvent(ode.t, ode.y) <= 0:
+                        break
                 except RuntimeWarning as error:
                     logging.error(error.args[0] + f" at T={ode.t}")
                     break
@@ -362,9 +371,7 @@ class FreeEnergy(InterpolatableFunction):
                         tol=rTol,
                     )
                     ode.y = phaset[0]
-                if spinodalEvent(ode.t, ode.y) <= 0:
-                    break
-                if not paranoid:
+                else:
                     # check if extremum is still accurate
                     dVt = self.effectivePotential.derivField(Fields((ode.y)), ode.t)
                     err = np.linalg.norm(dVt) / T0**3
@@ -382,6 +389,14 @@ class FreeEnergy(InterpolatableFunction):
                         potentialEffT = np.asarray(
                             self.effectivePotential.evaluate(Fields((ode.y)), ode.t)
                         )
+
+                # Computing all the derivatives along the whole phase tracing
+                dVdT = self.effectivePotential.derivT(Fields((ode.y)), ode.t)
+                (d2Vdphi2,
+                 d2VdphidT,
+                 d2VdT2) = self.effectivePotential.allSecondDerivatives(
+                     FieldPoint(ode.y), ode.t)
+
                 # check if step size is still okay to continue
                 if ode.step_size < 1e-16 * T0 or (
                     TList.size > 0 and ode.t == TList[-1]
@@ -393,19 +408,51 @@ class FreeEnergy(InterpolatableFunction):
                         ode.y,
                     )
                     break
+
+                dphidT = -np.linalg.inv(d2Vdphi2)@d2VdphidT
+                D2VDT2 = d2VdT2+dphidT@d2VdphidT
+
+                # check that sound speed square is still positive
+                csq = dVdT/D2VDT2/ode.t
+                if csq < 0:
+                    break
+                # Check if 2 methods for computing the 2nd derivative disagree by more
+                # than a factor of 2. This would indicate a discontinuity caused by a
+                # phase disappearing.
+                if TList.size >= 2:
+                    # The first method uses the last value stored in d2VdT2List, which
+                    # computes the total derivative in terms of the partial derivatives
+                    # of V and the field phi. This is the more accurate method.
+                    # The second method takes the finite derivative of dVdT, which
+                    # should break down when the phase disappears because there is a
+                    # discontinuity. 
+                    if d2VdT2List[-1,0]*(ode.t-TList[-2])/(dVdT-dVdTList[-2,0]) < 0.5:
+                        break
+
                 # append results to lists
                 TList = np.append(TList, [ode.t], axis=0)
                 fieldList = np.append(fieldList, [ode.y], axis=0)
                 potentialEffList = np.append(potentialEffList, [potentialEffT], axis=0)
+                dVdTList = np.append(dVdTList, [[dVdT]], axis=0)
+                d2VdT2List = np.append(d2VdT2List, [[D2VDT2]], axis=0)
+                dphidTList = np.append(dphidTList,
+                                       [dphidT],
+                                       axis=0)
             if direction == 0:
                 # populating results array
                 TFullList = TList
                 fieldFullList = fieldList
                 potentialEffFullList = potentialEffList
+                dVdTFullList = dVdTList
+                d2VdT2FullList = d2VdT2List
+                dphidTFullList = dphidTList
                 # making new empty array for downwards integration
                 TList = np.empty(0, dtype=float)
                 fieldList = np.empty((0, phase0.numFields()), dtype=float)
                 potentialEffList = np.empty((0, 1), dtype=float)
+                dVdTList = np.empty((0, 1), dtype=float)
+                d2VdT2List = np.empty((0, 1), dtype=float)
+                dphidTList = np.empty((0, phase0.numFields()), dtype=float)
             else:
                 if len(TList) > 1:
                     # combining up and down integrations
@@ -415,6 +462,13 @@ class FreeEnergy(InterpolatableFunction):
                     )
                     potentialEffFullList = np.append(
                         np.flip(potentialEffList, axis=0), potentialEffFullList, axis=0
+                    )
+                    dVdTFullList = np.append(
+                        np.flip(dVdTList, axis=0), dVdTFullList, axis=0)
+                    d2VdT2FullList = np.append(
+                        np.flip(d2VdT2List, axis=0), d2VdT2FullList, axis=0)
+                    dphidTFullList = np.append(
+                        np.flip(dphidTList, axis=0), dphidTFullList, axis=0
                     )
                 elif len(TFullList) <= 1:
                     # Both up and down lists are too short
@@ -445,9 +499,21 @@ class FreeEnergy(InterpolatableFunction):
                 Try decreasing temperatureVariationScale."""
             )
 
+        # Compute the second derivative of the field by finite differences
+        d2phidT2 = np.zeros_like(dphidTFullList)
+        d2phidT2[1:-1] = ((dphidTFullList[2:] - dphidTFullList[:-2]) /
+                          (TFullList[2:] - TFullList[:-2])[:,None])
+        d2phidT2[0] = ((dphidTFullList[1] - dphidTFullList[0]) /
+                          (TFullList[1] - TFullList[0]))
+        d2phidT2[-1] = ((dphidTFullList[-1] - dphidTFullList[-2]) /
+                          (TFullList[-1] - TFullList[-2]))
+
         # Now to construct the interpolation
         result = np.concatenate((fieldFullList, potentialEffFullList), axis=1)
-        self.newInterpolationTableFromValues(TFullList, result)
+        deriv1 = np.concatenate((dphidTFullList, dVdTFullList), axis=1)
+        deriv2 = np.concatenate((d2phidT2, d2VdT2FullList), axis=1)
+        self.newInterpolationTableFromValues(TFullList, result, [deriv1, deriv2],
+                                             interpolationDegree)
 
     def constructInterpolationFromArray(
         self,

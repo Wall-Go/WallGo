@@ -238,13 +238,13 @@ class WallGoManager:
             phaseLocation1,
             effPotValue1,
         ) = self.model.getEffectivePotential().findLocalMinimum(
-            phaseInput.phaseLocation1, T
+            phaseInput.phaseLocation1, T, method='Nelder-Mead'
         )
         (
             phaseLocation2,
             effPotValue2,
         ) = self.model.getEffectivePotential().findLocalMinimum(
-            phaseInput.phaseLocation2, T
+            phaseInput.phaseLocation2, T, method='Nelder-Mead'
         )
 
         logging.info(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
@@ -410,6 +410,15 @@ class WallGoManager:
         if TLowTMinTemplate is None:
             TLowTMinTemplate = self.config.configHydrodynamics.tmin * Tn
 
+        phaseTracerTol = self.config.configThermodynamics.phaseTracerTol
+        interpolationDegree = self.config.configThermodynamics.interpolationDegree
+
+        # Estimate of the dT needed to reach the desired tolerance considering
+        # the error of a cubic spline scales like dT**4.
+        dT = (
+            self.model.getEffectivePotential().derivativeSettings.temperatureVariationScale
+            * phaseTracerTol**0.25
+        )
         """Since the template model is an approximation of the full model, 
         and since the temperature profile in the wall could be non-monotonous,
         we should not take exactly the TMin and TMax from the template model.

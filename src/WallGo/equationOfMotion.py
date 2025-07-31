@@ -135,6 +135,9 @@ class EOM:
         self.successTemperatureProfile = True
         ## Flag to detect if we were able to find the pressure
         self.successWallPressure = True
+        
+        # also getting the LTE results
+        self.wallVelocityLTE = self.hydrodynamics.findvwLTE()
 
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
@@ -185,7 +188,15 @@ class EOM:
                 Consider increasing the maximum temperature if no velocity is found. \n"""
             )
 
-        return self.solveWall(vmin, vmax, wallParams)
+        results = self.solveWall(vmin, vmax, wallParams)
+        if (results.solutionType != ESolutionType.DEFLAGRATION and
+            0 < self.wallVelocityLTE < 1 and
+            self.includeOffEq):
+            # If there is a LTE solution but no out-of-equilibrium one, retry with vmax
+            # set to the LTE velocity.
+            results = self.solveWall(vmin, self.wallVelocityLTE, wallParams)
+            
+        return results
 
     def findWallVelocityDetonation(
         self,
@@ -451,15 +462,12 @@ class EOM:
                 hydroResultsMax,
             ) = wallPressureResultsMax
 
-        # also getting the LTE results
-        wallVelocityLTE = self.hydrodynamics.findvwLTE()
-
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
         if pressureMax < 0:
             logging.info("Maximum pressure on wall is negative!")
             logging.info(f"{pressureMax=} {wallParamsMax=}")
-            results.setWallVelocities(None, None, wallVelocityLTE)
+            results.setWallVelocities(None, None, self.wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
@@ -500,7 +508,7 @@ class EOM:
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
                 )
-                results.setWallVelocities(None, None, wallVelocityLTE)
+                results.setWallVelocities(None, None, self.wallVelocityLTE)
                 results.setWallParams(wallParamsMin)
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
@@ -601,7 +609,7 @@ class EOM:
         if self.includeOffEq:
             finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
             # assuming nonequilibrium errors proportional to deviation from LTE
-            wallVelocityDeltaLTE = abs(wallVelocity - wallVelocityLTE)
+            wallVelocityDeltaLTE = abs(wallVelocity - self.wallVelocityLTE)
             # the truncation error in the spectral method within Boltzmann
             wallVelocityTruncationError = (
                 boltzmannResults.truncationError * wallVelocityDeltaLTE
@@ -632,7 +640,7 @@ class EOM:
         results.setWallVelocities(
             wallVelocity=wallVelocity,
             wallVelocityError=wallVelocityError,
-            wallVelocityLTE=wallVelocityLTE,
+            wallVelocityLTE=self.wallVelocityLTE,
         )
 
         results.setHydroResults(hydroResults)
