@@ -5,6 +5,7 @@ Data classes for compiling and returning results
 from dataclasses import dataclass
 from enum import Enum
 import numpy as np
+from typing import Tuple
 from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
@@ -217,6 +218,12 @@ class WallGoResults:
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
 
+    violationOfEMConservation: Tuple[float,float]
+    """
+    RMS along the grid of the violation of the conservation of the components T30 and T33 of
+    the energy-momentum tensor.
+    """
+
     solutionType: ESolutionType
     """
     Describes the type of solution obtained. Must be a ESolutionType object. The
@@ -293,6 +300,17 @@ class WallGoResults:
         """
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
+
+    def setViolationOfEMConservation(
+        self, violationOfEMConservation: Tuple[float, float]
+    ) -> None:
+        """
+        Set the violation of energy-momentum conservation results
+        """
+        assert (
+            len(violationOfEMConservation) == 2
+        ), "WallGoResults Error: violationOfEMConservation must be a tuple of two floats."
+        self.violationOfEMConservation = violationOfEMConservation
 
     def setSuccessState(
         self,

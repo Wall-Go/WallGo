@@ -313,6 +313,7 @@ def test_EOMSolver(muSq, lam):
         boltzmannResults,
         boltzmannBackground,
         hydroResults,
+        *_
     ) = eom.wallPressure(0.3, wallParams)
     
     tanhError = eom.estimateTanhError(wallParams, boltzmannResults, boltzmannBackground, hydroResults)[0]

@@ -53,6 +53,7 @@ class EOM:
         errTol: float = 1e-3,
         maxIterations: int = 10,
         pressRelErrTol: float = 0.3679,
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
     ):
         """
         Initialization
@@ -139,6 +140,7 @@ class EOM:
         # also getting the LTE results
         self.wallVelocityLTE = self.hydrodynamics.findvwLTE()
 
+
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
     ) -> WallGoResults:
@@ -179,7 +181,7 @@ class EOM:
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
 
         if vmax < self.hydrodynamics.vJ and (
-            self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
+            self.hydrodynamics.doesPhaseTraceLimitvmax[0]
             or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
             logging.warning(
@@ -452,6 +454,8 @@ class EOM:
                 boltzmannResultsMax,
                 boltzmannBackgroundMax,
                 hydroResultsMax,
+                EMviolationT30Max,
+                EMviolationT33Max,
             ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
         else:
             (
@@ -460,6 +464,8 @@ class EOM:
                 boltzmannResultsMax,
                 boltzmannBackgroundMax,
                 hydroResultsMax,
+                EMviolationT30Max,
+                EMviolationT33Max,
             ) = wallPressureResultsMax
 
         # The pressure peak is not enough to stop the wall: no deflagration or
@@ -472,6 +478,7 @@ class EOM:
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
             results.setBoltzmannResults(boltzmannResultsMax)
+            results.setViolationOfEMConservation((EMviolationT30Max, EMviolationT33Max))
             results.setSuccessState(
                 True,
                 ESolutionType.RUNAWAY,
@@ -488,6 +495,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
+                EMviolationT30Min,
+                EMviolationT33Min,
             ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
         else:
             (
@@ -496,6 +505,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
+                EMviolationT30Min,
+                EMviolationT33Min,
             ) = wallPressureResultsMin
 
         while pressureMin > 0:
@@ -513,6 +524,9 @@ class EOM:
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
+                results.setViolationOfEMConservation(
+                    EMviolationT30Min, EMviolationT33Min
+                )
                 results.setSuccessState(
                     False,
                     ESolutionType.ERROR,
@@ -526,6 +540,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
+                EMviolationT30Min,
+                EMviolationT33Min,
             ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
 
         self.pressAbsErrTol = (
@@ -584,21 +600,21 @@ class EOM:
             boltzmannResults,
             boltzmannBackground,
             hydroResults,
+            EMviolationT30,
+            EMviolationT33,
         ) = self.wallPressure(
             wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults
         )
-        
+
         eomResidual = self.estimateTanhError(
-            wallParams,
-            boltzmannResults,
-            boltzmannBackground,
-            hydroResults
+            wallParams, boltzmannResults, boltzmannBackground, hydroResults
         )
-            
+
         # Computing the linearisation criteria
         if self.includeOffEq:
             criterion1, criterion2 = self.boltzmannSolver.checkLinearization(
-                boltzmannResults.deltaF)
+                boltzmannResults.deltaF
+            )
             boltzmannResults.linearizationCriterion1 = criterion1
             boltzmannResults.linearizationCriterion2 = criterion2
 
@@ -648,6 +664,7 @@ class EOM:
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
         results.setFiniteDifferenceBoltzmannResults(finiteDifferenceBoltzmannResults)
+        results.setViolationOfEMConservation((EMviolationT30, EMviolationT33))
         results.eomResidual = eomResidual
 
         # Set the message
@@ -718,7 +735,15 @@ class EOM:
         atol: float | None = None,
         rtol: float | None = None,
         boltzmannResultsInput: BoltzmannResults | None = None,
-    ) -> tuple[float, WallParams, BoltzmannResults, BoltzmannBackground, HydroResults]:
+    ) -> tuple[
+        float,
+        WallParams,
+        BoltzmannResults,
+        BoltzmannBackground,
+        HydroResults,
+        float,
+        float,
+    ]:
         """
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action. Can use two different iteration algorithms
@@ -844,6 +869,8 @@ class EOM:
             wallParams,
             boltzmannResults,
             boltzmannBackground,
+            EMviolationBefore,
+            EMviolationAfter,
         ) = self._intermediatePressureResults(
             wallParams,
             vevLowT,
@@ -878,9 +905,14 @@ class EOM:
         multiplier = 1.0
 
         i = 0
-        logging.debug(
-            f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s}"
-        )
+        if self.includeOffEq:
+            logging.debug(
+                f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s} {'EMViolation before (T30)':>20s} {'EMViolation after (T30)':>20s}"
+            )
+        else:
+            logging.debug(
+                f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s} {'EMViolation (T30)':>20s}"
+            )
         while True:
             if improveConvergence:
                 # Use the improved algorithm (which converges better but slowly)
@@ -890,6 +922,8 @@ class EOM:
                     boltzmannResults,
                     boltzmannBackground,
                     errorSolver,
+                    EMviolationBefore,
+                    EMviolationAfter,
                 ) = self._getNextPressure(
                     pressure,
                     wallParams,
@@ -911,6 +945,8 @@ class EOM:
                     wallParams,
                     boltzmannResults,
                     boltzmannBackground,
+                    EMviolationBefore,
+                    EMviolationAfter,
                 ) = self._intermediatePressureResults(
                     wallParams,
                     vevLowT,
@@ -931,9 +967,14 @@ class EOM:
             error = np.abs(pressures[-1] - pressures[-2])
             errTol = np.maximum(rtol * np.abs(pressure), atol) * multiplier
 
-            logging.debug(
-                f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g}"
-            )
+            if self.includeOffEq:
+                logging.debug(
+                    f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g} {EMviolationBefore[0]:>20g} {EMviolationAfter[0]:>20g}"
+                )
+            else:
+                logging.debug(
+                    f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g} {EMviolationBefore[0]:>20g}"
+                )
             i += 1
 
             if error < errTol or (errorSolver < errTol and improveConvergence):
@@ -977,13 +1018,15 @@ class EOM:
 
         logging.info(f"Final {pressure=:g}")
         logging.debug(f"Final {wallParams=}")
-        
+
         return (
             pressure,
             wallParams,
             boltzmannResults,
             boltzmannBackground,
             hydroResults,
+            EMviolationAfter[0],
+            EMviolationAfter[1],
         )
 
     def _getNextPressure(
@@ -1015,6 +1058,8 @@ class EOM:
             wallParams2,
             boltzmannResults2,
             _,
+            _,
+            _,
         ) = self._intermediatePressureResults(
             wallParams1,
             vevLowT,
@@ -1034,6 +1079,8 @@ class EOM:
             wallParams3,
             boltzmannResults3,
             boltzmannBackground3,
+            EMviolationBefore,
+            EMviolationAfter,
         ) = self._intermediatePressureResults(
             wallParams2,
             vevLowT,
@@ -1053,7 +1100,15 @@ class EOM:
         ## last update go in the same direction), returns the last iteration.
         if (pressure3 - pressure2) * (pressure2 - pressure1) >= 0:
             err = abs(pressure3 - pressure2)
-            return pressure3, wallParams3, boltzmannResults3, boltzmannBackground3, err
+            return (
+                pressure3,
+                wallParams3,
+                boltzmannResults3,
+                boltzmannBackground3,
+                err,
+                EMviolationBefore,
+                EMviolationAfter,
+            )
 
         ## If the last iteration overshot, uses linear interpolation to find a
         ## better estimate of the true solution.
@@ -1063,6 +1118,8 @@ class EOM:
             wallParams4,
             boltzmannResults4,
             boltzmannBackground4,
+            EMviolationBefore,
+            EMviolationAfter,
         ) = self._intermediatePressureResults(
             wallParams1 + (wallParams2 - wallParams1) * interpPoint,
             vevLowT,
@@ -1078,7 +1135,15 @@ class EOM:
             multiplier,
         )
         err = abs(pressure4 - pressure2)
-        return pressure4, wallParams4, boltzmannResults4, boltzmannBackground4, err
+        return (
+            pressure4,
+            wallParams4,
+            boltzmannResults4,
+            boltzmannBackground4,
+            err,
+            EMviolationBefore,
+            EMviolationAfter,
+        )
 
     def _intermediatePressureResults(
         self,
@@ -1094,7 +1159,14 @@ class EOM:
         temperatureProfileInput: np.ndarray | None = None,
         velocityProfileInput: np.ndarray | None = None,
         multiplier: float = 1.0,
-    ) -> tuple[float, WallParams, BoltzmannResults, BoltzmannBackground]:
+    ) -> tuple[
+        float,
+        WallParams,
+        BoltzmannResults,
+        BoltzmannBackground,
+        tuple[float, float],
+        tuple[float, float],
+    ]:
         """
         Performs one step of the iteration procedure to update the pressure,
         wall parameters and Boltzmann solution. This is done by first solving
@@ -1133,6 +1205,19 @@ class EOM:
         else:
             temperatureProfile = temperatureProfileInput
             velocityProfile = velocityProfileInput
+
+        ## Compute the violation of energy-momentum conservation before solving the Boltzmann equation
+        violationOfEMConservationBefore = self.violationOfEMConservation(
+            c1,
+            c2,
+            velocityMid,
+            fields,
+            dfieldsdz,
+            boltzmannResults.Deltas,
+            temperatureProfile,
+            velocityProfile,
+            max(wallParams.widths),
+        )
 
         ## Prepare a new background for Boltzmann
         TWithEndpoints: np.ndarray = np.concatenate(
@@ -1208,6 +1293,19 @@ class EOM:
         )
         dVdPhi = self.thermo.effectivePotential.derivField(fields, temperatureProfile)
 
+        ## Compute the violation of energy-momentum conservation after solving the Boltzmann equation
+        violationOfEMConservationAfter = self.violationOfEMConservation(
+            c1,
+            c2,
+            velocityMid,
+            fields,
+            dPhidz,
+            boltzmannResults.Deltas,
+            temperatureProfile,
+            velocityProfile,
+            max(wallParams.widths),
+        )
+
         # Out-of-equilibrium term of the EOM
         dVout = (
             np.sum(
@@ -1233,7 +1331,14 @@ class EOM:
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
         pressure = eomPoly.integrate(weight=-dzdchi)
 
-        return pressure, wallParams, boltzmannResults, boltzmannBackground
+        return (
+            pressure,
+            wallParams,
+            boltzmannResults,
+            boltzmannBackground,
+            violationOfEMConservationBefore,
+            violationOfEMConservationAfter,
+        )
 
     def _toWallParams(self, wallArray: np.ndarray) -> WallParams:
         offsets: np.ndarray = np.concatenate(
@@ -1364,14 +1469,14 @@ class EOM:
         )
 
         return float(U + K)
-    
+
     def estimateTanhError(
-            self,
-            wallParams: WallParams,
-            boltzmannResults: BoltzmannResults,
-            boltzmannBackground: BoltzmannBackground,
-            hydroResults: HydroResults,
-        ) -> np.ndarray:
+        self,
+        wallParams: WallParams,
+        boltzmannResults: BoltzmannResults,
+        boltzmannBackground: BoltzmannBackground,
+        hydroResults: HydroResults,
+    ) -> np.ndarray:
         """
         Estimates the EOM error due to the tanh ansatz. It is estimated by the integral
 
@@ -1382,13 +1487,13 @@ class EOM:
         .. math:: \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
 
         and
-        
+
         .. math:: |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
-        
+
         """
         Tminus = hydroResults.temperatureMinus
         Tplus = hydroResults.temperaturePlus
-        
+
         # Positions of the phases
         TminusEval = max(
             min(Tminus, self.thermo.freeEnergyLow.interpolationRangeMax()),
@@ -1400,18 +1505,18 @@ class EOM:
         )
         vevLowT = self.thermo.freeEnergyLow(TminusEval).fieldsAtMinimum
         vevHighT = self.thermo.freeEnergyHigh(TplusEval).fieldsAtMinimum
-        
+
         temperatureProfile = boltzmannBackground.temperatureProfile[1:-1]
-        
+
         z = self.grid.xiValues
         fields = self.wallProfile(z, vevLowT, vevHighT, wallParams)[0]
         d2FieldsDz2 = -(
-            (vevHighT-vevLowT)
-            * np.tanh(z[:,None]/wallParams.widths[None,:] + wallParams.offsets)
-            / np.cosh(z[:,None]/wallParams.widths[None,:] + wallParams.offsets)**2
+            (vevHighT - vevLowT)
+            * np.tanh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets)
+            / np.cosh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets) ** 2
             / wallParams.widths**2
-            )
-        
+        )
+
         dVdPhi = self.thermo.effectivePotential.derivField(fields, temperatureProfile)
 
         # Out-of-equilibrium term of the EOM
@@ -1427,17 +1532,17 @@ class EOM:
             )
             / 2
         )
-        
-        eomSq = (-d2FieldsDz2 + dVdPhi + dVout)**2
+
+        eomSq = (-d2FieldsDz2 + dVdPhi + dVout) ** 2
         eomSqScale = d2FieldsDz2**2 + dVdPhi**2 + dVout**2
-        
+
         eomSqPoly = Polynomial(eomSq, self.grid, basis=("Cardinal", "Array"))
         eomSqScalePoly = Polynomial(eomSqScale, self.grid, basis=("Cardinal", "Array"))
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
-        eomSqResidual = eomSqPoly.integrate(axis=0, weight=dzdchi[:,None])
-        eomSqScaleIntegrated = eomSqScalePoly.integrate(axis=0, weight=dzdchi[:,None])
-        
-        return eomSqResidual.coefficients/eomSqScaleIntegrated.coefficients
+        eomSqResidual = eomSqPoly.integrate(axis=0, weight=dzdchi[:, None])
+        eomSqScaleIntegrated = eomSqScalePoly.integrate(axis=0, weight=dzdchi[:, None])
+
+        return eomSqResidual.coefficients / eomSqScaleIntegrated.coefficients
 
     def wallProfile(
         self,
@@ -1680,7 +1785,7 @@ class EOM:
             Plasma velocity.
 
         """
-        # Need enthalpy ouside a free-energy minimum (eq .(12) in arXiv:2204.13120v1)
+        # Need enthalpy outside a free-energy minimum (eq .(12) in arXiv:2204.13120v1)
         enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
 
         return float((-enthalpy + np.sqrt(4 * s1**2 + enthalpy**2)) / (2 * s1))
@@ -1715,7 +1820,7 @@ class EOM:
             LHS of Eq. (20) of arXiv:2204.13120v1.
 
         """
-        # Need enthalpy ouside a free-energy minimum (eq (12) in the ref.)
+        # Need enthalpy outside a free-energy minimum (eq (12) in the ref.)
         enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
 
         kineticTerm = 0.5 * np.sum(dPhidz**2).view(np.ndarray)
@@ -1861,3 +1966,150 @@ class EOM:
         boltzmannSolverFiniteDifference.collisionArray.changeBasis("Cardinal")
         # now computing results
         return boltzmannSolverFiniteDifference.getDeltas()
+
+    def violationOfEMConservation(
+        self,
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
+        velocityMid: float,
+        fields: Fields,
+        dPhidz: Fields,
+        offEquilDeltas: BoltzmannDeltas,
+        temperatureProfile: np.ndarray,
+        velocityProfile: np.ndarray,
+        wallThickness: float,
+    ) -> Tuple[float, float]:
+        r"""
+        Determines the RMS (along the grid) of the residual of the energy-momentum equations (18) of arXiv:2204.13120v1.
+
+        Parameters
+        ----------
+        index : int
+            Index of the grid point.
+        c1 : float
+            Value of the :math:`T^{30}` component of the energy-momentum tensor.
+        c2 : float
+            Value of the :math:`T^{33}` component of the energy-momentum tensor.
+        velocityMid : float
+            Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
+        fields : FieldPoint
+            Scalar field profile.
+        dPhidz : FieldPoint
+            Derivative with respect to the position of the scalar field profile.
+        offEquilDeltas : BoltzmannDeltas
+            BoltzmannDeltas object containing the off-equilibrium Delta functions
+        temperatureProfile: np.ndarray
+            Plasma temperature profile at the grid points.
+        velocityProfile: np.ndarray
+            Plasma velocity profile at the grid points.
+        wallThickness: float
+            Thickness of the wall, used to normalize the violations.
+
+        Returns
+        -------
+        violationEM30, violationEM33 : (float, float)
+            Violation of energy-momentum conservation in T03 and T33 integrated over the grid,
+            normalized by the wall thickness.
+
+        """
+
+        violationT30sq = np.zeros(len(self.grid.xiValues))
+        violationT33sq = np.zeros(len(self.grid.xiValues))
+
+        for index in range(len(self.grid.xiValues)):
+            vt30, vt33 = self.violationEMPoint(
+                index,
+                c1,
+                c2,
+                velocityMid,
+                fields.getFieldPoint(index),
+                dPhidz.getFieldPoint(index),
+                offEquilDeltas,
+                temperatureProfile[index],
+                velocityProfile[index],
+            )
+
+            violationT30sq[index] = (
+                (np.asarray(vt30).item()) ** 2
+                if isinstance(vt30, np.ndarray)
+                else vt30**2
+            )
+            violationT33sq[index] = (
+                (np.asarray(vt33).item()) ** 2
+                if isinstance(vt33, np.ndarray)
+                else vt33**2
+            )
+
+        T30Poly = Polynomial(violationT30sq, self.grid)
+        T33Poly = Polynomial(violationT33sq, self.grid)
+        dzdchi, _, _ = self.grid.getCompactificationDerivatives()
+        violationT30sqIntegrated = T30Poly.integrate(weight=dzdchi)
+        violationT33sqIntegrated = T33Poly.integrate(weight=dzdchi)
+
+        return (
+            np.sqrt(violationT30sqIntegrated) / wallThickness,
+            np.sqrt(violationT33sqIntegrated) / wallThickness,
+        )
+
+    def violationEMPoint(
+        self,
+        index: int,
+        c1: float,  # pylint: disable=invalid-name
+        c2: float,  # pylint: disable=invalid-name
+        velocityMid: float,
+        fields: FieldPoint,
+        dPhidz: FieldPoint,
+        offEquilDeltas: BoltzmannDeltas,
+        T: float,
+        v: float,  # pylint: disable=invalid-name
+    ) -> Tuple[float, float]:
+        r"""
+        Determines the residual of the energy-momentum equations (18) of arXiv:2204.13120v1 locally.
+
+        Parameters
+        ----------
+        index : int
+            Index of the grid point.
+        c1 : float
+            Value of the :math:`T^{30}` component of the energy-momentum tensor.
+        c2 : float
+            Value of the :math:`T^{33}` component of the energy-momentum tensor.
+        velocityMid : float
+            Midpoint of plasma velocity in the wall frame, :math:`(v_+ + v_-)/2`.
+        fields : FieldPoint
+            Scalar field profile.
+        dPhidz : FieldPoint
+            Derivative with respect to the position of the scalar field profile.
+        offEquilDeltas : BoltzmannDeltas
+            BoltzmannDeltas object containing the off-equilibrium Delta functions
+        T: float
+            Plasma temperature at the point grid.xiValues[index].
+        v: float
+            Plasma velocity at the point grid.xiValues[index].
+
+        Returns
+        -------
+        violationEM30, violationEM33 : float
+            Violation of energy-momentum conservation in T03 and T33 at the point grid.xiValues[index].
+
+        """
+
+        # Computing the out-of-equilibrium part of the energy-momentum tensor
+        Tout30, Tout33 = self.deltaToTmunu(index, fields, velocityMid, offEquilDeltas)
+
+        # Need enthalpy ouside a free-energy minimum (eq .(12) in arXiv:2204.13120v1)
+        enthalpy = -T * self.thermo.effectivePotential.derivT(fields, T)
+
+        # Kinetic term
+        kineticTerm = 0.5 * np.sum(dPhidz**2).view(np.ndarray)
+
+        ## eff potential at this field point and temperature. NEEDS the T-dep constant
+        veff = self.thermo.effectivePotential.evaluate(fields, T)
+
+        violationEM30 = (enthalpy * v / (1 - v**2) + Tout30 - c1) / c1
+
+        violationEM33 = (
+            kineticTerm - veff + enthalpy * v**2 / (1 - v**2) + Tout33 - c2
+        ) / c2
+
+        return (violationEM30, violationEM33)
