@@ -25,7 +25,6 @@ G. Moore and T. Prokopec, How fast can the wall move?
 A Study of the electroweak phase transition dynamics, Phys.Rev.D 52 (1995) 7182-7204
 doi:10.1103/PhysRevD.52.7182
 """
-
 import sys
 import pathlib
 import numpy as np
@@ -299,9 +298,9 @@ class EffectivePotentialSM(EffectivePotential):
         lambdaT = self.modelParameters["lambda"] - 3 / (
             16 * np.pi * np.pi * self.modelParameters["v0"] ** 4
         ) * (
-            2 * mW**4 * np.log(mW**2 / (ab * T**2) + 1e-100)
-            + mZ**4 * np.log(mZ**2 / (ab * T**2) + 1e-100)
-            - 4 * mt**4 * np.log(mt**2 / (af * T**2) + 1e-100)
+            2 * mW**4 * np.log(mW**2 / (ab * T**2) )
+            + mZ**4 * np.log(mZ**2 / (ab * T**2) )
+            - 4 * mt**4 * np.log(mt**2 / (af * T**2) )
         )
 
         cT: float | np.ndarray = self.modelParameters["C0"] + 1 / (
@@ -317,7 +316,7 @@ class EffectivePotentialSM(EffectivePotential):
 
         potentialT: float | np.ndarray = (
             self.modelParameters["D"] * (T**2 - self.modelParameters["T0sq"]) * v**2
-            - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T))
+            - cT * T**2 * pow(v, 2) * np.log(np.abs(v / T) + 1e-100) # Avoid log(0)
             - eT * T * pow(v, 3)
             + lambdaT / 4 * pow(v, 4)
         )
@@ -529,7 +528,7 @@ class StandardModelExample(WallGoExampleBase):
         of the Higgs mass.
         """
         valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
-        valuesTn = [57.192, 70.579, 83.426, 102.344, 113.575]
+        valuesTn = [57.1958, 70.5793, 83.4251, 102.344, 113.575]
 
         output: list[ExampleInputPoint] = []
 
