@@ -137,8 +137,10 @@ class EOM:
         ## Flag to detect if we were able to find the pressure
         self.successWallPressure = True
         
-        # also getting the LTE results
-        self.wallVelocityLTE = self.hydrodynamics.findvwLTE()
+        ## Setup lists used to estimate the pressure derivative
+        self.listVelocity = []
+        self.listPressure = []
+        self.listPressureError = []
 
 
     def findWallVelocityDeflagrationHybrid(
@@ -187,18 +189,10 @@ class EOM:
             logging.warning(
                 """\n Warning: vmax is limited by the maximum temperature chosen in
                 the phase tracing. WallGo might be unable to find the wall velocity.
-                Consider increasing the maximum temperature if no velocity is found. \n"""
+                Try increasing the maximum temperature! \n"""
             )
 
-        results = self.solveWall(vmin, vmax, wallParams)
-        if (results.solutionType != ESolutionType.DEFLAGRATION and
-            0 < self.wallVelocityLTE < 1 and
-            self.includeOffEq):
-            # If there is a LTE solution but no out-of-equilibrium one, retry with vmax
-            # set to the LTE velocity.
-            results = self.solveWall(vmin, self.wallVelocityLTE, wallParams)
-            
-        return results
+        return self.solveWall(vmin, vmax, wallParams)
 
     def findWallVelocityDetonation(
         self,
@@ -441,6 +435,11 @@ class EOM:
             Data class containing results.
 
         """
+        ## Reset lists used to estimate the pressure derivative
+        self.listVelocity = []
+        self.listPressure = []
+        self.listPressureError = []
+        
         results = WallGoResults()
         results.hasOutOfEquilibrium = self.includeOffEq
 
@@ -468,12 +467,15 @@ class EOM:
                 EMviolationT33Max,
             ) = wallPressureResultsMax
 
+        # also getting the LTE results
+        wallVelocityLTE = self.hydrodynamics.findvwLTE()
+
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
         if pressureMax < 0:
             logging.info("Maximum pressure on wall is negative!")
             logging.info(f"{pressureMax=} {wallParamsMax=}")
-            results.setWallVelocities(None, None, self.wallVelocityLTE)
+            results.setWallVelocities(None, None, wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
@@ -519,7 +521,7 @@ class EOM:
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
                 )
-                results.setWallVelocities(None, None, self.wallVelocityLTE)
+                results.setWallVelocities(None, None, wallVelocityLTE)
                 results.setWallParams(wallParamsMin)
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
@@ -610,35 +612,61 @@ class EOM:
             wallParams, boltzmannResults, boltzmannBackground, hydroResults
         )
 
-        # Computing the linearisation criteria
+        # minimum possible error in the wall speed
+        wallVelocityMinError = self.errTol
+
         if self.includeOffEq:
+            # Computing the linearisation criteria
             criterion1, criterion2 = self.boltzmannSolver.checkLinearization(
                 boltzmannResults.deltaF
             )
             boltzmannResults.linearizationCriterion1 = criterion1
             boltzmannResults.linearizationCriterion2 = criterion2
+            
+            # Computing the out-of-equilibrium pressure to get the absolute error
+            vevLowT = boltzmannBackground.fieldProfiles.getFieldPoint(0)
+            vevHighT = boltzmannBackground.fieldProfiles.getFieldPoint(-1)
+            fields, dPhidz = self.wallProfile(
+                self.grid.xiValues, vevLowT, vevHighT, wallParams
+            )
+            dVout = (
+                np.sum(
+                    [
+                        particle.totalDOFs
+                        * particle.msqDerivative(fields)
+                        * boltzmannResults.Deltas.Delta00.coefficients[i, :, None]
+                        for i, particle in enumerate(self.particles)
+                    ],
+                    axis=0,
+                )
+                / 2
+            )
 
-        # minimum possible error in the wall speed
-        wallVelocityMinError = self.errTol * optimizeResult.root
+            dVoutdz = np.sum(np.array(dVout * dPhidz), axis=1)
 
-        # estimating errors from truncation and comparison to finite differences
-        if self.includeOffEq:
+            # Create a Polynomial object to represent dVdz. Will be used to integrate it.
+            dVoutdzPoly = Polynomial(dVoutdz, self.grid)
+
+            dzdchi, _, _ = self.grid.getCompactificationDerivatives()
+            offEquilPressureScale = np.abs(dVoutdzPoly.integrate(weight=-dzdchi))
+            
+            # Compute the pressure derivative
+            pressureDerivative = self.estimatePressureDerivative(wallVelocity)
+            
+            # estimating errors from truncation and comparison to finite differences
             finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
-            # assuming nonequilibrium errors proportional to deviation from LTE
-            wallVelocityDeltaLTE = abs(wallVelocity - self.wallVelocityLTE)
             # the truncation error in the spectral method within Boltzmann
-            wallVelocityTruncationError = (
-                boltzmannResults.truncationError * wallVelocityDeltaLTE
+            wallVelocityTruncationError = abs(
+                boltzmannResults.truncationError * offEquilPressureScale / pressureDerivative
             )
             # the deviation from the finite difference method within Boltzmann
             delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
             delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
             errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
-            wallVelocityDerivativeError = errorFD * wallVelocityDeltaLTE
 
             # if truncation waringin large, raise a warning
             if (
-                wallVelocityTruncationError > wallVelocityDerivativeError
+                boltzmannResults.truncationError > errorFD
                 and wallVelocityTruncationError > self.errTol
             ):
                 warnings.warn("Truncation error large, increase N or M", RuntimeWarning)
@@ -656,7 +684,7 @@ class EOM:
         results.setWallVelocities(
             wallVelocity=wallVelocity,
             wallVelocityError=wallVelocityError,
-            wallVelocityLTE=self.wallVelocityLTE,
+            wallVelocityLTE=wallVelocityLTE,
         )
 
         results.setHydroResults(hydroResults)
@@ -1018,7 +1046,11 @@ class EOM:
 
         logging.info(f"Final {pressure=:g}")
         logging.debug(f"Final {wallParams=}")
-
+        
+        self.listVelocity.append(wallVelocity)
+        self.listPressure.append(pressure)
+        self.listPressureError.append(max(error, rtol * np.abs(pressure), atol))
+        
         return (
             pressure,
             wallParams,
@@ -1541,8 +1573,50 @@ class EOM:
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
         eomSqResidual = eomSqPoly.integrate(axis=0, weight=dzdchi[:, None])
         eomSqScaleIntegrated = eomSqScalePoly.integrate(axis=0, weight=dzdchi[:, None])
-
+        
         return eomSqResidual.coefficients / eomSqScaleIntegrated.coefficients
+    
+    def estimatePressureDerivative(self, wallVelocity: float) -> float:
+        """
+        Estimates the derivative of the preessure with respect to the wall velocity from
+        a least square fit of the computed pressure to a line. Must have run
+        wallPressure at velocities close to wallVelocity before calling this function.
+
+        Parameters
+        ----------
+        wallVelocity : float
+            Wall velocity.
+
+        Returns
+        -------
+        float
+            Derivative of the pressure at wallVelocity.
+
+        """
+        # Number of pressure points
+        nbrPressure = len(self.listPressure)
+
+        assert (len(self.listPressureError) ==
+                len(self.listVelocity) ==
+                nbrPressure >= 2), """The lists listVelocity, listPressure, 
+                                     listPressureError must have the same length and 
+                                     contain at least two elements."""
+
+        velocityErrorScale = self.errTol * wallVelocity
+        pressures = np.array(self.listPressure)
+        velocityDiff = np.array(self.listVelocity) - wallVelocity
+        # Farter points are exponentially suppressed to make sure they don't impact the
+        # estimate too much.
+        weightMatrix = np.diag(np.exp(-np.abs(velocityDiff/velocityErrorScale))/
+                               np.array(self.listPressureError)**2)
+        aMatrix = np.ones((nbrPressure, 2))
+        aMatrix[:,1] = velocityDiff
+
+        # Computes the derivative by fitting the pressure to a line
+        derivative = (np.linalg.inv(aMatrix.T @ weightMatrix @ aMatrix)
+                      @ aMatrix.T @ weightMatrix @ pressures)[1]
+
+        return derivative
 
     def wallProfile(
         self,
