@@ -527,7 +527,7 @@ class EOM:
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
                 results.setViolationOfEMConservation(
-                    EMviolationT30Min, EMviolationT33Min
+                    (EMviolationT30Min, EMviolationT33Min)
                 )
                 results.setSuccessState(
                     False,
