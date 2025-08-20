@@ -111,13 +111,26 @@ Collision integrals
 - **WallGo tells me that it can not read the collision files.**
 
     This might happen when you download the collision files from the git repository. 
-    As the git repository uses `git lfs` to manage the large collision files, the downloaded
-    files will be pointers, and not the full collision files.
-    You can obtain the collision files by cloning the repository, and running
+    As the git repository uses Git Large File Storage (LFS) to manage the large collision files, the downloaded
+    files will be pointers, and not the full collision files. To obtain the collision files requires Git LFS.
+
+    Complete installation instructions for Git LFS can be found at `git-lfs.com <https://git-lfs.com/>`_. This depends on your operating system, but should be straightforward. For example, on Ubuntu you can use
+
+    .. code-block:: bash
+
+        sudo apt-get install git-lfs
+
+    or on a Mac, you can use
+
+    .. code-block:: bash
+
+        brew install git-lfs
+    
+    Then, within the WallGo repository run
     
     .. code-block:: bash
 
-        git install lfs
+        git lfs install
         git lfs fetch --all
     
     Alternatively, you can generate the collision files yourself.
