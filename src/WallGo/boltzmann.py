@@ -80,7 +80,7 @@ class BoltzmannSolver:
             Default is 1.0.
         truncationOption : ETruncationOption, optional
             Option for truncating the spectral expansion. Default is
-            ETruncationOption.NONE, which means no truncation. Other options
+            ETruncationOption.AUTO. Other options
             are ETruncationOption.AUTO and ETruncationOption.THIRD.
 
         Returns
