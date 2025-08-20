@@ -39,7 +39,6 @@ dependencies = [
     "h5py>=3.8.0",
     "numpy>=1.21.5",
     "scipy>=1.9.0",
-    "deprecated>=1.2.14",
 ]
 readme = "README.md"
 

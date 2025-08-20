@@ -1,3 +1,11 @@
+"""
+This Python script, exampleOutputThermodynamics.py,
+uses the implementation of the minimal Standard Model
+extension in singletStandardModelZ2.py and gives methods
+for saving the thermodynamics of the model for later use
+in e.g. PTTools.
+"""
+
 import sys
 import pathlib
 import numpy as np
