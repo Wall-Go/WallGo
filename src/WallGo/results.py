@@ -28,6 +28,12 @@ class BoltzmannResults:
     r"""Estimated relative error in :math:`\delta f` due to truncation
     of spectral expansion."""
 
+    truncatedTail: tuple[bool, bool, bool]
+    """True if tail 1/3 of spectral expansion was truncated in each direction, False otherwise."""
+
+    spectralPeaks: tuple[int, int, int]
+    r"""Indices of the peaks in the spectral expansion in each direction."""
+
     # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
@@ -45,6 +51,8 @@ class BoltzmannResults:
             deltaF=number * self.deltaF,
             Deltas=number * self.Deltas,
             truncationError=abs(number) * self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
@@ -54,6 +62,8 @@ class BoltzmannResults:
             deltaF=number * self.deltaF,
             Deltas=number * self.Deltas,
             truncationError=abs(number) * self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
@@ -63,6 +73,8 @@ class BoltzmannResults:
             deltaF=other.deltaF + self.deltaF,
             Deltas=other.Deltas + self.Deltas,
             truncationError=other.truncationError + self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=other.linearizationCriterion1
             + self.linearizationCriterion1,
             linearizationCriterion2=other.linearizationCriterion2

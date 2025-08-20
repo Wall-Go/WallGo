@@ -823,9 +823,9 @@ class EOM:
 
         self.successWallPressure = True
 
-        improveConvergence = self.forceImproveConvergence
+        cautious = self.forceImproveConvergence
         if wallVelocity > self.hydrodynamics.vJ:
-            improveConvergence = True
+            cautious = True
 
         logging.info(f"------------- Trying {wallVelocity=:g} -------------")
 
@@ -857,6 +857,8 @@ class EOM:
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
                 truncationError=0.0,
+                truncatedTail=(False,False,False),
+                spectralPeaks=(0,0,0),
             )
         else:
             boltzmannResults = boltzmannResultsInput
@@ -935,14 +937,32 @@ class EOM:
         i = 0
         if self.includeOffEq:
             logging.debug(
-                f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s} {'EMViolation before (T30)':>20s} {'EMViolation after (T30)':>20s}"
+                "%12s %12s %12s %12s %12s %12s %12s %12s %12s %12s",
+                'pressure',
+                'error',
+                'errorSolver',
+                'errTol',
+                'cautious',
+                'multiplier',
+                'dT30Before',
+                'dT30After',
+                'spectralPeak',
+                'truncatedTail',
             )
         else:
             logging.debug(
-                f"{'pressure':>12s} {'error':>12s} {'errorSolver':>12s} {'errTol':>12s} {'cautious':>12s} {'multiplier':>12s} {'EMViolation (T30)':>20s}"
+                "%12s %12s %12s %12s %12s %12s %12s",
+                'pressure',
+                'error',
+                'errorSolver',
+                'errTol',
+                'cautious',
+                'multiplier',
+                'dT30Before',
             )
+            
         while True:
-            if improveConvergence:
+            if cautious:
                 # Use the improved algorithm (which converges better but slowly)
                 (
                     pressure,
@@ -997,15 +1017,32 @@ class EOM:
 
             if self.includeOffEq:
                 logging.debug(
-                    f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g} {EMviolationBefore[0]:>20g} {EMviolationAfter[0]:>20g}"
+                    "%12g %12g %12g %12g %12r %12g %12g %12g %12r %12r",
+                    pressure,
+                    error,
+                    errorSolver,
+                    errTol,
+                    int(cautious),
+                    multiplier,
+                    EMviolationBefore[0],
+                    EMviolationAfter[0],
+                    tuple(int(s) for s in boltzmannResults.spectralPeaks),
+                    tuple(int(t) for t in boltzmannResults.truncatedTail),
                 )
             else:
                 logging.debug(
-                    f"{pressure:>12g} {error:>12g} {errorSolver:>12g} {errTol:>12g} {improveConvergence:>12} {multiplier:>12g} {EMviolationBefore[0]:>20g}"
-                )
+                "%12g %12g %12g %12g %12r %12g %12g",
+                pressure,
+                error,
+                errorSolver,
+                errTol,
+                int(cautious),
+                multiplier,
+                EMviolationBefore[0],
+            )
             i += 1
 
-            if error < errTol or (errorSolver < errTol and improveConvergence):
+            if error < errTol or (errorSolver < errTol and cautious):
                 """
                 Even if two consecutive call to _getNextPressure() give similar
                 pressures, it is possible that the internal calls made to
@@ -1042,7 +1079,7 @@ class EOM:
             if len(pressures) > 2:
                 if error > abs(pressures[-2] - pressures[-3]) / 1.5:
                     # If the error decreases too slowly, use the improved algorithm
-                    improveConvergence = True
+                    cautious = True
 
         logging.info(f"Final {pressure=:g}")
         logging.debug(f"Final {wallParams=}")
@@ -1083,7 +1120,7 @@ class EOM:
         Boltzmann results each time. If the iterations overshot the true solution
         (the two pressure updates go in opposite directions), uses linear
         interpolation to find a better estimate of the true solution. This function is
-        called only when improveConvergence=True in wallPressure().
+        called only when cautious=True in wallPressure().
         """
         (
             pressure2,
@@ -1503,13 +1540,13 @@ class EOM:
         return float(U + K)
 
     def estimateTanhError(
-        self,
-        wallParams: WallParams,
-        boltzmannResults: BoltzmannResults,
-        boltzmannBackground: BoltzmannBackground,
-        hydroResults: HydroResults,
-    ) -> np.ndarray:
-        """
+            self,
+            wallParams: WallParams,
+            boltzmannResults: BoltzmannResults,
+            boltzmannBackground: BoltzmannBackground,
+            hydroResults: HydroResults,
+        ) -> np.ndarray:
+        r"""
         Estimates the EOM error due to the tanh ansatz. It is estimated by the integral
 
         .. math:: \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},

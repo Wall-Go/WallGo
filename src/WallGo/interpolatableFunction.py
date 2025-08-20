@@ -788,8 +788,11 @@ class InterpolatableFunction(ABC):
             self._validateInterpolationTable((self._rangeMax - self._rangeMin) / 2.55)
 
             logging.debug(
-                f"{selfName}: Succesfully read interpolation table from file. "
-                "Range [{self._rangeMin}, {self._rangeMax}]"
+                "%s: Succesfully read interpolation table from file. "
+                "Range [%g, %g]",
+                selfName,
+                self._rangeMin,
+                self._rangeMax,
             )
 
         except IOError as ioError:

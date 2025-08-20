@@ -153,11 +153,11 @@ def test_checkSpectralConvergence(
     for z in range(spatialGridSize - 1):
         for pz in range(momentumGridSize - 1):
             for pp in range(momentumGridSize - 1):
-                deltaF[0, z, pz, pp] = np.exp(slope*z -1e-2*pz - 1e-2*pp)
+                deltaF[0, z, pz, pp] = np.exp(slope*z - 1e-2*pz - 1e-3*pp) / (1 + pz) / (1 + pp)**2
         
 
     # checking spectral convergence
-    deltaFTruncated, truncatedShape = boltzmann.checkSpectralConvergence(deltaF)
+    deltaFTruncated, truncatedShape, _ = boltzmann.checkSpectralConvergence(deltaF)
 
     nTruncated = (spatialGridSize - 1) // 3
     expectTruncated = deltaFTruncated[:, -nTruncated:, :, :]
