@@ -13,7 +13,7 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `arXiv:2411.04970 <https://arxiv.org/abs/2411.04970>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
+    support us by please citing the WallGo paper, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
 
         @article{Ekstedt:2024fyq,
             author = "Ekstedt, Andreas and Gould, Oliver and Hirvonen, Joonas and Laurent, Benoit and Niemi, Lauri and Schicho, Philipp and van de Vis, Jorinde",
@@ -22,8 +22,11 @@ General
             archivePrefix = "arXiv",
             primaryClass = "hep-ph",
             reportNumber = "CERN-TH-2024-174, DESY-24-162, HIP-2024-21/TH",
-            month = "11",
-            year = "2024"
+            doi = "10.1007/JHEP04(2025)101",
+            journal = "JHEP",
+            volume = "04",
+            pages = "101",
+            year = "2025"
         }
 
 
@@ -203,6 +206,18 @@ Effective potentials
     different options for how to remove unwanted imaginary parts, listed in the
     enum :py:class:`WallGo.PotentialTools.EImaginaryOption`. See the docs for more
     details.
+
+Free energy
+-----------
+- **I already know the value of the field and the effective potential as a function of temperature, can I provide these to WallGo to circumvent the phase tracing?**
+
+    If the phase tracing does not work properly for your model, or if you want to speed up the
+    initialization phase, you can provide arrays with the values of the field(s) in the minimum of the
+    potential and the corresponding effective potential for the appropriate temperature range. 
+    These are passed as a :py:class:`WallGo.FreeEnergyArrays` object, to the function
+    :py:meth:`WallGo.WallGoManager.setupThermodynamicsHydrodynamics()`. These arrays are optional arguments;
+    if they are not provided, WallGo will execute its default phase tracing algorithm.
+
 
 
 Settings

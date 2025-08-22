@@ -4,6 +4,7 @@ Data classes passed around WallGo
 from dataclasses import dataclass
 import numpy as np
 from .fields import Fields
+from .freeEnergy import FreeEnergyValueType
 from .helpers import boostVelocity
 from .polynomial import Polynomial
 
@@ -21,6 +22,56 @@ class PhaseInfo:
 
     temperature: float
     """Temperature of transition."""
+
+
+@dataclass
+class FreeEnergyArrays:
+    """Object containing temperatures, positions of the minimum and value of the effective potential.
+    """
+
+    temperatures: np.ndarray[float]  # 1D array
+    """Array of temperatures."""
+
+    freeEnergyList: np.ndarray[FreeEnergyValueType]  # 1D array of FreeEnergyValueType objects
+    """Array of field(s) and potential value at the minimum."""
+
+    allowedDiscrepancy: float | None
+    """Allowed discrepancy between the effective potential at the minimum and the user-provided value"""
+
+    def __init__(
+        self,
+        temperatures: np.ndarray[float],
+        minimumList: np.ndarray[float],
+        potentialEffList: np.ndarray[float],
+        allowedDiscrepancy: float | None = None,
+    ) -> None:
+        """Initialisation of FreeEnergyArrays, based on passing 3 arrays
+        and a float. """
+        temperatures = np.asarray(temperatures)
+        minimumList = np.asarray(minimumList)
+        potentialEffList = np.asarray(potentialEffList)
+
+        if temperatures.ndim != 1:
+            raise ValueError("temperatures must be a 1D array.")
+        if temperatures.shape[0] != minimumList.shape[0]:
+            raise ValueError(
+                "The temperatures and minimumList must have the same length."
+            )
+        if temperatures.shape[0] != potentialEffList.shape[0]:
+            raise ValueError(
+                "The temperatures and potentialEffList must have the same length."
+            )
+        if allowedDiscrepancy is not None and allowedDiscrepancy < 0:
+            raise ValueError("allowedDiscrepancy must not be negative.")
+
+        self.temperatures = temperatures
+        self.freeEnergyList = FreeEnergyValueType.fromArray(
+            np.concatenate(
+                (minimumList, potentialEffList[:, np.newaxis]), axis=1,
+            )
+        )
+        self.allowedDiscrepancy = allowedDiscrepancy
+
 
 
 @dataclass

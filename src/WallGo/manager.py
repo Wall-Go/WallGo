@@ -10,7 +10,7 @@ import numpy as np
 
 # WallGo imports
 import WallGo
-from .boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver, ETruncationOption
 from .containers import PhaseInfo
 from .equationOfMotion import EOM
 from .exceptions import WallGoError, WallGoPhaseValidationError
@@ -68,7 +68,7 @@ class WallSolver:
 
 class WallGoManager:
     """Manages WallGo program flow
-    
+
     The WallGoManager is a 'control' class which collects together and manages
     all the various parts of the WallGo Python package for the computation of
     the bubble wall velocity.
@@ -115,12 +115,14 @@ class WallGoManager:
             shown.
 
         """
-        logging.basicConfig(format='%(message)s', level=verbosityLevel, force=True)
+        logging.basicConfig(format="%(message)s", level=verbosityLevel, force=True)
 
     def setupThermodynamicsHydrodynamics(
         self,
         phaseInfo: WallGo.PhaseInfo,
         veffDerivativeScales: WallGo.VeffDerivativeSettings,
+        freeEnergyArraysHighT: WallGo.FreeEnergyArrays = None,
+        freeEnergyArraysLowT: WallGo.FreeEnergyArrays = None,
     ) -> None:
         r"""Must run before :py:meth:`solveWall()` and companions.
         Initialization of internal objects related to equilibrium thermodynamics and
@@ -158,7 +160,10 @@ class WallGoManager:
         # Checks that phase input makes sense with the user-specified Veff
         self.validatePhaseInput(phaseInfo)
 
-        self.initTemperatureRange()
+        self.initTemperatureRange(
+            freeEnergyArraysHighT=freeEnergyArraysHighT,
+            freeEnergyArraysLowT=freeEnergyArraysLowT,
+        )
 
         ## Should we write these to a result struct?
         logging.info("Temperature ranges:")
@@ -233,13 +238,13 @@ class WallGoManager:
             phaseLocation1,
             effPotValue1,
         ) = self.model.getEffectivePotential().findLocalMinimum(
-            phaseInput.phaseLocation1, T
+            phaseInput.phaseLocation1, T, method='Nelder-Mead'
         )
         (
             phaseLocation2,
             effPotValue2,
         ) = self.model.getEffectivePotential().findLocalMinimum(
-            phaseInput.phaseLocation2, T
+            phaseInput.phaseLocation2, T, method='Nelder-Mead'
         )
 
         logging.info(f"Found phase 1: phi = {phaseLocation1}, Veff(phi) = {effPotValue1}")
@@ -277,11 +282,24 @@ class WallGoManager:
 
         self.phasesAtTn = foundPhaseInfo
 
-    def initTemperatureRange(self) -> None:
+    def initTemperatureRange(
+        self,
+        freeEnergyArraysHighT: WallGo.FreeEnergyArrays = None,
+        freeEnergyArraysLowT: WallGo.FreeEnergyArrays = None,
+    ) -> None:
         """
         Determine the relevant temperature range and trace the phases
         over this range. Interpolate the free energy in both phases and
         store in internal thermodynamics object.
+
+        Parameters
+        ----------
+        freeEnergyArraysHighT : WallGo.FreeEnergyArrays, optional
+            If provided, use these arrays to initialize the high-T free energy object.
+            If None, the phase will be traced.
+        freeEnergyArraysLowT : WallGo.FreeEnergyArrays, optional
+            If provided, use these arrays to initialize the low-T free energy object.
+            If None, the phase will be traced.
         """
 
         assert self.phasesAtTn is not None
@@ -308,7 +326,9 @@ class WallGoManager:
             # required temperature. We do not solve hydrodynamics inside the bubble, so
             # we are only interested in T- (the temperature right at the wall).
             hydrodynamicsTemplate = HydrodynamicsTemplateModel(self.thermodynamics)
-            logging.info(f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}")
+            logging.info(
+                f"vwLTE in the template model: {hydrodynamicsTemplate.findvwLTE()}"
+            )
 
         except WallGoError as error:
             # Throw new error with more info
@@ -322,6 +342,56 @@ class WallGoManager:
                 f"WallGo requires epsilon={hydrodynamicsTemplate.epsilon} to be "
                 "positive."
             )
+
+        phaseTracerTol = self.config.configThermodynamics.phaseTracerTol
+        # Estimate of the dT needed to reach the desired tolerance considering
+        # the error of a cubic spline scales like dT**4.
+        dT = (
+            self.model.getEffectivePotential().derivativeSettings.temperatureVariationScale
+            * phaseTracerTol**0.25
+        )
+
+        # Construct high and low temperature free energy objects
+        fHighT = self.thermodynamics.freeEnergyHigh
+        fLowT = self.thermodynamics.freeEnergyLow
+
+        # Try to construct interpolations if arrays are given
+        loadedHigh = False
+        loadedLow = False
+
+        if freeEnergyArraysHighT is not None:
+            # If the user provided free energy arrays, use them to initialize the
+            # free energy objects.
+            try:
+                fHighT.constructInterpolationFromArray(
+                    freeEnergyArraysHighT,
+                    dT,
+                )
+                loadedHigh = True
+                logging.info("Using user-provided high-T free energy arrays.")
+            except (ValueError, WallGoError) as e:
+                raise WallGoError(
+                    f"Failed to load high-T free energy arrays: \n {e}"
+                ) from e
+
+        if freeEnergyArraysLowT is not None:
+            # If the user provided free energy arrays, use them to initialize the
+            # free energy objects.
+            try:
+                fLowT.constructInterpolationFromArray(
+                    freeEnergyArraysLowT,
+                    dT,
+                )
+                loadedLow = True
+                logging.info("Using user-provided low-T free energy arrays.")
+            except (ValueError, WallGoError) as e:
+                raise WallGoError(
+                    f"Failed to load high-T free energy arrays: \n {e}"
+                ) from e
+
+        # If the user did not provide free energy arrays, we trace the phases
+        if loadedHigh and loadedLow:
+            return
 
         # Maximum values for T+ and T- are reached at the Jouguet velocity
         _, _, THighTMaxTemplate, TLowTMaxTemplate = hydrodynamicsTemplate.findMatching(
@@ -341,6 +411,7 @@ class WallGoManager:
             TLowTMinTemplate = self.config.configHydrodynamics.tmin * Tn
 
         phaseTracerTol = self.config.configThermodynamics.phaseTracerTol
+        interpolationDegree = self.config.configThermodynamics.interpolationDegree
 
         # Estimate of the dT needed to reach the desired tolerance considering
         # the error of a cubic spline scales like dT**4.
@@ -348,7 +419,6 @@ class WallGoManager:
             self.model.getEffectivePotential().derivativeSettings.temperatureVariationScale
             * phaseTracerTol**0.25
         )
-
         """Since the template model is an approximation of the full model, 
         and since the temperature profile in the wall could be non-monotonous,
         we should not take exactly the TMin and TMax from the template model.
@@ -360,24 +430,23 @@ class WallGoManager:
         TMinLowT = TLowTMinTemplate * self.config.configThermodynamics.tmin
         TMaxLowT = TLowTMaxTemplate * self.config.configThermodynamics.tmax
 
-        # Interpolate phases and check that they remain stable in this range
-        fHighT = self.thermodynamics.freeEnergyHigh
-        fLowT = self.thermodynamics.freeEnergyLow
-
-        fHighT.tracePhase(
-            TMinHighT,
-            TMaxHighT,
-            dT,
-            rTol=phaseTracerTol,
-            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
-        )
-        fLowT.tracePhase(
-            TMinLowT,
-            TMaxLowT,
-            dT,
-            rTol=phaseTracerTol,
-            phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
-        )
+        # Only trace if the corresponding file wasn't loaded
+        if not loadedHigh:
+            fHighT.tracePhase(
+                TMinHighT,
+                TMaxHighT,
+                dT,
+                rTol=phaseTracerTol,
+                phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+            )
+        if not loadedLow:
+            fLowT.tracePhase(
+                TMinLowT,
+                TMaxLowT,
+                dT,
+                rTol=phaseTracerTol,
+                phaseTracerFirstStep=self.config.configThermodynamics.phaseTracerFirstStep,
+            )
 
     def setPathToCollisionData(self, directoryPath: pathlib.Path) -> None:
         """
@@ -418,7 +487,7 @@ class WallGoManager:
     ) -> WallGoResults:
         r"""
         Solves for the wall velocity
-        
+
         Solves the coupled scalar equation of motion and the Boltzmann equation.
         Must be ran after :py:meth:`analyzeHydrodynamics()` because
         the solver depends on thermodynamical and hydrodynamical
@@ -529,13 +598,17 @@ class WallGoManager:
 
         # Factor that multiplies the collision term in the Boltzmann equation.
         collisionMultiplier = self.config.configBoltzmannSolver.collisionMultiplier
+        truncationOption = ETruncationOption[
+            self.config.configBoltzmannSolver.truncationOption
+        ]
         # Hardcode basis types here: Cardinal for z, Chebyshev for pz, pp
         boltzmannSolver = BoltzmannSolver(
             grid,
             basisM="Cardinal",
             basisN="Chebyshev",
             collisionMultiplier=collisionMultiplier,
-            )
+            truncationOption=truncationOption,
+        )
 
         boltzmannSolver.updateParticleList(self.model.outOfEquilibriumParticles)
 
@@ -591,13 +664,17 @@ class WallGoManager:
         gridM = self.config.configGrid.spatialGridSize
         ratioPointsWall = self.config.configGrid.ratioPointsWall
         smoothing = self.config.configGrid.smoothing
-        
+
         Tnucl = self.phasesAtTn.temperature
 
         # We divide by Tnucl to get it in physical units of length
-        tailLength = max(
-            meanFreePathScale, 0.5 * wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall
-        ) / Tnucl
+        tailLength = (
+            max(
+                meanFreePathScale,
+                0.5 * wallThicknessIni * (1.0 + 3.0 * smoothing) / ratioPointsWall,
+            )
+            / Tnucl
+        )
 
         if gridN % 2 == 0:
             raise ValueError(
@@ -617,7 +694,10 @@ class WallGoManager:
         )
 
     def buildEOM(
-        self, grid: Grid3Scales, boltzmannSolver: BoltzmannSolver, meanFreePathScale: float
+        self,
+        grid: Grid3Scales,
+        boltzmannSolver: BoltzmannSolver,
+        meanFreePathScale: float,
     ) -> EOM:
         r"""
         Constructs an :py:class:`EOM` object using internal state from the :py:class:`WallGoManager`,
@@ -649,7 +729,7 @@ class WallGoManager:
 
         wallThicknessBounds = self.config.configEOM.wallThicknessBounds
         wallOffsetBounds = self.config.configEOM.wallOffsetBounds
-        
+
         Tnucl = self.phasesAtTn.temperature
 
         return EOM(
@@ -658,7 +738,7 @@ class WallGoManager:
             self.hydrodynamics,
             grid,
             numberOfFields,
-            meanFreePathScale / Tnucl, # We divide by Tnucl to get physical units
+            meanFreePathScale / Tnucl,  # We divide by Tnucl to get physical units
             wallThicknessBounds,
             wallOffsetBounds,
             includeOffEq=True,
@@ -668,4 +748,3 @@ class WallGoManager:
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,
         )
-

@@ -10,6 +10,8 @@ Here we collect a number of different example model files. The Yukawa model file
     examples/wallGoExampleBase
     examples/standardModel
     examples/singletScalarExtension
+    examples/singletScalarExtensionCollisions
+    examples/singletScalarExtensionThermodynamics
     examples/manySinglets
     examples/inertDoubletModel
     examples/yukawa

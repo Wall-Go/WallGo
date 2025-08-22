@@ -5,6 +5,7 @@ Data classes for compiling and returning results
 from dataclasses import dataclass
 from enum import Enum
 import numpy as np
+from typing import Tuple
 from .fields import Fields
 from .containers import BoltzmannBackground, BoltzmannDeltas, WallParams
 
@@ -27,24 +28,31 @@ class BoltzmannResults:
     r"""Estimated relative error in :math:`\delta f` due to truncation
     of spectral expansion."""
 
+    truncatedTail: tuple[bool, bool, bool]
+    """True if tail 1/3 of spectral expansion was truncated in each direction, False otherwise."""
+
+    spectralPeaks: tuple[int, int, int]
+    r"""Indices of the peaks in the spectral expansion in each direction."""
+
     # These two criteria are to evaluate the validity of the linearization of the
     # Boltzmann equation. The arrays contain one element for each out-of-equilibrium
     # particle. To be valid, at least one criterion must be small for each particle.
-    linearizationCriterion1: np.ndarray
+    linearizationCriterion1: float = 0
     r"""Ratio of out-of-equilibrium and equilibrium pressures,
-    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. One element for each
-    out-of-equilibrium particle."""
+    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. Default is 0."""
 
-    linearizationCriterion2: np.ndarray
-    r"""Ratio of collision and Liouville operators in Boltzmann equation,
-    :math:`|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|`. One element for each
-    out-of-equilibrium particle."""
+    linearizationCriterion2: float = 0
+    r"""Ratio of the first-order correction due to nonlinearities and total pressure
+    computed by WallGo, :math:`|P[\delta f_2]| / |P[f_\text{eq}+\delta f]|`.
+    Default is 0."""
 
     def __mul__(self, number: float) -> "BoltzmannResults":
         return BoltzmannResults(
             deltaF=number * self.deltaF,
             Deltas=number * self.Deltas,
             truncationError=abs(number) * self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
@@ -54,6 +62,8 @@ class BoltzmannResults:
             deltaF=number * self.deltaF,
             Deltas=number * self.Deltas,
             truncationError=abs(number) * self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=abs(number) * self.linearizationCriterion1,
             linearizationCriterion2=self.linearizationCriterion2,
         )
@@ -63,6 +73,8 @@ class BoltzmannResults:
             deltaF=other.deltaF + self.deltaF,
             Deltas=other.Deltas + self.Deltas,
             truncationError=other.truncationError + self.truncationError,
+            truncatedTail=self.truncatedTail,
+            spectralPeaks=self.spectralPeaks,
             linearizationCriterion1=other.linearizationCriterion1
             + self.linearizationCriterion1,
             linearizationCriterion2=other.linearizationCriterion2
@@ -172,15 +184,29 @@ class WallGoResults:
     temperatureProfile: np.ndarray
     r"""Temperarture profile as a function of position, :math:`T(\xi)`."""
 
-    linearizationCriterion1: np.ndarray
+    linearizationCriterion1: float
     r"""Ratio of out-of-equilibrium and equilibrium pressures,
-    :math:`|P[\delta f]| / |P[f_\text{eq}]|`. One element for each
-    out-of-equilibrium particle."""
+    :math:`|P[\delta f]| / |P[f_\text{eq}]|`."""
+    
+    eomResidual: np.ndarray
+    r"""
+    Residual of the EOM due to the tanh ansatz. There is one element for each scalar
+    field. It is estimated by the integral
 
-    linearizationCriterion2: np.ndarray
-    r"""Ratio of collision and Liouville operators in Boltzmann equation,
-    :math:`|\mathcal{C}[\delta f]|/ |\mathcal{L}[\delta f]|`. One element for each
-    out-of-equilibrium particle."""
+    .. math:: \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|}
+        
+    with 
+
+    .. math:: \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
+
+    and
+
+    .. math:: |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
+    """
+
+    linearizationCriterion2: float
+    r"""Ratio of the first-order correction due to nonlinearities and total pressure
+    computed by WallGo, :math:`|P[\delta f_2]| / |P[f_\text{eq}+\delta f]|`."""
 
     deltaF: np.ndarray
     r"""Deviation of probability density function from equilibrium,
@@ -203,6 +229,12 @@ class WallGoResults:
     r"""Relativistically invariant integrals over
     :math:`\mathcal{E}_\text{pl}^{n_\mathcal{E}}\mathcal{P}_\text{pl}^{n_\mathcal{P}}\delta f`,
     using finite differences instead of spectral expansion."""
+
+    violationOfEMConservation: Tuple[float,float]
+    """
+    RMS along the grid of the violation of the conservation of the components T30 and T33 of
+    the energy-momentum tensor.
+    """
 
     solutionType: ESolutionType
     """
@@ -280,6 +312,17 @@ class WallGoResults:
         """
         self.deltaFFiniteDifference = boltzmannResults.deltaF
         self.DeltasFiniteDifference = boltzmannResults.Deltas
+
+    def setViolationOfEMConservation(
+        self, violationOfEMConservation: Tuple[float, float]
+    ) -> None:
+        """
+        Set the violation of energy-momentum conservation results
+        """
+        assert (
+            len(violationOfEMConservation) == 2
+        ), "WallGoResults Error: violationOfEMConservation must be a tuple of two floats."
+        self.violationOfEMConservation = violationOfEMConservation
 
     def setSuccessState(
         self,

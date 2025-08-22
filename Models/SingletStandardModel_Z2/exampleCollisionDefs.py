@@ -1,3 +1,10 @@
+"""
+This Python script, exampleCollisionDefs.py,
+uses the implementation of the minimal Standard Model
+extension in singletStandardModelZ2.py and adds example
+definitions for the Boltzmann collision integrals for
+WallGoCollision.
+"""
 import WallGoCollision
 import pathlib
 import sys

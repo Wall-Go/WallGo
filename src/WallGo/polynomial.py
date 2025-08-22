@@ -4,6 +4,7 @@ Class that stores and perfom operation on the coefficients of a polynomial serie
 
 from __future__ import annotations
 import typing
+import logging
 import numpy as np
 import numpy.typing as npt
 from scipy.special import eval_chebyt, eval_chebyu
@@ -947,3 +948,90 @@ class Polynomial:
             else:
                 return False
         return True
+
+
+class SpectralConvergenceInfo:
+    """
+    Carries information about the convergence of a polynomial expansion.
+
+    Assumes input is a 1d array of coefficients in the Chebyshev basis. Fits a slope to the logarithm of the absolute value of these coefficients. Also, finds the average value of the index, treating the coefficients as a
+    histogram.
+    """
+    coefficients: np.ndarray
+    """Coefficients of expansion in the Chebyshev basis, must be 1d."""
+
+    weightPower: int = 0
+    r"""Additional powers of :math:`n` to weight by in assessing convergence.
+    Default is zero."""
+
+    offset: int = 0
+    r"""Offest in :math:`n`. Default is zero."""
+
+    apparentConvergence: bool = False
+    """True if spectral expansion appears to be converging, False otherwise."""
+
+    spectralPeak: int = 0
+    """Positions of the peak of the spectral expansion."""
+
+    spectralExponent: float = 0.0
+    r"""Exponent :math:`\sigma` of :math:`A e^{\sigma n}` fit to spectral expansion."""
+
+    def __init__(
+        self, coefficients: np.ndarray, weightPower: int=0, offset: int=0
+    ) -> None:
+        """Initialise given an array."""
+        assert len(coefficients.shape) == 1, "SpectralConvergenceInfo requires a 1d array"
+        self.coefficients = coefficients[:]
+        self.weightPower = weightPower
+        self.offset = offset
+        self._checkSpectralConvergence()
+
+    def _checkSpectralConvergence(self) -> None:
+        """
+        Check for spectral convergence, performing fits and looking at the
+        position of the maximum.
+        """
+        nCoeff = len(self.coefficients)
+        weight = (1 + self.offset + np.arange(nCoeff)) ** self.weightPower
+        absCoefficients = abs(self.coefficients)
+        if nCoeff < 2:
+            logging.warning("Spectral convergence tests not valid for n < 2.")
+            return
+        if nCoeff < 3:
+            strict = False
+        else:
+            strict = True
+
+        # fit slope to the log of the coefficients
+        if strict:
+            # enough points to fit slopes with errors
+            fit = np.polyfit(
+                np.arange(nCoeff) + self.offset,
+                np.log(absCoefficients),
+                # np.log(absCoefficients * weight),
+                1,
+                cov=True,
+            )
+            self.spectralExponent = fit[0][0]
+            # self.apparentConvergence = fit[0][0] < - np.sqrt(fit[1][0, 0])
+            self.apparentConvergence = fit[0][0] < 0
+        else:
+            # not enough points to get sensible errors
+            fit = np.polyfit(
+                np.arange(nCoeff) + self.offset,
+                np.log(absCoefficients),
+                # np.log(absCoefficients * weight),
+                1,
+                cov=False,
+            )
+            self.spectralExponent = fit[0]
+            self.apparentConvergence = fit[0] < 0
+
+        # Index weighted by absolute value in array
+        self.spectralPeak = int(
+            np.sum((np.arange(nCoeff) + self.offset) * weight * absCoefficients) / np.sum(absCoefficients * weight)
+        )
+
+        # Alternative convergence condition
+        # self.apparentConvergence = self.spectralPeak < self.offset + nCoeff // 2
+        

@@ -99,6 +99,7 @@ class HydrodynamicsTemplateModel:
         self.vMin = self.minVelocity()
         self.epsilon = self.wN*(1/self.mu-(1-3*self.alN)/self.nu)
 
+
     def findJouguetVelocity(self, alN: float | None = None) -> float:
         r"""
         Finds the Jouguet velocity, corresponding to the phase transition strength 

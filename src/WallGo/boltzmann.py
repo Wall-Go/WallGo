@@ -6,11 +6,12 @@ import sys
 import typing
 from copy import deepcopy
 import logging
+from enum import Enum, auto
 import numpy as np
 import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
 from .grid import Grid
-from .polynomial import Polynomial
+from .polynomial import Polynomial, SpectralConvergenceInfo
 from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
@@ -18,6 +19,19 @@ from .exceptions import CollisionLoadError
 
 if typing.TYPE_CHECKING:
     import importlib
+
+
+class ETruncationOption(Enum):
+    """Enums for what to do with truncating the spectral expansion."""
+
+    NONE = auto()
+    """Do not truncate early, use all coefficients."""
+
+    AUTO = auto()
+    """Truncate early if it seems the UV is not converging."""
+
+    THIRD = auto()
+    """Drop the last third of the coefficients."""
 
 
 class BoltzmannSolver:
@@ -33,6 +47,7 @@ class BoltzmannSolver:
     offEqParticles: list[Particle]
     background: BoltzmannBackground
     collisionArray: CollisionArray
+    truncationOption: ETruncationOption
 
     def __init__(
         self,
@@ -41,6 +56,7 @@ class BoltzmannSolver:
         basisN: str = "Chebyshev",
         derivatives: str = "Spectral",
         collisionMultiplier: float = 1.0,
+        truncationOption: ETruncationOption = ETruncationOption.AUTO,
     ):
         """
         Initialisation of BoltzmannSolver
@@ -62,6 +78,10 @@ class BoltzmannSolver:
         collisionMultiplier : float, optional
             Factor by which the collision term is multiplied. Can be used for testing.
             Default is 1.0.
+        truncationOption : ETruncationOption, optional
+            Option for truncating the spectral expansion. Default is
+            ETruncationOption.AUTO. Other options
+            are ETruncationOption.NONE and ETruncationOption.THIRD.
 
         Returns
         -------
@@ -83,8 +103,9 @@ class BoltzmannSolver:
         self.basisM = basisM
         # Momentum polynomial type
         self.basisN = basisN
-        
+
         self.collisionMultiplier = collisionMultiplier
+        self.truncationOption = truncationOption
 
         # These are set, and can be updated, by our member functions
         # TODO: are these None types the best way to go?
@@ -117,7 +138,10 @@ class BoltzmannSolver:
 
         self.offEqParticles = offEqParticles
 
-    def getDeltas(self, deltaF: typing.Optional[np.ndarray] = None) -> BoltzmannResults:
+    def getDeltas(
+        self,
+        deltaF: typing.Optional[np.ndarray] = None,
+    ) -> BoltzmannResults:
         """
         Computes Deltas necessary for solving the Higgs equation of motion.
 
@@ -139,11 +163,18 @@ class BoltzmannSolver:
         if deltaF is None:
             deltaF = self.solveBoltzmannEquations()
 
-        # getting (optimistic) estimate of truncation error
-        truncationError = self.estimateTruncationError(deltaF)
+        # checking spectral convergence
+        deltaF, shapeTruncated, spectralPeaks = self.checkSpectralConvergence(deltaF)
 
-        # getting criteria for validity of linearization
-        criterion1, criterion2 = self.checkLinearization(deltaF)
+        # getting (optimistic) estimate of truncation error
+        truncationError = self.estimateTruncationError(
+            deltaF, shapeTruncated
+        )
+        truncatedTail = (
+            shapeTruncated[1] != deltaF.shape[1],
+            shapeTruncated[2] != deltaF.shape[2],
+            shapeTruncated[3] != deltaF.shape[3],
+        )
 
         particles = self.offEqParticles
 
@@ -202,8 +233,8 @@ class BoltzmannSolver:
             deltaF=deltaF,
             Deltas=Deltas,
             truncationError=truncationError,
-            linearizationCriterion1=criterion1,
-            linearizationCriterion2=criterion2,
+            truncatedTail=truncatedTail,
+            spectralPeaks=spectralPeaks,
         )
 
     def solveBoltzmannEquations(self) -> np.ndarray:
@@ -218,15 +249,15 @@ class BoltzmannSolver:
 
         where :math:`\mathcal{L}` is the Lioville operator, :math:`\mathcal{C}`
         is the collision operator, and :math:`\mathcal{S}` is the source.
-        
+
         As regards the indicies,
-            
+
             - :math:`\alpha, \beta, \gamma` denote points on the coordinate lattice :math:`\{\xi^{(\alpha)},p_{z}^{(\beta)},p_{\Vert}^{(\gamma)}\}`,
 
             - :math:`i, j, k` denote elements of the basis of spectral functions :math:`\{\bar{T}_i, \bar{T}_j, \tilde{T}_k\}`,
 
             - :math:`a, b` denote particle species.
-        
+
         For more details see the WallGo paper.
 
         Parameters
@@ -262,7 +293,7 @@ class BoltzmannSolver:
 
         return deltaF
 
-    def estimateTruncationError(self, deltaF: np.ndarray) -> float:
+    def estimateTruncationError(self, deltaF: np.ndarray, shapeTruncated: tuple[int, ...]) -> float:
         r"""
         Quick estimate of the polynomial truncation error using
         John Boyd's Rule-of-thumb-2: the last coefficient of a Chebyshev
@@ -287,38 +318,192 @@ class BoltzmannSolver:
 
         # sum(|deltaF|) as the norm
         deltaFPoly.changeBasis(("Array", "Chebyshev", "Chebyshev", "Chebyshev"))
-        deltaFMeanAbs = np.sum(
-            np.abs(deltaFPoly.coefficients),
+        deltaFTuncated = deltaFPoly.coefficients[
+            :shapeTruncated[0],
+            :shapeTruncated[1],
+            :shapeTruncated[2],
+            :shapeTruncated[3],
+        ]
+        deltaFSumAbs = np.sum(
+            np.abs(deltaFTuncated),
             axis=(1, 2, 3),
         )
 
         # estimating truncation errors in each direction
         truncationErrorChi = np.sum(
-            np.abs(deltaFPoly.coefficients[:, -1, :, :]),
+            np.abs(deltaFTuncated[:, -1, :, :]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
         truncationErrorPz = np.sum(
-            np.abs(deltaFPoly.coefficients[:, :, -1, :]),
+            np.abs(deltaFTuncated[:, :, -1, :]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
         truncationErrorPp = np.sum(
-            np.abs(deltaFPoly.coefficients[:, :, :, -1]),
+            np.abs(deltaFTuncated[:, :, :, -1]),
             axis=(1, 2),
-        )
+        ) / deltaFSumAbs
 
         # estimating the total truncation error as the maximum of these three
         return max(  # type: ignore[no-any-return]
-            np.max(truncationErrorChi / deltaFMeanAbs),
-            np.max(truncationErrorPz / deltaFMeanAbs),
-            np.max(truncationErrorPp / deltaFMeanAbs),
+            np.max(truncationErrorChi),
+            np.max(truncationErrorPz),
+            np.max(truncationErrorPp),
         )
+
+    def checkSpectralConvergence(self, deltaF: np.ndarray) -> tuple[np.ndarray, tuple[int, int, int, int], tuple[int, int, int]]:
+        """
+        Check for spectral convergence.
+
+        Fits to the exponential slope of the last 1/3 of coefficients in the
+        Chebyshev basis. Also returns the 
+
+        Parameters
+        ----------
+        deltaF : array_like
+            The solution for which to estimate the truncation error,
+            a rank 3 array, with shape :py:data:`(len(z), len(pz), len(pp))`.
+
+        Returns
+        -------
+        deltaFTruncated : np.ndarray
+            Potentially truncated version of input :py:data:`deltaF`, padded with zeros if truncated, so same shape as input.
+        shapeTruncated : tuple[int, int, int, int]
+            Shape of truncated array.
+        spectralPeaks : tuple[int, int, int]
+            Indices of the peaks in the (potentially truncated) spectral expansion.
+        """
+        # constructing Polynomial
+        basisTypes = ("Array", self.basisM, self.basisN, self.basisN)
+        basisNames = ("Array", "z", "pz", "pp")
+        deltaFPoly = Polynomial(deltaF, self.grid, basisTypes, basisNames, False)
+        truncatedShape = list(deltaF.shape)
+
+        # changing to Chebyshev basis
+        deltaFPoly.changeBasis(("Array", "Chebyshev", "Chebyshev", "Chebyshev"))
+
+        # looking at convergence of spectral expansion
+        spectralCoeffsChi = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 2, 3),
+        )
+        spectralCoeffsPz = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 1, 3),
+        )
+        spectralCoeffsPp = np.sum(
+            np.abs(deltaFPoly.coefficients),
+            axis=(0, 1, 2),
+        )
+
+        # how much to cut, if truncating
+        cutSpatial = -((self.grid.M - 1) // 3)
+        cutMomentum = -((self.grid.N - 1) // 3)
+
+        # checking spectral convergence of spatial direction
+        chiConvergenceTailInfo = SpectralConvergenceInfo(
+            spectralCoeffsChi[cutSpatial:],
+            # weightPower=0,
+            offset=self.grid.M - 1 + cutSpatial,
+        )
+
+        # checking spectral convergence of pz direction
+        pzConvergenceTailInfo = SpectralConvergenceInfo(
+            spectralCoeffsPz[cutMomentum:],
+            # weightPower=1,  # removed as max(pz) only grows as log(N)
+            offset=self.grid.N - 1 + cutMomentum,
+        )
+
+        # checking spectral convergence of pp direction
+        ppConvergenceTailInfo = SpectralConvergenceInfo(
+            spectralCoeffsPp[cutMomentum:],
+            # weightPower=2,  # removed as max(pp) only grows as log(N)
+            offset=self.grid.N - 1 + cutMomentum,
+        )
+
+        allTailsConverging = (
+            chiConvergenceTailInfo.apparentConvergence and
+            pzConvergenceTailInfo.apparentConvergence and
+            ppConvergenceTailInfo.apparentConvergence
+        )
+
+        # Deciding what to do based on truncationOption
+        if self.truncationOption == ETruncationOption.AUTO:
+            # if the slope is not definitely negative, we will truncate
+            if not chiConvergenceTailInfo.apparentConvergence:
+                deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
+                truncatedShape[1] = deltaF.shape[1] + cutSpatial
+            if not pzConvergenceTailInfo.apparentConvergence:
+                deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
+                truncatedShape[2] = deltaF.shape[2] + cutMomentum
+            if not ppConvergenceTailInfo.apparentConvergence:
+                deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
+                truncatedShape[3] = deltaF.shape[3] + cutMomentum
+        elif self.truncationOption == ETruncationOption.THIRD:
+            # truncating regardless
+            deltaFPoly.coefficients[:, cutSpatial:, :, :] = 0
+            deltaFPoly.coefficients[:, :, cutMomentum:, :] = 0
+            deltaFPoly.coefficients[:, :, :, cutMomentum:] = 0
+            truncatedShape[1:] = [
+                deltaF.shape[1] + cutSpatial,
+                deltaF.shape[2] + cutMomentum,
+                deltaF.shape[3] + cutMomentum,
+            ]
+            if allTailsConverging:
+                logging.info(
+                    "Tails of spectral expansions converging but truncated, consider changing truncation option."
+                )
+        else:
+            # not truncating regardless
+            if not allTailsConverging:
+                logging.info(
+                    "Tails of spectral expansions not converging, consider changing truncation option, or changing grid parameters."
+                )
+
+        # checking spectral convergence of z direction
+        chiConvergenceInfo = SpectralConvergenceInfo(
+            spectralCoeffsChi[:truncatedShape[1]], weightPower=0
+        )
+
+        # checking spectral convergence of pz direction
+        pzConvergenceInfo = SpectralConvergenceInfo(
+            spectralCoeffsPz[:truncatedShape[2]], weightPower=1
+        )
+
+        # checking spectral convergence of pp direction
+        ppConvergenceInfo = SpectralConvergenceInfo(
+            spectralCoeffsPp[:truncatedShape[3]], weightPower=2
+        )
+
+        # putting together the spectral peaks
+        spectralPeaks = (
+            chiConvergenceInfo.spectralPeak,
+            pzConvergenceInfo.spectralPeak,
+            ppConvergenceInfo.spectralPeak,
+        )
+
+        if self.truncationOption == ETruncationOption.NONE:
+            return deltaF, tuple(truncatedShape), spectralPeaks
+
+        # changing back to original basis
+        deltaFPoly.changeBasis(basisTypes)
+
+        return deltaFPoly.coefficients, tuple(truncatedShape), spectralPeaks
+
+    @staticmethod
+    def _smoothTruncation(length: int, cut: int, sharp: float = 3) -> np.ndarray:
+        """
+        Internal function to smooth the truncation of the spectral expansion. """
+        x = np.arange(length)
+        return 1 / (1 + np.exp(sharp * (x - cut)))
 
     def checkLinearization(
         self, deltaF: typing.Optional[np.ndarray] = None
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[float, float]:
         r"""
-        Compute two criteria to verify the validity of the linearization of the
-        Boltzmann equation: :math:`\delta f/f_{eq}` and :math:`C[\delta f]/L[\delta f]`.
+        Compute two criteria to verify the validity of the linearisation of the
+        Boltzmann equation: :math:`\delta f/f_{eq}` and
+        :math:`\delta f_2/(f_{eq}+\delta f)`, with :math:`\delta f_2` the first-order
+        correction due to nonlinearities.
         To be valid, at least one of the two criteria must be small for each particle.
 
         Parameters
@@ -348,20 +533,51 @@ class BoltzmannSolver:
         )
         deltaFPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
 
+        # Computing \delta f^2
+        deltaFSqPoly = deltaFPoly * deltaFPoly
+        deltaFSqPoly.changeBasis(("Array", self.basisM, self.basisN, self.basisN))
+
+        operator, _, _, collision = self.buildLinearEquations()
+        source = np.sum(
+            collision * deltaFSqPoly.coefficients[None, None, None, None, ...],
+            axis=(4, 5, 6, 7),
+        )
+
+        # Computing the correction from nonlinear terms
+        deltaNonlin = np.linalg.solve(
+            operator, np.reshape(source, source.size, order="C")
+        )
+        deltaNonlinShape = (
+            len(self.offEqParticles),
+            self.grid.M - 1,
+            self.grid.N - 1,
+            self.grid.N - 1,
+        )
+        deltaNonlin = np.reshape(deltaNonlin, deltaNonlinShape, order="C")
+        deltaNonlinPoly = Polynomial(
+            coefficients=deltaNonlin,
+            grid=self.grid,
+            basis=("Array", self.basisM, self.basisN, self.basisN),
+            direction=("z", "z", "pz", "pp"),
+            endpoints=False,
+        )
+        deltaNonlinPoly.changeBasis(("Array", "Cardinal", "Cardinal", "Cardinal"))
+
         msqFull = np.array(
             [
                 particle.msqVacuum(self.background.fieldProfiles)
                 for particle in particles
             ]
         )
-        fieldPoly = Polynomial(
-            np.sum(self.background.fieldProfiles, axis=1),
+
+        msqPoly = Polynomial(
+            msqFull,
             self.grid,
-            "Cardinal",
+            ("Array", "Cardinal"),
             "z",
             True,
         )
-        dfielddChi = fieldPoly.derivative(0).coefficients[None, 1:-1, None, None]
+        dmsqdChi = msqPoly.derivative(axis=1).coefficients[:, 1:-1, None, None]
 
         # adding new axes, to make everything rank 3 like deltaF (z, pz, pp)
         # for fast multiplication of arrays, using numpy's broadcasting rules
@@ -389,45 +605,24 @@ class BoltzmannSolver:
         dpzdrz = dpzdrz[None, None, :, None]
         dppdrp = dppdrp[None, None, None, :]
 
-        # base integrand, for '00'
-        integrand = dfielddChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
+        dofs = np.array([particle.totalDOFs for particle in particles])[
+            :, None, None, None
+        ]
+        integrand = dofs * dmsqdChi * dpzdrz * dppdrp * pp / (4 * np.pi**2 * energy)
 
-        # The first criterion is to require that pressureOut/pressureEq is small
-        pressureOut = deltaFPoly.integrate((1, 2, 3), integrand).coefficients
-        pressureEq = fEqPoly.integrate((1, 2, 3), integrand).coefficients
-        deltaFCriterion = pressureOut / pressureEq
+        # Computing the pressure contributions of the equilibrium part, the linear
+        # out-of-equilibrium part and the first-order correction due to nonlinearities.
+        pressureEq = np.sum(fEqPoly.integrate((1, 2, 3), integrand).coefficients)
+        pressureDeltaF = np.sum(deltaFPoly.integrate((1, 2, 3), integrand).coefficients)
+        pressureNonlin = np.sum(
+            deltaNonlinPoly.integrate((1, 2, 3), integrand).coefficients
+        )
 
-        # If criterion1 is large, we need C[deltaF]/L[deltaF] to be small
-        _, _, liouville, collision = self.buildLinearEquations()
-        collisionDeltaF = np.sum(
-            collision * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
-        )
-        liouvilleDeltaF = np.sum(
-            liouville * deltaF[None, None, None, None, ...], axis=(4, 5, 6, 7)
-        )
-        collisionDeltaFPoly = Polynomial(
-            collisionDeltaF,
-            self.grid,
-            ("Array", "Cardinal", "Cardinal", "Cardinal"),
-            ("z", "z", "pz", "pp"),
-            False,
-        )
-        lioviilleDeltaFPoly = Polynomial(
-            liouvilleDeltaF,
-            self.grid,
-            ("Array", "Cardinal", "Cardinal", "Cardinal"),
-            ("z", "z", "pz", "pp"),
-            False,
-        )
-        collisionDeltaFIntegrated = collisionDeltaFPoly.integrate(
-            (1, 2, 3), integrand
-        ).coefficients
-        liovilleDeltaFIntegrated = lioviilleDeltaFPoly.integrate(
-            (1, 2, 3), integrand
-        ).coefficients
-        collCriterion = collisionDeltaFIntegrated / liovilleDeltaFIntegrated
+        # Computing the 2 linearisation criteria
+        criterion1 = abs(pressureDeltaF / pressureEq)
+        criterion2 = abs(pressureNonlin / (pressureEq + pressureDeltaF))
 
-        return deltaFCriterion, collCriterion
+        return criterion1, criterion2
 
     def buildLinearEquations(
         self,
@@ -645,7 +840,7 @@ class BoltzmannSolver:
                 self.basisN,
                 self.offEqParticles,
             )
-            logging.debug(f"Loaded collision data from directory {directoryPath}")
+            logging.debug("Loaded collision data from directory %s", directoryPath)
         except CollisionLoadError as e:
             raise
 
