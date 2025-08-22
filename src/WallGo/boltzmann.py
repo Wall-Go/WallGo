@@ -81,7 +81,7 @@ class BoltzmannSolver:
         truncationOption : ETruncationOption, optional
             Option for truncating the spectral expansion. Default is
             ETruncationOption.AUTO. Other options
-            are ETruncationOption.AUTO and ETruncationOption.THIRD.
+            are ETruncationOption.NONE and ETruncationOption.THIRD.
 
         Returns
         -------

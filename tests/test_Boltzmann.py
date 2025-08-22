@@ -138,9 +138,12 @@ def test_checkSpectralConvergence(
     """
     # setting up objects
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 1)
-    boltzmann = WallGo.BoltzmannSolver(grid)
-    boltzmann.basisM = "Chebyshev"
-    boltzmann.basisN =  "Chebyshev"
+    boltzmann = WallGo.BoltzmannSolver(
+        grid,
+        basisM="Chebyshev",
+        basisN="Chebyshev",
+        truncationOption=WallGo.ETruncationOption.AUTO,
+    )
 
     # solving Boltzmann equations
     deltaFShape = (
