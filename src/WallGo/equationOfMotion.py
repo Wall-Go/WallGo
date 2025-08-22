@@ -53,7 +53,7 @@ class EOM:
         errTol: float = 1e-3,
         maxIterations: int = 10,
         pressRelErrTol: float = 0.3679,
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
+        # pylint: disable=too-many-arguments
     ):
         """
         Initialization
@@ -136,12 +136,11 @@ class EOM:
         self.successTemperatureProfile = True
         ## Flag to detect if we were able to find the pressure
         self.successWallPressure = True
-        
+
         ## Setup lists used to estimate the pressure derivative
         self.listVelocity = []
         self.listPressure = []
         self.listPressureError = []
-
 
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
@@ -439,7 +438,7 @@ class EOM:
         self.listVelocity = []
         self.listPressure = []
         self.listPressureError = []
-        
+
         results = WallGoResults()
         results.hasOutOfEquilibrium = self.includeOffEq
 
@@ -453,8 +452,8 @@ class EOM:
                 boltzmannResultsMax,
                 boltzmannBackgroundMax,
                 hydroResultsMax,
-                EMviolationT30Max,
-                EMviolationT33Max,
+                emViolationT30Max,
+                emViolationT33Max,
             ) = self.wallPressure(wallVelocityMax, wallParamsGuess)
         else:
             (
@@ -463,8 +462,8 @@ class EOM:
                 boltzmannResultsMax,
                 boltzmannBackgroundMax,
                 hydroResultsMax,
-                EMviolationT30Max,
-                EMviolationT33Max,
+                emViolationT30Max,
+                emViolationT33Max,
             ) = wallPressureResultsMax
 
         # also getting the LTE results
@@ -474,13 +473,13 @@ class EOM:
         # hybrid solution
         if pressureMax < 0:
             logging.info("Maximum pressure on wall is negative!")
-            logging.info(f"{pressureMax=} {wallParamsMax=}")
+            logging.info("pressureMax=%s wallParamsMax=%s", pressureMax, wallParamsMax)
             results.setWallVelocities(None, None, wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
             results.setBoltzmannResults(boltzmannResultsMax)
-            results.setViolationOfEMConservation((EMviolationT30Max, EMviolationT33Max))
+            results.setViolationOfEMConservation((emViolationT30Max, emViolationT33Max))
             results.setSuccessState(
                 True,
                 ESolutionType.RUNAWAY,
@@ -497,8 +496,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-                EMviolationT30Min,
-                EMviolationT33Min,
+                emViolationT30Min,
+                emViolationT33Min,
             ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
         else:
             (
@@ -507,8 +506,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-                EMviolationT30Min,
-                EMviolationT33Min,
+                emViolationT30Min,
+                emViolationT33Min,
             ) = wallPressureResultsMin
 
         while pressureMin > 0:
@@ -527,7 +526,7 @@ class EOM:
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
                 results.setBoltzmannResults(boltzmannResultsMin)
                 results.setViolationOfEMConservation(
-                    (EMviolationT30Min, EMviolationT33Min)
+                    (emViolationT30Min, emViolationT33Min)
                 )
                 results.setSuccessState(
                     False,
@@ -542,8 +541,8 @@ class EOM:
                 boltzmannResultsMin,
                 boltzmannBackgroundMin,
                 hydroResultsMin,
-                EMviolationT30Min,
-                EMviolationT33Min,
+                emViolationT30Min,
+                emViolationT33Min,
             ) = self.wallPressure(wallVelocityMin, wallParamsGuess)
 
         self.pressAbsErrTol = (
@@ -602,8 +601,8 @@ class EOM:
             boltzmannResults,
             boltzmannBackground,
             hydroResults,
-            EMviolationT30,
-            EMviolationT33,
+            emViolationT30,
+            emViolationT33,
         ) = self.wallPressure(
             wallVelocity, newWallParams, boltzmannResultsInput=newBoltzmannResults
         )
@@ -622,7 +621,7 @@ class EOM:
             )
             boltzmannResults.linearizationCriterion1 = criterion1
             boltzmannResults.linearizationCriterion2 = criterion2
-            
+
             # Computing the out-of-equilibrium pressure to get the absolute error
             vevLowT = boltzmannBackground.fieldProfiles.getFieldPoint(0)
             vevHighT = boltzmannBackground.fieldProfiles.getFieldPoint(-1)
@@ -644,20 +643,22 @@ class EOM:
 
             dVoutdz = np.sum(np.array(dVout * dPhidz), axis=1)
 
-            # Create a Polynomial object to represent dVdz. Will be used to integrate it.
+            # Create a Polynomial object to represent dVdz. Will be used to integrate.
             dVoutdzPoly = Polynomial(dVoutdz, self.grid)
 
             dzdchi, _, _ = self.grid.getCompactificationDerivatives()
             offEquilPressureScale = np.abs(dVoutdzPoly.integrate(weight=-dzdchi))
-            
+
             # Compute the pressure derivative
             pressureDerivative = self.estimatePressureDerivative(wallVelocity)
-            
+
             # estimating errors from truncation and comparison to finite differences
             finiteDifferenceBoltzmannResults = self.getBoltzmannFiniteDifference()
             # the truncation error in the spectral method within Boltzmann
             wallVelocityTruncationError = abs(
-                boltzmannResults.truncationError * offEquilPressureScale / pressureDerivative
+                boltzmannResults.truncationError
+                * offEquilPressureScale
+                / pressureDerivative
             )
             # the deviation from the finite difference method within Boltzmann
             delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
@@ -692,7 +693,7 @@ class EOM:
         results.setBoltzmannBackground(boltzmannBackground)
         results.setBoltzmannResults(boltzmannResults)
         results.setFiniteDifferenceBoltzmannResults(finiteDifferenceBoltzmannResults)
-        results.setViolationOfEMConservation((EMviolationT30, EMviolationT33))
+        results.setViolationOfEMConservation((emViolationT30, emViolationT33))
         results.eomResidual = eomResidual
 
         # Set the message
@@ -827,7 +828,7 @@ class EOM:
         if wallVelocity > self.hydrodynamics.vJ:
             cautious = True
 
-        logging.info(f"------------- Trying {wallVelocity=:g} -------------")
+        logging.info("------------- Trying wallVelocity=%g -------------", wallVelocity)
 
         # Initialize the different data class objects and arrays
         zeroPoly = Polynomial(
@@ -857,8 +858,8 @@ class EOM:
                 deltaF=deltaF,
                 Deltas=offEquilDeltas,
                 truncationError=0.0,
-                truncatedTail=(False,False,False),
-                spectralPeaks=(0,0,0),
+                truncatedTail=(False, False, False),
+                spectralPeaks=(0, 0, 0),
             )
         else:
             boltzmannResults = boltzmannResultsInput
@@ -899,8 +900,8 @@ class EOM:
             wallParams,
             boltzmannResults,
             boltzmannBackground,
-            EMviolationBefore,
-            EMviolationAfter,
+            emViolationBefore,
+            emViolationAfter,
         ) = self._intermediatePressureResults(
             wallParams,
             vevLowT,
@@ -938,29 +939,29 @@ class EOM:
         if self.includeOffEq:
             logging.debug(
                 "%12s %12s %12s %12s %12s %12s %12s %12s %12s %12s",
-                'pressure',
-                'error',
-                'errorSolver',
-                'errTol',
-                'cautious',
-                'multiplier',
-                'dT30Before',
-                'dT30After',
-                'spectralPeak',
-                'truncatedTail',
+                "pressure",
+                "error",
+                "errorSolver",
+                "errTol",
+                "cautious",
+                "multiplier",
+                "dT30Before",
+                "dT30After",
+                "spectralPeak",
+                "truncatedTail",
             )
         else:
             logging.debug(
                 "%12s %12s %12s %12s %12s %12s %12s",
-                'pressure',
-                'error',
-                'errorSolver',
-                'errTol',
-                'cautious',
-                'multiplier',
-                'dT30Before',
+                "pressure",
+                "error",
+                "errorSolver",
+                "errTol",
+                "cautious",
+                "multiplier",
+                "dT30Before",
             )
-            
+
         while True:
             if cautious:
                 # Use the improved algorithm (which converges better but slowly)
@@ -970,8 +971,8 @@ class EOM:
                     boltzmannResults,
                     boltzmannBackground,
                     errorSolver,
-                    EMviolationBefore,
-                    EMviolationAfter,
+                    emViolationBefore,
+                    emViolationAfter,
                 ) = self._getNextPressure(
                     pressure,
                     wallParams,
@@ -993,8 +994,8 @@ class EOM:
                     wallParams,
                     boltzmannResults,
                     boltzmannBackground,
-                    EMviolationBefore,
-                    EMviolationAfter,
+                    emViolationBefore,
+                    emViolationAfter,
                 ) = self._intermediatePressureResults(
                     wallParams,
                     vevLowT,
@@ -1024,22 +1025,22 @@ class EOM:
                     errTol,
                     int(cautious),
                     multiplier,
-                    EMviolationBefore[0],
-                    EMviolationAfter[0],
+                    emViolationBefore[0],
+                    emViolationAfter[0],
                     tuple(int(s) for s in boltzmannResults.spectralPeaks),
                     tuple(int(t) for t in boltzmannResults.truncatedTail),
                 )
             else:
                 logging.debug(
-                "%12g %12g %12g %12g %12r %12g %12g",
-                pressure,
-                error,
-                errorSolver,
-                errTol,
-                int(cautious),
-                multiplier,
-                EMviolationBefore[0],
-            )
+                    "%12g %12g %12g %12g %12r %12g %12g",
+                    pressure,
+                    error,
+                    errorSolver,
+                    errTol,
+                    int(cautious),
+                    multiplier,
+                    emViolationBefore[0],
+                )
             i += 1
 
             if error < errTol or (errorSolver < errTol and cautious):
@@ -1083,19 +1084,19 @@ class EOM:
 
         logging.info(f"Final {pressure=:g}")
         logging.debug(f"Final {wallParams=}")
-        
+
         self.listVelocity.append(wallVelocity)
         self.listPressure.append(pressure)
         self.listPressureError.append(max(error, rtol * np.abs(pressure), atol))
-        
+
         return (
             pressure,
             wallParams,
             boltzmannResults,
             boltzmannBackground,
             hydroResults,
-            EMviolationAfter[0],
-            EMviolationAfter[1],
+            emViolationAfter[0],
+            emViolationAfter[1],
         )
 
     def _getNextPressure(
@@ -1148,8 +1149,8 @@ class EOM:
             wallParams3,
             boltzmannResults3,
             boltzmannBackground3,
-            EMviolationBefore,
-            EMviolationAfter,
+            emViolationBefore,
+            emViolationAfter,
         ) = self._intermediatePressureResults(
             wallParams2,
             vevLowT,
@@ -1175,8 +1176,8 @@ class EOM:
                 boltzmannResults3,
                 boltzmannBackground3,
                 err,
-                EMviolationBefore,
-                EMviolationAfter,
+                emViolationBefore,
+                emViolationAfter,
             )
 
         ## If the last iteration overshot, uses linear interpolation to find a
@@ -1187,8 +1188,8 @@ class EOM:
             wallParams4,
             boltzmannResults4,
             boltzmannBackground4,
-            EMviolationBefore,
-            EMviolationAfter,
+            emViolationBefore,
+            emViolationAfter,
         ) = self._intermediatePressureResults(
             wallParams1 + (wallParams2 - wallParams1) * interpPoint,
             vevLowT,
@@ -1210,8 +1211,8 @@ class EOM:
             boltzmannResults4,
             boltzmannBackground4,
             err,
-            EMviolationBefore,
-            EMviolationAfter,
+            emViolationBefore,
+            emViolationAfter,
         )
 
     def _intermediatePressureResults(
@@ -1275,7 +1276,8 @@ class EOM:
             temperatureProfile = temperatureProfileInput
             velocityProfile = velocityProfileInput
 
-        ## Compute the violation of energy-momentum conservation before solving the Boltzmann equation
+        # Compute the violation of energy-momentum conservation before solving
+        # the Boltzmann equation
         violationOfEMConservationBefore = self.violationOfEMConservation(
             c1,
             c2,
@@ -1362,7 +1364,8 @@ class EOM:
         )
         dVdPhi = self.thermo.effectivePotential.derivField(fields, temperatureProfile)
 
-        ## Compute the violation of energy-momentum conservation after solving the Boltzmann equation
+        # Compute the violation of energy-momentum conservation after
+        # solving the Boltzmann equation
         violationOfEMConservationAfter = self.violationOfEMConservation(
             c1,
             c2,
@@ -1540,12 +1543,12 @@ class EOM:
         return float(U + K)
 
     def estimateTanhError(
-            self,
-            wallParams: WallParams,
-            boltzmannResults: BoltzmannResults,
-            boltzmannBackground: BoltzmannBackground,
-            hydroResults: HydroResults,
-        ) -> np.ndarray:
+        self,
+        wallParams: WallParams,
+        boltzmannResults: BoltzmannResults,
+        boltzmannBackground: BoltzmannBackground,
+        hydroResults: HydroResults,
+    ) -> np.ndarray:
         r"""
         Estimates the EOM error due to the tanh ansatz. It is estimated by the integral
 
@@ -1553,11 +1556,13 @@ class EOM:
 
         with
 
-        .. math:: \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
+        .. math:: \\Delta[\\mathrm{EOM}^2]=\\int\\! dz\\, (-\\partial_z^2 \\phi+ 
+            \\partial V_{\\mathrm{eq}}/ \\partial \\phi+ \\partial V_{\\mathrm{out}}/ \\partial \\phi )^2
 
         and
 
-        .. math:: |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
+        .. math:: |\\mathrm{EOM}^2|=\\int\\! dz\\, [(\\partial_z^2 \\phi)^2+ 
+            (\\partial V_{\\mathrm{eq}}/ \\partial \\phi)^2+ (\\partial V_{\\mathrm{out}}/ \\partial \\phi)^2].
 
         """
         Tminus = hydroResults.temperatureMinus
@@ -1610,9 +1615,9 @@ class EOM:
         dzdchi, _, _ = self.grid.getCompactificationDerivatives()
         eomSqResidual = eomSqPoly.integrate(axis=0, weight=dzdchi[:, None])
         eomSqScaleIntegrated = eomSqScalePoly.integrate(axis=0, weight=dzdchi[:, None])
-        
+
         return eomSqResidual.coefficients / eomSqScaleIntegrated.coefficients
-    
+
     def estimatePressureDerivative(self, wallVelocity: float) -> float:
         """
         Estimates the derivative of the preessure with respect to the wall velocity from
@@ -1633,9 +1638,9 @@ class EOM:
         # Number of pressure points
         nbrPressure = len(self.listPressure)
 
-        assert (len(self.listPressureError) ==
-                len(self.listVelocity) ==
-                nbrPressure >= 2), """The lists listVelocity, listPressure, 
+        assert (
+            len(self.listPressureError) == len(self.listVelocity) == nbrPressure >= 2
+        ), """The lists listVelocity, listPressure,
                                      listPressureError must have the same length and 
                                      contain at least two elements."""
 
@@ -1644,14 +1649,20 @@ class EOM:
         velocityDiff = np.array(self.listVelocity) - wallVelocity
         # Farter points are exponentially suppressed to make sure they don't impact the
         # estimate too much.
-        weightMatrix = np.diag(np.exp(-np.abs(velocityDiff/velocityErrorScale))/
-                               np.array(self.listPressureError)**2)
+        weightMatrix = np.diag(
+            np.exp(-np.abs(velocityDiff / velocityErrorScale))
+            / np.array(self.listPressureError) ** 2
+        )
         aMatrix = np.ones((nbrPressure, 2))
-        aMatrix[:,1] = velocityDiff
+        aMatrix[:, 1] = velocityDiff
 
         # Computes the derivative by fitting the pressure to a line
-        derivative = (np.linalg.inv(aMatrix.T @ weightMatrix @ aMatrix)
-                      @ aMatrix.T @ weightMatrix @ pressures)[1]
+        derivative = (
+            np.linalg.inv(aMatrix.T @ weightMatrix @ aMatrix)
+            @ aMatrix.T
+            @ weightMatrix
+            @ pressures
+        )[1]
 
         return derivative
 
@@ -2091,7 +2102,8 @@ class EOM:
         wallThickness: float,
     ) -> Tuple[float, float]:
         r"""
-        Determines the RMS (along the grid) of the residual of the energy-momentum equations (18) of arXiv:2204.13120v1.
+        Determines the RMS (along the grid) of the residual of the
+        energy-momentum equations (18) of arXiv:2204.13120v1.
 
         Parameters
         ----------
@@ -2119,8 +2131,8 @@ class EOM:
         Returns
         -------
         violationEM30, violationEM33 : (float, float)
-            Violation of energy-momentum conservation in T03 and T33 integrated over the grid,
-            normalized by the wall thickness.
+            Violation of energy-momentum conservation in T03 and T33 integrated over
+            the grid, normalized by the wall thickness.
 
         """
 
@@ -2175,7 +2187,8 @@ class EOM:
         v: float,  # pylint: disable=invalid-name
     ) -> Tuple[float, float]:
         r"""
-        Determines the residual of the energy-momentum equations (18) of arXiv:2204.13120v1 locally.
+        Determines the residual of the energy-momentum equations (18) of
+        arXiv:2204.13120v1 locally.
 
         Parameters
         ----------
@@ -2201,7 +2214,8 @@ class EOM:
         Returns
         -------
         violationEM30, violationEM33 : float
-            Violation of energy-momentum conservation in T03 and T33 at the point grid.xiValues[index].
+            Violation of energy-momentum conservation in T03 and T33 at
+            the point grid.xiValues[index].
 
         """
 
