@@ -1584,12 +1584,15 @@ class EOM:
 
         z = self.grid.xiValues
         fields = self.wallProfile(z, vevLowT, vevHighT, wallParams)[0]
-        d2FieldsDz2 = -(
-            (vevHighT - vevLowT)
-            * np.tanh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets)
-            / np.cosh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets) ** 2
-            / wallParams.widths**2
-        )
+        with warnings.catch_warnings():
+            # overflow here is benign, as just gives zero
+            warnings.filterwarnings("ignore", message="overflow encountered in *")
+            d2FieldsDz2 = -(
+                (vevHighT - vevLowT)
+                * np.tanh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets)
+                / np.cosh(z[:, None] / wallParams.widths[None, :] + wallParams.offsets) ** 2
+                / wallParams.widths**2
+            )
 
         dVdPhi = self.thermo.effectivePotential.derivField(fields, temperatureProfile)
 
@@ -1704,7 +1707,8 @@ class EOM:
             zL = z[:, None] / wallParams.widths[None, :]  # pylint: disable=invalid-name
 
         with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+            # overflow here is benign, as just gives zero
+            warnings.filterwarnings("ignore", message="overflow encountered in *")
             fields = vevLowT + 0.5 * (vevHighT - vevLowT) * (
                 1 + np.tanh(zL + wallParams.offsets)
             )
