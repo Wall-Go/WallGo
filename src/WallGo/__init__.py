@@ -24,7 +24,7 @@ from .particle import Particle
 from .polynomial import Polynomial, SpectralConvergenceInfo
 from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
-from .results import WallGoResults
+from .results import WallGoResults, ESolutionType
 from .utils import getSafePathToResource
 
 # list of submodules for lazy importing
