@@ -145,7 +145,10 @@ class ConfigBoltzmannSolver:
     """
 
     truncationOption: str = 'AUTO'
-    """ Truncation option for spectral expansions. Can be 'NONE' for no truncation, 'AUTO' to automatically detect if the spectral expansion is converging and truncate if not, or 'THIRD' which always truncates the last third. """
+    """ Truncation option for spectral expansions. Can be 'NONE' for no
+    truncation, 'AUTO' to automatically detect if the spectral expansion
+    is converging and truncate if not, or 'THIRD' which always truncates
+    the last third. """
 
 @dataclass
 class Config:
@@ -311,3 +314,4 @@ class Config:
             if 'truncationOption' in keys:      
                 self.configBoltzmannSolver.truncationOption = parser.get(
                     "BoltzmannSolver", "truncationOption")
+
