@@ -1128,6 +1128,11 @@ class EOM:
         interpolation to find a better estimate of the true solution. This function is
         called only when cautious=True in wallPressure().
         """
+
+        # The different pressure_i, wallParams_i and boltzmannResults_i correspond to
+        # different iterations that the solver use to determine if it overshoots the
+        # true solution. If it does, it uses linear interpolation to find a better
+        # solution.
         (
             pressure2,
             wallParams2,
