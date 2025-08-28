@@ -814,7 +814,12 @@ class EOM:
         hydroResults : HydroResults
             HydroResults object containing the solution obtained from Hydrodynamics.
             Only returned if returnExtras is True
-
+        emViolationAfter[0] : float
+            Violation of energy-momentum conservation in T30 after solving the
+            Boltzmann equation
+        emViolationAfter[1] : float
+            Violation of energy-momentum conservation in T33 after solving the
+            Boltzmann equation
         """
 
         if atol is None:
