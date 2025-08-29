@@ -38,6 +38,7 @@ def test_Delta00(
     grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 100)
     collisionPath = dir_path / "TestData/N19"
     boltzmann = WallGo.BoltzmannSolver(grid, "Cardinal", "Cardinal", "Spectral")
+    boltzmann.truncationOption = WallGo.ETruncationOption.NONE
 
     boltzmann.updateParticleList([particle])
     boltzmann.setBackground(bg)
@@ -122,3 +123,52 @@ def test_solution(
 
     # asserting solution works
     assert ratio == pytest.approx(0, abs=1e-14)
+
+
+@pytest.mark.parametrize("spatialGridSize, momentumGridSize, slope", [(7, 9, -0.1), (9, 9, -0.1), (11, 9, 0.1)])
+def test_checkSpectralConvergence(
+    boltzmannTestBackground: WallGo.BoltzmannBackground,
+    particle: WallGo.Particle,
+    spatialGridSize: int,
+    momentumGridSize: int,
+    slope: float,
+) -> None:
+    """
+    Tests that the Boltzmann equation is satisfied by the solution
+    """
+    # setting up objects
+    grid = WallGo.grid.Grid(spatialGridSize, momentumGridSize, 1, 1)
+    boltzmann = WallGo.BoltzmannSolver(
+        grid,
+        basisM="Chebyshev",
+        basisN="Chebyshev",
+        truncationOption=WallGo.ETruncationOption.AUTO,
+    )
+
+    # solving Boltzmann equations
+    deltaFShape = (
+        1,
+        spatialGridSize - 1,
+        momentumGridSize - 1,
+        momentumGridSize - 1,
+    )
+    deltaF = np.zeros(deltaFShape)
+    for z in range(spatialGridSize - 1):
+        for pz in range(momentumGridSize - 1):
+            for pp in range(momentumGridSize - 1):
+                deltaF[0, z, pz, pp] = np.exp(slope*z - 1e-2*pz - 1e-3*pp) / (1 + pz) / (1 + pp)**2
+        
+
+    # checking spectral convergence
+    deltaFTruncated, truncatedShape, _ = boltzmann.checkSpectralConvergence(deltaF)
+
+    nTruncated = (spatialGridSize - 1) // 3
+    expectTruncated = deltaFTruncated[:, -nTruncated:, :, :]
+
+    # asserting truncation
+    if slope > 0:
+        assert truncatedShape == (1, spatialGridSize - 1 - nTruncated, momentumGridSize - 1, momentumGridSize - 1)
+        assert np.allclose(expectTruncated, np.zeros_like(expectTruncated), atol=1e-2)
+    else:
+        assert truncatedShape == (1, spatialGridSize - 1, momentumGridSize - 1, momentumGridSize - 1)
+        assert not np.allclose(expectTruncated, np.zeros_like(expectTruncated))

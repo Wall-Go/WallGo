@@ -5,14 +5,14 @@ import warnings
 import importlib
 
 # package level modules
-from .boltzmann import BoltzmannSolver
+from .boltzmann import BoltzmannSolver, ETruncationOption
 from .config import Config
 from .collisionArray import CollisionArray
-from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, WallParams
+from .containers import PhaseInfo, BoltzmannBackground, BoltzmannDeltas, FreeEnergyArrays, WallParams
 from .effectivePotential import EffectivePotential, VeffDerivativeSettings
 from .exceptions import WallGoError, WallGoPhaseValidationError, CollisionLoadError
 from .fields import Fields
-from .freeEnergy import FreeEnergy
+from .freeEnergy import FreeEnergy, FreeEnergyValueType
 from .genericModel import GenericModel
 from .grid import Grid
 from .grid3Scales import Grid3Scales
@@ -21,10 +21,10 @@ from .hydrodynamicsTemplateModel import HydrodynamicsTemplateModel
 from .interpolatableFunction import InterpolatableFunction, EExtrapolationType
 from .manager import WallGoManager, WallSolverSettings
 from .particle import Particle
-from .polynomial import Polynomial
+from .polynomial import Polynomial, SpectralConvergenceInfo
 from .thermodynamics import Thermodynamics
 from .equationOfMotion import EOM
-from .results import WallGoResults
+from .results import WallGoResults, ESolutionType
 from .utils import getSafePathToResource
 
 # list of submodules for lazy importing

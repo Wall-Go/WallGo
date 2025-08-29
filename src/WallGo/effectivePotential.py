@@ -120,7 +120,8 @@ class EffectivePotential(ABC):
         return self.effectivePotentialError
 
 
-    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike, tol: float = None) -> Tuple[Fields, np.ndarray]:
+    def findLocalMinimum(self, initialGuess: Fields, temperature: npt.ArrayLike,
+                         tol: float = None, method: str|None = None) -> Tuple[Fields, np.ndarray]:
         """
         Finds a local minimum starting from a given initial configuration of background fields.
         Feel free to override this if your model requires more delicate minimization.
@@ -159,7 +160,7 @@ class EffectivePotential(ABC):
 
             guess = guesses.getFieldPoint(i)
 
-            res = scipy.optimize.minimize(evaluateWrapper, guess, tol=tol)
+            res = scipy.optimize.minimize(evaluateWrapper, guess, tol=tol, method=method)
 
             resLocation[i] = res.x
             resValue[i] = res.fun
