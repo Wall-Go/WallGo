@@ -378,7 +378,7 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
 
         # Note that we are taking the absolute value of the mass in the log here,
         # instead of using EImaginaryOption = ABS_ARGUMENT, because we do not 
-        # want the absolute value in the product of massSq ans rgScale
+        # want the absolute value in the product of massSq and rgScale
         return degreesOfFreedom*np.array( 
             massSq * massSq * (np.log(np.abs(massSq / rgScale**2)) - c)
             + 2 * massSq * rgScale**2

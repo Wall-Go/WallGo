@@ -123,8 +123,11 @@ def singletBenchmarkThermo_interpolate(
     """ Then manually interpolate """
     TMin, TMax, dT = BM.config["interpolateTemperatureRange"]
 
-    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
-    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+    # To meet the high accuracy requirement of this test, we set the interpolation order 
+    # to 3. We do not recommend to do this in general, as it can lead to unphysical
+    #features in the speed of sound.
+    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT, interpolationDegree=3)
+    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT, interpolationDegree=3)
 
     thermo.setExtrapolate()
 
@@ -170,8 +173,11 @@ def singletSimpleBenchmarkFreeEnergy(
     dT = 0.1
     BM.config["interpolateTemperatureRange"] = TMin, TMax, dT
 
-    freeEnergy1.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
-    freeEnergy2.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False)
+    # To meet the high accuracy requirement of this test, we set the interpolation order 
+    # to 3. We do not recommend to do this in general, as it can lead to unphysical
+    #features in the speed of sound.
+    freeEnergy1.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False, interpolationDegree=3)
+    freeEnergy2.tracePhase(TMin, TMax, dT, rTol=1e-6, paranoid=False, interpolationDegree=3)
 
     yield freeEnergy1, freeEnergy2, BM
 
@@ -207,8 +213,11 @@ def singletSimpleBenchmarkThermodynamics(
     thermo.freeEnergyHigh.disableAdaptiveInterpolation()
     thermo.freeEnergyLow.disableAdaptiveInterpolation()
 
-    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT)
-    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT)
+    # To meet the high accuracy requirement of this test, we set the interpolation order 
+    # to 3. We do not recommend to do this in general, as it can lead to unphysical
+    #features in the speed of sound.
+    thermo.freeEnergyHigh.tracePhase(TMin, TMax, dT, interpolationDegree=3)
+    thermo.freeEnergyLow.tracePhase(TMin, TMax, dT, interpolationDegree=3)
 
     thermo.setExtrapolate()
 

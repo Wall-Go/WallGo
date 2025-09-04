@@ -7,8 +7,7 @@ from enum import Enum, auto
 from typing import Callable, Tuple
 import logging
 import numpy as np
-from scipy.interpolate import CubicSpline
-
+from scipy.interpolate import make_interp_spline, BSpline
 from . import helpers
 
 inputType = list[float] | np.ndarray
@@ -95,7 +94,7 @@ class InterpolatableFunction(ABC):
         assert returnValueCount >= 1
         self._RETURN_VALUE_COUNT = returnValueCount  # pylint: disable=invalid-name
 
-        self._interpolatedFunction: CubicSpline
+        self._interpolatedFunction: BSpline
 
         ## Will hold list of interpolated derivatives, 1st and 2nd derivatives only
         self._interpolatedDerivatives: list[Callable]
@@ -242,6 +241,8 @@ class InterpolatableFunction(ABC):
         self,
         x: inputType,
         fx: outputType,
+        derivatives: list[outputType] | None = None,
+        splineDegree: int = 3
     ) -> None:
         """
         Like initializeInterpolationTable but takes in precomputed function values 'fx'
@@ -252,9 +253,11 @@ class InterpolatableFunction(ABC):
             Points where the function was evaluated.
         fx : list[float | np.ndarray] or np.ndarray
             Value of the function at x.
-
+        derivatives : list[outputType] | None
+            List containing the values of each derivative of the function at x. If None,
+            computes the derivatives from the interpolated spline.
         """
-        self._interpolate(x, fx)
+        self._interpolate(x, fx, derivatives, splineDegree)
 
     def scheduleForInterpolation(self, x: inputType, fx: outputType) -> None:
         """
@@ -504,7 +507,9 @@ class InterpolatableFunction(ABC):
 
         """
         x = np.asanyarray(x)
-        if not bUseInterpolation or not self.hasInterpolation() or order > 2:
+        if (not bUseInterpolation or
+            not self.hasInterpolation() or
+            order > len(self._interpolatedDerivatives)):
             return helpers.derivative(self._evaluateDirectly, x, n=order)
 
         # Use interpolated values whenever possible
@@ -555,6 +560,8 @@ class InterpolatableFunction(ABC):
         self,
         x: inputType,
         fx: outputType,
+        derivatives: list[outputType] | None = None,
+        splineDegree: int = 3,
     ) -> None:
         """Does the actual interpolation and sets some internal values.
         Input x needs to be 1D, and input fx needs to be at most 2D.
@@ -567,19 +574,21 @@ class InterpolatableFunction(ABC):
         )
 
         ## Can't specify different extrapolation methods for x > xmax, x < xmin in
-        ## CubicSpline! This logic is handled manually in __call__()
+        ## Spline! This logic is handled manually in __call__()
         bShouldExtrapolate = EExtrapolationType.FUNCTION in (
             self.extrapolationTypeLower,
             self.extrapolationTypeUpper,
         )
 
         ## Explicitly drop non-numerics
-        xFiltered, fxFiltered = self._dropBadPoints(x, fx)
+        xFiltered, fxFiltered, derivativesFiltered = self._dropBadPoints(x, fx,
+                                                                         derivatives)
 
         ## This works even if f(x) is vector valued
-        self._interpolatedFunction = CubicSpline(
-            xFiltered, fxFiltered, extrapolate=bShouldExtrapolate, axis=0
+        self._interpolatedFunction = make_interp_spline(
+            xFiltered, fxFiltered, k=splineDegree, axis=0
         )
+        self._interpolatedFunction.extrapolate = bShouldExtrapolate
 
         self._rangeMin = np.min(xFiltered)
         self._rangeMax = np.max(xFiltered)
@@ -589,32 +598,54 @@ class InterpolatableFunction(ABC):
         """Store a cubic spline for the 1st and 2nd derivatives into a list.
         We do not attempt to spline the higher derivatives as they are not 
         guaranteed to be continuous."""
-        self._interpolatedDerivatives = [
-            self._interpolatedFunction.derivative(1),
-            self._interpolatedFunction.derivative(2),
-        ]
+        if derivatives is None or len(derivatives) == 0:
+            self._interpolatedDerivatives = [
+                self._interpolatedFunction.derivative(1),
+                self._interpolatedFunction.derivative(2),
+            ]
+        else:
+            self._interpolatedDerivatives = []
+            for d in derivativesFiltered:
+                self._interpolatedDerivatives.append(make_interp_spline(
+                    xFiltered, d, k=splineDegree, axis=0
+                ))
+                self._interpolatedDerivatives[-1].extrapolate = bShouldExtrapolate
+            if len(self._interpolatedDerivatives) == 1:
+                self._interpolatedDerivatives.append(
+                    self._interpolatedDerivatives[0].derivative(1))
 
     @staticmethod
     def _dropBadPoints(
         x: np.ndarray,
         fx: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
+        derivatives: list[outputType] | None = None,
+    ) -> tuple[np.ndarray, np.ndarray, list[outputType] | None]:
         """
         Removes non-numerical (x, fx) pairs. For 2D fx the check is applied row-wise.
         Input x needs to be 1D, and input fx needs to be at most 2D.
         Output is same shape as input.
         """
+        if derivatives is None:
+            derivativesValid = None
+        else:
+            derivativesValid = []
         if fx.ndim > 1:
             validIndices = np.all(np.isfinite(fx), axis=1)
             fxValid = fx[validIndices]
+            if derivatives is not None:
+                for d in derivatives:
+                    derivativesValid.append(d[validIndices])
         else:
             ## fx is 1D array
             validIndices = np.all(np.isfinite(fx))
             fxValid = np.ravel(fx[validIndices])
+            if derivatives is not None:
+                for d in derivatives:
+                    derivativesValid.append(np.ravel(d[validIndices]))
 
         xValid = np.ravel(x[validIndices])
 
-        return xValid, fxValid
+        return xValid, fxValid, derivativesValid
 
     def _adaptiveInterpolationUpdate(self) -> None:
         """
@@ -757,8 +788,11 @@ class InterpolatableFunction(ABC):
             self._validateInterpolationTable((self._rangeMax - self._rangeMin) / 2.55)
 
             logging.debug(
-                f"{selfName}: Succesfully read interpolation table from file. "
-                "Range [{self._rangeMin}, {self._rangeMax}]"
+                "%s: Succesfully read interpolation table from file. "
+                "Range [%g, %g]",
+                selfName,
+                self._rangeMin,
+                self._rangeMax,
             )
 
         except IOError as ioError:

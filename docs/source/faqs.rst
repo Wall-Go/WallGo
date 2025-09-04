@@ -13,7 +13,7 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `arXiv:2411.04970 <https://arxiv.org/abs/2411.04970>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
+    support us by please citing the WallGo paper, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
 
         @article{Ekstedt:2024fyq,
             author = "Ekstedt, Andreas and Gould, Oliver and Hirvonen, Joonas and Laurent, Benoit and Niemi, Lauri and Schicho, Philipp and van de Vis, Jorinde",
@@ -22,18 +22,42 @@ General
             archivePrefix = "arXiv",
             primaryClass = "hep-ph",
             reportNumber = "CERN-TH-2024-174, DESY-24-162, HIP-2024-21/TH",
-            month = "11",
-            year = "2024"
+            doi = "10.1007/JHEP04(2025)101",
+            journal = "JHEP",
+            volume = "04",
+            pages = "101",
+            year = "2025"
         }
 
 
-Installation
+Installation and running
 ============
 
 - **I can not install WallGo.**
 
     Please take a look at our :doc:`installation instructions <installation>`. If it doesn't
     work for you, feel free to :doc:`send us an email <contact>`.
+
+- **How do I run a first example?**
+
+    After having installed WallGo, you can run one of the examples in the Models folder, e.g.
+    
+    .. code-block:: bash
+
+        python Models/SingletStandardModel_Z2/singletStandardModelZ2.py
+    
+    A full run of the example file requires that the collisions files
+    are located in the model folder as well.
+    You can also generate the collision files yourself, e.g. (for a basis size of 5)
+    
+    .. code-block:: bash
+
+        python Models/SingletStandardModel_Z2/singletStandardModelZ2.py --recalculateCollisions --momentumGridSize 5 
+
+    This will create a folder called CollisionOutput_N5_UserGenerated containing the collision files.
+    A grid size of 5 is typically too small for a full computation of the wall velocity, 
+    but it does allow you to confirm that everything is installed correctly, 
+    within a small amount of computation time.
 
 Matrix elements
 ===============
@@ -86,6 +110,33 @@ Collision integrals
     Yes, as long as your new model/parameter choice has the same interaction strength, 
     thermal masses (for the out-of-equilibrium particles) and momentum grid size as the model
     with which you obtained the collision integrals.
+
+- **WallGo tells me that it can not read the collision files.**
+
+    This might happen when you download the collision files from the git repository. 
+    As the git repository uses Git Large File Storage (LFS) to manage the large collision files, the downloaded
+    files will be pointers, and not the full collision files. To obtain the collision files requires Git LFS.
+
+    Complete installation instructions for Git LFS can be found at `git-lfs.com <https://git-lfs.com/>`_. This depends on your operating system, but should be straightforward. For example, on Ubuntu you can use
+
+    .. code-block:: bash
+
+        sudo apt-get install git-lfs
+
+    or on a Mac, you can use
+
+    .. code-block:: bash
+
+        brew install git-lfs
+    
+    Then, within the WallGo repository run
+    
+    .. code-block:: bash
+
+        git lfs install
+        git lfs fetch --all
+    
+    Alternatively, you can generate the collision files yourself.
 
 Creating a model in Python
 ==========================
@@ -155,6 +206,18 @@ Effective potentials
     different options for how to remove unwanted imaginary parts, listed in the
     enum :py:class:`WallGo.PotentialTools.EImaginaryOption`. See the docs for more
     details.
+
+Free energy
+-----------
+- **I already know the value of the field and the effective potential as a function of temperature, can I provide these to WallGo to circumvent the phase tracing?**
+
+    If the phase tracing does not work properly for your model, or if you want to speed up the
+    initialization phase, you can provide arrays with the values of the field(s) in the minimum of the
+    potential and the corresponding effective potential for the appropriate temperature range. 
+    These are passed as a :py:class:`WallGo.FreeEnergyArrays` object, to the function
+    :py:meth:`WallGo.WallGoManager.setupThermodynamicsHydrodynamics()`. These arrays are optional arguments;
+    if they are not provided, WallGo will execute its default phase tracing algorithm.
+
 
 
 Settings

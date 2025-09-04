@@ -119,6 +119,12 @@ class ConfigThermodynamics:
     uses the initial step size algorithm of :py:mod:`scipy.integrate.solve_ivp`.
     """
 
+    interpolationDegree: int = 1
+    """
+    Degree of the splines used in FreeEnergy to interpolate the potential and its
+    derivatives.
+    """
+
 @dataclass
 class ConfigBoltzmannSolver:
     """ Holds the config of the BoltzmannSolver class. """
@@ -137,6 +143,12 @@ class ConfigBoltzmannSolver:
     (meanFreePathScale should scale like 1/collisionMultiplier).
     WARNING: THIS CHANGES THE COLLISION TERMS WRT TO THEIR PHYSICAL VALUE.
     """
+
+    truncationOption: str = 'AUTO'
+    """ Truncation option for spectral expansions. Can be 'NONE' for no
+    truncation, 'AUTO' to automatically detect if the spectral expansion
+    is converging and truncate if not, or 'THIRD' which always truncates
+    the last third. """
 
 @dataclass
 class Config:
@@ -282,17 +294,24 @@ class Config:
                         self.configThermodynamics.phaseTracerFirstStep = None
                     else:
                         raise
+            if 'interpolationDegree' in keys:
+                self.configThermodynamics.interpolationDegree = parser.getint(
+                    "Thermodynamics",
+                    "interpolationDegree"
+                )
 
         # Read the BoltzmannSolver configs
         if 'BoltzmannSolver' in parser.sections():
             keys = parser['BoltzmannSolver'].keys()
             if 'collisionMultiplier' in keys:
-                self.configBoltzmannSolver.collisionMultiplier = parser.getfloat(
-                    "BoltzmannSolver",
-                    "collisionMultiplier")
+                self.configBoltzmannSolver.collisionMultiplier = parser.getfloat("BoltzmannSolver", "collisionMultiplier")
             if 'basisM' in keys:
-                self.configBoltzmannSolver.basisM = parser.get("BoltzmannSolver",
-                                                               "basisM")
+                self.configBoltzmannSolver.basisM = parser.get(
+                    "BoltzmannSolver", "basisM")
             if 'basisN' in keys:
-                self.configBoltzmannSolver.basisN = parser.get("BoltzmannSolver",
-                                                               "basisN")
+                self.configBoltzmannSolver.basisN = parser.get(
+                    "BoltzmannSolver", "basisN")
+            if 'truncationOption' in keys:      
+                self.configBoltzmannSolver.truncationOption = parser.get(
+                    "BoltzmannSolver", "truncationOption")
+
