@@ -142,6 +142,9 @@ class EOM:
         self.listPressure = []
         self.listPressureError = []
 
+        # also getting the LTE results
+        self.wallVelocityLTE = self.hydrodynamics.findvwLTE()
+
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
     ) -> WallGoResults:
@@ -182,16 +185,24 @@ class EOM:
         vmax = min(self.hydrodynamics.vJ, self.hydrodynamics.fastestDeflag())
 
         if vmax < self.hydrodynamics.vJ and (
-            self.hydrodynamics.doesPhaseTraceLimitvmax[0]
+            self.hydrodynamics.doesPhaseTraceLimitvmax[0] 
             or self.hydrodynamics.doesPhaseTraceLimitvmax[1]
         ):
             logging.warning(
                 """\n Warning: vmax is limited by the maximum temperature chosen in
                 the phase tracing. WallGo might be unable to find the wall velocity.
-                Try increasing the maximum temperature! \n"""
+                Consider increasing the maximum temperature if no velocity is found. \n"""
             )
 
-        return self.solveWall(vmin, vmax, wallParams)
+        results = self.solveWall(vmin, vmax, wallParams)
+        if (results.solutionType != ESolutionType.DEFLAGRATION and
+            0 < self.wallVelocityLTE < 1 and
+            self.includeOffEq):
+            # If there is a LTE solution but no out-of-equilibrium one, retry with vmax
+            # set to the LTE velocity.
+            results = self.solveWall(vmin, self.wallVelocityLTE, wallParams)
+            
+        return results
 
     def findWallVelocityDetonation(
         self,
@@ -466,15 +477,12 @@ class EOM:
                 emViolationT33Max,
             ) = wallPressureResultsMax
 
-        # also getting the LTE results
-        wallVelocityLTE = self.hydrodynamics.findvwLTE()
-
         # The pressure peak is not enough to stop the wall: no deflagration or
         # hybrid solution
         if pressureMax < 0:
             logging.info("Maximum pressure on wall is negative!")
             logging.info("pressureMax=%s wallParamsMax=%s", pressureMax, wallParamsMax)
-            results.setWallVelocities(None, None, wallVelocityLTE)
+            results.setWallVelocities(None, None, self.wallVelocityLTE)
             results.setWallParams(wallParamsMax)
             results.setHydroResults(hydroResultsMax)
             results.setBoltzmannBackground(boltzmannBackgroundMax)
@@ -520,7 +528,7 @@ class EOM:
                     the phase transition cannot proceed. Something might be wrong with
                     your potential."""
                 )
-                results.setWallVelocities(None, None, wallVelocityLTE)
+                results.setWallVelocities(None, None, self.wallVelocityLTE)
                 results.setWallParams(wallParamsMin)
                 results.setHydroResults(hydroResultsMin)
                 results.setBoltzmannBackground(boltzmannBackgroundMin)
@@ -685,7 +693,7 @@ class EOM:
         results.setWallVelocities(
             wallVelocity=wallVelocity,
             wallVelocityError=wallVelocityError,
-            wallVelocityLTE=wallVelocityLTE,
+            wallVelocityLTE=self.wallVelocityLTE,
         )
 
         results.setHydroResults(hydroResults)
