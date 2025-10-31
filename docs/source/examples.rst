@@ -15,3 +15,4 @@ Here we collect a number of different example model files. The Yukawa model file
     examples/manySinglets
     examples/inertDoubletModel
     examples/yukawa
+    examples/yukawaCollisionForPairs
