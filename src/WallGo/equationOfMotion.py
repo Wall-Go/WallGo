@@ -148,12 +148,12 @@ class EOM:
     def findWallVelocityDeflagrationHybrid(
         self, wallThicknessIni: float | None = None
     ) -> WallGoResults:
-        """
+        r"""
         Finds the wall velocity by minimizing the action and solving for the
         solution with 0 total pressure on the wall. This function only looks for
         deflagration or hybrid solutions. Returns a velocity of 1 if the pressure
-        peak at vw = vJ is not large enough to stop the wall.
-        For detonation solutions, use solveInterpolation().
+        peak at :math:`v_w = v_J` is not large enough to stop the wall.
+        For detonation solutions, use instead :py:meth:`findWallVelocityDetonation()`.
 
         Parameters
         ----------
@@ -215,15 +215,15 @@ class EOM:
         rtol: float = 0.01,
         onlySmallest: bool = True,
     ) -> list[WallGoResults]:
-        """
+        r"""
         Finds the wall velocity of detonation solutions. This is more complicated than
         for deflagrations or hybrids since the pressure is not necessarily monotonous,
-        so the root cannot be bracketed easily. To bracket it, we start at vmin and
+        so the root cannot be bracketed easily. To bracket it, we start at :py:data:`vmin` and
         increase it until the pressure goes from negative to positive. We then use a
         normal bracketed root finding algorithm to find the wall velocity. In
         principles, several solutions can exist. The function can either return a list
         containing all the solutions or the solution containing the smallest wall
-        velocity.
+        velocity. For deflagration and hybrid solutions, instead use :py:meth:`findWallVelocityDeflagrationHybrid()`.
 
         Parameters
         ----------
@@ -781,13 +781,13 @@ class EOM:
         float,
         float,
     ]:
-        """
+        r"""
         Computes the total pressure on the wall by finding the tanh profile
         that minimizes the action. Can use two different iteration algorithms
-        to find the pressure. If self.forceImproveConvergence=False and
-        wallVelocity<self.hydrodynamics.vJ, uses a fast algorithm that sometimes fails
+        to find the pressure. If :py:attr:`self.forceImproveConvergence=False` and
+        :py:data:`wallVelocity<self.hydrodynamics.vJ`, it uses a fast algorithm that sometimes fails
         to converge. Otherwise, or if the previous algorithm converges slowly,
-        uses a slower, but more robust algorithm.
+        it åuses a slower, but more robust algorithm.
 
         Parameters
         ----------
