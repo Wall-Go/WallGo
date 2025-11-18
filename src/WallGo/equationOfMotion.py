@@ -1572,6 +1572,8 @@ class EOM:
 
         .. math::
             \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},
+        .. math::
+            \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},
 
         with
 
