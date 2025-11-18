@@ -355,7 +355,8 @@ class BoltzmannSolver:
         Check for spectral convergence.
 
         Fits to the exponential slope of the last 1/3 of coefficients in the
-        Chebyshev basis. Also returns the 
+        Chebyshev basis, and truncates if they are increasing. Also returns the
+        positions of the spectral peaks of the distribution in each dimension.
 
         Parameters
         ----------
@@ -481,6 +482,36 @@ class BoltzmannSolver:
             ppConvergenceInfo.spectralPeak,
         )
 
+        BoltzmannSolver.save_truncated_array(
+            "spectral_convergence_chi.txt", spectralCoeffsChi, truncatedShape[1]
+        )
+        BoltzmannSolver.save_truncated_array(
+            "spectral_convergence_pz.txt", spectralCoeffsPz, truncatedShape[2]
+        )
+        BoltzmannSolver.save_truncated_array(
+            "spectral_convergence_pp.txt", spectralCoeffsPp, truncatedShape[3]
+        )
+
+        # Quick hacky plot
+        # import matplotlib.pyplot as plt
+        # nEnd = truncatedShape[1] + np.arange(deltaF.shape[1] - truncatedShape[1] + 1) - 1
+        # plt.plot(spectralCoeffsChi[:truncatedShape[1]], "o-", label=r"$\chi$", color="#cf0063")
+        # plt.plot(nEnd, spectralCoeffsChi[(truncatedShape[1] - 1):], "o:", color="#cf0063", markerfacecolor='none')
+
+        # nEnd = truncatedShape[2] + np.arange(deltaF.shape[2] - truncatedShape[2] + 1) - 1
+        # plt.plot(spectralCoeffsPz[:truncatedShape[2]], "^-", label=r"$p_z$", color="#0173b2")
+        # plt.plot(nEnd, spectralCoeffsPz[(truncatedShape[2] - 1):], "^:", color="#0173b2", markerfacecolor='none')
+
+        # nEnd = truncatedShape[3] + np.arange(deltaF.shape[3] - truncatedShape[3] + 1) - 1
+        # plt.plot(spectralCoeffsPp[:truncatedShape[3]], "D-", label=r"$p_\parallel$", color="#de8f05")
+        # plt.plot(nEnd, spectralCoeffsPp[(truncatedShape[3] - 1):], "D:", color="#de8f05", markerfacecolor='none')
+        # plt.xlabel("index")
+        # plt.ylabel("spectral coefficients")
+        # plt.yscale("log")
+        # plt.legend()
+        # plt.savefig("spectral_convergence.png")
+        # plt.show()
+
         if self.truncationOption == ETruncationOption.NONE:
             return deltaF, tuple(truncatedShape), spectralPeaks
 
@@ -488,6 +519,16 @@ class BoltzmannSolver:
         deltaFPoly.changeBasis(basisTypes)
 
         return deltaFPoly.coefficients, tuple(truncatedShape), spectralPeaks
+
+    @staticmethod
+    def save_truncated_array(filename: str, data: np.ndarray, truncated_size: int) -> None:
+        """ Quick hack """
+        head = data.copy()
+        if truncated_size < len(head):
+            head[truncated_size:] = 0
+        tail = data.copy()
+        tail[:truncated_size] = 0
+        np.savetxt(filename, np.c_[head, tail])
 
     @staticmethod
     def _smoothTruncation(length: int, cut: int, sharp: float = 3) -> np.ndarray:

@@ -56,8 +56,8 @@ def _integrator(
 
 
 class JbIntegral(InterpolatableFunction):
-    """
-    Bosonic Jb(x), in practice use with x = m^2 / T^2.
+    r"""
+    Bosonic :math:`J_b(x)`, in practice use with :math:`x = m^2 / T^2`.
     """
 
     SMALL_NUMBER: typing.Final[float] = 1e-100
@@ -176,9 +176,9 @@ class JbIntegral(InterpolatableFunction):
 
 
 class JfIntegral(InterpolatableFunction):
-    """
-    Fermionic Jf(x), in practice use with x = m^2 / T^2. This is very similar to the
-    bosonic counterpart Jb.
+    r"""
+    Fermionic :math:`J_f(x)`, in practice use with :math:`x = m^2 / T^2`. This is very similar to the
+    bosonic counterpart :math:`J_b`.
     """
 
     SMALL_NUMBER: typing.Final[float] = 1e-100

@@ -183,7 +183,7 @@ class CollisionArray:
         particles: list[Particle],
         bInterpolate: bool = True,
     ) -> "CollisionArray":
-        """
+        r"""
         Create a new CollisionArray object from a directory containing collision files.
 
         Parameters
@@ -191,7 +191,7 @@ class CollisionArray:
         collision : Collision
             Collision class that holds path of the directory containing the collision
             files. The collision files must have names with the form
-            "collisions_particle1_particle2.hdf5".
+            `collisions_particle1_particle2.hdf5`.
         grid : Grid
             The grid object representing the computational grid.
         basisType : str

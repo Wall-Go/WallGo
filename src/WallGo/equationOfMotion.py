@@ -1570,17 +1570,20 @@ class EOM:
         r"""
         Estimates the EOM error due to the tanh ansatz. It is estimated by the integral
 
-        .. math:: \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},
+        .. math::
+            \sqrt{\Delta[\mathrm{EOM}^2]/|\mathrm{EOM}^2|},
 
         with
 
-        .. math:: \\Delta[\\mathrm{EOM}^2]=\\int\\! dz\\, (-\\partial_z^2 \\phi+ 
-            \\partial V_{\\mathrm{eq}}/ \\partial \\phi+ \\partial V_{\\mathrm{out}}/ \\partial \\phi )^2
+        .. math::
+            \Delta[\mathrm{EOM}^2]=\int\! dz\, (-\partial_z^2 \phi+ 
+            \partial V_{\mathrm{eq}}/ \partial \phi+ \partial V_{\mathrm{out}}/ \partial \phi )^2
 
         and
 
-        .. math:: |\\mathrm{EOM}^2|=\\int\\! dz\\, [(\\partial_z^2 \\phi)^2+ 
-            (\\partial V_{\\mathrm{eq}}/ \\partial \\phi)^2+ (\\partial V_{\\mathrm{out}}/ \\partial \\phi)^2].
+        .. math::
+            |\mathrm{EOM}^2|=\int\! dz\, [(\partial_z^2 \phi)^2+ 
+            (\partial V_{\mathrm{eq}}/ \partial \phi)^2+ (\partial V_{\mathrm{out}}/ \partial \phi)^2].
 
         """
         Tminus = hydroResults.temperatureMinus

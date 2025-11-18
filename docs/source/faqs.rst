@@ -31,7 +31,7 @@ General
 
 
 Installation and running
-============
+========================
 
 - **I can not install WallGo.**
 
@@ -209,6 +209,7 @@ Effective potentials
 
 Free energy
 -----------
+
 - **I already know the value of the field and the effective potential as a function of temperature, can I provide these to WallGo to circumvent the phase tracing?**
 
     If the phase tracing does not work properly for your model, or if you want to speed up the

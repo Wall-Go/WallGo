@@ -527,8 +527,8 @@ class StandardModelExample(WallGoExampleBase):
         wall solver for the standard model benchmark points, with different values
         of the Higgs mass.
         """
-        valuesMH = [0.0, 34.0, 50.0, 70.0, 81.0]
-        valuesTn = [57.1958, 70.5793, 83.4251, 102.344, 113.575]
+        valuesMH = [0.0]
+        valuesTn = [57.1958]
 
         output: list[ExampleInputPoint] = []
 
