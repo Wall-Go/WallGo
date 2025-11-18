@@ -21,9 +21,9 @@ class Hydrodynamics:
     from the wall such that the wall can be treated as infinitesimally thin.
 
     NOTE: We use the conventions that the velocities are always positive, even in the
-    wall frame (vp and vm). These conventions are consistent with the literature, e.g.
+    wall frame (:py:data:`vp` and :py:data:`vm`). These conventions are consistent with the literature, e.g.
     with arxiv:1004.4187. These conventions differ from the conventions used in the
-    EOM and Boltzmann part of the code. The conversion is made in findHydroBoundaries.
+    :py:class:`~WallGo.EOM` and :py:class:`~WallGo.Boltzmann` part of the code. The conversion is made in :py:meth:`~Hydrodynamics.findHydroBoundaries`.
     """
 
     def __init__(
@@ -177,7 +177,7 @@ class Hydrodynamics:
         r"""
         Finds the largest wall velocity for which the temperature of the plasma is
         within the allowed regime, by finding the velocity for which
-        `Tm = TMaxLowT` or `Tp = TMaxHighT`.
+        :py:data:`Tm = TMaxLowT` or :py:data:`Tp = TMaxHighT`.
         Returns the Jouguet velocity if no solution can be found.
 
         Returns
@@ -240,8 +240,8 @@ class Hydrodynamics:
         r"""
         Finds the smallest detonation wall velocity for which the temperature of the
         plasma is within the allowed range, by finding the velocity for which
-        `Tm = TMaxLowT`. For detonations, `Tp = Tn`, so always in the allowed range.
-        Returns `1` if `Tm` is above `TMaxLowT` for `vw = 1`, and returns the
+        :py:data:`Tm = TMaxLowT`. For detonations, :py:data:`Tp = Tn`, so always in the allowed range.
+        Returns :py:data:`1` if :py:data:`Tm` is above :py:data:`TMaxLowT` for :py:data:`vw = 1`, and returns the
         Jouguet velocity if no solution can be found.
 
         Returns
@@ -800,7 +800,7 @@ class Hydrodynamics:
 
         NOTE: the sign of :math:`c_1` is chosen to match the convention for the
         fluid velocity used in EOM and Hydro. In those conventions,
-        math:`v_+` would be negative, and therefore :math:`c_1` has to
+        :math:`v_+` would be negative, and therefore :math:`c_1` has to
         be negative as well.
 
         Parameters
