@@ -175,13 +175,12 @@ Effective potentials
 
     Assuming that you know what the critical temperature of your model is, you could cross-check if
     WallGo gives you the same. The critical temperature is not computed by default, but can be obtained
-    from WallGoManager.thermodynamics.findCriticalTemperature( dT, rTol, paranoid), where dT is the 
-    temperature step size, rTol the relative tolerance, and bool a setting for the phase tracing. The 
-    latter two arguments are optional.
+    from :py:data:`WallGoManager.thermodynamics.findCriticalTemperature(dT, rTol, paranoid)`, where :py:data:`dT` is the 
+    temperature step size, :py:data:`rTol` the relative tolerance, and :py:data:`paranoid` is a boolean setting for the phase tracing. The latter two arguments are optional.
 
     Another cross-check is the position of the minimum at the provided nucleation temperature. 
-    This can be checked with WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn),
-    where phaseLocation is the approximate postion of the phase.
+    This can be checked with :py:data:`WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn)`,
+    where :py:data:`phaseLocation` is the approximate postion of the phase.
 
 - **I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?**
 
@@ -219,7 +218,23 @@ Free energy
     :py:meth:`WallGo.WallGoManager.setupThermodynamicsHydrodynamics()`. These arrays are optional arguments;
     if they are not provided, WallGo will execute its default phase tracing algorithm.
 
+Boltzmann
+-----------
 
+- **How do I make sure the spectral expansion is converging?**
+
+    In WallGo, spectral expansions are used for the particle distribution functions of the Boltzmann equations. When all is working well, these expansions converge exponentially quickly, but this convergence can fail in particular when there are insufficient functions to represent all the scales in the problem.
+    
+    Several pieces of information are returned by WallGo about the convergence of the spectral expansion. First, the value of :py:data:`WallGo.Results.truncationError` gives an estimate of the relative error due to truncating the spectral expansion. Second, :py:meth:`WallGo.Boltzmann.checkSpectralConvergence()` returns more detailed information, including the indices of the largest terms in the spectral expansions in each direction. This information is printed to stdout if the logging level is set to :py:const:`logging.DEBUG` or below, i.e. before running WallGo set the following
+
+    .. code-block:: python
+
+        import logging
+        logging.setLevel(logging.DEBUG)
+    
+    For even more fine-grained detail of the spectral convergence, you can investigate the size of successive terms in :py:data:`WallGo.Results.deltaF`. For more details, see Appendix A of the WallGo Investigates paper.
+
+    The configuration option :py:data:`WallGo.ConfigBoltzmannSolver.truncationOption` allows three options for how to truncate the spectral expansion: :py:data:`WallGo.ETruncationOption.AUTO` for automatic truncation based on apparent convergence/divergence of the last 1/3 of the expansion coefficients, :py:data:`WallGo.ETruncationOption.THIRD` to always set the last 1/3 of the coefficients to zero, or :py:data:`WallGo.ETruncationOption.NONE` to do no truncation.
 
 Settings
 ========
