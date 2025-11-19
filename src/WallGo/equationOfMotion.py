@@ -787,7 +787,7 @@ class EOM:
         to find the pressure. If :py:attr:`self.forceImproveConvergence=False` and
         :py:data:`wallVelocity<self.hydrodynamics.vJ`, it uses a fast algorithm that sometimes fails
         to converge. Otherwise, or if the previous algorithm converges slowly,
-        it åuses a slower, but more robust algorithm.
+        it uses a slower, but more robust algorithm.
 
         Parameters
         ----------
