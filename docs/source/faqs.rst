@@ -68,7 +68,7 @@ Matrix elements
     a JSON file with a specific structure, described in detail in the WallGo paper. 
 
 - **Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?**
-    Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
+    Yes, this works as an alternative to the WallGo MatrixElements package, and in fact
     we used this to cross check our results. We have included an example in the repository
     for the `WallGoMatrix package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
     a look at the directory `tests/FeynCalc`.
@@ -236,12 +236,15 @@ Boltzmann
 
     The configuration option :py:data:`WallGo.ConfigBoltzmannSolver.truncationOption` allows three options for how to truncate the spectral expansion: :py:data:`WallGo.ETruncationOption.AUTO` for automatic truncation based on apparent convergence/divergence of the last 1/3 of the expansion coefficients, :py:data:`WallGo.ETruncationOption.THIRD` to always set the last 1/3 of the coefficients to zero, or :py:data:`WallGo.ETruncationOption.NONE` to do no truncation.
 
+- **How can I make sure the linearisation of the Boltzmann equation is under control?**
+	WallGo evaluates a criterion to assess how large the error from the linearisation of the Boltzmann equation is expected to be. It is stored in :py:data:`WallGoResults.linearizationCriterion2`, and should be as small as possible for the linearisation to be a valid approximation. Note that the same object also contains :py:data:`WallGoResults.linearizationCriterion1`, which is NOT a necessary criterion for the linearisation to be valid. It reflects how large the deviation from equilibrium is compared to the equilibrium distribution function, which may contain useful information, but is not directly related to an uncertainty in the computed wall velocity. See section 3.1 of the WallGo Investigates paper for more details on these 2 linearisation criteria.
+
 Settings
 ========
 
 - **Can I choose any value for the grid size?**
 
-    No! The momentum-grid size has to be an ODD number. It should also be a large
+    No! The momentum-grid size has to be an ODD number. It should also be large
     enough. We have found that 11, 13, ..., 21 are often sufficient, but larger
     grid sizes are needed when the model has a hierarchy of scales to resolve.
 
