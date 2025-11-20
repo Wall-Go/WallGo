@@ -13,7 +13,9 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
+    support us by please citing the WallGo papers, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_ and 
+    `arXiv:2510.27691 <https://arxiv.org/abs/2510.27691>`_
+    The complete BibTex citations from `Inspire <https://inspirehep.net/literature/2846423>`_ are::
 
         @article{Ekstedt:2024fyq,
             author = "Ekstedt, Andreas and Gould, Oliver and Hirvonen, Joonas and Laurent, Benoit and Niemi, Lauri and Schicho, Philipp and van de Vis, Jorinde",
@@ -28,6 +30,18 @@ General
             pages = "101",
             year = "2025"
         }
+    `and <https://inspirehep.net/literature/3075632>`_::
+
+        @article{vandeVis:2025plm,
+            author = "van de Vis, Jorinde and Schicho, Philipp and Niemi, Lauri and Laurent, Benoit and Hirvonen, Joonas and Gould, Oliver",
+            title = "{WallGo investigates: Theoretical uncertainties in the bubble wall velocity}",
+            eprint = "2510.27691",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            reportNumber = "CERN-TH-2025-221",
+            month = "10",
+            year = "2025"
+        }   
 
 
 Installation and running
@@ -237,7 +251,8 @@ Boltzmann
     The configuration option :py:data:`WallGo.ConfigBoltzmannSolver.truncationOption` allows three options for how to truncate the spectral expansion: :py:data:`WallGo.ETruncationOption.AUTO` for automatic truncation based on apparent convergence/divergence of the last 1/3 of the expansion coefficients, :py:data:`WallGo.ETruncationOption.THIRD` to always set the last 1/3 of the coefficients to zero, or :py:data:`WallGo.ETruncationOption.NONE` to do no truncation.
 
 - **How can I make sure the linearisation of the Boltzmann equation is under control?**
-	WallGo evaluates a criterion to assess how large the error from the linearisation of the Boltzmann equation is expected to be. It is stored in :py:data:`WallGoResults.linearizationCriterion2`, and should be as small as possible for the linearisation to be a valid approximation. Note that the same object also contains :py:data:`WallGoResults.linearizationCriterion1`, which is NOT a necessary criterion for the linearisation to be valid. It reflects how large the deviation from equilibrium is compared to the equilibrium distribution function, which may contain useful information, but is not directly related to an uncertainty in the computed wall velocity. See section 3.1 of the WallGo Investigates paper for more details on these 2 linearisation criteria.
+	WallGo evaluates a criterion to assess how large the error from the linearisation of the Boltzmann equation is expected to be. It is stored in :py:data:`WallGoResults.linearizationCriterion2`, and should be as small as possible for the linearisation to be a valid approximation. Note that the same object also contains :py:data:`WallGoResults.linearizationCriterion1`, which is NOT a necessary criterion for the linearisation to be valid. 
+    It reflects how large the deviation from equilibrium is compared to the equilibrium distribution function, which may contain useful information, but is not directly related to an uncertainty in the computed wall velocity. See section 3.1 of the `WallGo Investigates paper <https://arxiv.org/abs/2510.27691>`_ for more details on these 2 linearisation criteria.
 
 Settings
 ========
