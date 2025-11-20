@@ -355,7 +355,8 @@ class BoltzmannSolver:
         Check for spectral convergence.
 
         Fits to the exponential slope of the last 1/3 of coefficients in the
-        Chebyshev basis. Also returns the 
+        Chebyshev basis, and truncates if they are increasing. Also returns the
+        positions of the spectral peaks of the distribution in each dimension.
 
         Parameters
         ----------

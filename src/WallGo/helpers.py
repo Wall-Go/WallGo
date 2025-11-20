@@ -82,8 +82,8 @@ def derivative(
     dx: float | None=None,
     args: list | None=None,
 ) -> np.ndarray:
-    r"""Computes numerical derivatives of a callable function. Use the epsilon
-    and scale parameters to estimate the optimal value of dx, if the latter is
+    r"""Computes numerical derivatives of a callable function. Uses the :py:data:`epsilon`
+    and :py:data:`scale` parameters to estimate the optimal value of :py:data:`dx`, if the latter is
     not provided.
 
 
@@ -195,8 +195,8 @@ def gradient(
     axis: list | int | None=None,
     args: list | None=None,
 ) -> np.ndarray:
-    r"""Computes the gradient of a callable function. Use the epsilon
-    and scale parameters to estimate the optimal value of dx, if the latter is
+    r"""Computes the gradient of a callable function. Uses the :py:data:`epsilon`
+    and :py:data:`scale` parameters to estimate the optimal value of :py:data:`dx`, if the latter is
     not provided.
 
 
@@ -307,8 +307,8 @@ def hessian(
     yAxis: list | int | None=None,
     args: list | None=None,
 ) -> np.ndarray:
-    r"""Computes the hessian of a callable function. Use the epsilon
-    and scale parameters to estimate the optimal value of dx, if the latter is
+    r"""Computes the hessian of a callable function. Uses the :py:data:`epsilon`
+    and :py:data:`scale` parameters to estimate the optimal value of :py:data:`dx`, if the latter is
     not provided.
 
 
@@ -452,12 +452,12 @@ def nextStepDeton(
     overshootProb: float = 0.05,
 ) -> float:
     """
-    Function used in EquationOfMotion to find detonation solutions. It finds the next
+    Function used in :py:class:`EOM` to find detonation solutions. It finds the next
     point to be sampled to try to bracket a root in such a way that the probability of
     overshooting a root is roughly equal to overshootProb.
 
     To estimate the overshoot probability, it fits the pressure to a quadratic which is
-    equal to pressure2 at pos2, but with uncertain 1st and 2nd derivatives which are
+    equal to :py:data:`pressure2` at :py:data`pos2`, but with uncertain 1st and 2nd derivatives which are
     assumed to be normally distributed. The mean of the 1st derivative is computed by
     finite differences from the last 2 points.
 

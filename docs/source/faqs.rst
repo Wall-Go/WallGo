@@ -13,7 +13,9 @@ General
 - **How should I cite WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
-    support us by please citing the WallGo paper, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_. The complete BibTex citation from `Inspire <https://inspirehep.net/literature/2846423>`_ is::
+    support us by please citing the WallGo papers, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_ and 
+    `arXiv:2510.27691 <https://arxiv.org/abs/2510.27691>`_
+    The complete BibTex citations from `Inspire <https://inspirehep.net/literature/2846423>`_ are::
 
         @article{Ekstedt:2024fyq,
             author = "Ekstedt, Andreas and Gould, Oliver and Hirvonen, Joonas and Laurent, Benoit and Niemi, Lauri and Schicho, Philipp and van de Vis, Jorinde",
@@ -28,10 +30,22 @@ General
             pages = "101",
             year = "2025"
         }
+    `and <https://inspirehep.net/literature/3075632>`_::
+
+        @article{vandeVis:2025plm,
+            author = "van de Vis, Jorinde and Schicho, Philipp and Niemi, Lauri and Laurent, Benoit and Hirvonen, Joonas and Gould, Oliver",
+            title = "{WallGo investigates: Theoretical uncertainties in the bubble wall velocity}",
+            eprint = "2510.27691",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            reportNumber = "CERN-TH-2025-221",
+            month = "10",
+            year = "2025"
+        }   
 
 
 Installation and running
-============
+========================
 
 - **I can not install WallGo.**
 
@@ -68,7 +82,7 @@ Matrix elements
     a JSON file with a specific structure, described in detail in the WallGo paper. 
 
 - **Can I compute the matrix elements for my model using FeynRules, FeynArts and FeynCalc?**
-    Yes, this works as an alternative to the WallGo MatrixElements pacakge, and in fact
+    Yes, this works as an alternative to the WallGo MatrixElements package, and in fact
     we used this to cross check our results. We have included an example in the repository
     for the `WallGoMatrix package <https://github.com/Wall-Go/WallGoMatrix>`_. Take
     a look at the directory `tests/FeynCalc`.
@@ -175,13 +189,12 @@ Effective potentials
 
     Assuming that you know what the critical temperature of your model is, you could cross-check if
     WallGo gives you the same. The critical temperature is not computed by default, but can be obtained
-    from WallGoManager.thermodynamics.findCriticalTemperature( dT, rTol, paranoid), where dT is the 
-    temperature step size, rTol the relative tolerance, and bool a setting for the phase tracing. The 
-    latter two arguments are optional.
+    from :py:data:`WallGoManager.thermodynamics.findCriticalTemperature(dT, rTol, paranoid)`, where :py:data:`dT` is the 
+    temperature step size, :py:data:`rTol` the relative tolerance, and :py:data:`paranoid` is a boolean setting for the phase tracing. The latter two arguments are optional.
 
     Another cross-check is the position of the minimum at the provided nucleation temperature. 
-    This can be checked with WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn),
-    where phaseLocation is the approximate postion of the phase.
+    This can be checked with :py:data:`WallGoManager.model.effectivePotential.findLocalMinimum(phaseInput.phaseLocation, Tn)`,
+    where :py:data:`phaseLocation` is the approximate postion of the phase.
 
 - **I want to describe the one-loop effective potential without high-temperature expansion. How do I include the thermal integrals in WallGo?**
 
@@ -209,6 +222,7 @@ Effective potentials
 
 Free energy
 -----------
+
 - **I already know the value of the field and the effective potential as a function of temperature, can I provide these to WallGo to circumvent the phase tracing?**
 
     If the phase tracing does not work properly for your model, or if you want to speed up the
@@ -218,14 +232,34 @@ Free energy
     :py:meth:`WallGo.WallGoManager.setupThermodynamicsHydrodynamics()`. These arrays are optional arguments;
     if they are not provided, WallGo will execute its default phase tracing algorithm.
 
+Boltzmann
+-----------
 
+- **How do I make sure the spectral expansion is converging?**
+
+    In WallGo, spectral expansions are used for the particle distribution functions of the Boltzmann equations. When all is working well, these expansions converge exponentially quickly, but this convergence can fail in particular when there are insufficient functions to represent all the scales in the problem.
+    
+    Several pieces of information are returned by WallGo about the convergence of the spectral expansion. First, the value of :py:data:`WallGo.Results.truncationError` gives an estimate of the relative error due to truncating the spectral expansion. Second, :py:meth:`WallGo.Boltzmann.checkSpectralConvergence()` returns more detailed information, including the indices of the largest terms in the spectral expansions in each direction. This information is printed to stdout if the logging level is set to :py:const:`logging.DEBUG` or below, i.e. before running WallGo set the following
+
+    .. code-block:: python
+
+        import logging
+        logging.setLevel(logging.DEBUG)
+    
+    For even more fine-grained detail of the spectral convergence, you can investigate the size of successive terms in :py:data:`WallGo.Results.deltaF`. For more details, see Appendix A of the WallGo Investigates paper.
+
+    The configuration option :py:data:`WallGo.ConfigBoltzmannSolver.truncationOption` allows three options for how to truncate the spectral expansion: :py:data:`WallGo.ETruncationOption.AUTO` for automatic truncation based on apparent convergence/divergence of the last 1/3 of the expansion coefficients, :py:data:`WallGo.ETruncationOption.THIRD` to always set the last 1/3 of the coefficients to zero, or :py:data:`WallGo.ETruncationOption.NONE` to do no truncation.
+
+- **How can I make sure the linearisation of the Boltzmann equation is under control?**
+	WallGo evaluates a criterion to assess how large the error from the linearisation of the Boltzmann equation is expected to be. It is stored in :py:data:`WallGoResults.linearizationCriterion2`, and should be as small as possible for the linearisation to be a valid approximation. Note that the same object also contains :py:data:`WallGoResults.linearizationCriterion1`, which is NOT a necessary criterion for the linearisation to be valid. 
+    It reflects how large the deviation from equilibrium is compared to the equilibrium distribution function, which may contain useful information, but is not directly related to an uncertainty in the computed wall velocity. See section 3.1 of the `WallGo Investigates paper <https://arxiv.org/abs/2510.27691>`_ for more details on these 2 linearisation criteria.
 
 Settings
 ========
 
 - **Can I choose any value for the grid size?**
 
-    No! The momentum-grid size has to be an ODD number. It should also be a large
+    No! The momentum-grid size has to be an ODD number. It should also be large
     enough. We have found that 11, 13, ..., 21 are often sufficient, but larger
     grid sizes are needed when the model has a hierarchy of scales to resolve.
 

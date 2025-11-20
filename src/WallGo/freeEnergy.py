@@ -55,9 +55,9 @@ class FreeEnergyValueType:
 
 
 class FreeEnergy(InterpolatableFunction):
-    """Class FreeEnergy: Describes properties of a local effective potential minimum.
+    """Describes properties of a local effective potential minimum.
     This is used to keep track of a minimum with respect to the temperature.
-    By definition: free energy density of a phase == value of Veff in its local minimum.
+    By definition, the free energy density of a phase equals the value of the effective potential in its local minimum.
     """
 
     def __init__(
@@ -172,10 +172,10 @@ class FreeEnergy(InterpolatableFunction):
             )
 
     def _functionImplementation(self, temperature: inputType | float) -> outputType:
-        """
+        r"""
         Internal implementation of free energy computation.
         You should NOT call this directly!
-        Use the __call__() routine instead.
+        Use the :py:meth:`__call__()` routine instead.
 
         Parameters
         ----------
@@ -211,9 +211,9 @@ class FreeEnergy(InterpolatableFunction):
     def derivative(
         self, x: inputType, order: int = 1, bUseInterpolation: bool = True
     ) -> "FreeEnergyValueType":
-        """
-        Override of InterpolatableFunction.derivative() function. Specifies accuracy
-        based on our internal variables and puts the results in FreeEnergyValueType
+        r"""
+        Override of :py:meth:`InterpolatableFunction.derivative()` function. Specifies accuracy
+        based on our internal variables and puts the results in :py:class:`FreeEnergyValueType`
         format. Otherwise similar to the parent function.
 
         Parameters
@@ -254,13 +254,13 @@ class FreeEnergy(InterpolatableFunction):
     ) -> None:
         r"""Traces minimum of potential
 
-        Finds field(T) for the range over which it exists. Takes a temperature
+        Finds the potential minimum for the range over which it exists. Takes a temperature
         derivative of the minimsation condition, and solves for :math:`\phi_i^\text{min}(T)` as an initial value problem
 
         .. math::
             \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial \phi_j}\bigg|_{\phi=\phi^\text{min}} \frac{\partial \phi^\text{min}_j}{\partial T} + \frac{\partial^2 V^\text{eff}}{\partial \phi_i \partial T}\bigg|_{\phi=\phi^\text{min}} = 0,
 
-        starting from a solution at the starting temperature. It uses `scipy.integrate.solve_ivp` to solve the problem. Stops if a mass squared goes through zero.
+        starting from a solution at the starting temperature. It uses :py:meth:`scipy.integrate.solve_ivp` to solve the problem. Stops if a mass squared goes through zero.
 
         Parameters
         ----------

@@ -34,14 +34,14 @@ class WallSolverSettings:
     """
 
     meanFreePathScale: float = 50.0
-    """Estimate of the mean free path of the plasma in units of 1/Tn. This will be used
+    """Estimate of the mean free path of the plasma in :math:`1/T_n`. This will be used
     to set the tail lengths in the Grid object. Default is 100.
     """
 
     wallThicknessGuess: float = 5.0
-    """
+    r"""
     Initial guess of the wall thickness that will be used to solve the EOM, in units
-    1/Tn. Default is 5.
+    :math:`1/T_n`. Default is 5.
     """
 
 
@@ -63,7 +63,7 @@ class WallSolver:
 
     initialWallThickness: float
     """Initial wall thickness used by the solver. Should be expressed in physical
-    units (the units used in EffectivePotential)."""
+    units (the units used in :py:class:`WallGo.EffectivePotential`)."""
 
 
 class WallGoManager:
@@ -109,8 +109,8 @@ class WallGoManager:
         ----------
         verbosityLevel : int
             Verbosity level. Follows the standard convention of the logging module where
-            DEBUG=10, INFO=20, WARNING=30 and ERROR=40. In WallGo, most of the
-            information is shown at the INFO level. At the DEBUG level, more
+            :py:const:`DEBUG=10`, :py:const:`INFO=20`, :py:const:`WARNING=30` and :py:const:`ERROR=40`. In WallGo, most of the
+            information is shown at the :py:const:`INFO` level. At the :py:const:`DEBUG` level, more
             information about the calculation of the pressure at each iteration is
             shown.
 
@@ -228,7 +228,7 @@ class WallGoManager:
         phaseInput : PhaseInfo
             Should contain approximate field values at the two phases that WallGo will
             analyze, and the nucleation temperature. Transition is assumed to go
-            phaseLocation1 --> phaseLocation2.
+            :py:data:`phaseLocation1` --> :py:data:`phaseLocation2`.
         """
 
         T = phaseInput.temperature
@@ -287,10 +287,10 @@ class WallGoManager:
         freeEnergyArraysHighT: WallGo.FreeEnergyArrays = None,
         freeEnergyArraysLowT: WallGo.FreeEnergyArrays = None,
     ) -> None:
-        """
+        r"""
         Determine the relevant temperature range and trace the phases
         over this range. Interpolate the free energy in both phases and
-        store in internal thermodynamics object.
+        store in internal :py:class:`Thermodynamics` object.
 
         Parameters
         ----------
@@ -652,10 +652,10 @@ class WallGoManager:
         ----------
         wallThicknessIni : float
             Initial guess of the wall thickness that will be used to solve the EOM.
-            Should be expressed in units of 1/Tnucl.
+            Should be expressed in units of :math:`1/T_n`.
         meanFreePathScale : float
             Estimate of the mean free path of the plasma. This will be used to set the
-            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
+            tail lengths in the Grid object. Should be expressed in units of :math:`1/T_n`.
         initialMomentumFalloffScale : float
             TODO documentation. Should be close to temperature at the wall
         """
@@ -712,7 +712,7 @@ class WallGoManager:
             BoltzmannSolver object used to solve the Boltzmann equation.
         meanFreePathScale : float
             Estimate of the mean free path of the plasma. This will be used to set the
-            tail lengths in the Grid object. Should be expressed in units of 1/Tnucl.
+            tail lengths in the Grid object. Should be expressed in :math:`1/T_n`.
 
         Returns
         -------
