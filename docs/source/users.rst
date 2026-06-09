@@ -1,12 +1,19 @@
 ======================================
-Research works using WallGo
+Research using WallGo
 ======================================
 
-If you have used WallGo in your work, please let us know.
+.. If you have used WallGo in your work, please let us know.
 
-- 2603.24583
-- 2603.22397
-- 2512.16663
-- 2510.11913
-- 2502.19478
-- 2411.13641
+:cite:empty:`Krajewski:2026kcm`
+
+:cite:empty:`Bhusal:2026iuw`
+
+:cite:empty:`Ekstedt:2025awx`
+
+:cite:empty:`Barenboim:2025jai`
+
+:cite:empty:`Balan:2025uke`
+
+:cite:empty:`Ai:2024btx`
+
+.. bibliography::
