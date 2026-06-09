@@ -19,7 +19,7 @@ Tests can then be run with::
 
     pytest -v
 
-Note that the `.hdf5` collision files packaged with WallGo are tracked with `git-lfs <https://git-lfs.com/>`_, so that to download them, you also need to run::
+The `.hdf5` collision files packaged with WallGo are tracked with `git-lfs <https://git-lfs.com/>`_, so that to download them, you also need to run::
 
     git lfs install
     git lfs pull

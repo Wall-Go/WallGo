@@ -41,6 +41,14 @@ def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-nam
         raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
 
 
+# defining the attrivute __version__ dynamically
+try:
+    __version__ = importlib.metadata.version("WallGo")
+except importlib.metadata.PackageNotFoundError:
+    # Package is not installed (e.g. running from source without installing)
+    __version__ = "unknown"
+
+
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
 _bCollisionModuleAvailable: bool = False
 
