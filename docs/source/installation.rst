@@ -12,6 +12,9 @@ WallGo can be installed as a Python package using pip:
     
     pip install WallGo
 
+Note that this installation just includes the Python package. For the examples,
+and collision integrals, please see the :doc:`development`.
+
 
 .. Installing WallGo with conan
 .. ===========================================

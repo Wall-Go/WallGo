@@ -30,6 +30,7 @@ References
     firstExample
     examples
     faqs
+    users
 
 
 .. toctree::

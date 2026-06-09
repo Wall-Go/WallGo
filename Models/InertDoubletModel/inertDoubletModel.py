@@ -486,6 +486,9 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         massSq = np.column_stack((mWsq, mZsq, mhsq, mHsq, mAsq, mHpmsq))
         massSq0 = np.column_stack((mWsq0T, mZsq0T, mhsq0T, mHsq0T, mAsq0T, mHpmsq0T))
         degreesOfFreedom = np.array([6, 3, 1, 1, 1, 2])
+        # Note that we follow arxiv:2211.13142 in choosing 3/2 for all particles
+        # here, but for MSbar we should instead have c=5/6 for vectors.
+        # Thanks Carlo Tasillo for highlighting this.
         c = 3 / 2 * np.ones(6)
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
