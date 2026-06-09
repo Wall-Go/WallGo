@@ -52,6 +52,11 @@ class ConfigEOM:
     results.
     """
 
+    forceImproveConvergence: bool = False
+    """ If True, uses a slower algorithm that improves the convergence when
+    computing the pressure for deflagrations. Default is False. The improved
+    algorithm is always used for detonations. """
+
     wallThicknessBounds: list[float] = field(default_factory=lambda: [0.1, 100.0])
     """ Lower and upper bounds on wall thickness (in units of 1/Tnucl). """
 
@@ -226,6 +231,10 @@ class Config:
                 self.configEOM.conserveEnergyMomentum = parser.getboolean(
                     "EquationOfMotion",
                     "conserveEnergyMomentum")
+            if 'forceImproveConvergence' in keys:
+                self.configEOM.forceImproveConvergence = parser.getboolean(
+                    "EquationOfMotion",
+                    "forceImproveConvergence")
             if 'wallThicknessLowerBound' in keys:
                 self.configEOM.wallThicknessBounds[0] = parser.getfloat(
                     "EquationOfMotion",
