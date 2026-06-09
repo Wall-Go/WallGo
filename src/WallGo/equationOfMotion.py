@@ -277,7 +277,7 @@ class EOM:
         vw2 = vmin
 
         wallPressureResults2 = self.wallPressure(vw2, wallParams2, 0, rtol, None)
-        pressure2, wallParams, boltzmannResults, _, _ = wallPressureResults2
+        pressure2, wallParams, boltzmannResults, _, _, _, _ = wallPressureResults2
         pressureIni = pressure2  # Only used at the end if no solutions are found
 
         list2ndDeriv: list[float] = []
@@ -328,7 +328,7 @@ class EOM:
             wallPressureResults2 = self.wallPressure(
                 vw3, wallParams, 0, rtol, boltzmannResults
             )
-            pressure3, wallParams2, _, _, _ = wallPressureResults2
+            pressure3, wallParams2, _, _, _, _, _ = wallPressureResults2
 
             # Estimate the 2nd deriv by finite differences and append it to list2nDeriv
             list2ndDeriv.append(
@@ -347,8 +347,8 @@ class EOM:
                         vw2,
                         vw3,
                         wallParams2,
-                        wallPressureResults1,
-                        wallPressureResults2,
+                        wallPressureResults1[0:5],
+                        wallPressureResults2[0:5],
                     )
                 )
                 if onlySmallest:
