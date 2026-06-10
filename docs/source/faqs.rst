@@ -10,7 +10,7 @@ FAQs
 General
 =======
 
-- **How should I cite WallGo?**
+- **What should I cite when using WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
     support us by please citing the WallGo papers, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_ and 
@@ -45,6 +45,24 @@ General
             pages = "041",
             year = "2026"
         } 
+
+    The theoretical approach for computing wall velocities implemented in WallGo is adopted from 
+    `Phys. Rev. D 106, 023501 (2022) <https://doi.org/10.1103/PhysRevD.106.023501>`_
+    with the BibTex citation from `Inspire <https://inspirehep.net/literature/2074151>`_::
+
+        @article{Laurent:2022jrs,
+            author = "Laurent, Benoit and Cline, James M.",
+            title = "{First principles determination of bubble wall velocity}",
+            eprint = "2204.13120",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            doi = "10.1103/PhysRevD.106.023501",
+            journal = "Phys. Rev. D",
+            volume = "106",
+            number = "2",
+            pages = "023501",
+            year = "2022"
+        }
 
 
 Installation and running
