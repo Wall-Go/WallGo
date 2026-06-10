@@ -64,6 +64,38 @@ General
             year = "2022"
         }
 
+    `WallGoMatrix <https://github.com/Wall-Go/WallGoMatrix>`_ builds on existing Mathematica packages
+    `DRalgo <https://github.com/DR-algo/DRalgo>`_ (`Comput. Phys. Commun. 288 (2023) 108725 <https://doi.org/10.1016/j.cpc.2023.108725>`_)
+    and `GroupMath <https://renatofonseca.net/groupmath>`_ (`Comput. Phys. Commun.  267 (2021) <https://doi.org/10.1016/j.cpc.2021.108085>`_).
+    You can cite these `with <https://inspirehep.net/literature/2083933>`_::
+
+        @article{Ekstedt:2022bff,
+            author = "Ekstedt, Andreas and Schicho, Philipp and Tenkanen, Tuomas V. I.",
+            title = "{DRalgo: A package for effective field theory approach for thermal phase transitions}",
+            eprint = "2205.08815",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            reportNumber = "HIP-2022-11/TH, NORDITA 2022-030",
+            doi = "10.1016/j.cpc.2023.108725",
+            journal = "Comput. Phys. Commun.",
+            volume = "288",
+            pages = "108725",
+            year = "2023"
+        }
+    `and <https://inspirehep.net/literature/1827870>`_::
+
+        @article{Fonseca:2020vke,
+            author = "Fonseca, Renato M.",
+            title = "{GroupMath: A Mathematica package for group theory calculations}",
+            eprint = "2011.01764",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-th",
+            doi = "10.1016/j.cpc.2021.108085",
+            journal = "Comput. Phys. Commun.",
+            volume = "267",
+            pages = "108085",
+            year = "2021"
+        }
 
 Installation and running
 ========================
