@@ -14,7 +14,7 @@ General
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
     support us by please citing the WallGo papers, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_ and 
-    `arXiv:2510.27691 <https://arxiv.org/abs/2510.27691>`_
+    `JHEP 04 (2026) 041 <https://doi.org/10.1007/JHEP04(2026)041>`_
     The complete BibTex citations from `Inspire <https://inspirehep.net/literature/2846423>`_ are::
 
         @article{Ekstedt:2024fyq,
@@ -39,9 +39,12 @@ General
             archivePrefix = "arXiv",
             primaryClass = "hep-ph",
             reportNumber = "CERN-TH-2025-221",
-            month = "10",
-            year = "2025"
-        }   
+            doi = "10.1007/JHEP04(2026)041",
+            journal = "JHEP",
+            volume = "04",
+            pages = "041",
+            year = "2026"
+        } 
 
 
 Installation and running
