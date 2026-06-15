@@ -425,6 +425,34 @@ def hessian(
     fEvaluation = f(pos, *args).reshape(shape)
     return np.asarray(np.sum(coeff * fEvaluation, axis=-3))
 
+def finiteDiffMatrix(grid: np.ndarray) -> np.ndarray:
+    """
+    Computes the finite difference matrix corresponding to the array grid.
+    grid must contain the endpoints.
+    """
+    diffMatrix = np.zeros((grid.size, grid.size))
+    dx1 = -(grid[1:-1] - grid[:-2])
+    dx2 = grid[2:] - grid[1:-1]
+
+    # Below the diagonal
+    diffMatrix[1:-1,:-2] += np.diag(dx2/(dx1*(dx2-dx1)))
+    # Diagonal
+    diffMatrix[1:-1,1:-1] += np.diag(-(dx1+dx2)/(dx1*dx2))
+    # Above the diagonal
+    diffMatrix[1:-1,2:] += np.diag(dx1/(dx2*(dx1-dx2)))
+
+    # Left boundary
+    diffMatrix[0,0] = ((2*grid[0] - grid[1] - grid[2])/((grid[0] - grid[1])*(grid[0] - grid[2])))
+    diffMatrix[0,1] = ((-grid[0] + grid[2])/((grid[0] - grid[1])*(grid[1] - grid[2])))
+    diffMatrix[0,2] = ((-grid[0] + grid[1])/((grid[0] - grid[2])*(-grid[1] + grid[2])))
+
+    # Right boundary
+    diffMatrix[-1,-1] = ((2*grid[-1] - grid[-2] - grid[-3])/((grid[-1] - grid[-2])*(grid[-1] - grid[-3])))
+    diffMatrix[-1,-2] = ((-grid[-1] + grid[-3])/((grid[-1] - grid[-2])*(grid[-2] - grid[-3])))
+    diffMatrix[-1,-3] = ((-grid[-1] + grid[-2])/((grid[-1] - grid[-3])*(-grid[-2] + grid[-3])))
+
+    return diffMatrix
+
 
 def gammaSq(v: float) -> float:
     r"""

@@ -8,7 +8,6 @@ from copy import deepcopy
 import logging
 from enum import Enum, auto
 import numpy as np
-import findiff  # finite difference methods
 from .containers import BoltzmannBackground, BoltzmannDeltas
 from .grid import Grid
 from .polynomial import Polynomial, SpectralConvergenceInfo
@@ -16,6 +15,7 @@ from .particle import Particle
 from .collisionArray import CollisionArray
 from .results import BoltzmannResults
 from .exceptions import CollisionLoadError
+from .helpers import finiteDiffMatrix
 
 if typing.TYPE_CHECKING:
     import importlib
@@ -704,10 +704,8 @@ class BoltzmannSolver:
             intertwinerRpMat = np.identity(self.grid.N - 1)
             # derivative matrices
             chiFull, rzFull, _ = self.grid.getCompactCoordinates(endpoints=True)
-            derivOperatorChi = findiff.FinDiff((0, chiFull, 1), acc=2)
-            derivMatrixChi = derivOperatorChi.matrix((self.grid.M + 1,))
-            derivOperatorRz = findiff.FinDiff((0, rzFull, 1), acc=2)
-            derivMatrixRz = derivOperatorRz.matrix((self.grid.N + 1,))
+            derivMatrixChi = finiteDiffMatrix(chiFull)
+            derivMatrixRz = finiteDiffMatrix(rzFull)
             # spatial derivatives of profiles, endpoints used for taking
             # derivatives but then dropped as deltaF fixed at 0 at endpoints
             dTemperaturedChi = (derivMatrixChi @ temperatureFull)[
