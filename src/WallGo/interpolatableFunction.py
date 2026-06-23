@@ -785,7 +785,7 @@ class InterpolatableFunction(ABC):
             ## and compare at a few values)
             self._validateInterpolationTable(self._rangeMin)
             self._validateInterpolationTable(self._rangeMax)
-            self._validateInterpolationTable(self._validateInterpolationTable(self._rangeMin + 0.3 * (self._rangeMax - self._rangeMin)))
+            self._validateInterpolationTable(self._rangeMin + 0.3 * (self._rangeMax - self._rangeMin))
 
             logging.debug(
                 "%s: Succesfully read interpolation table from file. "
