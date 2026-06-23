@@ -726,6 +726,7 @@ class WallGoManager:
         maxIterations = self.config.configEOM.maxIterations
         pressRelErrTol = self.config.configEOM.pressRelErrTol
         conserveEnergy = self.config.configEOM.conserveEnergyMomentum
+        forceImproveConvergence = self.config.configEOM.forceImproveConvergence
 
         wallThicknessBounds = self.config.configEOM.wallThicknessBounds
         wallOffsetBounds = self.config.configEOM.wallOffsetBounds
@@ -743,7 +744,7 @@ class WallGoManager:
             wallOffsetBounds,
             includeOffEq=True,
             forceEnergyConservation=conserveEnergy,
-            forceImproveConvergence=False,
+            forceImproveConvergence=forceImproveConvergence,
             errTol=errTol,
             maxIterations=maxIterations,
             pressRelErrTol=pressRelErrTol,

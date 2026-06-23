@@ -3,6 +3,7 @@
 import types
 import warnings
 import importlib
+from importlib.metadata import version, PackageNotFoundError
 
 # package level modules
 from .boltzmann import BoltzmannSolver, ETruncationOption
@@ -41,6 +42,14 @@ def __getattr__(name: str) -> types.ModuleType:    # pylint: disable=invalid-nam
         raise AttributeError(f"Module 'WallGo' has no attribute '{name}'") from esc
 
 
+# defining the attrivute __version__ dynamically
+try:
+    __version__ = version("WallGo")
+except PackageNotFoundError:
+    # Package is not installed (e.g. running from source without installing)
+    __version__ = "unknown"
+
+
 global _bCollisionModuleAvailable  # pylint: disable=invalid-name
 _bCollisionModuleAvailable: bool = False
 
@@ -53,11 +62,12 @@ try:
     from .collisionHelpers import *
 
 except ImportError as e:
-    warnings.warn(f"Error loading WallGoCollision module: {e}"
-        "This could indicate an issue with your installation of WallGo or "
-        "WallGoCollision, or both. This is non-fatal, but you will not be able to"
-        " utilize collision integration routines."
-    )
+    pass  # no longer printing warning to stdout
+    # warnings.warn(f"Error loading WallGoCollision module: {e}"
+    #     "This could indicate an issue with your installation of WallGo or "
+    #     "WallGoCollision, or both. This is non-fatal, but you will not be able to"
+    #     " utilize collision integration routines."
+    # )
 
 
 def isCollisionModuleAvailable() -> bool:
