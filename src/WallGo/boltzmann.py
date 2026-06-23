@@ -717,13 +717,13 @@ class BoltzmannSolver:
             #   "ij,aj->ai", derivMatrixChi.toarray(), msqFull
             # )[:, 1:-1, None, None]
             dMsqdChi = np.sum(
-                derivMatrixChi.toarray()[None, :, :] * msqFull[:, None, :],
+                derivMatrixChi[None, :, :] * msqFull[:, None, :],
                 axis=-1,
             )[:, 1:-1, None, None]
             # restructuring derivative matrices to appropriate forms for
             # Liouville operator
-            derivMatrixChi = derivMatrixChi.toarray()[1:-1, 1:-1]
-            derivMatrixRz = derivMatrixRz.toarray()[1:-1, 1:-1]
+            derivMatrixChi = derivMatrixChi[1:-1, 1:-1]
+            derivMatrixRz = derivMatrixRz[1:-1, 1:-1]
 
         # dot products with wall velocity
         gammaWall = 1 / np.sqrt(1 - velocityWall**2)
