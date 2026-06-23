@@ -6,7 +6,7 @@ import WallGo
 
 from tests.BenchmarkPoint import BenchmarkPoint, BenchmarkModel
 
-from .Benchmarks_singlet import BM1
+from .Benchmarks_singlet import BM1, BM2, BM3, BM4
 
 from Models.SingletStandardModel_Z2.singletStandardModelZ2 import (
     SingletSMZ2,
@@ -315,6 +315,39 @@ def singletBenchmarkEOM_equilibrium(
         (0.1, 100.0),
         (-10.0, 10.0),
         includeOffEq=False,
+    )
+
+    return eom, BM
+
+
+## EOM object for the singlet model, with out-of-equilibrium contributions.
+@pytest.fixture(scope="session")
+def singletBenchmarkEOM(
+    singletBenchmarkBoltzmannSolver,
+    singletBenchmarkThermo_interpolate,
+    singletBenchmarkHydrodynamics,
+    singletBenchmarkGrid: WallGo.Grid,
+) -> Tuple[WallGo.EOM, BenchmarkPoint]:
+
+    thermo, BM = singletBenchmarkThermo_interpolate
+    hydrodynamics, _ = singletBenchmarkHydrodynamics
+    grid = singletBenchmarkGrid
+    boltzmannSolver = singletBenchmarkBoltzmannSolver
+    meanFreePathScale = 0
+
+    fieldCount = 2
+
+    ## TODO fix error tolerance?
+    eom = WallGo.EOM(
+        boltzmannSolver,
+        thermo,
+        hydrodynamics,
+        grid,
+        fieldCount,
+        meanFreePathScale,
+        (0.1, 100.0),
+        (-10.0, 10.0),
+        includeOffEq=True,
     )
 
     return eom, BM

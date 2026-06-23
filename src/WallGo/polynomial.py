@@ -429,11 +429,11 @@ class Polynomial:
             grid, tuple(np.arange(1, len((n * compactCoord).shape) + 1)))
         nGrid = grid[n]
 
-        # Computing all the factor in the product defining the cardinal functions
+        # Computing all the factor in the product defining the cardinal functions        
         cardinalPartial = np.divide(
             compactCoord - completeGrid,
             nGrid - completeGrid,
-            where=nGrid - completeGrid != 0
+            where=nGrid - completeGrid != 0,
         )
 
         # Multiplying all the factors to get the cardinal functions
@@ -764,6 +764,8 @@ class Polynomial:
         """
 
         grid = self.grid.getCompactCoordinates(True, direction)
+        grid = np.asanyarray(grid)
+        length = grid.shape[0]
 
         # Computing the diagonal part
         diagonal = np.sum(
@@ -774,6 +776,7 @@ class Polynomial:
                     1,
                     grid[:, None] - grid[None, :],
                     where=grid[:, None] - grid[None, :] != 0,
+                    out=np.zeros((length, length), dtype=np.float64),
                 ),
             ),
             axis=1,
@@ -790,6 +793,7 @@ class Polynomial:
                     grid[None, :, None] - grid[None, None, :],
                     grid[:, None, None] - grid[None, None, :],
                     where=grid[:, None, None] - grid[None, None, :] != 0,
+                    out=np.zeros((length, length, length), dtype=np.float64),
                 ),
             ),
             axis=-1,
@@ -803,6 +807,7 @@ class Polynomial:
                 offDiagonal,
                 grid[:, None] - grid[None, :],
                 where=grid[:, None] - grid[None, :] != 0,
+                out=np.zeros_like(offDiagonal),
             ),
         )
 
