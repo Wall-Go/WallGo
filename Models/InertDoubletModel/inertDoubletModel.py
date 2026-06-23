@@ -488,7 +488,6 @@ class EffectivePotentialIDM(EffectivePotentialNoResum):
         degreesOfFreedom = np.array([6, 3, 1, 1, 1, 2])
         # Note that we follow arxiv:2211.13142 in choosing 3/2 for all particles
         # here, but for MSbar we should instead have c=5/6 for vectors.
-        # Thanks Carlo Tasillo for highlighting this.
         c = 3 / 2 * np.ones(6)
 
         return massSq, degreesOfFreedom, c, np.sqrt(massSq0)
