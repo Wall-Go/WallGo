@@ -24,4 +24,6 @@ The `.hdf5` collision files packaged with WallGo are tracked with `git-lfs <http
     git lfs install
     git lfs pull
 
+This only needs to be done once.
+
 |
