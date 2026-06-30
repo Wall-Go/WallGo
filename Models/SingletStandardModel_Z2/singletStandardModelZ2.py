@@ -32,7 +32,8 @@ import os
 import sys
 import pathlib
 import argparse
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Any
 import numpy as np
 
 # WallGo imports
@@ -52,6 +53,26 @@ from wallGoExampleBase import ExampleInputPoint  # pylint: disable=C0411, C0413,
 
 if TYPE_CHECKING:
     import WallGoCollision
+
+
+class _InterpolationWarningCatcher(logging.Handler):
+    """Capture interpolation table validation warnings for conditional handling."""
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.WARNING)
+        self.messages: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        message = record.getMessage()
+        if "Could not validate interpolation table" in message:
+            self.messages.append(message)
+
+
+class _SuppressInterpolationValidationWarningFilter(logging.Filter):
+    """Temporarily suppress targeted validation warnings from normal handlers."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "Could not validate interpolation table" not in record.getMessage()
 
 
 class SingletSMZ2(GenericModel):
@@ -290,12 +311,39 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # Load custom interpolation tables for Jb/Jf. These should be
         # the same as what CosmoTransitions version 2.0.2 provides by default.
         thisFileDirectory = os.path.dirname(os.path.abspath(__file__))
-        self.integrals.Jb.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-        )
-        self.integrals.Jf.readInterpolationTable(
-            os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-        )
+        
+        # By default, the WallGo prints a warning if there is a mismatch between
+        # the interpolation table and the direct evaluation of the integral.
+        # Since our benchmark tables have no entry for the imaginary part, we
+        # will get such a warning. For imaginaryOptions PRINCIPAL_PART and ABS_ARGUMENT,
+        # only the real part is relevant, so we can suppress the warning.
+        warningCatcher = _InterpolationWarningCatcher()
+        suppressFilter = _SuppressInterpolationValidationWarningFilter()
+        rootLogger = logging.getLogger()
+
+        # Suppress immediate printing of the specific validation warning while still
+        # capturing it in warningCatcher for conditional handling below.
+        filteredHandlers: list[logging.Handler] = []
+        for handler in rootLogger.handlers:
+            handler.addFilter(suppressFilter)
+            filteredHandlers.append(handler)
+
+        rootLogger.addHandler(warningCatcher)
+        try:
+            self.integrals.Jb.readInterpolationTable(
+                os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
+            )
+            self.integrals.Jf.readInterpolationTable(
+                os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
+            )
+        finally:
+            rootLogger.removeHandler(warningCatcher)
+            for handler in filteredHandlers:
+                handler.removeFilter(suppressFilter)
+
+        # Check if any warnings were captured. If so, check the real part
+        # separately, and only print a warning if it does not validate.
+        self._handleInterpolationValidationWarnings(warningCatcher.messages)
 
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
@@ -317,6 +365,48 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             extrapolationTypeLower=EExtrapolationType.CONSTANT,
             extrapolationTypeUpper=EExtrapolationType.CONSTANT,
         )
+
+    def _handleInterpolationValidationWarnings(self, warnings: list[str]) -> None:
+        """Handle interpolation validation warnings."""
+        if not warnings:
+            return
+
+        allowedImaginaryOptions = {
+            EImaginaryOption.PRINCIPAL_PART,
+            EImaginaryOption.ABS_ARGUMENT,
+        }
+
+        if self.imaginaryOption not in allowedImaginaryOptions:
+            for warningMessage in warnings:
+                logging.warning(warningMessage)
+            return
+
+        # For principal-part and abs-argument workflows, only the real part is needed.
+        realPartValid = True
+        if any("JbIntegral" in warningMessage for warningMessage in warnings):
+            realPartValid = realPartValid and self._validateFirstColumn(self.integrals.Jb)
+        if any("JfIntegral" in warningMessage for warningMessage in warnings):
+            realPartValid = realPartValid and self._validateFirstColumn(self.integrals.Jf)
+
+        if not realPartValid:
+            for warningMessage in warnings:
+                logging.warning(warningMessage)
+
+    @staticmethod
+    def _validateFirstColumn(integral: Any, absoluteTolerance: float = 1e-6) -> bool:
+        """Validate interpolation using only the real-part (first) output column."""
+        xMin = integral.interpolationRangeMin()
+        xMax = integral.interpolationRangeMax()
+        testPoints = (xMin, xMax, (xMax - xMin) / 2.55)
+
+        for xValue in testPoints:
+            interpolated = np.asarray(integral.evaluateInterpolation(xValue))[0]
+            direct = np.asarray(
+                integral.evaluate(xValue, bUseInterpolatedValues=False)
+            )[0]
+            if np.abs(interpolated - direct) > absoluteTolerance:
+                return False
+        return True
 
     def evaluate(
         self, fields: Fields, temperature: float
