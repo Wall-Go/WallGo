@@ -55,26 +55,6 @@ if TYPE_CHECKING:
     import WallGoCollision
 
 
-class _InterpolationWarningCatcher(logging.Handler):
-    """Capture interpolation table validation warnings for conditional handling."""
-
-    def __init__(self) -> None:
-        super().__init__(level=logging.WARNING)
-        self.messages: list[str] = []
-
-    def emit(self, record: logging.LogRecord) -> None:
-        message = record.getMessage()
-        if "Could not validate interpolation table" in message:
-            self.messages.append(message)
-
-
-class _SuppressInterpolationValidationWarningFilter(logging.Filter):
-    """Temporarily suppress targeted validation warnings from normal handlers."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        return "Could not validate interpolation table" not in record.getMessage()
-
-
 class SingletSMZ2(GenericModel):
     r"""
     Z2 symmetric SM + singlet model.
@@ -317,33 +297,13 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         # Since our benchmark tables have no entry for the imaginary part, we
         # will get such a warning. For imaginaryOptions PRINCIPAL_PART and ABS_ARGUMENT,
         # only the real part is relevant, so we can suppress the warning.
-        warningCatcher = _InterpolationWarningCatcher()
-        suppressFilter = _SuppressInterpolationValidationWarningFilter()
-        rootLogger = logging.getLogger()
-
-        # Suppress immediate printing of the specific validation warning while still
-        # capturing it in warningCatcher for conditional handling below.
-        filteredHandlers: list[logging.Handler] = []
-        for handler in rootLogger.handlers:
-            handler.addFilter(suppressFilter)
-            filteredHandlers.append(handler)
-
-        rootLogger.addHandler(warningCatcher)
-        try:
-            self.integrals.Jb.readInterpolationTable(
-                os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
-            )
-            self.integrals.Jf.readInterpolationTable(
-                os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
-            )
-        finally:
-            rootLogger.removeHandler(warningCatcher)
-            for handler in filteredHandlers:
-                handler.removeFilter(suppressFilter)
+        warnings = self._readInterpolationTablesWithCapturedValidationWarnings(
+            thisFileDirectory
+        )
 
         # Check if any warnings were captured. If so, check the real part
         # separately, and only print a warning if it does not validate.
-        self._handleInterpolationValidationWarnings(warningCatcher.messages)
+        self._handleInterpolationValidationWarnings(warnings)
 
         self.integrals.Jb.disableAdaptiveInterpolation()
         self.integrals.Jf.disableAdaptiveInterpolation()
@@ -377,20 +337,60 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         }
 
         if self.imaginaryOption not in allowedImaginaryOptions:
-            for warningMessage in warnings:
-                logging.warning(warningMessage)
+            self._logWarnings(warnings)
             return
 
-        # For principal-part and abs-argument workflows, only the real part is needed.
-        realPartValid = True
+        # Check if the real part validates.
+        realPartChecks: list[bool] = []
         if any("JbIntegral" in warningMessage for warningMessage in warnings):
-            realPartValid = realPartValid and self._validateFirstColumn(self.integrals.Jb)
+            realPartChecks.append(self._validateFirstColumn(self.integrals.Jb))
         if any("JfIntegral" in warningMessage for warningMessage in warnings):
-            realPartValid = realPartValid and self._validateFirstColumn(self.integrals.Jf)
+            realPartChecks.append(self._validateFirstColumn(self.integrals.Jf))
 
-        if not realPartValid:
-            for warningMessage in warnings:
-                logging.warning(warningMessage)
+        if not all(realPartChecks):
+            self._logWarnings(warnings)
+
+    def _readInterpolationTablesWithCapturedValidationWarnings(
+        self, thisFileDirectory: str
+    ) -> list[str]:
+        """Read benchmark interpolation tables while capturing validation warnings."""
+        warningNeedle = "Could not validate interpolation table"
+        warnings: list[str] = []
+        rootLogger = logging.getLogger()
+
+        class _WarningCaptureHandler(logging.Handler):
+            def emit(self, record: logging.LogRecord) -> None:
+                message = record.getMessage()
+                if warningNeedle in message:
+                    warnings.append(message)
+
+        def suppressValidationWarning(record: logging.LogRecord) -> bool:
+            return warningNeedle not in record.getMessage()
+
+        captureHandler = _WarningCaptureHandler(level=logging.WARNING)
+        filteredHandlers = list(rootLogger.handlers)
+        for handler in filteredHandlers:
+            handler.addFilter(suppressValidationWarning)
+
+        rootLogger.addHandler(captureHandler)
+        try:
+            self.integrals.Jb.readInterpolationTable(
+                os.path.join(thisFileDirectory, "interpolationTable_Jb_testModel.txt"),
+            )
+            self.integrals.Jf.readInterpolationTable(
+                os.path.join(thisFileDirectory, "interpolationTable_Jf_testModel.txt"),
+            )
+        finally:
+            rootLogger.removeHandler(captureHandler)
+            for handler in filteredHandlers:
+                handler.removeFilter(suppressValidationWarning)
+
+        return warnings
+
+    @staticmethod
+    def _logWarnings(warnings: list[str]) -> None:
+        for warningMessage in warnings:
+            logging.warning(warningMessage)
 
     @staticmethod
     def _validateFirstColumn(integral: Any, absoluteTolerance: float = 1e-6) -> bool:
