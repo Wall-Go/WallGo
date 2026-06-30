@@ -331,6 +331,12 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
         if not warnings:
             return
 
+        jbWarnings = [msg for msg in warnings if "JbIntegral" in msg]
+        jfWarnings = [msg for msg in warnings if "JfIntegral" in msg]
+        otherWarnings = [
+            msg for msg in warnings if "JbIntegral" not in msg and "JfIntegral" not in msg
+        ]
+
         allowedImaginaryOptions = {
             EImaginaryOption.PRINCIPAL_PART,
             EImaginaryOption.ABS_ARGUMENT,
@@ -340,15 +346,14 @@ class EffectivePotentialxSMZ2(EffectivePotentialNoResum):
             self._logWarnings(warnings)
             return
 
-        # Check if the real part validates.
-        realPartChecks: list[bool] = []
-        if any("JbIntegral" in warningMessage for warningMessage in warnings):
-            realPartChecks.append(self._validateFirstColumn(self.integrals.Jb))
-        if any("JfIntegral" in warningMessage for warningMessage in warnings):
-            realPartChecks.append(self._validateFirstColumn(self.integrals.Jf))
+        warningsToLog = list(otherWarnings)
+        if jbWarnings and not self._validateFirstColumn(self.integrals.Jb):
+            warningsToLog.extend(jbWarnings)
+        if jfWarnings and not self._validateFirstColumn(self.integrals.Jf):
+            warningsToLog.extend(jfWarnings)
 
-        if not all(realPartChecks):
-            self._logWarnings(warnings)
+        if warningsToLog:
+            self._logWarnings(warningsToLog)
 
     def _readInterpolationTablesWithCapturedValidationWarnings(
         self, thisFileDirectory: str
