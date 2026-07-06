@@ -713,7 +713,7 @@ class BoltzmannSolver:
             dTemperaturedChi = (derivMatrixChi @ temperatureFull)[
                 None, 1:-1, None, None
             ]
-            dvdChi = (derivMatrixChi @ temperatureFull)[None, 1:-1, None, None]
+            dvdChi = (derivMatrixChi @ vFull)[None, 1:-1, None, None] #Thanks to Wonsub Cho for pointing out a bug.
             # the following is equivalent to:
             # dMsqdChiEinsum = np.einsum(
             #   "ij,aj->ai", derivMatrixChi.toarray(), msqFull
