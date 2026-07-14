@@ -347,8 +347,8 @@ class EOM:
                         vw2,
                         vw3,
                         wallParams2,
-                        wallPressureResults1[0:5],
-                        wallPressureResults2[0:5],
+                        wallPressureResults1,
+                        wallPressureResults2,
                     )
                 )
                 if onlySmallest:
@@ -404,13 +404,25 @@ class EOM:
         wallParamsGuess: WallParams,
         wallPressureResultsMin: (
             tuple[
-                float, WallParams, BoltzmannResults, BoltzmannBackground, HydroResults
+                float,
+                WallParams,
+                BoltzmannResults,
+                BoltzmannBackground,
+                HydroResults,
+                float,
+                float,
             ]
             | None
         ) = None,
         wallPressureResultsMax: (
             tuple[
-                float, WallParams, BoltzmannResults, BoltzmannBackground, HydroResults
+                float,
+                WallParams,
+                BoltzmannResults,
+                BoltzmannBackground,
+                HydroResults,
+                float,
+                float,
             ]
             | None
         ) = None,
