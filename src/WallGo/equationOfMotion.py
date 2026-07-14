@@ -132,6 +132,8 @@ class EOM:
         self.pressRelErrTol = pressRelErrTol
         self.pressAbsErrTol = 0.0
 
+        ## Flag to detect if a velocity and temperature profile point was found successfully
+        self.successPlasmaProfilePoint = True
         ## Flag to detect if the temperature profile was found successfully
         self.successTemperatureProfile = True
         ## Flag to detect if we were able to find the pressure
@@ -200,6 +202,12 @@ class EOM:
             self.includeOffEq):
             # If there is a LTE solution but no out-of-equilibrium one, retry with vmax
             # set to the LTE velocity.
+            logging.warning(
+                f"\n Warning: No deflagration/hybrid solution was found with vmax={vmax:.6f}.\n"
+                f" Error message: {results.message}\n"
+                f" A hydro LTE solution exists. We therefore try again with vmax set to the\n"
+                f" LTE velocity {self.wallVelocityLTE:.6f}.\n"
+            )
             results = self.solveWall(vmin, self.wallVelocityLTE, wallParams)
             
         return results
@@ -1816,6 +1824,11 @@ class EOM:
             if T > 0:
                 temperatureProfile[index] = T
                 velocityProfile[index] = vPlasma
+
+                # If findPlasmaProfilePoint returned the minimum of the LHS, 
+                # instead of finding the root, the temperature profile hase also failed.
+                if not self.successPlasmaProfilePoint:
+                    self.successTemperatureProfile = False
             else:
                 ## If no solution was found, use the last point
                 temperatureProfile[index] = temperatureProfile[index - 1]
@@ -1892,6 +1905,7 @@ class EOM:
         if self.temperatureProfileEqLHS(fields, dPhidz, minRes.x, s1, s2) >= 0:
             T = minRes.x
             vPlasma = self.plasmaVelocity(fields, T, s1)
+            self.successPlasmaProfilePoint = False
             return T, vPlasma
 
         # Bracketing the root
@@ -1905,6 +1919,7 @@ class EOM:
         i = 0  # pylint: disable=invalid-name
         while self.temperatureProfileEqLHS(fields, dPhidz, testTemp, s1, s2) < 0:
             if i > 100:
+                self.successPlasmaProfilePoint = False
                 ## No solution was found. We return 0.
                 return 0, 0
             tempAtMinimum *= TMultiplier
@@ -1921,6 +1936,7 @@ class EOM:
 
         T = res
         vPlasma = self.plasmaVelocity(fields, T, s1)
+        self.successPlasmaProfilePoint = True
         return T, vPlasma
 
     def plasmaVelocity(
