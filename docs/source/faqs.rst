@@ -10,11 +10,11 @@ FAQs
 General
 =======
 
-- **How should I cite WallGo?**
+- **What should I cite when using WallGo?**
 
     WallGo is free and open source, but if you use WallGo in your work, we ask that you
     support us by please citing the WallGo papers, `JHEP 04 (2025) 101 <https://doi.org/10.1007/JHEP04(2025)101>`_ and 
-    `arXiv:2510.27691 <https://arxiv.org/abs/2510.27691>`_
+    `JHEP 04 (2026) 041 <https://doi.org/10.1007/JHEP04(2026)041>`_
     The complete BibTex citations from `Inspire <https://inspirehep.net/literature/2846423>`_ are::
 
         @article{Ekstedt:2024fyq,
@@ -39,10 +39,63 @@ General
             archivePrefix = "arXiv",
             primaryClass = "hep-ph",
             reportNumber = "CERN-TH-2025-221",
-            month = "10",
-            year = "2025"
-        }   
+            doi = "10.1007/JHEP04(2026)041",
+            journal = "JHEP",
+            volume = "04",
+            pages = "041",
+            year = "2026"
+        } 
 
+    The theoretical approach for computing wall velocities implemented in WallGo is adopted from 
+    `Phys. Rev. D 106, 023501 (2022) <https://doi.org/10.1103/PhysRevD.106.023501>`_
+    with the BibTex citation from `Inspire <https://inspirehep.net/literature/2074151>`_::
+
+        @article{Laurent:2022jrs,
+            author = "Laurent, Benoit and Cline, James M.",
+            title = "{First principles determination of bubble wall velocity}",
+            eprint = "2204.13120",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            doi = "10.1103/PhysRevD.106.023501",
+            journal = "Phys. Rev. D",
+            volume = "106",
+            number = "2",
+            pages = "023501",
+            year = "2022"
+        }
+
+    `WallGoMatrix <https://github.com/Wall-Go/WallGoMatrix>`_ builds on existing Mathematica packages
+    `DRalgo <https://github.com/DR-algo/DRalgo>`_ (`Comput. Phys. Commun. 288 (2023) 108725 <https://doi.org/10.1016/j.cpc.2023.108725>`_)
+    and `GroupMath <https://renatofonseca.net/groupmath>`_ (`Comput. Phys. Commun.  267 (2021) <https://doi.org/10.1016/j.cpc.2021.108085>`_).
+    You can cite these `with <https://inspirehep.net/literature/2083933>`_::
+
+        @article{Ekstedt:2022bff,
+            author = "Ekstedt, Andreas and Schicho, Philipp and Tenkanen, Tuomas V. I.",
+            title = "{DRalgo: A package for effective field theory approach for thermal phase transitions}",
+            eprint = "2205.08815",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-ph",
+            reportNumber = "HIP-2022-11/TH, NORDITA 2022-030",
+            doi = "10.1016/j.cpc.2023.108725",
+            journal = "Comput. Phys. Commun.",
+            volume = "288",
+            pages = "108725",
+            year = "2023"
+        }
+    `and <https://inspirehep.net/literature/1827870>`_::
+
+        @article{Fonseca:2020vke,
+            author = "Fonseca, Renato M.",
+            title = "{GroupMath: A Mathematica package for group theory calculations}",
+            eprint = "2011.01764",
+            archivePrefix = "arXiv",
+            primaryClass = "hep-th",
+            doi = "10.1016/j.cpc.2021.108085",
+            journal = "Comput. Phys. Commun.",
+            volume = "267",
+            pages = "108085",
+            year = "2021"
+        }
 
 Installation and running
 ========================
