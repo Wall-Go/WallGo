@@ -204,7 +204,7 @@ class WallGoExampleBase(ABC):
         )
 
         print(header)
-        if results.wallVelocity is not None:
+        if results.wallVelocity is not None and results.success is True:
             print(f"wallVelocity:      {results.wallVelocity:.6f}")
             print(f"wallVelocityError: {results.wallVelocityError:.6f}")
             print(f"wallWidths:        {results.wallWidths}")
