@@ -680,17 +680,15 @@ class EOM:
                 * offEquilPressureScale
                 / pressureDerivative
             )
-            # the deviation from the finite difference method within Boltzmann
-            delta00 = boltzmannResults.Deltas.Delta00.coefficients[0]
-            delta00FD = finiteDifferenceBoltzmannResults.Deltas.Delta00.coefficients[0]
-            errorFD = np.linalg.norm(delta00 - delta00FD) / np.linalg.norm(delta00)
 
-            # if truncation waringin large, raise a warning
+            # if the spectral truncation error is twice larger than the
+            # finite-difference truncation error, and larger than the user
+            # tolerance, raise a warning
             if (
-                boltzmannResults.truncationError > errorFD
+                boltzmannResults.truncationError > 2 * finiteDifferenceBoltzmannResults.truncationError
                 and wallVelocityTruncationError > self.errTol
             ):
-                warnings.warn("Truncation error large, increase N or M", RuntimeWarning)
+                warnings.warn("Spectral truncation error large, increase N or M ", RuntimeWarning)
 
             # estimating the error by the largest of these
             wallVelocityError = max(
