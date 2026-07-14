@@ -205,17 +205,23 @@ def main() -> None:
 
     results = manager.solveWall(solverSettings)
 
-    print(
-        f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity:.6f}"
-    )
+    if results.success is True and results.wallVelocity is not None:
+        print(
+            f"Wall velocity without out-of-equilibrium contributions {results.wallVelocity:.6f}"
+        )
+    else:
+        print(results.message)
 
     solverSettings.bIncludeOffEquilibrium = True
 
     results = manager.solveWall(solverSettings)
 
-    print(
-        f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity:.6f}"
-    )
+    if results.success is True and results.wallVelocity is not None:
+        print(
+            f"Wall velocity with out-of-equilibrium contributions {results.wallVelocity:.6f}"
+        )
+    else:
+        print(results.message)
 
 
 ## Don't run the main function if imported to another file

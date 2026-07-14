@@ -202,6 +202,12 @@ class EOM:
             self.includeOffEq):
             # If there is a LTE solution but no out-of-equilibrium one, retry with vmax
             # set to the LTE velocity.
+            logging.warning(
+                f"\n Warning: No deflagration/hybrid solution was found with vmax={vmax:.6f}.\n"
+                f" Error message: {results.message}\n"
+                f" A hydro LTE solution exists. We therefore try again with vmax set to the\n"
+                f" LTE velocity {self.wallVelocityLTE:.6f}.\n"
+            )
             results = self.solveWall(vmin, self.wallVelocityLTE, wallParams)
             
         return results
