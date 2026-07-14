@@ -2,6 +2,15 @@
 Changelog
 ==================
 
+1.1.2 (2026-07-14)
+==================
+
+* Exposed `forceImproveConvergence` in `WallGoSettings`.
+* Added `__version__`.
+* Improved warning messages.
+* Removed dependence on findiff library.
+* Bug fixes.
+
 1.1.0 (2025-08-20)
 ==================
 
