@@ -45,7 +45,7 @@ The implementation in WallGo is as follows: one defines a class, here called :py
 
 .. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 88-146
+   :lines: 87-146
 
 The initialisation of an :py:data:`WallGo.EffectivePotential` object takes the model parameters and the number of background scalar fields as arguments and stores them for use in evaluating the potential. It is possible to override other member functions when defining :py:data:`WallGo.EffectivePotentialYukawa`, such as the initialisation function, or to add additional member functions and variables, though we haven't done so in this simple example.
 
@@ -53,7 +53,7 @@ Once these two classes have been defined, we can now run WallGo to compute the b
 
 .. literalinclude:: ../../Models/Yukawa/yukawa.py
    :language: py
-   :lines: 149-210
+   :lines: 149-230
 
 **********
 References
