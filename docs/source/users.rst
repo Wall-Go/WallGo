@@ -4,6 +4,8 @@ Research using WallGo
 
 .. If you have used WallGo in your work, please let us know.
 
+:cite:empty:`Moretti:2026qsw`
+
 :cite:empty:`Krajewski:2026kcm`
 
 :cite:empty:`Bhusal:2026iuw`
